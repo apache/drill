@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
@@ -24,6 +23,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.parser.SqlParserUtil;
+import org.apache.calcite.util.Util;
 
 import com.google.common.collect.Lists;
 
@@ -32,7 +32,7 @@ import com.google.common.collect.Lists;
  */
 public class DrillParserUtil {
 
-  public static final String CHARSET = "ISO-8859-1";
+  public static final String CHARSET = Util.getDefaultCharset().name();
 
   public static SqlNode createCondition(SqlNode left, SqlOperator op, SqlNode right) {
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,26 +20,54 @@ package org.apache.drill.exec.store.easy.json.reader;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonToken;
+
 import io.netty.buffer.DrillBuf;
-import org.apache.drill.exec.store.easy.json.JsonProcessor;
+
+import org.apache.drill.exec.store.easy.json.JsonProcessor.ReadState;
+import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor.JsonExceptionProcessingState;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 public class CountingJsonReader extends BaseJsonProcessor {
 
-  public CountingJsonReader(DrillBuf workBuf) {
-    super(workBuf);
+  public CountingJsonReader(DrillBuf workBuf, boolean enableNanInf) {
+    super(workBuf, enableNanInf);
   }
 
   @Override
   public ReadState write(BaseWriter.ComplexWriter writer) throws IOException {
-    final JsonToken token = parser.nextToken();
-    if (!parser.hasCurrentToken()) {
-      return ReadState.END_OF_STREAM;
-    } else if (token != JsonToken.START_OBJECT) {
-      throw new IllegalStateException(String.format("Cannot read from the middle of a record. Current token was %s", token));
+    try {
+      JsonToken token = lastSeenJsonToken;
+      if (token == null || token == JsonToken.END_OBJECT){
+        token = parser.nextToken();
+      }
+      lastSeenJsonToken = null;
+      if (!parser.hasCurrentToken()) {
+        return ReadState.END_OF_STREAM;
+      } else if (token != JsonToken.START_OBJECT) {
+        throw new com.fasterxml.jackson.core.JsonParseException(
+            parser,
+            String
+                .format(
+                    "Cannot read from the middle of a record. Current token was %s ",
+                    token));
+        // throw new
+        // IllegalStateException(String.format("Cannot read from the middle of a record. Current token was %s",
+        // token));
+      }
+      writer.rootAsMap().bit("count").writeBit(1);
+      parser.skipChildren();
+    } catch (com.fasterxml.jackson.core.JsonParseException ex) {
+      if (ignoreJSONParseError()) {
+        if (processJSONException() == JsonExceptionProcessingState.END_OF_STREAM){
+          return ReadState.JSON_RECORD_PARSE_EOF_ERROR;
+        }
+        else{
+          return ReadState.JSON_RECORD_PARSE_ERROR;
+        }
+      } else {
+        throw ex;
+      }
     }
-    writer.rootAsMap().bit("count").writeBit(1);
-    parser.skipChildren();
     return ReadState.WRITE_SUCCEED;
   }
 

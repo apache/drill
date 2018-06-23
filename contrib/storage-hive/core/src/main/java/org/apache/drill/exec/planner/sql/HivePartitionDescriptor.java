@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,10 +31,10 @@ import org.apache.drill.exec.planner.PartitionLocation;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.hive.HiveTableWrapper;
 import org.apache.drill.exec.store.hive.HiveUtilities;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
-import org.apache.drill.exec.store.hive.HiveTable;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.hive.metastore.api.Partition;
 
@@ -64,7 +64,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     this.scanRel = scanRel;
     this.managedBuffer = managedBuffer.reallocIfNeeded(256);
     this.defaultPartitionValue = defaultPartitionValue;
-    for (HiveTable.FieldSchemaWrapper wrapper : ((HiveScan) scanRel.getGroupScan()).hiveReadEntry.table.partitionKeys) {
+    for (HiveTableWrapper.FieldSchemaWrapper wrapper : ((HiveScan) scanRel.getGroupScan()).getHiveReadEntry().table.partitionKeys) {
       partitionMap.put(wrapper.name, i);
       i++;
     }
@@ -86,8 +86,9 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     return numPartitionLevels;
   }
 
+  @Override
   public String getBaseTableLocation() {
-    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
+    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).getHiveReadEntry();
     return origEntry.table.getTable().getSd().getLocation();
   }
 
@@ -96,7 +97,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
                                        BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap) {
     int record = 0;
     final HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
-    final Map<String, String> partitionNameTypeMap = hiveScan.hiveReadEntry.table.getPartitionNameTypeMap();
+    final Map<String, String> partitionNameTypeMap = hiveScan.getHiveReadEntry().table.getPartitionNameTypeMap();
     for(PartitionLocation partitionLocation: partitions) {
       for(int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)){
         final String hiveType = partitionNameTypeMap.get(fieldNameMap.get(partitionColumnIndex));
@@ -114,7 +115,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     }
 
     for(ValueVector v : vectors) {
-      if(v == null){
+      if (v == null) {
         continue;
       }
       v.getMutator().setValueCount(partitions.size());
@@ -125,7 +126,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   public TypeProtos.MajorType getVectorType(SchemaPath column, PlannerSettings plannerSettings) {
     HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
     String partitionName = column.getAsNamePart().getName();
-    Map<String, String> partitionNameTypeMap = hiveScan.hiveReadEntry.table.getPartitionNameTypeMap();
+    Map<String, String> partitionNameTypeMap = hiveScan.getHiveReadEntry().table.getPartitionNameTypeMap();
     String hiveType = partitionNameTypeMap.get(partitionName);
     PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) TypeInfoUtils.getTypeInfoFromTypeString(hiveType);
 
@@ -142,7 +143,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   @Override
   protected void createPartitionSublists() {
     List<PartitionLocation> locations = new LinkedList<>();
-    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
+    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).getHiveReadEntry();
     for (Partition partition: origEntry.getPartitions()) {
       locations.add(new HivePartitionLocation(partition.getValues(), partition.getSd().getLocation()));
     }
@@ -151,7 +152,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<String> newPartitions) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitions, boolean wasAllPartitionsPruned /* ignored */) throws Exception {
     GroupScan newGroupScan = createNewGroupScan(newPartitions);
     return new DrillScanRel(scanRel.getCluster(),
         scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
@@ -162,16 +163,16 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
         true /*filter pushdown*/);
   }
 
-  private GroupScan createNewGroupScan(List<String> newFiles) throws ExecutionSetupException {
+  private GroupScan createNewGroupScan(List<PartitionLocation> newPartitionLocations) throws ExecutionSetupException {
     HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
-    HiveReadEntry origReadEntry = hiveScan.hiveReadEntry;
-    List<HiveTable.HivePartition> oldPartitions = origReadEntry.partitions;
-    List<HiveTable.HivePartition> newPartitions = new LinkedList<>();
+    HiveReadEntry origReadEntry = hiveScan.getHiveReadEntry();
+    List<HiveTableWrapper.HivePartitionWrapper> oldPartitions = origReadEntry.partitions;
+    List<HiveTableWrapper.HivePartitionWrapper> newPartitions = Lists.newLinkedList();
 
-    for (HiveTable.HivePartition part: oldPartitions) {
+    for (HiveTableWrapper.HivePartitionWrapper part: oldPartitions) {
       String partitionLocation = part.getPartition().getSd().getLocation();
-      for (String newPartitionLocation: newFiles) {
-        if (partitionLocation.equals(newPartitionLocation)) {
+      for (PartitionLocation newPartitionLocation: newPartitionLocations) {
+        if (partitionLocation.equals(newPartitionLocation.getEntirePartitionLocation())) {
           newPartitions.add(part);
         }
       }

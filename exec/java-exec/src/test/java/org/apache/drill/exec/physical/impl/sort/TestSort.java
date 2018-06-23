@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,20 +17,23 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Placeholder for all sort related test. Can be used as we move
  * more tests to use the new test framework
  */
+@Category(OperatorTest.class)
 public class TestSort extends BaseTestQuery {
 
-  private static final JsonStringHashMap x = new JsonStringHashMap();
-  private static final JsonStringArrayList<JsonStringHashMap> repeated_map = new JsonStringArrayList<>();
+  private static final JsonStringHashMap<String, Object> x = new JsonStringHashMap<>();
+  private static final JsonStringArrayList<JsonStringHashMap<String, Object>> repeated_map = new JsonStringArrayList<>();
 
   static {
     x.put("c", 1l);

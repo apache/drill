@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,7 +31,7 @@ public class UnlimitedRawBatchBuffer extends BaseRawBatchBuffer<RawFragmentBatch
   private final int softlimit;
   private final int startlimit;
 
-  public UnlimitedRawBatchBuffer(FragmentContext context, int fragmentCount, int oppositeId) {
+  public UnlimitedRawBatchBuffer(FragmentContext context, int fragmentCount) {
     super(context, fragmentCount);
     this.softlimit = bufferSizePerSocket * fragmentCount;
     this.startlimit = Math.max(softlimit/2, 1);
@@ -65,7 +65,7 @@ public class UnlimitedRawBatchBuffer extends BaseRawBatchBuffer<RawFragmentBatch
 
     @Override
     public boolean checkForOutOfMemory() {
-      return context.isOverMemoryLimit();
+      return context.getAllocator().isOverLimit();
     }
 
     @Override

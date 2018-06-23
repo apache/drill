@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,90 +17,102 @@
  */
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import javax.validation.constraints.NotNull;
 
 /**
  * Manager for Drill {@link OptionValue options}. Implementations must be case-insensitive to the name of an option.
+ *
+ * The options governed by an {@link OptionManager} fall into various categories. These categories are described below.
+ *
+ * <ul>
+ *   <li>
+ *     <b>Local:</b> Local options are options who have a value stored in this {@link OptionManager}. Whether an option is <b>Local</b> to an {@link OptionManager} or not should
+ *      be irrelevant to the user.
+ *   </li>
+ *   <li>
+ *     <b>Public:</b> Public options are options that are visible to end users in all the standard tables and rest endpoints.
+ *   </li>
+ *   <li>
+ *     <b>Internal:</b> Internal options are options that are only visible to end users if they check special tables and rest endpoints that are not documented. These options
+ *     are not intended to be modified by users and should only be modified by support during debugging. Internal options are also not gauranteed to be consistent accross
+ *     patch, minor, or major releases.
+ *   </li>
+ * </ul>
+ *
  */
-public interface OptionManager extends Iterable<OptionValue> {
+public interface OptionManager extends OptionSet, Iterable<OptionValue> {
 
   /**
-   * Sets an option value.
-   *
-   * @param value option value
-   * @throws org.apache.drill.common.exceptions.UserException message to describe error with value
+   * Sets a boolean option on the {@link OptionManager}.
+   * @param name The name of the option.
+   * @param value The value of the option.
    */
-  void setOption(OptionValue value);
+  void setLocalOption(String name, boolean value);
 
   /**
-   * Deletes the option. Unfortunately, the type is required given the fallback structure of option managers.
-   * See {@link FallbackOptionManager}.
+   * Sets a long option on the {@link OptionManager}.
+   * @param name The name of the option.
+   * @param value The value of the option.
+   */
+  void setLocalOption(String name, long value);
+
+  /**
+   * Sets a double option on the {@link OptionManager}.
+   * @param name The name of the option.
+   * @param value The value of the option.
+   */
+  void setLocalOption(String name, double value);
+
+  /**
+   * Sets a String option on the {@link OptionManager}.
+   * @param name The name of the option.
+   * @param value The value of the option.
+   */
+  void setLocalOption(String name, String value);
+
+  /**
+   * Sets an option on the {@link OptionManager}.
+   * @param name The name of the option.
+   * @param value The value of the option.
+   */
+  void setLocalOption(String name, Object value);
+
+  /**
+   * Sets an option of the specified {@link OptionValue.Kind} on the {@link OptionManager}.
+   * @param kind The kind of the option.
+   * @param name The name of the option.
+   * @param value The value of the option.
+   */
+  void setLocalOption(OptionValue.Kind kind, String name, String value);
+
+  /**
+   * Deletes the option.
    *
-   * If the option name is valid (exists in {@link SystemOptionManager#VALIDATORS}),
+   * If the option name is valid (exists in the set of validators produced by {@link SystemOptionManager#createDefaultOptionDefinitions()}),
    * but the option was not set within this manager, calling this method should be a no-op.
    *
    * @param name option name
-   * @param type option type
    * @throws org.apache.drill.common.exceptions.UserException message to describe error with value
    */
-  void deleteOption(String name, OptionType type);
+  void deleteLocalOption(String name);
 
   /**
-   * Deletes all options. Unfortunately, the type is required given the fallback structure of option managers.
-   * See {@link FallbackOptionManager}.
+   * Deletes all options.
    *
    * If no options are set, calling this method should be no-op.
    *
-   * @param type option type
    * @throws org.apache.drill.common.exceptions.UserException message to describe error with value
    */
-  void deleteAllOptions(OptionType type);
+  void deleteAllLocalOptions();
 
   /**
-   * Gets the option value for the given option name.
-   *
-   * This interface also provides convenient methods to get typed option values:
-   * {@link #getOption(TypeValidators.BooleanValidator validator)},
-   * {@link #getOption(TypeValidators.DoubleValidator validator)},
-   * {@link #getOption(TypeValidators.LongValidator validator)}, and
-   * {@link #getOption(TypeValidators.StringValidator validator)}.
-   *
-   * @param name option name
-   * @return the option value, null if the option does not exist
+   * Get the option definition corresponding to the given option name.
+   * @param name The name of the option to retrieve a validator for.
+   * @return The option validator corresponding to the given option name.
+   * @throws UserException - if the definition is not found
    */
-  OptionValue getOption(String name);
-
-  /**
-   * Gets the boolean value (from the option value) for the given boolean validator.
-   *
-   * @param validator the boolean validator
-   * @return the boolean value
-   */
-  boolean getOption(TypeValidators.BooleanValidator validator);
-
-  /**
-   * Gets the double value (from the option value) for the given double validator.
-   *
-   * @param validator the double validator
-   * @return the double value
-   */
-  double getOption(TypeValidators.DoubleValidator validator);
-
-  /**
-   * Gets the long value (from the option value) for the given long validator.
-   *
-   * @param validator the long validator
-   * @return the long value
-   */
-  long getOption(TypeValidators.LongValidator validator);
-
-  /**
-   * Gets the string value (from the option value) for the given string validator.
-   *
-   * @param validator the string validator
-   * @return the string value
-   */
-  String getOption(TypeValidators.StringValidator validator);
+  @NotNull
+  OptionDefinition getOptionDefinition(String name);
 
   /**
    * Gets the list of options managed this manager.
@@ -108,4 +120,20 @@ public interface OptionManager extends Iterable<OptionValue> {
    * @return the list of options
    */
   OptionList getOptionList();
+
+  /**
+   * Returns all the internal options contained in this option manager.
+   *
+   * @return All the internal options contained in this option manager.
+   */
+  @NotNull
+  OptionList getInternalOptionList();
+
+  /**
+   * Returns all the public options contained in this option manager.
+   *
+   * @return All the public options contained in this option manager.
+   */
+  @NotNull
+  OptionList getPublicOptionList();
 }

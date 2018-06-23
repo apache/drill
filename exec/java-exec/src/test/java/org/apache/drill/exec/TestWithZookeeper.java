@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,27 +17,22 @@
  */
 package org.apache.drill.exec;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 
 public class TestWithZookeeper extends ExecTest {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestWithZookeeper.class);
 
-  private static ZookeeperHelper zkHelper;
+  protected ZookeeperHelper zkHelper;
 
-  @BeforeClass
-  public static void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     zkHelper = new ZookeeperHelper();
     zkHelper.startZookeeper(1);
   }
 
-  @AfterClass
-  public static void tearDown() throws Exception {
+  @After
+  public void tearDown() throws Exception {
     zkHelper.stopZookeeper();
-  }
-
-  public static DrillConfig getConfig() {
-    return zkHelper.getConfig();
   }
 }

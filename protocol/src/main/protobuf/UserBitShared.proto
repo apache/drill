@@ -18,6 +18,10 @@ enum QueryType {
   SQL = 1;
   LOGICAL = 2;
   PHYSICAL = 3;
+  EXECUTION = 4;
+
+  /* Input is a prepared statement */
+  PREPARED_STATEMENT = 5;
 }
 
 message UserCredentials {
@@ -70,11 +74,15 @@ message DrillPBError{
      */
     RESOURCE = 7;
     /* equivalent to SQLNonTransientException.
+     * - unexpected internal state
+     * - uncategorized operation
+     * general user action is to contact the Drill team for
+     * assistance
      */
     SYSTEM = 8;
     /* equivalent to SQLFeatureNotSupportedException
-     * - type change
-     * - schema change
+     * - unimplemented feature, option, or execution path
+     * - schema change in operator that does not support it
      */
     UNSUPPORTED_OPERATION = 9;
     /* SQL validation exception
@@ -82,6 +90,21 @@ message DrillPBError{
      * - invalid entries in SQL tree
      */
     VALIDATION = 10;
+    /* Execution exception
+     *  - Internal errors not related to bad code
+     */
+    EXECUTION_ERROR = 11;
+    /* Internal exception
+     *  - Failed assertions
+     *  - Other "this should not happen" cases
+     */
+    INTERNAL_ERROR = 12;
+    /* Unspecified exception
+     *  - Exception caught but cause is unknown
+     * Indicates code that needs revisiting to move error reporting
+     * closer to the cause.
+     */
+    UNSPECIFIED_ERROR = 13;
   }
   optional string error_id = 1; // for debug tracing purposes
   optional DrillbitEndpoint endpoint = 2;
@@ -105,7 +128,6 @@ message StackTraceElementWrapper {
     optional string method_name = 4;
     optional bool is_native_method = 5;
 }
-
 
 message ParsingError{
   optional int32 start_column = 2;
@@ -159,6 +181,8 @@ message QueryResult {
 	  FAILED = 4;
 	  CANCELLATION_REQUESTED = 5; // cancellation has been requested, and is being processed
 	  ENQUEUED = 6; // query has been enqueued. this is pre-starting.
+	  PREPARING = 7; // query is at preparation stage, foreman is initializing
+	  PLANNING = 8; // query is at planning stage (includes logical or / and physical planning)
 	}
 
 	optional QueryState query_state = 1;
@@ -181,8 +205,10 @@ message QueryInfo {
   optional QueryResult.QueryState state = 3;
   optional string user = 4 [default = "-"];
   optional DrillbitEndpoint foreman = 5;
+  optional string options_json = 6;
+  optional double total_cost = 7;
+  optional string queue_name = 8 [default = "-"];
 }
-
 
 message QueryProfile {
   optional QueryId id = 1;
@@ -201,6 +227,12 @@ message QueryProfile {
   optional string verboseError = 14;
   optional string error_id = 15;
   optional string error_node = 16;
+  optional string options_json = 17;
+  optional int64 planEnd = 18;
+  optional int64 queueWaitEnd = 19;
+  optional double total_cost = 20;
+  optional string queue_name = 21 [default = "-"];
+  optional string queryId = 22;
 }
 
 message MajorFragmentProfile {
@@ -293,4 +325,45 @@ enum CoreOperatorType {
   WINDOW = 34;
   NESTED_LOOP_JOIN = 35;
   AVRO_SUB_SCAN = 36;
+  PCAP_SUB_SCAN = 37;
+  KAFKA_SUB_SCAN = 38;
+  KUDU_SUB_SCAN = 39;
+  FLATTEN = 40;
+  LATERAL_JOIN = 41;
+  UNNEST = 42;
+  HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;
+  JDBC_SCAN = 44;
+}
+
+/* Registry that contains list of jars, each jar contains its name and list of function signatures.
+Structure example:
+REGISTRY    -> Jar1.jar   -> upper(VARCHAR-REQUIRED)
+                          -> upper(VARCHAR-OPTIONAL)
+
+            -> Jar2.jar   -> lower(VARCHAR-REQUIRED)
+                          -> lower(VARCHAR-OPTIONAL)
+*/
+message Registry {
+  repeated Jar jar = 1;
+}
+
+/* Jar contains jar name and list of function signatures.
+ Function signature is concatenation of function name and its input parameters. */
+message Jar {
+  optional string name = 1;
+  repeated string function_signature = 2;
+}
+
+enum SaslStatus {
+  SASL_UNKNOWN = 0;
+  SASL_START = 1;
+  SASL_IN_PROGRESS = 2;
+  SASL_SUCCESS = 3;
+  SASL_FAILED = 4;
+}
+
+message SaslMessage {
+  optional string mechanism = 1;
+  optional bytes data = 2;
+  optional SaslStatus status = 3;
 }

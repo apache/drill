@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,6 +37,7 @@ import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.util.DecimalUtility;
 
@@ -126,7 +127,7 @@ public class ValueHolderHelper {
     byte[] b = s.getBytes(Charsets.UTF_8);
     vch.start = 0;
     vch.end = b.length;
-    vch.buffer = a.buffer(b.length); //
+    vch.buffer = a.buffer(b.length);
     vch.buffer.setBytes(0, b);
     return vch;
   }
@@ -179,7 +180,7 @@ public class ValueHolderHelper {
     dch.start = 0;
     dch.buffer = buf.reallocIfNeeded(5 * DecimalUtility.INTEGER_SIZE);
     DecimalUtility
-        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
+        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, Decimal28SparseHolder.nDecimalDigits);
 
     return dch;
   }
@@ -194,10 +195,28 @@ public class ValueHolderHelper {
       dch.precision = bigDecimal.precision();
       Decimal38SparseHolder.setSign(bigDecimal.signum() == -1, dch.start, dch.buffer);
       dch.start = 0;
-    dch.buffer = buf.reallocIfNeeded(dch.maxPrecision * DecimalUtility.INTEGER_SIZE);
+    dch.buffer = buf.reallocIfNeeded(Decimal38SparseHolder.maxPrecision * DecimalUtility.INTEGER_SIZE);
     DecimalUtility
-        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
+        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, Decimal38SparseHolder.nDecimalDigits);
 
       return dch;
+  }
+
+  public static VarDecimalHolder getVarDecimalHolder(DrillBuf buf, String decimal) {
+    VarDecimalHolder dch = new VarDecimalHolder();
+
+    BigDecimal bigDecimal = new BigDecimal(decimal);
+
+    byte[] bytes = bigDecimal.unscaledValue().toByteArray();
+    int length = bytes.length;
+
+    dch.scale = bigDecimal.scale();
+    dch.precision = bigDecimal.precision();
+    dch.start = 0;
+    dch.end = length;
+    dch.buffer = buf.reallocIfNeeded(length);
+    dch.buffer.setBytes(0, bytes);
+
+    return dch;
   }
 }

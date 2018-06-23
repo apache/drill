@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.kudu;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -45,24 +44,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.store.schedule.AffinityCreator;
 import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.CompleteWork;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
 import org.apache.drill.exec.store.schedule.EndpointByteMapImpl;
-import org.kududb.client.LocatedTablet;
-import org.kududb.client.LocatedTablet.Replica;
+import org.apache.kudu.client.LocatedTablet;
+import org.apache.kudu.client.LocatedTablet.Replica;
 
 @JsonTypeName("kudu-scan")
 public class KuduGroupScan extends AbstractGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduGroupScan.class);
   private static final long DEFAULT_TABLET_SIZE = 1000;
 
-  private KuduStoragePluginConfig storagePluginConfig;
+  private KuduStoragePlugin kuduStoragePlugin;
   private List<SchemaPath> columns;
   private KuduScanSpec kuduScanSpec;
-  private KuduStoragePlugin storagePlugin;
+
   private boolean filterPushedDown = false;
   private List<KuduWork> kuduWorkList = Lists.newArrayList();
   private ListMultimap<Integer,KuduWork> assignments;
@@ -71,31 +69,31 @@ public class KuduGroupScan extends AbstractGroupScan {
 
   @JsonCreator
   public KuduGroupScan(@JsonProperty("kuduScanSpec") KuduScanSpec kuduScanSpec,
-                        @JsonProperty("storage") KuduStoragePluginConfig storagePluginConfig,
+                        @JsonProperty("kuduStoragePluginConfig") KuduStoragePluginConfig kuduStoragePluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this((KuduStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), kuduScanSpec, columns);
+    this((KuduStoragePlugin) pluginRegistry.getPlugin(kuduStoragePluginConfig), kuduScanSpec, columns);
   }
 
-  public KuduGroupScan(KuduStoragePlugin storagePlugin, KuduScanSpec scanSpec,
-      List<SchemaPath> columns) {
+  public KuduGroupScan(KuduStoragePlugin kuduStoragePlugin,
+                       KuduScanSpec kuduScanSpec,
+                       List<SchemaPath> columns) {
     super((String) null);
-    this.storagePlugin = storagePlugin;
-    this.storagePluginConfig = storagePlugin.getConfig();
-    this.kuduScanSpec = scanSpec;
+    this.kuduStoragePlugin = kuduStoragePlugin;
+    this.kuduScanSpec = kuduScanSpec;
     this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
     init();
   }
 
   private void init() {
     String tableName = kuduScanSpec.getTableName();
-    Collection<DrillbitEndpoint> endpoints = storagePlugin.getContext().getBits();
+    Collection<DrillbitEndpoint> endpoints = kuduStoragePlugin.getContext().getBits();
     Map<String,DrillbitEndpoint> endpointMap = Maps.newHashMap();
     for (DrillbitEndpoint endpoint : endpoints) {
       endpointMap.put(endpoint.getAddress(), endpoint);
     }
     try {
-      List<LocatedTablet> locations = storagePlugin.getClient().openTable(tableName).getTabletsLocations(10000);
+      List<LocatedTablet> locations = kuduStoragePlugin.getClient().openTable(tableName).getTabletsLocations(10000);
       for (LocatedTablet tablet : locations) {
         KuduWork work = new KuduWork(tablet.getPartition().getPartitionKeyStart(), tablet.getPartition().getPartitionKeyEnd());
         for (Replica replica : tablet.getReplicas()) {
@@ -153,10 +151,9 @@ public class KuduGroupScan extends AbstractGroupScan {
    */
   private KuduGroupScan(KuduGroupScan that) {
     super(that);
+    this.kuduStoragePlugin = that.kuduStoragePlugin;
     this.columns = that.columns;
     this.kuduScanSpec = that.kuduScanSpec;
-    this.storagePlugin = that.storagePlugin;
-    this.storagePluginConfig = that.storagePluginConfig;
     this.filterPushedDown = that.filterPushedDown;
     this.kuduWorkList = that.kuduWorkList;
     this.assignments = that.assignments;
@@ -190,7 +187,7 @@ public class KuduGroupScan extends AbstractGroupScan {
    */
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-    assignments = AssignmentCreator.getMappings(incomingEndpoints, kuduWorkList, storagePlugin.getContext());
+    assignments = AssignmentCreator.getMappings(incomingEndpoints, kuduWorkList);
   }
 
 
@@ -204,7 +201,7 @@ public class KuduGroupScan extends AbstractGroupScan {
       scanSpecList.add(new KuduSubScanSpec(getTableName(), work.getPartitionKeyStart(), work.getPartitionKeyEnd()));
     }
 
-    return new KuduSubScan(storagePlugin, storagePluginConfig, scanSpecList, this.columns);
+    return new KuduSubScan(kuduStoragePlugin, scanSpecList, this.columns);
   }
 
   // KuduStoragePlugin plugin, KuduStoragePluginConfig config,
@@ -224,7 +221,7 @@ public class KuduGroupScan extends AbstractGroupScan {
 
   @JsonIgnore
   public KuduStoragePlugin getStoragePlugin() {
-    return storagePlugin;
+    return kuduStoragePlugin;
   }
 
   @JsonIgnore
@@ -244,9 +241,9 @@ public class KuduGroupScan extends AbstractGroupScan {
         + columns + "]";
   }
 
-  @JsonProperty("storage")
-  public KuduStoragePluginConfig getStorageConfig() {
-    return this.storagePluginConfig;
+  @JsonProperty
+  public KuduStoragePluginConfig getKuduStoragePluginConfig() {
+    return kuduStoragePlugin.getConfig();
   }
 
   @JsonProperty

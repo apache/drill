@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,13 @@
  */
 package org.apache.drill.jdbc.test;
 
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
@@ -34,53 +33,56 @@ import org.junit.rules.TestRule;
 import com.google.common.base.Stopwatch;
 
 public class JdbcTestQueryBase extends JdbcTestBase {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTestQueryBase.class);
+
   // Set a timeout unless we're debugging.
   @Rule
   public TestRule TIMEOUT = TestTools.getTimeoutRule(40000);
 
-  protected static final String WORKING_PATH;
   static{
     Driver.load();
-    WORKING_PATH = Paths.get("").toAbsolutePath().toString();
-
   }
 
-  protected static void testQuery(String sql) throws Exception{
+  protected static void testQuery(String sql) throws Exception {
+    final StringBuilder sb = new StringBuilder();
+
     boolean success = false;
-    try (Connection conn = connect("jdbc:drill:zk=local")) {
+    try (Connection conn = connect()) {
       for (int x = 0; x < 1; x++) {
         Stopwatch watch = Stopwatch.createStarted();
         Statement s = conn.createStatement();
         ResultSet r = s.executeQuery(sql);
-        System.out.println(String.format("QueryId: %s", r.unwrap(DrillResultSet.class).getQueryId()));
+        sb.append(String.format("QueryId: %s\n", r.unwrap(DrillResultSet.class).getQueryId()));
         boolean first = true;
         while (r.next()) {
           ResultSetMetaData md = r.getMetaData();
           if (first == true) {
             for (int i = 1; i <= md.getColumnCount(); i++) {
-              System.out.print(md.getColumnName(i));
-              System.out.print('\t');
+              sb.append(md.getColumnName(i));
+              sb.append('\t');
             }
-            System.out.println();
+            sb.append('\b');
             first = false;
           }
 
           for (int i = 1; i <= md.getColumnCount(); i++) {
-            System.out.print(r.getObject(i));
-            System.out.print('\t');
+            sb.append(r.getObject(i));
+            sb.append('\t');
           }
-          System.out.println();
+          sb.append('\n');
         }
 
-        System.out.println(String.format("Query completed in %d millis.", watch.elapsed(TimeUnit.MILLISECONDS)));
+        sb.append(String.format("Query completed in %d millis.\n", watch.elapsed(TimeUnit.MILLISECONDS)));
       }
 
-      System.out.println("\n\n\n");
+      sb.append("\n\n\n");
       success = true;
     } finally {
       if (!success) {
         Thread.sleep(2000);
       }
     }
+
+    logger.info(sb.toString());
   }
 }

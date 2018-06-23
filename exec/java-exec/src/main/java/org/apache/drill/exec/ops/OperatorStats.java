@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,18 +20,21 @@ package org.apache.drill.exec.ops;
 import java.util.Iterator;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
+import org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
 
 import com.carrotsearch.hppc.IntDoubleHashMap;
 import com.carrotsearch.hppc.IntLongHashMap;
 import com.carrotsearch.hppc.cursors.IntDoubleCursor;
 import com.carrotsearch.hppc.cursors.IntLongCursor;
+import com.carrotsearch.hppc.procedures.IntDoubleProcedure;
+import com.carrotsearch.hppc.procedures.IntLongProcedure;
+import com.google.common.annotations.VisibleForTesting;
 
 public class OperatorStats {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorStats.class);
-
   protected final int operatorId;
   protected final int operatorType;
   private final BufferAllocator allocator;
@@ -56,7 +59,6 @@ public class OperatorStats {
   private long setupMark;
   private long waitMark;
 
-  private long schemas;
   private int inputCount;
 
   public OperatorStats(OpProfileDef def, BufferAllocator allocator){
@@ -70,6 +72,7 @@ public class OperatorStats {
    * @param original - OperatorStats object to create a copy from
    * @param isClean - flag to indicate whether to start with clean state indicators or inherit those from original object
    */
+
   public OperatorStats(OperatorStats original, boolean isClean) {
     this(original.operatorId, original.operatorType, original.inputCount, original.allocator);
 
@@ -84,7 +87,8 @@ public class OperatorStats {
     }
   }
 
-  private OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator) {
+  @VisibleForTesting
+  public OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator) {
     super();
     this.allocator = allocator;
     this.operatorId = operatorId;
@@ -98,6 +102,7 @@ public class OperatorStats {
   private String assertionError(String msg){
     return String.format("Failure while %s for operator id %d. Currently have states of processing:%s, setup:%s, waiting:%s.", msg, operatorId, inProcessing, inSetup, inWait);
   }
+
   /**
    * OperatorStats merger - to merge stats from other OperatorStats
    * this is needed in case some processing is multithreaded that needs to have
@@ -106,6 +111,7 @@ public class OperatorStats {
    * @param from - OperatorStats from where to merge to "this"
    * @return OperatorStats - for convenience so one can merge multiple stats in one go
    */
+
   public OperatorStats mergeMetrics(OperatorStats from) {
     final IntLongHashMap fromMetrics = from.longMetrics;
 
@@ -128,7 +134,7 @@ public class OperatorStats {
   /**
    * Clear stats
    */
-  public void clear() {
+  public synchronized void clear() {
     processingNanos = 0l;
     setupNanos = 0l;
     waitNanos = 0l;
@@ -136,52 +142,62 @@ public class OperatorStats {
     doubleMetrics.clear();
   }
 
-  public void startSetup() {
+  public synchronized void startSetup() {
     assert !inSetup  : assertionError("starting setup");
     stopProcessing();
     inSetup = true;
     setupMark = System.nanoTime();
   }
 
-  public void stopSetup() {
+  public synchronized void stopSetup() {
     assert inSetup :  assertionError("stopping setup");
     startProcessing();
     setupNanos += System.nanoTime() - setupMark;
     inSetup = false;
   }
 
-  public void startProcessing() {
+  public synchronized void startProcessing() {
     assert !inProcessing : assertionError("starting processing");
     processingMark = System.nanoTime();
     inProcessing = true;
   }
 
-  public void stopProcessing() {
+  public synchronized void stopProcessing() {
     assert inProcessing : assertionError("stopping processing");
     processingNanos += System.nanoTime() - processingMark;
     inProcessing = false;
   }
 
-  public void startWait() {
+  public synchronized void startWait() {
     assert !inWait : assertionError("starting waiting");
     stopProcessing();
     inWait = true;
     waitMark = System.nanoTime();
   }
 
-  public void stopWait() {
+  public synchronized void stopWait() {
     assert inWait : assertionError("stopping waiting");
     startProcessing();
     waitNanos += System.nanoTime() - waitMark;
     inWait = false;
   }
 
-  public void batchReceived(int inputIndex, long records, boolean newSchema) {
+  public synchronized void batchReceived(int inputIndex, long records, boolean newSchema) {
     recordsReceivedByInput[inputIndex] += records;
     batchesReceivedByInput[inputIndex]++;
     if(newSchema){
       schemaCountByInput[inputIndex]++;
     }
+  }
+
+  public String getId() {
+    StringBuilder s = new StringBuilder();
+    return s.append(this.operatorId)
+        .append(":")
+        .append("[")
+        .append(UserBitShared.CoreOperatorType.valueOf(operatorType))
+        .append("]")
+        .toString();
   }
 
   public OperatorProfile getProfile() {
@@ -193,14 +209,11 @@ public class OperatorStats {
         .setProcessNanos(processingNanos)
         .setWaitNanos(waitNanos);
 
-    if(allocator != null){
+    if (allocator != null) {
       b.setPeakLocalMemoryAllocated(allocator.getPeakMemoryAllocation());
     }
 
-
-
     addAllMetrics(b);
-
     return b.build();
   }
 
@@ -216,33 +229,102 @@ public class OperatorStats {
     }
   }
 
+  private class LongProc implements IntLongProcedure {
+
+    private final OperatorProfile.Builder builder;
+
+    public LongProc(Builder builder) {
+      super();
+      this.builder = builder;
+    }
+
+    @Override
+    public void apply(int key, long value) {
+      builder.addMetric(MetricValue.newBuilder().setMetricId(key).setLongValue(value));
+    }
+  }
+
   public void addLongMetrics(OperatorProfile.Builder builder) {
-    for (int i = 0; i < longMetrics.keys.length; i++) {
-      if (longMetrics.keys[i] != 0) {
-        builder.addMetric(MetricValue.newBuilder().setMetricId(longMetrics.keys[i]).setLongValue(longMetrics.values[i]));
-      }
+    if (longMetrics.size() > 0) {
+      longMetrics.forEach(new LongProc(builder));
+    }
+  }
+
+  private class DoubleProc implements IntDoubleProcedure {
+    private final OperatorProfile.Builder builder;
+
+    public DoubleProc(Builder builder) {
+      super();
+      this.builder = builder;
+    }
+
+    @Override
+    public void apply(int key, double value) {
+      builder.addMetric(MetricValue.newBuilder().setMetricId(key).setDoubleValue(value));
     }
   }
 
   public void addDoubleMetrics(OperatorProfile.Builder builder) {
-    for (int i = 0; i < longMetrics.keys.length; i++) {
-      if (doubleMetrics.keys[i] != 0) {
-        builder.addMetric(MetricValue.newBuilder().setMetricId(doubleMetrics.keys[i]).setDoubleValue(doubleMetrics.values[i]));
-      }
+    if (doubleMetrics.size() > 0) {
+      doubleMetrics.forEach(new DoubleProc(builder));
     }
   }
+
+  /**
+   * Set a stat to the specified long value. Creates the stat
+   * if the stat does not yet exist.
+   *
+   * @param metric the metric to update
+   * @param value the value to set
+   */
 
   public void addLongStat(MetricDef metric, long value){
     longMetrics.putOrAdd(metric.metricId(), value, value);
   }
 
+  @VisibleForTesting
+  public long getLongStat(MetricDef metric) {
+    return longMetrics.get(metric.metricId());
+  }
+
+  /**
+   * Add a double value to the existing value. Creates the stat
+   * (with an initial value of zero) if the stat does not yet
+   * exist.
+   *
+   * @param metric the metric to update
+   * @param value the value to add to the existing value
+   */
+
   public void addDoubleStat(MetricDef metric, double value){
     doubleMetrics.putOrAdd(metric.metricId(), value, value);
   }
 
+  @VisibleForTesting
+  public double getDoubleStat(MetricDef metric) {
+    return doubleMetrics.get(metric.metricId());
+  }
+
+  /**
+   * Add a long value to the existing value. Creates the stat
+   * (with an initial value of zero) if the stat does not yet
+   * exist.
+   *
+   * @param metric the metric to update
+   * @param value the value to add to the existing value
+   */
+
   public void setLongStat(MetricDef metric, long value){
     longMetrics.put(metric.metricId(), value);
   }
+
+  /**
+   * Set a stat to the specified double value. Creates the stat
+   * if the stat does not yet exist.
+   *
+   * @param metric the metric to update
+   * @param value the value to set
+   */
 
   public void setDoubleStat(MetricDef metric, double value){
     doubleMetrics.put(metric.metricId(), value);
@@ -263,5 +345,4 @@ public class OperatorStats {
   public long getProcessingNanos() {
     return processingNanos;
   }
-
 }

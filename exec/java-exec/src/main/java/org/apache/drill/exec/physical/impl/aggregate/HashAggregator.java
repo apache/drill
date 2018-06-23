@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,9 +24,8 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.record.RecordBatch;
@@ -36,30 +35,35 @@ import org.apache.drill.exec.record.VectorContainer;
 
 public interface HashAggregator {
 
-  public static TemplateClassDefinition<HashAggregator> TEMPLATE_DEFINITION =
+  TemplateClassDefinition<HashAggregator> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<HashAggregator>(HashAggregator.class, HashAggTemplate.class);
 
-  public static enum AggOutcome {
-    RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR
+  enum AggOutcome {
+    RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR, CALL_WORK_AGAIN
   }
 
-  public abstract void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context,
-      OperatorStats stats, BufferAllocator allocator, RecordBatch incoming, HashAggBatch outgoing,
-      LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds,
-      VectorContainer outContainer) throws SchemaChangeException, IOException, ClassTransformationException;
+  // For returning results from outputCurrentBatch
+  // OK - batch returned, NONE - end of data, RESTART - call again
+  enum AggIterOutcome { AGG_OK, AGG_NONE, AGG_RESTART }
 
-  public abstract IterOutcome getOutcome();
+  void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext, RecordBatch incoming, HashAggBatch outgoing,
+             LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException, ClassTransformationException;
 
-  public abstract int getOutputCount();
+  IterOutcome getOutcome();
 
-  public abstract AggOutcome doWork();
+  int getOutputCount();
 
-  public abstract void cleanup();
+  AggOutcome doWork();
 
-  public abstract boolean allFlushed();
+  void cleanup();
 
-  public abstract boolean buildComplete();
+  boolean allFlushed();
 
-  public abstract IterOutcome outputCurrentBatch();
+  boolean buildComplete();
 
+  AggIterOutcome outputCurrentBatch();
+
+  boolean earlyOutput();
+
+  RecordBatch getNewIncoming();
 }

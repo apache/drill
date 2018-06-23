@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +20,7 @@ package org.apache.drill.jdbc;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import net.hydromatic.avatica.ConnectionConfigImpl;
+import org.apache.calcite.avatica.ConnectionConfigImpl;
 
 
 // TODO(DRILL-3730):  Change public DrillConnectionConfig from class to
@@ -66,4 +66,11 @@ public class DrillConnectionConfig extends ConnectionConfigImpl {
     return TimeZone.getDefault();
   }
 
+  public boolean isServerPreparedStatementDisabled() {
+    return Boolean.valueOf(props.getProperty("server.preparedstatement.disabled"));
+  }
+
+  public boolean isServerMetadataDisabled() {
+    return Boolean.valueOf(props.getProperty("server.metadata.disabled"));
+  }
 }

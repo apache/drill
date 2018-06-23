@@ -17,18 +17,20 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.proto.UserBitShared;
 
-import org.joda.time.DateTime;
-
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * JDBC storage plugin tests against Derby.
  */
+@Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
 
   @Test
@@ -55,16 +57,15 @@ public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
                     "FLOAT_FIELD", "REAL_FIELD", "TIME_FIELD", "TIMESTAMP_FIELD", "DATE_FIELD", "CLOB_FIELD")
             .baselineValues(1, "first_name_1", "last_name_1", "1401 John F Kennedy Blvd",   "Philadelphia",     "PA",
                             19107, "{ a : 5, b : 6 }",            123456L,         1, 10.01, false, 1.0, 1.1, 111.00,
-                            new DateTime(1970, 1, 1, 13, 0, 1), new DateTime(2012, 2, 29, 13, 0, 1), new DateTime(2012, 2, 29, 0, 0, 0), "some clob data 1")
+                            DateUtility.parseLocalTime("13:00:01.0"), DateUtility.parseLocalDateTime("2012-02-29 13:00:01.0"), DateUtility.parseLocalDate("2012-02-29"), "some clob data 1")
             .baselineValues(2, "first_name_2", "last_name_2", "One Ferry Building",         "San Francisco",    "CA",
                             94111, "{ foo : \"abc\" }",            95949L,         2, 20.02, true, 2.0, 2.1, 222.00,
-                            new DateTime(1970, 1, 1, 23, 59, 59),  new DateTime(1999, 9, 9, 23, 59, 59), new DateTime(1999, 9, 9, 0, 0, 0), "some more clob data")
+                            DateUtility.parseLocalTime("23:59:59.0"),  DateUtility.parseLocalDateTime("1999-09-09 23:59:59.0"), DateUtility.parseLocalDate("1999-09-09"), "some more clob data")
             .baselineValues(3, "first_name_3", "last_name_3", "176 Bowery",                 "New York",         "NY",
                             10012, "{ z : [ 1, 2, 3 ] }",           45456L,        3, 30.04, true, 3.0, 3.1, 333.00,
-                            new DateTime(1970, 1, 1, 11, 34, 21),  new DateTime(2011, 10, 30, 11, 34, 21), new DateTime(2011, 10, 30, 0, 0, 0), "clobber")
+                            DateUtility.parseLocalTime("11:34:21.0"),  DateUtility.parseLocalDateTime("2011-10-30 11:34:21.0"), DateUtility.parseLocalDate("2011-10-30"), "clobber")
             .baselineValues(4, null, null, "2 15th St NW", "Washington", "DC", 20007, "{ z : { a : 1, b : 2, c : 3 } " +
-                    "}", -67L, 4, 40.04, false, 4.0, 4.1, 444.00, new DateTime(1970, 1, 1, 16, 0, 1), new DateTime
-                    (2015, 6, 1, 16, 0, 1),  new DateTime(2015, 6, 1, 0, 0, 0), "xxx")
+                    "}", -67L, 4, 40.04, false, 4.0, 4.1, 444.00, DateUtility.parseLocalTime("16:00:01.0"), DateUtility.parseLocalDateTime("2015-06-01 16:00:01.0"),  DateUtility.parseLocalDate("2015-06-01"), "xxx")
             .baselineValues(5, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                             null, null, null, null)
             .build().run();

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.impersonation.hive;
 
-import org.apache.drill.TestBuilder;
+import org.apache.calcite.schema.Schema.TableType;
+import org.apache.drill.test.TestBuilder;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
@@ -30,9 +31,11 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.shims.ShimLoader;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.drill.exec.store.hive.HiveTestDataGenerator.createFileWithPermissions;
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 
@@ -59,12 +62,19 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   protected static void prepHiveConfAndData() throws Exception {
     hiveConf = new HiveConf();
 
+    File scratchDir = createFileWithPermissions(dirTestWatcher.getRootDir(), "scratch_dir");
+    File localScratchDir = createFileWithPermissions(dirTestWatcher.getRootDir(), "local_scratch_dir");
+    File metaStoreDBDir = new File(dirTestWatcher.getRootDir(), "metastore_db");
+
     // Configure metastore persistence db location on local filesystem
-    final String dbUrl = String.format("jdbc:derby:;databaseName=%s;create=true",  getTempDir("metastore_db"));
+    final String dbUrl = String.format("jdbc:derby:;databaseName=%s;create=true",  metaStoreDBDir.getAbsolutePath());
     hiveConf.set(ConfVars.METASTORECONNECTURLKEY.varname, dbUrl);
 
-    hiveConf.set(ConfVars.SCRATCHDIR.varname, "file:///" + getTempDir("scratch_dir"));
-    hiveConf.set(ConfVars.LOCALSCRATCHDIR.varname, getTempDir("local_scratch_dir"));
+    hiveConf.set(ConfVars.SCRATCHDIR.varname, "file://" + scratchDir.getAbsolutePath());
+    hiveConf.set(ConfVars.LOCALSCRATCHDIR.varname, localScratchDir.getAbsolutePath());
+    hiveConf.set(ConfVars.METASTORE_SCHEMA_VERIFICATION.varname, "false");
+    hiveConf.set(ConfVars.METASTORE_AUTO_CREATE_ALL.varname, "true");
+    hiveConf.set(ConfVars.HIVE_CBO_ENABLED.varname, "false");
 
     // Set MiniDFS conf in HiveConf
     hiveConf.set(FS_DEFAULT_NAME_KEY, dfsConf.get(FS_DEFAULT_NAME_KEY));
@@ -118,6 +128,26 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     } else {
       for (String tbl : expectedTables) {
         testBuilder.baselineValues(dbQualified, tbl);
+      }
+    }
+
+    testBuilder.go();
+  }
+
+  protected void fromInfoSchemaHelper(final String pluginName, final String db, List<String> expectedTables, List<TableType> expectedTableTypes) throws Exception {
+    final String dbQualified = pluginName + "." + db;
+    final TestBuilder testBuilder = testBuilder()
+        .sqlQuery("SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE \n" +
+            "FROM INFORMATION_SCHEMA.`TABLES` \n" +
+            "WHERE TABLE_SCHEMA = '" + dbQualified + "'")
+        .unOrdered()
+        .baselineColumns("TABLE_SCHEMA", "TABLE_NAME", "TABLE_TYPE");
+
+    if (expectedTables.size() == 0) {
+      testBuilder.expectsEmptyResultSet();
+    } else {
+      for (int i = 0; i < expectedTables.size(); ++i) {
+        testBuilder.baselineValues(dbQualified, expectedTables.get(i), expectedTableTypes.get(i).toString());
       }
     }
 

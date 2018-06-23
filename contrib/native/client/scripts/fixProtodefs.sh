@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -36,21 +35,15 @@ main() {
     then
         echo "Creating Protobuf directory"
         mkdir -p ${TARGDIR}
-        cp -r ${SRCDIR}/* ${TARGDIR}
+    fi
+    cp -r ${SRCDIR}/* ${TARGDIR}
+
+    if [ -e ${TARGDIR}/${FNAME} ]
+    then
         fixFile ${FNAME}
     else
-        cp -r ${SRCDIR}/* ${TARGDIR}
-
-        if [ -e ${TARGDIR}/${FNAME} ]
-        then
-            if [ ${SRCDIR}/${FNAME} -nt ${TARGDIR}/${FNAME} ]
-            then
-                fixFile ${FNAME}
-            fi
-        else
-            echo "$FNAME not found"
-            exit 1
-        fi
+        echo "$FNAME not found"
+        exit 1
     fi
 }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,21 +18,28 @@
 package org.apache.drill;
 
 import static java.lang.String.format;
-import static org.apache.drill.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.listOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
-import org.junit.Ignore;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(SqlTest.class)
 public class TestSelectWithOption extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
   private File genCSVFile(String name, String... rows) throws IOException {
-    File file = new File(format("target/%s_%s.csv", this.getClass().getName(), name));
+    File file = new File(format("%s/%s.csv", dirTestWatcher.getRootDir(), name));
     try (FileWriter fw = new FileWriter(file)) {
       for (int i = 0; i < rows.length; i++) {
         fw.append(rows[i] + "\n");
@@ -43,7 +50,7 @@ public class TestSelectWithOption extends BaseTestQuery {
 
   private String genCSVTable(String name, String... rows) throws IOException {
     File f = genCSVFile(name, rows);
-    return format("dfs.`${WORKING_PATH}/%s`", f.getPath());
+    return format("dfs.`%s`", f.getName());
   }
 
   private void testWithResult(String query, Object... expectedResult) throws Exception {
@@ -78,19 +85,72 @@ public class TestSelectWithOption extends BaseTestQuery {
       );
   }
 
-  @Test @Ignore // It does not look like lineDelimiter is working
-  public void testTextLineDelimiter() throws Exception {
-    String tableName = genCSVTable("testTextLineDelimiter",
-        "\"b\"|\"0\"",
-        "\"b\"|\"1\"",
-        "\"b\"|\"2\"");
+  @Test
+  public void testTabFieldDelimiter() throws Exception {
+    String tableName = genCSVTable("testTabFieldDelimiter",
+        "1\ta",
+        "2\tb");
+    String fieldDelimiter = new String(new char[]{92, 116}); // represents \t
+    testWithResult(format("select columns from table(%s(type=>'TeXT', fieldDelimiter => '%s'))", tableName, fieldDelimiter),
+        listOf("1", "a"),
+        listOf("2", "b"));
+  }
+
+  @Test
+  public void testSingleTextLineDelimiter() throws Exception {
+    String tableName = genCSVTable("testSingleTextLineDelimiter",
+        "a|b|c");
 
     testWithResult(format("select columns from table(%s(type => 'TeXT', lineDelimiter => '|'))", tableName),
-        listOf("\"b\""),
-        listOf("\"0\"", "\"b\""),
-        listOf("\"1\"", "\"b\""),
-        listOf("\"2\"")
-      );
+        listOf("a"),
+        listOf("b"),
+        listOf("c"));
+  }
+
+  @Test
+  // '\n' is treated as standard delimiter
+  // if user has indicated custom line delimiter but input file contains '\n', split will occur on both
+  public void testCustomTextLineDelimiterAndNewLine() throws Exception {
+    String tableName = genCSVTable("testTextLineDelimiter",
+        "b|1",
+        "b|2");
+
+    testWithResult(format("select columns from table(%s(type => 'TeXT', lineDelimiter => '|'))", tableName),
+        listOf("b"),
+        listOf("1"),
+        listOf("b"),
+        listOf("2"));
+  }
+
+  @Test
+  public void testTextLineDelimiterWithCarriageReturn() throws Exception {
+    String tableName = genCSVTable("testTextLineDelimiterWithCarriageReturn",
+        "1, a\r",
+        "2, b\r");
+    String lineDelimiter = new String(new char[]{92, 114, 92, 110}); // represents \r\n
+    testWithResult(format("select columns from table(%s(type=>'TeXT', lineDelimiter => '%s'))", tableName, lineDelimiter),
+        listOf("1, a"),
+        listOf("2, b"));
+  }
+
+  @Test
+  public void testMultiByteLineDelimiter() throws Exception {
+    String tableName = genCSVTable("testMultiByteLineDelimiter",
+        "1abc2abc3abc");
+    testWithResult(format("select columns from table(%s(type=>'TeXT', lineDelimiter => 'abc'))", tableName),
+        listOf("1"),
+        listOf("2"),
+        listOf("3"));
+  }
+
+  @Test
+  public void testDataWithPartOfMultiByteLineDelimiter() throws Exception {
+    String tableName = genCSVTable("testDataWithPartOfMultiByteLineDelimiter",
+        "ab1abc2abc3abc");
+    testWithResult(format("select columns from table(%s(type=>'TeXT', lineDelimiter => 'abc'))", tableName),
+        listOf("ab1"),
+        listOf("2"),
+        listOf("3"));
   }
 
   @Test
@@ -190,9 +250,6 @@ public class TestSelectWithOption extends BaseTestQuery {
     String[] jsonQueries = {
         format("select columns from table(%s ('JSON'))", jsonTableName),
         format("select columns from table(%s(type => 'JSON'))", jsonTableName),
-//        format("select columns from %s ('JSON')", jsonTableName),
-//        format("select columns from %s (type => 'JSON')", jsonTableName),
-//        format("select columns from %s(type => 'JSON')", jsonTableName),
         // we can use named format plugin configurations too!
         format("select columns from table(%s(type => 'Named', name => 'json'))", jsonTableName),
     };
@@ -205,7 +262,7 @@ public class TestSelectWithOption extends BaseTestQuery {
   public void testUse() throws Exception {
     File f = genCSVFile("testUse",
         "{\"columns\": [\"f\",\"g\"]}");
-    String jsonTableName = format("`${WORKING_PATH}/%s`", f.getPath());
+    String jsonTableName = String.format("dfs.`%s`", f.getName());
     // the extension is actually csv
     test("use dfs");
     try {
@@ -220,6 +277,18 @@ public class TestSelectWithOption extends BaseTestQuery {
       testWithResult(format("select length(columns[0]) as columns from table(%s ('JSON'))", jsonTableName), 1L);
     } finally {
       test("use sys");
+    }
+  }
+
+  @Test(expected = UserRemoteException.class)
+  public void testAbsentTable() throws Exception {
+    String schema = "cp.default";
+    String tableName = "absent_table";
+    try {
+      test("select * from table(`%s`.`%s`(type=>'parquet'))", schema, tableName);
+    } catch (UserRemoteException e) {
+      assertThat(e.getMessage(), containsString(String.format("Unable to find table [%s] in schema [%s]", tableName, schema)));
+      throw e;
     }
   }
 }

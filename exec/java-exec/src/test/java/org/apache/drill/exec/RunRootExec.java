@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,13 @@
  */
 package org.apache.drill.exec;
 
-
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
@@ -41,6 +40,8 @@ import com.google.common.base.Stopwatch;
 import com.google.common.io.Files;
 
 public class RunRootExec {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RunRootExec.class);
+
   public static DrillConfig c = DrillConfig.create();
 
   public static void main(String args[]) throws Exception {
@@ -52,11 +53,11 @@ public class RunRootExec {
     PhysicalPlanReader reader = bitContext.getPlanReader();
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(new File(path), Charsets.UTF_8));
     FunctionImplementationRegistry registry = bitContext.getFunctionImplementationRegistry();
-    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), null, registry);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), null, registry);
     SimpleRootExec exec;
     for (int i = 0; i < iterations; i ++) {
       Stopwatch w = Stopwatch.createStarted();
-      System.out.println("STARTITER:" + i);
+      logger.info("STARTITER: {}", i);
       exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
       while (exec.next()) {
@@ -64,8 +65,8 @@ public class RunRootExec {
           v.clear();
         }
       }
-      System.out.println("ENDITER: " + i);
-      System.out.println("TIME: " + w.elapsed(TimeUnit.MILLISECONDS) + "ms");
+      logger.info("ENDITER: {}", i);
+      logger.info("TIME: {}ms", w.elapsed(TimeUnit.MILLISECONDS));
       exec.close();
     }
     context.close();

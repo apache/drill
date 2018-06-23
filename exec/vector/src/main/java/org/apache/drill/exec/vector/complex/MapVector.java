@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,6 +38,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.BaseValueVector;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
@@ -48,7 +49,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 
 public class MapVector extends AbstractMapVector {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapVector.class);
 
   public final static MajorType TYPE = Types.required(MinorType.MAP);
 
@@ -57,41 +57,41 @@ public class MapVector extends AbstractMapVector {
   private final Mutator mutator = new Mutator();
   private int valueCount;
 
-  public MapVector(String path, BufferAllocator allocator, CallBack callBack){
+  public MapVector(String path, BufferAllocator allocator, CallBack callBack) {
     this(MaterializedField.create(path, TYPE), allocator, callBack);
   }
 
-  public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
+  public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field, allocator, callBack);
   }
 
   @Override
-  public FieldReader getReader() {
-    //return new SingleMapReaderImpl(MapVector.this);
-    return reader;
-  }
+  public FieldReader getReader() { return reader; }
 
   transient private MapTransferPair ephPair;
   transient private MapSingleCopier ephPair2;
 
   public void copyFromSafe(int fromIndex, int thisIndex, MapVector from) {
-    if(ephPair == null || ephPair.from != from) {
+    if (ephPair == null || ephPair.from != from) {
       ephPair = (MapTransferPair) from.makeTransferPair(this);
     }
     ephPair.copyValueSafe(fromIndex, thisIndex);
   }
 
   public void copyFromSafe(int fromSubIndex, int thisIndex, RepeatedMapVector from) {
-    if(ephPair2 == null || ephPair2.from != from) {
+    if (ephPair2 == null || ephPair2.from != from) {
       ephPair2 = from.makeSingularCopier(this);
     }
     ephPair2.copySafe(fromSubIndex, thisIndex);
   }
 
   @Override
-  protected boolean supportsDirectRead() {
-    return true;
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (MapVector) from);
   }
+
+  @Override
+  protected boolean supportsDirectRead() { return true; }
 
   public Iterator<String> fieldNameIterator() {
     return getChildFieldNames().iterator();
@@ -99,7 +99,7 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void setInitialCapacity(int numRecords) {
-    for (final ValueVector v : (Iterable<ValueVector>) this) {
+    for (final ValueVector v : this) {
       v.setInitialCapacity(numRecords);
     }
   }
@@ -110,11 +110,20 @@ public class MapVector extends AbstractMapVector {
       return 0;
     }
     long buffer = 0;
-    for (final ValueVector v : (Iterable<ValueVector>)this) {
+    for (final ValueVector v : this) {
       buffer += v.getBufferSize();
     }
 
     return (int) buffer;
+  }
+
+  @Override
+  public int getAllocatedSize() {
+    int size = 0;
+    for (final ValueVector v : this) {
+      size += v.getAllocatedSize();
+    }
+    return size;
   }
 
   @Override
@@ -124,7 +133,7 @@ public class MapVector extends AbstractMapVector {
     }
 
     long bufferSize = 0;
-    for (final ValueVector v : (Iterable<ValueVector>) this) {
+    for (final ValueVector v : this) {
       bufferSize += v.getBufferSizeFor(valueCount);
     }
 
@@ -133,16 +142,12 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    int expectedSize = getBufferSize();
-    int actualSize   = super.getBufferSize();
-
-    Preconditions.checkArgument(expectedSize == actualSize);
     return super.getBuffers(clear);
   }
 
   @Override
   public TransferPair getTransferPair(BufferAllocator allocator) {
-    return new MapTransferPair(this, getField().getPath(), allocator);
+    return new MapTransferPair(this, getField().getName(), allocator);
   }
 
   @Override
@@ -161,7 +166,7 @@ public class MapVector extends AbstractMapVector {
     private final MapVector to;
 
     public MapTransferPair(MapVector from, String path, BufferAllocator allocator) {
-      this(from, new MapVector(MaterializedField.create(path, TYPE), allocator, from.callBack), false);
+      this(from, new MapVector(MaterializedField.create(path, TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
     public MapTransferPair(MapVector from, MapVector to) {
@@ -263,11 +268,11 @@ public class MapVector extends AbstractMapVector {
     for (final SerializedField child : fields) {
       final MaterializedField fieldDef = MaterializedField.create(child);
 
-      ValueVector vector = getChild(fieldDef.getLastName());
+      ValueVector vector = getChild(fieldDef.getName());
       if (vector == null) {
         // if we arrive here, we didn't have a matching vector.
         vector = BasicTypeHelper.getNewVector(fieldDef, allocator);
-        putChild(fieldDef.getLastName(), vector);
+        putChild(fieldDef.getName(), vector);
       }
       if (child.getValueCount() == 0) {
         vector.clear();
@@ -277,14 +282,17 @@ public class MapVector extends AbstractMapVector {
       bufOffset += child.getBufferLength();
     }
 
-    assert bufOffset == buf.capacity();
+    // We should have consumed all bytes written into the buffer
+    // during deserialization.
+
+    assert bufOffset == buf.writerIndex();
   }
 
   @Override
   public SerializedField getMetadata() {
-    SerializedField.Builder b = getField() //
-        .getAsBuilder() //
-        .setBufferLength(getBufferSize()) //
+    SerializedField.Builder b = getField()
+        .getAsBuilder()
+        .setBufferLength(getBufferSize())
         .setValueCount(valueCount);
 
 
@@ -338,6 +346,18 @@ public class MapVector extends AbstractMapVector {
     return getChildByOrdinal(id);
   }
 
+  /**
+   * Set the value count for the map without setting the counts for the contained
+   * vectors. Use this only when the values of the contained vectors are set
+   * elsewhere in the code.
+   *
+   * @param valueCount number of items in the map
+   */
+
+  public void setMapValueCount(int valueCount) {
+    this.valueCount = valueCount;
+  }
+
   public class Mutator extends BaseValueVector.BaseMutator {
 
     @Override
@@ -345,7 +365,7 @@ public class MapVector extends AbstractMapVector {
       for (final ValueVector v : getChildren()) {
         v.getMutator().setValueCount(valueCount);
       }
-      MapVector.this.valueCount = valueCount;
+      setMapValueCount(valueCount);
     }
 
     @Override
@@ -373,5 +393,19 @@ public class MapVector extends AbstractMapVector {
     valueCount = 0;
 
     super.close();
- }
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    super.exchange(other);
+    MapVector otherMap = (MapVector) other;
+    int temp = otherMap.valueCount;
+    otherMap.valueCount = valueCount;
+    valueCount = temp;
+  }
 }

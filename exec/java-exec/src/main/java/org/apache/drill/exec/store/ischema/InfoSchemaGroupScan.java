@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,11 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -42,17 +40,17 @@ import com.google.common.base.Preconditions;
 public class InfoSchemaGroupScan extends AbstractGroupScan{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaGroupScan.class);
 
-  private final SelectedTable table;
+  private final InfoSchemaTableType table;
   private final InfoSchemaFilter filter;
 
   private boolean isFilterPushedDown = false;
 
-  public InfoSchemaGroupScan(SelectedTable table) {
+  public InfoSchemaGroupScan(InfoSchemaTableType table) {
     this(table, null);
   }
 
   @JsonCreator
-  public InfoSchemaGroupScan(@JsonProperty("table") SelectedTable table,
+  public InfoSchemaGroupScan(@JsonProperty("table") InfoSchemaTableType table,
                              @JsonProperty("filter") InfoSchemaFilter filter) {
     super((String)null);
     this.table = table;
@@ -67,12 +65,12 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
   }
 
   @JsonProperty("table")
-  public SelectedTable getTable() {
+  public InfoSchemaTableType getTable() {
     return table;
   }
 
   @JsonProperty("filter")
-  public InfoSchemaFilter getFilter() {
+  public InfoSchemaFilter getSchemaFilter() {
     return filter;
   }
 

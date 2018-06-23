@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import io.netty.buffer.DrillBuf;
@@ -91,12 +91,8 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
       dataTypeLengthInBits = pageReader.pageData.getInt((int) pageReader.readyToReadPosInBytes);
     }
     // I think this also needs to happen if it is null for the random access
-    boolean success = setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageData,
+    return ! setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageData,
         (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
-    if ( ! success ) {
-      return true;
-    }
-    return false;
   }
 
   @Override
@@ -122,7 +118,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
   protected void readField(long recordsToRead) {
     // TODO - unlike most implementations of this method, the recordsReadInThisIteration field is not set here
     // should verify that this is not breaking anything
-    currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
+    currentValNull = variableWidthVector.getAccessor().isNull(valuesReadInCurrentPass);
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
     if (! currentValNull) {
       if (usingDictionary) {

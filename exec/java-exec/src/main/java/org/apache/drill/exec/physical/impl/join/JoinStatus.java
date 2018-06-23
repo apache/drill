@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,8 +29,6 @@ import org.apache.calcite.rel.core.JoinRelType;
 public final class JoinStatus {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinStatus.class);
 
-  private static final int OUTPUT_BATCH_SIZE = 32*1024;
-
   public final RecordIterator left;
   public final RecordIterator right;
   private boolean iteratorInitialized;
@@ -43,6 +41,8 @@ public final class JoinStatus {
 
   public boolean ok = true;
   public boolean hasMoreData = false;
+
+  private int targetOutputRowCount;
 
   public JoinStatus(RecordIterator left, RecordIterator right, MergeJoinBatch output) {
     this.left = left;
@@ -101,8 +101,12 @@ public final class JoinStatus {
   }
 
   public final boolean isOutgoingBatchFull() {
-    Preconditions.checkArgument(outputPosition <= OUTPUT_BATCH_SIZE);
-    return outputPosition == OUTPUT_BATCH_SIZE;
+    Preconditions.checkArgument(outputPosition <= targetOutputRowCount);
+    return outputPosition >= targetOutputRowCount;
+  }
+
+  public final void setTargetOutputRowCount(int outputRowCount) {
+    this.targetOutputRowCount = outputRowCount;
   }
 
   public final void incOutputPos() {
@@ -138,7 +142,8 @@ public final class JoinStatus {
    *  4. JoinOutcome.SCHEMA_CHANGED : one of the side has change in schema.
    */
   public JoinOutcome getOutcome() {
-    if (!ok) {
+    // on STOP, OUT_OF_MEMORY return FAILURE.
+    if (!ok || eitherMatches(IterOutcome.STOP)) {
       return JoinOutcome.FAILURE;
     }
     if (hasMoreData) {
@@ -162,7 +167,7 @@ public final class JoinStatus {
       return JoinOutcome.WAITING;
     }
     ok = false;
-    // on STOP, OUT_OF_MEMORY return FAILURE.
+
     return JoinOutcome.FAILURE;
   }
 

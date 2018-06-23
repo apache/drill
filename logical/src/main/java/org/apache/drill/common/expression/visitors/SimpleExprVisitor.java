@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,6 +36,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 
 public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, RuntimeException>{
 
@@ -121,6 +122,11 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
   }
 
   @Override
+  public T visitVarDecimalConstant(VarDecimalExpression decExpr, Void value) throws RuntimeException {
+    return visitVarDecimalConstant(decExpr);
+  }
+
+  @Override
   public T visitDoubleConstant(DoubleExpression dExpr, Void value) throws RuntimeException {
     return visitDoubleConstant(dExpr);
   }
@@ -152,6 +158,7 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
   public abstract T visitDecimal18Constant(Decimal18Expression intExpr);
   public abstract T visitDecimal28Constant(Decimal28Expression intExpr);
   public abstract T visitDecimal38Constant(Decimal38Expression intExpr);
+  public abstract T visitVarDecimalConstant(VarDecimalExpression intExpr);
   public abstract T visitDoubleConstant(DoubleExpression dExpr);
   public abstract T visitBooleanConstant(BooleanExpression e);
   public abstract T visitQuotedStringConstant(QuotedString e);

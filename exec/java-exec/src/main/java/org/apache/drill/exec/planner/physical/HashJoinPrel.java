@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,12 +21,12 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
-import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -52,7 +52,7 @@ public class HashJoinPrel  extends JoinPrel {
       JoinRelType joinType, boolean swapped) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
     this.swapped = swapped;
-    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys);
+    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
   }
 
   @Override
@@ -65,14 +65,14 @@ public class HashJoinPrel  extends JoinPrel {
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     if (joincategory == JoinCategory.CARTESIAN || joincategory == JoinCategory.INEQUALITY) {
-      return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
+      return planner.getCostFactory().makeInfiniteCost();
     }
-    return computeHashJoinCost(planner);
+    return computeHashJoinCost(planner, mq);
   }
 
   @Override

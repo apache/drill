@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,6 +46,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    *  optimizer can leverage in <i>physical</i> space. Otherwise, it should return an empty set.
    * @return an empty set or a set of plugin specific physical optimizer rules.
    */
+  @Deprecated
   public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
 
   /**
@@ -53,7 +54,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    *
    * @param userName User whom to impersonate when when reading the contents as part of Scan.
    * @param selection The configured storage engine specific selection.
-   * @return
+   * @return The physical scan operator for the particular GroupScan (read) node.
    * @throws IOException
    */
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException;
@@ -64,13 +65,13 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @param userName User whom to impersonate when when reading the contents as part of Scan.
    * @param selection The configured storage engine specific selection.
    * @param columns (optional) The list of column names to scan from the data source.
-   * @return
+   * @return The physical scan operator for the particular GroupScan (read) node.
    * @throws IOException
   */
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException;
 
-  /** Method returns a jackson serializable object that extends a StoragePluginConfig
+  /** Method returns a Jackson serializable object that extends a StoragePluginConfig
   * @return an extension of StoragePluginConfig
   */
   public StoragePluginConfig getConfig();
@@ -79,5 +80,4 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * Initialize the storage plugin. The storage plugin will not be used until this method is called.
    */
   public void start() throws IOException;
-
 }

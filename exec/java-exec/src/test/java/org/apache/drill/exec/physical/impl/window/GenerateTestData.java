@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,17 +17,21 @@
  */
 package org.apache.drill.exec.physical.impl.window;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class GenerateTestData {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GenerateTestData.class);
+
   private static final int BATCH_SIZE = 20;
 
   private static class Builder {
@@ -268,7 +272,7 @@ public class GenerateTestData {
     }
   }
 
-  private static void writeData(final String path, final Partition[] partitions, final boolean addLineNo)
+  private static void writeData(final Path path, final Partition[] partitions, final boolean addLineNo)
       throws FileNotFoundException {
 
     // total number of rows
@@ -283,7 +287,7 @@ public class GenerateTestData {
 
     // data file(s)
     int fileId = 0;
-    PrintStream dataStream = new PrintStream(path + "/" + fileId + ".data.json");
+    PrintStream dataStream = new PrintStream(path.resolve(fileId + ".data.json").toFile());
 
     int emp_idx = 0;
     int lineNo = 0;
@@ -304,7 +308,6 @@ public class GenerateTestData {
       }
       emp_idx++;
       if ((emp_idx % BATCH_SIZE)==0 && emp_idx < total) {
-        System.out.printf("total: %d, emp_idx: %d, fileID: %d%n", total, emp_idx, fileId);
         dataStream.close();
         fileId++;
         dataStream = new PrintStream(path + "/" + fileId + ".data.json");
@@ -316,11 +319,11 @@ public class GenerateTestData {
     dataStream.close();
   }
 
-  private static void writeResults(final String path, final String prefix, final Partition[] partitions) throws FileNotFoundException {
+  private static void writeResults(final Path path, final String prefix, final Partition[] partitions) throws FileNotFoundException {
     // expected results for query without order by clause
-    final PrintStream resultStream = new PrintStream(path + prefix + ".tsv");
+    final PrintStream resultStream = new PrintStream(path.toString() + prefix + ".tsv");
     // expected results for query with order by clause
-    final PrintStream resultOrderStream = new PrintStream(path + prefix + ".oby.tsv");
+    final PrintStream resultOrderStream = new PrintStream(path.toString() + prefix + ".oby.tsv");
 
     int idx = 0;
     for (final Partition partition : partitions) {
@@ -354,19 +357,19 @@ public class GenerateTestData {
 
   private static void generateData(final String tableName, final Partition[] pby_data, final Partition[] nopby_data,
       final boolean addLineNo) throws FileNotFoundException {
-    final String WORKING_PATH = TestTools.getWorkingPath();
-    final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
-    final String path = TEST_RES_PATH+"/window/" + tableName;
+    final Path path = TestTools.WORKING_PATH
+      .resolve(TestTools.TEST_RESOURCES_REL)
+      .resolve(Paths.get("window", tableName));
 
-    final File pathFolder = new File(path);
+    final File pathFolder = path.toFile();
+
     if (!pathFolder.exists()) {
       if (!pathFolder.mkdirs()) {
-        System.err.printf("Couldn't create folder %s, exiting%n", path);
+        logger.error("Couldn't create folder {}, exiting", path);
       }
     }
 
     writeData(path, pby_data, addLineNo);
-
     writeResults(path, "", nopby_data);
     writeResults(path, ".pby", pby_data);
   }

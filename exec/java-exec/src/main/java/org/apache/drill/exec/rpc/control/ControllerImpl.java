@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,39 +36,37 @@ import com.google.protobuf.Parser;
  * Manages communication tunnels between nodes.
  */
 public class ControllerImpl implements Controller {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControllerImpl.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControllerImpl.class);
 
   private volatile ControlServer server;
-  private final ControlMessageHandler handler;
-  private final BootStrapContext context;
   private final ConnectionManagerRegistry connectionRegistry;
-  private final boolean allowPortHunting;
   private final CustomHandlerRegistry handlerRegistry;
+  private final ControlConnectionConfig config;
 
-  public ControllerImpl(BootStrapContext context, ControlMessageHandler handler, BufferAllocator allocator,
-      boolean allowPortHunting) {
-    super();
-    this.handler = handler;
-    this.context = context;
-    this.connectionRegistry = new ConnectionManagerRegistry(allocator, handler, context);
-    this.allowPortHunting = allowPortHunting;
+  public ControllerImpl(BootStrapContext context, BufferAllocator allocator, ControlMessageHandler handler)
+      throws DrillbitStartupException {
+    config = new ControlConnectionConfig(allocator, context, handler);
+    this.connectionRegistry = new ConnectionManagerRegistry(config);
     this.handlerRegistry = handler.getHandlerRegistry();
+
+    // Initialize the singleton instance of ControlRpcMetrics.
+    ((ControlRpcMetrics)ControlRpcMetrics.getInstance()).initialize(config.isEncryptionEnabled(), allocator);
   }
 
   @Override
-  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws DrillbitStartupException {
-    server = new ControlServer(handler, context, connectionRegistry);
-    int port = context.getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
+  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint, final boolean allowPortHunting) {
+    server = new ControlServer(config, connectionRegistry);
+    int port = config.getBootstrapContext().getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
     port = server.bind(port, allowPortHunting);
     DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setControlPort(port).build();
-    connectionRegistry.setEndpoint(completeEndpoint);
+    connectionRegistry.setLocalEndpoint(completeEndpoint);
     handlerRegistry.setEndpoint(completeEndpoint);
     return completeEndpoint;
   }
 
   @Override
   public ControlTunnel getTunnel(DrillbitEndpoint endpoint) {
-    return new ControlTunnel(endpoint, connectionRegistry.getConnectionManager(endpoint));
+    return new ControlTunnel(connectionRegistry.getConnectionManager(endpoint));
   }
 
 
@@ -92,6 +90,7 @@ public class ControllerImpl implements Controller {
   }
 
 
+  @Override
   public void close() throws Exception {
     List<AutoCloseable> closeables = Lists.newArrayList();
     closeables.add(server);

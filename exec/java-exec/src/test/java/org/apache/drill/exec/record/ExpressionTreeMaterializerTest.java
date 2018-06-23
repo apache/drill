@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,9 +20,10 @@ package org.apache.drill.exec.record;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -46,24 +47,22 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
+import org.junit.experimental.categories.Category;
 
+@Category(VectorTest.class)
 public class ExpressionTreeMaterializerTest extends ExecTest {
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTreeMaterializerTest.class);
-
-  final MajorType boolConstant = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.BIT).build();
   final MajorType bigIntType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.BIGINT).build();
-  final MajorType intType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.INT).build();
 
   DrillConfig c = DrillConfig.create();
   FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
 
-  private MaterializedField getField(int fieldId, String name, MajorType type) {
+  private MaterializedField getField(String name, MajorType type) {
     return MaterializedField.create(name, type);
   }
 
   @Test
-  public void testMaterializingConstantTree(@Injectable RecordBatch batch) throws SchemaChangeException {
+  public void testMaterializingConstantTree() throws SchemaChangeException {
+    final RecordBatch batch = mock(RecordBatch.class);
 
     ErrorCollector ec = new ErrorCollectorImpl();
     LogicalExpression expr = ExpressionTreeMaterializer.materialize(new ValueExpressions.LongExpression(1L,
@@ -74,17 +73,14 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
   }
 
   @Test
-  public void testMaterializingLateboundField(final @Injectable RecordBatch batch) throws SchemaChangeException {
-    final SchemaBuilder builder = BatchSchema.newBuilder();
-    builder.addField(getField(2, "test", bigIntType));
-    final BatchSchema schema = builder.build();
+  public void testMaterializingLateboundField() throws SchemaChangeException {
+    final RecordBatch batch = mock(RecordBatch.class);
+    when(batch.getValueVectorId(new SchemaPath("test", ExpressionPosition.UNKNOWN)))
+      .thenReturn(new TypedFieldId(Types.required(MinorType.BIGINT), -5));
 
-    new NonStrictExpectations() {
-      {
-        batch.getValueVectorId(new SchemaPath("test", ExpressionPosition.UNKNOWN));
-        result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
-      }
-    };
+    final SchemaBuilder builder = BatchSchema.newBuilder();
+    builder.addField(getField("test", bigIntType));
+    final BatchSchema schema = builder.build();
 
     ErrorCollector ec = new ErrorCollectorImpl();
     LogicalExpression expr = ExpressionTreeMaterializer.materialize(new FieldReference("test",
@@ -94,18 +90,13 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
   }
 
   @Test
-  public void testMaterializingLateboundTree(final @Injectable RecordBatch batch) throws SchemaChangeException {
-    new NonStrictExpectations() {
-      {
-        batch.getValueVectorId(SchemaPath.getSimplePath("test"));
-        result = new TypedFieldId(Types.required(MinorType.BIT), -4);
-        batch.getValueVectorId(SchemaPath.getSimplePath("test1"));
-        result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
-      }
-    };
+  public void testMaterializingLateboundTree() throws SchemaChangeException {
+    final RecordBatch batch = mock(RecordBatch.class);
+
+    when(batch.getValueVectorId(SchemaPath.getSimplePath("test"))).thenReturn(new TypedFieldId(Types.required(MinorType.BIT), -4));
+    when(batch.getValueVectorId(SchemaPath.getSimplePath("test1"))).thenReturn(new TypedFieldId(Types.required(MinorType.BIGINT), -5));
 
     ErrorCollector ec = new ErrorCollectorImpl();
-
 
     LogicalExpression elseExpression = new IfExpression.Builder().setElse(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN))
         .setIfCondition(new IfExpression.IfCondition(new ValueExpressions.BooleanExpression("true", ExpressionPosition.UNKNOWN),
@@ -119,21 +110,20 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
     LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(expr, batch, ec, registry);
     assertTrue(newExpr instanceof IfExpression);
     IfExpression newIfExpr = (IfExpression) newExpr;
-    //assertEquals(1, newIfExpr.conditions.size());
     IfExpression.IfCondition ifCondition = newIfExpr.ifCondition;
     assertTrue(newIfExpr.elseExpression instanceof IfExpression);
-    //assertEquals(1, newIfExpr.conditions.size());
-    //ifCondition = newIfExpr.conditions.get(0);
     assertEquals(bigIntType, ifCondition.expression.getMajorType());
     assertEquals(true, ((ValueExpressions.BooleanExpression) ((IfExpression)(newIfExpr.elseExpression)).ifCondition.condition).value);
-    if (ec.hasErrors()) {
-      System.out.println(ec.toErrorString());
-    }
     assertFalse(ec.hasErrors());
   }
 
   @Test
-  public void testMaterializingLateboundTreeValidated(final @Injectable RecordBatch batch) throws SchemaChangeException {
+  public void testMaterializingLateboundTreeValidated() throws SchemaChangeException {
+    final RecordBatch batch = mock(RecordBatch.class);
+
+    when(batch.getValueVectorId(new SchemaPath("test", ExpressionPosition.UNKNOWN)))
+      .thenReturn(new TypedFieldId(Types.required(MinorType.BIGINT), -5));
+
     ErrorCollector ec = new ErrorCollector() {
       int errorCount = 0;
 
@@ -189,21 +179,11 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
       }
     };
 
-    new NonStrictExpectations() {
-      {
-        batch.getValueVectorId(new SchemaPath("test", ExpressionPosition.UNKNOWN));
-        result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
-      }
-    };
-
-
     LogicalExpression functionCallExpr = new FunctionCall("testFunc",
       ImmutableList.of((LogicalExpression) new FieldReference("test", ExpressionPosition.UNKNOWN) ),
       ExpressionPosition.UNKNOWN);
     LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(functionCallExpr, batch, ec, registry);
     assertTrue(newExpr instanceof TypedNullConstant);
     assertEquals(1, ec.getErrorCount());
-    System.out.println(ec.toErrorString());
   }
-
 }

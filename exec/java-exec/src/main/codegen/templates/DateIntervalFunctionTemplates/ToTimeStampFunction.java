@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 <@pp.dropOutputFile />
@@ -37,40 +36,31 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
-// This class is generated using freemarker template ToTimeStampFunction.java
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
-@FunctionTemplate(name = "to_timestamp" , scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "to_timestamp",
+                  scope = FunctionTemplate.FunctionScope.SIMPLE,
+                  nulls = NullHandling.NULL_IF_NULL)
 public class G${numerics}ToTimeStamp implements DrillSimpleFunc {
 
+  @Param  ${numerics}Holder left;
+  @Output TimeStampHolder out;
 
-    @Param  ${numerics}Holder left;
-    <#if numerics.startsWith("Decimal")>
-    @Workspace java.math.BigInteger millisConstant;
+  public void setup() {
+  }
+
+  public void eval() {
+    long inputMillis = 0;
+
+    <#if (numerics == "VarDecimal")>
+    java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer, left.start, left.end - left.start, left.scale);
+    inputMillis = input.multiply(new java.math.BigDecimal(1000)).longValue();
+    <#else>
+    inputMillis = (long) (left.value * 1000L);
     </#if>
-    @Output TimeStampHolder out;
-
-    public void setup() {
-      <#if numerics.startsWith("Decimal")>
-      millisConstant = java.math.BigInteger.valueOf(1000);
-      </#if>
-    }
-
-    public void eval() {
-        long inputMillis = 0;
-
-        <#if (numerics.startsWith("Decimal"))>
-        <#if (numerics == "Decimal9") || (numerics == "Decimal18")>
-        java.math.BigInteger value = java.math.BigInteger.valueOf(left.value);
-        value = value.multiply(millisConstant);
-        inputMillis = (new java.math.BigDecimal(value, left.scale)).longValue();
-        <#elseif (numerics == "Decimal28Sparse") || (numerics == "Decimal38Sparse")>
-        java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
-        inputMillis = input.multiply(new java.math.BigDecimal(1000)).longValue();
-        </#if>
-        <#else>
-        inputMillis = (long) (left.value * 1000l);
-        </#if>
-        out.value = new org.joda.time.DateTime(inputMillis).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
-    }
+    out.value = new org.joda.time.DateTime(inputMillis).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
+  }
 }
 </#list>

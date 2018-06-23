@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,36 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.mergereceiver;
 
-import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
-
 import org.apache.drill.exec.compile.TemplateClassDefinition;
-import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 
 public interface MergingReceiverGeneratorBase {
+  TemplateClassDefinition<MergingReceiverGeneratorBase> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(MergingReceiverGeneratorBase.class, MergingReceiverTemplate.class);
 
-  public abstract void doSetup(FragmentContext context,
-                               VectorAccessible incoming,
-                               VectorAccessible outgoing) throws SchemaChangeException;
-
-  public abstract int doEval(int leftIndex,
-                                int rightIndex);
-
-  public abstract void doCopy(int inIndex, int outIndex);
-
-  public static TemplateClassDefinition<MergingReceiverGeneratorBase> TEMPLATE_DEFINITION =
-      new TemplateClassDefinition<>(MergingReceiverGeneratorBase.class, MergingReceiverTemplate.class);
-
-  public final MappingSet compareMapping =
-    new MappingSet("leftIndex", "rightIndex",
-      GM("doSetup", "doCompare", null, null),
-      GM("doSetup", "doCompare", null, null));
-
-  public final MappingSet copyMapping =
-    new MappingSet("inIndex", "outIndex",
-      GM("doSetup", "doCopy", null, null),
-      GM("doSetup", "doCopy", null, null));
-
+  void doSetup(FragmentContext context, VectorAccessible incoming, VectorAccessible outgoing) throws SchemaChangeException;
+  int doEval(int leftIndex, int rightIndex) throws SchemaChangeException;
+  void doCopy(int inIndex, int outIndex) throws SchemaChangeException;
 }

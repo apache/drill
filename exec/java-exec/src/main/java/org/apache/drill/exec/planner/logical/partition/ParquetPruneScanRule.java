@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,10 +19,8 @@ package org.apache.drill.exec.planner.logical.partition;
 
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
-import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.ParquetPartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionDescriptor;
@@ -32,11 +30,11 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.drill.exec.store.parquet.ParquetGroupScan;
+import org.apache.drill.exec.store.parquet.AbstractParquetGroupScan;
 
 public class ParquetPruneScanRule {
 
-  public static final RelOptRule getFilterOnProjectParquet(OptimizerRulesContext optimizerRulesContext) {
+  public static RelOptRule getFilterOnProjectParquet(OptimizerRulesContext optimizerRulesContext) {
     return new PruneScanRule(
         RelOptHelper.some(DrillFilterRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))),
         "PruneScanRule:Filter_On_Project_Parquet",
@@ -53,9 +51,9 @@ public class ParquetPruneScanRule {
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for parquet based partition pruning
         if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
-          return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+          return groupScan instanceof AbstractParquetGroupScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
         } else {
-          return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown();
+          return groupScan instanceof AbstractParquetGroupScan && groupScan.supportsPartitionFilterPushdown();
         }
       }
 
@@ -69,7 +67,7 @@ public class ParquetPruneScanRule {
     };
   }
 
-  public static final RelOptRule getFilterOnScanParquet(OptimizerRulesContext optimizerRulesContext) {
+  public static RelOptRule getFilterOnScanParquet(OptimizerRulesContext optimizerRulesContext) {
     return new PruneScanRule(
         RelOptHelper.some(DrillFilterRel.class, RelOptHelper.any(DrillScanRel.class)),
         "PruneScanRule:Filter_On_Scan_Parquet", optimizerRulesContext) {
@@ -85,9 +83,9 @@ public class ParquetPruneScanRule {
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for parquet based partition pruning
         if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
-          return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+          return groupScan instanceof AbstractParquetGroupScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
         } else {
-          return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown();
+          return groupScan instanceof AbstractParquetGroupScan && groupScan.supportsPartitionFilterPushdown();
         }
       }
 

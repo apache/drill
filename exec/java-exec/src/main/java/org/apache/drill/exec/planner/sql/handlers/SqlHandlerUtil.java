@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,31 +22,24 @@ import com.google.common.collect.Sets;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlWriter;
-import org.apache.calcite.sql.TypedSqlNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
-import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.planner.StarColumnHelper;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
-import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.types.DrillFixedRelDataTypeImpl;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.store.AbstractSchema;
 
 import org.apache.calcite.tools.ValidationException;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.drill.exec.store.ischema.Records;
 
+import java.io.IOException;
 import java.util.AbstractList;
 import java.util.HashSet;
 import java.util.List;
@@ -93,9 +86,9 @@ public class SqlHandlerUtil {
             .build(logger);
       }
 
-      // CTAS's query field list shouldn't have "*" when table's field list is specified.
+      // CTAS's query field list shouldn't have "**" when table's field list is specified.
       for (String field : validatedRowtype.getFieldNames()) {
-        if (field.equals("*")) {
+        if (SchemaPath.DYNAMIC_STAR.equals(field)) {
           final String tblType = isNewTableView ? "view" : "table";
           throw UserException.validationError()
               .message("%s's query field list has a '*', which is invalid when %s's field list is specified.",
@@ -163,7 +156,7 @@ public class SqlHandlerUtil {
             .message("Partition column %s is not in the SELECT list of CTAS!", col)
             .build(logger);
       } else {
-        if (field.getName().startsWith(StarColumnHelper.STAR_COLUMN)) {
+        if (SchemaPath.DYNAMIC_STAR.equals(field.getName())) {
           colRefStarNames.add(col);
 
           final List<RexNode> operands = Lists.newArrayList();
@@ -197,10 +190,12 @@ public class SqlHandlerUtil {
 
       final List<RexNode> refs =
           new AbstractList<RexNode>() {
+            @Override
             public int size() {
               return originalFieldSize + colRefStarExprs.size();
             }
 
+            @Override
             public RexNode get(int index) {
               if (index < originalFieldSize) {
                 return RexInputRef.of(index, inputRowType.getFieldList());
@@ -210,7 +205,11 @@ public class SqlHandlerUtil {
             }
           };
 
-      return RelOptUtil.createProject(input, refs, names, false);
+      return DrillRelFactories.LOGICAL_BUILDER
+          .create(input.getCluster(), null)
+          .push(input)
+          .projectNamed(refs, names, true)
+          .build();
     }
   }
 
@@ -233,6 +232,44 @@ public class SqlHandlerUtil {
       fieldList.get(i).unparse(writer, leftPrec, rightPrec);
     }
     writer.keyword(")");
+  }
+
+  /**
+   * Drops table from schema.
+   * If drop has failed makes concurrency check: checks if table still exists.
+   * If table exists, throws {@link org.apache.drill.common.exceptions.UserException} since drop was unsuccessful,
+   * otherwise assumes that other user had dropped the view and exists without error.
+   *
+   * @param drillSchema drill schema
+   * @param tableName table name
+   */
+  public static void dropTableFromSchema(AbstractSchema drillSchema, String tableName) {
+    try {
+      drillSchema.dropTable(tableName);
+    } catch (Exception e) {
+      if (SqlHandlerUtil.getTableFromSchema(drillSchema, tableName) != null) {
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * Drops view from schema.
+   * If drop has failed makes concurrency check: checks if view still exists.
+   * If view exists, throws {@link org.apache.drill.common.exceptions.UserException} since drop was unsuccessful,
+   * otherwise assumes that other user had dropped the view and exists without error.
+   *
+   * @param drillSchema drill schema
+   * @param viewName view name
+   */
+  public static void dropViewFromSchema(AbstractSchema drillSchema, String viewName) throws IOException {
+    try {
+      drillSchema.dropView(viewName);
+    } catch (Exception e) {
+      if (SqlHandlerUtil.getTableFromSchema(drillSchema, viewName) != null) {
+        throw e;
+      }
+    }
   }
 
 }

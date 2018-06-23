@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.apache.drill.exec.vector.UntypedNullHolder;
+import org.apache.drill.exec.vector.UntypedNullVector;
 
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/BasicTypeHelper.java" />
@@ -31,16 +33,14 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.util.CallBack;
-
+import org.apache.drill.common.types.Types;
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 public class BasicTypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicTypeHelper.class);
 
   private static final int WIDTH_ESTIMATE = 50;
-
-  // Default length when casting to varchar : 65536 = 2^16
-  // This only defines an absolute maximum for values, setting
-  // a high value like this will not inflate the size for small values
-  public static final int VARCHAR_DEFAULT_CAST_LEN = 65536;
 
   protected static String buildErrorMessage(final String operation, final MinorType type, final DataMode mode) {
     return String.format("Unable to %s for minor type [%s] and mode [%s]", operation, type, mode);
@@ -60,9 +60,9 @@ public class BasicTypeHelper {
                                minor.class?substring(0, 3) == "MSG"> + WIDTH_ESTIMATE</#if>;
   </#list>
 </#list>
-      case FIXEDCHAR: return major.getWidth();
-      case FIXED16CHAR: return major.getWidth();
-      case FIXEDBINARY: return major.getWidth();
+      case FIXEDCHAR: return major.getPrecision();
+      case FIXED16CHAR: return major.getPrecision();
+      case FIXEDBINARY: return major.getPrecision();
     }
     throw new UnsupportedOperationException(buildErrorMessage("get size", major));
   }
@@ -73,7 +73,7 @@ public class BasicTypeHelper {
   }
   
   
-  public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
+  public static Class<? extends ValueVector> getValueVectorClass(MinorType type, DataMode mode){
     switch (type) {
     case UNION:
       return UnionVector.class;
@@ -110,6 +110,8 @@ public class BasicTypeHelper {
 </#list>
     case GENERIC_OBJECT      :
       return ObjectVector.class  ;
+    case NULL:
+      return UntypedNullVector.class;
     default:
       break;
     }
@@ -273,6 +275,8 @@ public class BasicTypeHelper {
 </#list>
     case GENERIC_OBJECT:
       return new ObjectVector(field, allocator)        ;
+    case NULL:
+      return new UntypedNullVector(field, allocator);
     default:
       break;
     }
@@ -350,6 +354,8 @@ public class BasicTypeHelper {
     case GENERIC_OBJECT:
       ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
       return;
+    case NULL:
+      ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
     default:
       throw new UnsupportedOperationException(buildErrorMessage("set value", type));
     }
@@ -378,7 +384,9 @@ public class BasicTypeHelper {
       </#list>
       case GENERIC_OBJECT:
         ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
-      default:
+    case NULL:
+      ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
+    default:
         throw new UnsupportedOperationException(buildErrorMessage("set value safe", type));
     }
   }
@@ -387,7 +395,9 @@ public class BasicTypeHelper {
     MajorType type1 = v1.getField().getType();
     MajorType type2 = v2.getField().getType();
 
-    if (type1.getMinorType() != type2.getMinorType()) {
+    if (type1.getMinorType() != type2.getMinorType()
+        || type1.getScale() != type1.getScale()
+        || type1.getPrecision() != type1.getPrecision()) {
       return false;
     }
 
@@ -430,6 +440,8 @@ public class BasicTypeHelper {
       </#list>
       case GENERIC_OBJECT:
         return new ObjectHolder();
+    case NULL:
+        return new UntypedNullHolder();
       default:
         throw new UnsupportedOperationException(buildErrorMessage("create value holder", type));
     }
@@ -453,6 +465,8 @@ public class BasicTypeHelper {
       }
       </#list>
       </#list>
+    case NULL:
+      return true;
       default:
         throw new UnsupportedOperationException(buildErrorMessage("check is null", type));
     }
@@ -527,16 +541,53 @@ public class BasicTypeHelper {
     }
     <#list vv.types as type>
     <#list type.minor as minor>
+    <#if minor.class.contains("Decimal")>
+      else if (holder instanceof ${minor.class}Holder) {
+        return  getType((${minor.class}Holder) holder);
+      } else if (holder instanceof Nullable${minor.class}Holder) {
+        return  getType((Nullable${minor.class}Holder) holder);
+      }
+    <#else>
       else if (holder instanceof ${minor.class}Holder) {
         return ((${minor.class}Holder) holder).TYPE;
       } else if (holder instanceof Nullable${minor.class}Holder) {
       return ((Nullable${minor.class}Holder) holder).TYPE;
       }
+    </#if>
     </#list>
     </#list>
-
+    else if (holder instanceof UntypedNullHolder) {
+      return UntypedNullHolder.TYPE;
+    }
     throw new UnsupportedOperationException("ValueHolder is not supported for 'getValueHolderType' method.");
 
   }
+
+  <#list vv.types as type>
+  <#list type.minor as minor>
+  <#if minor.class.contains("Decimal")>
+  <#list ["Nullable", "", "Repeated"] as dataMode>
+  public static MajorType getType(${dataMode}${minor.class}Holder holder) {
+    return MajorType.newBuilder()
+        .setMinorType(MinorType.${minor.class?upper_case})
+      <#if dataMode == "Nullable">
+        .setMode(DataMode.OPTIONAL)
+        .setScale(holder.scale)
+        .setPrecision(holder.precision)
+      <#elseif dataMode == "Repeated">
+        .setMode(DataMode.REPEATED)
+        .setScale(holder.vector.getField().getScale())
+        .setPrecision(holder.vector.getField().getPrecision())
+      <#else>
+        .setMode(DataMode.REQUIRED)
+        .setScale(holder.scale)
+        .setPrecision(holder.precision)
+      </#if>
+        .build();
+  }
+  </#list>
+  </#if>
+  </#list>
+  </#list>
 
 }

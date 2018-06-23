@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import org.apache.drill.exec.store.AbstractRecordWriter;
 
 import java.lang.Override;
@@ -64,7 +63,7 @@ public abstract class StringOutputRecordWriter extends AbstractRecordWriter {
     BatchSchema schema = batch.getSchema();
     List<String> columnNames = Lists.newArrayList();
     for (int i=0; i < schema.getFieldCount(); i++) {
-      columnNames.add(schema.getColumn(i).getLastName());
+      columnNames.add(schema.getColumn(i).getName());
     }
 
     startNewSchema(columnNames);
@@ -141,12 +140,12 @@ public abstract class StringOutputRecordWriter extends AbstractRecordWriter {
         minor.class == "Decimal28Dense" ||
         minor.class == "Decimal38Dense" ||
         minor.class == "Decimal28Sparse" ||
-        minor.class == "Decimal38Sparse">
-
+        minor.class == "Decimal38Sparse" ||
+        minor.class == "VarChar" ||
+        minor.class == "Var16Char" ||
+        minor.class == "VarBinary" ||
+        minor.class == "VarDecimal">
     // TODO: error check
-    addField(fieldId, reader.readObject().toString());
-
-  <#elseif minor.class == "VarChar" || minor.class == "Var16Char" || minor.class == "VarBinary">
     addField(fieldId, reader.readObject().toString());
   <#else>
     throw new UnsupportedOperationException(String.format("Unsupported field type: %s"),

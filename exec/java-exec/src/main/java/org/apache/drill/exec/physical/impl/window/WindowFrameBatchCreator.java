@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.impl.window;
 
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
@@ -29,9 +28,8 @@ import org.apache.drill.exec.record.RecordBatch;
 import com.google.common.base.Preconditions;
 
 public class WindowFrameBatchCreator implements BatchCreator<WindowPOP> {
-
   @Override
-  public WindowFrameRecordBatch getBatch(FragmentContext context, WindowPOP config, List<RecordBatch> children)
+  public WindowFrameRecordBatch getBatch(ExecutorFragmentContext context, WindowPOP config, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new WindowFrameRecordBatch(config, context, children.iterator().next());

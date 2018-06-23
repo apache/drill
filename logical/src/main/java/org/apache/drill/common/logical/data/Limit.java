@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -55,7 +55,7 @@ public class Limit extends SingleInputOperator {
   }
 
   @Override
-  public NodeBuilder nodeBuilder() {
+  public NodeBuilder<Limit> nodeBuilder() {
     return new LimitNodeBuilder();  //To change body of implemented methods use File | Settings | File Templates.
   }
 

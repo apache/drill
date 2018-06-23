@@ -1,5 +1,4 @@
-/*******************************************************************************
-
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 import io.netty.buffer.DrillBuf;
@@ -45,7 +44,7 @@ public class OrderedBytesBigIntDescConvertTo implements DrillSimpleFunc {
   public void setup() {
     buffer = buffer.reallocIfNeeded(9);
     bytes = new byte[9];
-    br = new org.apache.hadoop.hbase.util.SimplePositionedByteRange();
+    br = new org.apache.hadoop.hbase.util.SimplePositionedMutableByteRange();
   }
 
   @Override

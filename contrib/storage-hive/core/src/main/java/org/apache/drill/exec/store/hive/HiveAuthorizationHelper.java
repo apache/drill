@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.hive;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
@@ -102,7 +101,7 @@ public class HiveAuthorizationHelper {
       return;
     }
 
-    authorize(HiveOperationType.SHOWDATABASES, Collections.EMPTY_LIST, Collections.EMPTY_LIST, "SHOW DATABASES");
+    authorize(HiveOperationType.SHOWDATABASES, Collections.<HivePrivilegeObject> emptyList(), Collections.<HivePrivilegeObject> emptyList(), "SHOW DATABASES");
   }
 
   /**
@@ -117,7 +116,7 @@ public class HiveAuthorizationHelper {
 
     final HivePrivilegeObject toRead = new HivePrivilegeObject(HivePrivilegeObjectType.DATABASE, dbName, null);
 
-    authorize(HiveOperationType.SHOWTABLES, ImmutableList.of(toRead), Collections.EMPTY_LIST, "SHOW TABLES");
+    authorize(HiveOperationType.SHOWTABLES, ImmutableList.of(toRead), Collections.<HivePrivilegeObject> emptyList(), "SHOW TABLES");
   }
 
   /**
@@ -132,7 +131,7 @@ public class HiveAuthorizationHelper {
     }
 
     HivePrivilegeObject toRead = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, dbName, tableName);
-    authorize(HiveOperationType.QUERY, ImmutableList.of(toRead), Collections.EMPTY_LIST, "READ TABLE");
+    authorize(HiveOperationType.QUERY, ImmutableList.of(toRead), Collections.<HivePrivilegeObject> emptyList(), "READ TABLE");
   }
 
   /* Helper method to check privileges */

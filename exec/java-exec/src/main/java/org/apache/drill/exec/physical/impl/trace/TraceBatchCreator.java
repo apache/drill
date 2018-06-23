@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,25 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.impl.trace;
 
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.Trace;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class TraceBatchCreator implements BatchCreator<Trace> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TraceBatchCreator.class);
-
   @Override
-  public TraceRecordBatch getBatch(FragmentContext context, Trace config, List<RecordBatch> children)
+  public TraceRecordBatch getBatch(ExecutorFragmentContext context, Trace config, List<RecordBatch> children)
       throws ExecutionSetupException {
-    // Preconditions.checkArgument(children.size() == 1);
     return new TraceRecordBatch(config, children.iterator().next(), context);
   }
-
 }

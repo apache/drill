@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,8 +18,6 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
-
-import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
 public class BaseRpcOutcomeListener<T> implements RpcOutcomeListener<T> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseRpcOutcomeListener.class);

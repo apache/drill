@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,7 +48,7 @@ public interface LogicalOperator extends GraphValue<LogicalOperator> {
 
   public void registerAsSubscriber(LogicalOperator operator);
 
-  NodeBuilder nodeBuilder();
+  NodeBuilder<?> nodeBuilder();
 
   public interface NodeBuilder<T extends LogicalOperator> {
     ObjectNode convert(ObjectMapper mapper, T operator, Integer inputId);

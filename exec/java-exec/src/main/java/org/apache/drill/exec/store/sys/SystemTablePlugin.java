@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,9 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
@@ -37,6 +32,10 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.pojo.PojoDataType;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+
 /**
  * A "storage" plugin for system tables.
  */
@@ -45,15 +44,12 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
 
   public static final String SYS_SCHEMA_NAME = "sys";
 
-  private final DrillbitContext context;
-  private final String name;
   private final SystemTablePluginConfig config;
   private final SystemSchema schema = new SystemSchema();
 
   public SystemTablePlugin(SystemTablePluginConfig config, DrillbitContext context, String name) {
+    super(context, name);
     this.config = config;
-    this.context = context;
-    this.name = name;
   }
 
   @Override
@@ -61,20 +57,14 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
     return config;
   }
 
-  @JsonIgnore
-  public DrillbitContext getContext() {
-    return this.context;
-  }
-
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     parent.add(schema.getName(), schema);
   }
 
   @Override
-  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
-      throws IOException {
-    SystemTable table = selection.getWith(context.getLpPersistence(), SystemTable.class);
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns) {
+    SystemTable table = selection.getWith(getContext().getLpPersistence(), SystemTable.class);
     return new SystemTableScan(table, this);
   }
 
@@ -86,7 +76,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
     private final Set<String> tableNames;
 
     public SystemSchema() {
-      super(ImmutableList.<String>of(), SYS_SCHEMA_NAME);
+      super(ImmutableList.of(), SYS_SCHEMA_NAME);
       Set<String> names = Sets.newHashSet();
       for (SystemTable t : SystemTable.values()) {
         names.add(t.getTableName());
@@ -103,8 +93,8 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
     public DrillTable getTable(String name) {
       for (SystemTable table : SystemTable.values()) {
         if (table.getTableName().equalsIgnoreCase(name)) {
-          return new StaticDrillTable(SystemTablePlugin.this.name, SystemTablePlugin.this, table,
-            new PojoDataType(table.getPojoClass()));
+          return new StaticDrillTable(getName(), SystemTablePlugin.this, TableType.SYSTEM_TABLE,
+            table, new PojoDataType(table.getPojoClass()));
         }
       }
       return null;

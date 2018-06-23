@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,6 +46,12 @@ public final class SchemaCoordinationProtos
                 if(message.hasRoles())
                     output.writeObject(5, message.getRoles(), org.apache.drill.exec.proto.SchemaCoordinationProtos.Roles.WRITE, false);
 
+                if(message.hasVersion())
+                    output.writeString(6, message.getVersion(), false);
+                if(message.hasState())
+                    output.writeEnum(7, message.getState().getNumber(), false);
+                if(message.hasHttpPort())
+                    output.writeInt32(8, message.getHttpPort(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint message)
             {
@@ -101,6 +107,15 @@ public final class SchemaCoordinationProtos
                             builder.setRoles(input.mergeObject(org.apache.drill.exec.proto.CoordinationProtos.Roles.newBuilder(), org.apache.drill.exec.proto.SchemaCoordinationProtos.Roles.MERGE));
 
                             break;
+                        case 6:
+                            builder.setVersion(input.readString());
+                            break;
+                        case 7:
+                            builder.setState(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State.valueOf(input.readEnum()));
+                            break;
+                        case 8:
+                            builder.setHttpPort(input.readInt32());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -146,6 +161,9 @@ public final class SchemaCoordinationProtos
                 case 3: return "controlPort";
                 case 4: return "dataPort";
                 case 5: return "roles";
+                case 6: return "version";
+                case 7: return "state";
+                case 8: return "httpPort";
                 default: return null;
             }
         }
@@ -162,6 +180,9 @@ public final class SchemaCoordinationProtos
             fieldMap.put("controlPort", 3);
             fieldMap.put("dataPort", 4);
             fieldMap.put("roles", 5);
+            fieldMap.put("version", 6);
+            fieldMap.put("state", 7);
+            fieldMap.put("httpPort", 8);
         }
     }
 

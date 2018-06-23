@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,11 +17,15 @@
  */
 package org.apache.drill.store.kudu;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.PlanTestBase;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.KuduStorageTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Ignore("requires a remote kudu server to run.")
+@Category(KuduStorageTest.class)
 public class TestKuduPlugin extends BaseTestQuery {
 
   @Test
@@ -41,6 +45,11 @@ public class TestKuduPlugin extends BaseTestQuery {
     test("create table kudu.regions as select 1, * from sys.options limit 1");
     test("select * from kudu.regions");
     test("drop table kudu.regions");
-
   }
+
+  @Test
+  public void testPhysicalPlanSubmission() throws Exception {
+    PlanTestBase.testPhysicalPlanExecutionBasedOnQuery("select * from kudu.demo");
+  }
+
 }

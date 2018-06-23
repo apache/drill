@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import org.joda.time.DateTimeUtils;
 import org.apache.parquet.io.api.Binary;
 
 import java.lang.Override;
@@ -30,17 +28,21 @@ import java.util.Arrays;
 package org.apache.drill.exec.store;
 
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.parquet.ParquetTypeHelper;
+import org.apache.drill.exec.store.parquet.decimal.DecimalValueWriter;
 import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.parquet.io.api.RecordConsumer;
 import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.io.api.Binary;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.record.BatchSchema;
@@ -49,7 +51,7 @@ import org.apache.drill.exec.record.MaterializedField;
 
 import org.apache.drill.common.types.TypeProtos;
 
-import org.joda.time.DateTimeUtils;
+import org.joda.time.DateTimeConstants;
 
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
@@ -71,12 +73,13 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
 
   private RecordConsumer consumer;
   private MessageType schema;
-  public static final long JULIAN_DAY_EPOC = DateTimeUtils.toJulianDayNumber(0);
 
   public void setUp(MessageType schema, RecordConsumer consumer) {
     this.schema = schema;
     this.consumer = consumer;
   }
+
+  protected abstract PrimitiveType getPrimitiveType(MaterializedField field);
 
 <#list vv.types as type>
   <#list type.minor as minor>
@@ -89,19 +92,25 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
   public class ${mode.prefix}${minor.class}ParquetConverter extends FieldConverter {
     private Nullable${minor.class}Holder holder = new Nullable${minor.class}Holder();
     <#if minor.class?contains("Interval")>
-      private final byte[] output = new byte[12];
+    private final byte[] output = new byte[12];
+    <#elseif minor.class == "VarDecimal">
+    private final DecimalValueWriter decimalValueWriter;
     </#if>
 
     public ${mode.prefix}${minor.class}ParquetConverter(int fieldId, String fieldName, FieldReader reader) {
       super(fieldId, fieldName, reader);
+      <#if minor.class == "VarDecimal">
+      decimalValueWriter = DecimalValueWriter.
+          getDecimalValueWriterForType(getPrimitiveType(reader.getField()).getPrimitiveTypeName());
+      </#if>
     }
 
     @Override
     public void writeField() throws IOException {
   <#if mode.prefix == "Nullable" >
-    if (!reader.isSet()) {
-      return;
-    }
+      if (!reader.isSet()) {
+        return;
+      }
   <#elseif mode.prefix == "Repeated" >
     // empty lists are represented by simply not starting a field, rather than starting one and putting in 0 elements
     if (reader.size() == 0) {
@@ -156,12 +165,12 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
   <#elseif minor.class == "Date">
     <#if mode.prefix == "Repeated" >
       reader.read(i, holder);
-      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) + JULIAN_DAY_EPOC));
+      consumer.addInteger((int) (holder.value / DateTimeConstants.MILLIS_PER_DAY));
     <#else>
       consumer.startField(fieldName, fieldId);
       reader.read(holder);
       // convert from internal Drill date format to Julian Day centered around Unix Epoc
-      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) + JULIAN_DAY_EPOC));
+      consumer.addInteger((int) (holder.value / DateTimeConstants.MILLIS_PER_DAY));
       consumer.endField(fieldName, fieldId);
     </#if>
   <#elseif
@@ -232,18 +241,26 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
       <#else>
 
       </#if>
-  <#elseif minor.class == "VarChar" || minor.class == "Var16Char" || minor.class == "VarBinary">
+  <#elseif minor.class == "VarChar" || minor.class == "Var16Char"
+        || minor.class == "VarBinary" || minor.class == "VarDecimal">
     <#if mode.prefix == "Repeated">
       reader.read(i, holder);
-      //consumer.startField(fieldName, fieldId);
+      <#if minor.class == "VarDecimal">
+      decimalValueWriter.writeValue(consumer, holder.buffer,
+          holder.start, holder.end, reader.getField().getPrecision());
+      <#else>
       consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
-      //consumer.endField(fieldName, fieldId);
+      </#if>
     <#else>
-    reader.read(holder);
-    DrillBuf buf = holder.buffer;
-    consumer.startField(fieldName, fieldId);
-    consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
-    consumer.endField(fieldName, fieldId);
+      reader.read(holder);
+      consumer.startField(fieldName, fieldId);
+      <#if minor.class == "VarDecimal">
+      decimalValueWriter.writeValue(consumer, holder.buffer,
+          holder.start, holder.end, reader.getField().getPrecision());
+      <#else>
+      consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
+      </#if>
+      consumer.endField(fieldName, fieldId);
     </#if>
   </#if>
   <#if mode.prefix == "Repeated">

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import java.lang.Override;
 import java.util.Vector;
 
@@ -97,10 +96,10 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     vector.getMutator().setValueCount(idx()+1);
   }
 
-  <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
+  <#if !minor.class?contains("Decimal") || minor.class?contains("VarDecimal")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
-    mutator.addSafe(idx(), <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-    vector.getMutator().setValueCount(idx()+1);
+    mutator.addSafe(idx()<#list fields as field><#if field.include!true>, ${field.name}</#if></#list>);
+    vector.getMutator().setValueCount(idx() + 1);
   }
   </#if>
 
@@ -122,17 +121,23 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     vector.getMutator().setValueCount(idx()+1);
   }
 
-  <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
-  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
-    mutator.setSafe(idx(), <#if mode == "Nullable">1, </#if><#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-    vector.getMutator().setValueCount(idx()+1);
-  }
-
   <#if mode == "Nullable">
-
   public void writeNull() {
     mutator.setNull(idx());
-    vector.getMutator().setValueCount(idx()+1);
+    vector.getMutator().setValueCount(idx() + 1);
+  }
+  </#if>
+
+  <#if !(minor.class == "Decimal9" || minor.class == "Decimal18")>
+  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
+    mutator.setSafe(idx()<#if mode == "Nullable">, 1</#if><#list fields as field><#if field.include!true>, ${field.name}</#if></#list>);
+    vector.getMutator().setValueCount(idx() + 1);
+  }
+
+  <#if minor.class?contains("VarDecimal")>
+  public void write${minor.class}(BigDecimal value) {
+    mutator.setSafe(idx(), value);
+    vector.getMutator().setValueCount(idx() + 1);
   }
   </#if>
   </#if>
@@ -149,8 +154,12 @@ package org.apache.drill.exec.vector.complex.writer;
 public interface ${eName}Writer extends BaseWriter {
   public void write(${minor.class}Holder h);
 
-  <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
+  <#if !(minor.class == "Decimal9" || minor.class == "Decimal18")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>);
+  </#if>
+
+  <#if minor.class?contains("VarDecimal")>
+  public void write${minor.class}(BigDecimal value);
   </#if>
 }
 

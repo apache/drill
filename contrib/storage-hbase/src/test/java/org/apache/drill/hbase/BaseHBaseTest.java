@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +20,8 @@ package org.apache.drill.hbase;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -38,7 +38,7 @@ import com.google.common.io.Files;
 
 public class BaseHBaseTest extends BaseTestQuery {
 
-  private static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
+  public static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
 
   protected static Configuration conf = HBaseConfiguration.create();
 
@@ -46,16 +46,13 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected static HBaseStoragePluginConfig storagePluginConfig;
 
-
   @BeforeClass
   public static void setupDefaultTestCluster() throws Exception {
-    GuavaPatcher.patch();
-
     /*
      * Change the following to HBaseTestsSuite.configure(false, true)
      * if you want to test against an externally running HBase cluster.
      */
-    HBaseTestsSuite.configure(true, true);
+    HBaseTestsSuite.configure(true /*manageHBaseCluster*/, true /*createTables*/);
     HBaseTestsSuite.initCluster();
 
     BaseTestQuery.setupDefaultTestCluster();
@@ -66,7 +63,6 @@ public class BaseHBaseTest extends BaseTestQuery {
     storagePluginConfig.setEnabled(true);
     storagePluginConfig.setZookeeperPort(HBaseTestsSuite.getZookeeperPort());
     pluginRegistry.createOrUpdate(HBASE_STORAGE_PLUGIN_NAME, storagePluginConfig, true);
-
   }
 
   @AfterClass
@@ -75,7 +71,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   }
 
   protected String getPlanText(String planFile, String tableName) throws IOException {
-    return Files.toString(FileUtils.getResourceAsFile(planFile), Charsets.UTF_8)
+    return Files.toString(DrillFileUtils.getResourceAsFile(planFile), Charsets.UTF_8)
         .replaceFirst("\"hbase\\.zookeeper\\.property\\.clientPort\".*:.*\\d+", "\"hbase.zookeeper.property.clientPort\" : " + HBaseTestsSuite.getZookeeperPort())
         .replace("[TABLE_NAME]", tableName);
   }
@@ -88,7 +84,6 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected List<QueryDataBatch> runHBaseSQLlWithResults(String sql) throws Exception {
     sql = canonizeHBaseSQL(sql);
-    System.out.println("Running query:\n" + sql);
     return testSqlWithResults(sql);
   }
 
@@ -105,9 +100,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   }
 
   protected String canonizeHBaseSQL(String sql) {
-    return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1);
+    return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1.getNameAsString());
   }
-
-
 
 }

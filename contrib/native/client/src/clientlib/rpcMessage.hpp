@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #ifndef RPC_MESSAGE_H
 #define RPC_MESSAGE_H
 
@@ -25,8 +23,8 @@
 #include "GeneralRPC.pb.h"
 
 namespace Drill {
-
-class InBoundRpcMessage {
+namespace rpc {
+struct InBoundRpcMessage {
     public:
         exec::rpc::RpcMode m_mode;
         int m_rpc_type;
@@ -39,7 +37,7 @@ class InBoundRpcMessage {
         bool has_rpc_type() { return m_has_rpc_type; };
 };
 
-class OutBoundRpcMessage {
+struct OutBoundRpcMessage {
     public:
         exec::rpc::RpcMode m_mode;
         int m_rpc_type;
@@ -49,6 +47,12 @@ class OutBoundRpcMessage {
             m_mode(mode), m_rpc_type(rpc_type), m_coord_id(coord_id), m_pbody(pbody) { }
 };
 
-}
+std::size_t lengthDecode(const uint8_t* buf, uint32_t& length);
+
+bool decode(const uint8_t* buf, int length, InBoundRpcMessage& msg);
+
+bool encode(DataBuf& buf, const OutBoundRpcMessage& msg);
+} // namespace rpc
+} // namespace Drill
 
 #endif

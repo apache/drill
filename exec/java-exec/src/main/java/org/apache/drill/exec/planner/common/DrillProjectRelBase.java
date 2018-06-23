@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -64,22 +64,24 @@ public abstract class DrillProjectRelBase extends Project implements DrillRelNod
 
   protected DrillProjectRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, List<? extends RexNode> exps,
       RelDataType rowType) {
-    super(cluster, traits, child, exps, rowType, Flags.BOXED);
+    super(cluster, traits, child, exps, rowType);
     assert getConvention() == convention;
     nonSimpleFieldCount = this.getRowType().getFieldCount() - getSimpleFieldCount();
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
+    double rowCount = mq.getRowCount(this);
+    // Attribute small cost for projecting simple fields. In reality projecting simple columns in not free and
+    // this allows projection pushdown/project-merge rules to kick-in thereby eliminating unneeded columns from
+    // the projection.
+    double cpuCost = DrillCostBase.PROJECT_CPU_COST * rowCount * nonSimpleFieldCount
+        + (this.getRowType().getFieldCount() - nonSimpleFieldCount) * rowCount * DrillCostBase.BASE_CPU_COST;
 
-    // cost is proportional to the number of rows and number of columns being projected
-    double rowCount = nonSimpleFieldCount >0 ? RelMetadataQuery.getRowCount(this) : 0;
-    double cpuCost = DrillCostBase.PROJECT_CPU_COST * rowCount * nonSimpleFieldCount;
-
-    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
     return costFactory.makeCost(rowCount, cpuCost, 0, 0);
   }
 
@@ -90,7 +92,7 @@ public abstract class DrillProjectRelBase extends Project implements DrillRelNod
   protected List<NamedExpression> getProjectExpressions(DrillParseContext context) {
     List<NamedExpression> expressions = Lists.newArrayList();
 
-    HashMap<String, String> starColPrefixes = new HashMap<String, String>();
+    HashMap<String, String> starColPrefixes = new HashMap<>();
 
     // T1.* will subsume T1.*0, but will not subsume any regular column/expression.
     // Select *, col1, *, col2 : the intermediate will output one set of regular columns expanded from star with prefix,

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import java.io.IOException;
-import java.util.List;
+import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
 
+import java.io.IOException;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
@@ -28,28 +28,19 @@ import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillScreenRel;
-import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillWriterRel;
-import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.DrillSqlWorker;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlRefreshMetadata;
-import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
-import org.apache.drill.exec.store.parquet.Metadata;
+import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-
-import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
 
 public class RefreshMetadataHandler extends DefaultSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RefreshMetadataHandler.class);
@@ -63,7 +54,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
   }
 
   private PhysicalPlan notSupported(String tbl){
-    return direct(false, "Table %s does not support metadata refresh.  Support is currently limited to single-directory-based Parquet tables.", tbl);
+    return direct(false, "Table %s does not support metadata refresh. Support is currently limited to directory-based Parquet tables.", tbl);
   }
 
   @Override
@@ -72,8 +63,13 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
 
     try {
 
-      final SchemaPlus schema = findSchema(context.getNewDefaultSchema(),
+      final SchemaPlus schema = findSchema(config.getConverter().getDefaultSchema(),
           refreshTable.getSchemaPath());
+
+      if (schema == null) {
+        return direct(false, "Storage plugin or workspace does not exist [%s]",
+            SchemaUtilites.SCHEMA_PATH_JOINER.join(refreshTable.getSchemaPath()));
+      }
 
       final String tableName = refreshTable.getName();
 
@@ -83,11 +79,11 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
 
       final Table table = schema.getTable(tableName);
 
-      if(table == null){
+      if (table == null) {
         return direct(false, "Table %s does not exist.", tableName);
       }
 
-      if(! (table instanceof DrillTable) ){
+      if (!(table instanceof DrillTable)) {
         return notSupported(tableName);
       }
 
@@ -95,7 +91,12 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
       final DrillTable drillTable = (DrillTable) table;
 
       final Object selection = drillTable.getSelection();
-      if( !(selection instanceof FormatSelection) ){
+
+      if (selection instanceof FileSelection && ((FileSelection) selection).isEmptyDirectory()) {
+        return direct(false, "Table %s is empty and doesn't contain any parquet files.", tableName);
+      }
+
+      if (!(selection instanceof FormatSelection)) {
         return notSupported(tableName);
       }
 
@@ -115,7 +116,10 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
         return notSupported(tableName);
       }
 
-      Metadata.createMeta(fs, selectionRoot);
+      if (!(formatConfig instanceof ParquetFormatConfig)) {
+        formatConfig = new ParquetFormatConfig();
+      }
+      Metadata.createMeta(fs, selectionRoot, (ParquetFormatConfig) formatConfig);
       return direct(true, "Successfully updated metadata for table %s.", tableName);
 
     } catch(Exception e) {

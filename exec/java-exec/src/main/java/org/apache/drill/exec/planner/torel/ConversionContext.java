@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.calcite.prepare.Prepare;
 
+import org.apache.calcite.rel.RelRoot;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.Filter;
@@ -111,12 +112,12 @@ public class ConversionContext implements ToRelContext {
   }
 
   @Override
-  public RelNode expandView(RelDataType rowType, String queryString, List<String> schemaPath) {
+  public RelRoot expandView(RelDataType rowType, String queryString, List<String> schemaPath, List<String> viewPath) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public RelNode expandView(RelDataType rowType, String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
+  public RelRoot expandView(RelDataType rowType, String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
     throw new UnsupportedOperationException();
   }
 

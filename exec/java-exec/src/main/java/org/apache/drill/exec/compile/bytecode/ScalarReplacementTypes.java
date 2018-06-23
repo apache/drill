@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -51,12 +51,14 @@ import org.apache.drill.exec.expr.holders.NullableTimeHolder;
 import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.NullableVarDecimalHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 
 /**
  * Reference list of classes we will perform scalar replacement on.
@@ -87,6 +89,7 @@ public class ScalarReplacementTypes {
         TimeStampHolder.class,
         VarCharHolder.class,
         VarBinaryHolder.class,
+        VarDecimalHolder.class,
         NullableBitHolder.class,
         NullableIntHolder.class,
         NullableBigIntHolder.class,
@@ -94,6 +97,7 @@ public class ScalarReplacementTypes {
         NullableFloat8Holder.class,
         NullableVarCharHolder.class,
         NullableVarBinaryHolder.class,
+        NullableVarDecimalHolder.class,
         NullableDecimal9Holder.class,
         NullableDecimal18Holder.class,
         NullableDecimal28SparseHolder.class,

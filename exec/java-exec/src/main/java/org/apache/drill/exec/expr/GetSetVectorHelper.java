@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -81,7 +81,16 @@ public class GetSetVectorHelper {
         eval.assign(out.getHolder().ref("start"), JExpr.lit(TypeHelper.getSize(type)).mul(indexVariable));
         eval.assign(out.getHolder().ref("buffer"), vector.invoke("getBuffer"));
         return;
-      case INTERVAL:{
+      case VARDECIMAL: {
+        eval.assign(out.getHolder().ref("buffer"), vector.invoke("getBuffer"));
+        JVar se = eval.decl(model.LONG, "startEnd", getValueAccessor.invoke("getStartEnd").arg(indexVariable));
+        eval.assign(out.getHolder().ref("start"), JExpr.cast(model._ref(int.class), se));
+        eval.assign(out.getHolder().ref("end"), JExpr.cast(model._ref(int.class), se.shr(JExpr.lit(32))));
+        eval.assign(out.getHolder().ref("scale"), vector.invoke("getField").invoke("getScale"));
+        eval.assign(out.getHolder().ref("precision"), vector.invoke("getField").invoke("getPrecision"));
+        return;
+      }
+      case INTERVAL: {
         JVar start = eval.decl(model.INT, "start", JExpr.lit(TypeHelper.getSize(type)).mul(indexVariable));
         JVar data = eval.decl(model.ref(DrillBuf.class), "data", vector.invoke("getBuffer"));
         eval.assign(out.getHolder().ref("months"), data.invoke("getInt").arg(start));
@@ -97,13 +106,13 @@ public class GetSetVectorHelper {
       }
       case VAR16CHAR:
       case VARBINARY:
-      case VARCHAR:
+      case VARCHAR: {
          eval.assign(out.getHolder().ref("buffer"), vector.invoke("getBuffer"));
          JVar se = eval.decl(model.LONG, "startEnd", getValueAccessor.invoke("getStartEnd").arg(indexVariable));
          eval.assign(out.getHolder().ref("start"), JExpr.cast(model._ref(int.class), se));
          eval.assign(out.getHolder().ref("end"), JExpr.cast(model._ref(int.class), se.shr(JExpr.lit(32))));
         return;
-
+      }
       }
     }
 
@@ -141,36 +150,36 @@ public class GetSetVectorHelper {
       case BIT:
       case DECIMAL9:
       case DECIMAL18:
-        return setMethod //
+        return setMethod
             .arg(in.getValue());
       case DECIMAL28DENSE:
       case DECIMAL28SPARSE:
       case DECIMAL38DENSE:
       case DECIMAL38SPARSE:
-        return setMethod //
-            .arg(in.f("start")) //
+        return setMethod
+            .arg(in.f("start"))
             .arg(in.f("buffer"));
       case INTERVAL:{
-        return setMethod //
-            .arg(in.f("months")) //
-            .arg(in.f("days")) //
+        return setMethod
+            .arg(in.f("months"))
+            .arg(in.f("days"))
             .arg(in.f("milliseconds"));
       }
       case INTERVALDAY: {
-        return setMethod //
-            .arg(in.f("days")) //
+        return setMethod
+            .arg(in.f("days"))
             .arg(in.f("milliseconds"));
       }
       case VAR16CHAR:
       case VARBINARY:
       case VARCHAR:
-        return setMethod //
-            .arg(in.f("start")) //
-            .arg(in.f("end")) //
+      case VARDECIMAL:
+        return setMethod
+            .arg(in.f("start"))
+            .arg(in.f("end"))
             .arg(in.f("buffer"));
       }
     }
-
 
     return setMethod.arg(in.getHolder());
 

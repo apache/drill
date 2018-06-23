@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,17 +23,13 @@ import static org.junit.Assert.assertTrue;
 import java.util.Iterator;
 import java.util.List;
 
-import mockit.Injectable;
-
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
@@ -44,8 +40,7 @@ import com.google.common.io.Files;
 public class TestReverseImplicitCast extends PopUnitTestBase {
 
   @Test
-  public void twoWayCast(@Injectable final DrillbitContext bitContext,
-                         @Injectable UserServer.UserClientConnection connection) throws Throwable {
+  public void twoWayCast() throws Throwable {
 
     // Function checks for casting from Float, Double to Decimal data types
     try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
@@ -56,7 +51,7 @@ public class TestReverseImplicitCast extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/functions/cast/two_way_implicit_cast.json"), Charsets.UTF_8));
+          Files.toString(DrillFileUtils.getResourceAsFile("/functions/cast/two_way_implicit_cast.json"), Charsets.UTF_8));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
@@ -69,9 +64,7 @@ public class TestReverseImplicitCast extends PopUnitTestBase {
       ValueVector.Accessor varcharAccessor1 = itr.next().getValueVector().getAccessor();
 
       for (int i = 0; i < intAccessor1.getValueCount(); i++) {
-        System.out.println(intAccessor1.getObject(i));
         assertEquals(intAccessor1.getObject(i), 10);
-        System.out.println(varcharAccessor1.getObject(i));
         assertEquals(varcharAccessor1.getObject(i).toString(), "101");
       }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.buffer.ByteBuf;
 
 import java.util.List;
@@ -24,37 +25,36 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.store.TransientStore;
-import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.proto.SchemaUserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile.Builder;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.store.sys.PersistentStore;
-import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
-import org.apache.drill.exec.work.foreman.Foreman.StateListener;
 
 import com.carrotsearch.hppc.IntObjectHashMap;
+import com.carrotsearch.hppc.predicates.IntObjectPredicate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -65,19 +65,7 @@ import com.google.common.collect.Maps;
 public class QueryManager implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryManager.class);
 
-  public static final PersistentStoreConfig<QueryProfile> QUERY_PROFILE = PersistentStoreConfig.
-          newProtoBuilder(SchemaUserBitShared.QueryProfile.WRITE, SchemaUserBitShared.QueryProfile.MERGE)
-      .name("profiles")
-      .blob()
-      .build();
-
-  public static final TransientStoreConfig<QueryInfo> RUNNING_QUERY_INFO = TransientStoreConfig
-      .newProtoBuilder(SchemaUserBitShared.QueryInfo.WRITE, SchemaUserBitShared.QueryInfo.MERGE)
-      .name("running")
-      .build();
-
   private final Map<DrillbitEndpoint, NodeTracker> nodeMap = Maps.newHashMap();
-  private final StateListener stateListener;
   private final QueryId queryId;
   private final String stringQueryId;
   private final RunQuery runQuery;
@@ -91,13 +79,15 @@ public class QueryManager implements AutoCloseable {
       new IntObjectHashMap<>();
   private final List<FragmentData> fragmentDataSet = Lists.newArrayList();
 
-  private final PersistentStore<QueryProfile> profileStore;
-  private final TransientStore<QueryInfo> transientProfiles;
+  private final PersistentStore<QueryProfile> completedProfileStore;
+  private final TransientStore<QueryInfo> runningProfileStore;
 
   // the following mutable variables are used to capture ongoing query status
   private String planText;
   private long startTime = System.currentTimeMillis();
   private long endTime;
+  private long planningEndTime;
+  private long queueWaitEndTime;
 
   // How many nodes have finished their execution.  Query is complete when all nodes are complete.
   private final AtomicInteger finishedNodes = new AtomicInteger(0);
@@ -105,20 +95,28 @@ public class QueryManager implements AutoCloseable {
   // How many fragments have finished their execution.
   private final AtomicInteger finishedFragments = new AtomicInteger(0);
 
+  // Is the query saved in transient store
+  private boolean inTransientStore;
+
+  /**
+   * Total query cost. This value is used to place the query into a queue
+   * and so has meaning to the user who wants to predict queue placement.
+   */
+
+  private double totalCost;
+
+  private String queueName;
+
   public QueryManager(final QueryId queryId, final RunQuery runQuery, final PersistentStoreProvider storeProvider,
-      final ClusterCoordinator coordinator, final StateListener stateListener, final Foreman foreman) {
+      final ClusterCoordinator coordinator, final Foreman foreman) {
     this.queryId =  queryId;
     this.runQuery = runQuery;
-    this.stateListener = stateListener;
     this.foreman = foreman;
 
     stringQueryId = QueryIdHelper.getQueryId(queryId);
-    try {
-      profileStore = storeProvider.getOrCreateStore(QUERY_PROFILE);
-    } catch (final Exception e) {
-      throw new DrillRuntimeException(e);
-    }
-    transientProfiles = coordinator.getOrCreateTransientStore(RUNNING_QUERY_INFO);
+
+    this.completedProfileStore = foreman.getQueryContext().getProfileStoreContext().getCompletedProfileStore();
+    this.runningProfileStore = foreman.getQueryContext().getProfileStoreContext().getRunningProfileStore();
   }
 
   private static boolean isTerminal(final FragmentState state) {
@@ -201,6 +199,7 @@ public class QueryManager implements AutoCloseable {
    * (3) Leaf fragment: running, send the cancel signal through a tunnel. The cancel is done directly.
    */
   void cancelExecutingFragments(final DrillbitContext drillbitContext) {
+    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     for(final FragmentData data : fragmentDataSet) {
       switch(data.getState()) {
@@ -229,6 +228,7 @@ public class QueryManager implements AutoCloseable {
    * sending any message. Resume all fragments through the control tunnel.
    */
   void unpauseExecutingFragments(final DrillbitContext drillbitContext) {
+    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     for(final FragmentData data : fragmentDataSet) {
       final DrillbitEndpoint endpoint = data.getEndpoint();
@@ -279,50 +279,64 @@ public class QueryManager implements AutoCloseable {
     }
   }
 
-  QueryState updateEphemeralState(final QueryState queryState) {
+  void updateEphemeralState(final QueryState queryState) {
+    // If query is already in zk transient store, ignore the transient state update option.
+    // Else, they will not be removed from transient store upon completion.
+    if (!inTransientStore && !foreman.getQueryContext().getOptions().getOption(ExecConstants.QUERY_TRANSIENT_STATE_UPDATE)) {
+      return;
+    }
+
     switch (queryState) {
+      case PREPARING:
+      case PLANNING:
       case ENQUEUED:
       case STARTING:
       case RUNNING:
       case CANCELLATION_REQUESTED:
-        transientProfiles.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
+        runningProfileStore.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
+        inTransientStore = true;
         break;
-
       case COMPLETED:
       case CANCELED:
       case FAILED:
         try {
-          transientProfiles.remove(stringQueryId);
-        } catch(final Exception e) {
-          logger.warn("Failure while trying to delete the estore profile for this query.", e);
+          runningProfileStore.remove(stringQueryId);
+          inTransientStore = false;
+        } catch (final Exception e) {
+          logger.warn("Failure while trying to delete the stored profile for the query [{}]", stringQueryId, e);
         }
-
         break;
 
       default:
         throw new IllegalStateException("unrecognized queryState " + queryState);
     }
-
-    return queryState;
   }
 
   void writeFinalProfile(UserException ex) {
     try {
       // TODO(DRILL-2362) when do these ever get deleted?
-      profileStore.put(stringQueryId, getQueryProfile(ex));
+      completedProfileStore.put(stringQueryId, getQueryProfile(ex));
     } catch (Exception e) {
       logger.error("Failure while storing Query Profile", e);
     }
   }
 
   private QueryInfo getQueryInfo() {
-    return QueryInfo.newBuilder()
-        .setQuery(runQuery.getPlan())
+    final String queryText = foreman.getQueryText();
+    QueryInfo.Builder queryInfoBuilder = QueryInfo.newBuilder()
         .setState(foreman.getState())
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setForeman(foreman.getQueryContext().getCurrentEndpoint())
         .setStart(startTime)
-        .build();
+        .setTotalCost(totalCost)
+        .setQueueName(queueName == null ? "-" : queueName)
+        .setOptionsJson(getQueryOptionsAsJson());
+
+    if (queryText != null) {
+      queryInfoBuilder.setQuery(queryText);
+    }
+
+    return queryInfoBuilder.build();
   }
 
   public QueryProfile getQueryProfile() {
@@ -331,16 +345,21 @@ public class QueryManager implements AutoCloseable {
 
   private QueryProfile getQueryProfile(UserException ex) {
     final QueryProfile.Builder profileBuilder = QueryProfile.newBuilder()
-        .setQuery(runQuery.getPlan())
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setType(runQuery.getType())
         .setId(queryId)
+        .setQueryId(QueryIdHelper.getQueryId(queryId))
         .setState(foreman.getState())
         .setForeman(foreman.getQueryContext().getCurrentEndpoint())
         .setStart(startTime)
         .setEnd(endTime)
+        .setPlanEnd(planningEndTime)
+        .setQueueWaitEnd(queueWaitEndTime)
         .setTotalFragments(fragmentDataSet.size())
-        .setFinishedFragments(finishedFragments.get());
+        .setFinishedFragments(finishedFragments.get())
+        .setTotalCost(totalCost)
+        .setQueueName(queueName == null ? "-" : queueName)
+        .setOptionsJson(getQueryOptionsAsJson());
 
     if (ex != null) {
       profileBuilder.setError(ex.getMessage(false));
@@ -355,24 +374,53 @@ public class QueryManager implements AutoCloseable {
       profileBuilder.setPlan(planText);
     }
 
-    for (int i = 0; i < fragmentDataMap.keys.length; i++) {
-      if (fragmentDataMap.keys[i] != 0) {
-        final int majorFragmentId = fragmentDataMap.keys[i];
-        final IntObjectHashMap<FragmentData> minorMap =
-            (IntObjectHashMap<FragmentData>) ((Object[]) fragmentDataMap.values)[i];
-        final MajorFragmentProfile.Builder fb = MajorFragmentProfile.newBuilder()
-            .setMajorFragmentId(majorFragmentId);
-        for (int v = 0; v < minorMap.keys.length; v++) {
-          if (minorMap.keys[v] != 0) {
-            final FragmentData data = (FragmentData) ((Object[]) minorMap.values)[v];
-            fb.addMinorFragmentProfile(data.getProfile());
-          }
-        }
-        profileBuilder.addFragmentProfile(fb);
-      }
+    final String queryText = foreman.getQueryText();
+    if (queryText != null) {
+      profileBuilder.setQuery(queryText);
     }
 
+    fragmentDataMap.forEach(new OuterIter(profileBuilder));
+
     return profileBuilder.build();
+  }
+
+  private String getQueryOptionsAsJson() {
+    try {
+      OptionList optionList = foreman.getQueryContext().getOptions().getOptionList();
+      return foreman.getQueryContext().getLpPersistence().getMapper().writeValueAsString(optionList);
+    } catch (JsonProcessingException e) {
+      throw new DrillRuntimeException("Error while trying to convert option list to json string", e);
+    }
+  }
+
+  private class OuterIter implements IntObjectPredicate<IntObjectHashMap<FragmentData>> {
+    private final QueryProfile.Builder profileBuilder;
+
+    public OuterIter(Builder profileBuilder) {
+      this.profileBuilder = profileBuilder;
+    }
+
+    @Override
+    public boolean apply(final int majorFragmentId, final IntObjectHashMap<FragmentData> minorMap) {
+      final MajorFragmentProfile.Builder builder = MajorFragmentProfile.newBuilder().setMajorFragmentId(majorFragmentId);
+      minorMap.forEach(new InnerIter(builder));
+      profileBuilder.addFragmentProfile(builder);
+      return true;
+    }
+  }
+
+  private class InnerIter implements IntObjectPredicate<FragmentData> {
+    private final MajorFragmentProfile.Builder builder;
+
+    public InnerIter(MajorFragmentProfile.Builder fb) {
+      this.builder = fb;
+    }
+
+    @Override
+    public boolean apply(int key, FragmentData data) {
+      builder.addMinorFragmentProfile(data.getProfile());
+      return true;
+    }
   }
 
   void setPlanText(final String planText) {
@@ -385,6 +433,22 @@ public class QueryManager implements AutoCloseable {
 
   void markEndTime() {
     endTime = System.currentTimeMillis();
+  }
+
+  void markPlanningEndTime() {
+    planningEndTime = System.currentTimeMillis();
+  }
+
+  void markQueueWaitEndTime() {
+    queueWaitEndTime = System.currentTimeMillis();
+  }
+
+  public void setTotalCost(double totalCost) {
+    this.totalCost = totalCost;
+  }
+
+  public void setQueueName(String queueName) {
+    this.queueName = queueName;
   }
 
   /**
@@ -452,7 +516,7 @@ public class QueryManager implements AutoCloseable {
     final int remaining = totalNodes - finishedNodes;
     if (remaining == 0) {
       // this target state may be adjusted in moveToState() based on current FAILURE/CANCELLATION_REQUESTED status
-      stateListener.moveToState(QueryState.COMPLETED, null);
+      foreman.addToEventQueue(QueryState.COMPLETED, null);
     } else {
       logger.debug("Foreman is still waiting for completion message from {} nodes containing {} fragments", remaining,
           this.fragmentDataSet.size() - finishedFragments.get());
@@ -475,7 +539,7 @@ public class QueryManager implements AutoCloseable {
         break;
 
       case FAILED:
-        stateListener.moveToState(QueryState.FAILED, new UserRemoteException(status.getProfile().getError()));
+        foreman.addToEventQueue(QueryState.FAILED, new UserRemoteException(status.getProfile().getError()));
         // fall-through.
       case FINISHED:
       case CANCELLED:
@@ -493,7 +557,7 @@ public class QueryManager implements AutoCloseable {
     return drillbitStatusListener;
   }
 
-  private final DrillbitStatusListener drillbitStatusListener = new DrillbitStatusListener(){
+  private final DrillbitStatusListener drillbitStatusListener = new DrillbitStatusListener() {
 
     @Override
     public void drillbitRegistered(final Set<DrillbitEndpoint> registeredDrillbits) {
@@ -529,7 +593,7 @@ public class QueryManager implements AutoCloseable {
       if (atLeastOneFailure) {
         logger.warn("Drillbits [{}] no longer registered in cluster.  Canceling query {}",
             failedNodeList, QueryIdHelper.getQueryId(queryId));
-        stateListener.moveToState(QueryState.FAILED,
+        foreman.addToEventQueue(QueryState.FAILED,
             new ForemanException(String.format("One more more nodes lost connectivity during query.  Identified nodes were [%s].",
                 failedNodeList)));
       }

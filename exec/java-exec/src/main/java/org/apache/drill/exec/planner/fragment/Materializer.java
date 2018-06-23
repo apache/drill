@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,9 +28,10 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.work.foreman.ForemanException;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.physical.config.LateralJoinPOP;
+import org.apache.drill.exec.physical.config.UnnestPOP;
 
 public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Materializer.IndexedFragmentNode, ExecutionSetupException>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Materializer.class);
@@ -107,9 +108,37 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     return newOp;
   }
 
+
+  @Override
+  public PhysicalOperator visitLateralJoin(LateralJoinPOP op, IndexedFragmentNode iNode) throws ExecutionSetupException {
+    iNode.addAllocation(op);
+    List<PhysicalOperator> children = Lists.newArrayList();
+
+    children.add(op.getLeft().accept(this, iNode));
+    children.add(op.getRight().accept(this, iNode));
+    UnnestPOP unnestInLeftInput = iNode.getUnnest();
+
+    PhysicalOperator newOp = op.getNewWithChildren(children);
+    newOp.setCost(op.getCost());
+    newOp.setOperatorId(Short.MAX_VALUE & op.getOperatorId());
+
+    ((LateralJoinPOP)newOp).setUnnestForLateralJoin(unnestInLeftInput);
+
+    return newOp;
+  }
+
+  @Override
+  public PhysicalOperator visitUnnest(UnnestPOP unnest, IndexedFragmentNode value) throws ExecutionSetupException {
+    PhysicalOperator newOp = visitOp(unnest, value);
+    value.addUnnest((UnnestPOP)newOp);
+    return newOp;
+  }
+
   public static class IndexedFragmentNode{
     final Wrapper info;
     final int minorFragmentId;
+
+    UnnestPOP unnest = null;
 
     public IndexedFragmentNode(int minorFragmentId, Wrapper info) {
       super();
@@ -131,6 +160,14 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
     public void addAllocation(PhysicalOperator pop) {
       info.addAllocation(pop);
+    }
+
+    public void addUnnest(UnnestPOP unnest) {
+      this.unnest = unnest;
+    }
+
+    public UnnestPOP getUnnest() {
+      return this.unnest;
     }
 
   }

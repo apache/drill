@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,11 +19,10 @@ package org.apache.drill.exec.store.pojo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.google.common.collect.Lists;
@@ -57,6 +56,8 @@ public class PojoDataType extends RecordDataType {
         types.add(SqlTypeName.BIGINT);
       } else if(type == double.class || type == Double.class) {
         types.add(SqlTypeName.DOUBLE);
+      } else if(type == BigDecimal.class) {
+        types.add(SqlTypeName.DECIMAL);
       } else if(type == String.class) {
         types.add(SqlTypeName.VARCHAR);
       } else if(type.isEnum()) {

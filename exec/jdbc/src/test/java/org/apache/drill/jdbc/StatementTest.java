@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,25 +17,41 @@
  */
 package org.apache.drill.jdbc;
 
-import org.apache.drill.jdbc.Driver;
-
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.categories.JdbcTest;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.physical.impl.ScreenCreator;
+import org.apache.drill.exec.testing.Controls;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.SQLFeatureNotSupportedException;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.sql.SQLTimeoutException;
 import java.sql.SQLException;
-
 
 /**
  * Test for Drill's implementation of Statement's methods (most).
  */
+@Category(JdbcTest.class)
 public class StatementTest extends JdbcTestBase {
+
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatementTest.class);
+
+  private static final String SYS_VERSION_SQL = "select * from sys.version";
+  private static final String SYS_RANDOM_SQL =
+      "SELECT cast(random() as varchar) as myStr FROM (VALUES(1)) " +
+      "union SELECT cast(random() as varchar) as myStr FROM (VALUES(1)) " +
+      "union SELECT cast(random() as varchar) as myStr FROM (VALUES(1)) ";
 
   private static Connection connection;
   private static Statement statement;
@@ -46,7 +62,6 @@ public class StatementTest extends JdbcTestBase {
     // Connection--and other JDBC objects--on test method failure, but this test
     // class uses some objects across methods.)
     connection = new Driver().connect( "jdbc:drill:zk=local", null );
-    statement = connection.createStatement();
   }
 
   @AfterClass
@@ -61,54 +76,166 @@ public class StatementTest extends JdbcTestBase {
   //////////
   // getQueryTimeout():
 
-  /** Tests that getQueryTimeout() indicates no timeout set. */
+  /**
+   * Test for reading of default query timeout
+   */
   @Test
-  public void testGetQueryTimeoutSaysNoTimeout() throws SQLException {
-    assertThat( statement.getQueryTimeout(), equalTo( 0 ) );
+  public void testDefaultGetQueryTimeout() throws SQLException {
+    try(Statement stmt = connection.createStatement()) {
+      int timeoutValue = stmt.getQueryTimeout();
+      assertEquals( 0 , timeoutValue );
+    }
   }
 
   //////////
   // setQueryTimeout(...):
 
-  /** Tests that setQueryTimeout(...) accepts (redundantly) setting to
-   *  no-timeout mode. */
+  /**
+   * Test Invalid parameter by giving negative timeout
+   */
   @Test
-  public void testSetQueryTimeoutAcceptsNotimeoutRequest() throws SQLException {
-    statement.setQueryTimeout( 0 );
-  }
-
-  /** Tests that setQueryTimeout(...) rejects setting a timeout. */
-  @Test( expected = SQLFeatureNotSupportedException.class )
-  public void testSetQueryTimeoutRejectsTimeoutRequest() throws SQLException {
-    try {
-      statement.setQueryTimeout( 1_000 );
-    }
-    catch ( SQLFeatureNotSupportedException e ) {
-      // Check exception for some mention of query timeout:
-      assertThat( e.getMessage(), anyOf( containsString( "Timeout" ),
-                                         containsString( "timeout" ) ) );
-      throw e;
+  public void testInvalidSetQueryTimeout() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      //Setting negative value
+      int valueToSet = -10;
+      try {
+        stmt.setQueryTimeout(valueToSet);
+      } catch ( final SQLException e) {
+        assertThat( e.getMessage(), containsString( "illegal timeout value") );
+      }
     }
   }
 
-  /** Tests that setQueryTimeout(...) rejects setting a timeout (different
-   *  value). */
-  @Test( expected = SQLFeatureNotSupportedException.class )
-  public void testSetQueryTimeoutRejectsTimeoutRequest2() throws SQLException {
-    statement.setQueryTimeout( Integer.MAX_VALUE / 2 );
+  /**
+   * Test setting a valid timeout
+   */
+  @Test
+  public void testValidSetQueryTimeout() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      //Setting positive value
+      int valueToSet = new Random(20150304).nextInt(59)+1;
+      logger.info("Setting timeout as {} seconds", valueToSet);
+      stmt.setQueryTimeout(valueToSet);
+      assertEquals( valueToSet , stmt.getQueryTimeout() );
+    }
   }
 
-  @Test( expected = InvalidParameterSqlException.class )
-  public void testSetQueryTimeoutRejectsBadTimeoutValue() throws SQLException {
-    try {
-      statement.setQueryTimeout( -2 );
+
+  /**
+   * Test setting timeout that never gets triggered
+   */
+  @Test
+  public void testSetQueryTimeoutAsZero() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      stmt.setQueryTimeout(0);
+      stmt.executeQuery(SYS_RANDOM_SQL);
+      ResultSet rs = stmt.getResultSet();
+      int rowCount = 0;
+      while (rs.next()) {
+        rs.getBytes(1);
+        rowCount++;
+      }
+      assertEquals( 3 , rowCount );
     }
-    catch ( InvalidParameterSqlException e ) {
-      // Check exception for some mention of parameter name or semantics:
-      assertThat( e.getMessage(), anyOf( containsString( "milliseconds" ),
-                                         containsString( "timeout" ),
-                                         containsString( "Timeout" ) ) );
-      throw e;
+  }
+
+  /**
+   * Test setting timeout for a query that actually times out because of lack of timely client response
+   */
+  @Test
+  public void testClientTriggeredQueryTimeout() throws Exception {
+    //Setting to a very low value (3sec)
+    int timeoutDuration = 3;
+    int rowsCounted = 0;
+    try (Statement stmt = connection.createStatement()) {
+      stmt.setQueryTimeout(timeoutDuration);
+      logger.info("Set a timeout of {} seconds", stmt.getQueryTimeout());
+      ResultSet rs = stmt.executeQuery(SYS_RANDOM_SQL);
+      //Fetch each row and pause (simulate a slow client)
+      try {
+        while (rs.next()) {
+          rs.getString(1);
+          rowsCounted++;
+          //Pause briefly (a second beyond the timeout) before attempting to fetch rows
+          try {
+            Thread.sleep( TimeUnit.SECONDS.toMillis(timeoutDuration + 1) );
+          } catch (InterruptedException e) {/*DoNothing*/}
+          logger.info("Paused for {} seconds", (timeoutDuration+1));
+        }
+      } catch (SQLTimeoutException sqlEx) {
+        logger.info("Counted "+rowsCounted+" rows before hitting timeout");
+        return; //Successfully return
+      }
+    }
+    //Throw an exception to indicate that we shouldn't have reached this point
+    throw new Exception("Failed to trigger timeout of "+ timeoutDuration + " sec");
+  }
+
+  /**
+   * Test setting timeout for a query that actually times out because of lack of timely server response
+   */
+  @Test ( expected = SqlTimeoutException.class )
+  public void testServerTriggeredQueryTimeout() throws Exception {
+    //Setting to a very low value (2sec)
+    int timeoutDuration = 2;
+    //Server will be paused marginally longer than the test timeout
+    long serverPause = timeoutDuration + 2;
+    //Additional time for JDBC timeout and server pauses to complete
+    int cleanupPause = 3;
+
+    //Simulate a lack of timely server response by injecting a pause in the Screen operator's sending-data RPC
+    final String controls = Controls.newBuilder()
+        .addTimedPause(ScreenCreator.class, "sending-data", 0, TimeUnit.SECONDS.toMillis(serverPause))
+        .build();
+
+    //Fetching an exclusive connection since injected pause affects all sessions on the connection
+    try ( Connection exclusiveConnection = new Driver().connect( "jdbc:drill:zk=local", null )) {
+      try(Statement stmt = exclusiveConnection.createStatement()) {
+        assertThat(
+            stmt.execute(String.format(
+                "ALTER session SET `%s` = '%s'",
+                ExecConstants.DRILLBIT_CONTROL_INJECTIONS, controls)),
+            equalTo(true));
+      }
+
+      try(Statement stmt = exclusiveConnection.createStatement()) {
+        stmt.setQueryTimeout(timeoutDuration);
+        logger.info("Set a timeout of {} seconds", stmt.getQueryTimeout());
+
+        //Executing a query with the paused server. Expecting timeout to occur here
+        ResultSet rs = stmt.executeQuery(SYS_VERSION_SQL);
+        //Fetch rows
+        while (rs.next()) {
+          rs.getBytes(1);
+        }
+      } catch (SQLTimeoutException sqlEx) {
+        logger.info("SQLTimeoutException thrown: {}", sqlEx.getMessage());
+        throw (SqlTimeoutException) sqlEx;
+      } finally {
+        //Pause briefly to wait for server to unblock
+        try {
+          Thread.sleep( TimeUnit.SECONDS.toMillis(cleanupPause) );
+        } catch (InterruptedException e) {/*DoNothing*/}
+      }
+    }
+  }
+
+
+  /**
+   * Test setting timeout that never gets triggered
+   */
+  @Test
+  public void testNonTriggeredQueryTimeout() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      stmt.setQueryTimeout(60);
+      stmt.executeQuery(SYS_VERSION_SQL);
+      ResultSet rs = stmt.getResultSet();
+      int rowCount = 0;
+      while (rs.next()) {
+        rs.getBytes(1);
+        rowCount++;
+      }
+      assertEquals( 1 , rowCount );
     }
   }
 

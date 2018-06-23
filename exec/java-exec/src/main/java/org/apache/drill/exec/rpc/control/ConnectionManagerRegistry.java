@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,36 +20,34 @@ package org.apache.drill.exec.rpc.control;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.server.BootStrapContext;
-import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.rpc.BitRpcUtility;
 
 public class ConnectionManagerRegistry implements Iterable<ControlConnectionManager> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConnectionManagerRegistry.class);
 
   private final ConcurrentMap<DrillbitEndpoint, ControlConnectionManager> registry = Maps.newConcurrentMap();
 
-  private final ControlMessageHandler handler;
-  private final BootStrapContext context;
-  private volatile DrillbitEndpoint localEndpoint;
-  private final BufferAllocator allocator;
+  private final ControlConnectionConfig config;
 
-  public ConnectionManagerRegistry(BufferAllocator allocator, ControlMessageHandler handler, BootStrapContext context) {
-    super();
-    this.handler = handler;
-    this.context = context;
-    this.allocator = allocator;
+  private DrillbitEndpoint localEndpoint;
+
+  public ConnectionManagerRegistry(ControlConnectionConfig config) {
+    this.config = config;
   }
 
-  public ControlConnectionManager getConnectionManager(DrillbitEndpoint endpoint) {
-    assert localEndpoint != null : "DrillbitEndpoint must be set before a connection manager can be retrieved";
-    ControlConnectionManager m = registry.get(endpoint);
+  public ControlConnectionManager getConnectionManager(DrillbitEndpoint remoteEndpoint) {
+    assert localEndpoint != null :
+        "DrillbitEndpoint must be set before a connection manager can be retrieved";
+
+    final boolean isLocalServer = BitRpcUtility.isLocalControlServer(localEndpoint, remoteEndpoint);
+    ControlConnectionManager m = registry.get(remoteEndpoint);
     if (m == null) {
-      m = new ControlConnectionManager(allocator, endpoint, localEndpoint, handler, context);
-      ControlConnectionManager m2 = registry.putIfAbsent(endpoint, m);
+      m = (isLocalServer) ? new LocalControlConnectionManager(config, remoteEndpoint)
+                    : new RemoteControlConnectionManager(config, localEndpoint, remoteEndpoint);
+      final ControlConnectionManager m2 = registry.putIfAbsent(remoteEndpoint, m);
       if (m2 != null) {
         m = m2;
       }
@@ -58,13 +56,13 @@ public class ConnectionManagerRegistry implements Iterable<ControlConnectionMana
     return m;
   }
 
+  void setLocalEndpoint(final DrillbitEndpoint endpoint) {
+    this.localEndpoint = endpoint;
+  }
+
   @Override
   public Iterator<ControlConnectionManager> iterator() {
     return registry.values().iterator();
-  }
-
-  public void setEndpoint(DrillbitEndpoint endpoint) {
-    this.localEndpoint = endpoint;
   }
 
 }

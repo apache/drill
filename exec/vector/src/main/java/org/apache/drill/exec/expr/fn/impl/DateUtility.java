@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,29 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.joda.time.Period;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
-import org.joda.time.format.DateTimeParser;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 
 import com.carrotsearch.hppc.ObjectIntHashMap;
 
-// Utility class for Date, DateTime, TimeStamp, Interval data types
+/**
+ * Utility class for Date, DateTime, TimeStamp, Interval data types.
+ * <p>
+ * WARNING: This class is excluded from the JDBC driver. If vectors refer
+ * to this code, they will fail when called from JDBC.
+ */
+
 public class DateUtility {
 
-
-    /* We have a hashmap that stores the timezone as the key and an index as the value
-     * While storing the timezone in value vectors, holders we only use this index. As we
-     * reconstruct the timestamp, we use this index to index through the array timezoneList
-     * and get the corresponding timezone and pass it to joda-time
-     */
+  /* We have a hashmap that stores the timezone as the key and an index as the value
+   * While storing the timezone in value vectors, holders we only use this index. As we
+   * reconstruct the timestamp, we use this index to index through the array timezoneList
+   * and get the corresponding timezone and pass it to joda-time
+   */
   public static ObjectIntHashMap<String> timezoneMap = new ObjectIntHashMap<String>();
 
-    public static String[] timezoneList =  {"Africa/Abidjan",
+  public static String[] timezoneList =  {  "Africa/Abidjan",
                                             "Africa/Accra",
                                             "Africa/Addis_Ababa",
                                             "Africa/Algiers",
@@ -612,71 +620,123 @@ public class DateUtility {
                                             "WET",
                                             "Zulu"};
 
-    static {
-      for (int i = 0; i < timezoneList.length; i++) {
-        timezoneMap.put(timezoneList[i], i);
-      }
+  static {
+    for (int i = 0; i < timezoneList.length; i++) {
+      timezoneMap.put(timezoneList[i], i);
     }
+  }
 
-    public static final DateTimeFormatter formatDate        = DateTimeFormat.forPattern("yyyy-MM-dd");
-    public static final DateTimeFormatter formatTimeStamp    = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
-    public static final DateTimeFormatter formatTimeStampTZ = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS ZZZ");
-    public static final DateTimeFormatter formatTime        = DateTimeFormat.forPattern("HH:mm:ss.SSS");
+  public static final DateTimeFormatter formatDate        = buildFormatter("yyyy-MM-dd");
+  public static final DateTimeFormatter formatTimeStamp   = buildFormatter("yyyy-MM-dd HH:mm:ss.SSS");
+  public static final DateTimeFormatter formatTimeStampTZ = buildFormatter("yyyy-MM-dd HH:mm:ss.SSS VV");
+  public static final DateTimeFormatter formatTime        = buildFormatter("HH:mm:ss.SSS");
 
-    public static DateTimeFormatter dateTimeTZFormat = null;
-    public static DateTimeFormatter timeFormat = null;
+  public static final DateTimeFormatter isoFormatDate     = formatDate;
+  public static final DateTimeFormatter isoFormatTimeStamp= buildFormatter("yyyy-MM-dd'T'HH:mm:ss.SSSXX");
+  public static final DateTimeFormatter isoFormatTime     = buildFormatter("HH:mm:ss.SSSXX");
 
-    public static final int yearsToMonths = 12;
-    public static final int hoursToMillis = 60 * 60 * 1000;
-    public static final int minutesToMillis = 60 * 1000;
-    public static final int secondsToMillis = 1000;
-    public static final int monthToStandardDays = 30;
-    public static final long monthsToMillis = 2592000000L; // 30 * 24 * 60 * 60 * 1000
-    public static final int daysToStandardMillis = 24 * 60 * 60 * 1000;
+  public static DateTimeFormatter dateTimeTZFormat = null;
+  public static DateTimeFormatter timeFormat = null;
+
 
 
   public static int getIndex(String timezone) {
-        return timezoneMap.get(timezone);
+    return timezoneMap.get(timezone);
+  }
+
+  public static String getTimeZone(int index) {
+    return timezoneList[index];
+  }
+
+  /**
+   * Parse given string into a LocalDate
+   */
+  public static LocalDate parseLocalDate(final String value) {
+    return LocalDate.parse(value, formatDate);
+  }
+
+  /**
+   * Parse given string into a LocalTime
+   */
+  public static LocalTime parseLocalTime(final String value) {
+    return LocalTime.parse(value, formatTime);
+  }
+
+  /**
+   * Parse the given string into a LocalDateTime.
+   */
+  public static LocalDateTime parseLocalDateTime(final String value) {
+    return LocalDateTime.parse(value, formatTimeStamp);
+  }
+
+  // Returns the date time formatter used to parse date strings
+  public static DateTimeFormatter getDateTimeFormatter() {
+
+    if (dateTimeTZFormat == null) {
+      DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      DateTimeFormatter optionalTime = DateTimeFormatter.ofPattern(" HH:mm:ss");
+      DateTimeFormatter optionalSec = DateTimeFormatter.ofPattern(".SSS");
+      DateTimeFormatter optionalZone = DateTimeFormatter.ofPattern(" ZZZ");
+
+      dateTimeTZFormat = new DateTimeFormatterBuilder().parseLenient()
+          .append(dateFormatter)
+          .appendOptional(optionalTime)
+          .appendOptional(optionalSec)
+          .appendOptional(optionalZone)
+          .toFormatter();
     }
 
-    public static String getTimeZone(int index) {
-        return timezoneList[index];
+    return dateTimeTZFormat;
+  }
+
+  /**
+   * Best effort parsing of the given value
+   */
+  public static LocalDateTime parseBest(String value) {
+    TemporalAccessor parsed = getDateTimeFormatter().parse(value);
+    LocalDate datePart;
+    LocalTime timePart;
+    ZoneOffset zoneOffset;
+
+    long epochDay = 0, nanoSeconds = 0;
+    int offsetSeconds = 0;
+
+    // get different parsed parts
+    if (parsed.isSupported(ChronoField.EPOCH_DAY)) {
+      epochDay = parsed.getLong(ChronoField.EPOCH_DAY);
+    }
+    if (parsed.isSupported(ChronoField.NANO_OF_DAY)) {
+      nanoSeconds = parsed.getLong(ChronoField.NANO_OF_DAY);
+    }
+    if (parsed.isSupported(ChronoField.OFFSET_SECONDS)) {
+      offsetSeconds = parsed.get(ChronoField.OFFSET_SECONDS);
     }
 
-    // Function returns the date time formatter used to parse date strings
-    public static DateTimeFormatter getDateTimeFormatter() {
+    zoneOffset = ZoneOffset.ofTotalSeconds(offsetSeconds);
+    datePart = LocalDate.ofEpochDay(epochDay);
+    timePart = LocalTime.ofNanoOfDay(nanoSeconds);
 
-        if (dateTimeTZFormat == null) {
-            DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd");
-            DateTimeParser optionalTime = DateTimeFormat.forPattern(" HH:mm:ss").getParser();
-            DateTimeParser optionalSec = DateTimeFormat.forPattern(".SSS").getParser();
-            DateTimeParser optionalZone = DateTimeFormat.forPattern(" ZZZ").getParser();
+    return OffsetDateTime.of(datePart, timePart, zoneOffset).toLocalDateTime();
+  }
 
-            dateTimeTZFormat = new DateTimeFormatterBuilder().append(dateFormatter).appendOptional(optionalTime).appendOptional(optionalSec).appendOptional(optionalZone).toFormatter();
-        }
-
-        return dateTimeTZFormat;
+  // Returns time formatter used to parse time strings
+  public static DateTimeFormatter getTimeFormatter() {
+    if (timeFormat == null) {
+      DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+      DateTimeFormatter optionalSec = DateTimeFormatter.ofPattern(".SSS");
+      timeFormat = new DateTimeFormatterBuilder().parseLenient()
+          .append(timeFormatter)
+          .appendOptional(optionalSec)
+          .toFormatter();
     }
+    return timeFormat;
+  }
 
-    // Function returns time formatter used to parse time strings
-    public static DateTimeFormatter getTimeFormatter() {
-        if (timeFormat == null) {
-            DateTimeFormatter timeFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-            DateTimeParser optionalSec = DateTimeFormat.forPattern(".SSS").getParser();
-            timeFormat = new DateTimeFormatterBuilder().append(timeFormatter).appendOptional(optionalSec).toFormatter();
-        }
-        return timeFormat;
-    }
-
-    public static int monthsFromPeriod(Period period){
-      return (period.getYears() * yearsToMonths) + period.getMonths();
-    }
-
-    public static int millisFromPeriod(final Period period){
-      return (period.getHours() * hoursToMillis) +
-      (period.getMinutes() * minutesToMillis) +
-      (period.getSeconds() * secondsToMillis) +
-      (period.getMillis());
-    }
-
+  // return a formatter that is lenient in its parsing of fields.  e.g.
+  // if the month specification is "MM", a lenient version of the formatter
+  // will accept a single digit month number as well as the 2-digit month
+  // number.
+  public static DateTimeFormatter buildFormatter(String pattern) {
+    return new DateTimeFormatterBuilder().parseLenient().append(DateTimeFormatter.ofPattern(pattern)).toFormatter();
+  }
 }

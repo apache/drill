@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,8 @@
 package org.apache.drill.exec.sql;
 
 import com.google.common.base.Strings;
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.TestBuilder;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,14 +34,14 @@ public class TestBaseViewSupport extends BaseTestQuery {
   /**
    * Create view with given parameters.
    *
-   * Current default schema "dfs_test"
+   * Current default schema "dfs"
    *
    * CREATE VIEW tmp.viewName(f1, f2) AS SELECT * FROM cp.`region.json`
    *
    * For the above CREATE VIEW query, function parameters are:
    *   viewSchema = "tmp"
    *   viewName = "viewName"
-   *   finalSchema = "dfs_test.tmp"
+   *   finalSchema = "dfs.tmp"
    *   viewFields = "(f1, f2)"
    *   viewDef = "SELECT * FROM cp.`region.json`"
    *
@@ -76,13 +76,13 @@ public class TestBaseViewSupport extends BaseTestQuery {
   /**
    * Drop view with given parameters.
    *
-   * Current schema "dfs_test"
+   * Current schema "dfs"
    * DROP VIEW tmp.viewName
    *
    * For the above DROP VIEW query, function parameters values are:
    *  viewSchema = "tmp"
    *  "viewName" = "viewName"
-   *  "finalSchema" = "dfs_test.tmp"
+   *  "finalSchema" = "dfs.tmp"
    *
    * @param viewSchema
    * @param viewName
@@ -102,6 +102,50 @@ public class TestBaseViewSupport extends BaseTestQuery {
         .baselineColumns("ok", "summary")
         .baselineValues(true, String.format("View [%s] deleted successfully from schema [%s].", viewName, finalSchema))
         .go();
+  }
+
+  /**
+   * Drop view if exists with given parameters.
+   *
+   * Current schema "dfs"
+   * DROP VIEW IF EXISTS tmp.viewName
+   *
+   * For the above DROP VIEW IF EXISTS query, function parameters values are:
+   *  viewSchema = "tmp"
+   *  "viewName" = "viewName"
+   *  "finalSchema" = "dfs.tmp"
+   *  "ifViewExists" = null
+   *
+   * @param viewSchema
+   * @param viewName
+   * @param finalSchema
+   * @param ifViewExists Helps to check query result depending from the existing of the view.
+   * @throws Exception
+   */
+  protected static void dropViewIfExistsHelper(final String viewSchema, final String viewName, final String finalSchema, Boolean ifViewExists) throws
+      Exception{
+    String viewFullName = "`" + viewName + "`";
+    if (!Strings.isNullOrEmpty(viewSchema)) {
+      viewFullName = viewSchema + "." + viewFullName;
+    }
+    if (ifViewExists == null) {
+      // ifViewExists == null: we do not know whether the table exists. Just drop it if exists or skip dropping if doesn't exist
+      test(String.format("DROP VIEW IF EXISTS %s", viewFullName));
+    } else if (ifViewExists) {
+      testBuilder()
+          .sqlQuery(String.format("DROP VIEW IF EXISTS %s", viewFullName))
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("View [%s] deleted successfully from schema [%s].", viewName, finalSchema))
+          .go();
+    } else {
+      testBuilder()
+          .sqlQuery(String.format("DROP VIEW IF EXISTS %s", viewFullName))
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(false, String.format("View [%s] not found in schema [%s].", viewName, finalSchema))
+          .go();
+    }
   }
 
   /**

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,6 +24,8 @@ import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
 public class SortTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortTest.class);
+
   private static final int RECORD_COUNT = 10*1000*1000;
   private static final int KEY_SIZE = 10;
   private static final int DATA_SIZE = 90;
@@ -35,18 +37,16 @@ public class SortTest {
     for(int i =0; i < 100; i++){
       SortTest st = new SortTest();
       long nanos = st.doSort();
-      System.out.print("Sort Completed in ");
-      System.out.print(nanos);
-      System.out.println(" ns.");
+      logger.info("Sort Completed in {} ns.", nanos);
     }
   }
 
   SortTest(){
-    System.out.print("Generating data... ");
+    logger.info("Generating data... ");
     data = new byte[RECORD_SIZE*RECORD_COUNT];
     Random r = new Random();
     r.nextBytes(data);
-    System.out.print("Data generated. ");
+    logger.info("Data generated. ");
   }
 
   public long doSort(){

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,6 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 public interface ExecErrorConstants {
 
   // Error message when decimal data type is disabled
-  public static final String DECIMAL_DISABLE_ERR_MSG = String.format("Decimal data type is disabled. \n" +
-      "As of this release decimal data type is a beta level feature and should not be used in production \n" +
+  String DECIMAL_DISABLE_ERR_MSG = String.format("Decimal data type is disabled. \n" +
       "Use option '%s' to enable decimal data type", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
 }

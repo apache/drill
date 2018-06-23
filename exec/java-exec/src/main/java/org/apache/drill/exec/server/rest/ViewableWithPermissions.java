@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.drill.exec.server.rest;
 
 import com.google.common.collect.ImmutableMap;
-import org.apache.drill.exec.server.rest.auth.AnonymousAuthenticator;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -37,8 +36,8 @@ public class ViewableWithPermissions extends Viewable {
    * @param sc
    * @return
    */
-  public static Viewable create(final String templateName, final SecurityContext sc) {
-    return new ViewableWithPermissions(templateName, sc, true, null);
+  public static Viewable create(final boolean authEnabled, final String templateName, final SecurityContext sc) {
+    return new ViewableWithPermissions(authEnabled, templateName, sc, true, null);
   }
 
   /**
@@ -48,8 +47,9 @@ public class ViewableWithPermissions extends Viewable {
    * @param model
    * @return
    */
-  public static Viewable create(final String templateName, final SecurityContext sc, final Object model) {
-    return new ViewableWithPermissions(templateName, sc, true, model);
+  public static Viewable create(final boolean authEnabled, final String templateName,
+                                final SecurityContext sc, final Object model) {
+    return new ViewableWithPermissions(authEnabled, templateName, sc, true, model);
   }
 
   /**
@@ -58,17 +58,24 @@ public class ViewableWithPermissions extends Viewable {
    * @return
    */
   public static Viewable createLoginPage(final String errorMsg) {
-    return new ViewableWithPermissions("/rest/login.ftl", null, false, errorMsg);
+    return new ViewableWithPermissions(true, "/rest/login.ftl", null, false, errorMsg);
   }
 
-  private ViewableWithPermissions(final String templateName, final SecurityContext sc, final boolean showControls,
-      final Object model) throws IllegalArgumentException {
-    super(templateName, createModel(sc, showControls, model));
+  public static Viewable createMainLoginPage(Object mainPageModel) {
+    return new ViewableWithPermissions(true, "/rest/mainLogin.ftl", null, false, mainPageModel);
   }
 
-  private static Map<String, Object> createModel(final SecurityContext sc, final boolean showControls,
-      final Object pageModel) {
-    final boolean isAdmin = showControls && sc.isUserInRole(DrillUserPrincipal.ADMIN_ROLE);
+  private ViewableWithPermissions(final boolean authEnabled, final String templateName,
+                                  final SecurityContext sc, final boolean showControls,
+                                  final Object model) throws IllegalArgumentException {
+    super(templateName, createModel(authEnabled, sc, showControls, model));
+  }
+
+  private static Map<String, Object> createModel(final boolean authEnabled, final SecurityContext sc,
+                                                 final boolean showControls, final Object pageModel) {
+
+    final boolean isAdmin = !authEnabled /* when auth is disabled every user is an admin user */
+        || (showControls && sc.isUserInRole(DrillUserPrincipal.ADMIN_ROLE));
 
     final boolean isUserLoggedIn = AuthDynamicFeature.isUserLoggedIn(sc);
 
@@ -76,11 +83,12 @@ public class ViewableWithPermissions extends Viewable {
         .put("showStorage", isAdmin)
         .put("showOptions", isAdmin)
         .put("showThreads", isAdmin)
-        .put("showLogin", showControls && !isUserLoggedIn)
-        .put("showLogout", showControls && isUserLoggedIn &&
-            !AnonymousAuthenticator.METHOD.equals(sc.getAuthenticationScheme()))
-        .put("loggedInUserName", showControls && isUserLoggedIn ? sc.getUserPrincipal().getName() : "anonymous")
-        .put("showControls", showControls);
+        .put("showLogs", isAdmin)
+        .put("showLogin", authEnabled && showControls && !isUserLoggedIn)
+        .put("showLogout", authEnabled && showControls && isUserLoggedIn)
+        .put("loggedInUserName", authEnabled && showControls &&
+            isUserLoggedIn ? sc.getUserPrincipal().getName()
+                           : DrillUserPrincipal.ANONYMOUS_USER).put("showControls", showControls);
 
     if (pageModel != null) {
       mapBuilder.put("model", pageModel);

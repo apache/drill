@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 package io.netty.buffer;
-
-import io.netty.util.internal.PlatformDependent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +38,13 @@ import org.apache.drill.exec.ops.BufferManager;
 
 import com.google.common.base.Preconditions;
 
+import io.netty.util.internal.PlatformDependent;
+
+/**
+ * Drill data structure for accessing and manipulating data buffers. This class is integrated with the
+ * Drill memory management layer for quota enforcement and buffer sharing.
+ */
+@SuppressWarnings("unused")
 public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBuf.class);
 
@@ -52,7 +57,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   private final int offset;
   private final BufferLedger ledger;
   private final BufferManager bufManager;
-  private final ByteBufAllocator alloc;
   private final boolean isEmpty;
   private volatile int length;
   private final HistoricalLog historicalLog = BaseAllocator.DEBUG ?
@@ -72,7 +76,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     this.udle = byteBuf;
     this.isEmpty = isEmpty;
     this.bufManager = manager;
-    this.alloc = alloc;
     this.addr = byteBuf.memoryAddress() + offset;
     this.ledger = ledger;
     this.length = length;
@@ -81,7 +84,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     if (BaseAllocator.DEBUG) {
       historicalLog.recordEvent("create()");
     }
-
   }
 
   public DrillBuf reallocIfNeeded(final int size) {
@@ -107,51 +109,14 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     }
   }
 
+  public long addr() { return addr; }
+
   private long addr(int index) {
     return addr + index;
   }
 
-  private final void checkIndexD(int index, int fieldLength) {
-    ensureAccessible();
-    if (fieldLength < 0) {
-      throw new IllegalArgumentException("length: " + fieldLength + " (expected: >= 0)");
-    }
-    if (index < 0 || index > capacity() - fieldLength) {
-      if (BaseAllocator.DEBUG) {
-        historicalLog.logHistory(logger);
-      }
-      throw new IndexOutOfBoundsException(String.format(
-          "index: %d, length: %d (expected: range(0, %d))", index, fieldLength, capacity()));
-    }
-  }
-
-  /**
-   * Allows a function to determine whether not reading a particular string of bytes is valid.
-   *
-   * Will throw an exception if the memory is not readable for some reason. Only doesn't something in the case that
-   * AssertionUtil.BOUNDS_CHECKING_ENABLED is true.
-   *
-   * @param start
-   *          The starting position of the bytes to be read.
-   * @param end
-   *          The exclusive endpoint of the bytes to be read.
-   */
-  public void checkBytes(int start, int end) {
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      checkIndexD(start, end - start);
-    }
-  }
-
   private void chk(int index, int width) {
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      checkIndexD(index, width);
-    }
-  }
-
-  private void ensure(int width) {
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      ensureWritable(width);
-    }
+    BoundsChecking.lengthCheck(this, index, width);
   }
 
   /**
@@ -184,15 +149,15 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   /**
    * Transfer the memory accounting ownership of this DrillBuf to another allocator. This will generate a new DrillBuf
    * that carries an association with the underlying memory of this DrillBuf. If this DrillBuf is connected to the
-   * owning BufferLedger of this memory, that memory ownership/accounting will be transferred to the taret allocator. If
+   * owning BufferLedger of this memory, that memory ownership/accounting will be transferred to the target allocator. If
    * this DrillBuf does not currently own the memory underlying it (and is only associated with it), this does not
    * transfer any ownership to the newly created DrillBuf.
-   *
+   * <p>
    * This operation has no impact on the reference count of this DrillBuf. The newly created DrillBuf with either have a
    * reference count of 1 (in the case that this is the first time this memory is being associated with the new
    * allocator) or the current value of the reference count for the other AllocationManager/BufferLedger combination in
    * the case that the provided allocator already had an association to this underlying memory.
-   *
+   * <p>
    * Transfers will always succeed, even if that puts the other allocator into an overlimit situation. This is possible
    * due to the fact that the original owning allocator may have allocated this memory out of a local reservation
    * whereas the target allocator may need to allocate new memory from a parent or RootAllocator. This operation is done
@@ -218,6 +183,13 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   /**
+   * Visible only for memory allocation calculations.
+   *
+   * @return The {@link BufferLedger} associated with this {@link DrillBuf}.
+   */
+  public BufferLedger getLedger() { return ledger; }
+
+  /**
    * The outcome of a Transfer.
    */
   public class TransferResult {
@@ -236,7 +208,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       this.allocationFit = allocationFit;
       this.buffer = buffer;
     }
-
   }
 
   @Override
@@ -269,9 +240,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       throw new IllegalStateException(
           String.format("DrillBuf[%d] refCnt has gone negative. Buffer Info: %s", id, toVerboseString()));
     }
-
     return refCnt == 0;
-
   }
 
   @Override
@@ -452,7 +421,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       return "";
     }
 
-    return ByteBufUtil.decodeString(nioBuffer(index, length), charset);
+    return ByteBufUtil.decodeString(this, index, length, charset);
   }
 
   @Override
@@ -578,7 +547,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeShort(int value) {
-    ensure(2);
+    BoundsChecking.ensureWritable(this, 2);
     PlatformDependent.putShort(addr(writerIndex), (short) value);
     writerIndex += 2;
     return this;
@@ -586,7 +555,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeInt(int value) {
-    ensure(4);
+    BoundsChecking.ensureWritable(this, 4);
     PlatformDependent.putInt(addr(writerIndex), value);
     writerIndex += 4;
     return this;
@@ -594,7 +563,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeLong(long value) {
-    ensure(8);
+    BoundsChecking.ensureWritable(this, 8);
     PlatformDependent.putLong(addr(writerIndex), value);
     writerIndex += 8;
     return this;
@@ -602,7 +571,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeChar(int value) {
-    ensure(2);
+    BoundsChecking.ensureWritable(this, 2);
     PlatformDependent.putShort(addr(writerIndex), (short) value);
     writerIndex += 2;
     return this;
@@ -610,7 +579,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeFloat(float value) {
-    ensure(4);
+    BoundsChecking.ensureWritable(this, 4);
     PlatformDependent.putInt(addr(writerIndex), Float.floatToRawIntBits(value));
     writerIndex += 4;
     return this;
@@ -618,7 +587,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeDouble(double value) {
-    ensure(8);
+    BoundsChecking.ensureWritable(this, 8);
     PlatformDependent.putLong(addr(writerIndex), Double.doubleToRawLongBits(value));
     writerIndex += 8;
     return this;
@@ -700,7 +669,20 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf getBytes(int index, ByteBuf dst, int dstIndex, int length) {
+    final int BULK_COPY_THR = 16;
+    // Performance profiling indicated that using the "putByte()" method is faster for short
+    // data lengths (less than 16 bytes) than using the "copyMemory()" method.
+    if (length < BULK_COPY_THR && udle.hasMemoryAddress() && dst.hasMemoryAddress()) {
+      if (dst.capacity() < (dstIndex + length)) {
+        throw new IndexOutOfBoundsException();
+      }
+      for (int idx = 0; idx < length; ++idx) {
+        byte value = getByte(index + idx);
+        PlatformDependent.putByte(dst.memoryAddress() + dstIndex + idx, value);
+      }
+    } else {
     udle.getBytes(index + offset, dst, dstIndex, length);
+    }
     return this;
   }
 
@@ -802,6 +784,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   private final static int LOG_BYTES_PER_ROW = 10;
+  private static final char[] HEX_CHAR = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
   /**
    * Return the buffer's byte contents in the form of a hex dump.
@@ -813,23 +796,20 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
    * @return A hex dump in a String.
    */
   public String toHexString(final int start, final int length) {
-    final int roundedStart = (start / LOG_BYTES_PER_ROW) * LOG_BYTES_PER_ROW;
-
-    final StringBuilder sb = new StringBuilder("buffer byte dump\n");
-    int index = roundedStart;
-    for (int nLogged = 0; nLogged < length; nLogged += LOG_BYTES_PER_ROW) {
-      sb.append(String.format(" [%05d-%05d]", index, index + LOG_BYTES_PER_ROW - 1));
-      for (int i = 0; i < LOG_BYTES_PER_ROW; ++i) {
-        try {
-          final byte b = getByte(index++);
-          sb.append(String.format(" 0x%02x", b));
-        } catch (IndexOutOfBoundsException ioob) {
-          sb.append(" <ioob>");
-        }
+    Preconditions.checkArgument(start >= 0);
+    final StringBuilder sb = new StringBuilder("buffer byte dump");
+    final int end = Math.min(length, this.length - start);
+    for (int i = 0; i < end; i++) {
+      if (i % LOG_BYTES_PER_ROW == 0) {
+        sb.append(String.format("%n [%05d-%05d]", i + start, Math.min(i + LOG_BYTES_PER_ROW - 1, end - 1) + start));
       }
-      sb.append('\n');
+      byte b = _getByte(i + start);
+      sb.append(" 0x").append(HEX_CHAR[b >> 4]).append(HEX_CHAR[b & 0x0F]);
     }
-    return sb.toString();
+    if (length > end) {
+      sb.append(String.format("%n [%05d-%05d] <ioob>", start + end, start + length));
+    }
+    return sb.append(System.lineSeparator()).toString();
   }
 
   /**
@@ -857,6 +837,157 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     if (BaseAllocator.DEBUG && !isEmpty && verbosity.includeHistoricalLog) {
       sb.append("\n");
       historicalLog.buildHistory(sb, indent + 1, verbosity.includeStackTraces);
+    }
+  }
+
+  /**
+   * Convenience method to read buffer bytes into a newly allocated byte
+   * array.
+   *
+   * @param srcOffset the offset into this buffer of the data to read
+   * @param length number of bytes to read
+   * @return byte array with the requested bytes
+   */
+  public byte[] unsafeGetMemory(int srcOffset, int length) {
+    byte buf[] = new byte[length];
+    PlatformDependent.copyMemory(addr + srcOffset, buf, 0, length);
+    return buf;
+  }
+
+  // --------------------------------------------------------------------------
+  // Helper Methods for code that needs efficient processing on byte arrays;
+  // this should be done only when direct memory cannot be used
+  // --------------------------------------------------------------------------
+
+  /** Number of bytes in a long */
+  public static final int LONG_NUM_BYTES  = 8;
+  /** Number of bytes in an int */
+  public static final int INT_NUM_BYTES   = 4;
+  /** Number of bytes in a short */
+  public static final int SHORT_NUM_BYTES = 2;
+
+  /**
+   * @param data source byte array
+   * @param index index within the byte array
+   * @return short value starting at data+index
+   */
+  public static short getShort(byte[] data, int index) {
+    check(index, SHORT_NUM_BYTES, data.length);
+    return PlatformDependent.getShort(data, index);
+  }
+
+  /**
+   * @param data source byte array
+   * @param index index within the byte array
+   * @return integer value starting at data+index
+   */
+  public static int getInt(byte[] data, int index) {
+    check(index, INT_NUM_BYTES, data.length);
+    return PlatformDependent.getInt(data, index);
+  }
+
+  /**
+   * @param data data source byte array
+   * @param index index within the byte array
+   * @return long value read at data_index
+   */
+  public static long getLong(byte[] data, int index) {
+    check(index, LONG_NUM_BYTES, data.length);
+    return PlatformDependent.getLong(data, index);
+  }
+
+  /**
+   * Read a short at position src+srcIndex and copy it to the dest+destIndex
+   *
+   * @param src source byte array
+   * @param srcIndex source index
+   * @param dest destination byte array
+   * @param destIndex destination index
+   */
+  public static void putShort(byte[] src, int srcIndex, byte[] dest, int destIndex) {
+    check(srcIndex, SHORT_NUM_BYTES, src.length);
+    check(destIndex,SHORT_NUM_BYTES, dest.length);
+
+    short value = PlatformDependent.getShort(src, srcIndex);
+    PlatformDependent.putShort(dest, destIndex, value);
+  }
+
+  /**
+   * Read an integer at position src+srcIndex and copy it to the dest+destIndex
+   *
+   * @param src source byte array
+   * @param srcIndex source index
+   * @param dest destination byte array
+   * @param destIndex destination index
+   */
+  public static void putInt(byte[] src, int srcIndex, byte[] dest, int destIndex) {
+    check(srcIndex, INT_NUM_BYTES, src.length);
+    check(destIndex,INT_NUM_BYTES, dest.length);
+
+    int value = PlatformDependent.getInt(src, srcIndex);
+    PlatformDependent.putInt(dest, destIndex, value);
+  }
+
+  /**
+   * Read a long at position src+srcIndex and copy it to the dest+destIndex
+   *
+   * @param src source byte array
+   * @param srcIndex source index
+   * @param dest destination byte array
+   * @param destIndex destination index
+   */
+  public static void putLong(byte[] src, int srcIndex, byte[] dest, int destIndex) {
+    check(srcIndex, LONG_NUM_BYTES, src.length);
+    check(destIndex,LONG_NUM_BYTES, dest.length);
+
+    long value = PlatformDependent.getLong(src, srcIndex);
+    PlatformDependent.putLong(dest, destIndex, value);
+  }
+
+  /**
+   * Copy a short value to the dest+destIndex
+   *
+   * @param dest destination byte array
+   * @param destIndex destination index
+   * @param value a short value
+   */
+  public static void putShort(byte[] dest, int destIndex, short value) {
+    check(destIndex, SHORT_NUM_BYTES, dest.length);
+    PlatformDependent.putShort(dest, destIndex, value);
+  }
+
+  /**
+   * Copy an integer value to the dest+destIndex
+   *
+   * @param dest destination byte array
+   * @param destIndex destination index
+   * @param value an int value
+   */
+  public static void putInt(byte[] dest, int destIndex, int value) {
+    check(destIndex, INT_NUM_BYTES, dest.length);
+    PlatformDependent.putInt(dest, destIndex, value);
+  }
+
+  /**
+   * Copy a long value to the dest+destIndex
+   *
+   * @param dest destination byte array
+   * @param destIndex destination index
+   * @param value a long value
+   */
+  public static void putLong(byte[] dest, int destIndex, long value) {
+    check(destIndex, LONG_NUM_BYTES, dest.length);
+    PlatformDependent.putLong(dest, destIndex, value);
+  }
+
+  private static void check(int index, int len, int bufferLen) {
+    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
+      if (index < 0 || len < 0) {
+        throw new IllegalArgumentException(String.format("index: [%d], len: [%d]", index, len));
+      }
+      if ((index + len) > bufferLen) {
+        throw new IndexOutOfBoundsException(String.format("Trying to access more than buffer length; index: [%d], len: [%d], buffer-len: [%d]", index, len, bufferLen));
+      }
     }
   }
 

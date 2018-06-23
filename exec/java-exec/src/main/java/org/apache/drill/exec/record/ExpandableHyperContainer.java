@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,6 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.vector.ValueVector;
 
-import java.util.LinkedList;
-
 public class ExpandableHyperContainer extends VectorContainer {
 
   public ExpandableHyperContainer() {
@@ -29,46 +27,44 @@ public class ExpandableHyperContainer extends VectorContainer {
 
   public ExpandableHyperContainer(VectorAccessible batch) {
     super();
+    build(batch);
+  }
+
+  private void build(VectorAccessible batch) {
     if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
-      for (VectorWrapper w : batch) {
+      for (VectorWrapper<?> w : batch) {
         ValueVector[] hyperVector = w.getValueVectors();
         this.add(hyperVector, true);
       }
     } else {
-      for (VectorWrapper w : batch) {
+      for (VectorWrapper<?> w : batch) {
         ValueVector[] hyperVector = { w.getValueVector() };
         this.add(hyperVector, true);
       }
     }
+
+    buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
   }
 
   public void addBatch(VectorAccessible batch) {
     if (wrappers.size() == 0) {
-      if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
-        for (VectorWrapper w : batch) {
-          ValueVector[] hyperVector = w.getValueVectors();
-          this.add(hyperVector, true);
-        }
-      } else {
-        for (VectorWrapper w : batch) {
-          ValueVector[] hyperVector = { w.getValueVector() };
-          this.add(hyperVector, true);
-        }
-      }
+      build(batch);
       return;
     }
     if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
       int i = 0;
-      for (VectorWrapper w : batch) {
-        HyperVectorWrapper hyperVectorWrapper = (HyperVectorWrapper) wrappers.get(i++);
+      for (VectorWrapper<?> w : batch) {
+        HyperVectorWrapper<?> hyperVectorWrapper = (HyperVectorWrapper<?>) wrappers.get(i++);
         hyperVectorWrapper.addVectors(w.getValueVectors());
       }
     } else {
       int i = 0;
-      for (VectorWrapper w : batch) {
-        HyperVectorWrapper hyperVectorWrapper = (HyperVectorWrapper) wrappers.get(i++);
+      for (VectorWrapper<?> w : batch) {
+        HyperVectorWrapper<?> hyperVectorWrapper = (HyperVectorWrapper<?>) wrappers.get(i++);
         hyperVectorWrapper.addVector(w.getValueVector());
       }
     }
+
+    buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
   }
 }

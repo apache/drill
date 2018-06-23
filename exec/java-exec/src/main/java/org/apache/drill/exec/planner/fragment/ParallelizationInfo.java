@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -121,8 +121,13 @@ public class ParallelizationInfo {
 
     // Helper method to add the given EndpointAffinity to the global affinity map
     private void addEndpointAffinity(EndpointAffinity epAff) {
-      if (affinityMap.containsKey(epAff.getEndpoint())) {
-        affinityMap.get(epAff.getEndpoint()).addAffinity(epAff.getAffinity());
+      final EndpointAffinity epAffAgg = affinityMap.get(epAff.getEndpoint());
+      if (epAffAgg != null) {
+        epAffAgg.addAffinity(epAff.getAffinity());
+        if (epAff.isAssignmentRequired()) {
+          epAffAgg.setAssignmentRequired();
+        }
+        epAffAgg.setMaxWidth(epAff.getMaxWidth());
       } else {
         affinityMap.put(epAff.getEndpoint(), epAff);
       }

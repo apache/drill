@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,28 +17,6 @@
  */
 package org.apache.drill.exec.rpc.control;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
-
-import java.util.concurrent.TimeUnit;
-
-import org.apache.drill.exec.proto.BitControl.CustomMessage;
-import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
-import org.apache.drill.exec.proto.BitControl.FragmentStatus;
-import org.apache.drill.exec.proto.BitControl.InitializeFragments;
-import org.apache.drill.exec.proto.BitControl.RpcType;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
-import org.apache.drill.exec.rpc.DrillRpcFuture;
-import org.apache.drill.exec.rpc.FutureBitCommand;
-import org.apache.drill.exec.rpc.ListeningCommand;
-import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.RpcOutcomeListener;
-import org.apache.drill.exec.rpc.control.Controller.CustomSerDe;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -51,21 +29,33 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+import org.apache.drill.exec.proto.BitControl.CustomMessage;
+import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
+import org.apache.drill.exec.proto.BitControl.FragmentStatus;
+import org.apache.drill.exec.proto.BitControl.InitializeFragments;
+import org.apache.drill.exec.proto.BitControl.RpcType;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.rpc.DrillRpcFuture;
+import org.apache.drill.exec.rpc.FutureBitCommand;
+import org.apache.drill.exec.rpc.ListeningCommand;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.control.Controller.CustomSerDe;
 
+import java.util.concurrent.TimeUnit;
 
 public class ControlTunnel {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlTunnel.class);
 
   private final ControlConnectionManager manager;
-  private final DrillbitEndpoint endpoint;
 
-  public ControlTunnel(DrillbitEndpoint endpoint, ControlConnectionManager manager) {
+  public ControlTunnel(ControlConnectionManager manager) {
     this.manager = manager;
-    this.endpoint = endpoint;
-  }
-
-  public DrillbitEndpoint getEndpoint(){
-    return manager.getEndpoint();
   }
 
   public void sendFragments(RpcOutcomeListener<Ack> outcomeListener, InitializeFragments fragments){
@@ -106,8 +96,7 @@ public class ControlTunnel {
     return b.getFuture();
   }
 
-
-  public static class SendFragmentStatus extends FutureBitCommand<Ack, ControlConnection> {
+  public static class SendFragmentStatus extends FutureBitCommand<Ack, ControlConnection, RpcType, FragmentStatus> {
     final FragmentStatus status;
 
     public SendFragmentStatus(FragmentStatus status) {
@@ -117,13 +106,22 @@ public class ControlTunnel {
 
     @Override
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
-      connection.sendUnsafe(outcomeListener, RpcType.REQ_FRAGMENT_STATUS, status, Ack.class);
+      connection.sendUnsafe(outcomeListener, getRpcType(), status, Ack.class);
+    }
+
+    @Override
+    public RpcType getRpcType() {
+      return RpcType.REQ_FRAGMENT_STATUS;
+    }
+
+    @Override
+    public FragmentStatus getMessage() {
+      return status;
     }
 
   }
 
-
-  public static class ReceiverFinished extends ListeningCommand<Ack, ControlConnection> {
+  public static class ReceiverFinished extends ListeningCommand<Ack, ControlConnection, RpcType, FinishedReceiver> {
     final FinishedReceiver finishedReceiver;
 
     public ReceiverFinished(RpcOutcomeListener<Ack> listener, FinishedReceiver finishedReceiver) {
@@ -133,11 +131,21 @@ public class ControlTunnel {
 
     @Override
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_RECEIVER_FINISHED, finishedReceiver, Ack.class);
+      connection.send(outcomeListener, getRpcType(), finishedReceiver, Ack.class);
+    }
+
+    @Override
+    public RpcType getRpcType() {
+      return RpcType.REQ_RECEIVER_FINISHED;
+    }
+
+    @Override
+    public FinishedReceiver getMessage() {
+      return finishedReceiver;
     }
   }
 
-  public static class SignalFragment extends ListeningCommand<Ack, ControlConnection> {
+  public static class SignalFragment extends ListeningCommand<Ack, ControlConnection, RpcType, FragmentHandle> {
     final FragmentHandle handle;
     final RpcType type;
 
@@ -152,9 +160,18 @@ public class ControlTunnel {
       connection.sendUnsafe(outcomeListener, type, handle, Ack.class);
     }
 
+    @Override
+    public RpcType getRpcType() {
+      return type;
+    }
+
+    @Override
+    public FragmentHandle getMessage() {
+      return handle;
+    }
   }
 
-  public static class SendFragment extends ListeningCommand<Ack, ControlConnection> {
+  public static class SendFragment extends ListeningCommand<Ack, ControlConnection, RpcType, InitializeFragments> {
     final InitializeFragments fragments;
 
     public SendFragment(RpcOutcomeListener<Ack> listener, InitializeFragments fragments) {
@@ -164,12 +181,21 @@ public class ControlTunnel {
 
     @Override
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_INITIALIZE_FRAGMENTS, fragments, Ack.class);
+      connection.send(outcomeListener, getRpcType(), fragments, Ack.class);
     }
 
+    @Override
+    public RpcType getRpcType() {
+      return RpcType.REQ_INITIALIZE_FRAGMENTS;
+    }
+
+    @Override
+    public InitializeFragments getMessage() {
+      return fragments;
+    }
   }
 
-  public static class RequestProfile extends FutureBitCommand<QueryProfile, ControlConnection> {
+  public static class RequestProfile extends FutureBitCommand<QueryProfile, ControlConnection, RpcType, QueryId> {
     final QueryId queryId;
 
     public RequestProfile(QueryId queryId) {
@@ -179,11 +205,21 @@ public class ControlTunnel {
 
     @Override
     public void doRpcCall(RpcOutcomeListener<QueryProfile> outcomeListener, ControlConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_QUERY_STATUS, queryId, QueryProfile.class);
+      connection.send(outcomeListener, getRpcType(), queryId, QueryProfile.class);
+    }
+
+    @Override
+    public RpcType getRpcType() {
+      return RpcType.REQ_QUERY_STATUS;
+    }
+
+    @Override
+    public QueryId getMessage() {
+      return queryId;
     }
   }
 
-  public static class CancelQuery extends FutureBitCommand<Ack, ControlConnection> {
+  public static class CancelQuery extends FutureBitCommand<Ack, ControlConnection, RpcType, QueryId> {
     final QueryId queryId;
 
     public CancelQuery(QueryId queryId) {
@@ -193,7 +229,17 @@ public class ControlTunnel {
 
     @Override
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_QUERY_CANCEL, queryId, Ack.class);
+      connection.send(outcomeListener, getRpcType(), queryId, Ack.class);
+    }
+
+    @Override
+    public RpcType getRpcType() {
+      return RpcType.REQ_QUERY_CANCEL;
+    }
+
+    @Override
+    public QueryId getMessage() {
+      return queryId;
     }
   }
 
@@ -211,8 +257,8 @@ public class ControlTunnel {
     return new CustomTunnel<SEND, RECEIVE>(messageTypeId, send, receive);
   }
 
-
-  private static class CustomMessageSender extends ListeningCommand<CustomMessage, ControlConnection> {
+  public static class CustomMessageSender extends
+    ListeningCommand<CustomMessage, ControlConnection, RpcType, CustomMessage> {
 
     private CustomMessage message;
     private ByteBuf[] dataBodies;
@@ -225,12 +271,27 @@ public class ControlTunnel {
 
     @Override
     public void doRpcCall(RpcOutcomeListener<CustomMessage> outcomeListener, ControlConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_CUSTOM, message, CustomMessage.class, dataBodies);
+      connection.send(outcomeListener, getRpcType(), message, CustomMessage.class, dataBodies);
+    }
+
+    @Override
+    public RpcType getRpcType() {
+      return RpcType.REQ_CUSTOM;
+    }
+
+    @Override
+    public CustomMessage getMessage() {
+      return message;
+    }
+
+    public ByteBuf[] getDataBodies() {
+      return dataBodies;
     }
 
   }
 
-  private static class SyncCustomMessageSender extends FutureBitCommand<CustomMessage, ControlConnection> {
+  public static class SyncCustomMessageSender extends
+    FutureBitCommand<CustomMessage, ControlConnection, RpcType, CustomMessage> {
 
     private CustomMessage message;
     private ByteBuf[] dataBodies;
@@ -243,7 +304,21 @@ public class ControlTunnel {
 
     @Override
     public void doRpcCall(RpcOutcomeListener<CustomMessage> outcomeListener, ControlConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_CUSTOM, message, CustomMessage.class, dataBodies);
+      connection.send(outcomeListener, getRpcType(), message, CustomMessage.class, dataBodies);
+    }
+
+    @Override
+    public RpcType getRpcType() {
+      return RpcType.REQ_CUSTOM;
+    }
+
+    @Override
+    public CustomMessage getMessage() {
+      return message;
+    }
+
+    public ByteBuf[] getDataBodies() {
+      return dataBodies;
     }
   }
 
@@ -268,8 +343,7 @@ public class ControlTunnel {
       return serde.deserializeReceived(message.getMessage().toByteArray());
     }
 
-    public RECEIVE get(long timeout, TimeUnit unit) throws Exception,
-        InvalidProtocolBufferException {
+    public RECEIVE get(long timeout, TimeUnit unit) throws Exception, InvalidProtocolBufferException {
       CustomMessage message = future.checkedGet(timeout, unit);
       return serde.deserializeReceived(message.getMessage().toByteArray());
     }
@@ -277,7 +351,6 @@ public class ControlTunnel {
     public DrillBuf getBuffer() throws RpcException {
       return (DrillBuf) future.getBuffer();
     }
-
   }
 
 
@@ -358,20 +431,14 @@ public class ControlTunnel {
         } catch (Exception e) {
           innerListener.failed(new RpcException("Failure while parsing message locally.", e));
         }
-
       }
 
       @Override
       public void interrupted(InterruptedException e) {
         innerListener.interrupted(e);
       }
-
     }
-
   }
-
-
-
 
   public static class ProtoSerDe<MSG extends MessageLite> implements CustomSerDe<MSG> {
     private final Parser<MSG> parser;
@@ -427,7 +494,5 @@ public class ControlTunnel {
     public MSG deserializeReceived(byte[] bytes) throws Exception {
       return (MSG) reader.readValue(bytes);
     }
-
   }
-
 }

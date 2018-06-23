@@ -54,7 +54,7 @@ class ProxiesManager {
       Class<Proxy> newProxyReturnClass =
           (Class<Proxy>) Proxy.getProxyClass( interfaceType.getClassLoader(),
                                               new Class[] { interfaceType });
-      interfacesToProxyClassesMap.put( interfaceType, proxyReturnClass );
+      interfacesToProxyClassesMap.put( interfaceType, newProxyReturnClass );
       proxyReturnClass = newProxyReturnClass;
     }
     return proxyReturnClass;

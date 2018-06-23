@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.physical.explain;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,8 +32,10 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.runtime.FlatLists;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.util.Pair;
+import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.HashJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
 
 import com.google.common.collect.ImmutableList;
@@ -46,7 +49,8 @@ class NumberingRelWriter implements RelWriter {
   protected final PrintWriter pw;
   private final SqlExplainLevel detailLevel;
   protected final Spacer spacer = new Spacer();
-  private final List<Pair<String, Object>> values = new ArrayList<Pair<String, Object>>();
+  private final List<Pair<String, Object>> values = new ArrayList<>();
+  private final Map<String, Prel> sourceOperatorRegistry;
 
   private final Map<Prel, OpId> ids;
   //~ Constructors -----------------------------------------------------------
@@ -55,6 +59,7 @@ class NumberingRelWriter implements RelWriter {
     this.pw = pw;
     this.ids = ids;
     this.detailLevel = detailLevel;
+    this.sourceOperatorRegistry = new HashMap<>();
   }
 
   //~ Methods ----------------------------------------------------------------
@@ -62,17 +67,10 @@ class NumberingRelWriter implements RelWriter {
   protected void explain_(
       RelNode rel,
       List<Pair<String, Object>> values) {
-    List<RelNode> inputs = rel.getInputs();
-    if (rel instanceof HashJoinPrel && ((HashJoinPrel) rel).isSwapped()) {
-      HashJoinPrel joinPrel = (HashJoinPrel) rel;
-      inputs = FlatLists.of(joinPrel.getRight(), joinPrel.getLeft());
-    }
-
-    if (!RelMetadataQuery.isVisibleInExplain(
-        rel,
-        detailLevel)) {
+    RelMetadataQuery mq = RelMetadataQuery.instance();
+    if (!mq.isVisibleInExplain(rel, detailLevel)) {
       // render children in place of this, at same level
-      explainInputs(inputs);
+      explainInputs(rel);
       return;
     }
 
@@ -96,6 +94,7 @@ class NumberingRelWriter implements RelWriter {
     s.append(rel.getRelTypeName().replace("Prel", ""));
     if (detailLevel != SqlExplainLevel.NO_ATTRIBUTES) {
       int j = 0;
+      s.append(getDependentSrcOp(rel));
       for (Pair<String, Object> value : values) {
         if (value.right instanceof RelNode) {
           continue;
@@ -115,23 +114,72 @@ class NumberingRelWriter implements RelWriter {
       }
     }
     if (detailLevel == SqlExplainLevel.ALL_ATTRIBUTES) {
-      s.append(" : rowType = " + rel.getRowType().toString());
-      s.append(": rowcount = ")
-          .append(RelMetadataQuery.getRowCount(rel))
-          .append(", cumulative cost = ")
-          .append(RelMetadataQuery.getCumulativeCost(rel));
-       s.append(", id = ").append(rel.getId());
+      s.append(" : rowType = ")
+        .append(rel.getRowType())
+        .append(": rowcount = ")
+        .append(mq.getRowCount(rel))
+        .append(", cumulative cost = ")
+        .append(mq.getCumulativeCost(rel))
+        .append(", id = ")
+        .append(rel.getId());
     }
     pw.println(s);
     spacer.add(2);
-    explainInputs(inputs);
+    explainInputs(rel);
     spacer.subtract(2);
   }
 
-  private void explainInputs(List<RelNode> inputs) {
-    for (RelNode input : inputs) {
-      input.explain(this);
+  private String getDependentSrcOp(RelNode rel) {
+    if (rel instanceof UnnestPrel) {
+      return this.getDependentSrcOp((UnnestPrel) rel);
     }
+    return "";
+  }
+
+  private String getDependentSrcOp(UnnestPrel unnest) {
+    Prel parent = this.getRegisteredPrel(unnest.getParentClass());
+    if (parent != null && parent instanceof LateralJoinPrel) {
+      OpId id = ids.get(parent);
+      return String.format(" [srcOp=%02d-%02d] ", id.fragmentId, id.opId);
+    }
+    return "";
+  }
+
+  public void register(Prel toRegister) {
+    this.sourceOperatorRegistry.put(toRegister.getClass().getSimpleName(), toRegister);
+  }
+
+  public Prel getRegisteredPrel(Class<?> classname) {
+    return this.sourceOperatorRegistry.get(classname.getSimpleName());
+  }
+
+  public void unRegister(Prel unregister) {
+    this.sourceOperatorRegistry.remove(unregister.getClass().getSimpleName());
+  }
+
+
+  private void explainInputs(RelNode rel) {
+    if (rel instanceof LateralJoinPrel) {
+      this.explainInputs((LateralJoinPrel) rel);
+    } else {
+      List<RelNode> inputs = rel.getInputs();
+      if (rel instanceof HashJoinPrel && ((HashJoinPrel) rel).isSwapped()) {
+        HashJoinPrel joinPrel = (HashJoinPrel) rel;
+        inputs = FlatLists.of(joinPrel.getRight(), joinPrel.getLeft());
+      }
+      for (RelNode input : inputs) {
+        input.explain(this);
+      }
+    }
+  }
+
+  //Lateral is handled differently because explain plan
+  //needs to show relation between Lateral and Unnest operators.
+  private void explainInputs(LateralJoinPrel lateralJoinPrel) {
+    lateralJoinPrel.getInput(0).explain(this);
+    this.register(lateralJoinPrel);
+    lateralJoinPrel.getInput(1).explain(this);
+    this.unRegister(lateralJoinPrel);
   }
 
   public final void explain(RelNode rel, List<Pair<String, Object>> valueList) {
@@ -159,6 +207,7 @@ class NumberingRelWriter implements RelWriter {
     return this;
   }
 
+  @SuppressWarnings("deprecation")
   public RelWriter done(RelNode node) {
     int i = 0;
     if (values.size() > 0 && values.get(0).left.equals("subset")) {

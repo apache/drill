@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,16 @@
  */
 package org.apache.drill.jdbc;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.hamcrest.CoreMatchers.*;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -58,6 +60,7 @@ import java.sql.Statement;
  *   {@link org.apache.drill.jdbc.impl.TypeConvertingSqlAccessor}).
  * </p>
  */
+@Category(JdbcTest.class)
 public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
 
   private static Connection connection;
@@ -89,8 +92,8 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
         //+ "\n  CAST(  5.5 AS REAL             ) AS `C_REAL_5.5`, "
         + "\n  CAST(  6.6 AS DOUBLE PRECISION ) AS `C_DOUBLE_PREC._6.6`, "
         + "\n  CAST(  7.7 AS FLOAT            ) AS `C_FLOAT_7.7`, "
-        + "\n  CAST( 10.10 AS DECIMAL         ) AS `C_DECIMAL_10.10`, "
-        + "\n  CAST( 10.5  AS DECIMAL         ) AS `C_DECIMAL_10.5`, "
+        + "\n  CAST( 10.10 AS DECIMAL(4,2)         ) AS `C_DECIMAL_10.10`, "
+        + "\n  CAST( 10.5  AS DECIMAL (3,1)        ) AS `C_DECIMAL_10.5`, "
         + "\n  CAST( 11.11 AS DECIMAL(9,2)    ) AS `C_DECIMAL(9,2)_11.11`, "
         + "\n  CAST( 12.12 AS DECIMAL(18,2)   ) AS `C_DECIMAL(18,2)_12.12`, "
         + "\n  CAST( 13.13 AS DECIMAL(28,2)   ) AS `C_DECIMAL(28,2)_13.13`, "
@@ -491,7 +494,6 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getBigDecimal( "C_DECIMAL_10.5" ), equalTo( new BigDecimal( "10.5") ) );
   }
 
-  @Ignore( "TODO(DRILL-3367): unignore when DECIMAL is no longer DOUBLE" )
   @Test
   public void test_getBigDecimal_handles_DECIMAL_2() throws SQLException {
     assertThat( testDataRow.getBigDecimal( "C_DECIMAL_10.10" ), equalTo( new BigDecimal( "10.10") ) );
@@ -563,7 +565,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
 
   @Test
   public void test_getString_handles_DECIMAL() throws SQLException {
-    assertThat( testDataRow.getString( "C_DECIMAL_10.10" ), equalTo( "10.1" ) );
+    assertThat( testDataRow.getString( "C_DECIMAL_10.10" ), equalTo( "10.10" ) );
     assertThat( testDataRowWithNulls.getString( "C_DECIMAL_10.10" ), equalTo( null ) );
   }
 
@@ -721,14 +723,12 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getObject( "C_FLOAT_7.7" ), equalTo( (Object) 7.7f ) );
   }
 
-  @Ignore( "TODO(DRILL-3367): unignore when DECIMAL is no longer DOUBLE" )
   @Test
   public void test_getObject_handles_DECIMAL_1() throws SQLException {
     assertThat( testDataRow.getObject( "C_DECIMAL_10.5" ),
                 equalTo( (Object) new BigDecimal( "10.5" ) ) );
   }
 
-  @Ignore( "TODO(DRILL-3367): unignore when DECIMAL is no longer DOUBLE" )
   @Test
   public void test_getObject_handles_DECIMAL_2() throws SQLException {
     assertThat( testDataRow.getObject( "C_DECIMAL_10.10" ),

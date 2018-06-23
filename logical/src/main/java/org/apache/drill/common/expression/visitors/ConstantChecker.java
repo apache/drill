@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -28,7 +29,9 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
@@ -96,10 +99,7 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
       return false;
     }
 
-    if (!ifExpr.elseExpression.accept(this, errors)) {
-      return false;
-    }
-    return true;
+    return ifExpr.elseExpression.accept(this, errors);
   }
 
   @Override
@@ -168,6 +168,11 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   }
 
   @Override
+  public Boolean visitVarDecimalConstant(ValueExpressions.VarDecimalExpression decExpr, ErrorCollector errors) {
+    return true;
+  }
+
+  @Override
   public Boolean visitDoubleConstant(DoubleExpression dExpr, ErrorCollector errors) {
     return true;
   }
@@ -198,6 +203,11 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   }
 
   @Override
+  public Boolean visitAnyValueExpression(AnyValueExpression e, ErrorCollector value) throws RuntimeException {
+    return e.getInput().accept(this, value);
+  }
+
+  @Override
   public Boolean visitNullConstant(TypedNullConstant e, ErrorCollector value) throws RuntimeException {
     return true;
   }
@@ -207,4 +217,13 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
     return true;
   }
 
+  @Override
+  public Boolean visitParameter(ValueExpressions.ParameterExpression e, ErrorCollector value) throws RuntimeException {
+    return false;
+  }
+
+  @Override
+  public Boolean visitTypedFieldExpr(TypedFieldExpr e, ErrorCollector value) throws RuntimeException {
+    return false;
+  }
 }

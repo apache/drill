@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,10 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.physical.visitor;
 
-import java.beans.Statement;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +30,7 @@ import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -42,12 +41,12 @@ import org.apache.calcite.util.Pair;
 
 import com.google.common.collect.Lists;
 
-public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeException>{
+public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeException> {
 
   private static final AtomicLong tableNumber = new AtomicLong(0);
 
-  private boolean prefixedForStar = false;
-  private boolean prefixedForWriter = false;
+  private boolean prefixedForStar;
+  private boolean prefixedForWriter;
 
   private StarColumnConverter() {
     prefixedForStar = false;
@@ -82,7 +81,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
         return insertProjUnderScreenOrWriter(prel, prel.getInput().getRowType(), child);
       } else {
         // Prefix is added under CTAS Writer. We need create a new Screen with the converted child.
-        return (Prel) prel.copy(prel.getTraitSet(), Collections.<RelNode>singletonList(child));
+        return prel.copy(prel.getTraitSet(), Collections.<RelNode>singletonList(child));
       }
     } else {
       // No prefix is
@@ -98,7 +97,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     if (prefixedForStar) {
       prefixedForWriter = true;
       // return insertProjUnderScreenOrWriter(prel, prel.getInput().getRowType(), child);
-      return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList(child));
+      return prel.copy(prel.getTraitSet(), Collections.singletonList(child));
     } else {
       return prel;
     }
@@ -107,7 +106,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
   // insert PUS or PUW: Project Under Screen/Writer, when necessary.
   private Prel insertProjUnderScreenOrWriter(Prel prel, RelDataType origRowType, Prel child) {
 
-    ProjectPrel proj = null;
+    ProjectPrel proj;
     List<RelNode> children = Lists.newArrayList();
 
     List<RexNode> exprs = Lists.newArrayList();
@@ -116,7 +115,8 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
       exprs.add(expr);
     }
 
-    RelDataType newRowType = RexUtil.createStructType(child.getCluster().getTypeFactory(), exprs, origRowType.getFieldNames());
+    RelDataType newRowType = RexUtil.createStructType(child.getCluster().getTypeFactory(),
+        exprs, origRowType.getFieldNames(), null);
 
     int fieldCount = prel.getRowType().isStruct()? prel.getRowType().getFieldCount():1;
 
@@ -130,13 +130,12 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     children.add(proj);
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
-      @Override
-  public Prel visitProject(ProjectPrel prel, Void value) throws RuntimeException {
-    ProjectPrel proj = (ProjectPrel) prel;
 
+  @Override
+  public Prel visitProject(ProjectPrel prel, Void value) throws RuntimeException {
     // Require prefix rename : there exists other expression, in addition to a star column.
     if (!prefixedForStar  // not set yet.
-        && StarColumnHelper.containsStarColumnInProject(prel.getInput().getRowType(), proj.getProjects())
+        && StarColumnHelper.containsStarColumnInProject(prel.getInput().getRowType(), prel.getProjects())
         && prel.getRowType().getFieldNames().size() > 1) {
       prefixedForStar = true;
     }
@@ -149,7 +148,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
 
     List<String> fieldNames = Lists.newArrayList();
 
-    for (Pair<String, RexNode> pair : Pair.zip(prel.getRowType().getFieldNames(), proj.getProjects())) {
+    for (Pair<String, RexNode> pair : Pair.zip(prel.getRowType().getFieldNames(), prel.getProjects())) {
       if (pair.right instanceof RexInputRef) {
         String name = child.getRowType().getFieldNames().get(((RexInputRef) pair.right).getIndex());
         fieldNames.add(name);
@@ -161,9 +160,10 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     // Make sure the field names are unique : no allow of duplicate field names in a rowType.
     fieldNames = makeUniqueNames(fieldNames);
 
-    RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(), proj.getProjects(), fieldNames);
+    RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(),
+        prel.getProjects(), fieldNames, null);
 
-    ProjectPrel newProj = (ProjectPrel) proj.copy(proj.getTraitSet(), child, proj.getProjects(), rowType);
+    ProjectPrel newProj = (ProjectPrel) prel.copy(prel.getTraitSet(), child, prel.getProjects(), rowType);
 
     if (ProjectRemoveRule.isTrivial(newProj)) {
       return (Prel) child;
@@ -190,14 +190,13 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 
-  @Override
-  public Prel visitScan(ScanPrel scanPrel, Void value) throws RuntimeException {
-    if (StarColumnHelper.containsStarColumn(scanPrel.getRowType()) && prefixedForStar ) {
+  private Prel prefixTabNameToStar(Prel prel, Void value) throws RuntimeException {
+    if (StarColumnHelper.containsStarColumn(prel.getRowType()) && prefixedForStar) {
 
       List<RexNode> exprs = Lists.newArrayList();
 
-      for (RelDataTypeField field : scanPrel.getRowType().getFieldList()) {
-        RexNode expr = scanPrel.getCluster().getRexBuilder().makeInputRef(field.getType(), field.getIndex());
+      for (RelDataTypeField field : prel.getRowType().getFieldList()) {
+        RexNode expr = prel.getCluster().getRexBuilder().makeInputRef(field.getType(), field.getIndex());
         exprs.add(expr);
       }
 
@@ -205,22 +204,33 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
 
       long tableId = tableNumber.getAndIncrement();
 
-      for (String name : scanPrel.getRowType().getFieldNames()) {
+      for (String name : prel.getRowType().getFieldNames()) {
         if (StarColumnHelper.isNonPrefixedStarColumn(name)) {
           fieldNames.add("T" +  tableId + StarColumnHelper.PREFIX_DELIMITER + name);  // Add prefix to * column.
         } else {
           fieldNames.add(name);  // Keep regular column as it is.
         }
       }
-      RelDataType rowType = RexUtil.createStructType(scanPrel.getCluster().getTypeFactory(), exprs, fieldNames);
+      RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(),
+          exprs, fieldNames, null);
 
       // insert a PAS.
-      ProjectPrel proj = new ProjectPrel(scanPrel.getCluster(), scanPrel.getTraitSet(), scanPrel, exprs, rowType);
+      ProjectPrel proj = new ProjectPrel(prel.getCluster(), prel.getTraitSet(), prel, exprs, rowType);
 
       return proj;
     } else {
-      return visitPrel(scanPrel, value);
+      return visitPrel(prel, value);
     }
+  }
+
+  @Override
+  public Prel visitScan(ScanPrel scanPrel, Void value) throws RuntimeException {
+    return prefixTabNameToStar(scanPrel, value);
+  }
+
+  @Override
+  public Prel visitUnnest(UnnestPrel unnestPrel, Void value) throws RuntimeException {
+    return prefixTabNameToStar(unnestPrel, value);
   }
 
   private List<String> makeUniqueNames(List<String> names) {
@@ -231,8 +241,8 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     // That means we should pick a different name that does not conflict with the original names, in additional
     // to make sure it's unique in the set of unique names.
 
-    HashSet<String> uniqueNames = new HashSet<String>();
-    HashSet<String> origNames = new HashSet<String>(names);
+    HashSet<String> uniqueNames = new HashSet<>();
+    HashSet<String> origNames = new HashSet<>(names);
 
     List<String> newNames = Lists.newArrayList();
 

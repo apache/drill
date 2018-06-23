@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +20,8 @@ package org.apache.drill.exec.planner;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.vector.ValueVector;
 
 import java.util.BitSet;
@@ -70,16 +70,32 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
    * Method returns the Major type associated with the given column
    * @param column - column whose type should be determined
    * @param plannerSettings
-   * @return
    */
   TypeProtos.MajorType getVectorType(SchemaPath column, PlannerSettings plannerSettings);
 
   /**
    * Methods create a new TableScan rel node, given the lists of new partitions or new files to SCAN.
    * @param newPartitions
-   * @return
+   * @param wasAllPartitionsPruned
    * @throws Exception
    */
-  public TableScan createTableScan(List<String> newPartitions) throws Exception;
+  public TableScan createTableScan(List<PartitionLocation> newPartitions,
+      boolean wasAllPartitionsPruned) throws Exception;
+
+  /**
+   * Create a new TableScan rel node, given the lists of new partitions or new files to scan and a path
+   * to a metadata cache file
+   * @param newPartitions
+   * @param cacheFileRoot
+   * @param wasAllPartitionsPruned
+   * @param metaContext
+   * @throws Exception
+   */
+  public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot,
+      boolean wasAllPartitionsPruned, MetadataContext metaContext) throws Exception;
+
+  public boolean supportsMetadataCachePruning();
+
+  public String getBaseTableLocation();
 
 }

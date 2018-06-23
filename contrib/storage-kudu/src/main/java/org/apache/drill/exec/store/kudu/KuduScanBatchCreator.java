@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.store.kudu;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
@@ -29,16 +30,15 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class KuduScanBatchCreator implements BatchCreator<KuduSubScan>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduScanBatchCreator.class);
 
   @Override
-  public ScanBatch getBatch(FragmentContext context, KuduSubScan subScan, List<RecordBatch> children)
+  public ScanBatch getBatch(ExecutorFragmentContext context, KuduSubScan subScan, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    List<RecordReader> readers = Lists.newArrayList();
+    List<RecordReader> readers = new LinkedList<>();
     List<SchemaPath> columns = null;
 
     for (KuduSubScan.KuduSubScanSpec scanSpec : subScan.getTabletScanSpecList()) {
@@ -46,12 +46,12 @@ public class KuduScanBatchCreator implements BatchCreator<KuduSubScan>{
         if ((columns = subScan.getColumns())==null) {
           columns = GroupScan.ALL_COLUMNS;
         }
-        readers.add(new KuduRecordReader(subScan.getStorageEngine().getClient(), scanSpec, columns, context));
+        readers.add(new KuduRecordReader(subScan.getStorageEngine().getClient(), scanSpec, columns));
       } catch (Exception e1) {
         throw new ExecutionSetupException(e1);
       }
     }
-    return new ScanBatch(subScan, context, readers.iterator());
+    return new ScanBatch(subScan, context, readers);
   }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -42,12 +43,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
- * A wrapper around a VectorAccessible. Will serialize a VectorAccessible and write to an OutputStream, or can read
- * from an InputStream and construct a new VectorContainer.
+ * A wrapper around a VectorAccessible. Will serialize a VectorAccessible and
+ * write to an OutputStream, or can read from an InputStream and construct a new
+ * VectorContainer.
  */
 public class VectorAccessibleSerializable extends AbstractStreamSerializable {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorAccessibleSerializable.class);
-  static final MetricRegistry metrics = DrillMetrics.getInstance();
+  static final MetricRegistry metrics = DrillMetrics.getRegistry();
   static final String WRITER_TIMER = MetricRegistry.name(VectorAccessibleSerializable.class, "writerTime");
 
   private VectorContainer va;
@@ -56,6 +57,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
   private int recordCount = -1;
   private BatchSchema.SelectionVectorMode svMode = BatchSchema.SelectionVectorMode.NONE;
   private SelectionVector2 sv2;
+  private long timeNs;
 
   private boolean retain = false;
 
@@ -69,8 +71,9 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
   }
 
   /**
-   * Creates a wrapper around batch and sv2 for writing to a stream. sv2 will never be released by this class, and ownership
-   * is maintained by caller.
+   * Creates a wrapper around batch and sv2 for writing to a stream. sv2 will
+   * never be released by this class, and ownership is maintained by caller.
+   *
    * @param batch
    * @param sv2
    * @param allocator
@@ -85,13 +88,59 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
   }
 
   /**
-   * Reads from an InputStream and parses a RecordBatchDef. From this, we construct a SelectionVector2 if it exits
-   * and construct the vectors and add them to a vector container
-   * @param input the InputStream to read from
+   * Reads from an InputStream and parses a RecordBatchDef. From this, we
+   * construct a SelectionVector2 if it exits and construct the vectors and add
+   * them to a vector container
+   *
+   * @param input
+   *          the InputStream to read from
    * @throws IOException
    */
   @Override
   public void readFromStream(InputStream input) throws IOException {
+    final UserBitShared.RecordBatchDef batchDef = UserBitShared.RecordBatchDef.parseDelimitedFrom(input);
+    recordCount = batchDef.getRecordCount();
+    if (batchDef.hasCarriesTwoByteSelectionVector() && batchDef.getCarriesTwoByteSelectionVector()) {
+      readSv2(input);
+    }
+    readVectors(input, batchDef);
+  }
+
+  private void readSv2(InputStream input) throws IOException {
+    if (sv2 != null) {
+      sv2.clear();
+    }
+    final int dataLength = recordCount * SelectionVector2.RECORD_SIZE;
+    svMode = BatchSchema.SelectionVectorMode.TWO_BYTE;
+    @SuppressWarnings("resource")
+    DrillBuf buf = allocator.read(dataLength, input);
+    sv2 = new SelectionVector2(allocator, buf, recordCount);
+    buf.release(); // SV2 now owns the buffer
+  }
+
+  @SuppressWarnings("resource")
+  private void readVectors(InputStream input, RecordBatchDef batchDef) throws IOException {
+    final VectorContainer container = new VectorContainer();
+    final List<ValueVector> vectorList = Lists.newArrayList();
+    final List<SerializedField> fieldList = batchDef.getFieldList();
+    for (SerializedField metaData : fieldList) {
+      final int dataLength = metaData.getBufferLength();
+      final MaterializedField field = MaterializedField.create(metaData);
+      final DrillBuf buf = allocator.read(dataLength, input);
+      final ValueVector vector = TypeHelper.getNewVector(field, allocator);
+      vector.load(metaData, buf);
+      buf.release(); // Vector now owns the buffer
+      vectorList.add(vector);
+    }
+    container.addCollection(vectorList);
+    container.buildSchema(svMode);
+    container.setRecordCount(recordCount);
+    va = container;
+  }
+
+  // Like above, only preserve the original container and list of value-vectors
+  @SuppressWarnings("resource")
+  public void readFromStreamWithContainer(VectorContainer myContainer, InputStream input) throws IOException {
     final VectorContainer container = new VectorContainer();
     final UserBitShared.RecordBatchDef batchDef = UserBitShared.RecordBatchDef.parseDelimitedFrom(input);
     recordCount = batchDef.getRecordCount();
@@ -121,9 +170,27 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       vectorList.add(vector);
     }
     container.addCollection(vectorList);
-    container.buildSchema(svMode);
     container.setRecordCount(recordCount);
-    va = container;
+    myContainer.transferIn(container); // transfer the vectors
+    myContainer.buildSchema(svMode);
+    myContainer.setRecordCount(recordCount);
+    /*
+    // for debugging -- show values from the first row
+    Object tmp0 = (myContainer).getValueAccessorById(NullableVarCharVector.class, 0).getValueVector();
+    Object tmp1 = (myContainer).getValueAccessorById(NullableVarCharVector.class, 1).getValueVector();
+    Object tmp2 = (myContainer).getValueAccessorById(NullableBigIntVector.class, 2).getValueVector();
+    if (tmp0 != null && tmp1 != null && tmp2 != null) {
+      NullableVarCharVector vv0 = ((NullableVarCharVector) tmp0);
+      NullableVarCharVector vv1 = ((NullableVarCharVector) tmp1);
+      NullableBigIntVector vv2 = ((NullableBigIntVector) tmp2);
+
+      try {
+        logger.info("HASH AGG: Got a row = {} , {} , {}", vv0.getAccessor().get(0), vv1.getAccessor().get(0), vv2.getAccessor().get(0));
+      } catch (Exception e) { logger.info("HASH AGG: Got an exception = {}",e); }
+    }
+    else { logger.info("HASH AGG: got nulls !!!"); }
+    */
+    va = myContainer;
   }
 
   public void writeToStreamAndRetain(OutputStream output) throws IOException {
@@ -136,6 +203,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
    * @param output the OutputStream to write to
    * @throws IOException
    */
+  @SuppressWarnings("resource")
   @Override
   public void writeToStream(OutputStream output) throws IOException {
     Preconditions.checkNotNull(output);
@@ -144,37 +212,24 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     final DrillBuf[] incomingBuffers = batch.getBuffers();
     final UserBitShared.RecordBatchDef batchDef = batch.getDef();
 
-    /* DrillBuf associated with the selection vector */
-    DrillBuf svBuf = null;
-    Integer svCount =  null;
-
-    if (svMode == BatchSchema.SelectionVectorMode.TWO_BYTE) {
-      svCount = sv2.getCount();
-      svBuf = sv2.getBuffer(); //this calls retain() internally
-    }
-
     try {
       /* Write the metadata to the file */
       batchDef.writeDelimitedTo(output);
 
       /* If we have a selection vector, dump it to file first */
-      if (svBuf != null) {
-        svBuf.getBytes(0, output, svBuf.readableBytes());
-        sv2.setBuffer(svBuf);
-        svBuf.release(); // sv2 now owns the buffer
-        sv2.setRecordCount(svCount);
+      if (svMode == BatchSchema.SelectionVectorMode.TWO_BYTE) {
+        recordCount = sv2.getCount();
+        final int dataLength = recordCount * SelectionVector2.RECORD_SIZE;
+        allocator.write(sv2.getBuffer(false), dataLength, output);
       }
 
       /* Dump the array of ByteBuf's associated with the value vectors */
       for (DrillBuf buf : incomingBuffers) {
-                /* dump the buffer into the OutputStream */
-        int bufLength = buf.readableBytes();
-        buf.getBytes(0, output, bufLength);
+        /* dump the buffer into the OutputStream */
+        allocator.write(buf, output);
       }
 
-      output.flush();
-
-      timerContext.stop();
+      timeNs += timerContext.stop();
     } catch (IOException e) {
       throw new RuntimeException(e);
     } finally {
@@ -191,11 +246,9 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     }
   }
 
-  public VectorContainer get() {
-    return va;
-  }
+  public VectorContainer get() { return va; }
 
-  public SelectionVector2 getSv2() {
-    return sv2;
-  }
+  public SelectionVector2 getSv2() { return sv2; }
+
+  public long getTimeNs() { return timeNs; }
 }

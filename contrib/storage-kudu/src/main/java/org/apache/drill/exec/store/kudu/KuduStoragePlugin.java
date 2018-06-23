@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,7 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.kududb.client.KuduClient;
+import org.apache.kudu.client.KuduClient;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,20 +32,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class KuduStoragePlugin extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduStoragePlugin.class);
 
-  private final DrillbitContext context;
   private final KuduStoragePluginConfig engineConfig;
   private final KuduSchemaFactory schemaFactory;
 
-  @SuppressWarnings("unused")
-  private final String name;
   private final KuduClient client;
 
   public KuduStoragePlugin(KuduStoragePluginConfig configuration, DrillbitContext context, String name)
       throws IOException {
-    this.context = context;
+    super(context, name);
     this.schemaFactory = new KuduSchemaFactory(this, name);
     this.engineConfig = configuration;
-    this.name = name;
     this.client = new KuduClient.KuduClientBuilder(configuration.getMasterAddresses()).build();
   }
 
@@ -61,10 +57,6 @@ public class KuduStoragePlugin extends AbstractStoragePlugin {
   @Override
   public void close() throws Exception {
     client.close();
-  }
-
-  public DrillbitContext getContext() {
-    return this.context;
   }
 
   @Override

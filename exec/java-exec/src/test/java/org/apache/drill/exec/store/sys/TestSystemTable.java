@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,18 +17,25 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class TestSystemTable extends BaseTestQuery {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSystemTable.class);
+public class TestSystemTable extends PlanTestBase {
+
+  @BeforeClass
+  public static void setupMultiNodeCluster() {
+    updateTestCluster(3, null);
+  }
 
   @Test
   public void alterSessionOption() throws Exception {
 
     newTest() //
-      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by type desc", ExecConstants.JSON_ALL_TEXT_MODE)
+      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by accessibleScopes desc", ExecConstants.JSON_ALL_TEXT_MODE)
       .baselineColumns("bool")
       .ordered()
       .baselineValues(false)
@@ -37,7 +44,7 @@ public class TestSystemTable extends BaseTestQuery {
     test("alter session set `%s` = true", ExecConstants.JSON_ALL_TEXT_MODE);
 
     newTest() //
-      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by type desc ", ExecConstants.JSON_ALL_TEXT_MODE)
+      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by accessibleScopes desc ", ExecConstants.JSON_ALL_TEXT_MODE)
       .baselineColumns("bool")
       .ordered()
       .baselineValues(false)
@@ -47,6 +54,7 @@ public class TestSystemTable extends BaseTestQuery {
 
   // DRILL-2670
   @Test
+  @Category(UnlikelyTest.class)
   public void optionsOrderBy() throws Exception {
     test("select * from sys.options order by name");
   }
@@ -59,5 +67,27 @@ public class TestSystemTable extends BaseTestQuery {
   @Test
   public void memoryTable() throws Exception {
     test("select * from sys.memory");
+  }
+
+  @Test
+  public void connectionsTable() throws Exception {
+    test("select * from sys.connections");
+  }
+
+  @Test
+  public void profilesTable() throws Exception {
+    test("select * from sys.profiles");
+  }
+
+  @Test
+  public void profilesJsonTable() throws Exception {
+    test("select * from sys.profiles_json");
+  }
+
+  @Test
+  public void testProfilesLimitPushDown() throws Exception {
+    String query = "select * from sys.profiles limit 10";
+    String numFilesPattern = "maxRecordsToRead=10";
+    testPlanMatchingPatterns(query, new String[] {numFilesPattern}, new String[] {});
   }
 }

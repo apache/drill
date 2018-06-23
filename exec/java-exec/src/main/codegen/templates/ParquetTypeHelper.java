@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,12 +16,6 @@
  * limitations under the License.
  */
 
-import org.apache.drill.common.types.MinorType;
-import org.apache.parquet.format.ConvertedType;
-import org.apache.parquet.schema.DecimalMetadata;
-import org.apache.parquet.schema.OriginalType;
-import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="org/apache/drill/exec/store/parquet/ParquetTypeHelper.java" />
 <#include "/@includes/license.ftl" />
@@ -30,6 +24,7 @@ package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.DecimalMetadata;
@@ -38,6 +33,10 @@ import org.apache.parquet.schema.Type.Repetition;
 
 import java.util.HashMap;
 import java.util.Map;
+
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 public class ParquetTypeHelper {
   private static Map<MinorType,PrimitiveTypeName> typeMap;
@@ -82,7 +81,8 @@ public class ParquetTypeHelper {
             minor.class == "Decimal28Dense" ||
             minor.class == "Decimal38Dense" ||
             minor.class == "Decimal28Sparse" ||
-            minor.class == "Decimal38Sparse">
+            minor.class == "Decimal38Sparse" ||
+            minor.class == "VarDecimal">
                     typeMap.put(MinorType.${minor.class?upper_case}, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY);
     <#elseif
             minor.class == "VarChar" ||
@@ -103,8 +103,8 @@ public class ParquetTypeHelper {
 
     <#list vv.types as type>
     <#list type.minor as minor>
-            <#if minor.class.startsWith("Decimal")>
-            originalTypeMap.put(MinorType.${minor.class?upper_case},OriginalType.DECIMAL);
+            <#if minor.class.contains("Decimal")>
+            originalTypeMap.put(MinorType.${minor.class?upper_case}, OriginalType.DECIMAL);
             </#if>
     </#list>
     </#list>
@@ -138,6 +138,7 @@ public class ParquetTypeHelper {
       case DECIMAL28DENSE:
       case DECIMAL38SPARSE:
       case DECIMAL38DENSE:
+      case VARDECIMAL:
         return new DecimalMetadata(field.getPrecision(), field.getScale());
       default:
         return null;
@@ -153,9 +154,25 @@ public class ParquetTypeHelper {
       case DECIMAL28SPARSE:
         return 12;
       case DECIMAL38SPARSE:
+      case VARDECIMAL:
         return 16;
       default:
         return 0;
+    }
+  }
+
+  public static int getMaxPrecisionForPrimitiveType(PrimitiveTypeName type) {
+    switch(type) {
+      case INT32:
+        return 9;
+      case INT64:
+        return 18;
+      case FIXED_LEN_BYTE_ARRAY:
+        return DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+      default:
+        throw new UnsupportedOperationException(String.format(
+          "Specified PrimitiveTypeName %s cannot be used to determine max precision",
+          type));
     }
   }
 

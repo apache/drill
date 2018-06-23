@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,8 +21,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -35,17 +36,16 @@ import org.apache.drill.exec.store.pojo.PojoRecordReader;
  * Local system tables do not require a full-fledged query because these records are present on every Drillbit.
  */
 public class SystemTableBatchCreator implements BatchCreator<SystemTableScan> {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTableBatchCreator.class);
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public ScanBatch getBatch(final FragmentContext context, final SystemTableScan scan,
-                              final List<RecordBatch> children)
+  public ScanBatch getBatch(final ExecutorFragmentContext context, final SystemTableScan scan,
+                            final List<RecordBatch> children)
     throws ExecutionSetupException {
     final SystemTable table = scan.getTable();
-    final Iterator<Object> iterator = table.getIterator(context);
-    final RecordReader reader = new PojoRecordReader(table.getPojoClass(), iterator);
+    final Iterator<Object> iterator = table.getIterator(context, scan.getMaxRecordsToRead());
+    final RecordReader reader = new PojoRecordReader(table.getPojoClass(), ImmutableList.copyOf(iterator), scan.getMaxRecordsToRead());
 
-    return new ScanBatch(scan, context, Collections.singleton(reader).iterator());
+    return new ScanBatch(scan, context, Collections.singletonList(reader));
   }
 }

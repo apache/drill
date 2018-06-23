@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,16 +17,20 @@
  */
 package org.apache.drill.jdbc;
 
-import org.apache.drill.jdbc.Driver;
-
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.JdbcTest;
+import org.apache.drill.exec.ExecConstants;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -35,14 +39,16 @@ import java.sql.ResultSet;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 
 /**
  * Test for Drill's implementation of Connection's methods (other than
  * main transaction-related methods in {@link ConnectionTransactionMethodsTest}).
+ * TODO: When here will be more tests, they should be sorted according to the {@link Connection} methods order
  */
+@Category(JdbcTest.class)
 public class ConnectionTest extends JdbcTestBase {
 
   private static Connection connection;
@@ -56,7 +62,9 @@ public class ConnectionTest extends JdbcTestBase {
     // Connection--and other JDBC objects--on test method failure, but this test
     // class uses some objects across methods.)
     Driver.load();
-    connection = DriverManager.getConnection( "jdbc:drill:zk=local" );
+    Properties properties = new Properties();
+    properties.setProperty(ExecConstants.bootDefaultFor(ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS), "30000");
+    connection = DriverManager.getConnection( "jdbc:drill:zk=local", properties);
     executor = Executors.newSingleThreadExecutor();
   }
 
@@ -330,6 +338,11 @@ public class ConnectionTest extends JdbcTestBase {
                                          containsString( "Executor" ) ) );
       throw e;
     }
+  }
+
+  @Test
+  public void testIsReadOnly() throws Exception {
+    assertFalse(connection.isReadOnly());
   }
 
 }

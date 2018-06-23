@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +20,11 @@ package org.apache.drill.exec.expr.fn.impl;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.SqlFunctionTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(SqlFunctionTest.class)
 public class TestSimpleRepeatedFunctions extends PlanTestBase {
   @Test
   public void testIfDrillCanInferReturnTypeOfRepeatedContains() throws Exception {

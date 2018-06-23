@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.resolver;
 
 import java.util.HashMap;
@@ -43,7 +42,7 @@ public class ResolverTypePrecedence {
      * tinyint could be promoted into int; but int could NOT be promoted into tinyint (due to possible precision loss).
      */
     int i = 0;
-    precedenceMap = new HashMap<MinorType, Integer>();
+    precedenceMap = new HashMap<>();
     precedenceMap.put(MinorType.NULL, i += 2);       // NULL is legal to implicitly be promoted to any other type
     precedenceMap.put(MinorType.FIXEDBINARY, i += 2); // Fixed-length is promoted to var length
     precedenceMap.put(MinorType.VARBINARY, i += 2);
@@ -68,6 +67,7 @@ public class ResolverTypePrecedence {
     precedenceMap.put(MinorType.DECIMAL28SPARSE, i += 2);
     precedenceMap.put(MinorType.DECIMAL38DENSE, i += 2);
     precedenceMap.put(MinorType.DECIMAL38SPARSE, i += 2);
+    precedenceMap.put(MinorType.VARDECIMAL, i += 2);
     precedenceMap.put(MinorType.FLOAT8, i += 2);
     precedenceMap.put(MinorType.DATE, i += 2);
     precedenceMap.put(MinorType.TIMESTAMP, i += 2);
@@ -77,6 +77,8 @@ public class ResolverTypePrecedence {
     precedenceMap.put(MinorType.INTERVALDAY, i+= 2);
     precedenceMap.put(MinorType.INTERVALYEAR, i+= 2);
     precedenceMap.put(MinorType.INTERVAL, i+= 2);
+    precedenceMap.put(MinorType.MAP, i += 2);
+    precedenceMap.put(MinorType.LIST, i += 2);
     precedenceMap.put(MinorType.UNION, i += 2);
 
     MAX_IMPLICIT_CAST_COST = i;
@@ -105,12 +107,7 @@ public class ResolverTypePrecedence {
     rule.add(MinorType.UINT2);
     rule.add(MinorType.UINT4);
     rule.add(MinorType.UINT8);
-    rule.add(MinorType.DECIMAL9);
-    rule.add(MinorType.DECIMAL18);
-    rule.add(MinorType.DECIMAL28SPARSE);
-    rule.add(MinorType.DECIMAL28DENSE);
-    rule.add(MinorType.DECIMAL38SPARSE);
-    rule.add(MinorType.DECIMAL38DENSE);
+    rule.add(MinorType.VARDECIMAL);
     rule.add(MinorType.MONEY);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
@@ -137,6 +134,34 @@ public class ResolverTypePrecedence {
     rule.add(MinorType.VARCHAR);
     secondaryImplicitCastRules.put(MinorType.VARBINARY, rule);
 
-  }
+    rule = new HashSet<>();
 
+    // Be able to implicitly cast to VARDECIMAL
+    rule.add(MinorType.FLOAT8);
+    secondaryImplicitCastRules.put(MinorType.VARDECIMAL, rule);
+
+    rule = new HashSet<>();
+
+    // Be able to implicitly cast to DECIMAL9
+    rule.add(MinorType.VARDECIMAL);
+    secondaryImplicitCastRules.put(MinorType.DECIMAL9, rule);
+
+    rule = new HashSet<>();
+
+    // Be able to implicitly cast to DECIMAL18
+    rule.add(MinorType.VARDECIMAL);
+    secondaryImplicitCastRules.put(MinorType.DECIMAL18, rule);
+
+    rule = new HashSet<>();
+
+    // Be able to implicitly cast to DECIMAL28SPARSE
+    rule.add(MinorType.VARDECIMAL);
+    secondaryImplicitCastRules.put(MinorType.DECIMAL28SPARSE, rule);
+
+    rule = new HashSet<>();
+
+    // Be able to implicitly cast to DECIMAL38SPARSE
+    rule.add(MinorType.VARDECIMAL);
+    secondaryImplicitCastRules.put(MinorType.DECIMAL38SPARSE, rule);
+  }
 }

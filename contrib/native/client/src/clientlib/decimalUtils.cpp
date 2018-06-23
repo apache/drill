@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #include <vector>
 #include "drill/recordBatch.hpp"
 #include "drill/decimalUtils.hpp"
@@ -93,6 +91,21 @@ DecimalValue getDecimalValueFromByteBuf(SlicedByteBuf& data, size_t startIndex, 
         val.m_unscaledValue *= -1;
     }
 
+    val.m_scale = scale;
+    return val;
+}
+
+DecimalValue getDecimalValueFromByteBuf(SlicedByteBuf& data, size_t length, int scale) {
+
+    cpp_int decimalDigits;
+    // casts the first unsigned byte to signed to determine the sign of the value
+    decimalDigits = decimalDigits | cpp_int(static_cast<int8_t>(data.getByte(0))) << (length - 1) * 8;
+    for (int pos = length - 1; pos > 0; pos--) {
+        decimalDigits = decimalDigits | cpp_int(data.getByte(pos)) << (length - pos - 1) * 8;
+    }
+
+    DecimalValue val;
+    val.m_unscaledValue = decimalDigits;
     val.m_scale = scale;
     return val;
 }

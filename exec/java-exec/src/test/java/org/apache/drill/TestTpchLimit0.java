@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,10 +17,14 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class TestTpchLimit0 extends BaseTestQuery{
+@Category(PlannerTest.class)
+public class TestTpchLimit0 extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchLimit0.class);
 
   private void testLimitZero(String fileName) throws Exception {
@@ -136,7 +140,6 @@ public class TestTpchLimit0 extends BaseTestQuery{
   }
 
   @Test
-  @Ignore
   public void tpch21() throws Exception{
     testLimitZero("queries/tpch/21.sql");
   }

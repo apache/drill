@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.resolver;
 
 import java.util.LinkedList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.util.AssertionUtil;
 
@@ -30,7 +32,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultFunctionResolver.class);
 
   @Override
-  public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods,FunctionCall call) {
+  public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods, FunctionCall call) {
 
     int bestcost = Integer.MAX_VALUE;
     int currcost = Integer.MAX_VALUE;
@@ -38,8 +40,11 @@ public class DefaultFunctionResolver implements FunctionResolver {
     final List<DrillFuncHolder> bestMatchAlternatives = new LinkedList<>();
 
     for (DrillFuncHolder h : methods) {
-
-      currcost = TypeCastRules.getCost(call, h);
+      final List<TypeProtos.MajorType> argumentTypes = Lists.newArrayList();
+      for (LogicalExpression expression : call.args) {
+        argumentTypes.add(expression.getMajorType());
+      }
+      currcost = TypeCastRules.getCost(argumentTypes, h);
 
       // if cost is lower than 0, func implementation is not matched, either w/ or w/o implicit casts
       if (currcost  < 0 ) {
@@ -79,5 +84,4 @@ public class DefaultFunctionResolver implements FunctionResolver {
       return bestmatch;
     }
   }
-
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
@@ -43,6 +42,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.joda.time.Period;
 
 // Source code generated using FreeMarker template ${.template_name}
@@ -97,10 +97,14 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
   @Override
   public MajorType getType() {
-<#if holderMode == "Repeated">
-    return this.repeatedHolder.TYPE;
+<#if name?contains("Decimal")>
+    return BasicTypeHelper.getType(holder);
 <#else>
+  <#if holderMode == "Repeated">
+    return this.repeatedHolder.TYPE;
+  <#else>
     return this.holder.TYPE;
+  </#if>
 </#if>
   }
 
@@ -161,6 +165,8 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#if minor.class == "VarBinary">
       return value;
+<#elseif minor.class == "VarDecimal">
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(holder.buffer, holder.start, holder.end - holder.start, holder.scale);
 <#elseif minor.class == "Var16Char">
       return new String(value);
 <#elseif minor.class == "VarChar">
@@ -199,7 +205,13 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
                                                                                  holder.scale);
 
 <#elseif minor.class == "Bit" >
-      return new Boolean(holder.value != 0);
+      return Boolean.valueOf(holder.value != 0);
+<#elseif minor.class == "Time">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC).toLocalTime();
+<#elseif minor.class == "Date">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC).toLocalDate();
+<#elseif minor.class == "TimeStamp">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC);
 <#else>
       ${friendlyType} value = new ${friendlyType}(this.holder.value);
       return value;
@@ -234,6 +246,8 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#if minor.class == "VarBinary">
       return value;
+<#elseif minor.class == "VarDecimal">
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(holder.buffer, holder.start, holder.end - holder.start, holder.scale);
 <#elseif minor.class == "Var16Char">
       return new String(value);
 <#elseif minor.class == "VarChar">
@@ -272,7 +286,13 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
                                                                                  holder.scale);
 
 <#elseif minor.class == "Bit" >
-      return new Boolean(holder.value != 0);
+      return Boolean.valueOf(holder.value != 0);
+<#elseif minor.class == "Time">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC).toLocalTime();
+<#elseif minor.class == "Date">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC).toLocalDate();
+<#elseif minor.class == "TimeStamp">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC);
 <#else>
       ${friendlyType} value = new ${friendlyType}(this.holder.value);
       return value;

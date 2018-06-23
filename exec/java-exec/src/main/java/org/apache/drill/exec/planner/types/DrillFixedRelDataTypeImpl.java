@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -91,7 +91,7 @@ public class DrillFixedRelDataTypeImpl extends RelDataTypeImpl {
 
   @Override
   public RelDataTypePrecedenceList getPrecedenceList() {
-    return new SqlTypeExplicitPrecedenceList((List) Collections.emptyList());
+    return new SqlTypeExplicitPrecedenceList(Collections.<SqlTypeName>emptyList());
   }
 
   @Override

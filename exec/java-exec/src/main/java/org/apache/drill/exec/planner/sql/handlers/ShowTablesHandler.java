@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,23 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.sql.handlers;
 
-import static org.apache.drill.exec.planner.sql.parser.DrillParserUtil.CHARSET;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_TABLES;
 
 import java.util.List;
 
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.tools.RelConversionException;
-
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
-import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
-import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
-import org.apache.drill.exec.store.AbstractSchema;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
-import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -39,6 +33,17 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.tools.RelConversionException;
+import org.apache.calcite.tools.ValidationException;
+import org.apache.calcite.util.Pair;
+import org.apache.calcite.util.Util;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SqlConverter;
+import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
+import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
+import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -68,7 +73,7 @@ public class ShowTablesHandler extends DefaultSqlHandler {
       tableSchema = db.toString();
     } else {
       // If no schema is given in SHOW TABLES command, list tables from current schema
-      SchemaPlus schema = context.getNewDefaultSchema();
+      SchemaPlus schema = config.getConverter().getDefaultSchema();
 
       if (SchemaUtilites.isRootSchema(schema)) {
         // If the default schema is a root schema, throw an error to select a default schema
@@ -81,10 +86,11 @@ public class ShowTablesHandler extends DefaultSqlHandler {
       tableSchema = drillSchema.getFullSchemaName();
     }
 
+    final String charset = Util.getDefaultCharset().name();
     where = DrillParserUtil.createCondition(
         new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),
         SqlStdOperatorTable.EQUALS,
-        SqlLiteral.createCharString(tableSchema, CHARSET, SqlParserPos.ZERO));
+        SqlLiteral.createCharString(tableSchema, charset, SqlParserPos.ZERO));
 
     SqlNode filter = null;
     final SqlNode likePattern = node.getLikePattern();
@@ -101,5 +107,16 @@ public class ShowTablesHandler extends DefaultSqlHandler {
 
     return new SqlSelect(SqlParserPos.ZERO, null, new SqlNodeList(selectList, SqlParserPos.ZERO),
         fromClause, where, null, null, null, null, null, null);
+  }
+
+  @Override
+  protected Pair<SqlNode, RelDataType> validateNode(SqlNode sqlNode) throws ValidationException,
+      RelConversionException, ForemanSetupException {
+    SqlConverter converter = config.getConverter();
+    // set this to true since INFORMATION_SCHEMA in the root schema, not in the default
+    converter.useRootSchemaAsDefault(true);
+    Pair<SqlNode, RelDataType> sqlNodeRelDataTypePair = super.validateNode(sqlNode);
+    converter.useRootSchemaAsDefault(false);
+    return sqlNodeRelDataTypePair;
   }
 }

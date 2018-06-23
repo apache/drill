@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -54,7 +54,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
 @JsonTypeName("fs-scan")
-public class EasyGroupScan extends AbstractFileGroupScan{
+public class EasyGroupScan extends AbstractFileGroupScan {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyGroupScan.class);
 
   private FileSelection selection;
@@ -99,7 +99,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     super(userName);
     this.selection = Preconditions.checkNotNull(selection);
     this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
-    this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
+    this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
     initFromSelection(selection, formatPlugin);
   }
@@ -127,6 +127,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
   }
 
   private void initFromSelection(FileSelection selection, EasyFormatPlugin<?> formatPlugin) throws IOException {
+    @SuppressWarnings("resource")
     final DrillFileSystem dfs = ImpersonationUtil.createFileSystem(getUserName(), formatPlugin.getFsConf());
     this.selection = selection;
     BlockMapBuilder b = new BlockMapBuilder(dfs, formatPlugin.getContext().getBits());
@@ -195,7 +196,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-    mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks, formatPlugin.getContext());
+    mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks);
   }
 
   private void createMappings(List<EndpointAffinity> affinities) {

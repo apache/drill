@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * Utility class that handles error message generation from protobuf error objects.
  */
-class ErrorHelper {
+public class ErrorHelper {
 
   private final static Pattern IGNORE= Pattern.compile("^(sun|com\\.sun|java).*");
 
@@ -96,7 +96,7 @@ class ErrorHelper {
     return sb.toString();
   }
 
-  static ExceptionWrapper getWrapper(Throwable ex) {
+  public static ExceptionWrapper getWrapper(Throwable ex) {
     return getWrapperBuilder(ex).build();
   }
 

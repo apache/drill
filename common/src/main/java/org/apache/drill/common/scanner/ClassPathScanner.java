@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -75,13 +75,13 @@ import javassist.bytecode.annotation.StringMemberValue;
 
 /**
  * Classpath scanning utility.
- * The classpath should be scanned once at startup from a DrillConfig instance. {@see ClassPathScanner#fromPrescan(DrillConfig)}
+ * The classpath should be scanned once at startup from a DrillConfig instance. {@link ClassPathScanner#fromPrescan(DrillConfig)}
  * The DrillConfig provides:
- *  - the list of packages to scan. (drill.classpath.scanning.packages) {@see CommonConstants#IMPLEMENTATIONS_SCAN_PACKAGES}
- *  - the list of base classes to scan for implementations. (drill.classpath.scanning.base.classes) {@see CommonConstants#IMPLEMENTATIONS_SCAN_CLASSES}
- *  - the list of annotations to scan for. (drill.classpath.scanning.annotations) {@see CommonConstants#IMPLEMENTATIONS_SCAN_ANNOTATIONS}
+ *  - the list of packages to scan. (drill.classpath.scanning.packages) {@link ClassPathScanner#IMPLEMENTATIONS_SCAN_PACKAGES}
+ *  - the list of base classes to scan for implementations. (drill.classpath.scanning.base.classes) {@link ClassPathScanner#IMPLEMENTATIONS_SCAN_CLASSES}
+ *  - the list of annotations to scan for. (drill.classpath.scanning.annotations) {@link ClassPathScanner#IMPLEMENTATIONS_SCAN_ANNOTATIONS}
  * Only the class directories and jars containing a drill-module.conf will be scanned.
- * Drill core packages are scanned at build time and the result is saved in a JSON file. {@see ClassPathScanner#FUNCTION_REGISTRY_FILE}
+ * Drill core packages are scanned at build time and the result is saved in a JSON file.
  * At runtime only the locations that have not been scanned yet will be scanned.
  */
 public final class ClassPathScanner {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <#list ["Single", "Repeated"] as mode>
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/${mode}MapWriter.java" />
@@ -198,7 +197,8 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   <#assign vectName = capName />
   <#assign vectName = "Nullable${capName}" />
 
-  <#if minor.class?starts_with("Decimal") >
+  <#if minor.class?contains("Decimal") >
+  @Override
   public ${minor.class}Writer ${lowerName}(String name) {
     // returns existing writer
     final FieldWriter writer = fields.get(name.toLowerCase());
@@ -206,6 +206,7 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
     return writer;
   }
 
+  @Override
   public ${minor.class}Writer ${lowerName}(String name, int scale, int precision) {
     final MajorType ${upperName}_TYPE = Types.withScaleAndPrecision(MinorType.${upperName}, DataMode.OPTIONAL, scale, precision);
   <#else>

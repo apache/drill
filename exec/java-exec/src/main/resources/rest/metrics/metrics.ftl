@@ -1,14 +1,22 @@
-<#-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
-  license agreements. See the NOTICE file distributed with this work for additional
-  information regarding copyright ownership. The ASF licenses this file to
-  You under the Apache License, Version 2.0 (the "License"); you may not use
-  this file except in compliance with the License. You may obtain a copy of
-  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
-  by applicable law or agreed to in writing, software distributed under the
-  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
-  OF ANY KIND, either express or implied. See the License for the specific
-  language governing permissions and limitations under the License. -->
+<#--
 
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
 <#include "*/generic.ftl">
 <#macro page_head>
 </#macro>
@@ -43,6 +51,11 @@
         <div id="totalUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
         </div>
       </div>
+      Actively Used Direct (Estimate)
+      <div class="progress">
+        <div id="estDirectUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
+        </div>
+      </div>
     </div>
 
     <div id="mainDiv" class="col-md-9" role="main">
@@ -63,12 +76,6 @@
           <strong>No histograms.</strong>
         </div>
       </div>
-      <h3 id="meters">Meters</h3>
-      <div id="metersVal">
-        <div class="alert alert-info">
-          <strong>No meters.</strong>
-        </div>
-      </div>
       <h3 id="timers">Timers</h3>
       <div id="timersVal">
         <div class="alert alert-info">
@@ -83,6 +90,15 @@
     var round = function(val, n) {
       return Math.round(val * Math.pow(10, n)) / Math.pow(10, n);
     };
+    var isAllocator = function(metricName) {
+      return (metricName.startsWith("drill.allocator"));
+    };
+    function getGBUsageText(val, perc) {
+      if (isNaN(perc)) {
+        perc = 0;
+      }
+      return round((val / 1073741824), 2) + "GB (" + Math.max(0, perc) + "%)";
+    }
 
     function updateGauges(gauges) {
       $("#gaugesTable").html(function() {
@@ -98,19 +114,40 @@
       });
     };
 
-    function updateBars(gauges) {
-      $.each(["heap","non-heap","total"], function(i, key) {
-        var used    = gauges[key + ".used"].value;
-        var max     = gauges[key + ".max"].value;
-        var usage   = round((used / 1073741824), 2) + "GB";
-        var percent = round((used / max), 2);
+    function createCountersTable(counters) {
+      $("#countersVal").html(function() {
+        var table = "<table class=\"table table-striped\" id=\"countersTable\">";
+        table += "<tbody>";
+        $.each(counters, function(key, value) {
+          table += "<tr>";
+          table += "<td>" + key + "</td>";
+          table += "<td>" + value.count + "</td>";
+          table += "</tr>";
+        });
+        table += "</tbody>";
+        table += "</table>";
+        return table;
+      });
+    };
 
-        var styleVal = "width: " + percent + "%;"
-        $("#" + key + "Usage").attr({
+    function updateBars(gauges) {
+      $.each(["heap","non-heap","total","drill.allocator.root"], function(i, key) {
+        var used = gauges[key + ".used"].value;
+        var max;
+        if (isAllocator(key)) {
+          max = gauges[key + ".peak"].value;
+        } else {
+          max = gauges[key + ".max"].value;
+        }
+        var percent = round((100 * used / max), 2);
+        var usage = getGBUsageText(used, percent);
+
+        var styleVal = "width: " + percent + "%;color: #202020;white-space: nowrap"
+        $("#" + (isAllocator(key) ? "estDirect" : key) + "Usage").attr({
           "aria-valuenow" : percent,
           "style" : styleVal
         });
-        $("#" + key + "Usage").html(usage);
+        $("#" + (isAllocator(key) ? "estDirect" : key) + "Usage").html(usage);
       });
     };
 
@@ -138,26 +175,18 @@
       });
     };
 
-    function updateOthers(metrics) {
-      $.each(["counters", "meters"], function(i, key) {
-        if(! $.isEmptyObject(metrics[key])) {
-          $("#" + key + "Val").html(JSON.stringify(metrics[key], null, 2));
-        }
-      });
-    };
-
     var update = function() {
       $.get("/status/metrics", function(metrics) {
         updateGauges(metrics.gauges);
         updateBars(metrics.gauges);
         if(! $.isEmptyObject(metrics.timers)) createTable(metrics.timers, "timers");
         if(! $.isEmptyObject(metrics.histograms)) createTable(metrics.histograms, "histograms");
-        updateOthers(metrics);
+        if(! $.isEmptyObject(metrics.counters)) createCountersTable(metrics.counters);
       });
     };
 
     update();
-    setInterval(update, 2000);
+    setInterval(update, 3000);
   </script>
 </#macro>
 

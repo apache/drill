@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,6 +30,7 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 
 import com.google.common.collect.ImmutableMap;
@@ -110,7 +111,7 @@ public class MongoCompareFunctionProcessor extends
   @Override
   public Boolean visitConvertExpression(ConvertExpression e,
       LogicalExpression valueArg) throws RuntimeException {
-    if (e.getConvertFunction() == ConvertExpression.CONVERT_FROM
+    if (ConvertExpression.CONVERT_FROM.equals(e.getConvertFunction())
         && e.getInput() instanceof SchemaPath) {
       String encodingType = e.getEncodingType();
       switch (encodingType) {
@@ -219,6 +220,14 @@ public class MongoCompareFunctionProcessor extends
       return true;
     }
 
+    // Mongo does not support decimals, therefore double value is used.
+    // See list of supported types in BsonValueCodecProvider.
+    if (valueArg instanceof VarDecimalExpression) {
+      this.value = ((VarDecimalExpression) valueArg).getBigDecimal().doubleValue();
+      this.path = path;
+      return true;
+    }
+
     return false;
   }
 
@@ -230,7 +239,7 @@ public class MongoCompareFunctionProcessor extends
         .add(DateExpression.class).add(DoubleExpression.class)
         .add(FloatExpression.class).add(IntExpression.class)
         .add(LongExpression.class).add(QuotedString.class)
-        .add(TimeExpression.class).build();
+        .add(TimeExpression.class).add(VarDecimalExpression.class).build();
   }
 
   private static final ImmutableMap<String, String> COMPARE_FUNCTIONS_TRANSPOSE_MAP;

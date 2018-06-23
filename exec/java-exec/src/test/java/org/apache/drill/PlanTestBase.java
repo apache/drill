@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill;
 
 import static org.junit.Assert.assertFalse;
@@ -36,8 +35,11 @@ import org.apache.calcite.sql.SqlExplain.Depth;
 import org.apache.calcite.sql.SqlExplainLevel;
 
 import com.google.common.base.Strings;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.QueryTestUtil;
 
 public class PlanTestBase extends BaseTestQuery {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanTestBase.class);
 
   protected static final String OPTIQ_FORMAT = "text";
   protected static final String JSON_FORMAT = "json";
@@ -78,8 +80,73 @@ public class PlanTestBase extends BaseTestQuery {
    *                     planning process throws an exception
    */
   public static void testPlanMatchingPatterns(String query, String[] expectedPatterns, String[] excludedPatterns)
-      throws Exception {
+    throws Exception {
+    testPlanMatchingPatterns(query, stringsToPatterns(expectedPatterns), stringsToPatterns(excludedPatterns));
+  }
+
+  public static void testPlanMatchingPatterns(String query, Pattern[] expectedPatterns, Pattern[] excludedPatterns)
+    throws Exception {
     final String plan = getPlanInString("EXPLAIN PLAN for " + QueryTestUtil.normalizeQuery(query), OPTIQ_FORMAT);
+
+    // Check and make sure all expected patterns are in the plan
+    if (expectedPatterns != null) {
+      for (final Pattern expectedPattern: expectedPatterns) {
+        final Matcher m = expectedPattern.matcher(plan);
+        assertTrue(EXPECTED_NOT_FOUND + expectedPattern.pattern() +"\n" + plan, m.find());
+      }
+    }
+
+    // Check and make sure all excluded patterns are not in the plan
+    if (excludedPatterns != null) {
+      for (final Pattern excludedPattern: excludedPatterns) {
+        final Matcher m = excludedPattern.matcher(plan);
+        assertFalse(UNEXPECTED_FOUND + excludedPattern.pattern() +"\n" + plan, m.find());
+      }
+    }
+  }
+
+  /**
+   * The same as above, but without excludedPatterns
+   */
+  public static void testPlanMatchingPatterns(String query, String[] expectedPatterns) throws Exception {
+    testPlanMatchingPatterns(query, expectedPatterns, null);
+  }
+
+  private static Pattern[] stringsToPatterns(String[] strings)
+  {
+    if (strings == null) {
+      return null;
+    }
+
+    final Pattern[] patterns = new Pattern[strings.length];
+
+    for (int index = 0; index < strings.length; index++) {
+      final String string = strings[index];
+      patterns[index] = Pattern.compile(string);
+    }
+
+    return patterns;
+  }
+
+  /**
+   * Runs an explain plan including attributes query and check for expected regex patterns
+   * (in optiq text format), also ensure excluded patterns are not found. Either list can
+   * be empty or null to skip that part of the check.
+   *
+   * See the convenience methods for passing a single string in either the
+   * excluded list, included list or both.
+   *
+   * @param query - an explain query, this method does not add it for you
+   * @param expectedPatterns - list of patterns that should appear in the plan
+   * @param excludedPatterns - list of patterns that should not appear in the plan
+   * @throws Exception - if an inclusion or exclusion check fails, or the
+   *                     planning process throws an exception
+   */
+  public static void testPlanWithAttributesMatchingPatterns(String query, String[] expectedPatterns,
+                                                            String[] excludedPatterns)
+          throws Exception {
+    final String plan = getPlanInString("EXPLAIN PLAN INCLUDING ALL ATTRIBUTES for " +
+            QueryTestUtil.normalizeQuery(query), OPTIQ_FORMAT);
 
     // Check and make sure all expected patterns are in the plan
     if (expectedPatterns != null) {
@@ -159,7 +226,6 @@ public class PlanTestBase extends BaseTestQuery {
   public static void testRelLogicalJoinOrder(String sql, String... expectedSubstrs) throws Exception {
     final String planStr = getDrillRelPlanInString(sql, SqlExplainLevel.EXPPLAN_ATTRIBUTES, Depth.LOGICAL);
     final String prefixJoinOrder = getLogicalPrefixJoinOrderFromPlan(planStr);
-    System.out.println(" prefix Join order = \n" + prefixJoinOrder);
     for (final String substr : expectedSubstrs) {
       assertTrue(String.format("Expected string %s is not in the prefixJoinOrder %s!", substr, prefixJoinOrder),
           prefixJoinOrder.contains(substr));
@@ -175,7 +241,6 @@ public class PlanTestBase extends BaseTestQuery {
   public static void testRelPhysicalJoinOrder(String sql, String... expectedSubstrs) throws Exception {
     final String planStr = getDrillRelPlanInString(sql, SqlExplainLevel.EXPPLAN_ATTRIBUTES, Depth.PHYSICAL);
     final String prefixJoinOrder = getPhysicalPrefixJoinOrderFromPlan(planStr);
-    System.out.println(" prefix Join order = \n" + prefixJoinOrder);
     for (final String substr : expectedSubstrs) {
       assertTrue(String.format("Expected string %s is not in the prefixJoinOrder %s!", substr, prefixJoinOrder),
           prefixJoinOrder.contains(substr));
@@ -238,6 +303,19 @@ public class PlanTestBase extends BaseTestQuery {
     for (final String substr : expectedSubstrs) {
       assertTrue(planStr.contains(substr));
     }
+  }
+
+
+  /**
+   * Creates physical plan for the given query and then executes this plan.
+   * This method is useful for testing serialization / deserialization issues.
+   *
+   * @param query query string
+   */
+  public static void testPhysicalPlanExecutionBasedOnQuery(String query) throws Exception {
+    query = "EXPLAIN PLAN for " + QueryTestUtil.normalizeQuery(query);
+    String plan = getPlanInString(query, JSON_FORMAT);
+    testPhysical(plan);
   }
 
   /*
@@ -308,13 +386,14 @@ public class PlanTestBase extends BaseTestQuery {
         throw new Exception("Looks like you did not provide an explain plan query, please add EXPLAIN PLAN FOR to the beginning of your query.");
       }
 
-      System.out.println(vw.getValueVector().getField().getPath());
+      logger.debug(vw.getValueVector().getField().getName());
       final ValueVector vv = vw.getValueVector();
       for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
         final Object o = vv.getAccessor().getObject(i);
         builder.append(o);
-        System.out.println(vv.getAccessor().getObject(i));
+        logger.debug(o.toString());
       }
+
       loader.clear();
       b.release();
     }

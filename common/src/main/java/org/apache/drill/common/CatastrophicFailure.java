@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,7 +30,7 @@ public class CatastrophicFailure {
    * Exit the VM as we hit a catastrophic failure.
    * @param e
    *          The Throwable that occurred
-   * @param name
+   * @param message
    *          A descriptive message
    * @param code
    *          An error code to exit the JVM with.

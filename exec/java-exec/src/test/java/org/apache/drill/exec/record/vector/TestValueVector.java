@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,16 +17,17 @@
  */
 package org.apache.drill.exec.record.vector;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import io.netty.buffer.DrillBuf;
 
 import java.nio.charset.Charset;
 
+import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
@@ -57,18 +58,23 @@ import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
+import io.netty.buffer.DrillBuf;
+
+@Category(VectorTest.class)
 public class TestValueVector extends ExecTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestValueVector.class);
 
   private final static String EMPTY_SCHEMA_PATH = "";
 
@@ -92,6 +98,7 @@ public class TestValueVector extends ExecTest {
   }
 
   @Test(expected = OversizedAllocationException.class)
+  @Category(UnlikelyTest.class)
   public void testFixedVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
     final UInt4Vector vector = new UInt4Vector(field, allocator);
@@ -117,6 +124,7 @@ public class TestValueVector extends ExecTest {
   }
 
   @Test(expected = OversizedAllocationException.class)
+  @Category(UnlikelyTest.class)
   public void testBitVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
     final BitVector vector = new BitVector(field, allocator);
@@ -146,8 +154,8 @@ public class TestValueVector extends ExecTest {
     }
   }
 
-
   @Test(expected = OversizedAllocationException.class)
+  @Category(UnlikelyTest.class)
   public void testVariableVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
     final VarCharVector vector = new VarCharVector(field, allocator);
@@ -385,7 +393,9 @@ the interface to load has changed
 
     // Combine into a single buffer so we can load it into a new vector.
     final DrillBuf[] buffers1 = vector1.getBuffers(false);
+    @SuppressWarnings("resource")
     final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
+    @SuppressWarnings("resource")
     final NullableVarCharVector vector2 = new NullableVarCharVector(field, allocator);
     vector2.load(vector1.getMetadata(), buffer1);
 
@@ -538,6 +548,7 @@ the interface to load has changed
       m.set(1, 0);
       m.set(100, 0);
       m.set(1022, 1);
+      m.setValueCount(1023);
 
       final BitVector.Accessor accessor = vector.getAccessor();
       assertEquals(1, accessor.get(0));
@@ -550,12 +561,14 @@ the interface to load has changed
       m.set(0, 1);
       m.set(1, 0);
       m.set(1, 0);
+      m.setValueCount(2);
       assertEquals(1, accessor.get(0));
       assertEquals(0, accessor.get(1));
 
       // test toggling the values
       m.set(0, 0);
       m.set(1, 1);
+      m.setValueCount(2);
       assertEquals(0, accessor.get(0));
       assertEquals(1, accessor.get(1));
 
@@ -744,7 +757,7 @@ the interface to load has changed
     final VectorVerifier noChild = new ChildVerifier();
     final VectorVerifier offsetChild = new ChildVerifier(UInt4Holder.TYPE);
 
-    final ImmutableMap.Builder<Class, VectorVerifier> builder = ImmutableMap.builder();
+    final ImmutableMap.Builder<Class<? extends ValueVector>, VectorVerifier> builder = ImmutableMap.builder();
     builder.put(UInt4Vector.class, noChild);
     builder.put(BitVector.class, noChild);
     builder.put(VarCharVector.class, offsetChild);
@@ -752,14 +765,14 @@ the interface to load has changed
     builder.put(RepeatedListVector.class, new ChildVerifier(UInt4Holder.TYPE, Types.LATE_BIND_TYPE));
     builder.put(MapVector.class, noChild);
     builder.put(RepeatedMapVector.class, offsetChild);
-    final ImmutableMap<Class, VectorVerifier> children = builder.build();
+    final ImmutableMap<Class<? extends ValueVector>, VectorVerifier> children = builder.build();
 
     testVectors(new VectorVerifier() {
 
       @Override
       public void verify(ValueVector vector) throws Exception {
 
-        final Class klazz = vector.getClass();
+        final Class<?> klazz = vector.getClass();
         final VectorVerifier verifier = children.get(klazz);
         verifier.verify(vector);
       }
@@ -788,4 +801,63 @@ the interface to load has changed
       }
     });
   }
+
+  @SuppressWarnings("resource")
+  @Test
+  public void testListVectorShouldNotThrowOversizedAllocationException() throws Exception {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH,
+            Types.optional(TypeProtos.MinorType.LIST));
+    ListVector vector = new ListVector(field, allocator, null);
+    ListVector vectorFrom = new ListVector(field, allocator, null);
+    vectorFrom.allocateNew();
+
+    for (int i = 0; i < 10000; i++) {
+      vector.allocateNew();
+      vector.copyFromSafe(0, 0, vectorFrom);
+      vector.clear();
+    }
+
+    vectorFrom.clear();
+    vector.clear();
+  }
+
+  /**
+   * For VariableLengthVectors when we clear of the vector and then explicitly set the
+   * ValueCount of zero, then it should not fail with IndexOutOfBoundException.
+   * @throws Exception
+   */
+  @Test
+  public void testVarLengthVector_SetCountZeroAfterClear() throws Exception {
+    try {
+      final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+      VariableWidthVector vector = new VarCharVector(field, allocator);
+      vector.allocateNew();
+      vector.clear();
+      assertTrue(vector.getAccessor().getValueCount() == 0);
+      vector.getMutator().setValueCount(0);
+      assertTrue(vector.getAccessor().getValueCount() == 0);
+    } catch (Exception ex) {
+      fail();
+    }
+  }
+
+  /** For VariableLengthVectors when we try to set value count greater than value count for which memory is allocated,
+   * then it should fail with IndexOutOfBoundException.
+   * @throws Exception
+   */
+  @Test
+  public void testVarLengthVector_SetOOBCount() throws Exception {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+    VariableWidthVector vector = new VarCharVector(field, allocator);
+    try {
+      vector.allocateNew(10, 1);
+      vector.getMutator().setValueCount(4);
+      fail();
+    } catch (Exception ex) {
+      assertTrue(ex instanceof IndexOutOfBoundsException);
+    } finally {
+      vector.clear();
+    }
+  }
+
 }

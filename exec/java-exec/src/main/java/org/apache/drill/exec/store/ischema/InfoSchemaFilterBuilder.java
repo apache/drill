@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,12 @@ package org.apache.drill.exec.store.ischema;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
+
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FieldReference;
@@ -37,7 +42,7 @@ import java.util.List;
 
 /**
  * Builds a InfoSchemaFilter out of the Filter condition. Currently we look only for certain conditions. Mainly
- * conditions involving columns "TABLE_NAME", "SCHEMA_NAME" and "TABLE_SCHEMA" and
+ * conditions involving columns "CATALOG_NAME, "TABLE_NAME", "SCHEMA_NAME", "TABLE_SCHEMA" and "COLUMN_NAME", and
  * functions EQUAL, NOT EQUAL, LIKE, OR and AND.
  */
 public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void, RuntimeException> {
@@ -69,13 +74,25 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
       case "equal":
       case "not equal":
       case "notequal":
-      case "not_equal":
-      case "like": {
-        ExprNode arg0 = call.args.get(0).accept(this, value);
-        ExprNode arg1 = call.args.get(1).accept(this, value);
+      case "not_equal": {
+        final ExprNode col = call.args.get(0).accept(this, value);
+        final ExprNode constant = call.args.get(1).accept(this, value);
 
-        if (arg0 != null && arg0 instanceof FieldExprNode && arg1 != null && arg1 instanceof ConstantExprNode) {
-          return new FunctionExprNode(funcName, ImmutableList.of(arg0, arg1));
+        if (col instanceof FieldExprNode && constant instanceof ConstantExprNode) {
+          return new FunctionExprNode(funcName, ImmutableList.of(col, constant));
+        }
+        break;
+      }
+
+      case "like": {
+        final ExprNode col = call.args.get(0).accept(this, value);
+        final ExprNode pattern = call.args.get(1).accept(this, value);
+        final ExprNode escape = call.args.size() > 2 ? call.args.get(2).accept(this, value) : null;
+
+        if (col instanceof FieldExprNode && pattern instanceof ConstantExprNode &&
+            (escape == null || escape instanceof ConstantExprNode)) {
+          return new FunctionExprNode(funcName,
+              escape == null ? ImmutableList.of(col, pattern) : ImmutableList.of(col, pattern, escape));
         }
         break;
       }
@@ -126,10 +143,12 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
   public ExprNode visitCastExpression(CastExpression e, Void value) throws RuntimeException {
     if (e.getInput() instanceof FieldReference) {
       FieldReference fieldRef = (FieldReference) e.getInput();
-      String field = fieldRef.getAsUnescapedPath().toUpperCase();
-      if (field.equals(SCHS_COL_SCHEMA_NAME)
+      String field = fieldRef.getRootSegmentPath().toUpperCase();
+      if (field.equals(CATS_COL_CATALOG_NAME)
+          || field.equals(SCHS_COL_SCHEMA_NAME)
           || field.equals(SHRD_COL_TABLE_NAME)
-          || field.equals(SHRD_COL_TABLE_SCHEMA)) {
+          || field.equals(SHRD_COL_TABLE_SCHEMA)
+          || field.equals(COLS_COL_COLUMN_NAME)) {
         return new FieldExprNode(field);
       }
     }
@@ -144,10 +163,12 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
 
   @Override
   public ExprNode visitSchemaPath(SchemaPath path, Void value) throws RuntimeException {
-    String field = path.getAsUnescapedPath().toUpperCase();
-    if (field.equals(SCHS_COL_SCHEMA_NAME)
+    String field = path.getRootSegmentPath().toUpperCase();
+    if (field.equals(CATS_COL_CATALOG_NAME)
+        || field.equals(SCHS_COL_SCHEMA_NAME)
         || field.equals(SHRD_COL_TABLE_NAME)
-        || field.equals(SHRD_COL_TABLE_SCHEMA)) {
+        || field.equals(SHRD_COL_TABLE_SCHEMA)
+        || field.equals(COLS_COL_COLUMN_NAME)) {
       return new FieldExprNode(field);
     }
 

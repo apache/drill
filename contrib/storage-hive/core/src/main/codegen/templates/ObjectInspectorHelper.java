@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/ObjectInspectorHelper.java" />
 
@@ -40,28 +39,40 @@ import java.lang.UnsupportedOperationException;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.ArrayListMultimap;
 
 public class ObjectInspectorHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ObjectInspectorHelper.class);
 
-  private static Map<MinorType, Class> OIMAP_REQUIRED = new HashMap<>();
-  private static Map<MinorType, Class> OIMAP_OPTIONAL = new HashMap<>();
+  private static Multimap<MinorType, Class> OIMAP_REQUIRED = ArrayListMultimap.create();
+  private static Multimap<MinorType, Class> OIMAP_OPTIONAL = ArrayListMultimap.create();
   static {
 <#list drillOI.map as entry>
-    OIMAP_REQUIRED.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}ObjectInspector.Required.class);
-    OIMAP_OPTIONAL.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}ObjectInspector.Optional.class);
+    <#if entry.needOIForDrillType == true>
+    OIMAP_REQUIRED.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}${entry.hiveOI}.Required.class);
+    OIMAP_OPTIONAL.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}${entry.hiveOI}.Optional.class);
+    </#if>
 </#list>
   }
 
-  public static ObjectInspector getDrillObjectInspector(DataMode mode, MinorType minorType) {
+  public static ObjectInspector getDrillObjectInspector(DataMode mode, MinorType minorType, boolean varCharToStringReplacement) {
     try {
       if (mode == DataMode.REQUIRED) {
         if (OIMAP_REQUIRED.containsKey(minorType)) {
-          return (ObjectInspector) OIMAP_REQUIRED.get(minorType).newInstance();
+          if (varCharToStringReplacement && minorType == MinorType.VARCHAR) {
+            return (ObjectInspector) ((Class) OIMAP_REQUIRED.get(minorType).toArray()[1]).newInstance();
+          } else {
+            return (ObjectInspector) ((Class) OIMAP_REQUIRED.get(minorType).toArray()[0]).newInstance();
+          }
         }
       } else if (mode == DataMode.OPTIONAL) {
         if (OIMAP_OPTIONAL.containsKey(minorType)) {
-          return (ObjectInspector) OIMAP_OPTIONAL.get(minorType).newInstance();
+          if (varCharToStringReplacement && minorType == MinorType.VARCHAR) {
+            return (ObjectInspector) ((Class) OIMAP_OPTIONAL.get(minorType).toArray()[1]).newInstance();
+          } else {
+            return (ObjectInspector) ((Class) OIMAP_OPTIONAL.get(minorType).toArray()[0]).newInstance();
+          }
         }
       } else {
         throw new UnsupportedOperationException("Repeated types are not supported as arguement to Hive UDFs");
@@ -85,7 +96,7 @@ public class ObjectInspectorHelper {
             JType holderClass = TypeHelper.getHolderType(m, returnType, TypeProtos.DataMode.OPTIONAL);
             block.assign(returnValueHolder, JExpr._new(holderClass));
 
-          <#if entry.hiveType == "VARCHAR" || entry.hiveType == "STRING" || entry.hiveType == "BINARY">
+          <#if entry.hiveType == "VARCHAR" || entry.hiveType == "STRING" || entry.hiveType == "BINARY" || entry.hiveType == "CHAR">
             block.assign( //
                 returnValueHolder.ref("buffer"), //
                 g
@@ -160,39 +171,43 @@ public class ObjectInspectorHelper {
             booleanJC._then().assign(returnValueHolder.ref("value"), JExpr.lit(1));
             booleanJC._else().assign(returnValueHolder.ref("value"), JExpr.lit(0));
 
-          <#elseif entry.hiveType == "VARCHAR">
-            JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
-              castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
+          <#elseif entry.hiveType == "VARCHAR" || entry.hiveType == "CHAR" || entry.hiveType == "STRING" || entry.hiveType == "BINARY">
+            <#if entry.hiveType == "VARCHAR">
+              JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
+                  castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
                       .invoke("getValue")
                       .invoke("getBytes"));
+            <#elseif entry.hiveType == "CHAR">
+                JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
+                    castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
+                        .invoke("getStrippedValue")
+                        .invoke("getBytes"));
+            <#elseif entry.hiveType == "STRING">
+              JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
+                  castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
+                      .invoke("getBytes"));
+            <#elseif entry.hiveType == "BINARY">
+                JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
+                    castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
+            </#if>
 
-            jc._else().add(returnValueHolder.ref("buffer")
-              .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
+            JConditional jnullif = jc._else()._if(data.eq(JExpr._null()));
+            jnullif._then().assign(returnValueHolder.ref("isSet"), JExpr.lit(0));
 
-
-            jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
-            jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
-
-          <#elseif entry.hiveType == "STRING">
-            JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
-              castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
-                      .invoke("getBytes").arg(DirectExpression.direct("com.google.common.base.Charsets.UTF_16")));
-            jc._else().add(returnValueHolder.ref("buffer")
-              .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
-            jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
-            jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
-          <#elseif entry.hiveType == "BINARY">
-
-            JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
-              castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
-            jc._else().add(returnValueHolder.ref("buffer")
+            jnullif._else().add(returnValueHolder.ref("buffer")
                 .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
-            jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
-            jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
+            jnullif._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
+            jnullif._else().assign(returnValueHolder.ref("end"), data.ref("length"));
+            jnullif._else().add(returnValueHolder.ref("buffer").invoke("setIndex").arg(JExpr.lit(0)).arg(data.ref("length")));
+
           <#elseif entry.hiveType == "TIMESTAMP">
             JVar tsVar = jc._else().decl(m.directClass(java.sql.Timestamp.class.getCanonicalName()), "ts",
               castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
-            jc._else().assign(returnValueHolder.ref("value"), tsVar.invoke("getTime"));
+            // Bringing relative timestamp value without timezone info to timestamp value in UTC, since Drill keeps date-time values in UTC
+            JVar localDateTimeVar = jc._else().decl(m.directClass(org.joda.time.LocalDateTime.class.getCanonicalName()), "localDateTime",
+                JExpr._new(m.directClass(org.joda.time.LocalDateTime.class.getCanonicalName())).arg(tsVar));
+            jc._else().assign(returnValueHolder.ref("value"), localDateTimeVar.invoke("toDateTime")
+                .arg(m.directClass(org.joda.time.DateTimeZone.class.getCanonicalName()).staticRef("UTC")).invoke("getMillis"));
           <#elseif entry.hiveType == "DATE">
             JVar dVar = jc._else().decl(m.directClass(java.sql.Date.class.getCanonicalName()), "d",
               castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));

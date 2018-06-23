@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.testing;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class Controls {
 
@@ -131,8 +132,22 @@ public class Controls {
      * @param nSkip     number of times to skip before firing
      * @return this builder
      */
-    public Builder addPause(final Class siteClass, final String desc, final int nSkip) {
+    public Builder addPause(final Class<?> siteClass, final String desc, final int nSkip) {
       injections.add(ControlsInjectionUtil.createPause(siteClass, desc, nSkip));
+      return this;
+    }
+
+    /**
+     * Adds a time-bound pause injection to the controls builder with the given parameters.
+     *
+     * @param siteClass class where the pause should happen
+     * @param desc      descriptor for the pause site in the site class
+     * @param nSkip     number of times to skip before firing
+     * @param msPause     duration of the pause in millisec
+     * @return this builder
+     */
+    public Builder addTimedPause(final Class<?> siteClass, final String desc, final int nSkip, final long msPause) {
+      injections.add(ControlsInjectionUtil.createTimedPause(siteClass, desc, nSkip, msPause));
       return this;
     }
 
@@ -144,7 +159,7 @@ public class Controls {
      * @param desc      descriptor for the pause site in the site class
      * @return this builder
      */
-    public Builder addPause(final Class siteClass, final String desc) {
+    public Builder addPause(final Class<?> siteClass, final String desc) {
       return addPause(siteClass, desc, 0);
     }
 
@@ -156,9 +171,24 @@ public class Controls {
      * @param nSkip     number of times to skip before firing
      * @return this builder
      */
-    public Builder addPauseOnBit(final Class siteClass, final String desc,
+    public Builder addPauseOnBit(final Class<?> siteClass, final String desc,
                                  final DrillbitEndpoint endpoint, final int nSkip) {
       injections.add(ControlsInjectionUtil.createPauseOnBit(siteClass, desc, nSkip, endpoint));
+      return this;
+    }
+
+    /**
+     * Adds a time-bound pause injection (for the specified drillbit) to the controls builder with the given parameters.
+     *
+     * @param siteClass class where the pause should happen
+     * @param desc      descriptor for the pause site in the site class
+     * @param nSkip     number of times to skip before firing
+     * @param msPause     duration of the pause in millisec
+     * @return this builder
+     */
+    public Builder addTimedPauseOnBit(final Class<?> siteClass, final String desc,
+                                 final DrillbitEndpoint endpoint, final int nSkip, final long msPause) {
+      injections.add(ControlsInjectionUtil.createTimedPauseOnBit(siteClass, desc, nSkip, endpoint, msPause));
       return this;
     }
 
@@ -170,7 +200,7 @@ public class Controls {
      * @param desc      descriptor for the pause site in the site class
      * @return this builder
      */
-    public Builder addPauseOnBit(final Class siteClass, final String desc,
+    public Builder addPauseOnBit(final Class<?> siteClass, final String desc,
                                  final DrillbitEndpoint endpoint) {
       return addPauseOnBit(siteClass, desc, endpoint, 0);
     }
@@ -182,7 +212,7 @@ public class Controls {
      * @param desc      descriptor for the latch in the site class
      * @return this builder
      */
-    public Builder addLatch(final Class siteClass, final String desc) {
+    public Builder addLatch(final Class<?> siteClass, final String desc) {
       injections.add(ControlsInjectionUtil.createLatch(siteClass, desc));
       return this;
     }

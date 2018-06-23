@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import org.apache.calcite.schema.SchemaPlus;
-
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -73,7 +73,7 @@ public class HiveSchemaFactory implements SchemaFactory {
 
     try {
       processUserMetastoreClient =
-          DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf);
+          DrillHiveMetaStoreClient.createCloseableClientWithCaching(hiveConf);
     } catch (MetaException e) {
       throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
     }
@@ -103,6 +103,20 @@ public class HiveSchemaFactory implements SchemaFactory {
    */
   private boolean needToImpersonateReadingData() {
     return isDrillImpersonationEnabled && isHS2DoAsSet;
+  }
+
+  /**
+   * Close this schema factory in preparation for retrying. Attempt to close
+   * connections, but just ignore any errors.
+   */
+
+  public void close() {
+    try {
+      processUserMetastoreClient.close();
+    } catch (Exception e) { }
+    try {
+      metaStoreClientLoadingCache.invalidateAll();
+    } catch (Exception e) { }
   }
 
   @Override
@@ -146,9 +160,8 @@ public class HiveSchemaFactory implements SchemaFactory {
           this.defaultSchema = schema;
         }
         return schema;
-      } catch (final TException e) {
-        logger.warn("Failure while attempting to access HiveDatabase '{}'.", name, e.getCause());
-        return null;
+      } catch (TException e) {
+        throw new DrillRuntimeException(e);
       }
     }
 

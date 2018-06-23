@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,6 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import static org.junit.Assert.*;
-
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -26,22 +24,21 @@ import org.apache.drill.exec.vector.accessor.AbstractSqlAccessor;
 import org.apache.drill.exec.vector.accessor.InvalidAccessException;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
 import org.apache.drill.jdbc.SQLConversionOverflowException;
-import org.apache.drill.jdbc.impl.TypeConvertingSqlAccessor;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.*;
 
 /**
  * Class-level unit test for {@link TypeConvertingSqlAccessor}.
  * (Also see {@link org.apache.drill.jdbc.ResultSetGetMethodConversionsTest}.
  */
+@Category(JdbcTest.class)
 public class TypeConvertingSqlAccessorTest {
 
   /**

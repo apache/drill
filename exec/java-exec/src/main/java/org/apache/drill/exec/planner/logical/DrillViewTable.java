@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,15 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.util.List;
-
+import com.google.common.collect.ImmutableList;
+import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
 import org.apache.calcite.schema.TranslatableTable;
 
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptTable;
@@ -65,9 +67,9 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
 
       if (viewExpansionContext.isImpersonationEnabled()) {
         token = viewExpansionContext.reserveViewExpansionToken(viewOwner);
-        rel = context.expandView(rowType, view.getSql(), token.getSchemaTree(), view.getWorkspaceSchemaPath());
+        rel = context.expandView(rowType, view.getSql(), token.getSchemaTree(), view.getWorkspaceSchemaPath()).rel;
       } else {
-        rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath());
+        rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath(), ImmutableList.<String>of()).rel;
       }
 
       // If the View's field list is not "*", create a cast.
@@ -91,5 +93,15 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
   @Override
   public String getViewSql() {
     return view.getSql();
+  }
+
+  @Override
+  public boolean rolledUpColumnValidInsideAgg(String column,
+      SqlCall call, SqlNode parent, CalciteConnectionConfig config) {
+    return true;
+  }
+
+  @Override public boolean isRolledUp(String column) {
+    return false;
   }
 }

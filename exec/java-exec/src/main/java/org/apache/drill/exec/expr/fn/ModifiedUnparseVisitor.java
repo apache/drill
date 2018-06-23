@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +43,7 @@ public class ModifiedUnparseVisitor extends UnparseVisitor {
   }
 
   /**
-   * Unparse the given {@link Java.CompilationUnit} to the given {@link Writer}.
+   * Unparse the given {@link org.codehaus.janino.Java.CompilationUnit} to the given {@link java.io.Writer}.
    */
   public static void unparse(Java.CompilationUnit cu, Writer w) {
     UnparseVisitor.unparse(cu, w);

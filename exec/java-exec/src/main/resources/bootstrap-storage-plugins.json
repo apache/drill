@@ -6,6 +6,81 @@
       workspaces: {
         "root" : {
           location: "/",
+          writable: false,
+          allowAccessOutsideWorkspace: false
+        },
+        "tmp" : {
+          location: "/tmp",
+          writable: true,
+          allowAccessOutsideWorkspace: false
+        }
+      },
+      formats: {
+        "psv" : {
+          type: "text",
+          extensions: [ "tbl" ],
+          delimiter: "|"
+        },
+        "csv" : {
+          type: "text",
+          extensions: [ "csv" ],
+          delimiter: ","
+        },
+        "tsv" : {
+          type: "text",
+          extensions: [ "tsv" ],
+          delimiter: "\t"
+        },
+        "httpd" : {
+          type: "httpd",
+          logFormat: "%h %t \"%r\" %>s %b \"%{Referer}i\""
+          /* timestampFormat: "dd/MMM/yyyy:HH:mm:ss ZZ" */
+        },
+        "parquet" : {
+          type: "parquet"
+        },
+        "json" : {
+          type: "json",
+          extensions: [ "json" ]
+        },
+        "pcap" : {
+          type: "pcap"
+        },
+        "avro" : {
+          type: "avro"
+        },
+        "sequencefile": {
+          type : "sequencefile",
+          extensions: [ "seq" ]
+        },
+        "csvh" : {
+          type: "text",
+          extensions: [ "csvh" ],
+          delimiter: ",",
+          extractHeader: true
+        },
+        "image" : {
+          type: "image",
+          extensions: [
+            "jpg", "jpeg", "jpe", "tif", "tiff", "dng", "psd", "png", "bmp", "gif",
+            "ico", "pcx", "wav", "wave", "avi", "webp", "mov", "mp4", "m4a", "m4p",
+            "m4b", "m4r", "m4v", "3gp", "3g2", "eps", "epsf", "epsi", "ai", "arw",
+            "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f"
+          ]
+        }
+      }
+    },
+    s3: {
+      type: "file",
+      connection: "s3a://my.bucket.location.com",
+      enabled : false,
+      config : {
+        "fs.s3a.access.key": "ID",
+        "fs.s3a.secret.key": "SECRET"
+      },
+      workspaces: {
+        "root" : {
+          location: "/",
           writable: false
         },
         "tmp" : {
@@ -81,6 +156,15 @@
           extensions: [ "csvh" ],
           delimiter: ",",
           extractHeader: true
+        },
+        "image" : {
+          type: "image",
+          extensions: [
+            "jpg", "jpeg", "jpe", "tif", "tiff", "dng", "psd", "png", "bmp", "gif",
+            "ico", "pcx", "wav", "wave", "avi", "webp", "mov", "mp4", "m4a", "m4p",
+            "m4b", "m4r", "m4v", "3gp", "3g2", "eps", "epsf", "epsi", "ai", "arw",
+            "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f"
+          ]
         }
       }
     }

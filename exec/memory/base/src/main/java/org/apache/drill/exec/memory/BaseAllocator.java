@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,9 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DrillBuf;
 import io.netty.buffer.UnsafeDirectLittleEndian;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -40,12 +43,20 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
   public static final String DEBUG_ALLOCATOR = "drill.memory.debug.allocator";
 
+  @SuppressWarnings("unused")
   private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
   private static final int CHUNK_SIZE = AllocationManager.INNER_ALLOCATOR.getChunkSize();
 
   public static final int DEBUG_LOG_LENGTH = 6;
   public static final boolean DEBUG = AssertionUtil.isAssertionsEnabled()
       || Boolean.parseBoolean(System.getProperty(DEBUG_ALLOCATOR, "false"));
+
+  /**
+   * Size of the I/O buffer used when writing to files. Set here
+   * because the buffer is used multiple times by an operator.
+   */
+
+  private static final int IO_BUFFER_SIZE = 32*1024;
   private final Object DEBUG_LOCK = DEBUG ? new Object() : null;
 
   private final BaseAllocator parentAllocator;
@@ -63,6 +74,17 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   private final IdentityHashMap<BufferLedger, Object> childLedgers;
   private final IdentityHashMap<Reservation, Object> reservations;
   private final HistoricalLog historicalLog;
+
+  /**
+   * Disk I/O buffer used for all reads and writes of DrillBufs.
+   * The buffer is allocated when first needed, then reused by all
+   * subsequent I/O operations for the same operator. Since very few
+   * operators do I/O, the number of allocated buffers should be
+   * low. Better would be to hold the buffer at the fragment level
+   * since all operators within a fragment run within a single thread.
+   */
+
+  private byte ioBuffer[];
 
   protected BaseAllocator(
       final BaseAllocator parentAllocator,
@@ -98,9 +120,9 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       historicalLog = null;
       childLedgers = null;
     }
-
   }
 
+  @Override
   public void assertOpen() {
     if (AssertionUtil.ASSERT_ENABLED) {
       if (isClosed) {
@@ -111,9 +133,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   }
 
   @Override
-  public String getName() {
-    return name;
-  }
+  public String getName() { return name; }
 
   @Override
   public DrillBuf getEmpty() {
@@ -176,11 +196,11 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   private static String createErrorMsg(final BufferAllocator allocator, final int rounded, final int requested) {
     if (rounded != requested) {
       return String.format(
-          "Unable to allocate buffer of size %d (rounded from %d) due to memory limit. Current allocation: %d",
-          rounded, requested, allocator.getAllocatedMemory());
+          "Unable to allocate buffer of size %d (rounded from %d) due to memory limit (%d). Current allocation: %d",
+          rounded, requested, allocator.getLimit(), allocator.getAllocatedMemory());
     } else {
-      return String.format("Unable to allocate buffer of size %d due to memory limit. Current allocation: %d",
-          rounded, allocator.getAllocatedMemory());
+      return String.format("Unable to allocate buffer of size %d due to memory limit (%d). Current allocation: %d",
+          rounded, allocator.getLimit(), allocator.getAllocatedMemory());
     }
   }
 
@@ -211,7 +231,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     final int actualRequestSize = initialRequestSize < CHUNK_SIZE ?
         nextPowerOfTwo(initialRequestSize)
         : initialRequestSize;
-    AllocationOutcome outcome = this.allocateBytes(actualRequestSize);
+    AllocationOutcome outcome = allocateBytes(actualRequestSize);
     if (!outcome.isOk()) {
       throw new OutOfMemoryException(createErrorMsg(this, actualRequestSize, initialRequestSize));
     }
@@ -226,7 +246,6 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         releaseBytes(actualRequestSize);
       }
     }
-
   }
 
   /**
@@ -289,6 +308,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       }
     }
 
+    @Override
     public boolean add(final int nBytes) {
       assertOpen();
 
@@ -310,6 +330,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       return true;
     }
 
+    @Override
     public DrillBuf allocateBuffer() {
       assertOpen();
 
@@ -321,14 +342,17 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       return drillBuf;
     }
 
+    @Override
     public int getSize() {
       return nBytes;
     }
 
+    @Override
     public boolean isUsed() {
       return used;
     }
 
+    @Override
     public boolean isClosed() {
       return closed;
     }
@@ -341,6 +365,9 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         return;
       }
 
+      if (ioBuffer != null) {
+        ioBuffer = null;
+      }
       if (DEBUG) {
         if (!isClosed()) {
           final Object object;
@@ -366,6 +393,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       closed = true;
     }
 
+    @Override
     public boolean reserve(int nBytes) {
       assertOpen();
 
@@ -428,7 +456,6 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         historicalLog.recordEvent("releaseReservation(%d)", nBytes);
       }
     }
-
   }
 
   @Override
@@ -503,14 +530,11 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
     if (DEBUG) {
       historicalLog.recordEvent("closed");
-      logger.debug(String.format(
-          "closed allocator[%s].",
-          name));
+      logger.debug(String.format("closed allocator[%s].", name));
     }
-
-
   }
 
+  @Override
   public String toString() {
     final Verbosity verbosity = logger.isTraceEnabled() ? Verbosity.LOG_WITH_STACKTRACE
         : Verbosity.BASIC;
@@ -525,6 +549,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
    *
    * @return A Verbose string of current allocator state.
    */
+  @Override
   public String toVerboseString() {
     final StringBuilder sb = new StringBuilder();
     print(sb, 0, Verbosity.LOG_WITH_STACKTRACE);
@@ -542,7 +567,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
    *          An integer value.
    * @return The closest power of two of that value.
    */
-  static int nextPowerOfTwo(int val) {
+  public static int nextPowerOfTwo(int val) {
     int highestBit = Integer.highestOneBit(val);
     if (highestBit == val) {
       return val;
@@ -550,7 +575,6 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       return highestBit << 1;
     }
   }
-
 
   /**
    * Verifies the accounting state of the allocator. Only works for DEBUG.
@@ -577,12 +601,12 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
    *           when any problems are found
    */
   private void verifyAllocator(final IdentityHashMap<UnsafeDirectLittleEndian, BaseAllocator> buffersSeen) {
-    synchronized (DEBUG_LOCK) {
+    // The remaining tests can only be performed if we're in debug mode.
+    if (!DEBUG) {
+      return;
+    }
 
-      // The remaining tests can only be performed if we're in debug mode.
-      if (!DEBUG) {
-        return;
-      }
+    synchronized (DEBUG_LOCK) {
 
       final long allocated = getAllocatedMemory();
 
@@ -718,26 +742,26 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         .append('\n');
 
     if (DEBUG) {
-      indent(sb, level + 1).append(String.format("child allocators: %d\n", childAllocators.size()));
-      for (BaseAllocator child : childAllocators.keySet()) {
-        child.print(sb, level + 2, verbosity);
-      }
+      synchronized (DEBUG_LOCK) {
+        indent(sb, level + 1).append(String.format("child allocators: %d\n", childAllocators.size()));
+        for (BaseAllocator child : childAllocators.keySet()) {
+          child.print(sb, level + 2, verbosity);
+        }
 
-      indent(sb, level + 1).append(String.format("ledgers: %d\n", childLedgers.size()));
-      for (BufferLedger ledger : childLedgers.keySet()) {
-        ledger.print(sb, level + 2, verbosity);
-      }
+        indent(sb, level + 1).append(String.format("ledgers: %d\n", childLedgers.size()));
+        for (BufferLedger ledger : childLedgers.keySet()) {
+          ledger.print(sb, level + 2, verbosity);
+        }
 
-      final Set<Reservation> reservations = this.reservations.keySet();
-      indent(sb, level + 1).append(String.format("reservations: %d\n", reservations.size()));
-      for (final Reservation reservation : reservations) {
-        if (verbosity.includeHistoricalLog) {
-          reservation.historicalLog.buildHistory(sb, level + 3, true);
+        final Set<Reservation> reservations = this.reservations.keySet();
+        indent(sb, level + 1).append(String.format("reservations: %d\n", reservations.size()));
+        for (final Reservation reservation : reservations) {
+          if (verbosity.includeHistoricalLog) {
+            reservation.historicalLog.buildHistory(sb, level + 3, true);
+          }
         }
       }
-
     }
-
   }
 
   private void dumpBuffers(final StringBuilder sb, final Set<BufferLedger> ledgerSet) {
@@ -753,7 +777,6 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       sb.append('\n');
     }
   }
-
 
   public static StringBuilder indent(StringBuilder sb, int indent) {
     final char[] indentation = new char[indent * 2];
@@ -779,5 +802,57 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
   public static boolean isDebug() {
     return DEBUG;
+  }
+
+  public byte[] getIOBuffer() {
+    if (ioBuffer == null) {
+      // Length chosen to the smallest size that maximizes
+      // disk I/O performance. Smaller sizes slow I/O. Larger
+      // sizes provide no increase in performance.
+      // Revisit from time to time.
+
+      ioBuffer = new byte[IO_BUFFER_SIZE];
+    }
+    return ioBuffer;
+  }
+
+  @Override
+  public void read(DrillBuf buf, int length, InputStream in) throws IOException {
+    buf.clear();
+
+    byte[] buffer = getIOBuffer();
+    for (int posn = 0; posn < length; posn += buffer.length) {
+      int len = Math.min(buffer.length, length - posn);
+      in.read(buffer, 0, len);
+      buf.writeBytes(buffer, 0, len);
+    }
+  }
+
+  @Override
+  public DrillBuf read(int length, InputStream in) throws IOException {
+    DrillBuf buf = buffer(length);
+    try {
+      read(buf, length, in);
+      return buf;
+    } catch (IOException e) {
+      buf.release();
+      throw e;
+    }
+  }
+
+  @Override
+  public void write(DrillBuf buf, OutputStream out) throws IOException {
+    assert(buf.readerIndex() == 0);
+    write(buf, buf.readableBytes(), out);
+  }
+
+  @Override
+  public void write(DrillBuf buf, int length, OutputStream out) throws IOException {
+    byte[] buffer = getIOBuffer();
+    for (int posn = 0; posn < length; posn += buffer.length) {
+      int len = Math.min(buffer.length, length - posn);
+      buf.getBytes(posn, buffer, 0, len);
+      out.write(buffer, 0, len);
+    }
   }
 }

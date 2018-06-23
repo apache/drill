@@ -1,20 +1,4 @@
-package org.apache.drill.exec.planner.logical;
-
-import com.google.common.collect.Lists;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.rel.core.Join;
-import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.core.RelFactories;
-import org.apache.calcite.rel.rules.FilterJoinRule;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlKind;
-
-import java.util.List;
-
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +15,18 @@ import java.util.List;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.drill.exec.planner.logical;
+
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.rules.FilterJoinRule;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexNode;
+import org.apache.drill.exec.planner.DrillRelBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DrillFilterJoinRules {
   /** Predicate that always returns true for any filter in OUTER join, and only true
@@ -50,30 +46,56 @@ public class DrillFilterJoinRules {
                           // into LEFT/RIGHT.
           }
 
-          List<RexNode> tmpLeftKeys = Lists.newArrayList();
-          List<RexNode> tmpRightKeys = Lists.newArrayList();
-          List<RelDataTypeField> sysFields = Lists.newArrayList();
+          List<RexNode> tmpLeftKeys = new ArrayList<>();
+          List<RexNode> tmpRightKeys = new ArrayList<>();
+          List<RelDataTypeField> sysFields = new ArrayList<>();
+          List<Integer> filterNulls = new ArrayList<>();
 
-          RexNode remaining = RelOptUtil.splitJoinCondition(sysFields, join.getLeft(), join.getRight(), exp, tmpLeftKeys, tmpRightKeys, null, null);
+          RexNode remaining = RelOptUtil.splitJoinCondition(sysFields, join.getLeft(), join.getRight(),
+              exp, tmpLeftKeys, tmpRightKeys, filterNulls, null);
 
-          if (remaining.isAlwaysTrue()) {
+          return remaining.isAlwaysTrue();
+        }
+      };
+
+  /** Predicate that always returns true for any filter in OUTER join, and only true
+   * for strict EQUAL or IS_DISTINCT_FROM conditions (without any mathematical operations) over RexInputRef in INNER join.
+   * With this predicate, the filter expression that return true will be kept in the JOIN OP.
+   * Example:  INNER JOIN,   L.C1 = R.C2 will be kepted in JOIN.
+   *                         L.C3 + 100 = R.C4 + 100, L.C5 < R.C6 will be pulled up into Filter above JOIN.
+   *           OUTER JOIN,   Keep any filter in JOIN.
+  */
+  public static final FilterJoinRule.Predicate STRICT_EQUAL_IS_DISTINCT_FROM =
+      new FilterJoinRule.Predicate() {
+        public boolean apply(Join join, JoinRelType joinType, RexNode exp) {
+          if (joinType != JoinRelType.INNER) {
             return true;
           }
 
-          return false;
+          List<Integer> tmpLeftKeys = new ArrayList<>();
+          List<Integer> tmpRightKeys = new ArrayList<>();
+          List<Boolean> filterNulls = new ArrayList<>();
+
+          RexNode remaining =
+              RelOptUtil.splitJoinCondition(join.getLeft(), join.getRight(), exp, tmpLeftKeys, tmpRightKeys, filterNulls);
+
+          return remaining.isAlwaysTrue();
         }
       };
 
 
   /** Rule that pushes predicates from a Filter into the Join below them. */
-  public static final FilterJoinRule DRILL_FILTER_ON_JOIN =
-      new FilterJoinRule.FilterIntoJoinRule(true, RelFactories.DEFAULT_FILTER_FACTORY,
-          RelFactories.DEFAULT_PROJECT_FACTORY, EQUAL_IS_DISTINCT_FROM);
+  public static final FilterJoinRule FILTER_INTO_JOIN =
+      new FilterJoinRule.FilterIntoJoinRule(true, DrillRelFactories.LOGICAL_BUILDER, EQUAL_IS_DISTINCT_FROM);
 
+  /** The same as above, but with Drill's operators. */
+  public static final FilterJoinRule DRILL_FILTER_INTO_JOIN =
+      new FilterJoinRule.FilterIntoJoinRule(true,
+          DrillRelBuilder.proto(DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY,
+              DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY), STRICT_EQUAL_IS_DISTINCT_FROM);
 
   /** Rule that pushes predicates in a Join into the inputs to the join. */
-  public static final FilterJoinRule DRILL_JOIN =
-      new FilterJoinRule.JoinConditionPushRule(RelFactories.DEFAULT_FILTER_FACTORY,
-          RelFactories.DEFAULT_PROJECT_FACTORY, EQUAL_IS_DISTINCT_FROM);
+  public static final FilterJoinRule JOIN_PUSH_CONDITION =
+      new FilterJoinRule.JoinConditionPushRule(DrillRelFactories.LOGICAL_BUILDER, EQUAL_IS_DISTINCT_FROM);
 
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,10 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.options.OptionValue.Kind;
 
 /**
  * Validates the values provided to Drill options.
@@ -27,6 +28,7 @@ public abstract class OptionValidator {
   // the error messages produced by the validator
   private final String optionName;
 
+  /** By default, if admin option value is not specified, it would be set to false.*/
   public OptionValidator(String optionName) {
     this.optionName = optionName;
   }
@@ -69,17 +71,22 @@ public abstract class OptionValidator {
   }
 
   /**
-   * Gets the default option value for this validator.
-   *
-   * @return default option value
-   */
-  public abstract OptionValue getDefault();
-
-  /**
    * Validates the option value.
    *
    * @param value the value to validate
+   * @param manager the manager for accessing validation dependencies (options)
    * @throws UserException message to describe error with value, including range or list of expected values
    */
-  public abstract void validate(OptionValue value);
+  public abstract void validate(OptionValue value, OptionMetaData optionMetaData, OptionSet manager);
+
+  /**
+   * Gets the kind of this option value for this validator.
+   *
+   * @return kind of this option value
+   */
+  public abstract Kind getKind();
+
+  public String getConfigProperty() {
+    return ExecConstants.bootDefaultFor(getOptionName());
+  }
 }

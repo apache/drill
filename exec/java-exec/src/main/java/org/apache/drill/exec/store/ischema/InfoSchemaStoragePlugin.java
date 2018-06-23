@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -45,13 +45,10 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaStoragePlugin.class);
 
   private final InfoSchemaConfig config;
-  private final DrillbitContext context;
-  private final String name;
 
   public InfoSchemaStoragePlugin(InfoSchemaConfig config, DrillbitContext context, String name){
+    super(context, name);
     this.config = config;
-    this.context = context;
-    this.name = name;
   }
 
   @Override
@@ -62,7 +59,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   @Override
   public InfoSchemaGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException {
-    SelectedTable table = selection.getWith(context.getLpPersistence(),  SelectedTable.class);
+    InfoSchemaTableType table = selection.getWith(getContext().getLpPersistence(),  InfoSchemaTableType.class);
     return new InfoSchemaGroupScan(table);
   }
 
@@ -85,7 +82,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
     public ISchema(SchemaPlus parent, InfoSchemaStoragePlugin plugin){
       super(ImmutableList.<String>of(), IS_SCHEMA_NAME);
       Map<String, InfoSchemaDrillTable> tbls = Maps.newHashMap();
-      for(SelectedTable tbl : SelectedTable.values()){
+      for(InfoSchemaTableType tbl : InfoSchemaTableType.values()){
         tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, IS_SCHEMA_NAME, tbl, config));
       }
       this.tables = ImmutableMap.copyOf(tbls);

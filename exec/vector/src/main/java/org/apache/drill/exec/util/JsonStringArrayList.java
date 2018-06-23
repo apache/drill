@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,6 +29,7 @@ public class JsonStringArrayList<E> extends ArrayList<E> {
 
   static {
     mapper = new ObjectMapper();
+    mapper.registerModule(SerializationModule.getModule());
   }
 
   @Override
@@ -42,7 +43,7 @@ public class JsonStringArrayList<E> extends ArrayList<E> {
     if (!(obj instanceof List)) {
       return false;
     }
-    List other = (List) obj;
+    List<?> other = (List<?>) obj;
     return this.size() == other.size() && this.containsAll(other);
   }
 

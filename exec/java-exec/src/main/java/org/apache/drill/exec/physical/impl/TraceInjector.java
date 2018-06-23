@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.impl;
 
 import java.util.List;
@@ -35,10 +34,7 @@ public class TraceInjector extends AbstractPhysicalVisitor<PhysicalOperator, Fra
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TraceInjector.class);
 
     static int traceTagCount = 0;
-
-
     RootExec root = null;
-    private ScreenCreator sc = new ScreenCreator();
 
     public static PhysicalOperator getExec(FragmentContext context, FragmentRoot root) throws ExecutionSetupException {
         TraceInjector tI = new TraceInjector();
@@ -89,5 +85,4 @@ public class TraceInjector extends AbstractPhysicalVisitor<PhysicalOperator, Fra
 
         return newOp;
     }
-
 }

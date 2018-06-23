@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,16 +17,23 @@
  */
 package org.apache.drill.exec;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.HiveStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.util.List;
+
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestHivePartitionPruning extends HiveTestBase {
   // enable decimal data type
   @BeforeClass
@@ -113,25 +120,6 @@ public class TestHivePartitionPruning extends HiveTestBase {
     assertFalse(plan.contains("Filter"));
   }
 
-  @Test
-  public void pruneDataTypeSupportNativeReaders() throws Exception {
-    try {
-      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
-      final String query = "EXPLAIN PLAN FOR " +
-          "SELECT * FROM hive.readtest_parquet WHERE tinyint_part = 64";
-
-      final String plan = getPlanInString(query, OPTIQ_FORMAT);
-
-      // Check and make sure that Filter is not present in the plan
-      assertFalse(plan.contains("Filter"));
-
-      // Make sure the plan contains the Hive scan utilizing native parquet reader
-      assertTrue(plan.contains("groupscan=[HiveDrillNativeParquetScan"));
-    } finally {
-      test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
-    }
-  }
-
   @Test // DRILL-3579
   public void selectFromPartitionedTableWithNullPartitions() throws Exception {
     final String query = "SELECT count(*) nullCount FROM hive.partition_pruning_test " +
@@ -147,6 +135,45 @@ public class TestHivePartitionPruning extends HiveTestBase {
         .baselineColumns("nullCount")
         .baselineValues(95L)
         .go();
+  }
+
+  @Test // DRILL-5032
+  public void testPartitionColumnsCaching() throws Exception {
+    final String query = "EXPLAIN PLAN FOR SELECT * FROM hive.partition_with_few_schemas";
+
+    List<QueryDataBatch> queryDataBatches = testSqlWithResults(query);
+    String resultString = getResultString(queryDataBatches, "|");
+
+    // different for both partitions column strings from physical plan
+    String columnString = "\"name\" : \"a\"";
+    String secondColumnString = "\"name\" : \"a1\"";
+
+    int columnIndex = resultString.indexOf(columnString);
+    assertTrue(columnIndex >= 0);
+    columnIndex = resultString.indexOf(columnString, columnIndex + 1);
+    // checks that column added to physical plan only one time
+    assertEquals(-1, columnIndex);
+
+    int secondColumnIndex = resultString.indexOf(secondColumnString);
+    assertTrue(secondColumnIndex >= 0);
+    secondColumnIndex = resultString.indexOf(secondColumnString, secondColumnIndex + 1);
+    // checks that column added to physical plan only one time
+    assertEquals(-1, secondColumnIndex);
+  }
+
+  @Test // DRILL-6173
+  public void prunePartitionsBasedOnTransitivePredicates() throws Exception {
+    String query = String.format("SELECT * FROM hive.partition_pruning_test t1 " +
+            "JOIN hive.partition_with_few_schemas t2 ON t1.`d` = t2.`d` AND t1.`e` = t2.`e` " +
+            "WHERE t2.`e` IS NOT NULL AND t1.`d` = 1");
+
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 450;
+    assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
+
+    final String[] expectedPlan =
+        {"partition_with_few_schemas.*numPartitions=6", "partition_pruning_test.*numPartitions=6"};
+    testPlanMatchingPatterns(query, expectedPlan);
   }
 
   @AfterClass

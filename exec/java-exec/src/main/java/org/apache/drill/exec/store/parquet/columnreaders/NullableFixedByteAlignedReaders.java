@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,23 +17,15 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.DrillBuf;
-
-import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
-import org.apache.drill.exec.store.ParquetOutputRecordWriter;
+import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
-import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableDateVector;
-import org.apache.drill.exec.vector.NullableDecimal18Vector;
-import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
-import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
-import org.apache.drill.exec.vector.NullableDecimal9Vector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
@@ -41,21 +33,24 @@ import org.apache.drill.exec.vector.NullableIntervalVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableTimeVector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
+import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.joda.time.DateTimeUtils;
-
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.io.api.Binary;
+import org.joda.time.DateTimeConstants;
+
+import io.netty.buffer.DrillBuf;
+import static org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.getDateTimeValueFromBinary;
 
 public class NullableFixedByteAlignedReaders {
 
-  static class NullableFixedByteAlignedReader extends NullableColumnReader {
+  static class NullableFixedByteAlignedReader<V extends ValueVector> extends NullableColumnReader<V> {
     protected DrillBuf bytebuf;
 
     NullableFixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+                      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
@@ -74,21 +69,17 @@ public class NullableFixedByteAlignedReaders {
    * a fixed length binary type, so this is read into a varbinary with the same size recorded for
    * each value.
    */
-  static class NullableFixedBinaryReader extends NullableFixedByteAlignedReader {
-
-    NullableVarBinaryVector castedVector;
-
+  static class NullableFixedBinaryReader extends NullableFixedByteAlignedReader<NullableVarBinaryVector> {
     NullableFixedBinaryReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarBinaryVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      castedVector = v;
     }
 
     @Override
     protected void readField(long recordsToReadInThisPass) {
       this.bytebuf = pageReader.pageData;
       if (usingDictionary) {
-        NullableVarBinaryVector.Mutator mutator =  castedVector.getMutator();
+        NullableVarBinaryVector.Mutator mutator =  valueVec.getMutator();
         Binary currDictValToWrite;
         for (int i = 0; i < recordsReadInThisIteration; i++){
           currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
@@ -107,9 +98,38 @@ public class NullableFixedByteAlignedReaders {
         // for now we need to write the lengths of each value
         int byteLength = dataTypeLengthInBits / 8;
         for (int i = 0; i < recordsToReadInThisPass; i++) {
-          castedVector.getMutator().setValueLengthSafe(valuesReadInCurrentPass + i, byteLength);
+          valueVec.getMutator().setValueLengthSafe(valuesReadInCurrentPass + i, byteLength);
         }
       }
+    }
+  }
+
+  /**
+   * Class for reading parquet fixed binary type INT96, which is used for storing hive,
+   * impala timestamp values with nanoseconds precision (12 bytes). It reads such values as a drill timestamp (8 bytes).
+   */
+  static class NullableFixedBinaryAsTimeStampReader extends NullableFixedByteAlignedReader<NullableTimeStampVector> {
+    NullableFixedBinaryAsTimeStampReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                              ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableTimeStampVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+      this.bytebuf = pageReader.pageData;
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
+          Binary binaryTimeStampValue = pageReader.dictionaryValueReader.readBytes();
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
+        }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
+          Binary binaryTimeStampValue = pageReader.valueReader.readBytes();
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
+        }
+      }
+      // The width of each element of the TimeStampVector is 8 bytes (64 bits) instead of 12 bytes.
+      dataTypeLengthInBits = NullableTimeStampHolder.WIDTH * 8;
     }
   }
 
@@ -128,30 +148,10 @@ public class NullableFixedByteAlignedReaders {
         for (int i = 0; i < recordsToReadInThisPass; i++){
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
         }
+        int writerIndex = castedBaseVector.getBuffer().writerIndex();
+        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int)readLength);
       } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readInteger());
-        }
-      }
-    }
-  }
 
-  static class NullableDictionaryDecimal9Reader extends NullableColumnReader<NullableDecimal9Vector> {
-
-    NullableDictionaryDecimal9Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                                ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableDecimal9Vector v,
-                                SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-    }
-
-    // this method is called by its superclass during a read loop
-    @Override
-    protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
-        }
-      } else {
         for (int i = 0; i < recordsToReadInThisPass; i++){
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readInteger());
         }
@@ -227,28 +227,53 @@ public class NullableFixedByteAlignedReaders {
       }
     }
   }
-  static class NullableDictionaryDecimal18Reader extends NullableColumnReader<NullableDecimal18Vector> {
 
-    NullableDictionaryDecimal18Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableDecimal18Vector v,
-                                   SchemaElement schemaElement) throws ExecutionSetupException {
+  static class NullableDictionaryVarDecimalReader extends NullableColumnReader<NullableVarDecimalVector> {
+
+    NullableDictionaryVarDecimalReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+        ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarDecimalVector v,
+        SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
-        }
-      } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readLong());
-        }
+      switch (columnDescriptor.getType()) {
+        case INT32:
+          if (usingDictionary) {
+            for (int i = 0; i < recordsToReadInThisPass; i++) {
+              byte[] bytes = Ints.toByteArray(pageReader.dictionaryValueReader.readInteger());
+              setValueBytes(i, bytes);
+            }
+          } else {
+            for (int i = 0; i < recordsToReadInThisPass; i++) {
+              byte[] bytes = Ints.toByteArray(pageReader.valueReader.readInteger());
+              setValueBytes(i, bytes);
+            }
+          }
+          break;
+        case INT64:
+          if (usingDictionary) {
+            for (int i = 0; i < recordsToReadInThisPass; i++) {
+              byte[] bytes = Longs.toByteArray(pageReader.dictionaryValueReader.readLong());
+              setValueBytes(i, bytes);
+            }
+          } else {
+            for (int i = 0; i < recordsToReadInThisPass; i++) {
+              byte[] bytes = Longs.toByteArray(pageReader.valueReader.readLong());
+              setValueBytes(i, bytes);
+            }
+          }
+          break;
       }
     }
+
+    private void setValueBytes(int i, byte[] bytes) {
+      valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, bytes, 0, bytes.length);
+    }
   }
+
   static class NullableDictionaryFloat4Reader extends NullableColumnReader<NullableFloat4Vector> {
 
     NullableDictionaryFloat4Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
@@ -295,12 +320,12 @@ public class NullableFixedByteAlignedReaders {
     }
   }
 
-  static abstract class NullableConvertedReader extends NullableFixedByteAlignedReader {
+  static abstract class NullableConvertedReader<V extends ValueVector> extends NullableFixedByteAlignedReader<V> {
 
     protected int dataTypeLengthInBytes;
 
     NullableConvertedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                            ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+                            ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
@@ -318,14 +343,10 @@ public class NullableFixedByteAlignedReaders {
     abstract void addNext(int start, int index);
   }
 
-  public static class NullableDateReader extends NullableConvertedReader {
-
-    NullableDateVector dateVector;
-
+  public static class NullableDateReader extends NullableConvertedReader<NullableDateVector> {
     NullableDateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-                       boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+                       boolean fixedLength, NullableDateVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      dateVector = (NullableDateVector) v;
     }
 
     @Override
@@ -337,70 +358,108 @@ public class NullableFixedByteAlignedReaders {
         intValue = readIntLittleEndian(bytebuf, start);
       }
 
-      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+      valueVec.getMutator().set(index, intValue * (long) DateTimeConstants.MILLIS_PER_DAY);
     }
 
   }
 
-  public static class NullableDecimal28Reader extends NullableConvertedReader {
+  /**
+   * Old versions of Drill were writing a non-standard format for date. See DRILL-4203
+   */
+  public static class NullableCorruptDateReader extends NullableConvertedReader<NullableDateVector> {
 
-    NullableDecimal28SparseVector decimal28Vector;
-
-    NullableDecimal28Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-                            boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+    NullableCorruptDateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                       boolean fixedLength, NullableDateVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      decimal28Vector = (NullableDecimal28SparseVector) v;
     }
 
     @Override
     void addNext(int start, int index) {
-      int width = NullableDecimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
-          schemaElement.getScale());
-      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getBuffer(), index * width, schemaElement.getScale(),
-          schemaElement.getPrecision(), NullableDecimal28SparseHolder.nDecimalDigits);
+      int intValue;
+      if (usingDictionary) {
+        intValue =  pageReader.dictionaryValueReader.readInteger();
+      } else {
+        intValue = readIntLittleEndian(bytebuf, start);
+      }
+
+      valueVec.getMutator().set(index, (intValue - ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT) * DateTimeConstants.MILLIS_PER_DAY);
     }
+
   }
 
-  public static class NullableDecimal38Reader extends NullableConvertedReader {
+  /**
+   * Old versions of Drill were writing a non-standard format for date. See DRILL-4203
+   *
+   * For files that lack enough metadata to determine if the dates are corrupt, we must just
+   * correct values when they look corrupt during this low level read.
+   */
+  public static class CorruptionDetectingNullableDateReader extends NullableConvertedReader<NullableDateVector> {
 
-    NullableDecimal38SparseVector decimal38Vector;
-
-    NullableDecimal38Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-                            boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+    CorruptionDetectingNullableDateReader(ParquetRecordReader parentReader, int allocateSize,
+                                          ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                                          boolean fixedLength, NullableDateVector v, SchemaElement schemaElement)
+        throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      decimal38Vector = (NullableDecimal38SparseVector) v;
     }
 
     @Override
     void addNext(int start, int index) {
-      int width = NullableDecimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
-          schemaElement.getScale());
-      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getBuffer(), index * width, schemaElement.getScale(),
-          schemaElement.getPrecision(), NullableDecimal38SparseHolder.nDecimalDigits);
+      int intValue;
+      if (usingDictionary) {
+        intValue =  pageReader.dictionaryValueReader.readInteger();
+      } else {
+        intValue = readIntLittleEndian(bytebuf, start);
+      }
+
+      if (intValue > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
+        valueVec.getMutator().set(index, (intValue - ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT) * DateTimeConstants.MILLIS_PER_DAY);
+      } else {
+        valueVec.getMutator().set(index, intValue * (long) DateTimeConstants.MILLIS_PER_DAY);
+      }
     }
   }
 
-  public static class NullableIntervalReader extends NullableConvertedReader {
-    NullableIntervalVector nullableIntervalVector;
+  public static class NullableVarDecimalReader extends NullableConvertedReader<NullableVarDecimalVector> {
+    NullableVarDecimalReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+        boolean fixedLength, NullableVarDecimalVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
 
+    // TODO: allow reading page instead of reading every record separately
+    @Override
+    void addNext(int start, int index) {
+      switch (columnChunkMetaData.getType()) {
+        case INT32:
+          valueVec.getMutator().setSafe(index, Ints.toByteArray(bytebuf.getInt(start)), 0, dataTypeLengthInBytes);
+          break;
+        case INT64:
+          valueVec.getMutator().setSafe(index, Longs.toByteArray(bytebuf.getLong(start)), 0, dataTypeLengthInBytes);
+          break;
+        case FIXED_LEN_BYTE_ARRAY:
+        case BINARY:
+          valueVec.getMutator().setSafe(index, 1, start, start + dataTypeLengthInBytes, bytebuf);
+          break;
+      }
+
+    }
+  }
+
+  public static class NullableIntervalReader extends NullableConvertedReader<NullableIntervalVector> {
     NullableIntervalReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-                   boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+                   boolean fixedLength, NullableIntervalVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      nullableIntervalVector = (NullableIntervalVector) v;
     }
 
     @Override
     void addNext(int start, int index) {
       if (usingDictionary) {
         byte[] input = pageReader.dictionaryValueReader.readBytes().getBytes();
-        nullableIntervalVector.getMutator().setSafe(index * 12, 1,
+        valueVec.getMutator().setSafe(index * 12, 1,
             ParquetReaderUtility.getIntFromLEBytes(input, 0),
             ParquetReaderUtility.getIntFromLEBytes(input, 4),
             ParquetReaderUtility.getIntFromLEBytes(input, 8));
       }
-      nullableIntervalVector.getMutator().set(index, 1, bytebuf.getInt(start), bytebuf.getInt(start + 4), bytebuf.getInt(start + 8));
+      valueVec.getMutator().set(index, 1, bytebuf.getInt(start), bytebuf.getInt(start + 4), bytebuf.getInt(start + 8));
     }
   }
 }

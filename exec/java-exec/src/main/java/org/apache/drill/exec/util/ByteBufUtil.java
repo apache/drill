@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,8 +18,6 @@
 package org.apache.drill.exec.util;
 
 import io.netty.buffer.DrillBuf;
-
-import java.io.DataInput;
 
 import org.apache.drill.common.util.DrillStringUtils;
 

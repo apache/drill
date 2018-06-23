@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,22 +17,19 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import com.google.common.base.Charsets;
+import java.util.Iterator;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
-//import org.apache.drill.common.types.DataMode;
-import org.apache.drill.common.types.MinorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.MapUtility;
-import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
-import io.netty.buffer.DrillBuf;
+import com.google.common.base.Charsets;
 
-import java.util.Iterator;
+import io.netty.buffer.DrillBuf;
 
 public class MappifyUtility {
 
@@ -40,7 +37,7 @@ public class MappifyUtility {
   public static final String fieldKey = "key";
   public static final String fieldValue = "value";
 
-  public static DrillBuf mappify(FieldReader reader, BaseWriter.ComplexWriter writer, DrillBuf buffer) {
+  public static DrillBuf mappify(FieldReader reader, BaseWriter.ComplexWriter writer, DrillBuf buffer, String caller) {
     // Currently we expect single map as input
     if (DataMode.REPEATED == reader.getType().getMode() || !(reader.getType().getMinorType() == TypeProtos.MinorType.MAP)) {
       throw new DrillRuntimeException("kvgen function only supports Simple maps as input");
@@ -75,13 +72,43 @@ public class MappifyUtility {
       mapWriter.varChar(fieldKey).write(vh);
 
       // Write the value to the map
-      MapUtility.writeToMapFromReader(fieldReader, mapWriter);
+      MapUtility.writeToMapFromReader(fieldReader, mapWriter, caller);
 
       mapWriter.end();
     }
     listWriter.endList();
 
     return buffer;
+  }
+
+  public static void createRepeatedMapOrList(FieldReader reader, BaseWriter.ComplexWriter writer, String caller) {
+    if (DataMode.REPEATED != reader.getType().getMode()) {
+      throw new DrillRuntimeException("Do not invoke createRepeatedMapOrList() unless MINOR mode is REPEATED");
+    }
+    BaseWriter.ListWriter listWriter = writer.rootAsList();
+    MapUtility.writeToListFromReader(reader, listWriter, caller);
+  }
+
+  public static void createMap(FieldReader reader, BaseWriter.ComplexWriter writer, String caller) {
+    if (DataMode.REPEATED == reader.getType().getMode()) {
+      throw new DrillRuntimeException("Do not invoke createMap() with REPEATED MINOR mode");
+    }
+    if (reader.getType().getMinorType() == TypeProtos.MinorType.MAP) {
+      BaseWriter.MapWriter mapWriter = writer.rootAsMap();
+      // Iterate over the fields in the map
+      Iterator<String> fieldIterator = reader.iterator();
+      while (fieldIterator.hasNext()) {
+        String field = fieldIterator.next();
+        FieldReader fieldReader = reader.reader(field);
+        // Write the value to the map
+        MapUtility.writeToMapFromReader(fieldReader, mapWriter, field, caller);
+      }
+    }
+  }
+
+  public static void createList(FieldReader reader, BaseWriter.ComplexWriter writer, String caller) {
+    BaseWriter.ListWriter listWriter = writer.rootAsList();
+    MapUtility.writeToListFromReader(reader, listWriter, caller);
   }
 }
 

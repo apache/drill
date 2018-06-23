@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -80,6 +80,7 @@ public class WritableBatch implements AutoCloseable {
         len += b.capacity();
       }
 
+      @SuppressWarnings("resource")
       DrillBuf newBuf = allocator.buffer(len);
       try {
         /* Copy data from each buffer into the compound buffer */
@@ -101,7 +102,9 @@ public class WritableBatch implements AutoCloseable {
 
         for (VectorWrapper<?> vv : container) {
           SerializedField fmd = fields.get(vectorIndex);
+          @SuppressWarnings("resource")
           ValueVector v = vv.getValueVector();
+          @SuppressWarnings("resource")
           DrillBuf bb = newBuf.slice(bufferOffset, fmd.getBufferLength());
 //        v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
           v.load(fmd, bb);
@@ -174,7 +177,7 @@ public class WritableBatch implements AutoCloseable {
     return b;
   }
 
-  public static WritableBatch get(RecordBatch batch) {
+  public static WritableBatch get(VectorAccessible batch) {
     if (batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) {
       throw new UnsupportedOperationException("Only batches without hyper selections vectors are writable.");
     }
@@ -195,5 +198,4 @@ public class WritableBatch implements AutoCloseable {
       drillBuf.release(1);
     }
   }
-
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,18 +24,21 @@ import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
+import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 
 
 public interface PrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrelVisitor.class);
+  org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrelVisitor.class);
 
-  public RETURN visitExchange(ExchangePrel prel, EXTRA value) throws EXCEP;
-  public RETURN visitScreen(ScreenPrel prel, EXTRA value) throws EXCEP;
-  public RETURN visitWriter(WriterPrel prel, EXTRA value) throws EXCEP;
-  public RETURN visitScan(ScanPrel prel, EXTRA value) throws EXCEP;
-  public RETURN visitJoin(JoinPrel prel, EXTRA value) throws EXCEP;
-  public RETURN visitProject(ProjectPrel prel, EXTRA value) throws EXCEP;
-
-  public RETURN visitPrel(Prel prel, EXTRA value) throws EXCEP;
+  RETURN visitExchange(ExchangePrel prel, EXTRA value) throws EXCEP;
+  RETURN visitScreen(ScreenPrel prel, EXTRA value) throws EXCEP;
+  RETURN visitWriter(WriterPrel prel, EXTRA value) throws EXCEP;
+  RETURN visitScan(ScanPrel prel, EXTRA value) throws EXCEP;
+  RETURN visitJoin(JoinPrel prel, EXTRA value) throws EXCEP;
+  RETURN visitProject(ProjectPrel prel, EXTRA value) throws EXCEP;
+  RETURN visitPrel(Prel prel, EXTRA value) throws EXCEP;
+  RETURN visitUnnest(UnnestPrel prel, EXTRA value) throws EXCEP;
+  RETURN visitLateral(LateralJoinPrel prel, EXTRA value) throws EXCEP;
 
 }

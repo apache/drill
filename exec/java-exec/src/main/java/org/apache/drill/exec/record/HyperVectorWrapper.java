@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,18 +17,16 @@
  */
 package org.apache.drill.exec.record;
 
-import java.util.AbstractMap;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.FieldIdUtil;
-import org.apache.drill.exec.vector.complex.MapVector;
 
 import com.google.common.base.Preconditions;
+
+import java.lang.reflect.Array;
 
 
 public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<T>{
@@ -85,6 +83,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     }
   }
 
+  @SuppressWarnings("resource")
   @Override
   public VectorWrapper<?> getChildWrapper(int[] ids) {
     if (ids.length == 1) {
@@ -109,6 +108,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     return new HyperVectorWrapper<ValueVector>(vectors[0].getField(), vectors);
   }
 
+  @SuppressWarnings("resource")
   @Override
   public TypedFieldId getFieldIdIfMatches(int id, SchemaPath expectedPath) {
     ValueVector v = vectors[0];
@@ -116,7 +116,6 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public VectorWrapper<T> cloneAndTransfer(BufferAllocator allocator) {
     return new HyperVectorWrapper<T>(f, vectors, false);
 //    T[] newVectors = (T[]) Array.newInstance(vectors.getClass().getComponentType(), vectors.length);
@@ -132,14 +131,16 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     return new HyperVectorWrapper<T>(f, v, releasable);
   }
 
+  @SuppressWarnings("unchecked")
   public void addVector(ValueVector v) {
     Preconditions.checkArgument(v.getClass() == this.getVectorClass(), String.format("Cannot add vector type %s to hypervector type %s for field %s",
       v.getClass(), this.getVectorClass(), v.getField()));
     vectors = (T[]) ArrayUtils.add(vectors, v);// TODO optimize this so not copying every time
   }
 
+  @SuppressWarnings("unchecked")
   public void addVectors(ValueVector[] vv) {
-    vectors = (T[]) ArrayUtils.add(vectors, vv);
+    vectors = (T[]) ArrayUtils.addAll(vectors, vv);
   }
 
   /**
@@ -147,14 +148,33 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
    * Both this and destination must be of same type and have same number of vectors.
    * @param destination destination HyperVectorWrapper.
    */
+  @Override
   public void transfer(VectorWrapper<?> destination) {
     Preconditions.checkArgument(destination instanceof HyperVectorWrapper);
     Preconditions.checkArgument(getField().getType().equals(destination.getField().getType()));
-    Preconditions.checkArgument(vectors.length == ((HyperVectorWrapper)destination).vectors.length);
+    Preconditions.checkArgument(vectors.length == ((HyperVectorWrapper<?>)destination).vectors.length);
 
-    ValueVector[] destionationVectors = ((HyperVectorWrapper)destination).vectors;
+    ValueVector[] destionationVectors = ((HyperVectorWrapper<?>)destination).vectors;
     for (int i = 0; i < vectors.length; ++i) {
       vectors[i].makeTransferPair(destionationVectors[i]).transfer();
     }
+  }
+
+  /**
+   * Method to replace existing list of vectors with the newly provided ValueVectors list in this HyperVectorWrapper
+   * @param vv - New list of ValueVectors to be stored
+   */
+  @SuppressWarnings("unchecked")
+  public void updateVectorList(ValueVector[] vv) {
+    Preconditions.checkArgument(vv.length > 0);
+    Preconditions.checkArgument(getField().getType().equals(vv[0].getField().getType()));
+    // vectors.length will always be > 0 since in constructor that is enforced
+    Preconditions.checkArgument(vv[0].getClass().equals(vectors[0].getClass()));
+    clear();
+
+    final Class<?> clazz = vv[0].getClass();
+    final ValueVector[] c = (ValueVector[]) Array.newInstance(clazz, vv.length);
+    System.arraycopy(vv, 0, c, 0, vv.length);
+    vectors = (T[])c;
   }
 }

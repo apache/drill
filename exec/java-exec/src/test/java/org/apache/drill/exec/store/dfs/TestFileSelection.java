@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,18 +17,16 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.fs.FileStatus;
-import org.junit.Rule;
+import org.apache.hadoop.fs.Path;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class TestFileSelection extends BaseTestQuery {
   private static final List<FileStatus> EMPTY_STATUSES = ImmutableList.of();
@@ -48,18 +46,53 @@ public class TestFileSelection extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testBackPathBad() throws Exception {
+    final String[][] badPaths =
+        {
+            {"/tmp", "../../bad"},   //  goes beyond root and outside parent; resolves to /../bad
+            {"/tmp", "../etc/bad"},  //  goes outside parent; resolves to /etc/bad
+            {"", "/bad"},            //  empty parent
+            {"/", ""},               //  empty path
+        } ;
 
-  @Test(expected = Exception.class)
-  public void testEmptyFolderThrowsTableNotFound() throws Exception {
-    final String table = String.format("%s/empty", TestTools.getTestResourcesPath());
-    final String query = String.format("select * from dfs.`%s`", table);
-    try {
-      testNoResult(query);
-    } catch (Exception ex) {
-      final String pattern = String.format("%s' not found", table).toLowerCase();
-      final boolean isTableNotFound = ex.getMessage().toLowerCase().contains(pattern);
-      assertTrue(isTableNotFound);
-      throw ex;
+
+    for (int i = 0; i < badPaths.length; i++) {
+      boolean isPathGood = true;
+      try {
+        String parent = badPaths[i][0];
+        String subPath = FileSelection.removeLeadingSlash(badPaths[i][1]);
+        String path = new Path(parent, subPath).toString();
+        FileSelection.checkBackPaths(parent, path, subPath);
+      } catch (IllegalArgumentException e) {
+        isPathGood = false;
+      }
+      if (isPathGood) {
+        fail("Failed to catch invalid file selection paths.");
+      }
+    }
+  }
+
+  @Test
+  public void testBackPathGood() throws Exception {
+    final String[][] goodPaths =
+        {
+            {"/tmp", "../tmp/good"},
+            {"/", "/tmp/good/../../good"},
+            {"/", "etc/tmp/../../good"},   //  no leading slash in path
+            {"/", "../good"},              //  resolves to /../good which is OK
+            {"/", "/good"}
+        } ;
+
+    for (int i = 0; i < goodPaths.length; i++) {
+      try {
+        String parent = goodPaths[i][0];
+        String subPath = FileSelection.removeLeadingSlash(goodPaths[i][1]);
+        String path = new Path(parent, subPath).toString();
+        FileSelection.checkBackPaths(parent, path, subPath);
+      } catch (IllegalArgumentException e) {
+        fail("Valid path not allowed by selection path validation.");
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,39 +17,34 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.slf4j.Logger;
-
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Array;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.common.util.TestTools;
-import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTestBase;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
-
+import org.apache.drill.jdbc.JdbcTestBase;
+import org.apache.drill.categories.JdbcTest;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.TestRule;
+import org.slf4j.Logger;
 
 /**
  * Test that non-SQLException exceptions used by Drill's current version of
@@ -69,6 +64,7 @@ import org.apache.drill.jdbc.AlreadyClosedSqlException;
  * 103 UnsupportedOperationException in AvaticaResultSet
  * </pre>
  */
+@Category(JdbcTest.class)
 public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase {
   private static final Logger logger =
       getLogger(Drill2769UnsupportedReportsUseSqlExceptionTest.class);
@@ -84,13 +80,10 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
   private static ResultSetMetaData resultSetMetaData;
   private static DatabaseMetaData databaseMetaData;
 
-
   @BeforeClass
   public static void setUpObjects() throws Exception {
     // (Note: Can't use JdbcTest's connect(...) for this test class.)
-
-    connection = new Driver().connect("jdbc:drill:zk=local",
-                                      JdbcAssert.getDefaultProperties());
+    connection = connect();
 
     plainStatement = connection.createStatement();
     preparedStatement =
@@ -103,20 +96,14 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
     catch (SQLException | UnsupportedOperationException e) {
       // Expected.
     }
-    try {
-      connection.createArrayOf("INTEGER", new Object[0]);
-      fail("Test seems to be out of date.  Were arrays implemented?");
-    }
-    catch (SQLException | UnsupportedOperationException e) {
-      // Expected.
-    }
+
+    connection.createArrayOf("INTEGER", new Object[0]);
 
     resultSet = plainStatement.executeQuery("VALUES 'plain Statement query'");
     resultSet.next();
 
     resultSetMetaData = resultSet.getMetaData();
     databaseMetaData = connection.getMetaData();
-
 
     // Self-check that member variables are set:
     assertFalse("Test setup error", connection.isClosed());
@@ -133,7 +120,6 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
     connection.close();
   }
 
-
   /**
    * Reflection-based checker that exceptions thrown by JDBC interfaces'
    * implementation methods for unsupported-operation cases are SQLExceptions
@@ -147,7 +133,6 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
 
     private final StringBuilder failureLinesBuf = new StringBuilder();
     private final StringBuilder successLinesBuf = new StringBuilder();
-
 
     NoNonSqlExceptionsChecker(final Class<INTF> jdbcIntf,
                               final INTF jdbcObject) {
@@ -171,7 +156,9 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
      */
     private static Object getDummyValueForType(Class<?> type) {
       final Object result;
-      if (! type.isPrimitive()) {
+      if (type.equals(String.class)) {
+        result = "";
+      } else if (! type.isPrimitive()) {
         result = null;
       }
       else {
@@ -280,6 +267,10 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
           // code implements them.
           successLinesBuf.append(resultLine);
         }
+        else if (isOkaySpecialCaseException(method, cause)) {
+          successLinesBuf.append(resultLine);
+        }
+
         else {
           final String badResultLine =
               "- " + methodLabel + " threw <" + cause + "> instead"
@@ -319,6 +310,15 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
       }
     }
 
+    /**
+     * Reports whether it's okay if given method throw given exception (that is
+     * not preferred AlreadyClosedException with regular message).
+     */
+    protected boolean isOkaySpecialCaseException(Method method,
+                                                 Throwable cause) {
+      return false;
+    }
+
     public boolean hadAnyFailures() {
       return 0 != failureLinesBuf.length();
     }
@@ -340,9 +340,7 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
           + ")";
       return report;
     }
-
   } // class NoNonSqlExceptionsChecker<INTF>
-
 
   @Test
   public void testConnectionMethodsThrowRight() {
@@ -357,7 +355,6 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
     }
   }
 
-
   private static class PlainStatementChecker
       extends NoNonSqlExceptionsChecker<Statement> {
 
@@ -368,10 +365,18 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
       this.factoryConnection = factoryConnection;
     }
 
+    @Override
     protected Statement getJdbcObject() throws SQLException {
       return factoryConnection.createStatement();
     }
 
+    @Override
+    protected boolean isOkaySpecialCaseException(Method method,
+                                                 Throwable cause) {
+       // New Java 8 method not supported by Avatica
+
+      return method.getName().equals( "executeLargeBatch" );
+    }
   } // class PlainStatementChecker
 
   @Test
@@ -386,7 +391,6 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
     }
   }
 
-
   private static class PreparedStatementChecker
       extends NoNonSqlExceptionsChecker<PreparedStatement> {
 
@@ -397,10 +401,18 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
       this.factoryConnection = factoryConnection;
     }
 
+    @Override
     protected PreparedStatement getJdbcObject() throws SQLException {
-      return factoryConnection.prepareStatement(null);
+      return factoryConnection.prepareStatement("VALUES 1");
     }
 
+    @Override
+    protected boolean isOkaySpecialCaseException(Method method,
+                                                 Throwable cause) {
+       // New Java 8 method not supported by Avatica
+
+      return method.getName().equals( "executeLargeBatch" );
+    }
   } // class PlainStatementChecker
 
   @Test
@@ -415,7 +427,6 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
     }
   }
 
-
   @Test
   public void testResultSetMethodsThrowRight() {
     NoNonSqlExceptionsChecker<ResultSet> checker =
@@ -427,7 +438,6 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
       fail("Non-SQLException exception error(s): \n" + checker.getReport());
     }
   }
-
 
   @Test
   public void testResultSetMetaDataMethodsThrowRight() {
@@ -442,7 +452,6 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
     }
   }
 
-
   @Test
   public void testDatabaseMetaDataMethodsThrowRight() {
     NoNonSqlExceptionsChecker<DatabaseMetaData> checker =
@@ -455,5 +464,4 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
       fail("Non-SQLException exception error(s): \n" + checker.getReport());
     }
   }
-
 }

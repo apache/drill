@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,17 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.vector.complex.writer;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestComplexTypeReader extends BaseTestQuery{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestComplexTypeReader.class);
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
+import static org.apache.drill.test.TestBuilder.listOf;
+
+public class TestComplexTypeReader extends BaseTestQuery {
   @BeforeClass
   public static void init() throws Exception {
     testNoResult("alter session set `exec.enable_union_type` = true");
@@ -232,13 +239,68 @@ public class TestComplexTypeReader extends BaseTestQuery{
 
   @Test //DRILL-2872.
   public void testRepeatedJson() throws Exception {
-
-    final String query="select cast(convert_to(interests, 'JSON') as varchar(0)) as interests from cp.`complex_student.json`";
     testBuilder()
-            .sqlQuery(query)
-            .unOrdered()
-            .jsonBaselineFile("DRILL-2872-result.json")
-            .go();
+      .sqlQuery("select cast(convert_to(interests, 'JSON') as varchar(0)) as interests from cp.`complex_student.json`")
+      .unOrdered()
+      .jsonBaselineFile("DRILL-2872-result.json")
+      .go();
   }
 
+  @Test  // DRILL-4410
+  // ListVector allocation
+  public void test_array() throws Exception{
+
+    long numRecords = 100000;
+
+    final String file1 = "arrays1.json";
+    final String file2 = "arrays2.json";
+
+    final Path path1 = dirTestWatcher.getRootDir().toPath().resolve(file1);
+    final Path path2 = dirTestWatcher.getRootDir().toPath().resolve(file2);
+
+    Files.createFile(path1);
+    Files.createFile(path2);
+
+    final String arrayString = "[ \"abcdef\", \"ghijkl\", \"mnopqr\", \"stuvwx\", \"yz1234\", \"567890\" ] ";
+
+    try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path1.toFile(), true)))) {
+      for (long i = 0; i < numRecords; i++) {
+        out.println("{ \"id\" : " + i + ", \"array\" : " + arrayString + "}");
+      }
+    }catch (IOException e) {
+      throw e;
+    }
+
+    try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path2.toFile(), true)))) {
+      for (long i = 0; i < numRecords; i++) {
+        out.println("{ \"id\" : " + i + ", \"array\" : " + arrayString + "}");
+      }
+    }catch (IOException e) {
+      throw e;
+    }
+
+    TestBuilder testBuilder = testBuilder()
+      .sqlQuery("select * from dfs.`%s` `arrays1` INNER JOIN dfs.`%s` `arrays2` ON "
+        + "(`arrays1`.id = `arrays2`.id)", file1, file2)
+      .unOrdered()
+      .baselineColumns("id", "id0", "array", "array0");
+
+    for (long i = 0; i < numRecords; i++) {
+      testBuilder.baselineValues(i, i, listOf("abcdef", "ghijkl", "mnopqr", "stuvwx", "yz1234", "567890"),
+              listOf("abcdef", "ghijkl", "mnopqr", "stuvwx", "yz1234", "567890"));
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testNonExistentFieldConverting() throws Exception {
+    testBuilder()
+        .sqlQuery("select employee_id, convert_to(`complex_field`, 'JSON') as complex_field from cp.`employee.json` " +
+          "where employee_id = 1")
+        .unOrdered()
+        .baselineColumns("employee_id", "complex_field")
+        .baselineValues(1L, null)
+        .build()
+        .run();
+  }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,16 +17,53 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import java.time.LocalDate;
+
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestNewDateFunctions extends BaseTestQuery {
   DateTime date;
   DateTimeFormatter formatter;
   long unixTimeStamp = -1;
+
+  @Test
+  public void testIsDate() throws Exception {
+    final String dateValues = "(values('1900-01-01'), ('3500-01-01'), ('2000-12-31'), ('2005-12-32'), ('2015-02-29'), (cast(null as varchar))) as t(date1)";
+    testBuilder()
+        .sqlQuery("select isDate(date1) res1 " +
+            "from " + dateValues)
+        .unOrdered()
+        .baselineColumns("res1")
+        .baselineValues(true)
+        .baselineValues(true)
+        .baselineValues(true)
+        .baselineValues(false)
+        .baselineValues(false)
+        .baselineValues(false)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery("select case when isdate(date1) then cast(date1 as date) else null end res1 from " + dateValues)
+        .unOrdered()
+        .baselineColumns("res1")
+        .baselineValues(LocalDate.of(1900, 1, 1))
+        .baselineValues(LocalDate.of(3500, 1, 1))
+        .baselineValues(LocalDate.of(2000, 12, 31))
+        .baselineValues(new Object[] {null})
+        .baselineValues(new Object[] {null})
+        .baselineValues(new Object[] {null})
+        .build()
+        .run();
+  }
 
   @Test
   public void testUnixTimeStampForDate() throws Exception {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 import io.netty.buffer.DrillBuf;
@@ -45,7 +44,8 @@ public class JsonConvertTo {
 
   private JsonConvertTo(){}
 
-  @FunctionTemplate(names = { "convert_toJSON", "convert_toSIMPLEJSON" } , scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = { "convert_toJSON", "convert_toSIMPLEJSON" } , scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+                    outputWidthCalculatorType = FunctionTemplate.OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
   public static class ConvertToJson implements DrillSimpleFunc{
 
     @Param FieldReader input;
@@ -75,7 +75,8 @@ public class JsonConvertTo {
     }
   }
 
-  @FunctionTemplate(name = "convert_toEXTENDEDJSON", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "convert_toEXTENDEDJSON", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+                    outputWidthCalculatorType = FunctionTemplate.OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
   public static class ConvertToExtendedJson implements DrillSimpleFunc{
 
     @Param FieldReader input;
@@ -104,4 +105,5 @@ public class JsonConvertTo {
       out.end = bytea.length;
     }
   }
+
 }

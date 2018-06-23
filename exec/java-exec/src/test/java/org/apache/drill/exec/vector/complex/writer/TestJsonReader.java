@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,55 +17,59 @@
  */
 package org.apache.drill.exec.vector.complex.writer;
 
-import static org.apache.drill.TestBuilder.listOf;
-import static org.apache.drill.TestBuilder.mapOf;
+import static org.apache.drill.test.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import com.google.common.base.Joiner;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.util.JsonStringHashMap;
+import org.apache.drill.exec.util.Text;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.RepeatedBigIntVector;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import org.junit.rules.TemporaryFolder;
 
 public class TestJsonReader extends BaseTestQuery {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
 
-  private static final boolean VERBOSE_DEBUG = false;
-
-  @Rule
-  public TemporaryFolder folder = new TemporaryFolder();
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("store", "json"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("vector","complex", "writer"));
+  }
 
   @Test
   public void testEmptyList() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/json/emptyLists").toURI().toString();
-    String query = String.format("select count(a[0]) as ct from dfs_test.`%s`", root, root);
+    final String root = "store/json/emptyLists";
 
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select count(a[0]) as ct from dfs.`%s`", root, root)
         .ordered()
         .baselineColumns("ct")
         .baselineValues(6l)
@@ -75,7 +79,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void schemaChange() throws Exception {
-    test("select b from dfs.`${WORKING_PATH}/src/test/resources/vector/complex/writer/schemaChange/`");
+    test("select b from dfs.`vector/complex/writer/schemaChange/`");
   }
 
   @Test
@@ -113,16 +117,16 @@ public class TestJsonReader extends BaseTestQuery {
   public void testSplitAndTransferFailure() throws Exception {
     final String testVal = "a string";
     testBuilder()
-        .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list.json`")
+        .sqlQuery("select flatten(config) as flat from cp.`store/json/null_list.json`")
         .ordered()
         .baselineColumns("flat")
         .baselineValues(listOf())
         .baselineValues(listOf(testVal))
         .go();
 
-    test("select flatten(config) as flat from cp.`/store/json/null_list_v2.json`");
+    test("select flatten(config) as flat from cp.`store/json/null_list_v2.json`");
     testBuilder()
-        .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list_v2.json`")
+        .sqlQuery("select flatten(config) as flat from cp.`store/json/null_list_v2.json`")
         .ordered()
         .baselineColumns("flat")
         .baselineValues(mapOf("repeated_varchar", listOf()))
@@ -130,7 +134,7 @@ public class TestJsonReader extends BaseTestQuery {
         .go();
 
     testBuilder()
-        .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list_v3.json`")
+        .sqlQuery("select flatten(config) as flat from cp.`store/json/null_list_v3.json`")
         .ordered()
         .baselineColumns("flat")
         .baselineValues(mapOf("repeated_map", listOf(mapOf("repeated_varchar", listOf()))))
@@ -141,36 +145,33 @@ public class TestJsonReader extends BaseTestQuery {
   @Test
   @Ignore("DRILL-1824")
   public void schemaChangeValidate() throws Exception {
-    testBuilder() //
-      .sqlQuery("select b from dfs.`${WORKING_PATH}/src/test/resources/vector/complex/writer/schemaChange/`") //
-      .unOrdered() //
-      .jsonBaselineFile("/vector/complex/writer/expected.json") //
+    testBuilder()
+      .sqlQuery("select b from dfs.`vector/complex/writer/schemaChange/`")
+      .unOrdered()
+      .jsonBaselineFile("/vector/complex/writer/expected.json")
       .build()
       .run();
   }
 
   public void runTestsOnFile(String filename, UserBitShared.QueryType queryType, String[] queries, long[] rowCounts) throws Exception {
-    if (VERBOSE_DEBUG) {
-      System.out.println("===================");
-      System.out.println("source data in json");
-      System.out.println("===================");
-      System.out.println(Files.toString(FileUtils.getResourceAsFile(filename), Charsets.UTF_8));
-    }
+    logger.debug("===================");
+    logger.debug("source data in json");
+    logger.debug("===================");
+    logger.debug(Files.toString(DrillFileUtils.getResourceAsFile(filename), Charsets.UTF_8));
 
     int i = 0;
     for (String query : queries) {
-      if (VERBOSE_DEBUG) {
-        System.out.println("=====");
-        System.out.println("query");
-        System.out.println("=====");
-        System.out.println(query);
-        System.out.println("======");
-        System.out.println("result");
-        System.out.println("======");
-      }
+      logger.debug("=====");
+      logger.debug("query");
+      logger.debug("=====");
+      logger.debug(query);
+      logger.debug("======");
+      logger.debug("result");
+      logger.debug("======");
       int rowCount = testRunAndPrint(queryType, query);
       assertEquals(rowCounts[i], rowCount);
-      System.out.println();
+
+      logger.debug("\n");
       i++;
     }
   }
@@ -178,14 +179,14 @@ public class TestJsonReader extends BaseTestQuery {
   @Test
   public void testReadCompressed() throws Exception {
     String filepath = "compressed_json.json";
-    File f = folder.newFile(filepath);
+    File f = new File(dirTestWatcher.getRootDir(), filepath);
     PrintWriter out = new PrintWriter(f);
     out.println("{\"a\" :5}");
     out.close();
 
     gzipIt(f);
     testBuilder()
-        .sqlQuery("select * from dfs.`" + f.getPath() + ".gz" + "`")
+        .sqlQuery("select * from dfs.`%s.gz`", filepath)
         .unOrdered()
         .baselineColumns("a")
         .baselineValues(5l)
@@ -193,7 +194,7 @@ public class TestJsonReader extends BaseTestQuery {
 
     // test reading the uncompressed version as well
     testBuilder()
-        .sqlQuery("select * from dfs.`" + f.getPath() + "`")
+        .sqlQuery("select * from dfs.`%s`", filepath)
         .unOrdered()
         .baselineColumns("a")
         .baselineValues(5l)
@@ -221,7 +222,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testDrill_1419() throws Exception {
-    String[] queries = {"select t.trans_id, t.trans_info.prod_id[0],t.trans_info.prod_id[1] from cp.`/store/json/clicks.json` t limit 5"};
+    String[] queries = {"select t.trans_id, t.trans_info.prod_id[0],t.trans_info.prod_id[1] from cp.`store/json/clicks.json` t limit 5"};
     long[] rowCounts = {5};
     String filename = "/store/json/clicks.json";
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
@@ -229,26 +230,26 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testRepeatedCount() throws Exception {
-    test("select repeated_count(str_list) from cp.`/store/json/json_basic_repeated_varchar.json`");
-    test("select repeated_count(INT_col) from cp.`/parquet/alltypes_repeated.json`");
-    test("select repeated_count(FLOAT4_col) from cp.`/parquet/alltypes_repeated.json`");
-    test("select repeated_count(VARCHAR_col) from cp.`/parquet/alltypes_repeated.json`");
-    test("select repeated_count(BIT_col) from cp.`/parquet/alltypes_repeated.json`");
+    test("select repeated_count(str_list) from cp.`store/json/json_basic_repeated_varchar.json`");
+    test("select repeated_count(INT_col) from cp.`parquet/alltypes_repeated.json`");
+    test("select repeated_count(FLOAT4_col) from cp.`parquet/alltypes_repeated.json`");
+    test("select repeated_count(VARCHAR_col) from cp.`parquet/alltypes_repeated.json`");
+    test("select repeated_count(BIT_col) from cp.`parquet/alltypes_repeated.json`");
   }
 
   @Test
   public void testRepeatedContains() throws Exception {
-    test("select repeated_contains(str_list, 'asdf') from cp.`/store/json/json_basic_repeated_varchar.json`");
-    test("select repeated_contains(INT_col, -2147483648) from cp.`/parquet/alltypes_repeated.json`");
-    test("select repeated_contains(FLOAT4_col, -1000000000000.0) from cp.`/parquet/alltypes_repeated.json`");
-    test("select repeated_contains(VARCHAR_col, 'qwerty' ) from cp.`/parquet/alltypes_repeated.json`");
-    test("select repeated_contains(BIT_col, true) from cp.`/parquet/alltypes_repeated.json`");
-    test("select repeated_contains(BIT_col, false) from cp.`/parquet/alltypes_repeated.json`");
+    test("select repeated_contains(str_list, 'asdf') from cp.`store/json/json_basic_repeated_varchar.json`");
+    test("select repeated_contains(INT_col, -2147483648) from cp.`parquet/alltypes_repeated.json`");
+    test("select repeated_contains(FLOAT4_col, -1000000000000.0) from cp.`parquet/alltypes_repeated.json`");
+    test("select repeated_contains(VARCHAR_col, 'qwerty' ) from cp.`parquet/alltypes_repeated.json`");
+    test("select repeated_contains(BIT_col, true) from cp.`parquet/alltypes_repeated.json`");
+    test("select repeated_contains(BIT_col, false) from cp.`parquet/alltypes_repeated.json`");
   }
 
   @Test
   public void testSingleColumnRead_vector_fill_bug() throws Exception {
-    String[] queries = {"select * from cp.`/store/json/single_column_long_file.json`"};
+    String[] queries = {"select * from cp.`store/json/single_column_long_file.json`"};
     long[] rowCounts = {13512};
     String filename = "/store/json/single_column_long_file.json";
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
@@ -256,7 +257,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testNonExistentColumnReadAlone() throws Exception {
-    String[] queries = {"select non_existent_column from cp.`/store/json/single_column_long_file.json`"};
+    String[] queries = {"select non_existent_column from cp.`store/json/single_column_long_file.json`"};
     long[] rowCounts = {13512};
     String filename = "/store/json/single_column_long_file.json";
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
@@ -265,7 +266,7 @@ public class TestJsonReader extends BaseTestQuery {
   @Test
   public void testAllTextMode() throws Exception {
     test("alter system set `store.json.all_text_mode` = true");
-    String[] queries = {"select * from cp.`/store/json/schema_change_int_to_string.json`"};
+    String[] queries = {"select * from cp.`store/json/schema_change_int_to_string.json`"};
     long[] rowCounts = {3};
     String filename = "/store/json/schema_change_int_to_string.json";
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
@@ -274,7 +275,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void readComplexWithStar() throws Exception {
-    List<QueryDataBatch> results = testSqlWithResults("select * from cp.`/store/json/test_complex_read_with_star.json`");
+    List<QueryDataBatch> results = testSqlWithResults("select * from cp.`store/json/test_complex_read_with_star.json`");
     assertEquals(1, results.size());
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
@@ -291,7 +292,7 @@ public class TestJsonReader extends BaseTestQuery {
   @Test
   public void testNullWhereListExpected() throws Exception {
     test("alter system set `store.json.all_text_mode` = true");
-    String[] queries = {"select * from cp.`/store/json/null_where_list_expected.json`"};
+    String[] queries = {"select * from cp.`store/json/null_where_list_expected.json`"};
     long[] rowCounts = {3};
     String filename = "/store/json/null_where_list_expected.json";
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
@@ -301,7 +302,7 @@ public class TestJsonReader extends BaseTestQuery {
   @Test
   public void testNullWhereMapExpected() throws Exception {
     test("alter system set `store.json.all_text_mode` = true");
-    String[] queries = {"select * from cp.`/store/json/null_where_map_expected.json`"};
+    String[] queries = {"select * from cp.`store/json/null_where_map_expected.json`"};
     long[] rowCounts = {3};
     String filename = "/store/json/null_where_map_expected.json";
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
@@ -321,7 +322,7 @@ public class TestJsonReader extends BaseTestQuery {
   // ensure that the project is filtering out the correct data in the scan alone
   @Test
   public void testProjectPushdown() throws Exception {
-    String[] queries = {Files.toString(FileUtils.getResourceAsFile("/store/json/project_pushdown_json_physical_plan.json"), Charsets.UTF_8)};
+    String[] queries = {Files.toString(DrillFileUtils.getResourceAsFile("/store/json/project_pushdown_json_physical_plan.json"), Charsets.UTF_8)};
     long[] rowCounts = {3};
     String filename = "/store/json/schema_change_int_to_string.json";
     test("alter system set `store.json.all_text_mode` = false");
@@ -346,13 +347,8 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testJsonDirectoryWithEmptyFile() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/json/jsonDirectoryWithEmpyFile").toURI().toString();
-
-    String queryRightEmpty = String.format(
-        "select * from dfs_test.`%s`", root);
-
     testBuilder()
-        .sqlQuery(queryRightEmpty)
+        .sqlQuery("select * from dfs.`store/json/jsonDirectoryWithEmpyFile`")
         .unOrdered()
         .baselineColumns("a")
         .baselineValues(1l)
@@ -397,9 +393,8 @@ public class TestJsonReader extends BaseTestQuery {
   @Test
   public void testSelectStarWithUnionType() throws Exception {
     try {
-      String query = "select * from cp.`jsoninput/union/a.json`";
       testBuilder()
-              .sqlQuery(query)
+              .sqlQuery("select * from cp.`jsoninput/union/a.json`")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .baselineColumns("field1", "field2")
@@ -449,12 +444,11 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testSelectFromListWithCase() throws Exception {
-    String query = "select a, typeOf(a) `type` from " +
-            "(select case when is_list(field2) then field2[4][1].inner7 end a " +
-            "from cp.`jsoninput/union/a.json`) where a is not null";
     try {
       testBuilder()
-              .sqlQuery(query)
+              .sqlQuery("select a, typeOf(a) `type` from " +
+                "(select case when is_list(field2) then field2[4][1].inner7 end a " +
+                "from cp.`jsoninput/union/a.json`) where a is not null")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .baselineColumns("a", "type")
@@ -467,12 +461,11 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testTypeCase() throws Exception {
-    String query = "select case when is_bigint(field1) " +
-            "then field1 when is_list(field1) then field1[0] " +
-            "when is_map(field1) then t.field1.inner1 end f1 from cp.`jsoninput/union/a.json` t";
     try {
       testBuilder()
-              .sqlQuery(query)
+              .sqlQuery("select case when is_bigint(field1) " +
+                "then field1 when is_list(field1) then field1[0] " +
+                "when is_map(field1) then t.field1.inner1 end f1 from cp.`jsoninput/union/a.json` t")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .baselineColumns("f1")
@@ -488,13 +481,12 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testSumWithTypeCase() throws Exception {
-    String query = "select sum(cast(f1 as bigint)) sum_f1 from " +
-            "(select case when is_bigint(field1) then field1 " +
-            "when is_list(field1) then field1[0] when is_map(field1) then t.field1.inner1 end f1 " +
-            "from cp.`jsoninput/union/a.json` t)";
     try {
       testBuilder()
-              .sqlQuery(query)
+              .sqlQuery("select sum(cast(f1 as bigint)) sum_f1 from " +
+                "(select case when is_bigint(field1) then field1 " +
+                "when is_list(field1) then field1[0] when is_map(field1) then t.field1.inner1 end f1 " +
+                "from cp.`jsoninput/union/a.json` t)")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .baselineColumns("sum_f1")
@@ -507,10 +499,9 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testUnionExpressionMaterialization() throws Exception {
-    String query = "select a + b c from cp.`jsoninput/union/b.json`";
     try {
       testBuilder()
-              .sqlQuery(query)
+              .sqlQuery("select a + b c from cp.`jsoninput/union/b.json`")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .baselineColumns("c")
@@ -525,9 +516,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testSumMultipleBatches() throws Exception {
-    String dfs_temp = getDfsTestTmpSchemaLocation();
-    File table_dir = new File(dfs_temp, "multi_batch");
-    table_dir.mkdir();
+    File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("multi_batch"));
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
     for (int i = 0; i < 10000; i++) {
       os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes());
@@ -535,10 +524,10 @@ public class TestJsonReader extends BaseTestQuery {
     }
     os.flush();
     os.close();
-    String query = "select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs_test.tmp.multi_batch t";
+
     try {
       testBuilder()
-              .sqlQuery(query)
+              .sqlQuery("select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs.tmp.multi_batch t")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .baselineColumns("sum")
@@ -551,9 +540,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testSumFilesWithDifferentSchema() throws Exception {
-    String dfs_temp = getDfsTestTmpSchemaLocation();
-    File table_dir = new File(dfs_temp, "multi_file");
-    table_dir.mkdir();
+    File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("multi_file"));
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
     for (int i = 0; i < 10000; i++) {
       os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes());
@@ -566,10 +553,10 @@ public class TestJsonReader extends BaseTestQuery {
     }
     os.flush();
     os.close();
-    String query = "select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs_test.tmp.multi_file t";
+
     try {
       testBuilder()
-              .sqlQuery(query)
+              .sqlQuery("select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs.tmp.multi_file t")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .baselineColumns("sum")
@@ -582,8 +569,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void drill_4032() throws Exception {
-    String dfs_temp = getDfsTestTmpSchemaLocation();
-    File table_dir = new File(dfs_temp, "drill_4032");
+    File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("drill_4032"));
     table_dir.mkdir();
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
     os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes());
@@ -595,6 +581,168 @@ public class TestJsonReader extends BaseTestQuery {
     os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes());
     os.flush();
     os.close();
-    testNoResult("select t.col2.col3 from dfs_test.tmp.drill_4032 t");
+    testNoResult("select t.col2.col3 from dfs.tmp.drill_4032 t");
+  }
+
+  @Test
+  public void drill_4479() throws Exception {
+    try {
+      File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("drill_4479"));
+      table_dir.mkdir();
+      BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "mostlynulls.json")));
+      // Create an entire batch of null values for 3 columns
+      for (int i = 0 ; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+        os.write("{\"a\": null, \"b\": null, \"c\": null}".getBytes());
+      }
+      // Add a row with {bigint,  float, string} values
+      os.write("{\"a\": 123456789123, \"b\": 99.999, \"c\": \"Hello World\"}".getBytes());
+      os.flush();
+      os.close();
+
+      testBuilder()
+        .sqlQuery("select c, count(*) as cnt from dfs.tmp.drill_4479 t group by c")
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .baselineColumns("c", "cnt")
+        .baselineValues(null, 4096L)
+        .baselineValues("Hello World", 1L)
+        .go();
+
+      testBuilder()
+        .sqlQuery("select a, b, c, count(*) as cnt from dfs.tmp.drill_4479 t group by a, b, c")
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .baselineColumns("a", "b", "c", "cnt")
+        .baselineValues(null, null, null, 4096L)
+        .baselineValues("123456789123", "99.999", "Hello World", 1L)
+        .go();
+
+      testBuilder()
+        .sqlQuery("select max(a) as x, max(b) as y, max(c) as z from dfs.tmp.drill_4479 t")
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .baselineColumns("x", "y", "z")
+        .baselineValues("123456789123", "99.999", "Hello World")
+        .go();
+
+    } finally {
+      testNoResult("alter session set `store.json.all_text_mode` = false");
+    }
+  }
+
+  @Test
+  public void testFlattenEmptyArrayWithAllTextMode() throws Exception {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), "empty_array_all_text_mode.json")))) {
+      writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
+    }
+
+    try {
+      String query = "select flatten(t.a.b.c) as c from dfs.`empty_array_all_text_mode.json` t";
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = false")
+        .expectsEmptyResultSet()
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `store.json.all_text_mode`");
+    }
+  }
+
+  @Test
+  public void testFlattenEmptyArrayWithUnionType() throws Exception {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), "empty_array.json")))) {
+      writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
+    }
+
+    try {
+      String query = "select flatten(t.a.b.c) as c from dfs.`empty_array.json` t";
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `store.json.all_text_mode`");
+      testNoResult("alter session reset `exec.enable_union_type`");
+    }
+  }
+
+  @Test // DRILL-5521
+  public void testKvgenWithUnionAll() throws Exception {
+    String fileName = "map.json";
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      writer.write("{\"rk\": \"a\", \"m\": {\"a\":\"1\"}}");
+    }
+
+    String query = String.format("select kvgen(m) as res from (select m from dfs.`%s` union all " +
+        "select convert_from('{\"a\" : null}' ,'json') as m from (values(1)))", fileName);
+    assertEquals("Row count should match", 2, testSql(query));
+  }
+
+  @Test // DRILL-4264
+  public void testFieldWithDots() throws Exception {
+    String fileName = "table.json";
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      writer.write("{\"rk.q\": \"a\", \"m\": {\"a.b\":\"1\", \"a\":{\"b\":\"2\"}, \"c\":\"3\"}}");
+    }
+
+    testBuilder()
+      .sqlQuery("select t.m.`a.b` as a,\n" +
+        "t.m.a.b as b,\n" +
+        "t.m['a.b'] as c,\n" +
+        "t.rk.q as d,\n" +
+        "t.`rk.q` as e\n" +
+        "from dfs.`%s` t", fileName)
+      .unOrdered()
+      .baselineColumns("a", "b", "c", "d", "e")
+      .baselineValues("1", "2", "1", null, "a")
+      .go();
+  }
+
+  @Test // DRILL-6020
+  public void testUntypedPathWithUnion() throws Exception {
+    String fileName = "table.json";
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      writer.write("{\"rk\": {\"a\": {\"b\": \"1\"}}}");
+      writer.write("{\"rk\": {\"a\": \"2\"}}");
+    }
+
+    JsonStringHashMap<String, Text> map = new JsonStringHashMap<>();
+    map.put("b", new Text("1"));
+
+    try {
+      testBuilder()
+        .sqlQuery("select t.rk.a as a from dfs.`%s` t", fileName)
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type`=true")
+        .baselineColumns("a")
+        .baselineValues(map)
+        .baselineValues("2")
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `exec.enable_union_type`");
+    }
   }
 }

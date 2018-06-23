@@ -23,6 +23,7 @@ namespace {
 const ::google::protobuf::Descriptor* DrillbitEndpoint_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   DrillbitEndpoint_reflection_ = NULL;
+const ::google::protobuf::EnumDescriptor* DrillbitEndpoint_State_descriptor_ = NULL;
 const ::google::protobuf::Descriptor* DrillServiceInstance_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   DrillServiceInstance_reflection_ = NULL;
@@ -40,12 +41,15 @@ void protobuf_AssignDesc_Coordination_2eproto() {
       "Coordination.proto");
   GOOGLE_CHECK(file != NULL);
   DrillbitEndpoint_descriptor_ = file->message_type(0);
-  static const int DrillbitEndpoint_offsets_[5] = {
+  static const int DrillbitEndpoint_offsets_[8] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillbitEndpoint, address_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillbitEndpoint, user_port_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillbitEndpoint, control_port_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillbitEndpoint, data_port_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillbitEndpoint, roles_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillbitEndpoint, version_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillbitEndpoint, state_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillbitEndpoint, http_port_),
   };
   DrillbitEndpoint_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -58,6 +62,7 @@ void protobuf_AssignDesc_Coordination_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(DrillbitEndpoint));
+  DrillbitEndpoint_State_descriptor_ = DrillbitEndpoint_descriptor_->enum_type(0);
   DrillServiceInstance_descriptor_ = file->message_type(1);
   static const int DrillServiceInstance_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillServiceInstance, id_),
@@ -132,18 +137,22 @@ void protobuf_AddDesc_Coordination_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\022Coordination.proto\022\004exec\"{\n\020DrillbitEn"
-    "dpoint\022\017\n\007address\030\001 \001(\t\022\021\n\tuser_port\030\002 \001"
-    "(\005\022\024\n\014control_port\030\003 \001(\005\022\021\n\tdata_port\030\004 "
-    "\001(\005\022\032\n\005roles\030\005 \001(\0132\013.exec.Roles\"i\n\024Drill"
-    "ServiceInstance\022\n\n\002id\030\001 \001(\t\022\033\n\023registrat"
-    "ionTimeUTC\030\002 \001(\003\022(\n\010endpoint\030\003 \001(\0132\026.exe"
-    "c.DrillbitEndpoint\"\227\001\n\005Roles\022\027\n\tsql_quer"
-    "y\030\001 \001(\010:\004true\022\032\n\014logical_plan\030\002 \001(\010:\004tru"
-    "e\022\033\n\rphysical_plan\030\003 \001(\010:\004true\022\033\n\rjava_e"
-    "xecutor\030\004 \001(\010:\004true\022\037\n\021distributed_cache"
-    "\030\005 \001(\010:\004trueB3\n\033org.apache.drill.exec.pr"
-    "otoB\022CoordinationProtosH\001", 465);
+    "\n\022Coordination.proto\022\004exec\"\212\002\n\020DrillbitE"
+    "ndpoint\022\017\n\007address\030\001 \001(\t\022\021\n\tuser_port\030\002 "
+    "\001(\005\022\024\n\014control_port\030\003 \001(\005\022\021\n\tdata_port\030\004"
+    " \001(\005\022\032\n\005roles\030\005 \001(\0132\013.exec.Roles\022\017\n\007vers"
+    "ion\030\006 \001(\t\022+\n\005state\030\007 \001(\0162\034.exec.Drillbit"
+    "Endpoint.State\022\021\n\thttp_port\030\010 \001(\005\"<\n\005Sta"
+    "te\022\013\n\007STARTUP\020\000\022\n\n\006ONLINE\020\001\022\r\n\tQUIESCENT"
+    "\020\002\022\013\n\007OFFLINE\020\003\"i\n\024DrillServiceInstance\022"
+    "\n\n\002id\030\001 \001(\t\022\033\n\023registrationTimeUTC\030\002 \001(\003"
+    "\022(\n\010endpoint\030\003 \001(\0132\026.exec.DrillbitEndpoi"
+    "nt\"\227\001\n\005Roles\022\027\n\tsql_query\030\001 \001(\010:\004true\022\032\n"
+    "\014logical_plan\030\002 \001(\010:\004true\022\033\n\rphysical_pl"
+    "an\030\003 \001(\010:\004true\022\033\n\rjava_executor\030\004 \001(\010:\004t"
+    "rue\022\037\n\021distributed_cache\030\005 \001(\010:\004trueB3\n\033"
+    "org.apache.drill.exec.protoB\022Coordinatio"
+    "nProtosH\001", 609);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "Coordination.proto", &protobuf_RegisterTypes);
   DrillbitEndpoint::default_instance_ = new DrillbitEndpoint();
@@ -164,12 +173,40 @@ struct StaticDescriptorInitializer_Coordination_2eproto {
 
 // ===================================================================
 
+const ::google::protobuf::EnumDescriptor* DrillbitEndpoint_State_descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return DrillbitEndpoint_State_descriptor_;
+}
+bool DrillbitEndpoint_State_IsValid(int value) {
+  switch(value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#ifndef _MSC_VER
+const DrillbitEndpoint_State DrillbitEndpoint::STARTUP;
+const DrillbitEndpoint_State DrillbitEndpoint::ONLINE;
+const DrillbitEndpoint_State DrillbitEndpoint::QUIESCENT;
+const DrillbitEndpoint_State DrillbitEndpoint::OFFLINE;
+const DrillbitEndpoint_State DrillbitEndpoint::State_MIN;
+const DrillbitEndpoint_State DrillbitEndpoint::State_MAX;
+const int DrillbitEndpoint::State_ARRAYSIZE;
+#endif  // _MSC_VER
 #ifndef _MSC_VER
 const int DrillbitEndpoint::kAddressFieldNumber;
 const int DrillbitEndpoint::kUserPortFieldNumber;
 const int DrillbitEndpoint::kControlPortFieldNumber;
 const int DrillbitEndpoint::kDataPortFieldNumber;
 const int DrillbitEndpoint::kRolesFieldNumber;
+const int DrillbitEndpoint::kVersionFieldNumber;
+const int DrillbitEndpoint::kStateFieldNumber;
+const int DrillbitEndpoint::kHttpPortFieldNumber;
 #endif  // !_MSC_VER
 
 DrillbitEndpoint::DrillbitEndpoint()
@@ -194,6 +231,9 @@ void DrillbitEndpoint::SharedCtor() {
   control_port_ = 0;
   data_port_ = 0;
   roles_ = NULL;
+  version_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  state_ = 0;
+  http_port_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -204,6 +244,9 @@ DrillbitEndpoint::~DrillbitEndpoint() {
 void DrillbitEndpoint::SharedDtor() {
   if (address_ != &::google::protobuf::internal::kEmptyString) {
     delete address_;
+  }
+  if (version_ != &::google::protobuf::internal::kEmptyString) {
+    delete version_;
   }
   if (this != default_instance_) {
     delete roles_;
@@ -244,6 +287,13 @@ void DrillbitEndpoint::Clear() {
     if (has_roles()) {
       if (roles_ != NULL) roles_->::exec::Roles::Clear();
     }
+    if (has_version()) {
+      if (version_ != &::google::protobuf::internal::kEmptyString) {
+        version_->clear();
+      }
+    }
+    state_ = 0;
+    http_port_ = 0;
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -329,6 +379,60 @@ bool DrillbitEndpoint::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(50)) goto parse_version;
+        break;
+      }
+
+      // optional string version = 6;
+      case 6: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_version:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_version()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->version().data(), this->version().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(56)) goto parse_state;
+        break;
+      }
+
+      // optional .exec.DrillbitEndpoint.State state = 7;
+      case 7: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_state:
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::exec::DrillbitEndpoint_State_IsValid(value)) {
+            set_state(static_cast< ::exec::DrillbitEndpoint_State >(value));
+          } else {
+            mutable_unknown_fields()->AddVarint(7, value);
+          }
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(64)) goto parse_http_port;
+        break;
+      }
+
+      // optional int32 http_port = 8;
+      case 8: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_http_port:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &http_port_)));
+          set_has_http_port();
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -381,6 +485,26 @@ void DrillbitEndpoint::SerializeWithCachedSizes(
       5, this->roles(), output);
   }
 
+  // optional string version = 6;
+  if (has_version()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->version().data(), this->version().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      6, this->version(), output);
+  }
+
+  // optional .exec.DrillbitEndpoint.State state = 7;
+  if (has_state()) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      7, this->state(), output);
+  }
+
+  // optional int32 http_port = 8;
+  if (has_http_port()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(8, this->http_port(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -419,6 +543,27 @@ void DrillbitEndpoint::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         5, this->roles(), target);
+  }
+
+  // optional string version = 6;
+  if (has_version()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->version().data(), this->version().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        6, this->version(), target);
+  }
+
+  // optional .exec.DrillbitEndpoint.State state = 7;
+  if (has_state()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      7, this->state(), target);
+  }
+
+  // optional int32 http_port = 8;
+  if (has_http_port()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(8, this->http_port(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -467,6 +612,26 @@ int DrillbitEndpoint::ByteSize() const {
           this->roles());
     }
 
+    // optional string version = 6;
+    if (has_version()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->version());
+    }
+
+    // optional .exec.DrillbitEndpoint.State state = 7;
+    if (has_state()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->state());
+    }
+
+    // optional int32 http_port = 8;
+    if (has_http_port()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->http_port());
+    }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
@@ -509,6 +674,15 @@ void DrillbitEndpoint::MergeFrom(const DrillbitEndpoint& from) {
     if (from.has_roles()) {
       mutable_roles()->::exec::Roles::MergeFrom(from.roles());
     }
+    if (from.has_version()) {
+      set_version(from.version());
+    }
+    if (from.has_state()) {
+      set_state(from.state());
+    }
+    if (from.has_http_port()) {
+      set_http_port(from.http_port());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -537,6 +711,9 @@ void DrillbitEndpoint::Swap(DrillbitEndpoint* other) {
     std::swap(control_port_, other->control_port_);
     std::swap(data_port_, other->data_port_);
     std::swap(roles_, other->roles_);
+    std::swap(version_, other->version_);
+    std::swap(state_, other->state_);
+    std::swap(http_port_, other->http_port_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

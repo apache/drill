@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -112,7 +112,7 @@ public interface DistributedCache extends AutoCloseable{
       if (getClass() != obj.getClass()) {
         return false;
       }
-      CacheConfig other = (CacheConfig) obj;
+      CacheConfig<?, ?> other = (CacheConfig<?, ?>) obj;
       if (keyClass == null) {
         if (other.keyClass != null) {
           return false;

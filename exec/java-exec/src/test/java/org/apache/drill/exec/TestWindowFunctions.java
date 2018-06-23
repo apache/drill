@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,25 +17,31 @@
  */
 package org.apache.drill.exec;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 import org.apache.drill.PlanTestBase;
 
 import org.apache.drill.test.UserExceptionMatcher;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.nio.file.Paths;
 
 public class TestWindowFunctions extends BaseTestQuery {
-  static final String WORKING_PATH = TestTools.getWorkingPath();
-  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
-
   private static void throwAsUnsupportedException(UserException ex) throws Exception {
     SqlUnsupportedException.errorClassNameToException(ex.getOrCreatePBError(false).getException().getExceptionClass());
     throw ex;
+  }
+
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("window"));
   }
 
   @Test // DRILL-3196
@@ -154,35 +160,6 @@ public class TestWindowFunctions extends BaseTestQuery {
     }
   }
 
-  @Test(expected = UnsupportedFunctionException.class)  // DRILL-3188
-  public void testRowsUnboundedPreceding() throws Exception {
-    try {
-      final String query = "explain plan for select sum(n_nationKey) over(partition by n_nationKey order by n_nationKey \n" +
-      "rows UNBOUNDED PRECEDING)" +
-      "from cp.`tpch/nation.parquet` t \n" +
-      "order by n_nationKey";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3359
-  public void testFramesDefinedInWindowClause() throws Exception {
-    try {
-      final String query = "explain plan for select sum(n_nationKey) over w \n" +
-          "from cp.`tpch/nation.parquet` \n" +
-          "window w as (partition by n_nationKey order by n_nationKey rows UNBOUNDED PRECEDING)";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
   @Test(expected = UnsupportedFunctionException.class) // DRILL-3326
   public void testWindowWithAlias() throws Exception {
     try {
@@ -257,6 +234,7 @@ public class TestWindowFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-3346
+  @Category(UnlikelyTest.class)
   public void testWindowGroupByOnView() throws Exception {
     try {
       thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
@@ -266,7 +244,7 @@ public class TestWindowFunctions extends BaseTestQuery {
           "from testWindowGroupByOnView \n" +
           "group by b";
 
-      test("use dfs_test.tmp");
+      test("use dfs.tmp");
       test(createView);
       test(query);
     } finally {
@@ -432,7 +410,7 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3298
   public void testCountEmptyPartitionByWithExchange() throws Exception {
-    String query = String.format("select count(*) over (order by o_orderpriority) as cnt from dfs.`%s/multilevel/parquet` where o_custkey < 100", TEST_RES_PATH);
+    String query = "select count(*) over (order by o_orderpriority) as cnt from dfs.`multilevel/parquet` where o_custkey < 100";
     try {
       // Validate the plan
       final String[] expectedPlan = {"Window.*partition \\{\\} order by \\[0\\].*COUNT\\(\\)",
@@ -534,9 +512,9 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test
   public void testCompoundIdentifierInWindowDefinition() throws Exception {
-    String root = FileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
+    String root = "/multilevel/csv/1994/Q1/orders_94_q1.csv";
     String query = String.format("SELECT count(*) OVER w as col1, count(*) OVER w as col2 \n" +
-        "FROM dfs_test.`%s` \n" +
+        "FROM cp.`%s` \n" +
         "WINDOW w AS (PARTITION BY columns[1] ORDER BY columns[0] DESC)", root);
 
     // Validate the plan
@@ -585,7 +563,7 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3404
   public void testWindowSumAggIsNotNull() throws Exception {
-    String query = String.format("select count(*) cnt from (select sum ( c1 ) over ( partition by c2 order by c1 asc nulls first ) w_sum from dfs.`%s/window/table_with_nulls.parquet` ) sub_query where w_sum is not null", TEST_RES_PATH);
+    String query = "select count(*) cnt from (select sum ( c1 ) over ( partition by c2 order by c1 asc nulls first ) w_sum from dfs.`window/table_with_nulls.parquet` ) sub_query where w_sum is not null";
 
     // Validate the plan
     final String[] expectedPlan = {"Window.*partition \\{1\\} order by \\[0 ASC-nulls-first\\].*SUM\\(\\$0\\)",
@@ -597,19 +575,21 @@ public class TestWindowFunctions extends BaseTestQuery {
       .sqlQuery(query)
       .ordered()
       .baselineColumns("cnt")
-      .baselineValues(26l)
+      .baselineValues(26L)
       .build().run();
   }
 
   @Test // DRILL-3292
   public void testWindowConstants() throws Exception {
-    String query = "select rank() over w fn, sum(2) over w sumINTEGER, sum(employee_id) over w sumEmpId, sum(0.5) over w sumFLOAT \n" +
+    String query =
+        "select rank() over w fn, sum(2) over w sumINTEGER, sum(employee_id) over w sumEmpId,\n" +
+            "sum(cast(0.5 as double)) over w sumFLOAT \n" +
         "from cp.`employee.json` \n" +
         "where position_id = 2 \n" +
         "window w as(partition by position_id order by employee_id)";
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), SUM\\(\\$2\\), SUM\\(\\$1\\), SUM\\(\\$3\\)",
+    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), \\$SUM0\\(\\$2\\), SUM\\(\\$1\\), \\$SUM0\\(\\$3\\)",
         "Scan.*columns=\\[`position_id`, `employee_id`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
@@ -618,23 +598,23 @@ public class TestWindowFunctions extends BaseTestQuery {
         .sqlQuery(query)
         .ordered()
         .baselineColumns("fn", "sumINTEGER", "sumEmpId", "sumFLOAT")
-        .baselineValues(1l, 2l, 2l, 0.5)
-        .baselineValues(2l, 4l, 6l, 1.0)
-        .baselineValues(3l, 6l, 11l, 1.5)
-        .baselineValues(4l, 8l, 31l, 2.0)
-        .baselineValues(5l, 10l, 52l, 2.5)
-        .baselineValues(6l, 12l, 74l, 3.0)
+        .baselineValues(1L, 2L, 2L, 0.5)
+        .baselineValues(2L, 4L, 6L, 1.0)
+        .baselineValues(3L, 6L, 11L, 1.5)
+        .baselineValues(4L, 8L, 31L, 2.0)
+        .baselineValues(5L, 10L, 52L, 2.5)
+        .baselineValues(6L, 12L, 74L, 3.0)
         .build()
         .run();
   }
 
   @Test // DRILL-3567
   public void testMultiplePartitions1() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = "/store/text/data/t.json";
     String query = String.format("select count(*) over(partition by b1 order by c1) as count1, \n" +
         "sum(a1)  over(partition by b1 order by c1) as sum1, \n" +
         "count(*) over(partition by a1 order by c1) as count2 \n" +
-        "from dfs_test.`%s`", root);
+        "from cp.`%s`", root);
 
     // Validate the plan
     final String[] expectedPlan = {"Window.*partition \\{2\\} order by \\[1\\].*COUNT\\(\\)",
@@ -663,11 +643,11 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3567
   public void testMultiplePartitions2() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = "/store/text/data/t.json";
     String query = String.format("select count(*) over(partition by b1 order by c1) as count1, \n" +
         "count(*) over(partition by a1 order by c1) as count2, \n" +
         "sum(a1)  over(partition by b1 order by c1) as sum1 \n" +
-        "from dfs_test.`%s`", root);
+        "from cp.`%s`", root);
 
     // Validate the plan
     final String[] expectedPlan = {"Window.*partition \\{2\\} order by \\[1\\].*COUNT\\(\\)",
@@ -696,9 +676,9 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // see DRILL-3574
   public void testWithAndWithoutPartitions() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = "/store/text/data/t.json";
     String query = String.format("select sum(a1) over(partition by b1, c1) as s1, sum(a1) over() as s2 \n" +
-        "from dfs_test.`%s` \n" +
+        "from cp.`%s` \n" +
         "order by a1", root);
     test("alter session set `planner.slice_target` = 1");
 
@@ -727,17 +707,17 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // see DRILL-3657
   public void testConstantsInMultiplePartitions() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = "/store/text/data/t.json";
     String query = String.format(
         "select sum(1) over(partition by b1 order by a1) as sum1, sum(1) over(partition by a1) as sum2, rank() over(order by b1) as rank1, rank() over(order by 1) as rank2 \n" +
-        "from dfs_test.`%s` \n" +
+        "from cp.`%s` \n" +
         "order by 1, 2, 3, 4", root);
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*SUM\\(\\$3\\).*\n" +
+    final String[] expectedPlan = {"Window.*\\$SUM0\\(\\$3\\).*\n" +
         ".*SelectionVectorRemover.*\n" +
         ".*Sort.*\n" +
-        ".*Window.*SUM\\(\\$2\\).*"
+        ".*Window.*\\$SUM0\\(\\$2\\).*"
     };
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
 
@@ -761,9 +741,9 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3580
   public void testExpressionInWindowFunction() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = "/store/text/data/t.json";
     String query = String.format("select a1, b1, sum(b1) over (partition by a1) as c1, sum(a1 + b1) over (partition by a1) as c2\n" +
-        "from dfs_test.`%s`", root);
+        "from cp.`%s`", root);
 
     // Validate the plan
     final String[] expectedPlan = {"Window\\(window#0=\\[window\\(partition \\{0\\} order by \\[\\].*\\[SUM\\(\\$1\\), SUM\\(\\$2\\)\\]"};
@@ -870,6 +850,108 @@ public class TestWindowFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("c1", "c2", "c3", "c4")
         .baselineValues(333.56708470261117d, 333.4226520980038d, 111266.99999699896d, 111170.66493206649d)
+        .build()
+        .run();
+  }
+
+  @Test // DRILL-2330
+  public void testNestedAggregates() throws Exception {
+
+    final String query = "select sum(min(l_extendedprice))"
+        + " over (partition by l_suppkey order by l_suppkey) as totprice"
+        + " from cp.`tpch/lineitem.parquet` where l_suppkey <= 10 group by l_suppkey order by 1 desc";
+
+    // Validate the plan
+    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[0\\].*SUM\\(\\$1\\).*",
+            "HashAgg\\(group=\\[\\{0\\}\\].*\\[MIN\\(\\$1\\)\\]\\)"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    // Validate the results
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("totprice")
+            .baselineValues(1107.2)
+            .baselineValues(998.09)
+            .baselineValues(957.05)
+            .baselineValues(953.05)
+            .baselineValues(931.03)
+            .baselineValues(926.02)
+            .baselineValues(909.0)
+            .baselineValues(906.0)
+            .baselineValues(904.0)
+            .baselineValues(904.0)
+            .go();
+  }
+
+  @Test // DRILL-4795, DRILL-4796
+  public void testNestedAggregates1() throws Exception {
+    try {
+      String query = "select sum(min(l_extendedprice)) over (partition by l_suppkey)\n"
+              + " from cp.`tpch/nation.parquet` where l_suppkey <= 10";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'l_suppkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over (partition by l_suppkey) as totprice\n"
+          + " from cp.`tpch/nation.parquet` where l_suppkey <= 10";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'l_suppkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over w1 as totprice\n"
+          + " from cp.`tpch/nation.parquet` where l_suppkey <= 10\n"
+          + " window w1 as (partition by l_suppkey)";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'l_suppkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over (partition by n_nationkey)\n"
+              + " from cp.`tpch/nation.parquet` where l_suppkey <= 10 group by l_suppkey";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over (partition by n_nationkey) as totprice\n"
+          + " from cp.`tpch/nation.parquet` where l_suppkey <= 10 group by l_suppkey";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over w2 as totprice\n"
+          + " from cp.`tpch/nation.parquet` where l_suppkey <= 10 group by l_suppkey\n"
+          + " window w2 as (partition by n_nationkey)";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
+    }
+  }
+
+  @Test // DRILL-4469
+  public void testWindowOnSubqueryWithStar() throws Exception {
+    String query = "SELECT SUM(n_nationkey) OVER w as s\n" +
+        "FROM (SELECT * FROM cp.`tpch/nation.parquet`) subQry\n" +
+        "WINDOW w AS (PARTITION BY region ORDER BY n_nationkey)\n" +
+        "limit 1";
+
+    final String[] expectedPlan = {"Scan.*columns=\\[`n_nationkey`, `region`\\].*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("s")
+        .baselineValues(0L)
         .build()
         .run();
   }

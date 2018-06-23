@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -50,7 +50,6 @@ public class CachedSingleFileSystem extends FileSystem {
     if (length > Integer.MAX_VALUE) {
       throw new UnsupportedOperationException("Cached file system only supports files of less than 2GB.");
     }
-    System.out.println(length);
     try (InputStream is = new BufferedInputStream(new FileInputStream(path))) {
       byte[] buffer = new byte[64*1024];
       this.file = UnpooledByteBufAllocator.DEFAULT.directBuffer((int) length);

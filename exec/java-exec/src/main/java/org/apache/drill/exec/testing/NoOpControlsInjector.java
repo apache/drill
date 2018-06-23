@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.testing;
 
-import org.apache.drill.exec.ops.FragmentContext;
 import org.slf4j.Logger;
 
 /**
@@ -45,10 +44,6 @@ public final class NoOpControlsInjector implements ControlsInjector {
 
   @Override
   public void injectUnchecked(final ExecutionControls executionControls, final String desc) {
-  }
-
-  @Override
-  public void injectUnchecked(final FragmentContext fragmentContext, final String desc) {
   }
 
   @Override

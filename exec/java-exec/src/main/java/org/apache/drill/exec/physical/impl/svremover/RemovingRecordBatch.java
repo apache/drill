@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
@@ -34,10 +30,6 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.util.CallBack;
-import org.apache.drill.exec.vector.CopyUtil;
-import org.apache.drill.exec.vector.SchemaChangeCallBack;
-import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -46,9 +38,6 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemovingRecordBatch.class);
 
   private Copier copier;
-  private int recordCount;
-  private boolean hasRemainder;
-  private int remainderIndex;
 
   public RemovingRecordBatch(SelectionVectorRemover popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, incoming);
@@ -57,7 +46,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   @Override
   public int getRecordCount() {
-    return recordCount;
+    return container.getRecordCount();
   }
 
   @Override
@@ -68,10 +57,10 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       this.copier = getStraightCopier();
       break;
     case TWO_BYTE:
-      this.copier = getGenerated2Copier();
+      this.copier = create2Copier();
       break;
     case FOUR_BYTE:
-      this.copier = getGenerated4Copier();
+      this.copier = create4Copier();
       break;
     default:
       throw new UnsupportedOperationException();
@@ -86,33 +75,12 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   }
 
   @Override
-  public IterOutcome innerNext() {
-    if (hasRemainder) {
-      handleRemainder();
-      return IterOutcome.OK;
-    }
-    return super.innerNext();
-  }
-
-  @Override
   protected IterOutcome doWork() {
-    int incomingRecordCount = incoming.getRecordCount();
-    int copiedRecords = copier.copyRecords(0, incomingRecordCount);
-
-    if (copiedRecords < incomingRecordCount) {
-      for(VectorWrapper<?> v : container){
-        ValueVector.Mutator m = v.getValueVector().getMutator();
-        m.setValueCount(copiedRecords);
-      }
-      hasRemainder = true;
-      remainderIndex = copiedRecords;
-      this.recordCount = remainderIndex;
-    } else {
-      recordCount = copiedRecords;
-      for(VectorWrapper<?> v : container){
-        ValueVector.Mutator m = v.getValueVector().getMutator();
-        m.setValueCount(recordCount);
-      }
+    try {
+      copier.copyRecords(0, incoming.getRecordCount());
+    } catch (SchemaChangeException e) {
+      throw new IllegalStateException(e);
+    } finally {
       if (incoming.getSchema().getSelectionVectorMode() != SelectionVectorMode.FOUR_BYTE) {
         for(VectorWrapper<?> v: incoming) {
           v.clear();
@@ -123,65 +91,9 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       }
     }
 
-    assert recordCount >= copiedRecords;
-    logger.debug("doWork(): {} records copied out of {}, remaining: {}, incoming schema {} ",
-        copiedRecords,
-        incomingRecordCount,
-        incomingRecordCount - remainderIndex,
-        incoming.getSchema());
-    return IterOutcome.OK;
-  }
-
-  private void handleRemainder() {
-    int recordCount = incoming.getRecordCount();
-    int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
-    int copiedRecords;
-    while((copiedRecords = copier.copyRecords(remainderIndex, remainingRecordCount)) == 0) {
-      logger.debug("Copied zero records. Retrying");
-      container.zeroVectors();
-    }
-
-    /*
-    StringBuilder builder = new StringBuilder();
-    for (VectorWrapper w : container) {
-      builder.append(w.getField().getPath());
-      builder.append(" Value capacity: ");
-      builder.append(w.getValueVector().getValueCapacity());
-      if (w.getValueVector() instanceof VariableWidthVector) {
-        builder.append(" Byte capacity: ");
-        builder.append(((VariableWidthVector) w.getValueVector()).getByteCapacity());
-        builder.append("\n");
-      }
-    }
-    logger.debug(builder.toString());
-    */
-
-    if (copiedRecords < remainingRecordCount) {
-      for(VectorWrapper<?> v : container){
-        ValueVector.Mutator m = v.getValueVector().getMutator();
-        m.setValueCount(copiedRecords);
-      }
-      remainderIndex += copiedRecords;
-      this.recordCount = copiedRecords;
-    } else {
-      for(VectorWrapper<?> v : container){
-        ValueVector.Mutator m = v.getValueVector().getMutator();
-        m.setValueCount(remainingRecordCount);
-        this.recordCount = remainingRecordCount;
-      }
-      if (incoming.getSchema().getSelectionVectorMode() != SelectionVectorMode.FOUR_BYTE) {
-        for(VectorWrapper<?> v: incoming) {
-          v.clear();
-        }
-      }
-      remainderIndex = 0;
-      hasRemainder = false;
-    }
-    logger.debug(String.format("handleRemainder(): %s records copied out of %s, remaining: %s, incoming schema %s ",
-        copiedRecords,
-        recordCount,
-        recordCount - remainderIndex,
-        incoming.getSchema()));
+    logger.debug("doWork(): {} records copied out of {}, incoming schema {} ",
+      container.getRecordCount(), container.getRecordCount(), incoming.getSchema());
+    return getFinalOutcome(false);
   }
 
   @Override
@@ -194,7 +106,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     private List<TransferPair> pairs = Lists.newArrayList();
 
     @Override
-    public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing){
+    public void setup(RecordBatch incoming, VectorContainer outgoing){
       for(VectorWrapper<?> vv : incoming){
         TransferPair tp = vv.getValueVector().makeTransferPair(container.addOrGet(vv.getField(), callBack));
         pairs.add(tp);
@@ -207,65 +119,47 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       for(TransferPair tp : pairs){
         tp.transfer();
       }
+
+      container.setRecordCount(incoming.getRecordCount());
       return recordCount;
     }
 
+    @Override
+    public int appendRecord(int index) throws SchemaChangeException {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int appendRecords(int index, int recordCount) throws SchemaChangeException {
+      throw new UnsupportedOperationException();
+    }
   }
 
   private Copier getStraightCopier(){
     StraightCopier copier = new StraightCopier();
-    copier.setupRemover(context, incoming, this);
+    copier.setup(incoming, container);
     return copier;
   }
 
-  private Copier getGenerated2Copier() throws SchemaChangeException{
+  private Copier create2Copier() throws SchemaChangeException {
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
 
     for(VectorWrapper<?> vv : incoming){
-      TransferPair tp = vv.getValueVector().makeTransferPair(container.addOrGet(vv.getField(), callBack));
+      vv.getValueVector().makeTransferPair(container.addOrGet(vv.getField(), callBack));
     }
 
-    try {
-      final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
-      CopyUtil.generateCopies(cg.getRoot(), incoming, false);
-      Copier copier = context.getImplementationClass(cg);
-      copier.setupRemover(context, incoming, this);
-
-      return copier;
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Failure while attempting to load generated class", e);
-    }
+    Copier copier = new GenericSV2Copier();
+    copier.setup(incoming, container);
+    return copier;
   }
 
-  private Copier getGenerated4Copier() throws SchemaChangeException {
+  private Copier create4Copier() throws SchemaChangeException {
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE);
-    return getGenerated4Copier(incoming, context, oContext.getAllocator(), container, this, callBack);
-  }
-
-  public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, BufferAllocator allocator, VectorContainer container, RecordBatch outgoing, SchemaChangeCallBack callBack) throws SchemaChangeException{
-
-    for(VectorWrapper<?> vv : batch){
-      ValueVector v = vv.getValueVectors()[0];
-      v.makeTransferPair(container.addOrGet(v.getField(), callBack));
-    }
-
-    try {
-      final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
-      CopyUtil.generateCopies(cg.getRoot(), batch, true);
-      Copier copier = context.getImplementationClass(cg);
-      copier.setupRemover(context, batch, outgoing);
-
-      return copier;
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Failure while attempting to load generated class", e);
-    }
+    return GenericSV4Copier.createCopier(incoming, container, callBack);
   }
 
   @Override
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
   }
-
-
-
 }

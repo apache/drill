@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,7 +31,8 @@ public class DrillSortRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillSortRule();
 
   private DrillSortRule() {
-    super(RelOptHelper.any(Sort.class, Convention.NONE), "DrillSortRule");
+    super(RelOptHelper.any(Sort.class, Convention.NONE),
+        DrillRelFactories.LOGICAL_BUILDER, "DrillSortRule");
   }
 
   @Override
@@ -48,7 +49,7 @@ public class DrillSortRule extends RelOptRule {
     final RelNode input = sort.getInput();
     final RelTraitSet traits = sort.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
-    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
+    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
     call.transformTo(new DrillSortRel(sort.getCluster(), traits, convertedInput, sort.getCollation()));
   }
 }

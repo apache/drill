@@ -81,6 +81,10 @@ convertCall returns [LogicalExpression e]
       { $e = FunctionCallFactory.createConvert($Convert.text, $String.text, $expression.e, pos($Convert));}
   ;
 
+anyValueCall returns [LogicalExpression e]
+  :  AnyValue OParen exprList? CParen {$e = FunctionCallFactory.createExpression($AnyValue.text, pos($AnyValue), $exprList.listE);  }
+  ;
+
 castCall returns [LogicalExpression e]
 	@init{
   	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
@@ -119,11 +123,12 @@ numType returns [MajorType type]
 	| DECIMAL28SPARSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL28SPARSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
 	| DECIMAL38DENSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL38DENSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
 	| DECIMAL38SPARSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL38SPARSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
+	| VARDECIMAL OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARDECIMAL).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
 	;
 
 charType returns [MajorType type]
-	:  VARCHAR typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARCHAR).setMode(DataMode.REQUIRED).setWidth($typeLen.length.intValue()).build(); }
-	|  VARBINARY typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARBINARY).setMode(DataMode.REQUIRED).setWidth($typeLen.length.intValue()).build();}	
+	:  VARCHAR typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARCHAR).setMode(DataMode.REQUIRED).setPrecision($typeLen.length.intValue()).build(); }
+	|  VARBINARY typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARBINARY).setMode(DataMode.REQUIRED).setPrecision($typeLen.length.intValue()).build();}
 	;
 
 precision returns [Integer value]
@@ -312,9 +317,10 @@ arraySegment returns [PathSegment seg]
 lookup returns [LogicalExpression e]
   :  functionCall {$e = $functionCall.e ;}
   | convertCall {$e = $convertCall.e; }
+  | anyValueCall {$e = $anyValueCall.e; }
   | castCall {$e = $castCall.e; }
   | pathSegment {$e = new SchemaPath($pathSegment.seg, pos($pathSegment.start) ); }
-  | String {$e = new ValueExpressions.QuotedString($String.text, pos($String) ); }
+  | String {$e = new ValueExpressions.QuotedString($String.text, $String.text.length(), pos($String) ); }
   | OParen expression CParen  {$e = $expression.e; }
   | SingleQuote Identifier SingleQuote {$e = new SchemaPath($Identifier.text, pos($Identifier) ); }
   ;

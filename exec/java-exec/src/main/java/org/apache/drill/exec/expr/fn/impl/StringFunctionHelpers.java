@@ -1,5 +1,4 @@
-/*******************************************************************************
-
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,17 +14,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.BoundsChecking;
 import org.joda.time.chrono.ISOChronology;
 
 import com.google.common.base.Charsets;
+
+import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 public class StringFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctionHelpers.class);
@@ -34,7 +35,7 @@ public class StringFunctionHelpers {
   static final long MAX_LONG = -Long.MAX_VALUE / RADIX;
   static final int MAX_INT = -Integer.MAX_VALUE / RADIX;
 
-  public static long varCharToLong(final int start, final int end, DrillBuf buffer){
+  public static long varTypesToLong(final int start, final int end, DrillBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeL(start, end, buffer);
@@ -95,7 +96,7 @@ public class StringFunctionHelpers {
     throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
   }
 
-  public static int varCharToInt(final int start, final int end, DrillBuf buffer){
+  public static int varTypesToInt(final int start, final int end, DrillBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeI(start, end, buffer);
@@ -143,41 +144,28 @@ public class StringFunctionHelpers {
     return result;
   }
 
-  // Assumes Alpha as [A-Za-z0-9]
-  // white space is treated as everything else.
+  /**
+   * Capitalizes first letter in each word.
+   * Any symbol except digits and letters is considered as word delimiter.
+   *
+   * @param start start position in input buffer
+   * @param end end position in input buffer
+   * @param inBuf buffer with input characters
+   * @param outBuf buffer with output characters
+   */
   public static void initCap(int start, int end, DrillBuf inBuf, DrillBuf outBuf) {
-    boolean capNext = true;
+    boolean capitalizeNext = true;
     int out = 0;
     for (int id = start; id < end; id++, out++) {
-      byte currentByte = inBuf.getByte(id);
-
-      // 'A - Z' : 0x41 - 0x5A
-      // 'a - z' : 0x61 - 0x7A
-      // '0-9' : 0x30 - 0x39
-      if (capNext) { // curCh is whitespace or first character of word.
-        if (currentByte >= 0x30 && currentByte <= 0x39) { // 0-9
-          capNext = false;
-        } else if (currentByte >= 0x41 && currentByte <= 0x5A) { // A-Z
-          capNext = false;
-        } else if (currentByte >= 0x61 && currentByte <= 0x7A) { // a-z
-          capNext = false;
-          currentByte -= 0x20; // Uppercase this character
-        }
-        // else {} whitespace
-      } else { // Inside of a word or white space after end of word.
-        if (currentByte >= 0x30 && currentByte <= 0x39) { // 0-9
-          // noop
-        } else if (currentByte >= 0x41 && currentByte <= 0x5A) { // A-Z
-          currentByte -= 0x20; // Lowercase this character
-        } else if (currentByte >= 0x61 && currentByte <= 0x7A) { // a-z
-          // noop
-        } else { // whitespace
-          capNext = true;
-        }
+      int currentByte = inBuf.getByte(id);
+      if (Character.isLetterOrDigit(currentByte)) {
+        currentByte = capitalizeNext ? Character.toUpperCase(currentByte) : Character.toLowerCase(currentByte);
+        capitalizeNext = false;
+      } else {
+        capitalizeNext = true;
       }
-
       outBuf.setByte(out, currentByte);
-    } // end of for_loop
+    }
   }
 
   /**
@@ -191,6 +179,13 @@ public class StringFunctionHelpers {
    * @return              String of the bytes interpreted as UTF-8
    */
   public static String getStringFromVarCharHolder(VarCharHolder varCharHolder) {
+    return toStringFromUTF8(varCharHolder.start, varCharHolder.end, varCharHolder.buffer);
+  }
+
+  /**
+   * Convert a NullableVarCharHolder to a String.
+   */
+  public static String getStringFromVarCharHolder(NullableVarCharHolder varCharHolder) {
     return toStringFromUTF8(varCharHolder.start, varCharHolder.end, varCharHolder.buffer);
   }
 
@@ -210,14 +205,36 @@ public class StringFunctionHelpers {
   private static final ISOChronology CHRONOLOGY = org.joda.time.chrono.ISOChronology.getInstanceUTC();
 
   public static long getDate(DrillBuf buf, int start, int end){
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      buf.checkBytes(start, end);
-    }
-    return memGetDate(buf.memoryAddress(), start, end);
+    rangeCheck(buf, start, end);
+    int[] dateFields = memGetDate(buf.memoryAddress(), start, end);
+    return CHRONOLOGY.getDateTimeMillis(dateFields[0], dateFields[1], dateFields[2], 0);
   }
 
+  /**
+   * Takes a string value, specified as a buffer with a start and end and
+   * returns true if the value can be read as a date.
+   *
+   * @param buf
+   * @param start
+   * @param end
+   * @return true iff the string value can be read as a date
+   */
+  public static boolean isReadableAsDate(DrillBuf buf, int start, int end){
+    // Tried looking for a method that would do this check without relying on
+    // an exception in the failure case (for better performance). Joda does
+    // not appear to provide such a function, so the try/catch block
+    // was chosen for compatibility with the getDate() method that actually
+    // returns the result of parsing.
+    try {
+      getDate(buf, start, end);
+      // the parsing from the line above succeeded, this was a valid date
+      return true;
+    } catch(IllegalArgumentException ex) {
+      return false;
+    }
+  }
 
-  private static long memGetDate(long memoryAddress, int start, int end){
+  private static int[] memGetDate(long memoryAddress, int start, int end){
     long index = memoryAddress + start;
     final long endIndex = memoryAddress + end;
     int digit = 0;
@@ -255,7 +272,6 @@ public class StringFunctionHelpers {
         dateFields[0] += 1900;
       }
     }
-
-    return CHRONOLOGY.getDateTimeMillis(dateFields[0], dateFields[1], dateFields[2], 0);
+    return dateFields;
   }
 }

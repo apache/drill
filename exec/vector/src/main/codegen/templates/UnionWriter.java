@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/UnionWriter.java" />
 
@@ -29,10 +28,11 @@ package org.apache.drill.exec.vector.complex.impl;
 /*
  * This class is generated using freemarker and the ${.template_name} template.
  */
-@SuppressWarnings("unused")
+
 public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
 
-  UnionVector data;
+  // Accessed by UnionReader
+  protected UnionVector data;
   private MapWriter mapWriter;
   private UnionListWriter listWriter;
   private List<BaseWriter> writers = Lists.newArrayList();
@@ -58,7 +58,6 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
       writer.setPosition(index);
     }
   }
-
 
   @Override
   public void start() {
@@ -145,11 +144,9 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
     get${name}Writer().write${name}(<#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
   }
   </#if>
-
   </#list></#list>
 
-  public void writeNull() {
-  }
+  public void writeNull() { }
 
   @Override
   public MapWriter map() {
@@ -184,7 +181,21 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
   <#assign upperName = minor.class?upper_case />
   <#assign capName = minor.class?cap_first />
-  <#if !minor.class?starts_with("Decimal")>
+  <#if minor.class == "VarDecimal">
+  @Override
+  public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
+    data.getMutator().setType(idx(), MinorType.MAP);
+    getMapWriter().setPosition(idx());
+    return getMapWriter().${lowerName}(name, scale, precision);
+  }
+
+  @Override
+  public ${capName}Writer ${lowerName}(int scale, int precision) {
+    data.getMutator().setType(idx(), MinorType.LIST);
+    getListWriter().setPosition(idx());
+    return getListWriter().${lowerName}(scale, precision);
+  }
+  <#else>
   @Override
   public ${capName}Writer ${lowerName}(String name) {
     data.getMutator().setType(idx(), MinorType.MAP);

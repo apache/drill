@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.BitSet;
 
@@ -88,6 +89,68 @@ public class FilterSplitTest {
   }
 
   @Test
+  public void AndOrMix() {
+    // b = 3 OR dir0 = 1 and a = 2
+    RexNode n = or(
+        eq(c(2), lit(3)),
+        and(
+            eq(c(0), lit(1)),
+            eq(c(1), lit(2))
+        )
+    );
+
+    BitSet bs = new BitSet();
+    bs.set(0);
+    FindPartitionConditions c = new FindPartitionConditions(bs, builder);
+    c.analyze(n);
+
+    RexNode partNode = c.getFinalCondition();
+    assertEquals("OR(=($2, 3), AND(=($0, 1), =($1, 2)))", n.toString());
+    assertEquals(null, partNode);
+  }
+
+
+  @Test
+  public void NotOnAnd() {
+    // not (dir0 = 1 AND b = 2)
+    RexNode n = not(
+        and (
+            eq(c(0), lit(1)),
+            eq(c(1), lit(2))
+        )
+    );
+
+    BitSet bs = new BitSet();
+    bs.set(0);
+    FindPartitionConditions c = new FindPartitionConditions(bs, builder);
+    c.analyze(n);
+
+    RexNode partNode = c.getFinalCondition();
+    assertEquals("NOT(AND(=($0, 1), =($1, 2)))", n.toString());
+    assertEquals(null, partNode);
+  }
+
+  @Test
+  public void AndNot() {
+    // (not dir0 = 1) AND b = 2)
+    RexNode n = and(
+        not(
+            eq(c(0), lit(1))
+        ),
+        eq(c(1), lit(2))
+    );
+
+    BitSet bs = new BitSet();
+    bs.set(0);
+    FindPartitionConditions c = new FindPartitionConditions(bs, builder);
+    c.analyze(n);
+
+    RexNode partNode = c.getFinalCondition();
+    assertEquals("AND(NOT(=($0, 1)), =($1, 2))", n.toString());
+    assertEquals("NOT(=($0, 1))", partNode.toString());
+  }
+
+  @Test
   public void badOr() {
     // (dir0 = 1 and dir1 = 2) OR (a < 5)
     RexNode n = or(
@@ -141,6 +204,10 @@ public class FilterSplitTest {
 
   private RexNode or(RexNode...nodes){
     return builder.makeCall(SqlStdOperatorTable.OR, nodes);
+  }
+
+  private RexNode not(RexNode...nodes){
+    return builder.makeCall(SqlStdOperatorTable.NOT, nodes);
   }
 
   private RexNode lt(RexNode left, RexNode right){

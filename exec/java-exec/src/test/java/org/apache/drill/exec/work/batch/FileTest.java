@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,29 +32,29 @@ import org.apache.hadoop.fs.Path;
 import com.google.common.base.Stopwatch;
 
 public class FileTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileTest.class);
+
   public static void main(String[] args) throws IOException {
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "sync:///");
-    System.out.println(FileSystem.getDefaultUri(conf));
+    logger.info(FileSystem.getDefaultUri(conf).toString());
     FileSystem fs = FileSystem.get(conf);
-//    FileSystem fs = new LocalSyncableFileSystem(conf);
     Path path = new Path("/tmp/testFile");
     FSDataOutputStream out = fs.create(path);
     byte[] s = "hello world".getBytes();
     out.write(s);
     out.hsync();
-//    out.close();
     FSDataInputStream in = fs.open(path);
     byte[] bytes = new byte[s.length];
     in.read(bytes);
-    System.out.println(new String(bytes));
+    logger.info(new String(bytes));
     File file = new File("/tmp/testFile");
     FileOutputStream fos = new FileOutputStream(file);
     FileInputStream fis = new FileInputStream(file);
     fos.write(s);
     fos.getFD().sync();
     fis.read(bytes);
-    System.out.println(new String(bytes));
+    logger.info(new String(bytes));
     out = fs.create(new Path("/tmp/file"));
     for (int i = 0; i < 100; i++) {
       bytes = new byte[256*1024];
@@ -62,7 +62,7 @@ public class FileTest {
       out.write(bytes);
       out.hsync();
       long t = watch.elapsed(TimeUnit.MILLISECONDS);
-      System.out.printf("Elapsed: %d. Rate %d.\n", t, (long) ((long) bytes.length * 1000L / t));
+      logger.info(String.format("Elapsed: %d. Rate %d.\n", t, (long) ((long) bytes.length * 1000L / t)));
     }
   }
 }

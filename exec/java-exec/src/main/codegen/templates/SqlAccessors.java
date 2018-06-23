@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import java.lang.Override;
 
 <@pp.dropOutputFile />
@@ -35,6 +34,9 @@ package org.apache.drill.exec.vector.accessor;
 
 <#include "/@includes/vv_imports.ftl" />
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
 public class ${name}Accessor extends AbstractSqlAccessor {
  <#if mode == "Nullable">
@@ -121,6 +123,30 @@ public class ${name}Accessor extends AbstractSqlAccessor {
      </#if>
       byte [] b = ac.get(index);
       return DrillStringUtils.toBinaryString(b);
+    }
+      <#break>
+
+    <#case "VarDecimal">
+
+    @Override
+    public String getString(int index) {
+      <#if mode == "Nullable">
+      if (ac.isNull(index)) {
+        return null;
+      }
+      </#if>
+      BigDecimal bd = getBigDecimal(index);
+      return bd.toString();
+    }
+
+    @Override
+    public BigDecimal getBigDecimal(int index) {
+    <#if mode == "Nullable">
+      if (ac.isNull(index)) {
+        return null;
+      }
+    </#if>
+      return ac.getObject(index);
     }
       <#break>
 
@@ -226,7 +252,7 @@ public class ${name}Accessor extends AbstractSqlAccessor {
     return String.valueOf(ac.getAsStringBuilder(index));
   }
 
-  <#elseif minor.class.startsWith("Decimal")>
+  <#elseif minor.class.contains("Decimal")>
 
   @Override
   public BigDecimal getBigDecimal(int index) {
@@ -261,9 +287,10 @@ public class ${name}Accessor extends AbstractSqlAccessor {
       return null;
     }
    </#if>
-    org.joda.time.DateTime date = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
-    date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-    return new Date(date.getMillis());
+    org.joda.time.LocalDate date = new org.joda.time.LocalDate(ac.get(index), org.joda.time.DateTimeZone.UTC);
+    // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
+    // See more in Javadoc for "LocalDate#toDate()"
+    return new Date(date.toDate().getTime());
   }
 
   <#elseif minor.class == "TimeStamp">
@@ -290,9 +317,10 @@ public class ${name}Accessor extends AbstractSqlAccessor {
       return null;
     }
    </#if>
-    org.joda.time.DateTime date = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
-    date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-    return new Timestamp(date.getMillis());
+    org.joda.time.LocalDateTime dateTime = new org.joda.time.LocalDateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
+    // use "toDate()" to get java.util.Date object with exactly the same fields as this Joda date-time.
+    // See more in Javadoc for "LocalDateTime#toDate()"
+    return new Timestamp(dateTime.toDate().getTime());
   }
 
   <#elseif minor.class == "Time">
@@ -314,9 +342,9 @@ public class ${name}Accessor extends AbstractSqlAccessor {
       return null;
     }
    </#if>
-    org.joda.time.DateTime time = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
-    time = time.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-    return new TimePrintMillis(time.getMillis());
+    org.joda.time.LocalTime time = new org.joda.time.LocalTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
+    // use "toDateTimeToday()"  and "getMillis()" to get the local milliseconds from the Java epoch of 1970-01-01T00:00:00
+    return new TimePrintMillis(time.toDateTimeToday().getMillis());
   }
 
   <#else>
@@ -326,7 +354,6 @@ public class ${name}Accessor extends AbstractSqlAccessor {
     return ac.get(index);
   }
   </#if>
-
 
   <#if minor.class == "Bit" >
   public boolean getBoolean(int index) {
@@ -338,13 +365,8 @@ public class ${name}Accessor extends AbstractSqlAccessor {
    return 1 == ac.get(index);
   }
  </#if>
-
-
  </#if> <#-- not VarLen -->
-
 }
-
-
 </#list>
 </#list>
 </#list>

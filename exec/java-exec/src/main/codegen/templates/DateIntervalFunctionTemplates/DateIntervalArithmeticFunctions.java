@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,8 +41,10 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 public class ${datetype}${intervaltype}Functions {
 
@@ -157,7 +159,10 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 public class ${datetype}${intervaltype}Functions {
 <#macro timeIntervalArithmeticBlock left right temp op output intervaltype>
@@ -171,7 +176,7 @@ public class ${datetype}${intervaltype}Functions {
     <#else>
     ${output} = ${left}.value ${op} ${right}.milliseconds;
     // Wrap around 24 hour clock if we exceeded it while adding the time component
-    ${output} = ${output} % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
+    ${output} = ${output} % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
     </#if>
 </#macro>
 

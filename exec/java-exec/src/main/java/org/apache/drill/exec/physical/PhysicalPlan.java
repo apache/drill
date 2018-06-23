@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Root;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -62,9 +63,7 @@ public class PhysicalPlan {
     }else{
       return list;
     }
-
   }
-
 
   @JsonProperty("head")
   public PlanProperties getProperties() {
@@ -90,4 +89,16 @@ public class PhysicalPlan {
     }
   }
 
+  public double totalCost() {
+    double totalCost = 0;
+    for (final PhysicalOperator ops : getSortedOperators()) {
+      totalCost += ops.getCost();
+    }
+    return totalCost;
+  }
+
+  @JsonIgnore
+  public Graph<PhysicalOperator, Root, Leaf> graph() {
+    return graph;
+  }
 }

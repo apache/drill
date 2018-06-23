@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,6 +45,9 @@ public class Partition {
     return remaining;
   }
 
+  public long getLength() {
+    return length;
+  }
   /**
    * @param length number of rows in this partition
    * @param partial if true, then length is not the full length of the partition but just the number of rows in the

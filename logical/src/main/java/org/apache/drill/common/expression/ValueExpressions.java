@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,15 +18,16 @@
 package org.apache.drill.common.expression;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.common.util.CoreDecimalUtility;
 
 import com.google.common.collect.Iterators;
 
@@ -51,12 +52,16 @@ public class ValueExpressions {
     return new BooleanExpression(Boolean.toString(b), ExpressionPosition.UNKNOWN);
   }
 
-  public static LogicalExpression getChar(String s){
-    return new QuotedString(s, ExpressionPosition.UNKNOWN);
+  public static LogicalExpression getChar(String s, int precision){
+    return new QuotedString(s, precision, ExpressionPosition.UNKNOWN);
   }
 
   public static LogicalExpression getDate(GregorianCalendar date) {
     return new org.apache.drill.common.expression.ValueExpressions.DateExpression(date.getTimeInMillis());
+  }
+
+  public static LogicalExpression getDate(long milliSecond){
+    return new org.apache.drill.common.expression.ValueExpressions.DateExpression(milliSecond);
   }
 
   public static LogicalExpression getTime(GregorianCalendar time) {
@@ -68,9 +73,18 @@ public class ValueExpressions {
       return new TimeExpression(millis);
   }
 
+  public static LogicalExpression getTime(int milliSeconds) {
+    return new TimeExpression(milliSeconds);
+  }
+
   public static LogicalExpression getTimeStamp(GregorianCalendar date) {
     return new org.apache.drill.common.expression.ValueExpressions.TimeStampExpression(date.getTimeInMillis());
   }
+
+  public static LogicalExpression getTimeStamp(long milliSeconds) {
+    return new org.apache.drill.common.expression.ValueExpressions.TimeStampExpression(milliSeconds);
+  }
+
   public static LogicalExpression getIntervalYear(int months) {
     return new IntervalYearExpression(months);
   }
@@ -79,20 +93,8 @@ public class ValueExpressions {
       return new IntervalDayExpression(intervalInMillis);
   }
 
-  public static LogicalExpression getDecimal9(BigDecimal i) {
-    return new Decimal9Expression(i, ExpressionPosition.UNKNOWN);
-  }
-
-  public static LogicalExpression getDecimal18(BigDecimal i) {
-    return new Decimal18Expression(i, ExpressionPosition.UNKNOWN);
-  }
-
-  public static LogicalExpression getDecimal28(BigDecimal i) {
-    return new Decimal28Expression(i, ExpressionPosition.UNKNOWN);
-  }
-
-  public static LogicalExpression getDecimal38(BigDecimal i) {
-      return new Decimal38Expression(i, ExpressionPosition.UNKNOWN);
+  public static LogicalExpression getVarDecimal(BigDecimal input, int precision, int scale) {
+    return new VarDecimalExpression(input, precision, scale, ExpressionPosition.UNKNOWN);
   }
 
   public static LogicalExpression getNumericExpression(String sign, String s, ExpressionPosition ep) {
@@ -122,6 +124,10 @@ public class ValueExpressions {
 
   }
 
+  public static LogicalExpression getParameterExpression(String name, MajorType type) {
+    return new ParameterExpression(name, type, ExpressionPosition.UNKNOWN);
+  }
+
   protected static abstract class ValueExpression<V> extends LogicalExpressionBase {
     public final V value;
 
@@ -140,6 +146,8 @@ public class ValueExpressions {
 
   public static class BooleanExpression extends ValueExpression<Boolean> {
 
+    public static final BooleanExpression TRUE = new BooleanExpression("true", ExpressionPosition.UNKNOWN);
+    public static final BooleanExpression FALSE = new BooleanExpression("false", ExpressionPosition.UNKNOWN);
 
     public BooleanExpression(String value, ExpressionPosition pos) {
       super(value, pos);
@@ -240,7 +248,7 @@ public class ValueExpressions {
       super(pos);
       this.scale = input.scale();
       this.precision = input.precision();
-      this.decimal = CoreDecimalUtility.getDecimal9FromBigDecimal(input, scale, precision);
+      this.decimal = input.setScale(scale, BigDecimal.ROUND_HALF_UP).intValue();
     }
 
 
@@ -282,7 +290,7 @@ public class ValueExpressions {
       super(pos);
       this.scale = input.scale();
       this.precision = input.precision();
-      this.decimal = CoreDecimalUtility.getDecimal18FromBigDecimal(input, scale, precision);
+      this.decimal = input.setScale(scale, BigDecimal.ROUND_HALF_UP).longValue();
     }
 
 
@@ -371,11 +379,49 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
 
+  public static class VarDecimalExpression extends LogicalExpressionBase {
+
+    private final BigDecimal bigDecimal;
+    private final int precision;
+    private final int scale;
+
+    public VarDecimalExpression(BigDecimal input, int precision, int scale, ExpressionPosition pos) {
+      super(pos);
+      this.bigDecimal = input;
+      this.precision = precision;
+      this.scale = scale;
+    }
+
+    public BigDecimal getBigDecimal() {
+      return bigDecimal;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return MajorType
+          .newBuilder()
+          .setMinorType(MinorType.VARDECIMAL)
+          .setScale(scale)
+          .setPrecision(precision)
+          .setMode(DataMode.REQUIRED)
+          .build();
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitVarDecimalConstant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Collections.emptyIterator();
+    }
+  }
 
   public static class DoubleExpression extends LogicalExpressionBase {
     private double d;
@@ -635,10 +681,13 @@ public class ValueExpressions {
 
   public static class QuotedString extends ValueExpression<String> {
 
-    private static final MajorType QUOTED_STRING_CONSTANT = Types.required(MinorType.VARCHAR);
+    public static final QuotedString EMPTY_STRING = new QuotedString("", 0, ExpressionPosition.UNKNOWN);
 
-    public QuotedString(String value, ExpressionPosition pos) {
+    private final int precision;
+
+    public QuotedString(String value, int precision, ExpressionPosition pos) {
       super(value, pos);
+      this.precision = precision;
     }
 
     public String getString() {
@@ -652,12 +701,46 @@ public class ValueExpressions {
 
     @Override
     public MajorType getMajorType() {
-      return QUOTED_STRING_CONSTANT;
+      return Types.withPrecision(MinorType.VARCHAR, DataMode.REQUIRED, precision);
     }
 
     @Override
     public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
       return visitor.visitQuotedStringConstant(this, value);
+    }
+  }
+
+  /**
+   * Is used to identify method parameter based on given name and type.
+   */
+  public static class ParameterExpression extends LogicalExpressionBase {
+
+    private final String name;
+    private final MajorType type;
+
+    protected ParameterExpression(String name, MajorType type, ExpressionPosition pos) {
+      super(pos);
+      this.name = name;
+      this.type = type;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return type;
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitParameter(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return ImmutableList.<LogicalExpression>of().iterator();
     }
   }
 

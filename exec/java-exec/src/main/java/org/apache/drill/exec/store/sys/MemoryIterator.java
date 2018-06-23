@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,15 +25,15 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 public class MemoryIterator implements Iterator<Object> {
 
   private boolean beforeFirst = true;
-  private final FragmentContext context;
+  private final ExecutorFragmentContext context;
 
-  public MemoryIterator(final FragmentContext context) {
+  public MemoryIterator(final ExecutorFragmentContext context) {
     this.context = context;
   }
 
@@ -50,7 +50,7 @@ public class MemoryIterator implements Iterator<Object> {
     beforeFirst = false;
     final MemoryInfo memoryInfo = new MemoryInfo();
 
-    final DrillbitEndpoint endpoint = context.getIdentity();
+    final DrillbitEndpoint endpoint = context.getEndpoint();
     memoryInfo.hostname = endpoint.getAddress();
     memoryInfo.user_port = endpoint.getUserPort();
 
@@ -61,8 +61,8 @@ public class MemoryIterator implements Iterator<Object> {
     BufferPoolMXBean directBean = getDirectBean();
     memoryInfo.jvm_direct_current = directBean.getMemoryUsed();
 
-
-    memoryInfo.direct_current = context.getDrillbitContext().getAllocator().getAllocatedMemory();
+    // We need the memory used by the root allocator for the Drillbit
+    memoryInfo.direct_current = context.getRootAllocator().getAllocatedMemory();
     memoryInfo.direct_max = DrillConfig.getMaxDirectMemory();
     return memoryInfo;
   }

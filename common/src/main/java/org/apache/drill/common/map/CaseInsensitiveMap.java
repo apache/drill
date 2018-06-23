@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,6 +52,18 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
    */
   public static <VALUE> CaseInsensitiveMap<VALUE> newHashMap() {
     return new CaseInsensitiveMap<>(Maps.<String, VALUE>newHashMap());
+  }
+
+  /**
+   * Returns a new instance of {@link java.util.HashMap}, with key case-insensitivity, of expected size.
+   * See {@link java.util.HashMap}.
+   *
+   * @param expectedSize expected size
+   * @param <VALUE> type of values to be stored in the map
+   * @return key case-insensitive hash map
+   */
+  public static <VALUE> CaseInsensitiveMap<VALUE> newHashMapWithExpectedSize(final int expectedSize) {
+    return new CaseInsensitiveMap<>(Maps.<String, VALUE>newHashMapWithExpectedSize(expectedSize));
   }
 
   /**

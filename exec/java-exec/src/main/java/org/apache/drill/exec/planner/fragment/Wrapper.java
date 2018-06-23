@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -184,15 +184,15 @@ public class Wrapper {
 
   /**
    * Is the endpoints assignment done for this fragment?
-   * @return
+   * @return True if the endpoints assignment done for this fragment. False otherwise.
    */
   public boolean isEndpointsAssignmentDone() {
     return endpointsAssigned;
   }
 
   /**
-   * Get the list of fragements this particular fragment depends for determining its
-   * @return
+   * Get the list of fragements this particular fragment depends on.
+   * @return The list of fragements this particular fragment depends on.
    */
   public List<Wrapper> getFragmentDependencies() {
     return ImmutableList.copyOf(fragmentDependencies);

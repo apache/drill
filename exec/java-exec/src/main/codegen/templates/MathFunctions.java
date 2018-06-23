@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,6 +45,9 @@ import org.apache.drill.exec.expr.fn.impl.StringFunctions;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
 
 public class GMathFunctions{
@@ -56,11 +59,19 @@ public class GMathFunctions{
 
   <#list func.types as type>
 
+  <#if func.funcName=="negative">
+  @FunctionTemplate(names = {"negative", "u-", "-"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  <#else>
   @FunctionTemplate(name = "${func.funcName}", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  </#if>
   public static class ${func.className}${type.input} implements DrillSimpleFunc {
 
     @Param ${type.input}Holder in;
+  <#if func.funcName == 'sqrt'>
+    @Output Float8Holder out;
+  <#else>
     @Output ${type.outputType}Holder out;
+  </#if>
 
     public void setup() {
     }
@@ -69,12 +80,16 @@ public class GMathFunctions{
 
       <#if func.funcName=='trunc'>
       <#if type.roundingRequired ??>
-      java.math.BigDecimal bd = java.math.BigDecimal.valueOf(in.value).setScale(0, java.math.BigDecimal.ROUND_DOWN);
-      out.value = <#if type.extraCast ??>(${type.extraCast})</#if>bd.${type.castType}Value();
+      if (Double.isInfinite(in.value) || Double.isNaN(in.value)){
+        out.value = <#if type.input='Float8'> Double.NaN <#else> Float.NaN </#if>;
+      } else {
+        java.math.BigDecimal bd = java.math.BigDecimal.valueOf(in.value).setScale(0, java.math.BigDecimal.ROUND_DOWN);
+        out.value = <#if type.extraCast ??>(${type.extraCast})</#if>bd.${type.castType}Value();
+      }
       <#else>
-      out.value = (${type.castType}) (in.value);</#if>
+      out.value = <#if func.funcName!='sqrt'>(${type.castType})</#if> (in.value);</#if>
       <#else>
-      out.value = (${type.castType}) ${func.javaFunc}(in.value);
+      out.value =  <#if func.funcName!='sqrt'>(${type.castType})</#if> ${func.javaFunc}(in.value);
       </#if>
     }
   }
@@ -132,8 +147,18 @@ public class GMathFunctions{
     }
 
     public void eval() {
+
+    <#if func.funcName=='trunc' && (type.dataType=='Float4' || type.dataType=='Float8')>
+      if (Double.isInfinite(input1.value) || Double.isNaN(input1.value)){
+        out.value = Double.NaN;
+      } else {
+        java.math.BigDecimal temp = new java.math.BigDecimal(input1.value);
+        out.value = temp.setScale(input2.value, java.math.RoundingMode.${func.mode}).doubleValue();
+      }
+      <#else>
       java.math.BigDecimal temp = new java.math.BigDecimal(input1.value);
       out.value = temp.setScale(input2.value, java.math.RoundingMode.${func.mode}).doubleValue();
+    </#if>
     }
   }
   </#list>
@@ -202,12 +227,7 @@ public static class ${func.className}${type.input} implements DrillSimpleFunc {
   }
 
   public void eval() {
-	  <#if type.input?matches("^Decimal[1-9]*")>
-	  double dblval = new java.math.BigDecimal(in.value).setScale(in.scale).doubleValue();
-	  out.value = ${func.javaFunc}(dblval);
-	  <#else>
 	  out.value = ${func.javaFunc}(in.value);
-	  </#if>
   }
 }
 
@@ -232,12 +252,7 @@ public static class ${func.className}${type.input} implements DrillSimpleFunc {
   }
 
   public void eval() {
-	  <#if type.input?matches("^Decimal[1-9]*")>
-	  double dblval = new java.math.BigDecimal(val.value).setScale(val.scale).doubleValue();
-	  out.value = ${func.javaFunc}(dblval)/ ${func.javaFunc}(base.value);
-	  <#else>
 	  out.value = ${func.javaFunc}(val.value)/ ${func.javaFunc}(base.value);
-	  </#if>
   }
 }
 </#list>

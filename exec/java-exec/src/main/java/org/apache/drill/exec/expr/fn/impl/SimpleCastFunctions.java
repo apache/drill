@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,10 +30,8 @@ import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
-public class SimpleCastFunctions {
-  public static final byte[] TRUE = {'t','r','u','e'};
-  public static final byte[] FALSE = {'f','a','l','s','e'};
 
+public class SimpleCastFunctions {
 
   @FunctionTemplate(names = {"castBIT", "castBOOLEAN"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
   public static class CastVarCharBoolean implements DrillSimpleFunc {
@@ -48,18 +46,16 @@ public class SimpleCastFunctions {
     public void eval() {
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-      String input = new String(buf, com.google.common.base.Charsets.UTF_8).toLowerCase();
-      if ("true".equals(input)) {
-        out.value = 1;
-      } else if ("false".equals(input)) {
-        out.value = 0;
-      } else {
-        throw new IllegalArgumentException("Invalid value for boolean: " + input);
-      }
+      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
+      out.value = org.apache.drill.exec.expr.BooleanType.get(input).getNumericValue();
     }
   }
 
-  @FunctionTemplate(name = "castVARCHAR", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "castVARCHAR",
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.STRING_CAST,
+      nulls = NullHandling.NULL_IF_NULL,
+      outputWidthCalculatorType = FunctionTemplate.OutputWidthCalculatorType.CUSTOM_CLONE_DEFAULT)
   public static class CastBooleanVarChar implements DrillSimpleFunc {
 
     @Param BitHolder in;
@@ -70,12 +66,11 @@ public class SimpleCastFunctions {
     public void setup() {}
 
     public void eval() {
-      byte[] outB = in.value == 1 ? org.apache.drill.exec.expr.fn.impl.SimpleCastFunctions.TRUE : org.apache.drill.exec.expr.fn.impl.SimpleCastFunctions.FALSE;
+      byte[] outB = org.apache.drill.exec.expr.BooleanType.get(String.valueOf(in.value)).name().toLowerCase().getBytes();
       buffer.setBytes(0, outB);
       out.buffer = buffer;
       out.start = 0;
       out.end = Math.min((int)len.value, outB.length); // truncate if target type has length smaller than that of input's string
     }
   }
-
 }

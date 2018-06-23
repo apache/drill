@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/reader/BaseReader.java" />
 
@@ -27,7 +26,9 @@ package org.apache.drill.exec.vector.complex.reader;
 <#include "/@includes/vv_imports.ftl" />
 
 
-
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
 public interface BaseReader extends Positionable{
   MajorType getType();

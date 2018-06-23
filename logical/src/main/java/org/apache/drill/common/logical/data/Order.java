@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,34 +20,35 @@ package org.apache.drill.common.logical.data;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.calcite.rel.RelFieldCollation.Direction;
+import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-import org.apache.calcite.rel.RelFieldCollation;
-import org.apache.calcite.rel.RelFieldCollation.Direction;
-import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 @JsonTypeName("order")
 public class Order extends SingleInputOperator {
 
-  private final Ordering[] orderings;
+  private final List<Ordering> orderings;
   private final FieldReference within;
 
   @JsonCreator
-  public Order(@JsonProperty("within") FieldReference within, @JsonProperty("orderings") Ordering... orderings) {
+  public Order(@JsonProperty("within") FieldReference within, @JsonProperty("orderings") List<Ordering> orderings) {
     this.orderings = orderings;
     this.within = within;
   }
 
-  public Ordering[] getOrderings() {
+  public List<Ordering> getOrderings() {
     return orderings;
   }
 
@@ -55,15 +56,15 @@ public class Order extends SingleInputOperator {
     return within;
   }
 
-    @Override
-    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-        return logicalVisitor.visitOrder(this, value);
-    }
+  @Override
+  public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+      return logicalVisitor.visitOrder(this, value);
+  }
 
-    @Override
-    public Iterator<LogicalOperator> iterator() {
-        return Iterators.singletonIterator(getInput());
-    }
+  @Override
+  public Iterator<LogicalOperator> iterator() {
+      return Iterators.singletonIterator(getInput());
+  }
 
 
   /**
@@ -71,11 +72,33 @@ public class Order extends SingleInputOperator {
    */
   public static class Ordering {
 
+    public static final String ORDER_ASC = "ASC";
+    public static final String ORDER_DESC = "DESC";
+    public static final String ORDER_ASCENDING = "ASCENDING";
+    public static final String ORDER_DESCENDING = "DESCENDING";
+
+    public static final String NULLS_FIRST = "FIRST";
+    public static final String NULLS_LAST = "LAST";
+    public static final String NULLS_UNSPECIFIED = "UNSPECIFIED";
+
     private final LogicalExpression expr;
     /** Net &lt;ordering specification>. */
     private final Direction direction;
     /** Net &lt;null ordering> */
     private final NullDirection nullOrdering;
+    /** The values in the plans for ordering specification are ASC, DESC, not the
+     * full words featured in the Calcite {@link Direction} Enum, need to map between them. */
+    private static ImmutableMap<String, Direction> DRILL_TO_CALCITE_DIR_MAPPING =
+        ImmutableMap.<String, Direction>builder()
+        .put(ORDER_ASC, Direction.ASCENDING)
+        .put(ORDER_DESC, Direction.DESCENDING)
+        .put(ORDER_ASCENDING, Direction.ASCENDING)
+        .put(ORDER_DESCENDING, Direction.DESCENDING).build();
+    private static ImmutableMap<String, NullDirection> DRILL_TO_CALCITE_NULL_DIR_MAPPING =
+        ImmutableMap.<String, NullDirection>builder()
+            .put(NULLS_FIRST, NullDirection.FIRST)
+            .put(NULLS_LAST, NullDirection.LAST)
+            .put(NULLS_UNSPECIFIED, NullDirection.UNSPECIFIED).build();
 
     /**
      * Constructs a sort specification.
@@ -91,17 +114,17 @@ public class Order extends SingleInputOperator {
      *             (omitted / {@link NullDirection#UNSPECIFIED}, interpreted later)
      */
     @JsonCreator
-    public Ordering( @JsonProperty("expr") LogicalExpression expr,
-                     @JsonProperty("order") String strOrderingSpec,
+    public Ordering( @JsonProperty("order") String strOrderingSpec,
+                     @JsonProperty("expr") LogicalExpression expr,
                      @JsonProperty("nullDirection") String strNullOrdering ) {
       this.expr = expr;
-      this.direction = getOrderingSpecFromString( strOrderingSpec );
-      this.nullOrdering = getNullOrderingFromString( strNullOrdering );
+      this.direction = getOrderingSpecFromString(strOrderingSpec);
+      this.nullOrdering = getNullOrderingFromString(strNullOrdering);
     }
 
     public Ordering(Direction direction, LogicalExpression e, NullDirection nullOrdering) {
       this.expr = e;
-      this.direction = direction;
+      this.direction = filterDrillSupportedDirections(direction);
       this.nullOrdering = nullOrdering;
     }
 
@@ -109,42 +132,87 @@ public class Order extends SingleInputOperator {
       this(direction, e, NullDirection.FIRST);
     }
 
-    private static Direction getOrderingSpecFromString( String strDirection ) {
-      final Direction direction;
-      if ( null == strDirection
-          || Direction.ASCENDING.shortString.equals( strDirection ) ) {
-        direction = Direction.ASCENDING;
+    @VisibleForTesting
+    public static Direction getOrderingSpecFromString(String strDirection) {
+      Direction dir = null;
+      if (strDirection != null) {
+        dir = DRILL_TO_CALCITE_DIR_MAPPING.get(strDirection.toUpperCase());
       }
-      else if ( Direction.DESCENDING.shortString.equals( strDirection ) ) {
-        direction = Direction.DESCENDING;
+      if (dir != null || strDirection == null) {
+        return filterDrillSupportedDirections(dir);
+      } else {
+        throw new DrillRuntimeException(
+            "Unknown <ordering specification> string (not \"ASC\", \"DESC\", "
+                + "or null): \"" + strDirection + "\"" );
+      }
+    }
+
+    @VisibleForTesting
+    public static NullDirection getNullOrderingFromString( String strNullOrdering ) {
+      NullDirection nullDir = null;
+      if (strNullOrdering != null) {
+        nullDir = DRILL_TO_CALCITE_NULL_DIR_MAPPING.get(strNullOrdering.toUpperCase());
+      }
+      if (nullDir != null || strNullOrdering == null) {
+        return filterDrillSupportedNullDirections(nullDir);
+      } else {
+        throw new DrillRuntimeException(
+            "Internal error:  Unknown <null ordering> string (not "
+                + "\"" + NULLS_FIRST + "\", "
+                + "\"" + NULLS_LAST + "\", or "
+                + "\"" + NULLS_UNSPECIFIED + "\" or null): "
+                + "\"" + strNullOrdering + "\"" );
+      }
+    }
+
+    /**
+     * Disallows unsupported values for ordering direction (provided by Calcite but not implemented by Drill)
+     *
+     * Provides a default value of ASCENDING in the case of a null.
+     *
+     * @param direction
+     * @return - a sanitized direction value
+     */
+    private static Direction filterDrillSupportedDirections(Direction direction) {
+      if (direction == null || direction == Direction.ASCENDING) {
+        return Direction.ASCENDING;
+      }
+      else if (Direction.DESCENDING.equals( direction) ) {
+        return direction;
       }
       else {
         throw new DrillRuntimeException(
             "Unknown <ordering specification> string (not \"ASC\", \"DESC\", "
-            + "or null): \"" + strDirection + "\"" );
+            + "or null): \"" + direction + "\"" );
       }
-      return direction;
     }
 
-    private static NullDirection getNullOrderingFromString( String strNullOrdering ) {
-      final RelFieldCollation.NullDirection nullOrdering;
-      if ( null == strNullOrdering ) {
-        nullOrdering = NullDirection.UNSPECIFIED;
+    /**
+     * Disallows unsupported values for null ordering (provided by Calcite but not implemented by Drill),
+     * currently all values are supported.
+     *
+     * Provides a default value of UNSPECIFIED in the case of a null.
+     *
+     * @param nullDirection
+     * @return - a sanitized direction value
+     */
+    private static NullDirection filterDrillSupportedNullDirections(NullDirection nullDirection) {
+      if ( null == nullDirection) {
+        return NullDirection.UNSPECIFIED;
       }
-      else {
-        try {
-          nullOrdering = NullDirection.valueOf( strNullOrdering );
-        }
-        catch ( IllegalArgumentException e ) {
+      switch (nullDirection) {
+        case LAST:
+        case FIRST:
+        case UNSPECIFIED:
+          return nullDirection;
+        default:
           throw new DrillRuntimeException(
               "Internal error:  Unknown <null ordering> string (not "
-              + "\"" + NullDirection.FIRST.name() + "\", "
-              + "\"" + NullDirection.LAST.name() + "\", or "
-              + "\"" + NullDirection.UNSPECIFIED.name() + "\" or null): "
-              + "\"" + strNullOrdering + "\"" );
-        }
+                  + "\"" + NullDirection.FIRST.name() + "\", "
+                  + "\"" + NullDirection.LAST.name() + "\", or "
+                  + "\"" + NullDirection.UNSPECIFIED.name() + "\" or null): "
+                  + "\"" + nullDirection + "\"" );
       }
-      return nullOrdering;
    }
 
     @Override
@@ -244,7 +312,7 @@ public class Order extends SingleInputOperator {
 
     @Override
     public Order internalBuild() {
-      return new Order(within, orderings.toArray(new Ordering[orderings.size()]));
+      return new Order(within, orderings);
     }
 
 

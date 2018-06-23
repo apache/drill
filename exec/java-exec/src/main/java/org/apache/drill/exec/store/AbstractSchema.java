@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,7 +28,9 @@ import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.SchemaVersion;
 import org.apache.calcite.schema.Table;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
@@ -115,15 +117,30 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   /**
+   * Creates table entry using table name, list of partition columns
+   * and storage strategy used to create table folder and files
    *
    * @param tableName : new table name.
    * @param partitionColumns : list of partition columns. Empty list if there is no partition columns.
-   * @return
+   * @param storageStrategy : storage strategy used to create table folder and files
+   * @return create table entry
    */
-  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
+  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy storageStrategy) {
     throw UserException.unsupportedError()
         .message("Creating new tables is not supported in schema [%s]", getSchemaPath())
         .build(logger);
+  }
+
+  /**
+   * Creates table entry using table name and list of partition columns if any.
+   * Table folder and files will be created using persistent storage strategy.
+   *
+   * @param tableName : new table name.
+   * @param partitionColumns : list of partition columns. Empty list if there is no partition columns.
+   * @return create table entry
+   */
+  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
+    return createNewTable(tableName, partitionColumns, StorageStrategy.DEFAULT);
   }
 
   /**
@@ -180,13 +197,13 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   @Override
-  public boolean contentsHaveChangedSince(long lastCheck, long now) {
-    return true;
+  public void close() throws Exception {
+    // no-op: default implementation for most implementations.
   }
 
   @Override
-  public void close() throws Exception {
-    // no-op: default implementation for most implementations.
+  public Schema snapshot(SchemaVersion version) {
+    return this;
   }
 
   public void dropTable(String tableName) {
@@ -194,4 +211,56 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
         .message("Dropping tables is not supported in schema [%s]", getSchemaPath())
         .build(logger);
   }
+
+  /**
+   * Get the collection of {@link Table} tables specified in the tableNames with bulk-load (if the underlying storage
+   * plugin supports).
+   * It is not guaranteed that the retrieved tables would have RowType and Statistic being fully populated.
+   *
+   * Specifically, calling {@link Table#getRowType(RelDataTypeFactory)} or {@link Table#getStatistic()} might incur
+   * {@link UnsupportedOperationException} being thrown.
+   *
+   * @param  tableNames the requested tables, specified by the table names
+   * @return the collection of requested tables
+   */
+  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames, int bulkSize) {
+    return getTablesByNames(tableNames);
+  }
+
+  /**
+   * Get the collection of {@link Table} tables specified in the tableNames.
+   *
+   * @param  tableNames the requested tables, specified by the table names
+   * @return the collection of requested tables
+   */
+  public List<Pair<String, ? extends Table>> getTablesByNames(final List<String> tableNames) {
+    final List<Pair<String, ? extends Table>> tables = Lists.newArrayList();
+    for (String tableName : tableNames) {
+      final Table table = getTable(tableName);
+      if (table == null) {
+        // Schema may return NULL for table if the query user doesn't have permissions to load the table. Ignore such
+        // tables as INFO SCHEMA is about showing tables which the use has access to query.
+        continue;
+      }
+      tables.add(Pair.of(tableName, table));
+    }
+    return tables;
+  }
+
+  public List<Pair<String, Schema.TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
+    final List<String> tableNames = Lists.newArrayList(getTableNames());
+    final List<Pair<String, Schema.TableType>> tableNamesAndTypes = Lists.newArrayList();
+    final List<Pair<String, ? extends Table>> tables;
+    if (bulkLoad) {
+      tables = getTablesByNamesByBulkLoad(tableNames, bulkSize);
+    } else {
+      tables = getTablesByNames(tableNames);
+    }
+    for (Pair<String, ? extends Table> table : tables) {
+      tableNamesAndTypes.add(Pair.of(table.getKey(), table.getValue().getJdbcTableType()));
+    }
+
+    return tableNamesAndTypes;
+  }
+
 }

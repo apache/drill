@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,15 +17,15 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import java.io.IOException;
+import java.io.File;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -40,17 +40,19 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.Executor;
 
-import net.hydromatic.avatica.AvaticaConnection;
-import net.hydromatic.avatica.AvaticaFactory;
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.Helper;
-import net.hydromatic.avatica.Meta;
-import net.hydromatic.avatica.UnregisteredDriver;
-
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.AvaticaFactory;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.Meta.ExecuteResult;
+import org.apache.calcite.avatica.Meta.MetaResultSet;
+import org.apache.calcite.avatica.NoSuchStatementException;
+import org.apache.calcite.avatica.QueryState;
+import org.apache.calcite.avatica.UnregisteredDriver;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.client.InvalidConnectionInfoException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
@@ -58,13 +60,24 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillConnection;
 import org.apache.drill.jdbc.DrillConnectionConfig;
 import org.apache.drill.jdbc.InvalidParameterSqlException;
 import org.apache.drill.jdbc.JdbcApiSqlException;
 import org.slf4j.Logger;
+
+import com.google.common.base.Throwables;
+
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DEFAULT_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.UNIT_TEST_DFS_DEFAULT_PROP;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.UNIT_TEST_DFS_ROOT_PROP;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.UNIT_TEST_DFS_TMP_PROP;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.UNIT_TEST_PROP_PREFIX;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.updateSchemaLocation;
 
 /**
  * Drill's implementation of {@link Connection}.
@@ -91,75 +104,105 @@ class DrillConnectionImpl extends AvaticaConnection
     super(driver, factory, url, info);
 
     // Initialize transaction-related settings per Drill behavior.
-    super.setTransactionIsolation( TRANSACTION_NONE );
-    super.setAutoCommit( true );
+    super.setTransactionIsolation(TRANSACTION_NONE);
+    super.setAutoCommit(true);
+    super.setReadOnly(false);
 
     this.config = new DrillConnectionConfig(info);
+    try{
+      try {
+        String connect = null;
 
-    try {
-      if (config.isLocal()) {
-        try {
-          Class.forName("org.eclipse.jetty.server.Handler");
-        } catch (final ClassNotFoundException e) {
-          throw new SQLNonTransientConnectionException(
-              "Running Drill in embedded mode using Drill's jdbc-all JDBC"
-              + " driver Jar file alone is not supported.",  e);
-        }
-
-        final DrillConfig dConfig = DrillConfig.create(info);
-        this.allocator = RootAllocatorFactory.newRoot(dConfig);
-        RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
-        if (set == null) {
-          // We're embedded; start a local drill bit.
-          serviceSet = RemoteServiceSet.getLocalServiceSet();
-          set = serviceSet;
+        if (config.isLocal()) {
           try {
-            bit = new Drillbit(dConfig, serviceSet);
-            bit.run();
-          } catch (final UserException e) {
-            throw new SQLException(
-                "Failure in starting embedded Drillbit: " + e.getMessage(),
-                e);
-          } catch (Exception e) {
-            // (Include cause exception's text in wrapping exception's text so
-            // it's more likely to get to user (e.g., via SQLLine), and use
-            // toString() since getMessage() text doesn't always mention error:)
-            throw new SQLException("Failure in starting embedded Drillbit: " + e, e);
+            Class.forName("org.eclipse.jetty.server.Handler");
+          } catch (final ClassNotFoundException e) {
+            throw new SQLNonTransientConnectionException(
+                "Running Drill in embedded mode using Drill's jdbc-all JDBC"
+                + " driver Jar file alone is not supported.",  e);
           }
+
+          final DrillConfig dConfig = DrillConfig.create(info);
+          this.allocator = RootAllocatorFactory.newRoot(dConfig);
+          RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
+          if (set == null) {
+            // We're embedded; start a local drill bit.
+            serviceSet = RemoteServiceSet.getLocalServiceSet();
+            set = serviceSet;
+            try {
+              bit = new Drillbit(dConfig, serviceSet);
+              bit.run();
+            } catch (final UserException e) {
+              throw new SQLException(
+                  "Failure in starting embedded Drillbit: " + e.getMessage(),
+                  e);
+            } catch (Exception e) {
+              // (Include cause exception's text in wrapping exception's text so
+              // it's more likely to get to user (e.g., via SQLLine), and use
+              // toString() since getMessage() text doesn't always mention error:)
+              throw new SQLException("Failure in starting embedded Drillbit: " + e, e);
+            }
+          } else {
+            serviceSet = null;
+            bit = null;
+          }
+
+          makeTmpSchemaLocationsUnique(bit.getContext().getStorage(), info);
+
+          this.client = new DrillClient(dConfig, set.getCoordinator());
+        } else if(config.isDirect()) {
+          final DrillConfig dConfig = DrillConfig.forClient();
+          this.allocator = RootAllocatorFactory.newRoot(dConfig);
+          this.client = new DrillClient(dConfig, true); // Get a direct connection
+          connect = config.getZookeeperConnectionString();
         } else {
-          serviceSet = null;
-          bit = null;
+          final DrillConfig dConfig = DrillConfig.forClient();
+          this.allocator = RootAllocatorFactory.newRoot(dConfig);
+          // TODO:  Check:  Why does new DrillClient() create another DrillConfig,
+          // with enableServerConfigs true, and cause scanning for function
+          // implementations (needed by a server, but not by a client-only
+          // process, right?)?  Probably pass dConfig to construction.
+          this.client = new DrillClient();
+          connect = config.getZookeeperConnectionString();
         }
-
-        makeTmpSchemaLocationsUnique(bit.getContext().getStorage(), info);
-
-        this.client = new DrillClient(dConfig, set.getCoordinator());
-        this.client.connect(null, info);
-      } else if(config.isDirect()) {
-        final DrillConfig dConfig = DrillConfig.forClient();
-        this.allocator = RootAllocatorFactory.newRoot(dConfig);
-        this.client = new DrillClient(dConfig, true); // Get a direct connection
-        this.client.connect(config.getZookeeperConnectionString(), info);
-      } else {
-        final DrillConfig dConfig = DrillConfig.forClient();
-        this.allocator = RootAllocatorFactory.newRoot(dConfig);
-        // TODO:  Check:  Why does new DrillClient() create another DrillConfig,
-        // with enableServerConfigs true, and cause scanning for function
-        // implementations (needed by a server, but not by a client-only
-        // process, right?)?  Probably pass dConfig to construction.
-        this.client = new DrillClient();
-        this.client.connect(config.getZookeeperConnectionString(), info);
+        this.client.setClientName("Apache Drill JDBC Driver");
+        this.client.connect(connect, info);
+      } catch (OutOfMemoryException e) {
+        throw new SQLNonTransientConnectionException("Failure creating root allocator", e);
+      } catch (InvalidConnectionInfoException e) {
+        throw new SQLNonTransientConnectionException("Invalid parameter in connection string: " + e.getMessage(), e);
+      } catch (RpcException e) {
+        // (Include cause exception's text in wrapping exception's text so
+        // it's more likely to get to user (e.g., via SQLLine), and use
+        // toString() since getMessage() text doesn't always mention error:)
+        throw new SQLNonTransientConnectionException("Failure in connecting to Drill: " + e, e);
+      } catch(SQLException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new SQLException("Failure in creating DrillConnectionImpl: " + e, e);
       }
-    } catch (OutOfMemoryException e) {
-      throw new SQLException("Failure creating root allocator", e);
-    } catch (RpcException e) {
-      // (Include cause exception's text in wrapping exception's text so
-      // it's more likely to get to user (e.g., via SQLLine), and use
-      // toString() since getMessage() text doesn't always mention error:)
-      throw new SQLException("Failure in connecting to Drill: " + e, e);
+    } catch (Throwable t) {
+      cleanup();
+      throw t;
     }
   }
 
+
+  @Override
+  protected ResultSet createResultSet(MetaResultSet metaResultSet, QueryState state) throws SQLException {
+    return super.createResultSet(metaResultSet, state);
+  }
+
+  @Override
+  protected ExecuteResult prepareAndExecuteInternal(AvaticaStatement statement, String sql, long maxRowCount)
+      throws SQLException, NoSuchStatementException {
+    try {
+      return super.prepareAndExecuteInternal(statement, sql, maxRowCount);
+    } catch (RuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
+  }
   /**
    * Throws AlreadyClosedSqlException <i>iff</i> this Connection is closed.
    *
@@ -174,15 +217,6 @@ class DrillConnectionImpl extends AvaticaConnection
   @Override
   public DrillConnectionConfig getConfig() {
     return config;
-  }
-
-  @Override
-  protected Meta createMeta() {
-    return new MetaImpl(this);
-  }
-
-  MetaImpl meta() {
-    return (MetaImpl) meta;
   }
 
   BufferAllocator getAllocator() {
@@ -361,18 +395,12 @@ class DrillConnectionImpl extends AvaticaConnection
                                             int resultSetConcurrency,
                                             int resultSetHoldability) throws SQLException {
     throwIfClosed();
-    try {
-      DrillPrepareResult prepareResult = new DrillPrepareResult(sql);
-      DrillPreparedStatementImpl statement =
-          (DrillPreparedStatementImpl) factory.newPreparedStatement(
-              this, prepareResult, resultSetType, resultSetConcurrency,
-              resultSetHoldability);
-      return statement;
-    } catch (RuntimeException e) {
-      throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
-    } catch (Exception e) {
-      throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
-    }
+    DrillPreparedStatementImpl statement =
+        (DrillPreparedStatementImpl) super.prepareStatement(sql,
+                                                            resultSetType,
+                                                            resultSetConcurrency,
+                                                            resultSetHoldability);
+    return statement;
   }
 
   @Override
@@ -808,16 +836,36 @@ class DrillConnectionImpl extends AvaticaConnection
   /**
    * Test only code to make JDBC tests run concurrently. If the property <i>drillJDBCUnitTests</i> is set to
    * <i>true</i> in connection properties:
-   *   - Update dfs_test.tmp workspace location with a temp directory. This temp is for exclusive use for test jvm.
+   *   - Update dfs.tmp workspace location with a temp directory. This temp is for exclusive use for test jvm.
    *   - Update dfs.tmp workspace to immutable, so that test writer don't try to create views in dfs.tmp
    * @param pluginRegistry
    */
   private static void makeTmpSchemaLocationsUnique(StoragePluginRegistry pluginRegistry, Properties props) {
     try {
-      if (props != null && "true".equalsIgnoreCase(props.getProperty("drillJDBCUnitTests"))) {
-        final String tmpDirPath = TestUtilities.createTempDir();
-        TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, tmpDirPath);
-        TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
+      if (props != null && "true".equalsIgnoreCase(props.getProperty(UNIT_TEST_PROP_PREFIX))) {
+        final String logMessage = "The {} property was not configured";
+
+        final String dfsTmpPath = props.getProperty(UNIT_TEST_DFS_TMP_PROP);
+        final String dfsRootPath = props.getProperty(UNIT_TEST_DFS_ROOT_PROP);
+        final String dfsDefaultPath = props.getProperty(UNIT_TEST_DFS_DEFAULT_PROP);
+
+        if (dfsTmpPath == null) {
+          logger.warn(logMessage, UNIT_TEST_DFS_TMP_PROP);
+        } else {
+          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsTmpPath), TMP_SCHEMA);
+        }
+
+        if (dfsRootPath == null) {
+          logger.warn(logMessage, UNIT_TEST_DFS_ROOT_PROP);
+        } else {
+          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsRootPath), ROOT_SCHEMA);
+        }
+
+        if (dfsDefaultPath == null) {
+          logger.warn(logMessage, UNIT_TEST_DFS_DEFAULT_PROP);
+        } else {
+          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsDefaultPath), DEFAULT_SCHEMA);
+        }
       }
     } catch(Throwable e) {
       // Reason for catching Throwable is to capture NoSuchMethodError etc which depend on certain classed to be

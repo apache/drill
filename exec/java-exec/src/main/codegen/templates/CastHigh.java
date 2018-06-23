@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,32 +33,39 @@ import javax.inject.Inject;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.record.RecordBatch;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 public class CastHighFunctions {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CastHighFunctions.class);
 
   <#list casthigh.types as type>
 
   @SuppressWarnings("unused")
-  @FunctionTemplate(name = "casthigh", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "casthigh",
+                    scope = FunctionTemplate.FunctionScope.SIMPLE,
+                    <#if type.from.contains("Decimal")>
+                    returnType = FunctionTemplate.ReturnType.DECIMAL_AGGREGATE,
+                    </#if>
+                    nulls = NullHandling.NULL_IF_NULL)
   public static class CastHigh${type.from} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
     <#if type.from.contains("Decimal")>
-      @Output ${type.from}Holder out;
+    @Output ${type.from}Holder out;
     <#else>
-      @Output ${type.to}Holder out;
+    @Output ${type.to}Holder out;
     </#if>
 
     public void setup() {}
 
     public void eval() {
-      <#if type.value >
-        out.value = (double) in.value;
+      <#if type.value>
+      out.value = (double) in.value;
       <#else>
-        out = in;
+      out = in;
       </#if>
     }
   }
 </#list>
 }
-

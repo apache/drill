@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,7 +37,6 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Charsets;
 
 public class TestRepeated {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRepeated.class);
@@ -108,8 +107,6 @@ public class TestRepeated {
 //
 //
 //    assertTrue(writer.ok());
-//
-//    System.out.println(v.getAccessor().getObject(0));
 //
 //  }
 
@@ -242,9 +239,6 @@ public class TestRepeated {
 
     final ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 
-    System.out.println("Map of Object[0]: " + ow.writeValueAsString(mapVector.getAccessor().getObject(0)));
-    System.out.println("Map of Object[1]: " + ow.writeValueAsString(mapVector.getAccessor().getObject(1)));
-
     final ByteArrayOutputStream stream = new ByteArrayOutputStream();
     final JsonWriter jsonWriter = new JsonWriter(stream, true, true);
     final FieldReader reader = mapVector.getChild("col", MapVector.class).getReader();
@@ -252,8 +246,6 @@ public class TestRepeated {
     jsonWriter.write(reader);
     reader.setPosition(1);
     jsonWriter.write(reader);
-    System.out.print("Json Read: ");
-    System.out.println(new String(stream.toByteArray(), Charsets.UTF_8));
 
     writer.close();
   }

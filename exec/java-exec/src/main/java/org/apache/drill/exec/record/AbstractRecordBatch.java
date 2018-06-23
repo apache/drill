@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,6 +29,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordbatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -42,7 +43,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected final OperatorContext oContext;
   protected final OperatorStats stats;
   protected final boolean unionTypeEnabled;
-
   protected BatchState state;
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context) throws OutOfMemoryException {
@@ -59,7 +59,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     this.popConfig = popConfig;
     this.oContext = oContext;
     stats = oContext.getStats();
-    container = new VectorContainer(this.oContext);
+    container = new VectorContainer(this.oContext.getAllocator());
     if (buildSchema) {
       state = BatchState.BUILD_SCHEMA;
     } else {
@@ -103,7 +103,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   public final IterOutcome next(final RecordBatch b) {
-    if(!context.shouldContinue()) {
+    if(!context.getExecutorState().shouldContinue()) {
       return IterOutcome.STOP;
     }
     return next(0, b);
@@ -113,20 +113,30 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     IterOutcome next = null;
     stats.stopProcessing();
     try{
-      if (!context.shouldContinue()) {
+      if (!context.getExecutorState().shouldContinue()) {
         return IterOutcome.STOP;
       }
       next = b.next();
-    }finally{
+    } finally {
       stats.startProcessing();
     }
 
-    switch(next){
+    if (b instanceof SpilledRecordbatch) {
+      // Don't double count records which were already read and spilled.
+      // TODO evaluate whether swapping out upstream record batch with a SpilledRecordBatch
+      // is the right thing to do.
+      return next;
+    }
+
+    switch(next) {
     case OK_NEW_SCHEMA:
       stats.batchReceived(inputIndex, b.getRecordCount(), true);
       break;
     case OK:
+    case EMIT:
       stats.batchReceived(inputIndex, b.getRecordCount(), false);
+      break;
+    default:
       break;
     }
 
@@ -145,7 +155,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
               return IterOutcome.NONE;
             case OUT_OF_MEMORY:
               // because we don't support schema changes, it is safe to fail the query right away
-              context.fail(UserException.memoryError()
+              context.getExecutorState().fail(UserException.memoryError()
                 .build(logger));
               // FALL-THROUGH
             case STOP:
@@ -225,5 +235,10 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   @Override
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
+  }
+
+  @Override
+  public VectorContainer getContainer() {
+    return  container;
   }
 }

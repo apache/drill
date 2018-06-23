@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -66,7 +66,7 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
     List<ValueVector> vectors = Lists.newArrayList();
     for (VectorWrapper w : container) {
       ValueVector vector = w.getValueVector();
-      if (vector.getField().getPath().equals(schemaPath)) {
+      if (vector.getField().getName().equals(schemaPath.getRootSegmentPath())) {
         vectors.add(newVector);
       } else {
         vectors.add(w.getValueVector());

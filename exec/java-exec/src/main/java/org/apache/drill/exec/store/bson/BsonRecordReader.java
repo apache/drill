@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 package org.apache.drill.exec.store.bson;
-
-import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -38,14 +36,15 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-import org.apache.drill.exec.vector.complex.writer.DateWriter;
-import org.apache.drill.exec.vector.complex.writer.TimeWriter;
+import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
 import org.bson.BsonBinary;
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.joda.time.DateTime;
 
 import com.google.common.base.Preconditions;
+
+import io.netty.buffer.DrillBuf;
 
 public class BsonRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BsonRecordReader.class);
@@ -247,25 +246,28 @@ public class BsonRecordReader {
   }
 
   private void writeTimeStamp(int timestamp, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    DateTime dateTime = new DateTime(timestamp);
-    TimeWriter t;
+    DateTime dateTime = new DateTime(timestamp*1000L);
+    TimeStampWriter t;
     if (isList == false) {
-      t = writer.map.time(fieldName);
+      t = writer.map.timeStamp(fieldName);
     } else {
-      t = writer.list.time();
+      t = writer.list.timeStamp();
     }
-    t.writeTime((int) (dateTime.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis()));
+    t.writeTimeStamp((int) (dateTime.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis()));
   }
 
   private void writeString(String readString, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    final int length = readString.length();
-    final VarCharHolder vh = new VarCharHolder();
-    ensure(length);
+    int length;
+    byte[] strBytes;
     try {
-      workBuf.setBytes(0, readString.getBytes("UTF-8"));
+      strBytes = readString.getBytes("UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new DrillRuntimeException("Unable to read string value for field: " + fieldName, e);
     }
+    length = strBytes.length;
+    ensure(length);
+    workBuf.setBytes(0, strBytes);
+    final VarCharHolder vh = new VarCharHolder();
     vh.buffer = workBuf;
     vh.start = 0;
     vh.end = length;
@@ -294,13 +296,13 @@ public class BsonRecordReader {
 
   private void writeDateTime(long readDateTime, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
     DateTime date = new DateTime(readDateTime);
-    DateWriter dt;
+    TimeStampWriter dt;
     if (isList == false) {
-      dt = writer.map.date(fieldName);
+      dt = writer.map.timeStamp(fieldName);
     } else {
-      dt = writer.list.date();
+      dt = writer.list.timeStamp();
     }
-    dt.writeDate(date.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
+    dt.writeTimeStamp(date.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
   }
 
   private void writeBoolean(boolean readBoolean, final MapOrListWriterImpl writer, String fieldName, boolean isList) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,10 +17,12 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import net.hydromatic.avatica.DriverVersion;
-import net.hydromatic.avatica.Handler;
-import net.hydromatic.avatica.HandlerImpl;
-import net.hydromatic.avatica.UnregisteredDriver;
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.DriverVersion;
+import org.apache.calcite.avatica.Handler;
+import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.UnregisteredDriver;
+import org.apache.drill.common.util.DrillVersionInfo;
 
 /**
  * Optiq JDBC driver.
@@ -61,12 +63,16 @@ public class DriverImpl extends UnregisteredDriver {
         METADATA_PROPERTIES_RESOURCE_PATH,
         // Driver name and version:
         "Apache Drill JDBC Driver",
-        "<Properties resource " + METADATA_PROPERTIES_RESOURCE_PATH + " not loaded>",
+        DrillVersionInfo.getVersion(),
         // Database product name and version:
         "Apache Drill",
         "<Properties resource " + METADATA_PROPERTIES_RESOURCE_PATH + " not loaded>");
   }
 
+  @Override
+  public Meta createMeta(AvaticaConnection connection) {
+    return new DrillMetaImpl((DrillConnectionImpl) connection);
+  }
 
   @Override
   protected Handler createHandler() {

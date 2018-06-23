@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.physical;
 
 import com.google.common.collect.Lists;
@@ -102,11 +101,12 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
 
     WindowPOP windowPOP = new WindowPOP(
         childPOP,
-        withins.toArray(new NamedExpression[withins.size()]),
-        aggs.toArray(new NamedExpression[aggs.size()]),
-        orderings.toArray(new Order.Ordering[orderings.size()]),
-        Long.MIN_VALUE, //TODO: Get first/last to work
-        Long.MIN_VALUE);
+        withins,
+        aggs,
+        orderings,
+        window.isRows,
+        WindowPOP.newBound(window.lowerBound),
+        WindowPOP.newBound(window.upperBound));
 
     creator.addMetadata(this, windowPOP);
     return windowPOP;

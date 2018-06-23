@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -110,7 +110,6 @@ public class ImpersonationUtil {
    * @param opUserName Name of the user whom to impersonate while setting up the operator.
    * @param queryUserName Name of the user who issues the query. If <i>opUserName</i> is invalid,
    *                      then this parameter must be valid user name.
-   * @return
    */
   public static UserGroupInformation createProxyUgi(String opUserName, String queryUserName) {
     if (!Strings.isNullOrEmpty(opUserName)) {
@@ -130,11 +129,7 @@ public class ImpersonationUtil {
   /**
    * Create and return proxy user {@link org.apache.hadoop.security.UserGroupInformation} for give user name.
    *
-   * TODO: we may want to cache the {@link org.apache.hadoop.security.UserGroupInformation} instances as we try to
-   * create different instances for the same user which is an unnecessary overhead.
-   *
    * @param proxyUserName Proxy user name (must be valid)
-   * @return
    */
   public static UserGroupInformation createProxyUgi(String proxyUserName) {
     try {
@@ -173,7 +168,16 @@ public class ImpersonationUtil {
    * @return Drillbit process user.
    */
   public static String getProcessUserName() {
-    return getProcessUserUGI().getUserName();
+    return getProcessUserUGI().getShortUserName();
+  }
+
+  /**
+   * Return the list of groups to which the process user belongs.
+   *
+   * @return Drillbit process user group names
+   */
+  public static String[] getProcessUserGroupNames() {
+    return getProcessUserUGI().getGroupNames();
   }
 
   /**
@@ -196,7 +200,6 @@ public class ImpersonationUtil {
    *
    * @param proxyUserName Name of the user whom to impersonate while accessing the FileSystem contents.
    * @param fsConf FileSystem configuration.
-   * @return
    */
   public static DrillFileSystem createFileSystem(String proxyUserName, Configuration fsConf) {
     return createFileSystem(createProxyUgi(proxyUserName), fsConf, null);
@@ -228,7 +231,7 @@ public class ImpersonationUtil {
    * @param userName User who is checked for administrative privileges.
    * @param adminUsers Comma separated list of admin usernames,
    * @param adminGroups Comma separated list of admin usergroups
-   * @return
+   * @return True if the user has admin priveleges. False otherwise.
    */
   public static boolean hasAdminPrivileges(final String userName, final String adminUsers, final String adminGroups) {
     // Process user is by default an admin
@@ -255,5 +258,9 @@ public class ImpersonationUtil {
     }
 
     return false;
+  }
+
+  // avoid instantiation
+  private ImpersonationUtil() {
   }
 }

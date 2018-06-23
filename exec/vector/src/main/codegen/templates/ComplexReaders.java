@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import java.lang.Override;
 import java.util.List;
 
@@ -46,26 +45,28 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
-
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
 public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   
   private final ${nullMode}${name}Vector vector;
   
-  public ${nullMode}${name}ReaderImpl(${nullMode}${name}Vector vector){
+  public ${nullMode}${name}ReaderImpl(${nullMode}${name}Vector vector) {
     super();
     this.vector = vector;
   }
 
-  public MajorType getType(){
+  public MajorType getType() {
     return vector.getField().getType();
   }
 
-  public MaterializedField getField(){
+  public MaterializedField getField() {
     return vector.getField();
   }
   
-  public boolean isSet(){
+  public boolean isSet() {
     <#if nullMode == "Nullable">
     return !vector.getAccessor().isNull(idx());
     <#else>
@@ -73,76 +74,85 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
     </#if>
   }
 
-
-  
-  
   <#if mode == "Repeated">
 
-  public void copyAsValue(${minor.class?cap_first}Writer writer){
+  public void copyAsValue(${minor.class?cap_first}Writer writer) {
     Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer;
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
-  
-  public void copyAsField(String name, MapWriter writer){
-    Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl)  writer.list(name).${lowerName}();
+
+  <#if minor.class == "VarDecimal">
+  public void copyAsField(String name, MapWriter writer, int scale, int precision) {
+    Repeated${minor.class?cap_first}WriterImpl impl
+        = (Repeated${minor.class?cap_first}WriterImpl) writer.list(name).${lowerName}(scale, precision);
+  <#else>
+  public void copyAsField(String name, MapWriter writer) {
+    Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer.list(name).${lowerName}();
+  </#if>
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
   
-  public int size(){
+  public int size() {
     return vector.getAccessor().getInnerValueCountAt(idx());
   }
   
-  public void read(int arrayIndex, ${minor.class?cap_first}Holder h){
+  public void read(int arrayIndex, ${minor.class?cap_first}Holder h) {
     vector.getAccessor().get(idx(), arrayIndex, h);
   }
-  public void read(int arrayIndex, Nullable${minor.class?cap_first}Holder h){
+
+  public void read(int arrayIndex, Nullable${minor.class?cap_first}Holder h) {
     vector.getAccessor().get(idx(), arrayIndex, h);
   }
   
-  public ${friendlyType} read${safeType}(int arrayIndex){
+  public ${friendlyType} read${safeType}(int arrayIndex) {
     return vector.getAccessor().getSingleObject(idx(), arrayIndex);
   }
 
   
-  public List<Object> readObject(){
+  public List<Object> readObject() {
     return (List<Object>) (Object) vector.getAccessor().getObject(idx());
   }
   
   <#else>
   
-  public void copyAsValue(${minor.class?cap_first}Writer writer){
+  public void copyAsValue(${minor.class?cap_first}Writer writer) {
     ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer;
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
-  
-  public void copyAsField(String name, MapWriter writer){
+
+  <#if minor.class == "VarDecimal">
+  public void copyAsField(String name, MapWriter writer, int scale, int precision) {
+    ${nullMode}${minor.class?cap_first}WriterImpl impl
+        = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name, scale, precision);
+<#else>
+  public void copyAsField(String name, MapWriter writer) {
     ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name);
+  </#if>
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
 
   <#if nullMode != "Nullable">
-  public void read(${minor.class?cap_first}Holder h){
+  public void read(${minor.class?cap_first}Holder h) {
     vector.getAccessor().get(idx(), h);
   }
   </#if>
 
-  public void read(Nullable${minor.class?cap_first}Holder h){
+  public void read(Nullable${minor.class?cap_first}Holder h) {
     vector.getAccessor().get(idx(), h);
   }
   
-  public ${friendlyType} read${safeType}(){
+  public ${friendlyType} read${safeType}() {
     return vector.getAccessor().getObject(idx());
   }
   
-  public void copyValue(FieldWriter w){
+  public void copyValue(FieldWriter w) {
     
   }
   
-  public Object readObject(){
+  public Object readObject() {
     return vector.getAccessor().getObject(idx());
   }
 
-  
   </#if>
 }
 </#if>
@@ -154,7 +164,7 @@ package org.apache.drill.exec.vector.complex.reader;
 
 <#include "/@includes/vv_imports.ftl" />
 @SuppressWarnings("unused")
-public interface ${name}Reader extends BaseReader{
+public interface ${name}Reader extends BaseReader {
   
   <#if mode == "Repeated">
   public int size();
@@ -170,8 +180,11 @@ public interface ${name}Reader extends BaseReader{
   </#if>  
   public boolean isSet();
   public void copyAsValue(${minor.class}Writer writer);
+  <#if minor.class == "VarDecimal">
+  public void copyAsField(String name, ${minor.class}Writer writer, int scale, int precision);
+  <#else>
   public void copyAsField(String name, ${minor.class}Writer writer);
-  
+  </#if>
 }
 
 

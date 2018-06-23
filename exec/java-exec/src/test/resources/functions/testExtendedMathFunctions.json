@@ -23,6 +23,7 @@
     exprs : [
     { ref : "CBRTVAL", expr : " cbrt(1000) "},
     { ref : "LOGVAL", expr : " log(10) "},
+    { ref : "LOG10VAL", expr : " log10(5) "},
     { ref : "LOGVALBASE", expr : " log(2.0, 64.0) "},
     { ref : "EXP", expr : " exp(10) "},
     { ref : "DEGREES", expr : " degrees(0.5) "},

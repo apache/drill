@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import org.apache.drill.exec.planner.physical.WriterPrel;
 
 <@pp.dropOutputFile />
@@ -38,6 +37,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 /** Reads records from the RecordValueAccessor and writes into RecordWriter. */
 public class EventBasedRecordWriter {
@@ -79,11 +81,11 @@ public class EventBasedRecordWriter {
     try {
       int fieldId = 0;
       for (VectorWrapper w : batch) {
-        if (w.getField().getPath().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
+        if (w.getField().getName().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
           continue;
         }
         FieldReader reader = w.getValueVector().getReader();
-        FieldConverter converter = getConverter(recordWriter, fieldId++, w.getField().getLastName(), reader);
+        FieldConverter converter = getConverter(recordWriter, fieldId++, w.getField().getName(), reader);
         fieldConverters.add(converter);
       }
     } catch(Exception e) {

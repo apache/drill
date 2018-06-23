@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
-
-import java.io.IOException;
-import java.util.List;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.sun.codemodel.JClass;
+import com.sun.codemodel.JConditional;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JVar;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -32,6 +34,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -43,89 +46,108 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
-import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinComparator;
-import org.apache.drill.exec.record.AbstractRecordBatch;
+import org.apache.drill.exec.physical.impl.common.Comparator;
+import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.JoinBatchMemoryManager;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.RecordIterator;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 
-import com.google.common.base.Preconditions;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JConditional;
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JMod;
-import com.sun.codemodel.JVar;
+import java.io.IOException;
+import java.util.List;
+
+import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 
 /**
  * A join operator merges two sorted streams using record iterator.
  */
-public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
+public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinBatch.class);
 
-  public final MappingSet setupMapping =
+  private final MappingSet setupMapping =
     new MappingSet("null", "null",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doSetup", null, null));
-  public final MappingSet copyLeftMapping =
+  private final MappingSet copyLeftMapping =
     new MappingSet("leftIndex", "outIndex",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doCopyLeft", null, null));
-  public final MappingSet copyRightMappping =
+  private final MappingSet copyRightMappping =
     new MappingSet("rightIndex", "outIndex",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doCopyRight", null, null));
-  public final MappingSet compareMapping =
+  private final MappingSet compareMapping =
     new MappingSet("leftIndex", "rightIndex",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doCompare", null, null));
-  public final MappingSet compareRightMapping =
+  private final MappingSet compareRightMapping =
     new MappingSet("rightIndex", "null",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doCompare", null, null));
 
-  private final RecordBatch left;
-  private final RecordBatch right;
   private final RecordIterator leftIterator;
   private final RecordIterator rightIterator;
   private final JoinStatus status;
   private final List<JoinCondition> conditions;
+  private final List<Comparator> comparators;
   private final JoinRelType joinType;
   private JoinWorker worker;
-  private boolean areNullsEqual = false; // whether nulls compare equal
-
 
   private static final String LEFT_INPUT = "LEFT INPUT";
   private static final String RIGHT_INPUT = "RIGHT INPUT";
 
+  private class MergeJoinMemoryManager extends JoinBatchMemoryManager {
+
+    MergeJoinMemoryManager(int outputBatchSize, RecordBatch leftBatch, RecordBatch rightBatch) {
+      super(outputBatchSize, leftBatch, rightBatch);
+    }
+
+    /**
+     * mergejoin operates on one record at a time from the left and right batches
+     * using RecordIterator abstraction. We have a callback mechanism to get notified
+     * when new batch is loaded in record iterator.
+     * This can get called in the middle of current output batch we are building.
+     * when this gets called, adjust number of output rows for the current batch and
+     * update the value to be used for subsequent batches.
+     */
+    @Override
+    public void update(int inputIndex) {
+      status.setTargetOutputRowCount(super.update(inputIndex, status.getOutPosition()));
+      logger.debug("BATCH_STATS, incoming {}: {}", inputIndex == 0 ? "left" : "right", getRecordBatchSizer(inputIndex));
+    }
+  }
+
   protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
-    super(popConfig, context, true);
+    super(popConfig, context, true, left, right);
+
+    // Instantiate the batch memory manager
+    final int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
+    batchMemoryManager = new MergeJoinMemoryManager(configuredBatchSize, left, right);
+
+    logger.debug("BATCH_STATS, configured output batch size: {}", configuredBatchSize);
 
     if (popConfig.getConditions().size() == 0) {
       throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");
     }
-    this.left = left;
-    this.leftIterator = new RecordIterator(left, this, oContext, 0, false);
-    this.right = right;
-    this.rightIterator = new RecordIterator(right, this, oContext, 1);
+    this.leftIterator = new RecordIterator(left, this, oContext, 0, false, batchMemoryManager);
+    this.rightIterator = new RecordIterator(right, this, oContext, 1, batchMemoryManager);
     this.joinType = popConfig.getJoinType();
     this.status = new JoinStatus(leftIterator, rightIterator, this);
     this.conditions = popConfig.getConditions();
 
-    JoinComparator comparator = JoinComparator.NONE;
+    this.comparators = Lists.newArrayListWithExpectedSize(conditions.size());
     for (JoinCondition condition : conditions) {
-      comparator = JoinUtils.checkAndSetComparison(condition, comparator);
+      this.comparators.add(JoinUtils.checkAndReturnSupportedJoinComparator(condition));
     }
-    assert comparator != JoinComparator.NONE;
-    areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM);
   }
 
   public JoinRelType getJoinType() {
@@ -141,18 +163,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   public void buildSchema() {
     // initialize iterators
     status.initialize();
-
     final IterOutcome leftOutcome = status.getLeftStatus();
     final IterOutcome rightOutcome = status.getRightStatus();
-    if (leftOutcome == IterOutcome.STOP || rightOutcome == IterOutcome.STOP) {
-      state = BatchState.STOP;
+
+    if (!verifyOutcomeToSetBatchState(leftOutcome, rightOutcome)) {
       return;
     }
 
-    if (leftOutcome == IterOutcome.OUT_OF_MEMORY || rightOutcome == IterOutcome.OUT_OF_MEMORY) {
-      state = BatchState.OUT_OF_MEMORY;
-      return;
-    }
     allocateBatch(true);
   }
 
@@ -167,10 +184,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         case BATCH_RETURNED:
           allocateBatch(false);
           status.resetOutputPos();
+          status.setTargetOutputRowCount(batchMemoryManager.getOutputRowCount());
           break;
         case SCHEMA_CHANGED:
           allocateBatch(true);
           status.resetOutputPos();
+          status.setTargetOutputRowCount(batchMemoryManager.getOutputRowCount());
           break;
         case NO_MORE_DATA:
           status.resetOutputPos();
@@ -195,7 +214,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           this.worker = generateNewWorker();
           first = true;
         } catch (ClassTransformationException | IOException | SchemaChangeException e) {
-          context.fail(new SchemaChangeException(e));
+          context.getExecutorState().fail(new SchemaChangeException(e));
           kill(false);
           return IterOutcome.STOP;
         } finally {
@@ -250,10 +269,36 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       Preconditions.checkArgument(!vw.isHyper());
       vw.getValueVector().getMutator().setValueCount(getRecordCount());
     }
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("BATCH_STATS, outgoing: {}", new RecordBatchSizer(this));
+    }
+
+    batchMemoryManager.updateOutgoingStats(getRecordCount());
   }
 
   @Override
   public void close() {
+    updateBatchMemoryManagerStats();
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("BATCH_STATS, incoming aggregate left: batch count : {}, avg bytes : {},  avg row bytes : {}, record count : {}",
+        batchMemoryManager.getNumIncomingBatches(JoinBatchMemoryManager.LEFT_INDEX),
+        batchMemoryManager.getAvgInputBatchSize(JoinBatchMemoryManager.LEFT_INDEX),
+        batchMemoryManager.getAvgInputRowWidth(JoinBatchMemoryManager.LEFT_INDEX),
+        batchMemoryManager.getTotalInputRecords(JoinBatchMemoryManager.LEFT_INDEX));
+
+      logger.debug("BATCH_STATS, incoming aggregate right: batch count : {}, avg bytes : {},  avg row bytes : {}, record count : {}",
+        batchMemoryManager.getNumIncomingBatches(JoinBatchMemoryManager.RIGHT_INDEX),
+        batchMemoryManager.getAvgInputBatchSize(JoinBatchMemoryManager.RIGHT_INDEX),
+        batchMemoryManager.getAvgInputRowWidth(JoinBatchMemoryManager.RIGHT_INDEX),
+        batchMemoryManager.getTotalInputRecords(JoinBatchMemoryManager.RIGHT_INDEX));
+
+      logger.debug("BATCH_STATS, outgoing aggregate: batch count : {}, avg bytes : {},  avg row bytes : {}, record count : {}",
+        batchMemoryManager.getNumOutgoingBatches(), batchMemoryManager.getAvgOutputBatchSize(),
+        batchMemoryManager.getAvgOutputRowWidth(), batchMemoryManager.getTotalOutputRecords());
+    }
+
     super.close();
     leftIterator.close();
     rightIterator.close();
@@ -265,9 +310,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     right.kill(sendUpstream);
   }
 
-  private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException{
-
-    final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+  private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException {
+    final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getOptions());
+    cg.getCodeGenerator().plainJavaCapable(true);
+    // cg.getCodeGenerator().saveCodeForDebugging(true);
     final ErrorCollector collector = new ErrorCollectorImpl();
 
     // Generate members and initialization code
@@ -344,6 +390,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           .arg(copyLeftMapping.getValueReadIndex())
           .arg(copyLeftMapping.getValueWriteIndex())
           .arg(vvIn));
+        cg.rotateBlock();
         ++vectorId;
       }
     }
@@ -372,6 +419,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           .arg(copyRightMappping.getValueReadIndex())
           .arg(copyRightMappping.getValueWriteIndex())
           .arg(vvIn));
+        cg.rotateBlock();
         ++vectorId;
       }
     }
@@ -397,7 +445,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           } else {
             outputType = inputType;
           }
-          MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+          MaterializedField newField = MaterializedField.create(w.getField().getName(), outputType);
           ValueVector v = container.addOrGet(newField);
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v);
@@ -414,7 +462,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           } else {
             outputType = inputType;
           }
-          MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+          MaterializedField newField = MaterializedField.create(w.getField().getName(), outputType);
           ValueVector v = container.addOrGet(newField);
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v);
@@ -425,8 +473,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     } else {
       container.zeroVectors();
     }
+
+    // Allocate memory for the vectors.
+    // This will iteratively allocate memory for all nested columns underneath.
+    int outputRowCount = batchMemoryManager.getOutputRowCount();
     for (VectorWrapper w : container) {
-      AllocationHelper.allocateNew(w.getValueVector(), Character.MAX_VALUE);
+      RecordBatchSizer.ColumnSize colSize = batchMemoryManager.getColumnSize(w.getField().getName());
+      colSize.allocateVector(w.getValueVector(), outputRowCount);
     }
 
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
@@ -446,22 +499,22 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         ////////////////////////
         cg.setMappingSet(compareMapping);
         cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingLeftRecordBatch));
-        ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(leftExpression[i], false);
+        ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(leftExpression[i], ClassGenerator.BlkCreateMode.FALSE);
 
         cg.setMappingSet(compareRightMapping);
         cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
-        ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(rightExpression[i], false);
+        ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(rightExpression[i], ClassGenerator.BlkCreateMode.FALSE);
 
         LogicalExpression fh =
           FunctionGenerationHelper.getOrderingComparatorNullsHigh(compareLeftExprHolder,
             compareRightExprHolder,
             context.getFunctionRegistry());
-        HoldingContainer out = cg.addExpr(fh, false);
+        HoldingContainer out = cg.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
 
         // If not 0, it means not equal.
         // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal.
         if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()
-          && ! areNullsEqual) {
+          && comparators.get(i) == Comparator.EQUALS) {
           JConditional jc = cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0)).
             cand(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))));
           jc._then()._return(JExpr.lit(1));
@@ -491,5 +544,4 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
     return materializedExpr;
   }
-
 }

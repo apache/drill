@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/AbstractFieldWriter.java" />
 
@@ -66,6 +65,12 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
     fail("${name}");
   }
 
+  <#if minor.class?contains("Decimal") >
+  public void write${minor.class}(BigDecimal value) {
+    fail("${name}");
+  }
+  </#if>
+
   </#list></#list>
 
   public void writeNull() {
@@ -112,8 +117,15 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
   <#assign upperName = minor.class?upper_case />
   <#assign capName = minor.class?cap_first />
-  <#if minor.class?starts_with("Decimal") >
+  <#if minor.class?contains("Decimal") >
+  @Override
   public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
+    fail("${capName}");
+    return null;
+  }
+
+  @Override
+  public ${capName}Writer ${lowerName}(int scale, int precision) {
     fail("${capName}");
     return null;
   }

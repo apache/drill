@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,7 +21,9 @@ public interface MongoTestConstants {
 
   public static final String LOCALHOST = "localhost";
   // TODO: DRILL-3934: add some randomization to this as it fails when running concurrent builds
-  public static final int CONFIG_SERVER_PORT = 27019;
+  int CONFIG_SERVER_1_PORT = 61114;
+  int CONFIG_SERVER_2_PORT = 61215;
+  int CONFIG_SERVER_3_PORT = 61316;
   public static final int MONGOD_1_PORT = 27020;
   public static final int MONGOD_2_PORT = 27021;
   public static final int MONGOD_3_PORT = 27022;
@@ -44,6 +46,12 @@ public interface MongoTestConstants {
   public static final String EMP_DATA = "emp.json";
   public static final String SCHEMA_CHANGE_DATA = "schema_change_int_to_string.json";
 
+  String STORAGE_ENGINE = "wiredTiger";
+  String DATATYPE_DB = "datatype";
+  String DATATYPE_COLLECTION = "types";
+  String DATATYPE_DATA = "datatype-oid.json";
+
+  String CONFIG_REPLICA_SET = "config_replicas";
   public static final String REPLICA_SET_1_NAME = "shard_1_replicas";
   public static final String REPLICA_SET_2_NAME = "shard_2_replicas";
 

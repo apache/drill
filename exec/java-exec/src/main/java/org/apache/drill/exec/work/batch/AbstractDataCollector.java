@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.Collector;
 import org.apache.drill.exec.record.RawFragmentBatch;
@@ -29,9 +30,7 @@ import org.apache.drill.exec.util.ArrayWrappedIntIntMap;
 
 import com.google.common.base.Preconditions;
 
-public abstract class AbstractDataCollector implements DataCollector{
-
-  // private final List<MinorFragmentEndpoint> incoming;
+public abstract class AbstractDataCollector implements DataCollector {
   private final int oppositeMajorFragmentId;
   private final AtomicIntegerArray remainders;
   private final AtomicInteger remainingRequired;
@@ -39,10 +38,11 @@ public abstract class AbstractDataCollector implements DataCollector{
   private final int incomingStreams;
   protected final RawBatchBuffer[] buffers;
   protected final ArrayWrappedIntIntMap fragmentMap;
+  /** Allocator which owns incoming batches */
+  protected BufferAllocator ownerAllocator;
 
   /**
    * @param parentAccounter
-   * @param receiver
    * @param numBuffers Number of RawBatchBuffer inputs required to store the incoming data
    * @param bufferCapacity Capacity of each RawBatchBuffer.
    * @param context
@@ -56,6 +56,7 @@ public abstract class AbstractDataCollector implements DataCollector{
     this.parentAccounter = parentAccounter;
     this.remainders = new AtomicIntegerArray(incomingStreams);
     this.oppositeMajorFragmentId = collector.getOppositeMajorFragmentId();
+    this.ownerAllocator = context.getAllocator();
     // Create fragmentId to index that is within the range [0, incoming.size()-1]
     // We use this mapping to find objects belonging to the fragment in buffers and remainders arrays.
     fragmentMap = new ArrayWrappedIntIntMap();
@@ -74,7 +75,7 @@ public abstract class AbstractDataCollector implements DataCollector{
       if (spooling) {
         buffers[i] = new SpoolingRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId(), i);
       } else {
-        buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId());
+        buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity);
       }
     }
   }
@@ -117,6 +118,19 @@ public abstract class AbstractDataCollector implements DataCollector{
   @Override
   public void close() throws Exception {
     AutoCloseables.close(buffers);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public BufferAllocator getAllocator() {
+    return this.ownerAllocator;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void setAllocator(BufferAllocator allocator) {
+    Preconditions.checkArgument(allocator != null, "buffer allocator cannot be null");
+    this.ownerAllocator = allocator;
   }
 
 }

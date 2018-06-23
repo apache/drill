@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,7 +58,15 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
     HBASE_SUB_SCAN(33),
     WINDOW(34),
     NESTED_LOOP_JOIN(35),
-    AVRO_SUB_SCAN(36);
+    AVRO_SUB_SCAN(36),
+    PCAP_SUB_SCAN(37),
+    KAFKA_SUB_SCAN(38),
+    KUDU_SUB_SCAN(39),
+    FLATTEN(40),
+    LATERAL_JOIN(41),
+    UNNEST(42),
+    HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN(43),
+    JDBC_SCAN(44);
     
     public final int number;
     
@@ -113,6 +121,14 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
             case 34: return WINDOW;
             case 35: return NESTED_LOOP_JOIN;
             case 36: return AVRO_SUB_SCAN;
+            case 37: return PCAP_SUB_SCAN;
+            case 38: return KAFKA_SUB_SCAN;
+            case 39: return KUDU_SUB_SCAN;
+            case 40: return FLATTEN;
+            case 41: return LATERAL_JOIN;
+            case 42: return UNNEST;
+            case 43: return HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN;
+            case 44: return JDBC_SCAN;
             default: return null;
         }
     }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
-import java.util.Iterator;
-
+import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
@@ -26,16 +25,30 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.TypedFieldId;
 
-import com.google.common.collect.Iterators;
+import java.util.Iterator;
 
-public class ValueVectorReadExpression implements LogicalExpression{
+/**
+ * Wraps a value vector field to be read, providing metadata about the field.
+ * Also may contain batch naming information to which this field belongs.
+ * If such information is absent default namings will be used from mapping set during materialization.
+ */
+public class ValueVectorReadExpression implements LogicalExpression {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueVectorReadExpression.class);
 
   private final TypedFieldId fieldId;
-
+  private final BatchReference batchRef;
 
   public ValueVectorReadExpression(TypedFieldId tfId){
+    this(tfId, null);
+  }
+
+  public ValueVectorReadExpression(TypedFieldId tfId, BatchReference batchRef){
     this.fieldId = tfId;
+    this.batchRef = batchRef;
+  }
+
+  public BatchReference getBatchRef() {
+    return batchRef;
   }
 
   public boolean hasReadPath(){
@@ -60,6 +73,10 @@ public class ValueVectorReadExpression implements LogicalExpression{
 
   @Override
   public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+    if (visitor instanceof AbstractExecExprVisitor) {
+      AbstractExecExprVisitor<T, V, E> abstractExecExprVisitor = (AbstractExecExprVisitor<T, V, E>) visitor;
+      return abstractExecExprVisitor.visitValueVectorReadExpression(this, value);
+    }
     return visitor.visitUnknown(this, value);
   }
 
@@ -74,7 +91,7 @@ public class ValueVectorReadExpression implements LogicalExpression{
 
   @Override
   public Iterator<LogicalExpression> iterator() {
-    return Iterators.emptyIterator();
+    return ImmutableSet.<LogicalExpression>of().iterator();
   }
 
   @Override

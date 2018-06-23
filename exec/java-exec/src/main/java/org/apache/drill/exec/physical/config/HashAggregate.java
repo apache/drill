@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,38 +18,51 @@
 package org.apache.drill.exec.physical.config;
 
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
+import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import java.util.List;
+
 @JsonTypeName("hash-aggregate")
 public class HashAggregate extends AbstractSingle {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregate.class);
 
-  private final NamedExpression[] groupByExprs;
-  private final NamedExpression[] aggrExprs;
+  private final AggPrelBase.OperatorPhase aggPhase;
+  private final List<NamedExpression> groupByExprs;
+  private final List<NamedExpression> aggrExprs;
 
   private final float cardinality;
 
   @JsonCreator
-  public HashAggregate(@JsonProperty("child") PhysicalOperator child, @JsonProperty("keys") NamedExpression[] groupByExprs, @JsonProperty("exprs") NamedExpression[] aggrExprs, @JsonProperty("cardinality") float cardinality) {
+  public HashAggregate(@JsonProperty("child") PhysicalOperator child,
+                       @JsonProperty("phase") AggPrelBase.OperatorPhase aggPhase,
+                       @JsonProperty("keys") List<NamedExpression> groupByExprs,
+                       @JsonProperty("exprs") List<NamedExpression> aggrExprs,
+                       @JsonProperty("cardinality") float cardinality) {
     super(child);
+    this.aggPhase = aggPhase;
     this.groupByExprs = groupByExprs;
     this.aggrExprs = aggrExprs;
     this.cardinality = cardinality;
   }
 
-  public NamedExpression[] getGroupByExprs() {
+  public AggPrelBase.OperatorPhase getAggPhase() { return aggPhase; }
+
+  public List<NamedExpression> getGroupByExprs() {
     return groupByExprs;
   }
 
-  public NamedExpression[] getAggrExprs() {
+  public List<NamedExpression> getAggrExprs() {
     return aggrExprs;
   }
 
@@ -64,7 +77,9 @@ public class HashAggregate extends AbstractSingle {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new HashAggregate(child, groupByExprs, aggrExprs, cardinality);
+    HashAggregate newHAG = new HashAggregate(child, aggPhase, groupByExprs, aggrExprs, cardinality);
+    newHAG.setMaxAllocation(getMaxAllocation());
+    return newHAG;
   }
 
   @Override
@@ -72,5 +87,23 @@ public class HashAggregate extends AbstractSingle {
     return CoreOperatorType.HASH_AGGREGATE_VALUE;
   }
 
-
+  /**
+   *
+   * @param maxAllocation The max memory allocation to be set
+   */
+  @Override
+  public void setMaxAllocation(long maxAllocation) {
+    this.maxAllocation = maxAllocation;
+  }
+  /**
+   * The Hash Aggregate operator supports spilling
+   * @return true (unless a single partition is forced)
+   * @param queryContext
+   */
+  @Override
+  public boolean isBufferedOperator(QueryContext queryContext) {
+    // In case forced to use a single partition - do not consider this a buffered op (when memory is divided)
+    return queryContext == null ||
+      1 < (int)queryContext.getOptions().getOption(ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR) ;
+  }
 }

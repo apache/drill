@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,23 +14,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.fn.interp;
 
 import static org.junit.Assert.assertEquals;
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.parser.ExprLexer;
-import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.DrillStringUtils;
@@ -38,7 +38,7 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl;
@@ -47,15 +47,17 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.store.mock.MockGroupScanPOP;
 import org.apache.drill.exec.store.mock.MockScanBatchCreator;
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
+import org.apache.drill.exec.store.mock.MockTableDef;
 import org.apache.drill.exec.vector.ValueVector;
-import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.common.collect.Lists;
 
+@Category({SlowTest.class, SqlTest.class})
 public class ExpressionInterpreterTest  extends PopUnitTestBase {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionInterpreterTest.class);
 
@@ -128,9 +130,9 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     final String expressionStr = "now()";
     final BitControl.PlanFragment planFragment = BitControl.PlanFragment.getDefaultInstance();
     final QueryContextInformation queryContextInfo = planFragment.getContext();
-    final int                        timeZoneIndex = queryContextInfo.getTimeZone();
-    final org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-    final org.joda.time.DateTime     now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
+    final int timeZoneIndex = queryContextInfo.getTimeZone();
+    final DateTimeZone timeZone = DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+    final org.joda.time.DateTime now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
 
     final long queryStartDate = now.getMillis();
 
@@ -141,7 +143,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     final ByteBuffer buffer = ByteBuffer.allocate(12);
     buffer.putLong(out.value);
     final long l = buffer.getLong(0);
-    final DateTime t = new DateTime(l);
+    final LocalDateTime t = Instant.ofEpochMilli(l).atZone(ZoneOffset.systemDefault()).toLocalDateTime();
 
     final String[] expectedFirstTwoValues = {t.toString(), t.toString()};
 
@@ -154,6 +156,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
   }
 
   protected void doTest(String expressionStr, String[] colNames, TypeProtos.MajorType[] colTypes, String[] expectFirstTwoValues, BitControl.PlanFragment planFragment) throws Exception {
+    @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
 
@@ -162,19 +165,20 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     // Create a mock scan batch as input for evaluation.
     assertEquals(colNames.length, colTypes.length);
 
-    final MockGroupScanPOP.MockColumn[] columns = new MockGroupScanPOP.MockColumn[colNames.length];
+    final MockTableDef.MockColumn[] columns = new MockTableDef.MockColumn[colNames.length];
 
     for (int i = 0; i < colNames.length; i++ ) {
-      columns[i] = new MockGroupScanPOP.MockColumn(colNames[i], colTypes[i].getMinorType(), colTypes[i].getMode(),0,0,0);
+      columns[i] = new MockTableDef.MockColumn(colNames[i], colTypes[i].getMinorType(), colTypes[i].getMode(), 0, 0, 0, null, null, null);
     }
 
-    final MockGroupScanPOP.MockScanEntry entry = new MockGroupScanPOP.MockScanEntry(10, columns);
-    final MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", java.util.Collections.singletonList(entry));
+    final MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(10, false, 0, 1, columns);
+    final MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", false, java.util.Collections.singletonList(entry));
 
     final ScanBatch batch = createMockScanBatch(bit1, scanPOP, planFragment);
 
     batch.next();
 
+    @SuppressWarnings("resource")
     final ValueVector vv = evalExprWithInterpreter(expressionStr, batch, bit1);
 
     // Verify the first 2 values in the output of evaluation.
@@ -190,25 +194,18 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     bit1.close();
   }
 
+  @SuppressWarnings("resource")
   private ScanBatch createMockScanBatch(Drillbit bit, MockSubScanPOP scanPOP, BitControl.PlanFragment planFragment) {
     final List<RecordBatch> children = Lists.newArrayList();
     final MockScanBatchCreator creator = new MockScanBatchCreator();
 
     try {
-      final FragmentContext context =
-          new FragmentContext(bit.getContext(), planFragment, null, bit.getContext().getFunctionImplementationRegistry());
+      final FragmentContextImpl context =
+          new FragmentContextImpl(bit.getContext(), planFragment, null, bit.getContext().getFunctionImplementationRegistry());
       return creator.getBatch(context,scanPOP, children);
     } catch (Exception ex) {
       throw new DrillRuntimeException("Error when setup fragment context" + ex);
     }
-  }
-
-  private LogicalExpression parseExpr(String expr) throws RecognitionException {
-    final ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-    final CommonTokenStream tokens = new CommonTokenStream(lexer);
-    final ExprParser parser = new ExprParser(tokens);
-    final ExprParser.parse_return ret = parser.parse();
-    return ret.e;
   }
 
   private ValueVector evalExprWithInterpreter(String expression, RecordBatch batch, Drillbit bit) throws Exception {
@@ -238,7 +235,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
       } else {
         cellString = DrillStringUtils.escapeNewLines(String.valueOf(o));
       }
-      System.out.printf(row + "th value: " + cellString + "\n");
+      logger.info("{}th value: {}", row, cellString);
     }
   }
 

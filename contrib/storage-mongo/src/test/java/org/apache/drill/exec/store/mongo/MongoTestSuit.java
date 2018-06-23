@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,10 +20,12 @@ package org.apache.drill.exec.store.mongo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.collect.Lists;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.junit.AfterClass;
@@ -73,39 +75,51 @@ public class MongoTestSuit implements MongoTestConstants {
   private static boolean authEnabled = System.getProperty(
       "drill.mongo.tests.authEnabled", "false").equalsIgnoreCase("true");
 
+  private static volatile AtomicInteger initCount = new AtomicInteger(0);
+
+  private static volatile boolean runningSuite = false;
+
+  public static boolean isRunningSuite() {
+    return runningSuite;
+  }
+
   private static class DistributedMode {
     private static MongosSystemForTestFactory mongosTestFactory;
 
     private static void setup() throws Exception {
       // creating configServers
-      List<IMongodConfig> configServers = new ArrayList<IMongodConfig>(1);
-      IMongodConfig configIMongodConfig = crateConfigServerConfig(
-          CONFIG_SERVER_PORT, true);
-      configServers.add(configIMongodConfig);
+      List<IMongodConfig> configServers = new ArrayList<>(1);
+      configServers.add(crateConfigServerConfig(CONFIG_SERVER_1_PORT));
+      configServers.add(crateConfigServerConfig(CONFIG_SERVER_2_PORT));
+      configServers.add(crateConfigServerConfig(CONFIG_SERVER_3_PORT));
 
       // creating replicaSets
-      Map<String, List<IMongodConfig>> replicaSets = new HashMap<String, List<IMongodConfig>>();
-      List<IMongodConfig> replicaSet1 = new ArrayList<IMongodConfig>();
+      // A LinkedHashMap ensures that the config servers are started first.
+      Map<String, List<IMongodConfig>> replicaSets = new LinkedHashMap<>();
+
+      List<IMongodConfig> replicaSet1 = new ArrayList<>();
       replicaSet1.add(crateIMongodConfig(MONGOD_1_PORT, false,
           REPLICA_SET_1_NAME));
       replicaSet1.add(crateIMongodConfig(MONGOD_2_PORT, false,
           REPLICA_SET_1_NAME));
       replicaSet1.add(crateIMongodConfig(MONGOD_3_PORT, false,
           REPLICA_SET_1_NAME));
-      replicaSets.put(REPLICA_SET_1_NAME, replicaSet1);
-      List<IMongodConfig> replicaSet2 = new ArrayList<IMongodConfig>();
+      List<IMongodConfig> replicaSet2 = new ArrayList<>();
       replicaSet2.add(crateIMongodConfig(MONGOD_4_PORT, false,
           REPLICA_SET_2_NAME));
       replicaSet2.add(crateIMongodConfig(MONGOD_5_PORT, false,
           REPLICA_SET_2_NAME));
       replicaSet2.add(crateIMongodConfig(MONGOD_6_PORT, false,
           REPLICA_SET_2_NAME));
+
+      replicaSets.put(CONFIG_REPLICA_SET, configServers);
+      replicaSets.put(REPLICA_SET_1_NAME, replicaSet1);
       replicaSets.put(REPLICA_SET_2_NAME, replicaSet2);
 
       // create mongos
       IMongosConfig mongosConfig = createIMongosConfig();
       mongosTestFactory = new MongosSystemForTestFactory(mongosConfig,
-          replicaSets, configServers, EMPLOYEE_DB, EMPINFO_COLLECTION,
+          replicaSets, Lists.newArrayList(), EMPLOYEE_DB, EMPINFO_COLLECTION,
           "employee_id");
       try {
         mongosTestFactory.start();
@@ -116,51 +130,78 @@ public class MongoTestSuit implements MongoTestConstants {
       }
       createDbAndCollections(DONUTS_DB, DONUTS_COLLECTION, "id");
       createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
+      createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
     }
 
-    private static IMongodConfig crateConfigServerConfig(int configServerPort,
-        boolean flag) throws UnknownHostException, IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
-          .build();
+    private static IMongodConfig crateConfigServerConfig(int configServerPort) throws UnknownHostException, IOException {
+      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder()
+        .useNoPrealloc(false)
+        .useSmallFiles(false)
+        .useNoJournal(false)
+        .useStorageEngine(STORAGE_ENGINE)
+        .verbose(false)
+        .build();
+
+      Storage replication = new Storage(null, CONFIG_REPLICA_SET, 0);
 
       IMongodConfig mongodConfig = new MongodConfigBuilder()
-          .version(Version.Main.PRODUCTION)
+          .version(Version.Main.V3_4)
           .net(new Net(LOCALHOST, configServerPort, Network.localhostIsIPv6()))
-          .configServer(flag).cmdOptions(cmdOptions).build();
+          .replication(replication)
+          .shardServer(false)
+          .configServer(true).cmdOptions(cmdOptions).build();
       return mongodConfig;
     }
 
     private static IMongodConfig crateIMongodConfig(int mongodPort,
         boolean flag, String replicaName) throws UnknownHostException,
         IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
-          .build();
+      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder()
+        .useNoPrealloc(false)
+        .useSmallFiles(false)
+        .useNoJournal(false)
+        .useStorageEngine(STORAGE_ENGINE)
+        .verbose(false)
+        .build();
 
       Storage replication = new Storage(null, replicaName, 0);
       IMongodConfig mongodConfig = new MongodConfigBuilder()
-          .version(Version.Main.PRODUCTION)
+          .version(Version.Main.V3_4)
+        .shardServer(true)
           .net(new Net(LOCALHOST, mongodPort, Network.localhostIsIPv6()))
           .configServer(flag).replication(replication).cmdOptions(cmdOptions)
           .build();
+
       return mongodConfig;
     }
 
     private static IMongosConfig createIMongosConfig()
         throws UnknownHostException, IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
-          .build();
+      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder()
+        .useNoPrealloc(false)
+        .useSmallFiles(false)
+        .useNoJournal(false)
+        .useStorageEngine(STORAGE_ENGINE)
+        .verbose(false)
+        .build();
 
       IMongosConfig mongosConfig = new MongosConfigBuilder()
-          .version(Version.Main.PRODUCTION)
+          .version(Version.Main.V3_4)
           .net(new Net(LOCALHOST, MONGOS_PORT, Network.localhostIsIPv6()))
-          .configDB(LOCALHOST + ":" + CONFIG_SERVER_PORT)
+          .replicaSet(CONFIG_REPLICA_SET)
+          .configDB(LOCALHOST + ":" + CONFIG_SERVER_1_PORT)
           .cmdOptions(cmdOptions).build();
       return mongosConfig;
     }
 
     private static void cleanup() {
       if (mongosTestFactory != null) {
-        mongosTestFactory.stop();
+        // ignoring exception because sometimes provided time isn't enough to stop mongod processes
+        try {
+            mongosTestFactory.stop();
+          } catch (IllegalStateException e) {
+            logger.warn("Failed to close all mongod processes during provided timeout", e);
+          }
       }
     }
 
@@ -176,7 +217,7 @@ public class MongoTestSuit implements MongoTestConstants {
           .enableAuth(authEnabled).build();
 
       IMongodConfig mongodConfig = new MongodConfigBuilder()
-          .version(Version.Main.PRODUCTION)
+          .version(Version.Main.V3_4)
           .net(new Net(LOCALHOST, MONGOS_PORT, Network.localhostIsIPv6()))
           .cmdOptions(cmdOptions).build();
 
@@ -189,6 +230,7 @@ public class MongoTestSuit implements MongoTestConstants {
       createDbAndCollections(EMPLOYEE_DB, EMPINFO_COLLECTION, "employee_id");
       createDbAndCollections(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, "field_2");
       createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
+      createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
     }
 
     private static void cleanup() {
@@ -204,16 +246,21 @@ public class MongoTestSuit implements MongoTestConstants {
   @BeforeClass
   public static void initMongo() throws Exception {
     synchronized (MongoTestSuit.class) {
-      if (distMode) {
-        logger.info("Executing tests in distributed mode");
-        DistributedMode.setup();
-      } else {
-        logger.info("Executing tests in single mode");
-        SingleMode.setup();
+      if (initCount.get() == 0) {
+        if (distMode) {
+          logger.info("Executing tests in distributed mode");
+          DistributedMode.setup();
+        } else {
+          logger.info("Executing tests in single mode");
+          SingleMode.setup();
+        }
+        TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
+        TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
+        TestTableGenerator.importData(DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
+        TestTableGenerator.importData(DATATYPE_DB, DATATYPE_COLLECTION, DATATYPE_DATA);
       }
-      TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
-      TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
-      TestTableGenerator.importData(DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
+      initCount.incrementAndGet();
+      runningSuite = true;
     }
   }
 
@@ -226,23 +273,39 @@ public class MongoTestSuit implements MongoTestConstants {
       db.createCollection(collectionName);
       mongoCollection = db.getCollection(collectionName);
     }
-    IndexOptions indexOptions = new IndexOptions().unique(true)
-        .background(false).name(indexFieldName);
+
+    if (indexFieldName.equals("_id")) {
+      // Mongo 3.4 and later already makes an index for a field named _id
+      return;
+    }
+
+    IndexOptions indexOptions = new IndexOptions().unique(true).background(false).name(indexFieldName);
     Bson keys = Indexes.ascending(indexFieldName);
     mongoCollection.createIndex(keys, indexOptions);
   }
 
   @AfterClass
   public static void tearDownCluster() throws Exception {
-    if (mongoClient != null) {
-      mongoClient.dropDatabase(EMPLOYEE_DB);
-      mongoClient.close();
-    }
     synchronized (MongoTestSuit.class) {
-      if (distMode) {
-        DistributedMode.cleanup();
-      } else {
-        SingleMode.cleanup();
+      if (initCount.decrementAndGet() == 0) {
+        try {
+          if (mongoClient != null) {
+            mongoClient.dropDatabase(EMPLOYEE_DB);
+            mongoClient.dropDatabase(DATATYPE_DB);
+            mongoClient.dropDatabase(DONUTS_DB);
+          }
+        }
+        finally {
+          runningSuite = false;
+          if (mongoClient != null) {
+            mongoClient.close();
+          }
+          if (distMode) {
+            DistributedMode.cleanup();
+          } else {
+            SingleMode.cleanup();
+          }
+        }
       }
     }
   }

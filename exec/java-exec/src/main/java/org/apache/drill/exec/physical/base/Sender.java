@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,7 +38,7 @@ public interface Sender extends FragmentRoot {
 
   /**
    * Get the receiver major fragment id that is opposite this sender.
-   * @return
+   * @return The receiver major fragment id that is opposite this sender.
    */
   @JsonProperty("receiver-major-fragment")
   public int getOppositeMajorFragmentId();

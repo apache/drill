@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ public interface Exchange extends PhysicalOperator {
    * Assignment dependency describes whether sender fragments depend on receiver fragment's endpoint assignment for
    * determining its parallelization and endpoint assignment and vice versa.
    */
-  public enum ParallelizationDependency {
+  enum ParallelizationDependency {
     SENDER_DEPENDS_ON_RECEIVER, // Sending fragment depends on receiving fragment for parallelization
     RECEIVER_DEPENDS_ON_SENDER, // Receiving fragment depends on sending fragment for parallelization (default value).
   }
@@ -46,7 +46,7 @@ public interface Exchange extends PhysicalOperator {
    *
    * @param senderLocations
    */
-  public abstract void setupSenders(int majorFragmentId, List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException;
+  void setupSenders(int majorFragmentId, List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException;
 
   /**
    * Inform this Exchange node about its receiver locations. This list should be index-ordered the same as the expected
@@ -54,7 +54,7 @@ public interface Exchange extends PhysicalOperator {
    *
    * @param receiverLocations
    */
-  public abstract void setupReceivers(int majorFragmentId, List<DrillbitEndpoint> receiverLocations) throws PhysicalOperatorSetupException;
+  void setupReceivers(int majorFragmentId, List<DrillbitEndpoint> receiverLocations) throws PhysicalOperatorSetupException;
 
   /**
    * Get the Sender associated with the given minorFragmentId. Cannot be called until after setupSenders() and
@@ -66,7 +66,7 @@ public interface Exchange extends PhysicalOperator {
    *          The feeding node for the requested sender.
    * @return The materialized sender for the given arguments.
    */
-  public abstract Sender getSender(int minorFragmentId, PhysicalOperator child) throws PhysicalOperatorSetupException;
+  Sender getSender(int minorFragmentId, PhysicalOperator child) throws PhysicalOperatorSetupException;
 
   /**
    * Get the Receiver associated with the given minorFragmentId. Cannot be called until after setupSenders() and
@@ -76,38 +76,38 @@ public interface Exchange extends PhysicalOperator {
    *          The minor fragment id, must be in the range [0, fragment.width).
    * @return The materialized recevier for the given arguments.
    */
-  public abstract Receiver getReceiver(int minorFragmentId);
+  Receiver getReceiver(int minorFragmentId);
 
   /**
    * Provide parallelization parameters for sender side of the exchange. Output includes min width,
    * max width and affinity to Drillbits.
    *
    * @param receiverFragmentEndpoints Endpoints assigned to receiver fragment if available, otherwise an empty list.
-   * @return
+   * @return Sender {@link org.apache.drill.exec.planner.fragment.ParallelizationInfo}.
    */
   @JsonIgnore
-  public abstract ParallelizationInfo getSenderParallelizationInfo(List<DrillbitEndpoint> receiverFragmentEndpoints);
+  ParallelizationInfo getSenderParallelizationInfo(List<DrillbitEndpoint> receiverFragmentEndpoints);
 
   /**
    * Provide parallelization parameters for receiver side of the exchange. Output includes min width,
    * max width and affinity to Drillbits.
    *
    * @param senderFragmentEndpoints Endpoints assigned to receiver fragment if available, otherwise an empty list
-   * @return
+   * @return Receiver {@link org.apache.drill.exec.planner.fragment.ParallelizationInfo}.
    */
   @JsonIgnore
-  public abstract ParallelizationInfo getReceiverParallelizationInfo(List<DrillbitEndpoint> senderFragmentEndpoints);
+  ParallelizationInfo getReceiverParallelizationInfo(List<DrillbitEndpoint> senderFragmentEndpoints);
 
   /**
    * Return the feeding child of this operator node.
    *
-   * @return
+   * @return The feeding child of this operator node.
    */
-  public PhysicalOperator getChild();
+  PhysicalOperator getChild();
 
   /**
    * Get the parallelization dependency of the Exchange.
    */
   @JsonIgnore
-  public ParallelizationDependency getParallelizationDependency();
+  ParallelizationDependency getParallelizationDependency();
 }

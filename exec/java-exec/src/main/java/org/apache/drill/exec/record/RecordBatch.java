@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,7 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * A record batch contains a set of field values for a particular range of
@@ -34,13 +33,13 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
  * <p>
  *   A key thing to know is that the Iterator provided by a record batch must
  *   align with the rank positions of the field IDs provided using
- *   {@link getValueVectorId}.
+ *   {@link #getValueVectorId}.
  * </p>
  */
 public interface RecordBatch extends VectorAccessible {
 
   /** max batch size, limited by 2-byte length in SV2: 65536 = 2^16 */
-  public static final int MAX_BATCH_SIZE = 65536;
+  int MAX_BATCH_SIZE = ValueVector.MAX_ROW_COUNT;
 
   /**
    * Describes the outcome of incrementing RecordBatch forward by a call to
@@ -103,7 +102,7 @@ public interface RecordBatch extends VectorAccessible {
    *   )
    * </p>
    */
-  public static enum IterOutcome {
+  enum IterOutcome {
     /**
      * Normal completion of batch.
      * <p>
@@ -199,47 +198,68 @@ public interface RecordBatch extends VectorAccessible {
      *     {@code OUT_OF_MEMORY} to its caller) and call {@code next()} again.
      * </p>
      */
-    OUT_OF_MEMORY
+    OUT_OF_MEMORY,
+
+    /**
+     * Emit record to produce output batches.
+     * <p>
+     *   The call to {@link #next()},
+     *   read zero or more records with no change in schema as compared to last
+     *   time. It is an indication from upstream operator to unblock and
+     *   produce an output batch based on all the records current operator
+     *   possess. The caller should return this outcome to it's downstream
+     *   operators except LateralJoinRecordBatch, which will consume any EMIT
+     *   from right branch but will pass through EMIT from left branch.
+     * </p>
+     * <p>
+     *   Caller should produce one or more output record batch based on all the
+     *   current data and restart fresh for any new input. If there are multiple
+     *   output batches then caller should send EMIT only with last batch and OK
+     *   with all previous batches.
+     *   For example: Hash Join when received EMIT on build side will stop build
+     *   side and call next() on probe side until it sees EMIT. On seeing EMIT
+     *   from probe side, it should perform JOIN and produce output batches.
+     *   Later it should clear all the data on both build and probe side of
+     *   input and again start from build side.
+     * </p>
+     */
+    EMIT,
   }
 
   /**
    * Gets the FragmentContext of the current query fragment.  Useful for
    * reporting failure information or other query-level information.
    */
-  public FragmentContext getContext();
+  FragmentContext getContext();
 
   /**
    * Gets the current schema of this record batch.
    * <p>
    *   May be called only when the most recent call to {@link #next}, if any,
-   *   returned {@link #OK_NEW_SCHEMA} or {@link #OK}.
+   *   returned {@link IterOutcome#OK_NEW_SCHEMA} or {@link IterOutcome#OK}.
    * </p>
    * <p>
    *   The schema changes when and only when {@link #next} returns
-   *   {@link #OK_NEW_SCHEMA}.
+   *   {@link IterOutcome#OK_NEW_SCHEMA}.
    * </p>
    */
   @Override
-  public BatchSchema getSchema();
-
-  /**
-   * Gets the number of records that are within this record.
-   */
-  @Override
-  public int getRecordCount();
+  BatchSchema getSchema();
 
   /**
    * Informs child nodes that this query should be terminated.  Child nodes
    * should use the QueryContext to determine what has happened.
    */
-  public void kill(boolean sendUpstream);
+  void kill(boolean sendUpstream);
 
-  public abstract SelectionVector2 getSelectionVector2();
+  VectorContainer getOutgoingContainer();
 
-  public abstract SelectionVector4 getSelectionVector4();
-
-
-  public VectorContainer getOutgoingContainer();
+  /**
+   *  Return the internal vector container
+   *
+   * @return The internal vector container
+   */
+  public VectorContainer getContainer();
 
   /**
    * Gets the value vector type and ID for the given schema path.  The
@@ -253,10 +273,10 @@ public interface RecordBatch extends VectorAccessible {
    *         TypedFieldId
    */
   @Override
-  public abstract TypedFieldId getValueVectorId(SchemaPath path);
+  TypedFieldId getValueVectorId(SchemaPath path);
 
   @Override
-  public abstract VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids);
+  VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids);
 
   /**
    * Updates the data in each Field reading interface for the next range of
@@ -275,12 +295,11 @@ public interface RecordBatch extends VectorAccessible {
    *
    * @return An IterOutcome describing the result of the iteration.
    */
-  public IterOutcome next();
+  IterOutcome next();
 
   /**
    * Gets a writable version of this batch.  Takes over ownership of existing
    * buffers.
    */
-  public WritableBatch getWritableBatch();
-
+  WritableBatch getWritableBatch();
 }

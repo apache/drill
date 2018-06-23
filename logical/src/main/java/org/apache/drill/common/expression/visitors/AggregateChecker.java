@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -28,7 +29,9 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
@@ -44,6 +47,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 
 public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollector, RuntimeException>{
 
@@ -149,6 +153,11 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
   }
 
   @Override
+  public Boolean visitVarDecimalConstant(VarDecimalExpression decExpr, ErrorCollector errors) {
+    return false;
+  }
+
+  @Override
   public Boolean visitQuotedStringConstant(QuotedString e, ErrorCollector errors) {
     return false;
   }
@@ -165,6 +174,11 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
 
   @Override
   public Boolean visitConvertExpression(ConvertExpression e, ErrorCollector errors) throws RuntimeException {
+    return e.getInput().accept(this, errors);
+  }
+
+  @Override
+  public Boolean visitAnyValueExpression(AnyValueExpression e, ErrorCollector errors) throws RuntimeException {
     return e.getInput().accept(this, errors);
   }
 
@@ -203,4 +217,13 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
     return false;
   }
 
+  @Override
+  public Boolean visitParameter(ValueExpressions.ParameterExpression e, ErrorCollector value) throws RuntimeException {
+    return false;
+  }
+
+  @Override
+  public Boolean visitTypedFieldExpr(TypedFieldExpr e, ErrorCollector value) throws RuntimeException {
+    return false;
+  }
 }

@@ -1,4 +1,4 @@
- /**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,9 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -28,27 +29,27 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.drill.jdbc.Driver;
+import org.apache.drill.categories.JdbcTest;
+import org.apache.drill.jdbc.JdbcTestBase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-
-/**
+ /**
  * Tests from DRILL-2288, in which schema information wasn't propagated when a
  * scan yielded an empty (zero-row) result set.
  */
+@Category(JdbcTest.class)
 public class Drill2288GetColumnsMetadataWhenNoRowsTest {
-
   private static Connection connection;
-
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {
     // (Note: Can't use JdbcTest's connect(...) because JdbcTest closes
     // Connection--and other JDBC objects--on test method failure, but this test
     // class uses some objects across methods.)
-    connection = new Driver().connect( "jdbc:drill:zk=local", null );
+    connection = new Driver().connect( "jdbc:drill:zk=local", JdbcTestBase.getDefaultProperties());
   }
 
   @AfterClass
@@ -196,6 +197,4 @@ public class Drill2288GetColumnsMetadataWhenNoRowsTest {
     assertThat( "Unexpected non-empty results.  Test rot?",
                 false, equalTo( results.next() ) );
   }
-
-
 }

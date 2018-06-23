@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,6 +34,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -112,11 +113,11 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
     if (schema != null) {
       c = SchemaUtil.coerceContainer(c, schema, context);
     }
-//    logger.debug("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
+    logger.trace("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
     spilledBatches--;
     currentContainer.zeroVectors();
     Iterator<VectorWrapper<?>> wrapperIterator = c.iterator();
-    for (VectorWrapper w : currentContainer) {
+    for (VectorWrapper<?> w : currentContainer) {
       TransferPair pair = wrapperIterator.next().getValueVector().makeTransferPair(w.getValueVector());
       pair.transfer();
     }
@@ -208,6 +209,16 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return currentContainer.iterator();
+  }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public SelectionVector4 getSelectionVector4() {
+    throw new UnsupportedOperationException();
   }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,18 +17,23 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.common.graph.GraphVisitor;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.google.common.base.Preconditions;
 
-public abstract class AbstractBase implements PhysicalOperator{
+public abstract class AbstractBase implements PhysicalOperator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBase.class);
 
-  private final String userName;
+  public static long INIT_ALLOCATION = 1_000_000L;
+  public static long MAX_ALLOCATION = 10_000_000_000L;
 
-  protected long initialAllocation = 1000000L;
-  protected long maxAllocation = 10000000000L;
+  protected long initialAllocation = INIT_ALLOCATION;
+  protected long maxAllocation = MAX_ALLOCATION;
+
+  private final String userName;
   private int id;
   private double cost;
 
@@ -83,10 +88,12 @@ public abstract class AbstractBase implements PhysicalOperator{
     return initialAllocation;
   }
 
+  @Override
   public double getCost() {
     return cost;
   }
 
+  @Override
   public void setCost(double cost) {
     this.cost = cost;
   }
@@ -95,6 +102,23 @@ public abstract class AbstractBase implements PhysicalOperator{
   public long getMaxAllocation() {
     return maxAllocation;
   }
+
+  /**
+   * Any operator that supports spilling should override this method
+   * @param maxAllocation The max memory allocation to be set
+   */
+  @Override
+  public void setMaxAllocation(long maxAllocation) {
+    this.maxAllocation = maxAllocation;
+  }
+
+  /**
+   * Any operator that supports spilling should override this method (and return true)
+   * @return false
+   * @param queryContext
+   */
+  @Override @JsonIgnore
+  public boolean isBufferedOperator(QueryContext queryContext) { return false; }
 
   @Override
   public String getUserName() {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,11 +18,11 @@
 package org.apache.drill.exec.rpc;
 
 public interface RpcConnectionHandler<T extends RemoteConnection> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcConnectionHandler.class);
 
-  public static enum FailureType{CONNECTION, HANDSHAKE_COMMUNICATION, HANDSHAKE_VALIDATION}
+  enum FailureType {CONNECTION, HANDSHAKE_COMMUNICATION, HANDSHAKE_VALIDATION, AUTHENTICATION}
 
-  public void connectionSucceeded(T connection);
-  public void connectionFailed(FailureType type, Throwable t);
+  void connectionSucceeded(T connection);
+
+  void connectionFailed(FailureType type, Throwable t);
 
 }

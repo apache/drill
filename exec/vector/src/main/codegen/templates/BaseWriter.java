@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/writer/BaseWriter.java" />
 
@@ -54,7 +53,7 @@ package org.apache.drill.exec.vector.complex.writer;
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
     <#assign upperName = minor.class?upper_case />
     <#assign capName = minor.class?cap_first />
-    <#if minor.class?starts_with("Decimal") >
+    <#if minor.class?contains("Decimal") >
     ${capName}Writer ${lowerName}(String name, int scale, int precision);
     </#if>
     ${capName}Writer ${lowerName}(String name);
@@ -79,6 +78,9 @@ package org.apache.drill.exec.vector.complex.writer;
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
     <#assign upperName = minor.class?upper_case />
     <#assign capName = minor.class?cap_first />
+    <#if minor.class?contains("Decimal") >
+    ${capName}Writer ${lowerName}(int scale, int precision);
+    </#if>
     ${capName}Writer ${lowerName}();
     </#list></#list>
   }
@@ -106,12 +108,39 @@ package org.apache.drill.exec.vector.complex.writer;
     MapOrListWriter list(String name);
     boolean isMapWriter();
     boolean isListWriter();
+    UInt1Writer uInt1(String name);
+    UInt2Writer uInt2(String name);
+    UInt4Writer uInt4(String name);
+    UInt8Writer uInt8(String name);
     VarCharWriter varChar(String name);
+    Var16CharWriter var16Char(String name);
+    VarDecimalWriter varDecimal(String name);
+    VarDecimalWriter varDecimal(String name, int scale, int precision);
+    TinyIntWriter tinyInt(String name);
+    SmallIntWriter smallInt(String name);
     IntWriter integer(String name);
     BigIntWriter bigInt(String name);
     Float4Writer float4(String name);
     Float8Writer float8(String name);
     BitWriter bit(String name);
+    VarBinaryWriter varBinary(String name);
+    /**
+     * @deprecated Use {@link #varBinary(String)} instead.
+     */
+    @Deprecated
     VarBinaryWriter binary(String name);
+    DateWriter date(String name);
+    TimeWriter time(String name);
+    TimeStampWriter timeStamp(String name);
+    IntervalYearWriter intervalYear(String name);
+    IntervalDayWriter intervalDay(String name);
+    IntervalWriter interval(String name);
+    Decimal9Writer decimal9(String name);
+    Decimal18Writer decimal18(String name);
+    Decimal28DenseWriter decimal28Dense(String name);
+    Decimal38DenseWriter decimal38Dense(String name);
+    Decimal38SparseWriter decimal38Sparse(String name);
+    Decimal28SparseWriter decimal28Sparse(String name);
   }
+
 }

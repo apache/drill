@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,7 +44,7 @@ public class ExceptionInjection extends Injection {
                              @JsonProperty("nSkip") final int nSkip,
                              @JsonProperty("nFire") final int nFire,
                              @JsonProperty("exceptionClass") String classString) throws InjectionConfigurationException {
-    super(address, port, siteClass, desc, nSkip, nFire);
+    super(address, port, siteClass, desc, nSkip, nFire, 0L);
     final Class<?> clazz;
     try {
       clazz = Class.forName(classString);

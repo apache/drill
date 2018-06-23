@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,15 +21,13 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Admin;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -74,16 +72,25 @@ public class HBaseSchemaFactory implements SchemaFactory {
     @Override
     public Table getTable(String name) {
       HBaseScanSpec scanSpec = new HBaseScanSpec(name);
-      return new DrillHBaseTable(schemaName, plugin, scanSpec);
+      try {
+        return new DrillHBaseTable(schemaName, plugin, scanSpec);
+      } catch (Exception e) {
+        // Calcite firstly looks for a table in the default schema, if the table was not found,
+        // it looks in the root schema.
+        // If the table does not exist, a query will fail at validation stage,
+        // so the error should not be thrown here.
+        logger.warn("Failure while loading table '{}' for database '{}'.", name, schemaName, e.getCause());
+        return null;
+      }
     }
 
     @Override
     public Set<String> getTableNames() {
-      try(HBaseAdmin admin = new HBaseAdmin(plugin.getConfig().getHBaseConf())) {
+      try(Admin admin = plugin.getConnection().getAdmin()) {
         HTableDescriptor[] tables = admin.listTables();
         Set<String> tableNames = Sets.newHashSet();
         for (HTableDescriptor table : tables) {
-          tableNames.add(new String(table.getName()));
+          tableNames.add(new String(table.getTableName().getNameAsString()));
         }
         return tableNames;
       } catch (Exception e) {
@@ -96,7 +103,5 @@ public class HBaseSchemaFactory implements SchemaFactory {
     public String getTypeName() {
       return HBaseStoragePluginConfig.NAME;
     }
-
   }
-
 }

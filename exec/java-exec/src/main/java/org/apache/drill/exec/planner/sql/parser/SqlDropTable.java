@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
@@ -39,15 +38,21 @@ public class SqlDropTable extends DrillSqlCall {
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("DROP_TABLE", SqlKind.OTHER) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
-      return new SqlDropTable(pos, (SqlIdentifier) operands[0]);
+      return new SqlDropTable(pos, (SqlIdentifier) operands[0], (SqlLiteral) operands[1]);
     }
   };
 
   private SqlIdentifier tableName;
+  private boolean tableExistenceCheck;
 
-  public SqlDropTable(SqlParserPos pos, SqlIdentifier tableName) {
+  public SqlDropTable(SqlParserPos pos, SqlIdentifier tableName, SqlLiteral tableExistenceCheck) {
+    this(pos, tableName, tableExistenceCheck.booleanValue());
+  }
+
+  public SqlDropTable(SqlParserPos pos, SqlIdentifier tableName, boolean tableExistenceCheck) {
     super(pos);
     this.tableName = tableName;
+    this.tableExistenceCheck = tableExistenceCheck;
   }
 
   @Override
@@ -57,13 +62,22 @@ public class SqlDropTable extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    return Collections.singletonList((SqlNode) tableName);
+    final List<SqlNode> ops =
+        ImmutableList.of(
+            tableName,
+            SqlLiteral.createBoolean(tableExistenceCheck, SqlParserPos.ZERO)
+        );
+    return ops;
   }
 
   @Override
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("DROP");
     writer.keyword("TABLE");
+    if (tableExistenceCheck) {
+      writer.keyword("IF");
+      writer.keyword("EXISTS");
+    }
     tableName.unparse(writer, leftPrec, rightPrec);
   }
 
@@ -90,6 +104,10 @@ public class SqlDropTable extends DrillSqlCall {
 
   public SqlIdentifier getTableIdentifier() {
     return tableName;
+  }
+
+  public boolean checkTableExistence() {
+    return tableExistenceCheck;
   }
 
 }

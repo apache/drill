@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -62,7 +62,7 @@ public class FunctionCallFactory {
     opToFuncTable.put("u-", "negative");
   }
 
-  private static String replaceOpWithFuncName(String op) {
+  public static String replaceOpWithFuncName(String op) {
     return (opToFuncTable.containsKey(op)) ? (opToFuncTable.get(op)) : op;
   }
 
@@ -83,6 +83,14 @@ public class FunctionCallFactory {
 
   public static LogicalExpression createConvert(String function, String conversionType, LogicalExpression expr, ExpressionPosition ep) {
     return new ConvertExpression(function, conversionType, expr, ep);
+  }
+
+  public static LogicalExpression createAnyValue(ExpressionPosition ep, LogicalExpression expr) {
+    return new AnyValueExpression(expr, ep);
+  }
+
+  public static LogicalExpression createAnyValue(String functionName, List<LogicalExpression> args) {
+    return createExpression(functionName, args);
   }
 
   public static LogicalExpression createExpression(String functionName, List<LogicalExpression> args){

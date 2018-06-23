@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,8 +25,8 @@ import java.util.List;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.AllocationReservation;
+import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -98,13 +98,14 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     return true;
   }
 
+  @SuppressWarnings("resource")
   public void add(RecordBatchData rbd) {
     long batchBytes = getSize(rbd.getContainer());
     if (batchBytes == 0 && batches.size() > 0) {
       return;
     }
 
-    if(runningBatches >= Character.MAX_VALUE) {
+    if (runningBatches >= Character.MAX_VALUE) {
       final String errMsg = String.format("Tried to add more than %d number of batches.", (int) Character.MAX_VALUE);
       logger.error(errMsg);
       throw new DrillRuntimeException(errMsg);
@@ -130,17 +131,12 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     recordCount += rbd.getRecordCount();
   }
 
-  public void canonicalize() {
-    for (RecordBatchData batch : batches.values()) {
-      batch.canonicalize();
-    }
-  }
-
   public boolean isEmpty() {
     return batches.isEmpty();
   }
 
-  public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException{
+  @SuppressWarnings("resource")
+  public void build(VectorContainer outputContainer) throws SchemaChangeException {
     outputContainer.clear();
     if (batches.keySet().size() > 1) {
       throw new SchemaChangeException("Sort currently only supports a single schema.");
@@ -156,7 +152,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     if (svBuffer == null) {
       throw new OutOfMemoryError("Failed to allocate direct memory for SV4 vector in SortRecordBatchBuilder.");
     }
-    sv4 = new SelectionVector4(svBuffer, recordCount, Character.MAX_VALUE);
+    sv4 = new SelectionVector4(svBuffer, recordCount, ValueVector.MAX_ROW_COUNT);
     BatchSchema schema = batches.keySet().iterator().next();
     List<RecordBatchData> data = batches.get(schema);
 
@@ -177,8 +173,8 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       int index = 0;
       int recordBatchId = 0;
       for (RecordBatchData d : data) {
-        for (int i =0; i < d.getRecordCount(); i++, index++) {
-          sv4.set(index, recordBatchId, (int) d.getSv2().getIndex(i));
+        for (int i = 0; i < d.getRecordCount(); i++, index++) {
+          sv4.set(index, recordBatchId, d.getSv2().getIndex(i));
         }
         // might as well drop the selection vector since we'll stop using it now.
         d.getSv2().clear();
@@ -238,14 +234,17 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   }
 
   /**
-   * For given recordcount how muchmemory does SortRecordBatchBuilder needs for its own purpose. This is used in
-   * ExternalSortBatch to make decisions about whether to spill or not.
+   * For given record count, return the memory that SortRecordBatchBuilder needs
+   * for its own purpose. This is used in ExternalSortBatch to make decisions
+   * about whether to spill or not.
    *
-   * @param recordCount
-   * @return
+   * @param recordCount expected output record count
+   * @return number of bytes needed for an SV4, power-of-two rounded
    */
+
   public static long memoryNeeded(int recordCount) {
-    // We need 4 bytes (SV4) for each record.
-    return recordCount * 4;
+    // We need 4 bytes (SV4) for each record. Due to power-of-two allocations, the
+    // backing buffer might be twice this size.
+    return BaseAllocator.nextPowerOfTwo(recordCount * 4);
   }
 }

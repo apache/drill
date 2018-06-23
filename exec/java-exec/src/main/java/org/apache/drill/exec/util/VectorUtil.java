@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,35 +17,40 @@
  */
 package org.apache.drill.exec.util;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
-public class VectorUtil {
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
+public class VectorUtil {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorUtil.class);
   public static final int DEFAULT_COLUMN_WIDTH = 15;
 
   public static void showVectorAccessibleContent(VectorAccessible va, final String delimiter) {
-
+    final StringBuilder sb = new StringBuilder();
     int rows = va.getRecordCount();
-    System.out.println(rows + " row(s):");
+    sb.append(rows).append(" row(s):\n");
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getPath());
+      columns.add(formatFieldSchema(vw.getValueVector().getField()));
     }
 
     int width = columns.size();
     for (String column : columns) {
-      System.out.printf("%s%s",column, column == columns.get(width - 1) ? "\n" : delimiter);
+      sb.append(column).append(column.equals(columns.get(width - 1)) ? "\n" : delimiter);
     }
     for (int row = 0; row < rows; row++) {
       int columnCounter = 0;
@@ -54,20 +59,20 @@ public class VectorUtil {
         Object o ;
         try{
           o = vw.getValueVector().getAccessor().getObject(row);
-        }catch(Exception e){
-          throw new RuntimeException("failure while trying to read column " + vw.getField().getPath());
+        } catch (Exception e) {
+          throw new RuntimeException("failure while trying to read column " + vw.getField().getName());
         }
         if (o == null) {
           //null value
           String value = "null";
-          System.out.printf("%s%s", value, lastColumn ? "\n" : delimiter);
+          sb.append(value).append(lastColumn ? "\n" : delimiter);
         }
         else if (o instanceof byte[]) {
           String value = new String((byte[]) o);
-          System.out.printf("%s%s", value, lastColumn ? "\n" : delimiter);
+          sb.append(value).append(lastColumn ? "\n" : delimiter);
         } else {
           String value = o.toString();
-          System.out.printf("%s%s", value, lastColumn ? "\n" : delimiter);
+          sb.append(value).append(lastColumn ? "\n" : delimiter);
         }
         columnCounter++;
       }
@@ -76,6 +81,16 @@ public class VectorUtil {
     for (VectorWrapper<?> vw : va) {
       vw.clear();
     }
+
+    logger.info(sb.toString());
+  }
+
+  public static String formatFieldSchema(MaterializedField field) {
+    String colName = field.getName() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">";
+    if (field.getType().getMinorType() == MinorType.MAP) {
+      colName += expandMapSchema(field);
+    }
+    return colName;
   }
 
   public static void appendVectorAccessibleContent(VectorAccessible va, StringBuilder formattedResults,
@@ -83,7 +98,7 @@ public class VectorUtil {
     if (includeHeader) {
       List<String> columns = Lists.newArrayList();
       for (VectorWrapper<?> vw : va) {
-        columns.add(vw.getValueVector().getField().getPath());
+        columns.add(vw.getValueVector().getField().getName());
       }
 
       formattedResults.append(Joiner.on(delimiter).join(columns));
@@ -103,6 +118,8 @@ public class VectorUtil {
           // TODO(DRILL-3882) - remove this once the datetime is not returned in an
           // object needlessly holding a timezone
           rowValues.add(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").print((DateTime) o));
+        } else if (o instanceof LocalDateTime) {
+          rowValues.add(DateUtility.formatTimeStamp.format((LocalDateTime) o));
         } else {
           rowValues.add(o.toString());
         }
@@ -125,6 +142,7 @@ public class VectorUtil {
   }
 
   public static void showVectorAccessibleContent(VectorAccessible va, int[] columnWidths) {
+    final StringBuilder sb = new StringBuilder();
     int width = 0;
     int columnIndex = 0;
     List<String> columns = Lists.newArrayList();
@@ -133,25 +151,25 @@ public class VectorUtil {
       int columnWidth = getColumnWidth(columnWidths, columnIndex);
       width += columnWidth + 2;
       formats.add("| %-" + columnWidth + "s");
-      MaterializedField field = vw.getValueVector().getField();
-      columns.add(field.getPath() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">");
       columnIndex++;
+      columns.add(formatFieldSchema(vw.getValueVector().getField()));
     }
 
     int rows = va.getRecordCount();
-    System.out.println(rows + " row(s):");
+    sb.append(rows).append(" row(s):\n");
     for (int row = 0; row < rows; row++) {
       // header, every 50 rows.
       if (row%50 == 0) {
-        System.out.println(StringUtils.repeat("-", width + 1));
+        sb.append(StringUtils.repeat("-", width + 1)).append('\n');
         columnIndex = 0;
         for (String column : columns) {
           int columnWidth = getColumnWidth(columnWidths, columnIndex);
-          System.out.printf(formats.get(columnIndex), column.length() <= columnWidth ? column : column.substring(0, columnWidth - 1));
+          sb.append(String.format(formats.get(columnIndex), column.length() <= columnWidth ? column : column.substring(0, columnWidth - 1)));
           columnIndex++;
         }
-        System.out.printf("|\n");
-        System.out.println(StringUtils.repeat("-", width + 1));
+
+        sb.append("|\n");
+        sb.append(StringUtils.repeat("-", width + 1)).append('\n');
       }
       // column values
       columnIndex = 0;
@@ -164,13 +182,13 @@ public class VectorUtil {
         } else {
           cellString = DrillStringUtils.escapeNewLines(String.valueOf(o));
         }
-        System.out.printf(formats.get(columnIndex), cellString.length() <= columnWidth ? cellString : cellString.substring(0, columnWidth - 1));
+        sb.append(String.format(formats.get(columnIndex), cellString.length() <= columnWidth ? cellString : cellString.substring(0, columnWidth - 1)));
         columnIndex++;
       }
-      System.out.printf("|\n");
+      sb.append("|\n");
     }
     if (rows > 0) {
-      System.out.println(StringUtils.repeat("-", width + 1));
+      sb.append(StringUtils.repeat("-", width + 1)).append('\n');
     }
 
     for (VectorWrapper<?> vw : va) {
@@ -178,9 +196,33 @@ public class VectorUtil {
     }
   }
 
+  private static String expandMapSchema(MaterializedField mapField) {
+    StringBuilder buf = new StringBuilder();
+    buf.append("{");
+    String sep = "";
+    for (MaterializedField field : mapField.getChildren()) {
+      buf.append(sep);
+      sep = ",";
+      buf.append(formatFieldSchema(field));
+    }
+    buf.append("}");
+    return buf.toString();
+  }
+
+  public static void allocateVectors(Iterable<ValueVector> valueVectors, int count) {
+    for (final ValueVector v : valueVectors) {
+      AllocationHelper.allocateNew(v, count);
+    }
+  }
+
+  public static void setValueCount(Iterable<ValueVector> valueVectors, int count) {
+    for (final ValueVector v : valueVectors) {
+      v.getMutator().setValueCount(count);
+    }
+  }
+
   private static int getColumnWidth(int[] columnWidths, int columnIndex) {
     return (columnWidths == null) ? DEFAULT_COLUMN_WIDTH
         : (columnWidths.length > columnIndex) ? columnWidths[columnIndex] : columnWidths[0];
   }
-
 }

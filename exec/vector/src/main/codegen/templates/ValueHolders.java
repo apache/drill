@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,88 +29,94 @@ package org.apache.drill.exec.expr.holders;
 
 <#include "/@includes/vv_imports.ftl" />
 
-public final class ${className} implements ValueHolder{
-  
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+<#if minor.class.contains("Decimal") && !minor.class.contains("VarDecimal")>
+/**
+ *  Old decimal types are deprecated. Please use {@link VarDecimalHolder} holder instead.
+ */
+@Deprecated
+</#if>
+public final class ${className} implements ValueHolder {
+
+  <#if minor.class.contains("Decimal")>
+  @Deprecated
+  </#if>
   public static final MajorType TYPE = Types.${mode.name?lower_case}(MinorType.${minor.class?upper_case});
-  
-  public MajorType getType() {return TYPE;}
-  
-    <#if mode.name == "Repeated">
-    
-    /** The first index (inclusive) into the Vector. **/
-    public int start;
-    
-    /** The last index (exclusive) into the Vector. **/
-    public int end;
-    
-    /** The Vector holding the actual values. **/
-    public ${minor.class}Vector vector;
-    
-    <#else>
-    public static final int WIDTH = ${type.width};
-    
-    <#if mode.name == "Optional">public int isSet;</#if>
-    <#assign fields = minor.fields!type.fields />
-    <#list fields as field>
-    public ${field.type} ${field.name};
-    </#list>
-    
-    <#if minor.class.startsWith("Decimal")>
-    public static final int maxPrecision = ${minor.maxPrecisionDigits};
-    <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
-    public static final int nDecimalDigits = ${minor.nDecimalDigits};
-    
-    public static int getInteger(int index, int start, DrillBuf buffer) {
-      int value = buffer.getInt(start + (index * 4));
 
-      if (index == 0) {
-          /* the first byte contains sign bit, return value without it */
-          <#if minor.class.endsWith("Sparse")>
-          value = (value & 0x7FFFFFFF);
-          <#elseif minor.class.endsWith("Dense")>
-          value = (value & 0x0000007F);
-          </#if>
-      }
-      return value;
-    }
+  <#if mode.name == "Repeated">
+    
+  /** The first index (inclusive) into the Vector. **/
+  public int start;
 
-    public static void setInteger(int index, int value, int start, DrillBuf buffer) {
-        buffer.setInt(start + (index * 4), value);
-    }
-  
-    public static void setSign(boolean sign, int start, DrillBuf buffer) {
-      // Set MSB to 1 if sign is negative
-      if (sign == true) {
-        int value = getInteger(0, start, buffer);
-        setInteger(0, (value | 0x80000000), start, buffer);
-      }
-    }
-  
-    public static boolean getSign(int start, DrillBuf buffer) {
-      return ((buffer.getInt(start) & 0x80000000) != 0);
-    }
-    </#if></#if>
-    
-    @Deprecated
-    public int hashCode(){
-      throw new UnsupportedOperationException();
-    }
+  /** The last index (exclusive) into the Vector. **/
+  public int end;
 
-    /*
-     * Reason for deprecation is that ValueHolders are potential scalar replacements
-     * and hence we don't want any methods to be invoked on them.
-     */
-    @Deprecated
-    public String toString(){
-      throw new UnsupportedOperationException();
+  /** The Vector holding the actual values. **/
+  public ${minor.class}Vector vector;
+
+  public FieldReader reader;
+<#else>
+  public static final int WIDTH = ${type.width};
+
+  <#if mode.name == "Optional">public int isSet;</#if>
+  <#assign fields = minor.fields!type.fields />
+  <#list fields as field>
+  public ${field.type} ${field.name};
+  </#list>
+    
+  <#if minor.class.startsWith("Decimal")>
+  public static final int maxPrecision = ${minor.maxPrecisionDigits};
+  <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
+  public static final int nDecimalDigits = ${minor.nDecimalDigits};
+    
+  public static int getInteger(int index, int start, DrillBuf buffer) {
+    int value = buffer.getInt(start + (index * 4));
+
+    if (index == 0) {
+      /* the first byte contains sign bit, return value without it */
+      <#if minor.class.endsWith("Sparse")>
+      value = (value & 0x7FFFFFFF);
+      <#elseif minor.class.endsWith("Dense")>
+      value = (value & 0x0000007F);
+      </#if>
     }
-    </#if>
-    
-    
-    
-    
+    return value;
+  }
+
+  public static void setInteger(int index, int value, int start, DrillBuf buffer) {
+    buffer.setInt(start + (index * 4), value);
+  }
+  
+  public static void setSign(boolean sign, int start, DrillBuf buffer) {
+    // Set MSB to 1 if sign is negative
+    if (sign == true) {
+      int value = getInteger(0, start, buffer);
+      setInteger(0, (value | 0x80000000), start, buffer);
+    }
+  }
+  
+  public static boolean getSign(int start, DrillBuf buffer) {
+    return ((buffer.getInt(start) & 0x80000000) != 0);
+  }
+
+  </#if></#if>
+  @Deprecated
+  public int hashCode() {
+    throw new UnsupportedOperationException();
+  }
+
+  /*
+   * Reason for deprecation is that ValueHolders are potential scalar replacements
+   * and hence we don't want any methods to be invoked on them.
+   */
+  @Deprecated
+  public String toString() {
+    throw new UnsupportedOperationException();
+  }
+  </#if>
 }
-
 </#list>
 </#list>
 </#list>

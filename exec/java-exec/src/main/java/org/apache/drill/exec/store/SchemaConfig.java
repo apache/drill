@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,40 +17,47 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import org.apache.drill.exec.ops.QueryContext;
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.server.options.OptionValue;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 /**
  * Contains information needed by {@link org.apache.drill.exec.store.AbstractSchema} implementations.
  */
 public class SchemaConfig {
   private final String userName;
-  private final QueryContext queryContext;
+  private final SchemaConfigInfoProvider provider;
   private final boolean ignoreAuthErrors;
 
-  private SchemaConfig(final String userName, final QueryContext queryContext, final boolean ignoreAuthErrors) {
+  private SchemaConfig(final String userName, final SchemaConfigInfoProvider provider, final boolean ignoreAuthErrors) {
     this.userName = userName;
-    this.queryContext = queryContext;
+    this.provider = provider;
     this.ignoreAuthErrors = ignoreAuthErrors;
   }
 
-  public static Builder newBuilder(final String userName, final QueryContext queryContext) {
+  /**
+   * Create new builder.
+   * @param userName Name of the user accessing the storage sources.
+   * @param provider Implementation {@link SchemaConfigInfoProvider}
+   * @return
+   */
+  public static Builder newBuilder(final String userName, final SchemaConfigInfoProvider provider) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(userName), "A valid userName is expected");
-    Preconditions.checkNotNull(queryContext, "Non-null QueryContext is expected");
-    return new Builder(userName, queryContext);
+    Preconditions.checkNotNull(provider, "Non-null SchemaConfigInfoProvider is expected");
+    return new Builder(userName, provider);
   }
 
   public static class Builder {
     final String userName;
-    final QueryContext queryContext;
+    final SchemaConfigInfoProvider provider;
     boolean ignoreAuthErrors;
 
-    private Builder(final String userName, final QueryContext queryContext) {
+    private Builder(final String userName, final SchemaConfigInfoProvider provider) {
       this.userName = userName;
-      this.queryContext = queryContext;
+      this.provider = provider;
     }
 
     public Builder setIgnoreAuthErrors(boolean ignoreAuthErrors) {
@@ -59,16 +66,12 @@ public class SchemaConfig {
     }
 
     public SchemaConfig build() {
-      return new SchemaConfig(userName, queryContext, ignoreAuthErrors);
+      return new SchemaConfig(userName, provider, ignoreAuthErrors);
     }
   }
 
-  public QueryContext getQueryContext() {
-    return queryContext;
-  }
-
   /**
-   * @return User whom to impersonate as while {@link net.hydromatic.optiq.SchemaPlus} instances
+   * @return User whom to impersonate as while creating {@link SchemaPlus} instances
    * interact with the underlying storage.
    */
   public String getUserName() {
@@ -76,7 +79,7 @@ public class SchemaConfig {
   }
 
   /**
-   * @return Should ignore if authorization errors are reported while {@link net.hydromatic.optiq.SchemaPlus}
+   * @return Should ignore if authorization errors are reported while {@link SchemaPlus}
    * instances interact with the underlying storage.
    */
   public boolean getIgnoreAuthErrors() {
@@ -84,10 +87,23 @@ public class SchemaConfig {
   }
 
   public OptionValue getOption(String optionKey) {
-    return queryContext.getOptions().getOption(optionKey);
+    return provider.getOption(optionKey);
   }
 
   public ViewExpansionContext getViewExpansionContext() {
-    return queryContext.getViewExpansionContext();
+    return provider.getViewExpansionContext();
+  }
+
+  /**
+   * Interface to implement to provide required info for {@link org.apache.drill.exec.store.SchemaConfig}
+   */
+  public interface SchemaConfigInfoProvider {
+    ViewExpansionContext getViewExpansionContext();
+
+    SchemaPlus getRootSchema(String userName);
+
+    String getQueryUserName();
+
+    OptionValue getOption(String optionKey);
   }
 }

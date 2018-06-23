@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,13 +22,15 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionMetaData;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.options.TypeValidators.TypeValidator;
 import org.apache.drill.exec.testing.InjectionSite.InjectionSiteKeyDeserializer;
 import org.apache.drill.exec.util.AssertionUtil;
@@ -74,13 +76,11 @@ public final class ExecutionControls {
 
     /**
      * Constructor for controls option validator.
-     *
-     * @param name the name of the validator
-     * @param def  the default JSON, specified as string
+     *  @param name the name of the validator
      * @param ttl  the number of queries for which this option should be valid
      */
-    public ControlsOptionValidator(final String name, final String def, final int ttl) {
-      super(name, OptionValue.Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def));
+    public ControlsOptionValidator(final String name, final int ttl) {
+      super(name, OptionValue.Kind.STRING);
       assert ttl > 0;
       this.ttl = ttl;
     }
@@ -96,12 +96,7 @@ public final class ExecutionControls {
     }
 
     @Override
-    public void validate(final OptionValue v) {
-      if (v.type != OptionType.SESSION) {
-        throw UserException.validationError()
-            .message("Controls can be set only at SESSION level.")
-            .build(logger);
-      }
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
       final String jsonString = v.string_val;
       try {
         validateControlsString(jsonString);
@@ -136,6 +131,11 @@ public final class ExecutionControls {
   private final Map<InjectionSite, Injection> controls = new HashMap<>();
 
   private final DrillbitEndpoint endpoint; // the current endpoint
+
+  @VisibleForTesting
+  public ExecutionControls(final OptionManager options) {
+    this(options, null);
+  }
 
   public ExecutionControls(final OptionManager options, final DrillbitEndpoint endpoint) {
     this.endpoint = endpoint;

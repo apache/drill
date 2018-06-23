@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,6 +29,12 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   public final ImmutableList<LogicalExpression> args;
   public final String nameUsed;
 
+  /**
+   * A field reference identifies the output field and
+   * is used to reference that field in the generated classes.
+   */
+  private FieldReference fieldReference;
+
   public FunctionHolderExpression(String nameUsed, ExpressionPosition pos, List<LogicalExpression> args) {
     super(pos);
     if (args == null) {
@@ -48,8 +54,8 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   }
 
   /**
-   * A function can have multiple names, it returns the function name used in the query
-   * @return
+   * A function can have multiple names, it returns the function name used in the query.
+   * @return The function name used in the query.
    */
   public String getName() {
     return nameUsed;
@@ -58,7 +64,7 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   /**
    * constant input expected for i'th argument?
    * @param i
-   * @return
+   * @return True if a constant input is expected for the i'th argument. False otherwise.
    */
   public abstract boolean argConstantOnly(int i);
 
@@ -80,4 +86,16 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   /** Return the underlying function implementation holder. */
   public abstract FuncHolder getHolder();
 
+  public FieldReference getFieldReference() {
+    return fieldReference;
+  }
+
+  /**
+   * Set the FieldReference to be used during generating code.
+   *
+   * @param fieldReference FieldReference to set.
+   */
+  public void getFieldReference(FieldReference fieldReference) {
+    this.fieldReference = fieldReference;
+  }
 }

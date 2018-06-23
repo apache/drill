@@ -1,5 +1,4 @@
-/*******************************************************************************
-
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
@@ -171,8 +170,14 @@ public class RoundFunctions {
     }
 
     public void eval() {
-      java.math.BigDecimal input = java.math.BigDecimal.valueOf(in.value);
-      out.value = input.setScale(0, java.math.RoundingMode.HALF_UP).floatValue();
+      if (Float.isNaN(in.value)) {
+        out.value = 0;
+      } else if(Float.isInfinite(in.value)) {
+        out.value = Math.signum(in.value) > 0 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+      } else {
+        java.math.BigDecimal input = java.math.BigDecimal.valueOf(in.value);
+        out.value = input.setScale(0, java.math.RoundingMode.HALF_UP).floatValue();
+      }
     }
   }
 
@@ -186,8 +191,14 @@ public class RoundFunctions {
     }
 
     public void eval() {
-      java.math.BigDecimal input = java.math.BigDecimal.valueOf(in.value);
-      out.value = input.setScale(0, java.math.RoundingMode.HALF_UP).doubleValue();
+      if (Double.isNaN(in.value)) {
+        out.value = 0;
+      } else if(Double.isInfinite(in.value)) {
+        out.value = Math.signum(in.value) > 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+      } else {
+        java.math.BigDecimal input = java.math.BigDecimal.valueOf(in.value);
+        out.value = input.setScale(0, java.math.RoundingMode.HALF_UP).doubleValue();
+      }
     }
   }
 }

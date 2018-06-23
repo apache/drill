@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,13 +32,15 @@ import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 
 /**
- * The base allocator that we use for all of Drill's memory management. Returns UnsafeDirectLittleEndian buffers.
+ * The base allocator that we use for all of Drill's memory management. Returns
+ * UnsafeDirectLittleEndian buffers.
  */
+
 public class PooledByteBufAllocatorL {
-  private static final org.slf4j.Logger memoryLogger = org.slf4j.LoggerFactory.getLogger("drill.allocator");
+  private static final org.slf4j.Logger memoryLogger = org.slf4j.LoggerFactory
+      .getLogger("drill.allocator");
 
   private static final int MEMORY_LOGGER_FREQUENCY_SECONDS = 60;
-
 
   public static final String METRIC_PREFIX = "drill.allocator.";
 
@@ -54,7 +56,8 @@ public class PooledByteBufAllocatorL {
   public PooledByteBufAllocatorL(MetricRegistry registry) {
     this.registry = registry;
     allocator = new InnerAllocator();
-    empty = new UnsafeDirectLittleEndian(new DuplicatedByteBuf(Unpooled.EMPTY_BUFFER));
+    empty = new UnsafeDirectLittleEndian(
+        new DuplicatedByteBuf(Unpooled.EMPTY_BUFFER));
   }
 
   public UnsafeDirectLittleEndian allocate(int size) {
@@ -63,7 +66,6 @@ public class PooledByteBufAllocatorL {
     } catch (OutOfMemoryError e) {
       throw new OutOfMemoryException("Failure allocating buffer.", e);
     }
-
   }
 
   public int getChunkSize() {
@@ -72,13 +74,13 @@ public class PooledByteBufAllocatorL {
 
   private class InnerAllocator extends PooledByteBufAllocator {
 
-
     private final PoolArena<ByteBuffer>[] directArenas;
     private final MemoryStatusThread statusThread;
     private final Histogram largeBuffersHist;
     private final Histogram normalBuffersHist;
     private final int chunkSize;
 
+    @SuppressWarnings("unchecked")
     public InnerAllocator() {
       super(true);
 
@@ -87,7 +89,9 @@ public class PooledByteBufAllocatorL {
         f.setAccessible(true);
         this.directArenas = (PoolArena<ByteBuffer>[]) f.get(this);
       } catch (Exception e) {
-        throw new RuntimeException("Failure while initializing allocator.  Unable to retrieve direct arenas field.", e);
+        throw new RuntimeException(
+            "Failure while initializing allocator.  Unable to retrieve direct arenas field.",
+            e);
       }
 
       this.chunkSize = directArenas[0].chunkSize;
@@ -130,9 +134,7 @@ public class PooledByteBufAllocatorL {
 
       largeBuffersHist = registry.histogram(METRIC_PREFIX + "huge.hist");
       normalBuffersHist = registry.histogram(METRIC_PREFIX + "normal.hist");
-
     }
-
 
     private synchronized void removeOldMetrics() {
       registry.removeMatching(new MetricFilter() {
@@ -140,29 +142,32 @@ public class PooledByteBufAllocatorL {
         public boolean matches(String name, Metric metric) {
           return name.startsWith("drill.allocator.");
         }
-
       });
     }
 
     private UnsafeDirectLittleEndian newDirectBufferL(int initialCapacity, int maxCapacity) {
-      PoolThreadCache cache = threadCache.get();
+      PoolThreadCache cache = threadCache();
       PoolArena<ByteBuffer> directArena = cache.directArena;
 
       if (directArena != null) {
 
         if (initialCapacity > directArena.chunkSize) {
           // This is beyond chunk size so we'll allocate separately.
-          ByteBuf buf = UnpooledByteBufAllocator.DEFAULT.directBuffer(initialCapacity, maxCapacity);
+          ByteBuf buf = UnpooledByteBufAllocator.DEFAULT
+              .directBuffer(initialCapacity, maxCapacity);
 
           hugeBufferCount.incrementAndGet();
           hugeBufferSize.addAndGet(buf.capacity());
           largeBuffersHist.update(buf.capacity());
-          // logger.debug("Allocating huge buffer of size {}", initialCapacity, new Exception());
-          return new UnsafeDirectLittleEndian(new LargeBuffer(buf, hugeBufferSize, hugeBufferCount));
+          // logger.debug("Allocating huge buffer of size {}", initialCapacity,
+          // new Exception());
+          return new UnsafeDirectLittleEndian(
+              new LargeBuffer(buf, hugeBufferSize, hugeBufferCount));
 
         } else {
           // within chunk, use arena.
-          ByteBuf buf = directArena.allocate(cache, initialCapacity, maxCapacity);
+          ByteBuf buf = directArena.allocate(cache, initialCapacity,
+              maxCapacity);
           if (!(buf instanceof PooledUnsafeDirectByteBuf)) {
             fail();
           }
@@ -173,10 +178,9 @@ public class PooledByteBufAllocatorL {
             normalBufferCount.incrementAndGet();
           }
 
-          return new UnsafeDirectLittleEndian((PooledUnsafeDirectByteBuf) buf, normalBufferCount,
-              normalBufferSize);
+          return new UnsafeDirectLittleEndian((PooledUnsafeDirectByteBuf) buf,
+              normalBufferCount, normalBufferSize);
         }
-
       } else {
         throw fail();
       }
@@ -184,10 +188,12 @@ public class PooledByteBufAllocatorL {
 
     private UnsupportedOperationException fail() {
       return new UnsupportedOperationException(
-          "Drill requries that the JVM used supports access sun.misc.Unsafe.  This platform didn't provide that functionality.");
+          "Drill requires that the JVM used supports access sun.misc.Unsafe.  This platform doesn't provide that functionality.");
     }
 
-    public UnsafeDirectLittleEndian directBuffer(int initialCapacity, int maxCapacity) {
+    @Override
+    public UnsafeDirectLittleEndian directBuffer(int initialCapacity,
+        int maxCapacity) {
       if (initialCapacity == 0 && maxCapacity == 0) {
         newDirectBuffer(initialCapacity, maxCapacity);
       }
@@ -197,13 +203,14 @@ public class PooledByteBufAllocatorL {
 
     @Override
     public ByteBuf heapBuffer(int initialCapacity, int maxCapacity) {
-      throw new UnsupportedOperationException("Drill doesn't support using heap buffers.");
+      throw new UnsupportedOperationException(
+          "Drill doesn't support using heap buffers.");
     }
-
 
     private void validate(int initialCapacity, int maxCapacity) {
       if (initialCapacity < 0) {
-        throw new IllegalArgumentException("initialCapacity: " + initialCapacity + " (expectd: 0+)");
+        throw new IllegalArgumentException(
+            "initialCapacity: " + initialCapacity + " (expected: 0+)");
       }
       if (initialCapacity > maxCapacity) {
         throw new IllegalArgumentException(String.format(
@@ -223,18 +230,18 @@ public class PooledByteBufAllocatorL {
       @Override
       public void run() {
         while (true) {
-          memoryLogger.trace("Memory Usage: \n{}", PooledByteBufAllocatorL.this.toString());
+          memoryLogger.trace("Memory Usage: \n{}",
+              PooledByteBufAllocatorL.this.toString());
           try {
             Thread.sleep(MEMORY_LOGGER_FREQUENCY_SECONDS * 1000);
           } catch (InterruptedException e) {
             return;
           }
-
         }
       }
-
     }
 
+    @Override
     public String toString() {
       StringBuilder buf = new StringBuilder();
       buf.append(directArenas.length);
@@ -257,8 +264,6 @@ public class PooledByteBufAllocatorL {
       buf.append(" bytes.");
       return buf.toString();
     }
-
-
   }
 
   public static final boolean ASSERT_ENABLED;
@@ -268,5 +273,4 @@ public class PooledByteBufAllocatorL {
     assert isAssertEnabled = true;
     ASSERT_ENABLED = isAssertEnabled;
   }
-
 }

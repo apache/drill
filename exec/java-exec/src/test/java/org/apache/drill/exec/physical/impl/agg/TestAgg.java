@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,61 +20,52 @@ package org.apache.drill.exec.physical.impl.agg;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.scanner.ClassPathScanner;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.compile.CodeCompilerTestFactory;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
-import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
+@Category(OperatorTest.class)
 public class TestAgg extends ExecTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAgg.class);
   private final DrillConfig c = DrillConfig.create();
 
-  private SimpleRootExec doTest(final DrillbitContext bitContext, UserClientConnection connection, String file) throws Exception {
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+  private SimpleRootExec doTest(String file) throws Exception {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
+    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile(file), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     return exec;
   }
 
   @Test
-  public void oneKeyAgg(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable {
-    final SimpleRootExec exec = doTest(bitContext, connection, "/agg/test1.json");
+  public void oneKeyAgg() throws Throwable {
+    final SimpleRootExec exec = doTest("/agg/test1.json");
 
     while(exec.next()) {
       final BigIntVector cnt = exec.getValueVectorById(SchemaPath.getSimplePath("cnt"), BigIntVector.class);
@@ -88,16 +79,16 @@ public class TestAgg extends ExecTest {
       }
     }
 
-    if(exec.getContext().getFailureCause() != null) {
-      throw exec.getContext().getFailureCause();
+    if(exec.getContext().getExecutorState().getFailureCause() != null) {
+      throw exec.getContext().getExecutorState().getFailureCause();
     }
-    assertTrue(!exec.getContext().isFailed());
 
+    assertTrue(!exec.getContext().getExecutorState().isFailed());
   }
 
   @Test
-  public void twoKeyAgg(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable {
-    SimpleRootExec exec = doTest(bitContext, connection, "/agg/twokey.json");
+  public void twoKeyAgg() throws Throwable {
+    SimpleRootExec exec = doTest("/agg/twokey.json");
 
     while(exec.next()) {
       final IntVector key1 = exec.getValueVectorById(SchemaPath.getSimplePath("key1"), IntVector.class);
@@ -110,14 +101,6 @@ public class TestAgg extends ExecTest {
       final long[] totalArr = {0,34,68,0,34,68};
 
       for(int i = 0; i < exec.getRecordCount(); i++) {
-//        System.out.print(key1.getAccessor().getObject(i));
-//        System.out.print("\t");
-//        System.out.print(key2.getAccessor().getObject(i));
-//        System.out.print("\t");
-//        System.out.print(cnt.getAccessor().getObject(i));
-//        System.out.print("\t");
-//        System.out.print(total.getAccessor().getObject(i));
-//        System.out.println();
         assertEquals((Long) cntArr[i], cnt.getAccessor().getObject(i));
         assertEquals(keyArr1[i], key1.getAccessor().getObject(i));
         assertEquals((Long) keyArr2[i], key2.getAccessor().getObject(i));
@@ -125,9 +108,9 @@ public class TestAgg extends ExecTest {
       }
     }
 
-    if(exec.getContext().getFailureCause() != null){
-      throw exec.getContext().getFailureCause();
+    if(exec.getContext().getExecutorState().getFailureCause() != null){
+      throw exec.getContext().getExecutorState().getFailureCause();
     }
-    assertTrue(!exec.getContext().isFailed());
+    assertTrue(!exec.getContext().getExecutorState().isFailed());
   }
 }

@@ -27,6 +27,8 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeMap;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 
 /**
  * RecordIterator iterates over incoming record batches one record at a time.
@@ -55,18 +57,21 @@ public class RecordIterator implements VectorAccessible {
   private final VectorContainer container; // Holds VectorContainer of current record batch
   private final TreeRangeMap<Long, RecordBatchData> batches = TreeRangeMap.create();
 
+  private final RecordBatchMemoryManager newBatchCallBack;
+
   public RecordIterator(RecordBatch incoming,
                         AbstractRecordBatch<?> outgoing,
                         OperatorContext oContext,
-                        int inputIndex) {
-    this(incoming, outgoing, oContext, inputIndex, true);
+                        int inputIndex, RecordBatchMemoryManager callBack) {
+    this(incoming, outgoing, oContext, inputIndex, true, callBack);
   }
 
   public RecordIterator(RecordBatch incoming,
                         AbstractRecordBatch<?> outgoing,
                         OperatorContext oContext,
                         int inputIndex,
-                        boolean enableMarkAndReset) {
+                        boolean enableMarkAndReset,
+                        RecordBatchMemoryManager callBack) {
     this.incoming = incoming;
     this.outgoing = outgoing;
     this.inputIndex = inputIndex;
@@ -76,6 +81,7 @@ public class RecordIterator implements VectorAccessible {
     resetIndices();
     this.initialized = false;
     this.enableMarkAndReset = enableMarkAndReset;
+    this.newBatchCallBack = callBack;
   }
 
   private void resetIndices() {
@@ -95,6 +101,9 @@ public class RecordIterator implements VectorAccessible {
       return;
     }
     lastOutcome = outgoing != null ? outgoing.next(inputIndex, incoming) : incoming.next();
+    if ((lastOutcome == IterOutcome.OK || lastOutcome == IterOutcome.OK_NEW_SCHEMA) && newBatchCallBack != null) {
+      newBatchCallBack.update(inputIndex);
+    }
   }
 
   public void mark() {
@@ -320,6 +329,16 @@ public class RecordIterator implements VectorAccessible {
   public Iterator<VectorWrapper<?>> iterator() {
     assert initialized;
     return container.iterator();
+  }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public SelectionVector4 getSelectionVector4() {
+    throw new UnsupportedOperationException();
   }
 
   // Release all vectors held by record batches, clear out range map.

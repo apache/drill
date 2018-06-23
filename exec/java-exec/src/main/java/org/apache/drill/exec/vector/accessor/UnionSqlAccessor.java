@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,15 +21,9 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.vector.complex.UnionVector;
-import org.apache.drill.exec.vector.complex.impl.UnionWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-import java.io.InputStream;
-import java.io.Reader;
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 
 public class UnionSqlAccessor extends AbstractSqlAccessor {
 

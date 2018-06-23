@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -56,6 +56,7 @@ public class RecordBatchData {
         throw new UnsupportedOperationException("Record batch data can't be created based on a hyper batch.");
       }
       TransferPair tp = v.getValueVector().getTransferPair(allocator);
+      // Transfer make sure of releasing memory for value vector in source container.
       tp.transfer();
       vectors.add(tp.getTo());
     }
@@ -63,12 +64,6 @@ public class RecordBatchData {
     container.addCollection(vectors);
     container.setRecordCount(recordCount);
     container.buildSchema(batch.getSchema().getSelectionVectorMode());
-  }
-
-  public void canonicalize() {
-    SelectionVectorMode mode = container.getSchema().getSelectionVectorMode();
-    container = VectorContainer.canonicalize(container);
-    container.buildSchema(mode);
   }
 
   public int getRecordCount() {

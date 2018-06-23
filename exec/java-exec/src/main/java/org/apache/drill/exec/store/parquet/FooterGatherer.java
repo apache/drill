@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,12 +19,14 @@ package org.apache.drill.exec.store.parquet;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.drill.exec.store.TimedRunnable;
-import org.apache.drill.exec.store.dfs.DrillPathFilter;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.drill.exec.store.TimedCallable;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -38,7 +40,9 @@ import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+import static org.apache.parquet.format.converter.ParquetMetadataConverter.NO_FILTER;
 
 public class FooterGatherer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FooterGatherer.class);
@@ -66,12 +70,12 @@ public class FooterGatherer {
   }
 
   public static List<Footer> getFooters(final Configuration conf, List<FileStatus> statuses, int parallelism) throws IOException {
-    final List<TimedRunnable<Footer>> readers = Lists.newArrayList();
-    List<Footer> foundFooters = Lists.newArrayList();
-    for(FileStatus status : statuses){
+    final List<TimedCallable<Footer>> readers = new ArrayList<>();
+    final List<Footer> foundFooters = new ArrayList<>();
+    for (FileStatus status : statuses) {
 
 
-      if(status.isDirectory()){
+      if (status.isDirectory()){
         // first we check for summary file.
         FileSystem fs = status.getPath().getFileSystem(conf);
 
@@ -83,23 +87,23 @@ public class FooterGatherer {
         }
 
         // else we handle as normal file.
-        for(FileStatus inStatus : fs.listStatus(status.getPath(), new DrillPathFilter())){
+        for (FileStatus inStatus : DrillFileSystemUtil.listFiles(fs, status.getPath(), false)){
           readers.add(new FooterReader(conf, inStatus));
         }
-      }else{
+      } else {
         readers.add(new FooterReader(conf, status));
       }
 
     }
     if(!readers.isEmpty()){
-      foundFooters.addAll(TimedRunnable.run("Fetch Parquet Footers", logger, readers, parallelism));
+      foundFooters.addAll(TimedCallable.run("Fetch Parquet Footers", logger, readers, parallelism));
     }
 
     return foundFooters;
   }
 
 
-  private static class FooterReader extends TimedRunnable<Footer>{
+  private static class FooterReader extends TimedCallable<Footer> {
 
     final Configuration conf;
     final FileStatus status;
@@ -116,10 +120,9 @@ public class FooterGatherer {
     }
 
     @Override
-    protected IOException convertToIOException(Exception e) {
-      return new IOException("Failure while trying to get footer for file " + status.getPath(), e);
+    public String toString() {
+      return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("path", status.getPath()).toString();
     }
-
   }
 
   /**
@@ -158,7 +161,8 @@ public class FooterGatherer {
         footerBytes = ArrayUtils.subarray(footerBytes, start, start + size);
       }
 
-      ParquetMetadata metadata = ParquetFormatPlugin.parquetMetadataConverter.readParquetMetadata(new ByteArrayInputStream(footerBytes));
+      final ByteArrayInputStream from = new ByteArrayInputStream(footerBytes);
+      ParquetMetadata metadata = ParquetFormatPlugin.parquetMetadataConverter.readParquetMetadata(from, NO_FILTER);
       Footer footer = new Footer(status.getPath(), metadata);
       return footer;
     }

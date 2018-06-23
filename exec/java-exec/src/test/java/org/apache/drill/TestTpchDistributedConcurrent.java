@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,14 +24,17 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
-import org.apache.drill.QueryTestUtil;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.QueryTestUtil;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import com.google.common.collect.Sets;
@@ -45,8 +48,11 @@ import static org.junit.Assert.assertNull;
  * unstable from running a lot of queries concurrently -- it's not about
  * any particular order of execution. We ignore the results.
  */
+@Category({SlowTest.class})
 public class TestTpchDistributedConcurrent extends BaseTestQuery {
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(140000); // Longer timeout than usual.
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchDistributedConcurrent.class);
+
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(360000); // Longer timeout than usual.
 
   /*
    * Valid test names taken from TestTpchDistributed. Fuller path prefixes are
@@ -147,7 +153,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
       super.submissionFailed(uex);
 
       completionSemaphore.release();
-      System.out.println("submissionFailed for " + query + "\nwith " + uex);
+      logger.error("submissionFailed for {} \nwith:", query, uex);
       synchronized(TestTpchDistributedConcurrent.this) {
         final Object object = listeners.remove(this);
         assertNotNull("listener not found", object);
@@ -164,7 +170,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
         try {
           submissionSemaphore.acquire();
         } catch(InterruptedException e) {
-          System.out.println("QuerySubmitter quitting.");
+          logger.error("QuerySubmitter quitting.");
           return;
         }
 
@@ -193,8 +199,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
 
       // List the failed queries.
       for(final FailedQuery fq : failedQueries) {
-        System.err.println(String.format(
-            "%s failed with %s", fq.queryFile, fq.userEx));
+        logger.error(String.format("%s failed with %s", fq.queryFile, fq.userEx));
       }
     }
 
@@ -208,9 +213,9 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
         sb.append(s.toString());
         sb.append('\n');
       }
-      System.out.println("interruptedException: " + interruptedException.getMessage() +
-          " from \n" + sb.toString());
+      logger.error("Interruped Exception ", interruptedException);
     }
+
     assertNull("Query error caused interruption", interruptedException);
 
     final int nListeners = listeners.size();

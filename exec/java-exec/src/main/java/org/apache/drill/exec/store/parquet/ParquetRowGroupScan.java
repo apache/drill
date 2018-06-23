@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,20 +17,17 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.physical.base.AbstractBase;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -39,66 +36,59 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
+import org.apache.hadoop.conf.Configuration;
 
-// Class containing information for reading a single parquet row group form HDFS
+// Class containing information for reading a single parquet row group from HDFS
 @JsonTypeName("parquet-row-group-scan")
-public class ParquetRowGroupScan extends AbstractBase implements SubScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRowGroupScan.class);
+public class ParquetRowGroupScan extends AbstractParquetRowGroupScan {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRowGroupScan.class);
 
-  public final ParquetFormatConfig formatConfig;
   private final ParquetFormatPlugin formatPlugin;
-  private final List<RowGroupReadEntry> rowGroupReadEntries;
-  private final List<SchemaPath> columns;
-  private String selectionRoot;
+  private final ParquetFormatConfig formatConfig;
+  private final String selectionRoot;
 
   @JsonCreator
-  public ParquetRowGroupScan( //
-      @JacksonInject StoragePluginRegistry registry, //
-      @JsonProperty("userName") String userName, //
-      @JsonProperty("storage") StoragePluginConfig storageConfig, //
-      @JsonProperty("format") FormatPluginConfig formatConfig, //
-      @JsonProperty("entries") LinkedList<RowGroupReadEntry> rowGroupReadEntries, //
-      @JsonProperty("columns") List<SchemaPath> columns, //
-      @JsonProperty("selectionRoot") String selectionRoot //
-  ) throws ExecutionSetupException {
-    this(userName, (ParquetFormatPlugin) registry.getFormatPlugin(Preconditions.checkNotNull(storageConfig),
-            formatConfig == null ? new ParquetFormatConfig() : formatConfig),
-        rowGroupReadEntries, columns, selectionRoot);
+  public ParquetRowGroupScan(@JacksonInject StoragePluginRegistry registry,
+                             @JsonProperty("userName") String userName,
+                             @JsonProperty("storageConfig") StoragePluginConfig storageConfig,
+                             @JsonProperty("formatConfig") FormatPluginConfig formatConfig,
+                             @JsonProperty("rowGroupReadEntries") LinkedList<RowGroupReadEntry> rowGroupReadEntries,
+                             @JsonProperty("columns") List<SchemaPath> columns,
+                             @JsonProperty("selectionRoot") String selectionRoot,
+                             @JsonProperty("filter") LogicalExpression filter) throws ExecutionSetupException {
+    this(userName,
+        (ParquetFormatPlugin) registry.getFormatPlugin(Preconditions.checkNotNull(storageConfig), Preconditions.checkNotNull(formatConfig)),
+        rowGroupReadEntries,
+        columns,
+        selectionRoot,
+        filter);
   }
 
-  public ParquetRowGroupScan( //
-      String userName, //
-      ParquetFormatPlugin formatPlugin, //
-      List<RowGroupReadEntry> rowGroupReadEntries, //
-      List<SchemaPath> columns, //
-      String selectionRoot //
-  ) {
-    super(userName);
-    this.formatPlugin = Preconditions.checkNotNull(formatPlugin);
+  public ParquetRowGroupScan(String userName,
+                             ParquetFormatPlugin formatPlugin,
+                             List<RowGroupReadEntry> rowGroupReadEntries,
+                             List<SchemaPath> columns,
+                             String selectionRoot,
+                             LogicalExpression filter) {
+    super(userName, rowGroupReadEntries, columns, filter);
+    this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Could not find format config for the given configuration");
     this.formatConfig = formatPlugin.getConfig();
-    this.rowGroupReadEntries = rowGroupReadEntries;
-    this.columns = columns == null || columns.size() == 0 ? GroupScan.ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
   }
 
-  @JsonProperty("entries")
-  public List<RowGroupReadEntry> getRowGroupReadEntries() {
-    return rowGroupReadEntries;
-  }
-
-  @JsonProperty("storage")
-  public StoragePluginConfig getEngineConfig() {
+  @JsonProperty
+  public StoragePluginConfig getStorageConfig() {
     return formatPlugin.getStorageConfig();
   }
 
-  public String getSelectionRoot() {
-    return selectionRoot;
+  @JsonProperty
+  public ParquetFormatConfig getFormatConfig() {
+    return formatConfig;
   }
 
-  @Override
-  public boolean isExecutable() {
-    return false;
+  @JsonProperty
+  public String getSelectionRoot() {
+    return selectionRoot;
   }
 
   @JsonIgnore
@@ -107,23 +97,9 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
-    return physicalVisitor.visitSubScan(this, value);
-  }
-
-  @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new ParquetRowGroupScan(getUserName(), formatPlugin, rowGroupReadEntries, columns, selectionRoot);
-  }
-
-  @Override
-  public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
-  }
-
-  public List<SchemaPath> getColumns() {
-    return columns;
+    return new ParquetRowGroupScan(getUserName(), formatPlugin, rowGroupReadEntries, columns, selectionRoot, filter);
   }
 
   @Override
@@ -131,4 +107,29 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
     return CoreOperatorType.PARQUET_ROW_GROUP_SCAN_VALUE;
   }
 
+  @Override
+  public AbstractParquetRowGroupScan copy(List<SchemaPath> columns) {
+    return new ParquetRowGroupScan(getUserName(), formatPlugin, rowGroupReadEntries, columns, selectionRoot, filter);
+  }
+
+  @Override
+  public boolean areCorruptDatesAutoCorrected() {
+    return formatConfig.areCorruptDatesAutoCorrected();
+  }
+
+  @Override
+  public Configuration getFsConf(RowGroupReadEntry rowGroupReadEntry) {
+    return formatPlugin.getFsConf();
+  }
+
+  @Override
+  public boolean supportsFileImplicitColumns() {
+    return selectionRoot != null;
+  }
+
+  @Override
+  public List<String> getPartitionValues(RowGroupReadEntry rowGroupReadEntry) {
+    return ColumnExplorer.listPartitionValues(rowGroupReadEntry.getPath(), selectionRoot);
+  }
 }
+

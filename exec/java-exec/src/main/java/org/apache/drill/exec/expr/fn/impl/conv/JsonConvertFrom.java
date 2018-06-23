@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 
@@ -50,7 +49,9 @@ public class JsonConvertFrom {
     @Output ComplexWriter writer;
 
     public void setup(){
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false, false, false /* do not read numbers as doubles */);
+      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
+          .defaultSchemaPathColumns()
+          .build();
     }
 
     public void eval(){
@@ -76,7 +77,9 @@ public class JsonConvertFrom {
     @Output ComplexWriter writer;
 
     public void setup(){
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false, false, false /* do not read numbers as doubles */);
+      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
+          .defaultSchemaPathColumns()
+          .build();
     }
 
     public void eval(){
@@ -90,5 +93,6 @@ public class JsonConvertFrom {
       }
     }
   }
+
 
 }

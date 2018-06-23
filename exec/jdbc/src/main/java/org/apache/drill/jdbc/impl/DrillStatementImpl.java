@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,14 +21,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
-import java.sql.Statement;
 
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.Meta.StatementHandle;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillStatement;
-import org.apache.drill.jdbc.InvalidParameterSqlException;
-
-import net.hydromatic.avatica.AvaticaStatement;
 
 /**
  * Drill's implementation of {@link Statement}.
@@ -41,9 +39,9 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
 
   private final DrillConnectionImpl connection;
 
-  DrillStatementImpl(DrillConnectionImpl connection, int resultSetType,
+  DrillStatementImpl(DrillConnectionImpl connection, StatementHandle h, int resultSetType,
                      int resultSetConcurrency, int resultSetHoldability) {
-    super(connection, resultSetType, resultSetConcurrency, resultSetHoldability);
+    super(connection, h, resultSetType, resultSetConcurrency, resultSetHoldability);
     this.connection = connection;
     connection.openStatementsRegistry.addStatement(this);
   }
@@ -117,10 +115,10 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   }
 
   @Override
-  public int executeUpdate( String sql ) throws SQLException {
+  public long executeLargeUpdate( String sql ) throws SQLException {
     throwIfClosed();
     try {
-      return super.executeUpdate( sql );
+      return super.executeLargeUpdate( sql );
     }
     catch ( final SQLException possiblyExtraWrapperException ) {
       throw unwrapIfExtra( possiblyExtraWrapperException );
@@ -151,34 +149,23 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
 
   @Override
   public void cleanUp() {
-    final DrillConnectionImpl connection1 = (DrillConnectionImpl) connection;
+    final DrillConnectionImpl connection1 = connection;
     connection1.openStatementsRegistry.removeStatement(this);
   }
 
   @Override
-  public int getQueryTimeout() throws AlreadyClosedSqlException
+  public int getQueryTimeout() throws AlreadyClosedSqlException, SQLException
   {
     throwIfClosed();
-    return 0;  // (No no timeout.)
+    return super.getQueryTimeout();
   }
 
   @Override
-  public void setQueryTimeout( int milliseconds )
+  public void setQueryTimeout( int seconds )
       throws AlreadyClosedSqlException,
-             InvalidParameterSqlException,
-             SQLFeatureNotSupportedException {
+             SQLException {
     throwIfClosed();
-    if ( milliseconds < 0 ) {
-      throw new InvalidParameterSqlException(
-          "Invalid (negative) \"milliseconds\" parameter to setQueryTimeout(...)"
-          + " (" + milliseconds + ")" );
-    }
-    else {
-      if ( 0 != milliseconds ) {
-        throw new SQLFeatureNotSupportedException(
-            "Setting network timeout is not supported." );
-      }
-    }
+    super.setQueryTimeout(seconds);
   }
 
   @Override
@@ -225,7 +212,7 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   }
 
   @Override
-  public int getMaxRows() {
+  public long getLargeMaxRows() {
     try {
       throwIfClosed();
     } catch (AlreadyClosedSqlException e) {
@@ -233,13 +220,13 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
       // getMaxRows() is missing "throws SQLException".
       throw new RuntimeException(e.getMessage(), e);
     }
-    return super.getMaxRows();
+    return super.getLargeMaxRows();
   }
 
   @Override
-  public void setMaxRows(int max) throws SQLException {
+  public void setLargeMaxRows(long max) throws SQLException {
     throwIfClosed();
-    super.setMaxRows(max);
+    super.setLargeMaxRows(max);
   }
 
   @Override

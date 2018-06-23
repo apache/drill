@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.rules.ProjectFilterTransposeRule;
 import org.apache.calcite.rel.rules.PushProjector;
 import org.apache.calcite.plan.RelOptRule;
@@ -26,7 +28,7 @@ public class DrillPushProjectPastFilterRule extends ProjectFilterTransposeRule {
   public final static RelOptRule INSTANCE = new DrillPushProjectPastFilterRule(DrillConditions.PRESERVE_ITEM);
 
   protected DrillPushProjectPastFilterRule(PushProjector.ExprCondition preserveExprCondition) {
-    super(preserveExprCondition);
+    super(LogicalProject.class, LogicalFilter.class,
+        DrillRelFactories.LOGICAL_BUILDER, preserveExprCondition);
   }
-
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,12 +18,13 @@
 package org.apache.drill.exec.test;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.hamcrest.CoreMatchers.equalTo;
 
-
 public class Drill2130StorageHiveCoreHamcrestConfigurationTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drill2130StorageHiveCoreHamcrestConfigurationTest.class);
 
   @SuppressWarnings("unused")
   private org.hamcrest.MatcherAssert forCompileTimeCheckForNewEnoughHamcrest;
@@ -38,9 +39,7 @@ public class Drill2130StorageHiveCoreHamcrestConfigurationTest {
              + "  Got NoSuchMethodError;  e: " + e );
     }
     catch ( AssertionError e ) {
-      System.out.println( "Class path seems fine re new JUnit vs. old Hamcrest."
-                          + " (Got AssertionError, not NoSuchMethodError.)" );
+      logger.info("Class path seems fine re new JUnit vs. old Hamcrest. (Got AssertionError, not NoSuchMethodError.)");
     }
   }
-
 }

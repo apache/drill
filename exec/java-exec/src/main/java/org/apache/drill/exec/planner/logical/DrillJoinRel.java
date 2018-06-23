@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,6 +43,7 @@ import org.apache.drill.exec.planner.torel.ConversionContext;
  * Logical Join implemented in Drill.
  */
 public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
+  public static final String EQUALITY_CONDITION = "==";
 
   /** Creates a DrillJoinRel.
    * We do not throw InvalidRelException in Logical planning phase. It's up to the post-logical planning check or physical planning
@@ -52,7 +53,7 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
       JoinRelType joinType)  {
     super(cluster, traits, left, right, condition, joinType);
     assert traits.contains(DrillRel.DRILL_LOGICAL);
-    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
+    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys, filterNulls);
   }
 
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
@@ -88,7 +89,7 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     builder.right(rightOp);
 
     for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
-      builder.addCondition("==", new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right)));
+      builder.addCondition(EQUALITY_CONDITION, new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right)));
     }
 
     return builder.build();
@@ -103,9 +104,24 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
    * @return
    */
   private LogicalOperator implementInput(DrillImplementor implementor, int i, int offset, RelNode input) {
-    final LogicalOperator inputOp = implementor.visitChild(this, i, input);
+    return implementInput(implementor, i, offset, input, this);
+  }
+
+  /**
+   * Check to make sure that the fields of the inputs are the same as the output field names.
+   * If not, insert a project renaming them.
+   * @param implementor
+   * @param i
+   * @param offset
+   * @param input
+   * @param currentNode the node to be implemented
+   * @return
+   */
+  public static LogicalOperator implementInput(DrillImplementor implementor, int i, int offset,
+                                                RelNode input, DrillRel currentNode) {
+    final LogicalOperator inputOp = implementor.visitChild(currentNode, i, input);
     assert uniqueFieldNames(input.getRowType());
-    final List<String> fields = getRowType().getFieldNames();
+    final List<String> fields = currentNode.getRowType().getFieldNames();
     final List<String> inputFields = input.getRowType().getFieldNames();
     final List<String> outputFields = fields.subList(offset, offset + inputFields.size());
     if (!outputFields.equals(inputFields)) {
@@ -118,7 +134,8 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     }
   }
 
-  private LogicalOperator rename(DrillImplementor implementor, LogicalOperator inputOp, List<String> inputFields, List<String> outputFields) {
+  private static LogicalOperator rename(DrillImplementor implementor, LogicalOperator inputOp,
+                                        List<String> inputFields, List<String> outputFields) {
     Project.Builder builder = Project.builder();
     builder.setInput(inputOp);
     for (Pair<String, String> pair : Pair.zip(inputFields, outputFields)) {

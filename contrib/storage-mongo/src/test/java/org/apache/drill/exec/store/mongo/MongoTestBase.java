@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 
 public class MongoTestBase extends PlanTestBase implements MongoTestConstants {
@@ -36,6 +37,9 @@ public class MongoTestBase extends PlanTestBase implements MongoTestConstants {
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
+    // Make sure this test is only running as part of the suit
+    Assume.assumeTrue(MongoTestSuit.isRunningSuite());
+    MongoTestSuit.initMongo();
     initMongoStoragePlugin();
   }
 
@@ -84,6 +88,7 @@ public class MongoTestBase extends PlanTestBase implements MongoTestConstants {
 
   @AfterClass
   public static void tearDownMongoTestBase() throws Exception {
+    MongoTestSuit.tearDownCluster();
     storagePlugin = null;
   }
 

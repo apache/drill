@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,18 @@
  */
 package org.apache.drill.common.expression;
 
-public abstract class PathSegment{
+public abstract class PathSegment {
 
-  PathSegment child;
+  private PathSegment child;
 
-  int hash;
+  private int hash;
+
+  public PathSegment(PathSegment child) {
+    this.child = child;
+  }
 
   public abstract PathSegment cloneWithNewChild(PathSegment segment);
+
   @Override
   public abstract PathSegment clone();
 
@@ -35,13 +40,13 @@ public abstract class PathSegment{
     }
 
     public ArraySegment(int index, PathSegment child) {
-      this.child = child;
+      super(child);
       this.index = index;
-      assert index >=0;
+      assert index >= 0;
     }
 
     public ArraySegment(PathSegment child) {
-      this.child = child;
+      super(child);
       this.index = -1;
     }
 
@@ -50,6 +55,7 @@ public abstract class PathSegment{
     }
 
     public ArraySegment(int index) {
+      super(null);
       if (index < 0 ) {
         throw new IllegalArgumentException();
       }
@@ -100,8 +106,8 @@ public abstract class PathSegment{
     @Override
     public PathSegment clone() {
       PathSegment seg = index < 0 ? new ArraySegment(null) : new ArraySegment(index);
-      if (child != null) {
-        seg.setChild(child.clone());
+      if (getChild() != null) {
+        seg.setChild(getChild().clone());
       }
       return seg;
     }
@@ -109,8 +115,8 @@ public abstract class PathSegment{
     @Override
     public ArraySegment cloneWithNewChild(PathSegment newChild) {
       ArraySegment seg = index < 0 ? new ArraySegment(null) : new ArraySegment(index);
-      if (child != null) {
-        seg.setChild(child.cloneWithNewChild(newChild));
+      if (getChild() != null) {
+        seg.setChild(getChild().cloneWithNewChild(newChild));
       } else {
         seg.setChild(newChild);
       }
@@ -118,37 +124,29 @@ public abstract class PathSegment{
     }
   }
 
-
   public static final class NameSegment extends PathSegment {
     private final String path;
 
     public NameSegment(CharSequence n, PathSegment child) {
-      this.child = child;
+      super(child);
       this.path = n.toString();
     }
 
     public NameSegment(CharSequence n) {
+      super(null);
       this.path = n.toString();
     }
 
-    public String getPath() {
-      return path;
-    }
+    public String getPath() { return path; }
 
     @Override
-    public boolean isArray() {
-      return false;
-    }
+    public boolean isArray() { return false; }
 
     @Override
-    public boolean isNamed() {
-      return true;
-    }
+    public boolean isNamed() { return true; }
 
     @Override
-    public NameSegment getNameSegment() {
-      return this;
-    }
+    public NameSegment getNameSegment() { return this; }
 
     @Override
     public String toString() {
@@ -177,11 +175,16 @@ public abstract class PathSegment{
       return path.equalsIgnoreCase(other.path);
     }
 
+    public boolean nameEquals(String name) {
+      return path == null && name == null ||
+             path != null && path.equalsIgnoreCase(name);
+    }
+
     @Override
     public NameSegment clone() {
       NameSegment s = new NameSegment(this.path);
-      if (child != null) {
-        s.setChild(child.clone());
+      if (getChild() != null) {
+        s.setChild(getChild().clone());
       }
       return s;
     }
@@ -189,14 +192,13 @@ public abstract class PathSegment{
     @Override
     public NameSegment cloneWithNewChild(PathSegment newChild) {
       NameSegment s = new NameSegment(this.path);
-      if (child != null) {
-        s.setChild(child.cloneWithNewChild(newChild));
+      if (getChild() != null) {
+        s.setChild(getChild().cloneWithNewChild(newChild));
       } else {
         s.setChild(newChild);
       }
       return s;
     }
-
   }
 
   public NameSegment getNameSegment() {
@@ -230,7 +232,7 @@ public abstract class PathSegment{
     int h = hash;
     if (h == 0) {
       h = segmentHashCode();
-      h = 31*h + ((child == null) ? 0 : child.hashCode());
+      h = h + ((child == null) ? 0 : 31 * child.hashCode());
       hash = h;
     }
     return h;
@@ -278,6 +280,7 @@ public abstract class PathSegment{
    * @param otherSeg - path segment to check if it is contained below this one.
    * @return - is this a match
    */
+
   public boolean contains(PathSegment otherSeg) {
     if (this == otherSeg) {
       return true;
@@ -303,7 +306,5 @@ public abstract class PathSegment{
     } else {
       return child.contains(otherSeg.child);
     }
-
   }
-
 }

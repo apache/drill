@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -26,6 +27,7 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
@@ -39,34 +41,40 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.ParameterExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 
 public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
-  public T visitFunctionCall(FunctionCall call, VAL value) throws EXCEP;
-  public T visitFunctionHolderExpression(FunctionHolderExpression holder, VAL value) throws EXCEP;
-  public T visitIfExpression(IfExpression ifExpr, VAL value) throws EXCEP;
-  public T visitBooleanOperator(BooleanOperator call, VAL value) throws EXCEP;
-  public T visitSchemaPath(SchemaPath path, VAL value) throws EXCEP;
-  public T visitIntConstant(IntExpression intExpr, VAL value) throws EXCEP;
-  public T visitFloatConstant(FloatExpression fExpr, VAL value) throws EXCEP;
-  public T visitLongConstant(LongExpression intExpr, VAL value) throws EXCEP;
-  public T visitDateConstant(DateExpression intExpr, VAL value) throws EXCEP;
-  public T visitTimeConstant(TimeExpression intExpr, VAL value) throws EXCEP;
-  public T visitTimeStampConstant(TimeStampExpression intExpr, VAL value) throws EXCEP;
-  public T visitIntervalYearConstant(IntervalYearExpression intExpr, VAL value) throws EXCEP;
-  public T visitIntervalDayConstant(IntervalDayExpression intExpr, VAL value) throws EXCEP;
-  public T visitDecimal9Constant(Decimal9Expression decExpr, VAL value) throws EXCEP;
-  public T visitDecimal18Constant(Decimal18Expression decExpr, VAL value) throws EXCEP;
-  public T visitDecimal28Constant(Decimal28Expression decExpr, VAL value) throws EXCEP;
-  public T visitDecimal38Constant(Decimal38Expression decExpr, VAL value) throws EXCEP;
-  public T visitDoubleConstant(DoubleExpression dExpr, VAL value) throws EXCEP;
-  public T visitBooleanConstant(BooleanExpression e, VAL value) throws EXCEP;
-  public T visitQuotedStringConstant(QuotedString e, VAL value) throws EXCEP;
-  public T visitNullConstant(TypedNullConstant e, VAL value) throws EXCEP;
-  public T visitNullExpression(NullExpression e, VAL value) throws EXCEP;
-  public T visitUnknown(LogicalExpression e, VAL value) throws EXCEP;
-  public T visitCastExpression(CastExpression e, VAL value) throws EXCEP;
-  public T visitConvertExpression(ConvertExpression e, VAL value) throws EXCEP;
+  T visitFunctionCall(FunctionCall call, VAL value) throws EXCEP;
+  T visitFunctionHolderExpression(FunctionHolderExpression holder, VAL value) throws EXCEP;
+  T visitIfExpression(IfExpression ifExpr, VAL value) throws EXCEP;
+  T visitBooleanOperator(BooleanOperator call, VAL value) throws EXCEP;
+  T visitSchemaPath(SchemaPath path, VAL value) throws EXCEP;
+  T visitIntConstant(IntExpression intExpr, VAL value) throws EXCEP;
+  T visitFloatConstant(FloatExpression fExpr, VAL value) throws EXCEP;
+  T visitLongConstant(LongExpression intExpr, VAL value) throws EXCEP;
+  T visitDateConstant(DateExpression intExpr, VAL value) throws EXCEP;
+  T visitTimeConstant(TimeExpression intExpr, VAL value) throws EXCEP;
+  T visitTimeStampConstant(TimeStampExpression intExpr, VAL value) throws EXCEP;
+  T visitIntervalYearConstant(IntervalYearExpression intExpr, VAL value) throws EXCEP;
+  T visitIntervalDayConstant(IntervalDayExpression intExpr, VAL value) throws EXCEP;
+  T visitDecimal9Constant(Decimal9Expression decExpr, VAL value) throws EXCEP;
+  T visitDecimal18Constant(Decimal18Expression decExpr, VAL value) throws EXCEP;
+  T visitDecimal28Constant(Decimal28Expression decExpr, VAL value) throws EXCEP;
+  T visitDecimal38Constant(Decimal38Expression decExpr, VAL value) throws EXCEP;
+  T visitVarDecimalConstant(VarDecimalExpression decExpr, VAL value) throws EXCEP;
+  T visitDoubleConstant(DoubleExpression dExpr, VAL value) throws EXCEP;
+  T visitBooleanConstant(BooleanExpression e, VAL value) throws EXCEP;
+  T visitQuotedStringConstant(QuotedString e, VAL value) throws EXCEP;
+  T visitNullConstant(TypedNullConstant e, VAL value) throws EXCEP;
+  T visitNullExpression(NullExpression e, VAL value) throws EXCEP;
+  T visitUnknown(LogicalExpression e, VAL value) throws EXCEP;
+  T visitCastExpression(CastExpression e, VAL value) throws EXCEP;
+  T visitConvertExpression(ConvertExpression e, VAL value) throws EXCEP;
+  T visitParameter(ParameterExpression e, VAL value) throws EXCEP;
+  T visitTypedFieldExpr(TypedFieldExpr e, VAL value) throws EXCEP;
+  T visitAnyValueExpression(AnyValueExpression e, VAL value) throws EXCEP;
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import org.apache.drill.exec.vector.complex.UnionVector;
 
 <@pp.dropOutputFile />
@@ -35,6 +34,9 @@ import org.apache.drill.exec.vector.accessor.*;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.util.CallBack;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 public class TypeHelper extends BasicTypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
 
@@ -58,6 +60,7 @@ public class TypeHelper extends BasicTypeHelper {
     </#list>
     case MAP:
     case LIST:
+    case NULL:
       return new GenericAccessor(vector);
     }
     throw new UnsupportedOperationException(buildErrorMessage("find sql accessor", type));
@@ -86,6 +89,8 @@ public class TypeHelper extends BasicTypeHelper {
 </#list>
       case GENERIC_OBJECT:
         return model._ref(ObjectHolder.class);
+    case NULL:
+      return model._ref(UntypedNullHolder.class);
       default:
         break;
       }

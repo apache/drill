@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,40 +23,78 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import java.util.List;
+
 @JsonTypeName("hashtable-config")
 public class HashTableConfig  {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashTableConfig.class);
-
   private final int initialCapacity;
+  private final boolean initialSizeIsFinal;
   private final float loadFactor;
-  private final NamedExpression[] keyExprsBuild;
-  private final NamedExpression[] keyExprsProbe;
+  private final List<NamedExpression> keyExprsBuild;
+  private final List<NamedExpression> keyExprsProbe;
+  private final List<Comparator> comparators;
 
   @JsonCreator
-  public HashTableConfig(@JsonProperty("initialCapacity") int initialCapacity, @JsonProperty("loadFactor") float loadFactor,
-                         @JsonProperty("keyExprsBuild") NamedExpression[] keyExprsBuild,
-                         @JsonProperty("keyExprsProbe") NamedExpression[] keyExprsProbe) {
+  public HashTableConfig(@JsonProperty("initialCapacity") int initialCapacity,
+                         @JsonProperty("loadFactor") float loadFactor,
+                         @JsonProperty("keyExprsBuild") List<NamedExpression> keyExprsBuild,
+                         @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe,
+                         @JsonProperty("comparators") List<Comparator> comparators) {
     this.initialCapacity = initialCapacity;
+    this.initialSizeIsFinal = false;
     this.loadFactor = loadFactor;
     this.keyExprsBuild = keyExprsBuild;
     this.keyExprsProbe = keyExprsProbe;
+    this.comparators = comparators;
+  }
+
+  @JsonCreator
+  public HashTableConfig(@JsonProperty("initialCapacity") int initialCapacity,
+                         @JsonProperty("initialCapacity") boolean initialSizeIsFinal,
+                         @JsonProperty("loadFactor") float loadFactor,
+                         @JsonProperty("keyExprsBuild") List<NamedExpression> keyExprsBuild,
+                         @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe,
+                         @JsonProperty("comparators") List<Comparator> comparators) {
+    this.initialCapacity = initialCapacity;
+    this.initialSizeIsFinal = initialSizeIsFinal;
+    this.loadFactor = loadFactor;
+    this.keyExprsBuild = keyExprsBuild;
+    this.keyExprsProbe = keyExprsProbe;
+    this.comparators = comparators;
+  }
+
+  public HashTableConfig withInitialCapacity(int initialCapacity) {
+    return new HashTableConfig(initialCapacity,
+      initialSizeIsFinal,
+      loadFactor,
+      keyExprsBuild,
+      keyExprsProbe,
+      comparators);
   }
 
   public int getInitialCapacity() {
     return initialCapacity;
   }
 
+  public boolean getInitialSizeIsFinal() {
+    return initialSizeIsFinal;
+  }
+
   public float getLoadFactor() {
     return loadFactor;
   }
 
-  public NamedExpression[] getKeyExprsBuild() {
+  public List<NamedExpression> getKeyExprsBuild() {
     return keyExprsBuild;
   }
 
-  public NamedExpression[] getKeyExprsProbe() {
+  public List<NamedExpression> getKeyExprsProbe() {
     return keyExprsProbe;
+  }
+
+  public List<Comparator> getComparators() {
+    return comparators;
   }
 
 }

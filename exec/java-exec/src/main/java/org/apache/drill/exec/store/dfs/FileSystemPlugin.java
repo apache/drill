@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -53,8 +53,7 @@ import com.google.common.collect.Maps;
  * Tables are file names, directories and path patterns. This storage engine delegates to FSFormatEngines but shares
  * references to the FileSystem configuration and path management.
  */
-public class FileSystemPlugin extends AbstractStoragePlugin{
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemPlugin.class);
+public class FileSystemPlugin extends AbstractStoragePlugin {
 
   private final FileSystemSchemaFactory schemaFactory;
   private final FormatCreator formatCreator;
@@ -63,12 +62,20 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   private final Configuration fsConf;
   private final LogicalPlanPersistence lpPersistance;
 
-  public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException{
+  public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name)
+      throws ExecutionSetupException{
+    super(context, name);
     this.config = config;
     this.lpPersistance = context.getLpPersistence();
+
     try {
 
       fsConf = new Configuration();
+      if (config.config != null) {
+        for (String s : config.config.keySet()) {
+          fsConf.set(s, config.config.get(s));
+        }
+      }
       fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.connection);
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
@@ -128,15 +135,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException {
     FormatSelection formatSelection = selection.getWith(lpPersistance, FormatSelection.class);
-    FormatPlugin plugin;
-    if (formatSelection.getFormat() instanceof NamedFormatPluginConfig) {
-      plugin = formatCreator.getFormatPluginByName( ((NamedFormatPluginConfig) formatSelection.getFormat()).name);
-    } else {
-      plugin = formatPluginsByConfig.get(formatSelection.getFormat());
-    }
-    if (plugin == null) {
-      plugin = formatCreator.newFormatPlugin(formatSelection.getFormat());
-    }
+    FormatPlugin plugin = getFormatPlugin(formatSelection.getFormat());
     return plugin.getGroupScan(userName, formatSelection.getSelection(), columns);
   }
 
@@ -149,12 +148,23 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
     return formatCreator.getFormatPluginByName(name);
   }
 
+  /**
+   * If format plugin configuration is for named format plugin, will return format plugin from pre-loaded list by name.
+   * For other cases will try to find format plugin by its configuration, if not present will attempt to create one.
+   *
+   * @param config format plugin configuration
+   * @return format plugin for given configuration if found, null otherwise
+   */
   public FormatPlugin getFormatPlugin(FormatPluginConfig config) {
     if (config instanceof NamedFormatPluginConfig) {
       return formatCreator.getFormatPluginByName(((NamedFormatPluginConfig) config).name);
-    } else {
-      return formatPluginsByConfig.get(config);
     }
+
+    FormatPlugin plugin = formatPluginsByConfig.get(config);
+    if (plugin == null) {
+      plugin = formatCreator.newFormatPlugin(config);
+    }
+    return plugin;
   }
 
   @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,6 +35,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.joda.time.Period;
@@ -56,6 +57,13 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     expr.accept(INSTANCE, sb);
   }
 
+  public static String escapeSingleQuote(String input) {
+    return input.replaceAll("(['\\\\])", "\\\\$1");
+  }
+
+  public static String escapeBackTick(String input) {
+    return input.replaceAll("([`\\\\])", "\\\\$1");
+  }
 
   @Override
   public Void visitFunctionCall(FunctionCall call, StringBuilder sb) throws RuntimeException {
@@ -119,14 +127,14 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
       throw new IllegalStateException("Drill doesn't currently support top level arrays");
     }
     sb.append('`');
-    sb.append(seg.getNameSegment().getPath());
+    sb.append(escapeBackTick(seg.getNameSegment().getPath()));
     sb.append('`');
 
     while ( (seg = seg.getChild()) != null) {
       if (seg.isNamed()) {
         sb.append('.');
         sb.append('`');
-        sb.append(seg.getNameSegment().getPath());
+        sb.append(escapeBackTick(seg.getNameSegment().getPath()));
         sb.append('`');
       } else {
         sb.append('[');
@@ -210,6 +218,12 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   }
 
   @Override
+  public Void visitVarDecimalConstant(VarDecimalExpression decExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(decExpr.getBigDecimal().toString());
+    return null;
+  }
+
+  @Override
   public Void visitDoubleConstant(DoubleExpression dExpr, StringBuilder sb) throws RuntimeException {
     sb.append(dExpr.getDouble());
     return null;
@@ -224,7 +238,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   @Override
   public Void visitQuotedStringConstant(QuotedString e, StringBuilder sb) throws RuntimeException {
     sb.append("'");
-    sb.append(e.value);
+    sb.append(escapeSingleQuote(e.value));
     sb.append("'");
     return null;
   }
@@ -234,6 +248,14 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     sb.append(e.getConvertFunction()).append("(");
     e.getInput().accept(this, sb);
     sb.append(", '").append(e.getEncodingType()).append("')");
+    return null;
+  }
+
+  @Override
+  public Void visitAnyValueExpression(AnyValueExpression e, StringBuilder sb) throws RuntimeException {
+    sb.append("any(");
+    e.getInput().accept(this, sb);
+    sb.append(")");
     return null;
   }
 
@@ -276,7 +298,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
       // add size in parens
       sb.append("(");
-      sb.append(mt.getWidth());
+      sb.append(mt.getPrecision());
       sb.append(")");
       break;
     case DECIMAL9:
@@ -285,7 +307,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     case DECIMAL28SPARSE:
     case DECIMAL38DENSE:
     case DECIMAL38SPARSE:
-
+    case VARDECIMAL:
       // add scale and precision
       sb.append("(");
       sb.append(mt.getPrecision());

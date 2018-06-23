@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -59,7 +59,8 @@ public enum MinorType implements com.dyuproject.protostuff.EnumLite<MinorType>
     INTERVALDAY(39),
     LIST(40),
     GENERIC_OBJECT(41),
-    UNION(42);
+    UNION(42),
+    VARDECIMAL(43);
     
     public final int number;
     
@@ -115,6 +116,7 @@ public enum MinorType implements com.dyuproject.protostuff.EnumLite<MinorType>
             case 40: return LIST;
             case 41: return GENERIC_OBJECT;
             case 42: return UNION;
+            case 43: return VARDECIMAL;
             default: return null;
         }
     }

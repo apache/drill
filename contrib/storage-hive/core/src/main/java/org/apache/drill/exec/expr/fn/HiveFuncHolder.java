@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.expr.fn;
 import java.util.List;
 
 import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
@@ -45,6 +46,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JTryBlock;
 import com.sun.codemodel.JVar;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 
 public class HiveFuncHolder extends AbstractFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
@@ -128,7 +130,7 @@ public class HiveFuncHolder extends AbstractFuncHolder {
    * @return workspace variables
    */
   @Override
-  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables){
+  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables, FieldReference fieldReference){
     JVar[] workspaceJVars = new JVar[5];
 
     workspaceJVars[0] = g.declareClassField("returnOI", g.getModel()._ref(ObjectInspector.class));
@@ -141,17 +143,11 @@ public class HiveFuncHolder extends AbstractFuncHolder {
     return workspaceJVars;
   }
 
-  /**
-   * Complete code generation
-   * @param g
-   * @param inputVariables
-   * @param workspaceJVars
-   * @return HoldingContainer for return value
-   */
   @Override
-  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
-    generateSetup(g, workspaceJVars);
-    return generateEval(g, inputVariables, workspaceJVars);
+  public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
+                                    JVar[] workspaceJVars, FieldReference fieldReference) {
+    generateSetup(classGenerator, workspaceJVars);
+    return generateEval(classGenerator, inputVariables, workspaceJVars);
   }
 
   private JInvocation getUDFInstance(JCodeModel m) {
@@ -188,7 +184,9 @@ public class HiveFuncHolder extends AbstractFuncHolder {
         oiArray.component(JExpr.lit(i)),
         oih.staticInvoke("getDrillObjectInspector")
           .arg(mode.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMode().getNumber())))
-          .arg(mt.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMinorType().getNumber()))));
+          .arg(mt.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMinorType().getNumber())))
+          .arg((((PrimitiveObjectInspector) returnOI).getPrimitiveCategory() ==
+              PrimitiveObjectInspector.PrimitiveCategory.STRING) ? JExpr.lit(true) : JExpr.lit(false)));
     }
 
     // declare and instantiate DeferredObject array

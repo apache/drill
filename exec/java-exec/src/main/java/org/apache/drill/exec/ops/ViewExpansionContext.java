@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,10 +19,11 @@ package org.apache.drill.exec.ops;
 
 import static org.apache.drill.exec.ExecConstants.IMPERSONATION_MAX_CHAINED_USER_HOPS;
 
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelOptTable.ToRelContext;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 
 import com.carrotsearch.hppc.ObjectIntHashMap;
 import com.google.common.base.Preconditions;
@@ -70,20 +71,25 @@ import com.google.common.base.Preconditions;
 public class ViewExpansionContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ViewExpansionContext.class);
 
-  private final QueryContext queryContext;
+  private final SchemaConfigInfoProvider schemaConfigInfoProvider;
   private final int maxChainedUserHops;
   private final String queryUser;
   private final ObjectIntHashMap<String> userTokens = new ObjectIntHashMap<>();
+  private final boolean impersonationEnabled;
 
   public ViewExpansionContext(QueryContext queryContext) {
-    this.queryContext = queryContext;
-    this.maxChainedUserHops =
-        queryContext.getConfig().getInt(IMPERSONATION_MAX_CHAINED_USER_HOPS);
-    this.queryUser = queryContext.getQueryUserName();
+    this(queryContext.getConfig(), queryContext);
+  }
+
+  public ViewExpansionContext(DrillConfig config, SchemaConfigInfoProvider schemaConfigInfoProvider) {
+    this.schemaConfigInfoProvider = schemaConfigInfoProvider;
+    this.maxChainedUserHops = config.getInt(IMPERSONATION_MAX_CHAINED_USER_HOPS);
+    this.queryUser = schemaConfigInfoProvider.getQueryUserName();
+    this.impersonationEnabled = config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   public boolean isImpersonationEnabled() {
-    return queryContext.isImpersonationEnabled();
+    return impersonationEnabled;
   }
 
   /**
@@ -160,7 +166,7 @@ public class ViewExpansionContext {
      */
     public SchemaPlus getSchemaTree() {
       Preconditions.checkState(!released, "Trying to use released token.");
-      return queryContext.getRootSchema(viewOwner);
+      return schemaConfigInfoProvider.getRootSchema(viewOwner);
     }
 
     /**

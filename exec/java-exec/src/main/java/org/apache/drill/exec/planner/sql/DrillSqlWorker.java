@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,51 +18,29 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.calcite.config.Lex;
-import org.apache.calcite.rel.rules.ProjectToWindowRule;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Planner;
+import org.apache.calcite.sql.SqlDescribeSchema;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.tools.RelConversionException;
-import org.apache.calcite.tools.RuleSet;
 import org.apache.calcite.tools.ValidationException;
-
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.planner.cost.DrillCostBase;
-import org.apache.drill.exec.planner.logical.DrillConstExecutor;
-import org.apache.drill.exec.planner.logical.DrillRuleSets;
-import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.DescribeSchemaHandler;
+import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
+import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
-import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
-import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
-import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.apache.calcite.rel.RelCollationTraitDef;
-import org.apache.calcite.rel.rules.ReduceExpressionsRule;
-import org.apache.calcite.plan.ConventionTraitDef;
-import org.apache.calcite.plan.RelOptCostFactory;
-import org.apache.calcite.plan.RelTraitDef;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -70,116 +48,84 @@ public class DrillSqlWorker {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(DrillSqlWorker.class);
 
-  private final Planner planner;
-  private final HepPlanner hepPlanner;
-  public final static int LOGICAL_RULES = 0;
-  public final static int PHYSICAL_MEM_RULES = 1;
-  public final static int LOGICAL_HEP_JOIN_RULES = 2;
-  public final static int LOGICAL_HEP_JOIN__PP_RULES = 3;
-
-  private final QueryContext context;
-
-  public DrillSqlWorker(QueryContext context) {
-    final List<RelTraitDef> traitDefs = new ArrayList<RelTraitDef>();
-
-    traitDefs.add(ConventionTraitDef.INSTANCE);
-    traitDefs.add(DrillDistributionTraitDef.INSTANCE);
-    traitDefs.add(RelCollationTraitDef.INSTANCE);
-    this.context = context;
-    RelOptCostFactory costFactory = (context.getPlannerSettings().useDefaultCosting()) ?
-        null : new DrillCostBase.DrillCostFactory() ;
-    int idMaxLength = (int)context.getPlannerSettings().getIdentifierMaxLength();
-
-    FrameworkConfig config = Frameworks.newConfigBuilder() //
-        .parserConfig(SqlParser.configBuilder()
-            .setLex(Lex.MYSQL)
-            .setIdentifierMaxLength(idMaxLength)
-            .setParserFactory(DrillParserWithCompoundIdConverter.FACTORY)
-            .build()) //
-        .defaultSchema(context.getNewDefaultSchema()) //
-        .operatorTable(context.getDrillOperatorTable()) //
-        .traitDefs(traitDefs) //
-        .convertletTable(new DrillConvertletTable()) //
-        .context(context.getPlannerSettings()) //
-        .ruleSets(getRules(context)) //
-        .costFactory(costFactory) //
-        .executor(new DrillConstExecutor(context.getFunctionRegistry(), context, context.getPlannerSettings()))
-        .typeSystem(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM) //
-        .build();
-    this.planner = Frameworks.getPlanner(config);
-    HepProgramBuilder builder = new HepProgramBuilder();
-    builder.addRuleClass(ReduceExpressionsRule.class);
-    builder.addRuleClass(ProjectToWindowRule.class);
-    this.hepPlanner = new HepPlanner(builder.build());
-    hepPlanner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
-    hepPlanner.addRule(ProjectToWindowRule.PROJECT);
+  private DrillSqlWorker() {
   }
 
-  private RuleSet[] getRules(QueryContext context) {
-    final RuleSet[] storagePluginRules = context.getStorage().getStoragePluginRuleSet(context);
-
-    // Ruleset for the case where VolcanoPlanner is used for everything : join, filter/project pushdown, partition pruning.
-    RuleSet drillLogicalVolOnlyRules = DrillRuleSets.mergedRuleSets(
-        DrillRuleSets.getDrillBasicRules(context),
-        DrillRuleSets.getPruneScanRules(context),
-        DrillRuleSets.getJoinPermRules(context),
-        DrillRuleSets.getDrillUserConfigurableLogicalRules(context),
-        storagePluginRules[0]);
-
-    // Ruleset for the case where join planning is done in Hep-LOPT, filter/project pushdown and parttion pruning are done in VolcanoPlanner
-    RuleSet drillLogicalHepJoinRules = DrillRuleSets.mergedRuleSets(
-        DrillRuleSets.getDrillBasicRules(context),
-        DrillRuleSets.getPruneScanRules(context),
-        DrillRuleSets.getDrillUserConfigurableLogicalRules(context),
-        storagePluginRules[0]);
-
-    // Ruleset for the case where join planning and partition pruning is done in Hep, filter/project pushdown are done in VolcanoPlanner
-    RuleSet drillLogicalHepJoinPPRules = DrillRuleSets.mergedRuleSets(
-        DrillRuleSets.getDrillBasicRules(context),
-        DrillRuleSets.getDrillUserConfigurableLogicalRules(context),
-        storagePluginRules[0]);
-
-    // Ruleset for physical planning rules
-    RuleSet drillPhysicalMem = DrillRuleSets.mergedRuleSets(
-        DrillRuleSets.getPhysicalRules(context),
-        storagePluginRules[1]);
-
-    RuleSet[] allRules = new RuleSet[] {drillLogicalVolOnlyRules, drillPhysicalMem, drillLogicalHepJoinRules, drillLogicalHepJoinPPRules};
-
-    return allRules;
+  /**
+   * Converts sql query string into query physical plan.
+   *
+   * @param context query context
+   * @param sql sql query
+   * @return query physical plan
+   */
+  public static PhysicalPlan getPlan(QueryContext context, String sql) throws SqlParseException, ValidationException,
+      ForemanSetupException {
+    return getPlan(context, sql, null);
   }
 
-  public PhysicalPlan getPlan(String sql) throws SqlParseException, ValidationException, ForemanSetupException{
-    return getPlan(sql, null);
-  }
-
-  public PhysicalPlan getPlan(String sql, Pointer<String> textPlan) throws ForemanSetupException {
-    final PlannerSettings ps = this.context.getPlannerSettings();
-
-    SqlNode sqlNode;
+  /**
+   * Converts sql query string into query physical plan.
+   * In case of any errors (that might occur due to missing function implementation),
+   * checks if local function registry should be synchronized with remote function registry.
+   * If sync took place, reloads drill operator table
+   * (since functions were added to / removed from local function registry)
+   * and attempts to converts sql query string into query physical plan one more time.
+   *
+   * @param context query context
+   * @param sql sql query
+   * @param textPlan text plan
+   * @return query physical plan
+   */
+  public static PhysicalPlan getPlan(QueryContext context, String sql, Pointer<String> textPlan)
+      throws ForemanSetupException {
+    Pointer<String> textPlanCopy = textPlan == null ? null : new Pointer<>(textPlan.value);
     try {
-      injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
-      sqlNode = planner.parse(sql);
-    } catch (SqlParseException e) {
-      throw UserException
-        .parseError(e)
-        .addContext(
-            "while parsing SQL query:\n" +
-            formatSQLParsingError(sql, e.getPos()))
-        .build(logger);
+      return getQueryPlan(context, sql, textPlan);
+    } catch (Exception e) {
+      if (context.getFunctionRegistry().syncWithRemoteRegistry(
+          context.getDrillOperatorTable().getFunctionRegistryVersion())) {
+        context.reloadDrillOperatorTable();
+        return getQueryPlan(context, sql, textPlanCopy);
+      }
+      throw e;
     }
+  }
 
-    AbstractSqlHandler handler;
-    SqlHandlerConfig config = new SqlHandlerConfig(hepPlanner, planner, context);
+  /**
+   * Converts sql query string into query physical plan.
+   *
+   * @param context query context
+   * @param sql sql query
+   * @param textPlan text plan
+   * @return query physical plan
+   */
+  private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan)
+      throws ForemanSetupException {
 
-    // TODO: make this use path scanning or something similar.
+    final SqlConverter parser = new SqlConverter(context);
+
+    injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
+    final SqlNode sqlNode = parser.parse(sql);
+    final AbstractSqlHandler handler;
+    final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
+
     switch(sqlNode.getKind()){
     case EXPLAIN:
-      handler = new ExplainHandler(config);
+      handler = new ExplainHandler(config, textPlan);
       break;
     case SET_OPTION:
       handler = new SetOptionHandler(context);
       break;
+    case DESCRIBE_TABLE:
+      if (sqlNode instanceof DrillSqlDescribeTable) {
+        handler = new DescribeTableHandler(config);
+        break;
+      }
+    case DESCRIBE_SCHEMA:
+      if (sqlNode instanceof SqlDescribeSchema) {
+        handler = new DescribeSchemaHandler(config);
+        break;
+      }
     case OTHER:
       if(sqlNode instanceof SqlCreateTable) {
         handler = ((DrillSqlCall)sqlNode).getSqlHandler(config, textPlan);
@@ -211,27 +157,5 @@ public class DrillSqlWorker {
     } catch (IOException | RelConversionException e) {
       throw new QueryInputException("Failure handling SQL.", e);
     }
-  }
-
-  /**
-   *
-   * @param sql the SQL sent to the server
-   * @param pos the position of the error
-   * @return The sql with a ^ character under the error
-   */
-  static String formatSQLParsingError(String sql, SqlParserPos pos) {
-    StringBuilder sb = new StringBuilder();
-    String[] lines = sql.split("\n");
-    for (int i = 0; i < lines.length; i++) {
-      String line = lines[i];
-      sb.append(line).append("\n");
-      if (i == (pos.getLineNum() - 1)) {
-        for (int j = 0; j < pos.getColumnNum() - 1; j++) {
-          sb.append(" ");
-        }
-        sb.append("^\n");
-      }
-    }
-    return sb.toString();
   }
 }

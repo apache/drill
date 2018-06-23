@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.planner.logical.RelOptHelper;
@@ -32,14 +31,29 @@ public class PushLimitToTopN  extends Prule{
   }
 
   @Override
+  public boolean matches(RelOptRuleCall call) {
+    boolean topNEnabled = PrelUtil.getPlannerSettings(call.getPlanner()).getOptions().getOption(PlannerSettings.TOPN.getOptionName()).bool_val;
+
+    if (!topNEnabled) {
+      return false;
+    } else {
+      // If no limit is defined it doesn't make sense to use TopN since it could use unbounded memory in this case.
+      // We should use the sort and limit operator in this case.
+      // This also fixes DRILL-6474
+      final LimitPrel limit = call.rel(0);
+      return limit.getFetch() != null;
+    }
+  }
+
+  @Override
   public void onMatch(RelOptRuleCall call) {
-    final LimitPrel limit = (LimitPrel) call.rel(0);
-    final SingleMergeExchangePrel smex = (SingleMergeExchangePrel) call.rel(1);
-    final SortPrel sort = (SortPrel) call.rel(2);
+    final LimitPrel limit = call.rel(0);
+    final SingleMergeExchangePrel smex = call.rel(1);
+    final SortPrel sort = call.rel(2);
 
     // First offset to include into results (inclusive). Null implies it is starting from offset 0
     int offset = limit.getOffset() != null ? Math.max(0, RexLiteral.intValue(limit.getOffset())) : 0;
-    int fetch = limit.getFetch() != null?  Math.max(0, RexLiteral.intValue(limit.getFetch())) : 0;
+    int fetch = Math.max(0, RexLiteral.intValue(limit.getFetch()));
 
     final TopNPrel topN = new TopNPrel(limit.getCluster(), sort.getTraitSet(), sort.getInput(), offset + fetch, sort.getCollation());
     final LimitPrel newLimit = new LimitPrel(limit.getCluster(), limit.getTraitSet(),

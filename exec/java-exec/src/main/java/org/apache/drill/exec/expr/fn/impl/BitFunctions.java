@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 public class BitFunctions {
 
   @FunctionTemplate(names = {"booleanOr", "or", "||", "orNoShortCircuit"},
-                    scope = FunctionScope.SC_BOOLEAN_OPERATOR,
+                    scope = FunctionScope.SIMPLE,
                     nulls = NullHandling.NULL_IF_NULL)
   public static class BitOr implements DrillSimpleFunc {
 
@@ -51,7 +51,7 @@ public class BitFunctions {
   }
 
   @FunctionTemplate(names = {"booleanAnd", "and", "&&"},
-                    scope = FunctionScope.SC_BOOLEAN_OPERATOR,
+                    scope = FunctionScope.SIMPLE,
                     nulls = NullHandling.NULL_IF_NULL)
   public static class BitAnd implements DrillSimpleFunc {
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,28 +25,63 @@ import java.io.InputStream;
 import org.apache.drill.exec.store.easy.json.JsonProcessor;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 import com.google.common.base.Preconditions;
+
 import org.apache.drill.common.exceptions.UserException;
 
 public abstract class BaseJsonProcessor implements JsonProcessor {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper()
-    .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
-    .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+  private static final ObjectMapper DEFAULT_MAPPER = getDefaultMapper();
+
+  private static final ObjectMapper NAN_INF_MAPPER = getDefaultMapper()
+      .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
+
+  private static final String JACKSON_PARSER_EOF_FILE_MSG = "Unexpected end-of-input:";
+  private final boolean enableNanInf;
+
+  public enum JsonExceptionProcessingState {
+    END_OF_STREAM, PROC_SUCCEED
+  }
 
   protected JsonParser parser;
   protected DrillBuf workBuf;
+  protected JsonToken lastSeenJsonToken = null;
+  boolean ignoreJSONParseErrors = false; // default False
 
-  public BaseJsonProcessor(DrillBuf workBuf) {
+  /**
+   *
+   * @return Default json mapper
+   */
+  public static ObjectMapper getDefaultMapper() {
+    return new ObjectMapper().configure(
+        JsonParser.Feature.ALLOW_COMMENTS, true).configure(
+        JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+  }
+
+  public boolean ignoreJSONParseError() {
+    return ignoreJSONParseErrors;
+  }
+
+  public void setIgnoreJSONParseErrors(boolean ignoreJSONParseErrors) {
+    this.ignoreJSONParseErrors = ignoreJSONParseErrors;
+  }
+
+  public BaseJsonProcessor(DrillBuf workBuf, boolean enableNanInf) {
+    this.enableNanInf = enableNanInf;
     workBuf = Preconditions.checkNotNull(workBuf);
   }
 
   @Override
   public void setSource(InputStream is) throws IOException {
-    parser = MAPPER.getFactory().createParser(is);
+    if (enableNanInf) {
+      parser = NAN_INF_MAPPER.getFactory().createParser(is);
+    } else {
+      parser = DEFAULT_MAPPER.getFactory().createParser(is);
+    }
   }
 
   @Override
@@ -55,27 +90,52 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
   }
 
   @Override
-  public UserException.Builder getExceptionWithContext(UserException.Builder exceptionBuilder,
-                                                       String field,
-                                                       String msg,
-                                                       Object... args) {
+  public UserException.Builder getExceptionWithContext(
+      UserException.Builder exceptionBuilder, String field, String msg,
+      Object... args) {
     if (msg != null) {
       exceptionBuilder.message(msg, args);
     }
-    if(field != null) {
+    if (field != null) {
       exceptionBuilder.pushContext("Field ", field);
     }
-    exceptionBuilder.pushContext("Column ", parser.getCurrentLocation().getColumnNr()+1)
-            .pushContext("Line ", parser.getCurrentLocation().getLineNr());
+    exceptionBuilder.pushContext("Column ",
+        parser.getCurrentLocation().getColumnNr() + 1).pushContext("Line ",
+        parser.getCurrentLocation().getLineNr());
     return exceptionBuilder;
   }
 
   @Override
   public UserException.Builder getExceptionWithContext(Throwable e,
-                                                       String field,
-                                                       String msg,
-                                                       Object... args) {
+      String field, String msg, Object... args) {
     UserException.Builder exceptionBuilder = UserException.dataReadError(e);
     return getExceptionWithContext(exceptionBuilder, field, msg, args);
+  }
+
+  /*
+   * DRILL - 4653 This method processes JSON tokens until it reaches end of the
+   * current line when it processes start of a new JSON line { - return
+   * PROC_SUCCEED when it sees EOF the stream - there may not be a closing }
+   */
+
+  protected JsonExceptionProcessingState processJSONException()
+      throws IOException {
+    while (!parser.isClosed()) {
+      try {
+        JsonToken currentToken = parser.nextToken();
+        if(currentToken ==  JsonToken.START_OBJECT && (lastSeenJsonToken == JsonToken.END_OBJECT || lastSeenJsonToken == null))
+        {
+          lastSeenJsonToken =currentToken;
+          break;
+        }
+        lastSeenJsonToken =currentToken;
+        } catch (com.fasterxml.jackson.core.JsonParseException ex1) {
+        if (ex1.getOriginalMessage().startsWith(JACKSON_PARSER_EOF_FILE_MSG)) {
+          return JsonExceptionProcessingState.END_OF_STREAM;
+        }
+       continue;
+       }
+    }
+    return JsonExceptionProcessingState.PROC_SUCCEED;
   }
 }

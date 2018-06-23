@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.drill.exec.server.options.OptionManager;
+
+import java.util.Collections;
 
 public abstract class ExchangePrel extends SinglePrel{
 
@@ -32,6 +34,16 @@ public abstract class ExchangePrel extends SinglePrel{
   @Override
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
     return logicalVisitor.visitExchange(this, value);
+  }
+
+  /**
+   * The derived classes can override this method to create relevant mux exchanges.
+   * If this method is not overrided the default behaviour is to clone itself.
+   * @param child input to the new muxPrel or new Exchange node.
+   * @param options options manager to check if mux is enabled.
+   */
+  public Prel constructMuxPrel(Prel child, OptionManager options) {
+    return (Prel)copy(getTraitSet(), Collections.singletonList(((RelNode)child)));
   }
 
 }

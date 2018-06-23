@@ -10,6 +10,15 @@ message DrillbitEndpoint{
   optional int32 control_port = 3;
   optional int32 data_port = 4;
   optional Roles roles = 5;
+  optional string version = 6;
+  enum State {
+      STARTUP = 0;
+      ONLINE = 1;
+      QUIESCENT = 2;
+      OFFLINE = 3;
+  }
+  optional State state = 7;
+  optional int32 http_port = 8;
 }
 
 message DrillServiceInstance{

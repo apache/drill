@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,51 +19,7 @@
 
 
 <#list cast.types as type>
-
-<#if type.major == "DecimalSimpleInt" || type.major == "DecimalSimpleBigInt"> <#-- Cast function template for conversion from Decimal9, Decimal18 to Int and BigInt -->
-
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java" />
-
-<#include "/@includes/license.ftl" />
-
-package org.apache.drill.exec.expr.fn.impl.gcast;
-
-<#include "/@includes/vv_imports.ftl" />
-
-import org.apache.drill.exec.expr.DrillSimpleFunc;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
-import org.apache.drill.exec.expr.annotations.Output;
-import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.expr.annotations.Workspace;
-import io.netty.buffer.ByteBuf;
-import java.nio.ByteBuffer;
-
-@SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
-public class Cast${type.from}${type.to} implements DrillSimpleFunc {
-
-@Param ${type.from}Holder in;
-@Output ${type.to}Holder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-
-        int carry = (org.apache.drill.exec.util.DecimalUtility.getFirstFractionalDigit(in.value, in.scale) > 4) ? 1 : 0;
-        // Assign the integer part of the decimal to the output holder
-        out.value = java.lang.Math.abs((${type.javatype}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleDivide(in.value, (int) in.scale))) + carry;
-        if (in.value < 0) {
-          out.value *= -1;
-        }
-    }
-}
-
-<#elseif type.major == "DecimalComplexInt" || type.major == "DecimalComplexBigInt"> <#-- Cast function template for conversion from Decimal28Sparse, Decimal38Sparse to Int and BigInt -->
+<#if type.major == "DecimalComplexInt" || type.major == "DecimalComplexBigInt"> <#-- Cast function template for conversion from VarDecimal to Int and BigInt -->
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java" />
 
 <#include "/@includes/license.ftl" />
@@ -82,35 +38,27 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+                  scope = FunctionTemplate.FunctionScope.SIMPLE,
+                  nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
-@Param ${type.from}Holder in;
-@Output ${type.to}Holder out;
+  @Param ${type.from}Holder in;
+  @Output ${type.to}Holder out;
 
-    public void setup() {
-    }
+  public void setup() {
+  }
 
-    public void eval() {
-
-        int carry = (org.apache.drill.exec.util.DecimalUtility.getFirstFractionalDigit(in.buffer, in.scale, in.start, in.nDecimalDigits) > 4) ? 1 : 0;
-
-        // Get the index, where the integer part of the decimal ends
-        int integerEndIndex = in.nDecimalDigits - org.apache.drill.exec.util.DecimalUtility.roundUp(in.scale);
-
-        for (int i = 0 ; i < integerEndIndex; i++) {
-            // We store values as base 1 billion integers, use this to compute the output (we don't care about overflows)
-            out.value = (${type.javatype}) ((out.value * org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) + in.getInteger(i, in.start, in.buffer));
-        }
-
-        out.value += carry;
-
-        if (in.getSign(in.start, in.buffer) == true) {
-            out.value *= -1;
-        }
-    }
+  public void eval() {
+    java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
+    long lval = bd.setScale(0, java.math.BigDecimal.ROUND_HALF_UP).longValue(); // round off to nearest integer
+    out.value = (${type.javatype}) lval;
+  }
 }
-
 </#if> <#-- type.major -->
 </#list>

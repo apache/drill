@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,20 +24,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import net.hydromatic.avatica.ColumnMetaData;
-import net.hydromatic.avatica.ColumnMetaData.AvaticaType;
-import net.hydromatic.avatica.ColumnMetaData.Rep;
-
-import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.ColumnMetaData.AvaticaType;
+import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.proto.UserProtos.ColumnSearchability;
+import org.apache.drill.exec.proto.UserProtos.ColumnUpdatability;
+import org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+
+import com.google.common.collect.ImmutableList;
 
 public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillColumnMetaDataList.class);
 
-  private List<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
+  private List<ColumnMetaData> columns = new ArrayList<>();
 
   @Override
   public int size() {
@@ -51,25 +54,73 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
 
   /**
    * Gets AvaticaType carrying both JDBC {@code java.sql.Type.*} type code
+   * and SQL type name for given SQL type name.
+   */
+  private static AvaticaType getAvaticaType(String sqlTypeName) {
+    final int jdbcTypeId = Types.getJdbcTypeCode(sqlTypeName);
+    return ColumnMetaData.scalar( jdbcTypeId, sqlTypeName,
+        Rep.BOOLEAN /* dummy value, unused */ );
+  }
+
+  /**
+   * Update the metadata with given metadata received from server.
+   * @param metadata
+   */
+  public void updateColumnMetaData(List<ResultColumnMetadata> metadata) {
+    final List<ColumnMetaData> newColumns = new ArrayList<>(metadata.size());
+    int offset = 0;
+    for(ResultColumnMetadata m : metadata) {
+
+      final AvaticaType bundledSqlDataType = getAvaticaType(m.getDataType());
+
+      newColumns.add(new ColumnMetaData(
+          offset,
+          m.getAutoIncrement(),
+          m.getCaseSensitivity(),
+          m.getSearchability() != ColumnSearchability.NONE,
+          m.getIsCurrency(),
+          m.getIsNullable() ? ResultSetMetaData.columnNullable : ResultSetMetaData.columnNoNulls,
+          m.getSigned(),
+          m.getDisplaySize(),
+          m.getLabel(),
+          m.getColumnName(),
+          m.getSchemaName(),
+          m.getPrecision(),
+          m.getScale(),
+          m.getTableName(),
+          m.getCatalogName(),
+          bundledSqlDataType,
+          m.getUpdatability() == ColumnUpdatability.READ_ONLY,
+          m.getUpdatability() == ColumnUpdatability.WRITABLE,
+          m.getUpdatability() == ColumnUpdatability.WRITABLE,
+          m.getClassName()
+      ));
+      offset++;
+    }
+    columns = ImmutableList.copyOf(newColumns);
+  }
+
+  /**
+   * Gets AvaticaType carrying both JDBC {@code java.sql.Type.*} type code
    * and SQL type name for given RPC-level type (from batch schema).
    */
   private static AvaticaType getAvaticaType( MajorType rpcDateType ) {
     final String sqlTypeName = Types.getSqlTypeName( rpcDateType );
-    final int jdbcTypeId = Types.getJdbcTypeCode( rpcDateType );
+    final int jdbcTypeId = Types.getJdbcTypeCode( sqlTypeName );
     return ColumnMetaData.scalar( jdbcTypeId, sqlTypeName,
-                                  Rep.BOOLEAN /* dummy value, unused */ );
+        Rep.BOOLEAN /* dummy value, unused */ );
   }
 
   public void updateColumnMetaData(String catalogName, String schemaName,
                                    String tableName, BatchSchema schema,
                                    List<Class<?>> getObjectClasses ) {
     final List<ColumnMetaData> newColumns =
-        new ArrayList<ColumnMetaData>(schema.getFieldCount());
+        new ArrayList<>(schema.getFieldCount());
     for (int colOffset = 0; colOffset < schema.getFieldCount(); colOffset++) {
       final MaterializedField field = schema.getColumn(colOffset);
-      Class<?> objectClass = getObjectClasses.get( colOffset );
+      Class<?> objectClass = getObjectClasses.get(colOffset);
 
-      final String columnName = field.getPath();
+      final String columnName = field.getName();
 
       final MajorType rpcDataType = field.getType();
       final AvaticaType bundledSqlDataType = getAvaticaType(rpcDataType);
@@ -93,10 +144,9 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
       //   getColumns()'s COLUMN_SIZE)
       // - scale for getScale(...), and
       // - and displaySize for getColumnDisplaySize(...).
-      final int precision =
-          rpcDataType.hasPrecision() ? rpcDataType.getPrecision() : 0;
-      final int scale = rpcDataType.hasScale() ? rpcDataType.getScale() : 0;
-      final int displaySize = 10;
+      final int precision = Types.getPrecision(rpcDataType);
+      final int scale = Types.getScale(rpcDataType);
+      final int displaySize = Types.getJdbcDisplaySize(rpcDataType);
 
       ColumnMetaData col = new ColumnMetaData(
           colOffset,    // (zero-based ordinal (for Java arrays/lists).)

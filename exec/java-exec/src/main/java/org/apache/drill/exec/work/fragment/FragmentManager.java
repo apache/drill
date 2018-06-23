@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,6 @@ import java.io.IOException;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.data.IncomingDataBatch;
 
 /**
@@ -67,13 +66,6 @@ public interface FragmentManager {
 
   FragmentContext getFragmentContext();
 
-  void addConnection(RemoteConnection connection);
-
   void receivingFragmentFinished(final FragmentHandle handle);
 
-  /**
-   *  Sets autoRead property on all connections
-   * @param autoRead
-   */
-  void setAutoRead(boolean autoRead);
 }

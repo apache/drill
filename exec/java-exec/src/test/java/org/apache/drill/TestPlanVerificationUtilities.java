@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,13 +14,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+@Category(PlannerTest.class)
 public class TestPlanVerificationUtilities extends PlanTestBase {
 
   @Test
@@ -41,14 +44,14 @@ public class TestPlanVerificationUtilities extends PlanTestBase {
       testPlanMatchingPatterns(query,
           new String[] {expectedPattern}, new String[] {expectedPattern});
     } catch (AssertionError ex) {
-      assertEquals(ex.getMessage(), UNEXPECTED_FOUND + expectedPattern);
+      assertTrue(ex.getMessage().contains(UNEXPECTED_FOUND));
     }
 
     try {
       testPlanMatchingPatterns(query,
           new String[] {excludedPattern}, new String[] {excludedPattern});
     } catch (AssertionError ex) {
-      assertEquals(ex.getMessage(), EXPECTED_NOT_FOUND + excludedPattern);
+      assertTrue(ex.getMessage().contains(EXPECTED_NOT_FOUND));
     }
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 <@pp.dropOutputFile />
@@ -39,6 +38,10 @@ import org.apache.drill.exec.record.RecordBatch;
 
 import io.netty.buffer.ByteBuf;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
 public class G${type}Arithmetic {
 @SuppressWarnings("unused")
@@ -57,11 +60,11 @@ public static class G${type}Difference implements DrillSimpleFunc {
         <#if type == "Time">
         out.milliseconds = left.value - right.value;
         <#elseif type == "Date">
-        out.days = (int) ((left.value - right.value) / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        out.days = (int) ((left.value - right.value) / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         <#elseif type == "TimeStamp">
         long difference = (left.value - right.value);
-        out.milliseconds = (int) (difference % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-        out.days = (int) (difference / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        out.milliseconds = (int) (difference % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+        out.days = (int) (difference / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         </#if>
     }
 }

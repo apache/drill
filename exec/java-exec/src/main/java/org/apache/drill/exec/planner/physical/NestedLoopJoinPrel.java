@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +18,15 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.util.List;
 
-import org.apache.drill.common.logical.data.JoinCondition;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.planner.logical.DrillOptiq;
+import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.Join;
@@ -35,17 +37,13 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
-
-import com.google.common.collect.Lists;
 
 public class NestedLoopJoinPrel  extends JoinPrel {
 
   public NestedLoopJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
                       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
-    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
   }
 
   @Override
@@ -58,21 +56,22 @@ public class NestedLoopJoinPrel  extends JoinPrel {
   }
 
   @Override
-  public double getRows() {
-    return this.getLeft().getRows() * this.getRight().getRows();
+  public double estimateRowCount(RelMetadataQuery mq) {
+    return this.getLeft().estimateRowCount(mq) * this.getRight().estimateRowCount(mq);
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
-    double leftRowCount = RelMetadataQuery.getRowCount(this.getLeft());
-    double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
+    double leftRowCount = mq.getRowCount(this.getLeft());
+    double rightRowCount = mq.getRowCount(this.getRight());
     double nljFactor = PrelUtil.getSettings(getCluster()).getNestedLoopJoinFactor();
 
-    // cpu cost of evaluating each leftkey=rightkey join condition
-    double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * this.getLeftKeys().size();
+    // cpu cost of evaluating each expression in join condition
+    int exprNum = RelOptUtil.conjunctions(getCondition()).size() + RelOptUtil.disjunctions(getCondition()).size();
+    double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * exprNum;
 
     double cpuCost = joinConditionCost * (leftRowCount * rightRowCount) * nljFactor;
 
@@ -82,23 +81,29 @@ public class NestedLoopJoinPrel  extends JoinPrel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    final List<String> fields = getRowType().getFieldNames();
-    assert isUnique(fields);
-
-    final List<String> leftFields = left.getRowType().getFieldNames();
-    final List<String> rightFields = right.getRowType().getFieldNames();
-
     PhysicalOperator leftPop = ((Prel)left).getPhysicalOperator(creator);
     PhysicalOperator rightPop = ((Prel)right).getPhysicalOperator(creator);
 
-    JoinRelType jtype = this.getJoinType();
+    /*
+       Raw expression will be transformed into its logical representation. For example:
+       Query:
+         select t1.c1, t2.c1, t2.c2 from t1 inner join t2 on t1.c1 between t2.c1 and t2.c2
+       Raw expression:
+         AND(>=($0, $1), <=($0, $2))
+       Logical expression:
+         FunctionCall [func=booleanAnd,
+         args=[FunctionCall [func=greater_than_or_equal_to, args=[`i1`, `i10`]],
+               FunctionCall [func=less_than_or_equal_to, args=[`i1`, `i2`]]]
 
-    List<JoinCondition> conditions = Lists.newArrayList();
+       Both tables have the same column name thus duplicated column name in second table are renamed: i1 -> i10.
+    */
+    LogicalExpression condition = DrillOptiq.toDrill(
+        new DrillParseContext(PrelUtil.getSettings(getCluster())),
+        getInputs(),
+        getCondition());
 
-    buildJoinConditions(conditions, leftFields, rightFields, leftKeys, rightKeys);
-
-    NestedLoopJoinPOP nljoin = new NestedLoopJoinPOP(leftPop, rightPop, conditions, jtype);
-    return creator.addMetadata(this, nljoin);
+    NestedLoopJoinPOP nlj = new NestedLoopJoinPOP(leftPop, rightPop, getJoinType(), condition);
+    return creator.addMetadata(this, nlj);
   }
 
   @Override

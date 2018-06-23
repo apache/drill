@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,6 +26,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.RunTimeScan;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
+import org.apache.drill.exec.store.image.ImageFormatConfig;
 import org.junit.Test;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -53,11 +54,23 @@ public class TestFormatPluginOptionExtractor {
           assertEquals(NamedFormatPluginConfig.class, d.pluginConfigClass);
           assertEquals("(type: String, name: String)", d.presentParams());
           break;
+        case "parquet":
+          assertEquals(d.typeName, "(type: String, autoCorrectCorruptDates: boolean)", d.presentParams());
+          break;
         case "json":
         case "sequencefile":
-        case "parquet":
+        case "pcap":
         case "avro":
           assertEquals(d.typeName, "(type: String)", d.presentParams());
+          break;
+        case "httpd":
+          assertEquals("(type: String, logFormat: String, timestampFormat: String)", d.presentParams());
+          break;
+        case "image":
+          assertEquals(ImageFormatConfig.class, d.pluginConfigClass);
+          assertEquals(
+              "(type: String, fileSystemMetadata: boolean, descriptive: boolean, timeZone: String)", d.presentParams()
+          );
           break;
         default:
           fail("add validation for format plugin type " + d.typeName);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,7 +46,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoDatabase;
 
@@ -61,12 +60,10 @@ public class MongoSchemaFactory implements SchemaFactory {
   private LoadingCache<String, List<String>> tableNameLoader;
   private final String schemaName;
   private final MongoStoragePlugin plugin;
-  private final MongoClient client;
 
   public MongoSchemaFactory(MongoStoragePlugin plugin, String schemaName) throws ExecutionSetupException {
     this.plugin = plugin;
     this.schemaName = schemaName;
-    this.client = plugin.getClient();
 
     databases = CacheBuilder //
         .newBuilder() //
@@ -88,7 +85,7 @@ public class MongoSchemaFactory implements SchemaFactory {
       }
       try {
         List<String> dbNames = new ArrayList<>();
-        client.listDatabaseNames().into(dbNames);
+        plugin.getClient().listDatabaseNames().into(dbNames);
         return dbNames;
       } catch (MongoException me) {
         logger.warn("Failure while loading databases in Mongo. {}",
@@ -106,7 +103,7 @@ public class MongoSchemaFactory implements SchemaFactory {
     @Override
     public List<String> load(String dbName) throws Exception {
       try {
-        MongoDatabase db = client.getDatabase(dbName);
+        MongoDatabase db = plugin.getClient().getDatabase(dbName);
         List<String> collectionNames = new ArrayList<>();
         db.listCollectionNames().into(collectionNames);
         return collectionNames;

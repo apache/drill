@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,6 +30,10 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
 import java.util.Map;
+
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 /** RecordWriter interface. */
 public interface RecordWriter {

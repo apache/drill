@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.hive;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import io.netty.buffer.DrillBuf;
+import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -31,8 +32,9 @@ import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal9Holder;
+import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableBitVector;
@@ -47,39 +49,49 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
-import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.io.AcidUtils;
+import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
+import org.apache.hadoop.hive.ql.plan.TableDesc;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
+import org.apache.hadoop.hive.serde2.typeinfo.BaseCharTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.HiveDecimalUtils;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE;
 
 public class HiveUtilities {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
 
   /** Partition value is received in string format. Convert it into appropriate object based on the type. */
   public static Object convertPartitionType(TypeInfo typeInfo, String value, final String defaultPartitionValue) {
@@ -103,8 +115,7 @@ public class HiveUtilities {
           return Boolean.parseBoolean(value);
         case DECIMAL: {
           DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) typeInfo;
-          return HiveDecimalUtils.enforcePrecisionScale(HiveDecimal.create(value),
-              decimalTypeInfo.precision(), decimalTypeInfo.scale());
+          return HiveDecimalUtils.enforcePrecisionScale(HiveDecimal.create(value), decimalTypeInfo);
         }
         case DOUBLE:
           return Double.parseDouble(value);
@@ -119,6 +130,8 @@ public class HiveUtilities {
         case STRING:
         case VARCHAR:
           return value.getBytes();
+        case CHAR:
+          return value.trim().getBytes();
         case TIMESTAMP:
           return Timestamp.valueOf(value);
         case DATE:
@@ -222,7 +235,7 @@ public class HiveUtilities {
         final Decimal9Holder holder = new Decimal9Holder();
         holder.scale = v.getField().getScale();
         holder.precision = v.getField().getPrecision();
-        holder.value = DecimalUtility.getDecimal9FromBigDecimal(value, holder.scale, holder.precision);
+        holder.value = DecimalUtility.getDecimal9FromBigDecimal(value, holder.scale);
         for (int i = start; i < end; i++) {
           v.getMutator().setSafe(i, holder);
         }
@@ -235,7 +248,7 @@ public class HiveUtilities {
         final Decimal18Holder holder = new Decimal18Holder();
         holder.scale = v.getField().getScale();
         holder.precision = v.getField().getPrecision();
-        holder.value = DecimalUtility.getDecimal18FromBigDecimal(value, holder.scale, holder.precision);
+        holder.value = DecimalUtility.getDecimal18FromBigDecimal(value, holder.scale);
         for (int i = start; i < end; i++) {
           v.getMutator().setSafe(i, holder);
         }
@@ -255,7 +268,7 @@ public class HiveUtilities {
         holder.precision = v.getField().getPrecision();
         holder.buffer = managedBuffer;
         holder.start = 0;
-        DecimalUtility.getSparseFromBigDecimal(value, holder.buffer, 0, holder.scale, holder.precision,
+        DecimalUtility.getSparseFromBigDecimal(value, holder.buffer, 0, holder.scale,
             Decimal28SparseHolder.nDecimalDigits);
         for (int i = start; i < end; i++) {
           v.getMutator().setSafe(i, holder);
@@ -275,17 +288,26 @@ public class HiveUtilities {
         holder.precision = v.getField().getPrecision();
         holder.buffer = managedBuffer;
         holder.start = 0;
-        DecimalUtility.getSparseFromBigDecimal(value, holder.buffer, 0, holder.scale, holder.precision,
+        DecimalUtility.getSparseFromBigDecimal(value, holder.buffer, 0, holder.scale,
             Decimal38SparseHolder.nDecimalDigits);
         for (int i = start; i < end; i++) {
           v.getMutator().setSafe(i, holder);
         }
         break;
       }
+      case VARDECIMAL: {
+        final BigDecimal value = ((HiveDecimal) val).bigDecimalValue()
+            .setScale(vector.getField().getScale(), RoundingMode.HALF_UP);
+        final NullableVarDecimalVector v = ((NullableVarDecimalVector) vector);
+        for (int i = start; i < end; i++) {
+          v.getMutator().setSafe(i, value);
+        }
+        break;
+      }
     }
   }
 
-  public static MajorType getMajorTypeFromHiveTypeInfo(final TypeInfo typeInfo, final OptionManager options) {
+  public static MajorType getMajorTypeFromHiveTypeInfo(final TypeInfo typeInfo, final OptionSet options) {
     switch (typeInfo.getCategory()) {
       case PRIMITIVE: {
         PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) typeInfo;
@@ -293,10 +315,18 @@ public class HiveUtilities {
         MajorType.Builder typeBuilder = MajorType.newBuilder().setMinorType(minorType)
             .setMode(DataMode.OPTIONAL); // Hive columns (both regular and partition) could have null values
 
-        if (primitiveTypeInfo.getPrimitiveCategory() == PrimitiveCategory.DECIMAL) {
-          DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
-          typeBuilder.setPrecision(decimalTypeInfo.precision())
-              .setScale(decimalTypeInfo.scale()).build();
+        switch (primitiveTypeInfo.getPrimitiveCategory()) {
+          case CHAR:
+          case VARCHAR:
+            BaseCharTypeInfo baseCharTypeInfo = (BaseCharTypeInfo) primitiveTypeInfo;
+            typeBuilder.setPrecision(baseCharTypeInfo.getLength());
+            break;
+          case DECIMAL:
+            DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
+            typeBuilder.setPrecision(decimalTypeInfo.getPrecision()).setScale(decimalTypeInfo.getScale());
+            break;
+          default:
+            // do nothing, other primitive categories do not have precision or scale
         }
 
         return typeBuilder.build();
@@ -314,7 +344,7 @@ public class HiveUtilities {
   }
 
   public static TypeProtos.MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo,
-                                                                           OptionManager options) {
+                                                                           OptionSet options) {
     switch(primitiveTypeInfo.getPrimitiveCategory()) {
       case BINARY:
         return TypeProtos.MinorType.VARBINARY;
@@ -322,13 +352,12 @@ public class HiveUtilities {
         return TypeProtos.MinorType.BIT;
       case DECIMAL: {
 
-        if (options.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
+        if (!options.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val) {
           throw UserException.unsupportedError()
               .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
               .build(logger);
         }
-        DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
-        return DecimalUtility.getDecimalDataType(decimalTypeInfo.precision());
+        return MinorType.VARDECIMAL;
       }
       case DOUBLE:
         return TypeProtos.MinorType.FLOAT8;
@@ -345,6 +374,7 @@ public class HiveUtilities {
         return TypeProtos.MinorType.BIGINT;
       case STRING:
       case VARCHAR:
+      case CHAR:
         return TypeProtos.MinorType.VARCHAR;
       case TIMESTAMP:
         return TypeProtos.MinorType.TIMESTAMP;
@@ -364,7 +394,7 @@ public class HiveUtilities {
    * @param table Table object
    * @throws Exception
    */
-  public static Class<? extends InputFormat> getInputFormatClass(final JobConf job, final StorageDescriptor sd,
+  public static Class<? extends InputFormat<?, ?>> getInputFormatClass(final JobConf job, final StorageDescriptor sd,
       final Table table) throws Exception {
     final String inputFormatName = sd.getInputFormat();
     if (Strings.isNullOrEmpty(inputFormatName)) {
@@ -374,9 +404,12 @@ public class HiveUtilities {
             "InputFormat class explicitly specified nor StorageHandler class");
       }
       final HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(job, storageHandlerClass);
-      return storageHandler.getInputFormatClass();
+      TableDesc tableDesc = new TableDesc();
+      tableDesc.setProperties(MetaStoreUtils.getTableMetadata(table));
+      storageHandler.configureInputJobProperties(tableDesc, table.getParameters());
+      return (Class<? extends InputFormat<?, ?>>) storageHandler.getInputFormatClass();
     } else {
-      return (Class<? extends InputFormat>) Class.forName(inputFormatName);
+      return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName) ;
     }
   }
 
@@ -385,7 +418,6 @@ public class HiveUtilities {
    *
    * @param job {@link JobConf} instance.
    * @param properties New config properties
-   * @param hiveConf HiveConf of Hive storage plugin
    */
   public static void addConfToJob(final JobConf job, final Properties properties) {
     for (Object obj : properties.keySet()) {
@@ -397,12 +429,14 @@ public class HiveUtilities {
    * Wrapper around {@link MetaStoreUtils#getPartitionMetadata(Partition, Table)} which also adds parameters from table
    * to properties returned by {@link MetaStoreUtils#getPartitionMetadata(Partition, Table)}.
    *
-   * @param partition
-   * @param table
-   * @return
+   * @param partition the source of partition level parameters
+   * @param table     the source of table level parameters
+   * @return properties
    */
-  public static Properties getPartitionMetadata(final Partition partition, final Table table) {
-    final Properties properties = MetaStoreUtils.getPartitionMetadata(partition, table);
+  public static Properties getPartitionMetadata(final HivePartition partition, final HiveTableWithColumnCache table) {
+    final Properties properties;
+    restoreColumns(table, partition);
+    properties = MetaStoreUtils.getPartitionMetadata(partition, table);
 
     // SerDe expects properties from Table, but above call doesn't add Table properties.
     // Include Table properties in final list in order to not to break SerDes that depend on
@@ -416,17 +450,236 @@ public class HiveUtilities {
     return properties;
   }
 
+  /**
+   * Sets columns from table cache to table and partition.
+   *
+   * @param partition partition which will set column list
+   * @param table     the source of column lists cache
+   */
+  public static void restoreColumns(HiveTableWithColumnCache table, HivePartition partition) {
+    // exactly the same column lists for partitions or table
+    // stored only one time to reduce physical plan serialization
+    if (partition != null && partition.getSd().getCols() == null) {
+      partition.getSd().setCols(table.getColumnListsCache().getColumns(partition.getColumnListIndex()));
+    }
+    if (table.getSd().getCols() == null) {
+      table.getSd().setCols(table.getColumnListsCache().getColumns(0));
+    }
+  }
+
+  /**
+   * Wrapper around {@link MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}
+   * which also sets columns from table cache to table and returns properties returned by
+   * {@link MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}.
+   */
+  public static Properties getTableMetadata(HiveTableWithColumnCache table) {
+    restoreColumns(table, null);
+    return MetaStoreUtils.getSchema(table.getSd(), table.getSd(), table.getParameters(),
+      table.getDbName(), table.getTableName(), table.getPartitionKeys());
+  }
+
   public static void throwUnsupportedHiveDataTypeError(String unsupportedType) {
     StringBuilder errMsg = new StringBuilder();
     errMsg.append(String.format("Unsupported Hive data type %s. ", unsupportedType));
     errMsg.append(System.getProperty("line.separator"));
     errMsg.append("Following Hive data types are supported in Drill for querying: ");
     errMsg.append(
-        "BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, and VARCHAR");
+        "BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, VARCHAR and CHAR");
 
     throw UserException.unsupportedError()
         .message(errMsg.toString())
         .build(logger);
+  }
+
+  /**
+   * Returns property value. If property is absent, return given default value.
+   * If property value is non-numeric will fail.
+   *
+   * @param tableProperties table properties
+   * @param propertyName property name
+   * @param defaultValue default value used in case if property is absent
+   * @return property value
+   * @throws NumberFormatException if property value is not numeric
+   */
+  public static int retrieveIntProperty(Properties tableProperties, String propertyName, int defaultValue) {
+    Object propertyObject = tableProperties.get(propertyName);
+    if (propertyObject == null) {
+      return defaultValue;
+    }
+
+    try {
+      return Integer.valueOf(propertyObject.toString());
+    } catch (NumberFormatException e) {
+      throw new NumberFormatException(String.format("Hive table property %s value '%s' is non-numeric",
+          propertyName, propertyObject.toString()));
+    }
+  }
+
+  /**
+   * Checks if given table has header or footer.
+   * If at least one of them has value more then zero, method will return true.
+   *
+   * @param table table with column cache instance
+   * @return true if table contains header or footer, false otherwise
+   */
+  public static boolean hasHeaderOrFooter(HiveTableWithColumnCache table) {
+    Properties tableProperties = getTableMetadata(table);
+    int skipHeader = retrieveIntProperty(tableProperties, serdeConstants.HEADER_COUNT, -1);
+    int skipFooter = retrieveIntProperty(tableProperties, serdeConstants.FOOTER_COUNT, -1);
+    return skipHeader > 0 || skipFooter > 0;
+  }
+
+  /**
+   * This method checks whether the table is transactional and set necessary properties in {@link JobConf}.<br>
+   * If schema evolution properties aren't set in job conf for the input format, method sets the column names
+   * and types from table/partition properties or storage descriptor.
+   *
+   * @param job the job to update
+   * @param sd storage descriptor
+   */
+  public static void verifyAndAddTransactionalProperties(JobConf job, StorageDescriptor sd) {
+
+    if (AcidUtils.isTablePropertyTransactional(job)) {
+      AcidUtils.setTransactionalTableScan(job, true);
+
+      // No work is needed, if schema evolution is used
+      if (Utilities.isSchemaEvolutionEnabled(job, true) && job.get(IOConstants.SCHEMA_EVOLUTION_COLUMNS) != null &&
+          job.get(IOConstants.SCHEMA_EVOLUTION_COLUMNS_TYPES) != null) {
+        return;
+      }
+
+      String colNames;
+      String colTypes;
+
+      // Try to get get column names and types from table or partition properties. If they are absent there, get columns
+      // data from storage descriptor of the table
+      colNames = job.get(serdeConstants.LIST_COLUMNS);
+      colTypes = job.get(serdeConstants.LIST_COLUMN_TYPES);
+
+      if (colNames == null || colTypes == null) {
+        colNames = sd.getCols().stream()
+            .map(FieldSchema::getName)
+            .collect(Collectors.joining(","));
+        colTypes = sd.getCols().stream()
+            .map(FieldSchema::getType)
+            .collect(Collectors.joining(","));
+      }
+
+      job.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS, colNames);
+      job.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS_TYPES, colTypes);
+    }
+  }
+
+  /**
+   * Rule is matched when all of the following match:
+   * <ul>
+   * <li>GroupScan in given DrillScalRel is an {@link HiveScan}</li>
+   * <li> {@link HiveScan} is not already rewritten using Drill's native readers</li>
+   * <li> InputFormat in table metadata and all partitions metadata contains the same value {@param tableInputFormatClass}</li>
+   * <li> No error occurred while checking for the above conditions. An error is logged as warning.</li>
+   *</ul>
+   * @param call rule call
+   * @return True if the rule can be applied. False otherwise
+   */
+  public static boolean nativeReadersRuleMatches(RelOptRuleCall call, Class tableInputFormatClass) {
+    final DrillScanRel scanRel = call.rel(0);
+
+    if (!(scanRel.getGroupScan() instanceof HiveScan) || ((HiveScan) scanRel.getGroupScan()).isNativeReader()) {
+      return false;
+    }
+
+    final HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
+    final HiveConf hiveConf = hiveScan.getHiveConf();
+    final HiveTableWithColumnCache hiveTable = hiveScan.getHiveReadEntry().getTable();
+
+    if (HiveUtilities.containsUnsupportedDataTypes(hiveTable)) {
+      return false;
+    }
+
+    final Class<? extends InputFormat<?, ?>> tableInputFormat = getInputFormatFromSD(
+        HiveUtilities.getTableMetadata(hiveTable), hiveScan.getHiveReadEntry(), hiveTable.getSd(), hiveConf);
+    if (tableInputFormat == null || !tableInputFormat.equals(tableInputFormatClass)) {
+      return false;
+    }
+
+    final List<HiveTableWrapper.HivePartitionWrapper> partitions = hiveScan.getHiveReadEntry().getHivePartitionWrappers();
+    if (partitions == null) {
+      return true;
+    }
+
+    final List<FieldSchema> tableSchema = hiveTable.getSd().getCols();
+    // Make sure all partitions have the same input format as the table input format
+    for (HiveTableWrapper.HivePartitionWrapper partition : partitions) {
+      final StorageDescriptor partitionSD = partition.getPartition().getSd();
+      Class<? extends InputFormat<?, ?>> inputFormat = getInputFormatFromSD(HiveUtilities.getPartitionMetadata(
+          partition.getPartition(), hiveTable), hiveScan.getHiveReadEntry(), partitionSD, hiveConf);
+      if (inputFormat == null || !inputFormat.equals(tableInputFormat)) {
+        return false;
+      }
+
+      // Make sure the schema of the table and schema of the partition matches. If not return false. Schema changes
+      // between table and partition can happen when table schema is altered using ALTER statements after some
+      // partitions are already created. Currently native reader conversion doesn't handle schema changes between
+      // partition and table. Hive has extensive list of convert methods to convert from one type to rest of the
+      // possible types. Drill doesn't have the similar set of methods yet.
+      if (!partitionSD.getCols().equals(tableSchema)) {
+        logger.debug("Partitions schema is different from table schema. Currently native reader conversion can't " +
+            "handle schema difference between partitions and table");
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Get the input format from given {@link StorageDescriptor}
+   *
+   * @param properties table properties
+   * @param hiveReadEntry hive read entry
+   * @param sd storage descriptor
+   * @return {@link InputFormat} class or null if a failure has occurred. Failure is logged as warning.
+   */
+  private static Class<? extends InputFormat<?, ?>> getInputFormatFromSD(final Properties properties,
+                                                                  final HiveReadEntry hiveReadEntry, final StorageDescriptor sd, final HiveConf hiveConf) {
+    final Table hiveTable = hiveReadEntry.getTable();
+    try {
+      final String inputFormatName = sd.getInputFormat();
+      if (!Strings.isNullOrEmpty(inputFormatName)) {
+        return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName);
+      }
+
+      final JobConf job = new JobConf(hiveConf);
+      HiveUtilities.addConfToJob(job, properties);
+      return HiveUtilities.getInputFormatClass(job, sd, hiveTable);
+    } catch (final Exception e) {
+      logger.warn("Failed to get InputFormat class from Hive table '{}.{}'. StorageDescriptor [{}]",
+          hiveTable.getDbName(), hiveTable.getTableName(), sd.toString(), e);
+      return null;
+    }
+  }
+
+  /**
+   * This method allows to check whether the Hive Table contains
+   * <a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-ComplexTypes">
+   * Hive Complex Types</a><p>
+   * TODO: Need to implement it, DRILL-3290. Appropriate (new or existed) Drill types should be selected.
+   *
+   * @param hiveTable Thrift table from Hive Metastore
+   * @return true if table contains unsupported data types, false otherwise
+   */
+  public static boolean containsUnsupportedDataTypes(final Table hiveTable) {
+    for (FieldSchema hiveField : hiveTable.getSd().getCols()) {
+      final Category category = TypeInfoUtils.getTypeInfoFromTypeString(hiveField.getType()).getCategory();
+      if (category == Category.MAP ||
+          category == Category.STRUCT ||
+          category == Category.UNION ||
+          category == Category.LIST) {
+        logger.debug("Hive table contains unsupported data type: {}", category);
+        return true;
+      }
+    }
+    return false;
   }
 }
 

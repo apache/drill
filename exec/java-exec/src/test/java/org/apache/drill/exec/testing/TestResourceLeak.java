@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,7 @@ import java.util.Properties;
 
 import javax.inject.Inject;
 
-import org.apache.drill.QueryTestUtil;
+import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
@@ -87,7 +87,7 @@ public class TestResourceLeak extends DrillTest {
 
     bit = new Drillbit(config, serviceSet);
     bit.run();
-    client = QueryTestUtil.createClient(config, serviceSet, 2, null);
+    client = QueryTestUtil.createClient(config, serviceSet, 2, new Properties());
   }
 
   @Test

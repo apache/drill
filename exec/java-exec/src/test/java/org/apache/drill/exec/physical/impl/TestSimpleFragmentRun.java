@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.pop.PopUnitTestBase;
@@ -46,17 +46,18 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
   public void runNoExchangeFragment() throws Exception {
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
         final Drillbit bit = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
     // run query.
     bit.run();
     client.connect();
     final String path = "/physical_test2.json";
-//      String path = "/filter/test1.json";
-    final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(path), Charsets.UTF_8));
+    final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile(path), Charsets.UTF_8));
 
     // look at records
     final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
+    final StringBuilder sb = new StringBuilder();
+
     int recordCount = 0;
     for (final QueryDataBatch batch : results) {
       final boolean schemaChanged = batchLoader.load(batch.getHeader().getDef(), batch.getData());
@@ -64,20 +65,20 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
 
       // print headers.
       if (schemaChanged) {
-        System.out.println("\n\n========NEW SCHEMA=========\n\n");
+        sb.append("\n\n========NEW SCHEMA=========\n\n");
         for (final VectorWrapper<?> value : batchLoader) {
 
           if (firstColumn) {
             firstColumn = false;
           } else {
-            System.out.print("\t");
+            sb.append("\t");
           }
-          System.out.print(value.getField().getPath());
-          System.out.print("[");
-          System.out.print(value.getField().getType().getMinorType());
-          System.out.print("]");
+          sb.append(value.getField().getName());
+          sb.append("[");
+          sb.append(value.getField().getType().getMinorType());
+          sb.append("]");
         }
-        System.out.println();
+        sb.append('\n');
       }
 
       for (int i = 0; i < batchLoader.getRecordCount(); i++) {
@@ -87,17 +88,19 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           if (first) {
             first = false;
           } else {
-            System.out.print("\t");
+            sb.append("\t");
           }
-          System.out.print(value.getValueVector().getAccessor().getObject(i));
+          sb.append(value.getValueVector().getAccessor().getObject(i));
         }
         if (!first) {
-          System.out.println();
+          sb.append('\n');
         }
       }
       batchLoader.clear();
       batch.release();
     }
+
+    logger.debug(sb.toString());
     logger.debug("Received results {}", results);
     assertEquals(recordCount, 200);
     }
@@ -113,17 +116,13 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       bit.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8)
-              .replace("#{TEST_FILE}", FileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString())
+          Files.toString(DrillFileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8)
+              .replace("#{TEST_FILE}", DrillFileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString())
       );
 
       // look at records
       final RecordBatchLoader batchLoader = new RecordBatchLoader(RootAllocatorFactory.newRoot(CONFIG));
       int recordCount = 0;
-
-      //int expectedBatchCount = 2;
-
-      //assertEquals(expectedBatchCount, results.size());
 
       for (int i = 0; i < results.size(); ++i) {
         final QueryDataBatch batch = results.get(i);
@@ -139,22 +138,23 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
         boolean firstColumn = true;
 
         // print headers.
-        System.out.println("\n\n========NEW SCHEMA=========\n\n");
+        final StringBuilder sb = new StringBuilder();
+
+        sb.append("\n\n========NEW SCHEMA=========\n\n");
         for (final VectorWrapper<?> v : batchLoader) {
 
           if (firstColumn) {
             firstColumn = false;
           } else {
-            System.out.print("\t");
+            sb.append("\t");
           }
-          System.out.print(v.getField().getPath());
-          System.out.print("[");
-          System.out.print(v.getField().getType().getMinorType());
-          System.out.print("]");
+          sb.append(v.getField().getName());
+          sb.append("[");
+          sb.append(v.getField().getType().getMinorType());
+          sb.append("]");
         }
 
-        System.out.println();
-
+        sb.append('\n');
 
         for (int r = 0; r < batchLoader.getRecordCount(); r++) {
           boolean first = true;
@@ -163,14 +163,14 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
             if (first) {
               first = false;
             } else {
-              System.out.print("\t");
+              sb.append("\t");
             }
 
             final ValueVector.Accessor accessor = v.getValueVector().getAccessor();
-            System.out.print(accessor.getObject(r));
+            sb.append(accessor.getObject(r));
           }
           if (!first) {
-            System.out.println();
+            sb.append('\n');
           }
         }
         batchLoader.clear();

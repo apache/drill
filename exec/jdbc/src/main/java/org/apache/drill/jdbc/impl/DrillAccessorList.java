@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,7 @@ package org.apache.drill.jdbc.impl;
 
 import java.sql.SQLException;
 
-import net.hydromatic.avatica.Cursor.Accessor;
-
+import org.apache.calcite.avatica.util.Cursor.Accessor;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.vector.ValueVector;

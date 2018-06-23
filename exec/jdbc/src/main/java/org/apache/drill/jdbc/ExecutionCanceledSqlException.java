@@ -17,8 +17,6 @@
  */
 package org.apache.drill.jdbc;
 
-import java.beans.Statement;
-import java.sql.ResultSet;
 import java.sql.SQLNonTransientException;
 
 

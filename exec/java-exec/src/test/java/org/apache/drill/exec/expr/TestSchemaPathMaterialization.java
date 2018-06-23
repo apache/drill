@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,12 +17,25 @@
  */
 package org.apache.drill.exec.expr;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
+
+@Category({SqlTest.class, PlannerTest.class})
 public class TestSchemaPathMaterialization extends BaseTestQuery {
+
+  @BeforeClass
+  public static void setupFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("complex", "json", "multiple"));
+  }
 
   @Test
   public void testSingleProjectionFromMultiLevelRepeatedList() throws Exception {
@@ -83,8 +96,9 @@ public class TestSchemaPathMaterialization extends BaseTestQuery {
   }
 
   @Test //DRILL-1962
+  @Category(UnlikelyTest.class)
   public void testProjectionMultipleFiles() throws Exception {
-    final String query="select t.oooa.oa.oab.oabc[1].rowValue1 rowValue from dfs.`${WORKING_PATH}/src/test/resources/complex/json/multiple/*.json` t";
+    final String query="select t.oooa.oa.oab.oabc[1].rowValue1 rowValue from dfs.`complex/json/multiple/*.json` t";
 
     testBuilder()
       .sqlQuery(query)
@@ -93,4 +107,24 @@ public class TestSchemaPathMaterialization extends BaseTestQuery {
       .go();
   }
 
+  @Test //DRILL-4264
+  @Category(UnlikelyTest.class)
+  public void testFieldNameWithDot() throws Exception {
+    final String tableName = "dfs.tmp.table_with_dot_field";
+    try {
+      test("create table %s as select o_custkey as `x.y.z` from cp.`tpch/orders.parquet`", tableName);
+
+      final String query = "select * from %s t where `x.y.z`=1091";
+
+      testBuilder()
+        .sqlQuery(query, tableName)
+        .unOrdered()
+        .baselineColumns("`x.y.z`")
+        .baselineValues(1091)
+        .baselineValues(1091)
+        .go();
+    } finally {
+      test("drop table if exists %s", tableName);
+    }
+  }
 }

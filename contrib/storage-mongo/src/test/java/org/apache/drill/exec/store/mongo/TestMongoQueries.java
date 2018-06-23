@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,12 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import org.apache.drill.categories.MongoStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, MongoStorageTest.class})
 public class TestMongoQueries extends MongoTestBase {
 
   @Test
@@ -77,5 +81,12 @@ public class TestMongoQueries extends MongoTestBase {
     String queryString = String.format(TEST_STAR_QUERY_UNSHARDED_DB_GROUP_PROJECT_FILTER,
         DONUTS_DB, DONUTS_COLLECTION);
     runMongoSQLVerifyCount(queryString, 5);
+  }
+
+  @Test
+  public void testPhysicalPlanSubmission() throws Exception {
+    String query = String.format(TEST_BOOLEAN_FILTER_QUERY_TEMPLATE1,
+        EMPLOYEE_DB, EMPINFO_COLLECTION);
+    testPhysicalPlanExecutionBasedOnQuery(query);
   }
 }

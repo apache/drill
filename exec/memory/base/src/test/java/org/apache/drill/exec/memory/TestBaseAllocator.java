@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,10 +25,13 @@ import static org.junit.Assert.fail;
 import io.netty.buffer.DrillBuf;
 import io.netty.buffer.DrillBuf.TransferResult;
 
+import org.apache.drill.categories.MemoryTest;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(MemoryTest.class)
 public class TestBaseAllocator {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBaseAllocator.class);
 

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "drill/common.hpp"
+#include "drill/fieldmeta.hpp"
 #include "drill/recordBatch.hpp"
 #include "utils.hpp"
 #include "../protobuf/User.pb.h"
@@ -201,6 +201,8 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                     return new ValueVectorDecimal28Sparse(b,f.getValueCount(), f.getScale());
                 case common::DECIMAL38SPARSE:
                     return new ValueVectorDecimal38Sparse(b,f.getValueCount(), f.getScale());
+                case common::VARDECIMAL:
+                    return new ValueVectorVarDecimal(b, f.getValueCount(), f.getScale());
                 case common::DATE:
                     return new ValueVectorTyped<DateHolder, int64_t>(b,f.getValueCount());
                 case common::TIMESTAMP:
@@ -251,6 +253,8 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                     return new NullableValueVectorDecimal28Sparse(b,f.getValueCount(), f.getScale());
                 case common::DECIMAL38SPARSE:
                     return new NullableValueVectorDecimal38Sparse(b,f.getValueCount(), f.getScale());
+                case common::VARDECIMAL:
+                    return new NullableValueVectorVarDecimal(b, f.getValueCount(), f.getScale());
                 case common::DATE:
                     return new NullableValueVectorTyped<DateHolder,
                            ValueVectorTyped<DateHolder, int64_t> >(b,f.getValueCount());
@@ -401,17 +405,6 @@ bool RecordBatch::isLastChunk(){
     return false;
 }
 
-
-
-void FieldMetadata::set(const exec::shared::SerializedField& f){
-    m_name=f.name_part().name();
-    m_minorType=f.major_type().minor_type();
-    m_dataMode=f.major_type().mode();
-    m_valueCount=f.value_count();
-    m_scale=f.major_type().scale();
-    m_precision=f.major_type().precision();
-    m_bufferLength=f.buffer_length();
-}
 
 
 void DateHolder::load(){

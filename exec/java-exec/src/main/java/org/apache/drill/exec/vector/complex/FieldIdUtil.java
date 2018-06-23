@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,21 +31,29 @@ public class FieldIdUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldIdUtil.class);
 
   public static TypedFieldId getFieldIdIfMatchesUnion(UnionVector unionVector, TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (seg.isNamed()) {
-      ValueVector v = unionVector.getMap();
-      if (v != null) {
-        return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
-      } else {
-        return null;
+    if (seg != null) {
+      if (seg.isNamed()) {
+        ValueVector v = unionVector.getMap();
+        if (v != null) {
+          return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
+        } else {
+          return null;
+        }
+      } else if (seg.isArray()) {
+        ValueVector v = unionVector.getList();
+        if (v != null) {
+          return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
+        } else {
+          return null;
+        }
       }
-    } else if (seg.isArray()) {
-      ValueVector v = unionVector.getList();
-      if (v != null) {
-        return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
-      } else {
-        return null;
+    } else {
+      if (addToBreadCrumb) {
+        builder.intermediateType(unionVector.getField().getType());
       }
+      return builder.finalType(unionVector.getField().getType()).build();
     }
+
     return null;
   }
 
@@ -163,7 +171,7 @@ public class FieldIdUtil {
   }
 
   public static TypedFieldId getFieldId(ValueVector vector, int id, SchemaPath expectedPath, boolean hyper) {
-    if (!expectedPath.getRootSegment().getNameSegment().getPath().equalsIgnoreCase(vector.getField().getPath())) {
+    if (!expectedPath.getRootSegment().getPath().equalsIgnoreCase(vector.getField().getName())) {
       return null;
     }
     PathSegment seg = expectedPath.getRootSegment();

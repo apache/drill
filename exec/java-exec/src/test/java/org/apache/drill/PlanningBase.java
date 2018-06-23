@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,16 +20,18 @@ package org.apache.drill;
 import java.io.IOException;
 import java.net.URL;
 
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
-
-import org.apache.calcite.jdbc.SimpleCalciteSchema;
+import com.google.common.base.Function;
+import io.netty.buffer.DrillBuf;
+import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.drill.exec.vector.ValueHolderHelper;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -57,16 +59,16 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+import org.mockito.Matchers;
 
-public class PlanningBase extends ExecTest{
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningBase.class);
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+public class PlanningBase extends ExecTest {
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(10000);
 
-  @Mocked DrillbitContext dbContext;
   private final DrillConfig config = DrillConfig.create();
-
-  @Mocked QueryContext context;
 
   BufferAllocator allocator = RootAllocatorFactory.newRoot(config);
 
@@ -75,83 +77,71 @@ public class PlanningBase extends ExecTest{
   }
 
   protected void testSqlPlan(String sqlCommands) throws Exception {
+    final DrillbitContext dbContext = mock(DrillbitContext.class);
+    final QueryContext context = mock(QueryContext.class);
+
     final String[] sqlStrings = sqlCommands.split(";");
     final LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(config);
     provider.start();
     final ScanResult scanResult = ClassPathScanner.fromPrescan(config);
     final LogicalPlanPersistence logicalPlanPersistence = new LogicalPlanPersistence(config, scanResult);
-    final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence , provider);
+    final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence , provider, config);
     systemOptions.init();
+    @SuppressWarnings("resource")
     final UserSession userSession = UserSession.Builder.newBuilder().withOptionManager(systemOptions).build();
-    final SessionOptionManager sessionOptions = (SessionOptionManager) userSession.getOptions();
+    final SessionOptionManager sessionOptions = userSession.getOptions();
     final QueryOptionManager queryOptions = new QueryOptionManager(sessionOptions);
     final ExecutionControls executionControls = new ExecutionControls(queryOptions, DrillbitEndpoint.getDefaultInstance());
 
-    new NonStrictExpectations() {
-      {
-        dbContext.getMetrics();
-        result = new MetricRegistry();
-        dbContext.getAllocator();
-        result = allocator;
-        dbContext.getConfig();
-        result = config;
-        dbContext.getOptionManager();
-        result = systemOptions;
-        dbContext.getStoreProvider();
-        result = provider;
-        dbContext.getClasspathScan();
-        result = scanResult;
-        dbContext.getLpPersistence();
-        result = logicalPlanPersistence;
-      }
-    };
+    when(dbContext.getMetrics()).thenReturn(new MetricRegistry());
+    when(dbContext.getAllocator()).thenReturn(allocator);
+    when(dbContext.getConfig()).thenReturn(config);
+    when(dbContext.getOptionManager()).thenReturn(systemOptions);
+    when(dbContext.getStoreProvider()).thenReturn(provider);
+    when(dbContext.getClasspathScan()).thenReturn(scanResult);
+    when(dbContext.getLpPersistence()).thenReturn(logicalPlanPersistence);
 
     final StoragePluginRegistry registry = new StoragePluginRegistryImpl(dbContext);
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
-    final DrillOperatorTable table = new DrillOperatorTable(functionRegistry);
-    final SchemaPlus root = SimpleCalciteSchema.createRootSchema(false);
+    final DrillOperatorTable table = new DrillOperatorTable(functionRegistry, systemOptions);
+    final SchemaPlus root = CalciteSchema.createRootSchema(false, false).plus();
     registry.getSchemaFactory().registerSchemas(SchemaConfig.newBuilder("foo", context).build(), root);
 
-    new NonStrictExpectations() {
-      {
-        context.getNewDefaultSchema();
-        result = root;
-        context.getLpPersistence();
-        result = new LogicalPlanPersistence(config, ClassPathScanner.fromPrescan(config));
-        context.getStorage();
-        result = registry;
-        context.getFunctionRegistry();
-        result = functionRegistry;
-        context.getSession();
-        result = UserSession.Builder.newBuilder().setSupportComplexTypes(true).build();
-        context.getCurrentEndpoint();
-        result = DrillbitEndpoint.getDefaultInstance();
-        context.getActiveEndpoints();
-        result = ImmutableList.of(DrillbitEndpoint.getDefaultInstance());
-        context.getPlannerSettings();
-        result = new PlannerSettings(queryOptions, functionRegistry);
-        context.getOptions();
-        result = queryOptions;
-        context.getConfig();
-        result = config;
-        context.getDrillOperatorTable();
-        result = table;
-        context.getAllocator();
-        result = allocator;
-        context.getExecutionControls();
-        result = executionControls;
-        dbContext.getLpPersistence();
-        result = logicalPlanPersistence;
-      }
-    };
+    when(context.getNewDefaultSchema()).thenReturn(root);
+    when(context.getLpPersistence()).thenReturn(new LogicalPlanPersistence(config, ClassPathScanner.fromPrescan(config)));
+    when(context.getStorage()).thenReturn(registry);
+    when(context.getFunctionRegistry()).thenReturn(functionRegistry);
+    when(context.getSession()).thenReturn(
+        UserSession.Builder.newBuilder().withOptionManager(sessionOptions).setSupportComplexTypes(true).build());
+    when(context.getCurrentEndpoint()).thenReturn(DrillbitEndpoint.getDefaultInstance());
+    when(context.getActiveEndpoints()).thenReturn(ImmutableList.of(DrillbitEndpoint.getDefaultInstance()));
+    when(context.getPlannerSettings()).thenReturn(new PlannerSettings(queryOptions, functionRegistry));
+    when(context.getOptions()).thenReturn(queryOptions);
+    when(context.getConfig()).thenReturn(config);
+    when(context.getDrillOperatorTable()).thenReturn(table);
+    when(context.getAllocator()).thenReturn(allocator);
+    when(context.getExecutionControls()).thenReturn(executionControls);
+    when(context.getLpPersistence()).thenReturn(logicalPlanPersistence);
+    // mocks for org.apache.drill.TestTpchPlanning#tpch06 test.
+    // With changes for decimal types, subtract udf for decimals is used.
+    when(context.getManagedBuffer()).thenReturn(allocator.buffer(4));
+    when(context.getConstantValueHolder(eq("0.03"),
+        eq(TypeProtos.MinorType.VARDECIMAL),
+        Matchers.<Function<DrillBuf, ValueHolder>>any()))
+      .thenReturn(ValueHolderHelper.getVarDecimalHolder(allocator.buffer(4), "0.03"));
+    when(context.getConstantValueHolder(eq("0.01"),
+        eq(TypeProtos.MinorType.VARDECIMAL),
+        Matchers.<Function<DrillBuf, ValueHolder>>any()))
+      .thenReturn(ValueHolderHelper.getVarDecimalHolder(allocator.buffer(4), "0.01"));
+
 
     for (final String sql : sqlStrings) {
       if (sql.trim().isEmpty()) {
         continue;
       }
-      final DrillSqlWorker worker = new DrillSqlWorker(context);
-      final PhysicalPlan p = worker.getPlan(sql);
+      @SuppressWarnings("unused")
+      final PhysicalPlan p = DrillSqlWorker.getPlan(context, sql);
     }
   }
 

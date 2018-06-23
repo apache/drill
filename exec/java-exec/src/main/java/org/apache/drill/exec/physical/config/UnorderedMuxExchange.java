@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.physical.config;
 
-import java.util.List;
-
-import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
 
@@ -38,14 +35,7 @@ public class UnorderedMuxExchange extends AbstractMuxExchange {
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    createSenderReceiverMapping();
-
-    List<MinorFragmentEndpoint> senders = receiverToSenderMapping.get(minorFragmentId);
-    if (senders == null || senders.size() <= 0) {
-      throw new IllegalStateException(String.format("Failed to find senders for receiver [%d]", minorFragmentId));
-    }
-
-    return new UnorderedReceiver(senderMajorFragmentId, senders, false);
+    return new UnorderedReceiver(senderMajorFragmentId, getSenders(minorFragmentId), false);
   }
 
   @Override

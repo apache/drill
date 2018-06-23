@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,22 +20,18 @@ package org.apache.drill.exec.physical.impl.aggregate;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
 import com.google.common.base.Preconditions;
 
-public class HashAggBatchCreator implements BatchCreator<HashAggregate>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggBatchCreator.class);
-
+public class HashAggBatchCreator implements BatchCreator<HashAggregate> {
   @Override
-  public HashAggBatch getBatch(FragmentContext context, HashAggregate config, List<RecordBatch> children)
+  public HashAggBatch getBatch(ExecutorFragmentContext context, HashAggregate config, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new HashAggBatch(config, children.iterator().next(), context);
   }
-
-
 }

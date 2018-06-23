@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 package org.apache.drill.exec.work.foreman;
-
-import org.apache.calcite.sql.SqlDataTypeSpec;
 
 public class UnsupportedDataTypeException extends SqlUnsupportedException {
   public UnsupportedDataTypeException(String drillJiraNumber, String message) {

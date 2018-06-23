@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,15 +24,18 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.EndpointAffinity;
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.Iterators;
+import org.apache.drill.exec.server.options.OptionManager;
 
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractGroupScan.class);
 
   public AbstractGroupScan(String userName) {
     super(userName);
@@ -44,7 +47,7 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   @Override
@@ -85,8 +88,9 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   @JsonIgnore
+  @Deprecated
   public boolean enforceWidth() {
-    return false;
+    return getMinParallelizationWidth() > 1;
   }
 
   @Override
@@ -133,7 +137,6 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   /**
    * Default is not to support limit pushdown.
-   * @return
    */
   @Override
   @JsonIgnore
@@ -142,12 +145,12 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   }
 
   /**
-   * By default, return null to indicate rowcount based prune is not supported.
-   * Each groupscan subclass should override, if it supports rowcount based prune.
+   * By default, return null to indicate row count based prune is not supported.
+   * Each group scan subclass should override, if it supports row count based prune.
    */
   @Override
   @JsonIgnore
-  public GroupScan applyLimit(long maxRecords) {
+  public GroupScan applyLimit(int maxRecords) {
     return null;
   }
 
@@ -161,4 +164,18 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
     return null;
   }
 
+  @Override
+  public DistributionAffinity getDistributionAffinity() {
+    return DistributionAffinity.SOFT;
+  }
+
+  @Override
+  public LogicalExpression getFilter() {
+    return null;
+  }
+
+  @Override
+  public GroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities, FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
+    return null;
+  }
 }

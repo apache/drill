@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -28,6 +29,7 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
@@ -43,6 +45,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -166,6 +169,11 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
   }
 
   @Override
+  public Void visitVarDecimalConstant(VarDecimalExpression decExpr, ErrorCollector errors) throws RuntimeException {
+    return null;
+  }
+
+  @Override
   public Void visitDateConstant(DateExpression intExpr, ErrorCollector errors) throws RuntimeException {
     return null;
   }
@@ -231,4 +239,19 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
     return e.getInput().accept(this, value);
   }
 
+  @Override
+  public Void visitAnyValueExpression(AnyValueExpression e, ErrorCollector value)
+      throws RuntimeException {
+    return e.getInput().accept(this, value);
+  }
+
+  @Override
+  public Void visitParameter(ValueExpressions.ParameterExpression e, ErrorCollector value) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Void visitTypedFieldExpr(TypedFieldExpr e, ErrorCollector value) throws RuntimeException {
+    return null;
+  }
 }

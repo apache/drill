@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,7 +28,7 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JVar;
 
 public class CopyUtil {
-  public static void generateCopies(ClassGenerator g, VectorAccessible batch, boolean hyper){
+  public static void generateCopies(ClassGenerator<?> g, VectorAccessible batch, boolean hyper){
     // we have parallel ids for each value vector so we don't actually have to deal with managing the ids at all.
     int fieldId = 0;
 

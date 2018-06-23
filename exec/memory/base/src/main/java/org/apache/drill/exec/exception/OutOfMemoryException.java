@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.exception;
 
-
+/**
+ * This is thrown in various cases when Drill cannot allocate Direct Memory. <b>Note: </b> This does <b>NOT</b> get thrown when we run out of heap memory.
+ */
 public class OutOfMemoryException extends RuntimeException {
   private static final long serialVersionUID = -6858052345185793382L;
 

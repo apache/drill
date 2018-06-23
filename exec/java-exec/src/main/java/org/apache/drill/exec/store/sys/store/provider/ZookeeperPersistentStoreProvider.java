@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,16 +28,16 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.exec.store.sys.VersionedPersistentStore;
 import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
+import org.apache.drill.exec.store.sys.store.VersionedDelegatingStore;
 import org.apache.drill.exec.store.sys.store.ZookeeperPersistentStore;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvider {
-  private static final Logger logger = LoggerFactory.getLogger(ZookeeperPersistentStoreProvider.class);
+//  private static final Logger logger = LoggerFactory.getLogger(ZookeeperPersistentStoreProvider.class);
 
-  private static final String DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
+  public static final String DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
 
   private final CuratorFramework curator;
   private final DrillFileSystem fs;
@@ -79,6 +79,24 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
       return store;
     default:
       throw new IllegalStateException();
+    }
+  }
+
+  @Override
+  public <V> VersionedPersistentStore<V> getOrCreateVersionedStore(final PersistentStoreConfig<V> config) throws StoreException {
+    switch(config.getMode()){
+      case BLOB_PERSISTENT:
+        return new VersionedDelegatingStore<>(new LocalPersistentStore<>(fs, blobRoot, config));
+      case PERSISTENT:
+        final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
+        try {
+          store.start();
+        } catch (Exception e) {
+          throw new StoreException("unable to start zookeeper store", e);
+        }
+        return store;
+      default:
+        throw new IllegalStateException();
     }
   }
 

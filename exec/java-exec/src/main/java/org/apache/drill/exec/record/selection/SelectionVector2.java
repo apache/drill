@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,10 +24,16 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.record.DeadBuf;
 
 /**
- * A selection vector that fronts, at most, a
+ * A selection vector that fronts, at most, 64K values.
+ * The selection vector is used for two cases:
+ * <ol>
+ * <li>To create a list of values retained by a filter.</li>
+ * <li>To provide a redirection level for sorted
+ * batches.</li>
+ * </ol>
  */
+
 public class SelectionVector2 implements AutoCloseable {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector2.class);
 
   private final BufferAllocator allocator;
   private int recordCount;
@@ -37,6 +43,22 @@ public class SelectionVector2 implements AutoCloseable {
 
   public SelectionVector2(BufferAllocator allocator) {
     this.allocator = allocator;
+  }
+
+  /**
+   * Create a selection vector with the given buffer. The selection vector
+   * increments the buffer's reference count, talking ownership of the buffer.
+   *
+   * @param allocator allocator used to allocate the buffer
+   * @param buf the buffer containing the selection vector's data
+   * @param count the number of values in the selection vector
+   */
+
+  public SelectionVector2(BufferAllocator allocator, DrillBuf buf, int count) {
+    this.allocator = allocator;
+    buffer = buf;
+    buffer.retain(1);
+    recordCount = count;
   }
 
   public int getCount() {
@@ -64,11 +86,11 @@ public class SelectionVector2 implements AutoCloseable {
   }
 
   public void setBuffer(DrillBuf bufferHandle) {
-      /* clear the existing buffer */
-      clear();
+    /* clear the existing buffer */
+    clear();
 
-      this.buffer = bufferHandle;
-      buffer.retain(1);
+    this.buffer = bufferHandle;
+    buffer.retain(1);
   }
 
   public char getIndex(int index) {
@@ -84,7 +106,7 @@ public class SelectionVector2 implements AutoCloseable {
   }
 
   public void setIndex(int index, int value) {
-    buffer.setChar(index, value);
+    buffer.setChar(index * RECORD_SIZE, value);
   }
 
   public boolean allocateNewSafe(int size) {
@@ -132,5 +154,24 @@ public class SelectionVector2 implements AutoCloseable {
   @Override
   public void close() {
     clear();
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder();
+    buf.append("[SV2: recs=");
+    buf.append(recordCount);
+    buf.append(" - ");
+    int n = Math.min(20, recordCount);
+    for (int i = 0; i < n; i++) {
+      if (i > 0) { buf.append("," ); }
+      buf.append((int) getIndex(i));
+    }
+    if (recordCount > n) {
+      buf.append("...");
+      buf.append((int) getIndex(recordCount-1));
+    }
+    buf.append("]");
+    return buf.toString();
   }
 }

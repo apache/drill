@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.drill.common.exceptions.UserException;
 
 import com.univocity.parsers.common.TextParsingException;
-import com.univocity.parsers.csv.CsvParserSettings;
 
 /*******************************************************************************
  * Portions Copyright 2014 uniVocity Software Pty Ltd
@@ -231,7 +230,7 @@ final class TextReader {
     final TextInput input = this.input;
     final byte quote = this.quote;
 
-    ch = input.nextChar();
+    ch = input.nextCharNoNewLineCheck();
 
     while (!(prev == quote && (ch == delimiter || ch == newLine || isWhite(ch)))) {
       if (ch != quote) {
@@ -257,7 +256,7 @@ final class TextReader {
       } else {
         prev = ch;
       }
-      ch = input.nextChar();
+      ch = input.nextCharNoNewLineCheck();
     }
 
     // Handles whitespaces after quoted value:
@@ -372,15 +371,18 @@ final class TextReader {
         throw new TextParsingException(context, "Cannot use newline character within quoted string");
       }
 
-      if(success){
+      if (success) {
         if (recordsToRead > 0 && context.currentRecord() >= recordsToRead) {
           context.stop();
         }
         return true;
-      }else{
+      } else {
         return false;
       }
 
+    } catch (UserException ex) {
+      stopParsing();
+      throw ex;
     } catch (StreamFinishedPseudoException ex) {
       stopParsing();
       return false;

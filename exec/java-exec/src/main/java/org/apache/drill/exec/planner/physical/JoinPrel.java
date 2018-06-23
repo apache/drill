@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,18 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.physical;
 
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
-import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
@@ -46,12 +45,13 @@ import com.google.common.collect.Lists;
  * Base class for MergeJoinPrel and HashJoinPrel
  *
  */
-public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
+public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinPrel.class);
 
   protected JoinUtils.JoinCategory joincategory;
 
   public JoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType) throws InvalidRelException{
+      JoinRelType joinType) {
     super(cluster, traits, left, right, condition, joinType);
   }
 
@@ -66,12 +66,8 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
   }
 
   /**
-   * Check to make sure that the fields of the inputs are the same as the output field names.  If not, insert a project renaming them.
-   * @param implementor
-   * @param i
-   * @param offset
-   * @param input
-   * @return
+   * Check to make sure that the fields of the inputs are the same as the output field names.
+   * If not, insert a project renaming them.
    */
   public RelNode getJoinInput(int offset, RelNode input) {
     assert uniqueFieldNames(input.getRowType());
@@ -97,7 +93,8 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
       exprs.add(expr);
     }
 
-    RelDataType rowType = RexUtil.createStructType(input.getCluster().getTypeFactory(), exprs, outputFieldNames);
+    RelDataType rowType = RexUtil.createStructType(input.getCluster().getTypeFactory(),
+        exprs, outputFieldNames, null);
 
     ProjectPrel proj = new ProjectPrel(input.getCluster(), input.getTraitSet(), input, exprs, rowType);
 
@@ -114,7 +111,7 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
    * A join condition is built only for equality and IS NOT DISTINCT FROM comparisons. The difference is:
    * null == null is FALSE whereas null IS NOT DISTINCT FROM null is TRUE
    * For a use case of the IS NOT DISTINCT FROM comparison, see
-   * {@link org.apache.calcite.rel.rules.RemoveDistinctAggregateRule}
+   * {@link org.apache.calcite.rel.rules.AggregateRemoveRule}
    * @param conditions populated list of join conditions
    * @param leftFields join fields from the left input
    * @param rightFields join fields from the right input
@@ -127,27 +124,18 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
     List<RexNode> conjuncts = RelOptUtil.conjunctions(this.getCondition());
     short i=0;
 
-    RexNode comp1 = null, comp2 = null;
     for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
-      if (comp1 == null) {
-        comp1 = conjuncts.get(i++);
-        if ( ! (comp1.getKind() == SqlKind.EQUALS || comp1.getKind() == SqlKind.IS_NOT_DISTINCT_FROM)) {
-          throw new IllegalArgumentException("This type of join only supports '=' and 'is not distinct from' comparators.");
-        }
-      } else {
-        comp2 = conjuncts.get(i++);
-        if (comp1.getKind() != comp2.getKind()) {
-          // it does not seem necessary at this time to support join conditions which have mixed comparators - e.g
-          // 'a1 = a2 AND b1 IS NOT DISTINCT FROM b2'
-          String msg = String.format("This type of join does not support mixed comparators: '%s' and '%s'.", comp1, comp2);
-          throw new IllegalArgumentException(msg);
-        }
-
+      final RexNode conditionExpr = conjuncts.get(i++);
+      final SqlKind kind  = conditionExpr.getKind();
+      if (kind != SqlKind.EQUALS && kind != SqlKind.IS_NOT_DISTINCT_FROM) {
+        throw UserException.unsupportedError()
+            .message("Unsupported comparator in join condition %s", conditionExpr)
+            .build(logger);
       }
-      conditions.add(new JoinCondition(comp1.getKind().toString(), FieldReference.getWithQuotedRef(leftFields.get(pair.left)),
+
+      conditions.add(new JoinCondition(kind.toString(),
+          FieldReference.getWithQuotedRef(leftFields.get(pair.left)),
           FieldReference.getWithQuotedRef(rightFields.get(pair.right))));
     }
-
   }
-
 }

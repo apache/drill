@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -52,16 +51,16 @@ import org.apache.drill.exec.vector.TimeStampVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.kududb.ColumnSchema;
-import org.kududb.Schema;
-import org.kududb.Type;
-import org.kududb.client.KuduClient;
-import org.kududb.client.KuduScanner;
-import org.kududb.client.KuduScanner.KuduScannerBuilder;
-import org.kududb.client.KuduTable;
-import org.kududb.client.RowResult;
-import org.kududb.client.RowResultIterator;
-import org.kududb.client.shaded.com.google.common.collect.ImmutableMap;
+import org.apache.kudu.ColumnSchema;
+import org.apache.kudu.Schema;
+import org.apache.kudu.Type;
+import org.apache.kudu.client.KuduClient;
+import org.apache.kudu.client.KuduScanner;
+import org.apache.kudu.client.KuduScanner.KuduScannerBuilder;
+import org.apache.kudu.client.KuduTable;
+import org.apache.kudu.client.RowResult;
+import org.apache.kudu.client.RowResultIterator;
+import org.apache.kudu.client.shaded.com.google.common.collect.ImmutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -87,8 +86,7 @@ public class KuduRecordReader extends AbstractRecordReader {
 
   private ImmutableList<ProjectedColumnInfo> projectedCols;
 
-  public KuduRecordReader(KuduClient client, KuduSubScan.KuduSubScanSpec subScanSpec,
-      List<SchemaPath> projectedColumns, FragmentContext context) {
+  public KuduRecordReader(KuduClient client, KuduSubScan.KuduSubScanSpec subScanSpec, List<SchemaPath> projectedColumns) {
     setColumns(projectedColumns);
     this.client = client;
     scanSpec = subScanSpec;
@@ -106,7 +104,7 @@ public class KuduRecordReader extends AbstractRecordReader {
       if (!isStarQuery()) {
         List<String> colNames = Lists.newArrayList();
         for (SchemaPath p : this.getColumns()) {
-          colNames.add(p.getAsUnescapedPath());
+          colNames.add(p.getRootSegmentPath());
         }
         builder.setProjectedColumnNames(colNames);
       }
@@ -114,8 +112,8 @@ public class KuduRecordReader extends AbstractRecordReader {
       context.getStats().startWait();
       try {
         scanner = builder
-            .lowerBoundPartitionKeyRaw(scanSpec.getStartKey())
-            .exclusiveUpperBoundPartitionKeyRaw(scanSpec.getEndKey())
+            .lowerBoundRaw(scanSpec.getStartKey())
+            .exclusiveUpperBoundRaw(scanSpec.getEndKey())
             .build();
       } finally {
         context.getStats().stopWait();
@@ -138,7 +136,7 @@ public class KuduRecordReader extends AbstractRecordReader {
         .put(Type.INT32, MinorType.INT)
         .put(Type.INT64, MinorType.BIGINT)
         .put(Type.STRING, MinorType.VARCHAR)
-        .put(Type.TIMESTAMP, MinorType.TIMESTAMP)
+        .put(Type.UNIXTIME_MICROS, MinorType.TIMESTAMP)
         .build();
   }
 
@@ -170,7 +168,6 @@ public class KuduRecordReader extends AbstractRecordReader {
     return rowCount;
   }
 
-  @SuppressWarnings("unchecked")
   private void initCols(Schema schema) throws SchemaChangeException {
     ImmutableList.Builder<ProjectedColumnInfo> pciBuilder = ImmutableList.builder();
 
@@ -200,7 +197,7 @@ public class KuduRecordReader extends AbstractRecordReader {
         majorType = Types.required(minorType);
       }
       MaterializedField field = MaterializedField.create(name, majorType);
-      final Class<? extends ValueVector> clazz = (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(
+      final Class<? extends ValueVector> clazz = TypeHelper.getValueVectorClass(
           minorType, majorType.getMode());
       ValueVector vector = output.addField(field, clazz);
       vector.allocateNew();
@@ -237,7 +234,7 @@ public class KuduRecordReader extends AbstractRecordReader {
         break;
       }
       case STRING: {
-        ByteBuffer value = result.getBinary(pci.index);
+        ByteBuffer value = ByteBuffer.wrap(result.getString(pci.index).getBytes());
         if (pci.kuduColumn.isNullable()) {
           ((NullableVarCharVector.Mutator) pci.vv.getMutator())
               .setSafe(rowIndex, value, 0, value.remaining());
@@ -310,7 +307,7 @@ public class KuduRecordReader extends AbstractRecordReader {
               .setSafe(rowIndex, result.getLong(pci.index));
         }
         break;
-      case TIMESTAMP:
+        case UNIXTIME_MICROS:
         if (pci.kuduColumn.isNullable()) {
           ((NullableTimeStampVector.Mutator) pci.vv.getMutator())
               .setSafe(rowIndex, result.getLong(pci.index) / 1000);

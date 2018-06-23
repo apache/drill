@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.impl.mergereceiver;
 
 import static org.junit.Assert.assertEquals;
@@ -23,7 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
@@ -37,24 +37,26 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestMergingReceiver extends PopUnitTestBase {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergingReceiver.class);
 
   @Test
   public void twoBitTwoExchange() throws Exception {
+    @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
       bit1.run();
       bit2.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-        Files.toString(FileUtils.getResourceAsFile("/mergerecv/merging_receiver.json"),
+        Files.toString(DrillFileUtils.getResourceAsFile("/mergerecv/merging_receiver.json"),
           Charsets.UTF_8));
       int count = 0;
       final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
@@ -73,18 +75,19 @@ public class TestMergingReceiver extends PopUnitTestBase {
 
   @Test
   public void testMultipleProvidersMixedSizes() throws Exception {
+    @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       bit1.run();
       bit2.run();
       client.connect();
       final List<QueryDataBatch> results =
           client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(FileUtils.getResourceAsFile("/mergerecv/multiple_providers.json"),
+              Files.toString(DrillFileUtils.getResourceAsFile("/mergerecv/multiple_providers.json"),
                   Charsets.UTF_8));
       int count = 0;
       final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
@@ -95,14 +98,15 @@ public class TestMergingReceiver extends PopUnitTestBase {
         final int batchRowCount = queryData.getRowCount();
         count += batchRowCount;
         batchLoader.load(queryData.getDef(), b.getData());
-        for (final VectorWrapper vw : batchLoader) {
+        for (final VectorWrapper<?> vw : batchLoader) {
+          @SuppressWarnings("resource")
           final ValueVector vv = vw.getValueVector();
           final ValueVector.Accessor va = vv.getAccessor();
           final MaterializedField materializedField = vv.getField();
           final int numValues = va.getValueCount();
-          for(int valueIdx = 0; valueIdx < numValues; ++valueIdx) {
-            if (materializedField.getPath().equals("blue")) {
-              final long longValue = ((Long) va.getObject(valueIdx)).longValue();
+          for (int valueIdx = 0; valueIdx < numValues; ++valueIdx) {
+            if (materializedField.getName().equals("blue")) {
+              final long longValue = (Long) va.getObject(valueIdx);
               // check that order is ascending
               if (lastBlueValue != null) {
                 assertTrue(longValue >= lastBlueValue);
@@ -120,18 +124,19 @@ public class TestMergingReceiver extends PopUnitTestBase {
 
   @Test
   public void handleEmptyBatch() throws Exception {
+    @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       bit1.run();
       bit2.run();
       client.connect();
       final List<QueryDataBatch> results =
           client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(FileUtils.getResourceAsFile("/mergerecv/empty_batch.json"),
+              Files.toString(DrillFileUtils.getResourceAsFile("/mergerecv/empty_batch.json"),
                   Charsets.UTF_8));
       int count = 0;
       final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
@@ -144,6 +149,85 @@ public class TestMergingReceiver extends PopUnitTestBase {
         batchLoader.clear();
       }
       assertEquals(100000, count);
+    }
+  }
+
+  @Test
+  public void handleEmptyBatchNoSchema() throws Exception {
+    @SuppressWarnings("resource")
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
+         final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+
+      bit1.run();
+      bit2.run();
+      client.connect();
+      final List<QueryDataBatch> results =
+          client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+              Files.toString(DrillFileUtils.getResourceAsFile("/mergerecv/empty_batch_noschema.json"),
+                  Charsets.UTF_8));
+      int count = 0;
+      final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
+      // print the results
+      for (final QueryDataBatch b : results) {
+        final QueryData queryData = b.getHeader();
+        batchLoader.load(queryData.getDef(), b.getData()); // loaded but not used, for testing
+        count += queryData.getRowCount();
+        b.release();
+        batchLoader.clear();
+      }
+      assertEquals(100000, count);
+    }
+  }
+
+  @Test
+  public void testMultipleProvidersEmptyBatches() throws Exception {
+    @SuppressWarnings("resource")
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
+         final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+
+      bit1.run();
+      bit2.run();
+      client.connect();
+      final List<QueryDataBatch> results =
+          client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+              Files.toString(DrillFileUtils.getResourceAsFile("/mergerecv/multiple_providers_empty_batches.json"),
+                  Charsets.UTF_8));
+      int count = 0;
+      final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
+      // print the results
+      Long lastBlueValue = null;
+      for (final QueryDataBatch b : results) {
+        final QueryData queryData = b.getHeader();
+        final int batchRowCount = queryData.getRowCount();
+        count += batchRowCount;
+        batchLoader.load(queryData.getDef(), b.getData());
+        for (final VectorWrapper<?> vw : batchLoader) {
+          @SuppressWarnings("resource")
+          final ValueVector vv = vw.getValueVector();
+          final ValueVector.Accessor va = vv.getAccessor();
+          final MaterializedField materializedField = vv.getField();
+          final int numValues = va.getValueCount();
+          for (int valueIdx = 0; valueIdx < numValues; ++valueIdx) {
+            if (materializedField.getName().equals("blue")) {
+              final long longValue = (Long) va.getObject(valueIdx);
+              // check that order is ascending
+              if (lastBlueValue != null) {
+                assertTrue(longValue >= lastBlueValue);
+              }
+              lastBlueValue = longValue;
+            }
+          }
+        }
+        b.release();
+        batchLoader.clear();
+      }
+      assertEquals(300000, count);
     }
   }
 }

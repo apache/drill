@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,11 +25,15 @@ import java.util.Map;
  *
  * @param <V>  value type
  */
-public interface PersistentStore<V> extends AutoCloseable {
+public interface PersistentStore<V> extends Store<V> {
+
   /**
-   * Returns storage {@link PersistentStoreMode mode} of this store.
+   * Checks if lookup key is present in store.
+   *
+   * @param key lookup key
+   * @return true if store contains lookup key, false otherwise
    */
-  PersistentStoreMode getMode();
+  boolean contains(String key);
 
   /**
    * Returns the value for the given key if exists, null otherwise.
@@ -44,30 +48,6 @@ public interface PersistentStore<V> extends AutoCloseable {
    * @param value  value to store
    */
   void put(String key, V value);
-
-
-  /**
-   * Removes the value corresponding to the given key if exists, nothing happens otherwise.
-   * @param key  lookup key
-   */
-  void delete(String key);
-
-  /**
-   * Stores the (key, value) tuple in the store only if it does not exists.
-   *
-   * @param key  lookup key
-   * @param value  value to store
-   * @return  true if put takes place, false otherwise.
-   */
-  boolean putIfAbsent(String key, V value);
-
-  /**
-   * Returns an iterator of desired number of entries offsetting by the skip value.
-   *
-   * @param skip  number of records to skip from beginning
-   * @param take  max number of records to return
-   */
-  Iterator<Map.Entry<String, V>> getRange(int skip, int take);
 
   /**
    * Returns an iterator of entries.

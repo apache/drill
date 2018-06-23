@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,6 +33,38 @@ import com.dyuproject.protostuff.Schema;
 
 public final class DrillbitEndpoint implements Externalizable, Message<DrillbitEndpoint>, Schema<DrillbitEndpoint>
 {
+    public enum State implements com.dyuproject.protostuff.EnumLite<State>
+    {
+        STARTUP(0),
+        ONLINE(1),
+        QUIESCENT(2),
+        OFFLINE(3);
+        
+        public final int number;
+        
+        private State (int number)
+        {
+            this.number = number;
+        }
+        
+        public int getNumber()
+        {
+            return number;
+        }
+        
+        public static State valueOf(int number)
+        {
+            switch(number) 
+            {
+                case 0: return STARTUP;
+                case 1: return ONLINE;
+                case 2: return QUIESCENT;
+                case 3: return OFFLINE;
+                default: return null;
+            }
+        }
+    }
+
 
     public static Schema<DrillbitEndpoint> getSchema()
     {
@@ -52,6 +84,9 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
     private int controlPort;
     private int dataPort;
     private Roles roles;
+    private String version;
+    private State state;
+    private int httpPort;
 
     public DrillbitEndpoint()
     {
@@ -125,6 +160,45 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
         return this;
     }
 
+    // version
+
+    public String getVersion()
+    {
+        return version;
+    }
+
+    public DrillbitEndpoint setVersion(String version)
+    {
+        this.version = version;
+        return this;
+    }
+
+    // state
+
+    public State getState()
+    {
+        return state == null ? State.STARTUP : state;
+    }
+
+    public DrillbitEndpoint setState(State state)
+    {
+        this.state = state;
+        return this;
+    }
+
+    // httpPort
+
+    public int getHttpPort()
+    {
+        return httpPort;
+    }
+
+    public DrillbitEndpoint setHttpPort(int httpPort)
+    {
+        this.httpPort = httpPort;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -195,6 +269,15 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
                     message.roles = input.mergeObject(message.roles, Roles.getSchema());
                     break;
 
+                case 6:
+                    message.version = input.readString();
+                    break;
+                case 7:
+                    message.state = State.valueOf(input.readEnum());
+                    break;
+                case 8:
+                    message.httpPort = input.readInt32();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -219,6 +302,15 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
         if(message.roles != null)
              output.writeObject(5, message.roles, Roles.getSchema(), false);
 
+
+        if(message.version != null)
+            output.writeString(6, message.version, false);
+
+        if(message.state != null)
+             output.writeEnum(7, message.state.number, false);
+
+        if(message.httpPort != 0)
+            output.writeInt32(8, message.httpPort, false);
     }
 
     public String getFieldName(int number)
@@ -230,6 +322,9 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
             case 3: return "controlPort";
             case 4: return "dataPort";
             case 5: return "roles";
+            case 6: return "version";
+            case 7: return "state";
+            case 8: return "httpPort";
             default: return null;
         }
     }
@@ -248,6 +343,9 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
         __fieldMap.put("controlPort", 3);
         __fieldMap.put("dataPort", 4);
         __fieldMap.put("roles", 5);
+        __fieldMap.put("version", 6);
+        __fieldMap.put("state", 7);
+        __fieldMap.put("httpPort", 8);
     }
     
 }

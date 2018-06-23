@@ -11,7 +11,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-$(window).load(function () {
+$(window).on('load',(function () {
     // for each record, unroll the array pointed to by "fieldpath" into a new
     // record for each element of the array
     function unnest (table, fieldpath, dest) {
@@ -166,14 +166,15 @@ $(window).load(function () {
             .attr("height", result.graph().height + 2 * padding);
     }
 
+    // Fragment Gantt Chart
     function buildtimingchart (svgdest, timetable) {
         var chartprops = {
-            "w" : 800,
-            "h" : -1,
+            "w" : 850,
+            "h" : 70,
             "svg" : svgdest,
             "bheight" : 2,
             "bpad" : 0,
-            "margin" : 50,
+            "margin" : 35,
             "scaler" : null,
             "colorer" : null,
         };
@@ -193,10 +194,15 @@ $(window).load(function () {
 
         // backdrop
         chartprops.svg.append("g")
-            .selectAll("rect")
+          .selectAll("rect")
             .data(timetable)
             .enter()
-            .append("rect")
+          // TODO: Prototype to jump to related Major Fragment
+          //.append("a")
+          //  .attr("xlink:href", function(d) {
+          //     return "#fragment-" + parseInt(d.category);
+          //   })
+          .append("rect")
             .attr("x", 0)
             .attr("y", function(d, i) {return i * (chartprops.bheight + 2 * chartprops.bpad);})
             .attr("width", chartprops.w)
@@ -205,14 +211,25 @@ $(window).load(function () {
             .attr("fill", function(d) {return d3.rgb(chartprops.colorer(d.category));})
             .attr("opacity", 0.1)
             .attr("transform", "translate(" + chartprops.margin + "," +
-                  chartprops.margin + ")");
+                  chartprops.margin + ")")
+            .attr("style", "cursor: pointer;")
+          .append("title")
+            .text(function(d) {
+                var id = parseInt(d.category);
+                return ((id < 10) ? ("0" + id) : id) + "-XX-XX";
+             });
 
         // bars
         chartprops.svg.append('g')
-            .selectAll("rect")
+          .selectAll("rect")
             .data(timetable)
             .enter()
-            .append("rect")
+          // TODO: Prototype to jump to related Major Fragment
+          //.append("a")
+          //  .attr("xlink:href", function(d) {
+          //     return "#fragment-" + parseInt(d.category);
+          //   })
+          .append("rect")
              //.attr("rx", 3)
              //.attr("ry", 3)
             .attr("x", function(d) {return chartprops.scaler(d.start) + chartprops.bpad;})
@@ -222,7 +239,13 @@ $(window).load(function () {
             .attr("stroke", "none")
             .attr("fill", function(d) {return d3.rgb(chartprops.colorer(d.category));})
             .attr("transform", "translate(" + chartprops.margin + "," +
-                  chartprops.margin + ")");
+                  chartprops.margin + ")")
+            .attr("style", "cursor: pointer;")
+          .append("title")
+            .text(function(d) {
+                var id = parseInt(d.category);
+                return ((id < 10) ? ("0" + id) : id) + "-XX-XX";
+            });
 
         // grid lines
         chartprops.svg.append("g")
@@ -248,6 +271,25 @@ $(window).load(function () {
                   .orient('bottom')
                   .tickSize(0, 0)
                   .tickFormat(d3.format(".2f")));
+
+        // X Axis Label (Centered above graph)
+        chartprops.svg.append("text")
+            .attr("transform", "rotate(0)")
+            .attr("y", 0)
+            .attr("x", chartprops.w/2 + chartprops.margin)
+            .attr("dy", "1.5em")
+            .style("text-anchor", "middle")
+            .text("Elapsed Timeline");
+
+        //Y Axis (center of y axis)
+        chartprops.svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0)
+            // Aligning to center of Y-axis with minimum Svg height
+            .attr("x",0 - Math.max(chartprops.h/2 + chartprops.margin, 36))
+            .attr("dy", "1.5em")
+            .style("text-anchor", "middle")
+            .html("Fragments"); 
     }
 
     function loadprofile (queryid, callback) {
@@ -310,4 +352,4 @@ $(window).load(function () {
         //            .append("tbody"), extractminortimes(profile),
         //            ["name", "start", "end"]);
     });
-});
+}));

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,8 +43,8 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.exec.compile.sig.GeneratorMapping;
 
 import java.util.List;
 
@@ -73,6 +73,9 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
       return false;
     }
     if (!holder.getName().equals(((FunctionHolderExpression) value).getName())) {
+      return false;
+    }
+    if (holder.isRandom()) {
       return false;
     }
     return checkChildren(holder, value);
@@ -166,7 +169,8 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
     if (!(value instanceof IntervalDayExpression)) {
       return false;
     }
-    return intExpr.getIntervalDay() == ((IntervalDayExpression) value).getIntervalDay();
+    return intExpr.getIntervalDay() == ((IntervalDayExpression) value).getIntervalDay()
+            && intExpr.getIntervalMillis() == ((IntervalDayExpression) value).getIntervalMillis();
   }
 
   @Override
@@ -225,7 +229,21 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
     if (!decExpr.getMajorType().equals(((Decimal38Expression) value).getMajorType())) {
       return false;
     }
-    return false;
+    return true;
+  }
+
+  @Override
+  public Boolean visitVarDecimalConstant(VarDecimalExpression decExpr, LogicalExpression value) throws RuntimeException {
+    if (!(value instanceof VarDecimalExpression)) {
+      return false;
+    }
+    if (!decExpr.getMajorType().equals(value.getMajorType())) {
+      return false;
+    }
+    if (!decExpr.getBigDecimal().equals(((VarDecimalExpression) value).getBigDecimal())) {
+      return false;
+    }
+    return true;
   }
 
   @Override
@@ -287,7 +305,7 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
     if (!(value instanceof TypedNullConstant)) {
       return false;
     }
-    return e.getMajorType().equals(e.getMajorType());
+    return value.getMajorType().equals(e.getMajorType());
   }
 
   @Override

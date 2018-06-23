@@ -15,13 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef DRILL_CLIENT_ALL_H
 #define DRILL_CLIENT_ALL_H
 
 #include "drill/common.hpp"
+#include "drill/drillConfig.hpp"
+#include "drill/drillError.hpp"
 #include "drill/drillClient.hpp"
+#include "drill/fieldmeta.hpp"
+#include "drill/preparedStatement.hpp"
 #include "drill/recordBatch.hpp"
+#include "drill/userProperties.hpp"
 #include "drill/protobuf/Types.pb.h"
 
 #endif

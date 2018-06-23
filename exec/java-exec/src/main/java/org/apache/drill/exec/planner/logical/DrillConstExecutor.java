@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,13 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.planner.logical;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import org.apache.calcite.avatica.util.TimeUnit;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import io.netty.buffer.DrillBuf;
+import org.apache.calcite.rex.RexExecutor;
+import org.apache.calcite.util.DateString;
+import org.apache.calcite.util.TimeString;
+import org.apache.calcite.util.TimestampString;
+import org.apache.calcite.rel.RelNode;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -28,7 +33,6 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
@@ -43,60 +47,47 @@ import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.IntervalDayHolder;
 import org.apache.drill.exec.expr.holders.IntervalYearHolder;
+import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
+import org.apache.drill.exec.expr.holders.NullableBitHolder;
+import org.apache.drill.exec.expr.holders.NullableDateHolder;
+import org.apache.drill.exec.expr.holders.NullableDecimal18Holder;
+import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
+import org.apache.drill.exec.expr.holders.NullableDecimal9Holder;
+import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
+import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
+import org.apache.drill.exec.expr.holders.NullableIntHolder;
+import org.apache.drill.exec.expr.holders.NullableIntervalDayHolder;
+import org.apache.drill.exec.expr.holders.NullableIntervalYearHolder;
+import org.apache.drill.exec.expr.holders.NullableTimeHolder;
+import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.NullableVarDecimalHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlIntervalQualifier;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.util.NlsString;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
+import org.apache.drill.exec.vector.DateUtilities;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Calendar;
 import java.util.List;
 
-public class DrillConstExecutor implements RelOptPlanner.Executor {
+public class DrillConstExecutor implements RexExecutor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConstExecutor.class);
 
   private final PlannerSettings plannerSettings;
-
-  public static ImmutableMap<TypeProtos.MinorType, SqlTypeName> DRILL_TO_CALCITE_TYPE_MAPPING =
-      ImmutableMap.<TypeProtos.MinorType, SqlTypeName> builder()
-      .put(TypeProtos.MinorType.INT, SqlTypeName.INTEGER)
-      .put(TypeProtos.MinorType.BIGINT, SqlTypeName.BIGINT)
-      .put(TypeProtos.MinorType.FLOAT4, SqlTypeName.FLOAT)
-      .put(TypeProtos.MinorType.FLOAT8, SqlTypeName.DOUBLE)
-      .put(TypeProtos.MinorType.VARCHAR, SqlTypeName.VARCHAR)
-      .put(TypeProtos.MinorType.BIT, SqlTypeName.BOOLEAN)
-      .put(TypeProtos.MinorType.DATE, SqlTypeName.DATE)
-      .put(TypeProtos.MinorType.DECIMAL9, SqlTypeName.DECIMAL)
-      .put(TypeProtos.MinorType.DECIMAL18, SqlTypeName.DECIMAL)
-      .put(TypeProtos.MinorType.DECIMAL28SPARSE, SqlTypeName.DECIMAL)
-      .put(TypeProtos.MinorType.DECIMAL38SPARSE, SqlTypeName.DECIMAL)
-      .put(TypeProtos.MinorType.TIME, SqlTypeName.TIME)
-      .put(TypeProtos.MinorType.TIMESTAMP, SqlTypeName.TIMESTAMP)
-      .put(TypeProtos.MinorType.VARBINARY, SqlTypeName.VARBINARY)
-      .put(TypeProtos.MinorType.INTERVALYEAR, SqlTypeName.INTERVAL_YEAR_MONTH)
-      .put(TypeProtos.MinorType.INTERVALDAY, SqlTypeName.INTERVAL_DAY_TIME)
-      .put(TypeProtos.MinorType.MAP, SqlTypeName.MAP)
-      .put(TypeProtos.MinorType.LIST, SqlTypeName.ARRAY)
-      .put(TypeProtos.MinorType.LATE, SqlTypeName.ANY)
-      // These are defined in the Drill type system but have been turned off for now
-      .put(TypeProtos.MinorType.TINYINT, SqlTypeName.TINYINT)
-      .put(TypeProtos.MinorType.SMALLINT, SqlTypeName.SMALLINT)
-      // Calcite types currently not supported by Drill, nor defined in the Drill type list:
-      //      - CHAR, SYMBOL, MULTISET, DISTINCT, STRUCTURED, ROW, OTHER, CURSOR, COLUMN_LIST
-      .build();
 
   // This is a list of all types that cannot be folded at planning time for various reasons, most of the types are
   // currently not supported at all. The reasons for the others can be found in the evaluation code in the reduce method
@@ -132,43 +123,20 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
     this.plannerSettings = plannerSettings;
   }
 
-  private RelDataType createCalciteTypeWithNullability(RelDataTypeFactory typeFactory,
-                                                       SqlTypeName sqlTypeName,
-                                                       boolean isNullable) {
-    RelDataType type;
-    if (sqlTypeName == SqlTypeName.INTERVAL_DAY_TIME) {
-      type = typeFactory.createSqlIntervalType(
-          new SqlIntervalQualifier(
-              TimeUnit.DAY,
-              TimeUnit.MINUTE,
-              SqlParserPos.ZERO));
-    } else if (sqlTypeName == SqlTypeName.INTERVAL_YEAR_MONTH) {
-      type = typeFactory.createSqlIntervalType(
-          new SqlIntervalQualifier(
-              TimeUnit.YEAR,
-              TimeUnit.MONTH,
-             SqlParserPos.ZERO));
-    } else if (sqlTypeName == SqlTypeName.VARCHAR) {
-      type = typeFactory.createSqlType(sqlTypeName, TypeHelper.VARCHAR_DEFAULT_CAST_LEN);
-    } else {
-      type = typeFactory.createSqlType(sqlTypeName);
-    }
-    return typeFactory.createTypeWithNullability(type, isNullable);
-  }
-
   @Override
-  public void reduce(RexBuilder rexBuilder, List<RexNode> constExps, List<RexNode> reducedValues) {
-    for (RexNode newCall : constExps) {
-      LogicalExpression logEx = DrillOptiq.toDrill(new DrillParseContext(plannerSettings), null /* input rel */, newCall);
+  public void reduce(final RexBuilder rexBuilder, List<RexNode> constExps, final List<RexNode> reducedValues) {
+    for (final RexNode newCall : constExps) {
+      LogicalExpression logEx = DrillOptiq.toDrill(new DrillParseContext(plannerSettings), (RelNode) null /* input rel */, newCall);
 
       ErrorCollectorImpl errors = new ErrorCollectorImpl();
-      LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(logEx, null, errors, funcImplReg);
+      final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(logEx, null, errors, funcImplReg);
       if (errors.getErrorCount() != 0) {
         String message = String.format(
             "Failure while materializing expression in constant expression evaluator [%s].  Errors: %s",
             newCall.toString(), errors.toString());
-        logger.error(message);
-        throw new DrillRuntimeException(message);
+        throw UserException.planError()
+          .message(message)
+          .build(logger);
       }
 
       if (NON_REDUCIBLE_TYPES.contains(materializedExpr.getMajorType().getMinorType())) {
@@ -180,130 +148,218 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
       }
 
       ValueHolder output = InterpreterEvaluator.evaluateConstantExpr(udfUtilities, materializedExpr);
-      RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+      final RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
 
       if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL && TypeHelper.isNull(output)) {
-        SqlTypeName sqlTypeName = DRILL_TO_CALCITE_TYPE_MAPPING.get(materializedExpr.getMajorType().getMinorType());
+        SqlTypeName sqlTypeName = TypeInferenceUtils.getCalciteTypeFromDrillType(materializedExpr.getMajorType().getMinorType());
         if (sqlTypeName == null) {
           String message = String.format("Error reducing constant expression, unsupported type: %s.",
               materializedExpr.getMajorType().getMinorType());
-          logger.error(message);
-          throw new DrillRuntimeException(message);
+          throw UserException.unsupportedError()
+            .message(message)
+            .build(logger);
         }
-        reducedValues.add(rexBuilder.makeNullLiteral(sqlTypeName));
+        reducedValues.add(rexBuilder.makeNullLiteral(typeFactory.createSqlType(sqlTypeName)));
         continue;
       }
 
-        switch(materializedExpr.getMajorType().getMinorType()) {
-          case INT:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new BigDecimal(((IntHolder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTEGER, newCall.getType().isNullable()),
-                false));
-            break;
-          case BIGINT:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new BigDecimal(((BigIntHolder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.BIGINT, newCall.getType().isNullable()),
-                false));
-            break;
-          case FLOAT4:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new BigDecimal(((Float4Holder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.FLOAT, newCall.getType().isNullable()),
-                false));
-            break;
-          case FLOAT8:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new BigDecimal(((Float8Holder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DOUBLE, newCall.getType().isNullable()),
-                false));
-            break;
-          case VARCHAR:
-            reducedValues.add(rexBuilder.makeCharLiteral(
-                new NlsString(StringFunctionHelpers.getStringFromVarCharHolder((VarCharHolder)output), null, null)));
-            break;
-          case BIT:
-            reducedValues.add(rexBuilder.makeLiteral(
-                ((BitHolder)output).value == 1 ? true : false,
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.BOOLEAN, newCall.getType().isNullable()),
-                false));
-            break;
-          case DATE:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new DateTime(((DateHolder) output).value, DateTimeZone.UTC).toCalendar(null),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DATE, newCall.getType().isNullable()),
-                false));
-            break;
-          case DECIMAL9:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new BigDecimal(BigInteger.valueOf(((Decimal9Holder) output).value), ((Decimal9Holder)output).scale),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
-                false));
-            break;
-          case DECIMAL18:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new BigDecimal(BigInteger.valueOf(((Decimal18Holder) output).value), ((Decimal18Holder)output).scale),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
-                false));
-            break;
-          case DECIMAL28SPARSE:
-            Decimal28SparseHolder decimal28Out = (Decimal28SparseHolder)output;
-            reducedValues.add(rexBuilder.makeLiteral(
-                org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(
-                    decimal28Out.buffer,
-                    decimal28Out.start * 20,
-                    5,
-                    decimal28Out.scale),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
-                false
-            ));
-            break;
-          case DECIMAL38SPARSE:
-            Decimal38SparseHolder decimal38Out = (Decimal38SparseHolder)output;
-            reducedValues.add(rexBuilder.makeLiteral(
-                org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(
-                    decimal38Out.buffer,
-                    decimal38Out.start * 24,
-                    6,
-                    decimal38Out.scale),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
-                false));
-            break;
-
-          case TIME:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new DateTime(((TimeHolder)output).value, DateTimeZone.UTC).toCalendar(null),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIME, newCall.getType().isNullable()),
-                false));
-            break;
-          case TIMESTAMP:
-            reducedValues.add(rexBuilder.makeTimestampLiteral(
-                new DateTime(((TimeStampHolder)output).value, DateTimeZone.UTC).toCalendar(null), 0));
-            break;
-          case INTERVALYEAR:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new BigDecimal(((IntervalYearHolder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_YEAR_MONTH, newCall.getType().isNullable()),
-                false));
-            break;
-          case INTERVALDAY:
-            IntervalDayHolder intervalDayOut = (IntervalDayHolder) output;
-            reducedValues.add(rexBuilder.makeLiteral(
-                new BigDecimal(intervalDayOut.days * DateUtility.daysToStandardMillis + intervalDayOut.milliseconds),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY_TIME, newCall.getType().isNullable()),
-                false));
-            break;
-          // The list of known unsupported types is used to trigger this behavior of re-using the input expression
-          // before the expression is even attempted to be evaluated, this is just here as a last precaution a
-          // as new types may be added in the future.
-          default:
-            logger.debug("Constant expression not folded due to return type {}, complete expression: {}",
+      Function<ValueHolder, RexNode> literator = new Function<ValueHolder, RexNode>() {
+        @Override
+        public RexNode apply(ValueHolder output) {
+          switch(materializedExpr.getMajorType().getMinorType()) {
+            case INT: {
+              int value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                ((NullableIntHolder) output).value : ((IntHolder) output).value;
+              return rexBuilder.makeLiteral(new BigDecimal(value),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTEGER, newCall.getType().isNullable()), false);
+            }
+            case BIGINT: {
+              long value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                ((NullableBigIntHolder) output).value : ((BigIntHolder) output).value;
+              return rexBuilder.makeLiteral(new BigDecimal(value),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.BIGINT, newCall.getType().isNullable()), false);
+            }
+            case FLOAT4: {
+              float value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                ((NullableFloat4Holder) output).value : ((Float4Holder) output).value;
+              return rexBuilder.makeLiteral(new BigDecimal(value),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.FLOAT, newCall.getType().isNullable()), false);
+            }
+            case FLOAT8: {
+              double value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                ((NullableFloat8Holder) output).value : ((Float8Holder) output).value;
+              return rexBuilder.makeLiteral(new BigDecimal(value),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DOUBLE, newCall.getType().isNullable()), false);
+            }
+            case VARCHAR: {
+              String value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                StringFunctionHelpers.getStringFromVarCharHolder((NullableVarCharHolder)output) :
+                StringFunctionHelpers.getStringFromVarCharHolder((VarCharHolder)output);
+              return rexBuilder.makeLiteral(value,
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.VARCHAR, newCall.getType().isNullable()), false);
+            }
+            case BIT: {
+              boolean value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                ((NullableBitHolder) output).value == 1 : ((BitHolder) output).value == 1;
+              return rexBuilder.makeLiteral(value,
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.BOOLEAN, newCall.getType().isNullable()), false);
+            }
+            case DATE: {
+              Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                new DateTime(((NullableDateHolder) output).value, DateTimeZone.UTC).toCalendar(null) :
+                new DateTime(((DateHolder) output).value, DateTimeZone.UTC).toCalendar(null);
+              return rexBuilder.makeLiteral(DateString.fromCalendarFields(value),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DATE, newCall.getType().isNullable()), false);
+            }
+            case DECIMAL9: {
+              long value;
+              int scale;
+              if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
+                NullableDecimal9Holder decimal9Out = (NullableDecimal9Holder)output;
+                value = decimal9Out.value;
+                scale = decimal9Out.scale;
+              } else {
+                Decimal9Holder decimal9Out = (Decimal9Holder)output;
+                value = decimal9Out.value;
+                scale = decimal9Out.scale;
+              }
+              return rexBuilder.makeLiteral(
+                new BigDecimal(BigInteger.valueOf(value), scale),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
+                false);
+            }
+            case DECIMAL18: {
+              long value;
+              int scale;
+              if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
+                NullableDecimal18Holder decimal18Out = (NullableDecimal18Holder)output;
+                value = decimal18Out.value;
+                scale = decimal18Out.scale;
+              } else {
+                Decimal18Holder decimal18Out = (Decimal18Holder)output;
+                value = decimal18Out.value;
+                scale = decimal18Out.scale;
+              }
+              return rexBuilder.makeLiteral(
+                new BigDecimal(BigInteger.valueOf(value), scale),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
+                false);
+            }
+            case VARDECIMAL: {
+              DrillBuf buffer;
+              int start;
+              int end;
+              int scale;
+              int precision;
+              if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
+                NullableVarDecimalHolder varDecimalHolder = (NullableVarDecimalHolder) output;
+                buffer = varDecimalHolder.buffer;
+                start = varDecimalHolder.start;
+                end = varDecimalHolder.end;
+                scale = varDecimalHolder.scale;
+                precision = varDecimalHolder.precision;
+              } else {
+                VarDecimalHolder varDecimalHolder = (VarDecimalHolder) output;
+                buffer = varDecimalHolder.buffer;
+                start = varDecimalHolder.start;
+                end = varDecimalHolder.end;
+                scale = varDecimalHolder.scale;
+                precision = varDecimalHolder.precision;
+              }
+              return rexBuilder.makeLiteral(
+                  org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(buffer, start, end - start, scale),
+                  typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale),
+                  false);
+            }
+            case DECIMAL28SPARSE: {
+              DrillBuf buffer;
+              int start;
+              int scale;
+              if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
+                NullableDecimal28SparseHolder decimal28Out = (NullableDecimal28SparseHolder)output;
+                buffer = decimal28Out.buffer;
+                start = decimal28Out.start;
+                scale = decimal28Out.scale;
+              } else {
+                Decimal28SparseHolder decimal28Out = (Decimal28SparseHolder)output;
+                buffer = decimal28Out.buffer;
+                start = decimal28Out.start;
+                scale = decimal28Out.scale;
+              }
+              return rexBuilder.makeLiteral(
+                org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(buffer, start * 20, 5, scale),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()), false);
+            }
+            case DECIMAL38SPARSE: {
+              DrillBuf buffer;
+              int start;
+              int scale;
+              if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
+                NullableDecimal38SparseHolder decimal38Out = (NullableDecimal38SparseHolder)output;
+                buffer = decimal38Out.buffer;
+                start = decimal38Out.start;
+                scale = decimal38Out.scale;
+              } else {
+                Decimal38SparseHolder decimal38Out = (Decimal38SparseHolder)output;
+                buffer = decimal38Out.buffer;
+                start = decimal38Out.start;
+                scale = decimal38Out.scale;
+              }
+              return rexBuilder.makeLiteral(org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(buffer, start * 24, 6, scale),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
+                false);
+            }
+            case TIME: {
+              Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                new DateTime(((NullableTimeHolder) output).value, DateTimeZone.UTC).toCalendar(null) :
+                new DateTime(((TimeHolder) output).value, DateTimeZone.UTC).toCalendar(null);
+              return rexBuilder.makeLiteral(TimeString.fromCalendarFields(value),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIME, newCall.getType().isNullable()), false);
+            }
+            case TIMESTAMP: {
+              Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                new DateTime(((NullableTimeStampHolder) output).value, DateTimeZone.UTC).toCalendar(null) :
+                new DateTime(((TimeStampHolder) output).value, DateTimeZone.UTC).toCalendar(null);
+              return rexBuilder.makeLiteral(TimestampString.fromCalendarFields(value),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIMESTAMP, newCall.getType().isNullable()), false);
+            }
+            case INTERVALYEAR: {
+              BigDecimal value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                new BigDecimal(((NullableIntervalYearHolder) output).value) :
+                new BigDecimal(((IntervalYearHolder) output).value);
+              return rexBuilder.makeLiteral(value,
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_YEAR_MONTH, newCall.getType().isNullable()), false);
+            }
+            case INTERVALDAY: {
+              int days;
+              int milliseconds;
+              if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
+                NullableIntervalDayHolder intervalDayOut = (NullableIntervalDayHolder) output;
+                days = intervalDayOut.days;
+                milliseconds = intervalDayOut.milliseconds;
+              } else {
+                IntervalDayHolder intervalDayOut = (IntervalDayHolder) output;
+                days = intervalDayOut.days;
+                milliseconds = intervalDayOut.milliseconds;
+              }
+              return rexBuilder.makeLiteral(
+                  new BigDecimal(days * (long) DateUtilities.daysToStandardMillis + milliseconds),
+                  TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY,
+                      newCall.getType().isNullable()), false);
+            }
+            // The list of known unsupported types is used to trigger this behavior of re-using the input expression
+            // before the expression is even attempted to be evaluated, this is just here as a last precaution a
+            // as new types may be added in the future.
+            default:
+              logger.debug("Constant expression not folded due to return type {}, complete expression: {}",
                 materializedExpr.getMajorType(),
                 ExpressionStringBuilder.toString(materializedExpr));
-            reducedValues.add(newCall);
-            break;
+              return newCall;
+          }
         }
+      };
+
+      reducedValues.add(literator.apply(output));
     }
   }
 }

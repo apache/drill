@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,14 +20,10 @@ package org.apache.drill.exec.planner.sql.parser;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-import org.apache.calcite.tools.Planner;
 
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.CreateTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
-import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
@@ -48,8 +44,14 @@ public class SqlCreateTable extends DrillSqlCall {
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_TABLE", SqlKind.OTHER) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
-      Preconditions.checkArgument(operands.length == 4, "SqlCreateTable.createCall() has to get 4 operands!");
-      return new SqlCreateTable(pos, (SqlIdentifier) operands[0], (SqlNodeList) operands[1], (SqlNodeList) operands[2], operands[3]);
+      Preconditions.checkArgument(operands.length == 6, "SqlCreateTable.createCall() has to get 6 operands!");
+      return new SqlCreateTable(pos,
+          (SqlIdentifier) operands[0],
+          (SqlNodeList) operands[1],
+          (SqlNodeList) operands[2],
+          operands[3],
+          (SqlLiteral) operands[4],
+          (SqlLiteral) operands[5]);
     }
   };
 
@@ -57,13 +59,23 @@ public class SqlCreateTable extends DrillSqlCall {
   private final SqlNodeList fieldList;
   private final SqlNodeList partitionColumns;
   private final SqlNode query;
+  private final SqlLiteral isTemporary;
+  private final SqlLiteral tableNonExistenceCheck;
 
-  public SqlCreateTable(SqlParserPos pos, SqlIdentifier tblName, SqlNodeList fieldList, SqlNodeList partitionColumns, SqlNode query) {
+  public SqlCreateTable(SqlParserPos pos,
+                        SqlIdentifier tblName,
+                        SqlNodeList fieldList,
+                        SqlNodeList partitionColumns,
+                        SqlNode query,
+                        SqlLiteral isTemporary,
+                        SqlLiteral tableNonExistenceCheck) {
     super(pos);
     this.tblName = tblName;
     this.fieldList = fieldList;
     this.partitionColumns = partitionColumns;
     this.query = query;
+    this.isTemporary = isTemporary;
+    this.tableNonExistenceCheck = tableNonExistenceCheck;
   }
 
   @Override
@@ -78,13 +90,23 @@ public class SqlCreateTable extends DrillSqlCall {
     ops.add(fieldList);
     ops.add(partitionColumns);
     ops.add(query);
+    ops.add(isTemporary);
+    ops.add(tableNonExistenceCheck);
     return ops;
   }
 
   @Override
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("CREATE");
+    if (isTemporary.booleanValue()) {
+      writer.keyword("TEMPORARY");
+    }
     writer.keyword("TABLE");
+    if (tableNonExistenceCheck.booleanValue()) {
+      writer.keyword("IF");
+      writer.keyword("NOT");
+      writer.keyword("EXISTS");
+    }
     tblName.unparse(writer, leftPrec, rightPrec);
     if (fieldList.size() > 0) {
       SqlHandlerUtil.unparseSqlNodeList(writer, leftPrec, rightPrec, fieldList);
@@ -141,5 +163,9 @@ public class SqlCreateTable extends DrillSqlCall {
   }
 
   public SqlNode getQuery() { return query; }
+
+  public boolean isTemporary() { return isTemporary.booleanValue(); }
+
+  public boolean checkTableNonExistence() { return tableNonExistenceCheck.booleanValue(); }
 
 }

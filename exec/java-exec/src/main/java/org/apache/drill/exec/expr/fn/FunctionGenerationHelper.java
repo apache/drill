@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -26,7 +25,6 @@ import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -34,15 +32,27 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
-import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 public class FunctionGenerationHelper {
   public static final String COMPARE_TO_NULLS_HIGH = "compare_to_nulls_high";
   public static final String COMPARE_TO_NULLS_LOW = "compare_to_nulls_low";
+
+  public static final String EQ = "equal";
+  public static final String NE = "not_equal";
+  public static final String GT = "greater_than";
+  public static final String GE = "greater_than_or_equal_to";
+  public static final String LT = "less_than";
+  public static final String LE = "less_than_or_equal_to";
+
+  public static final String IS_NULL = "isnull";
+  public static final String IS_NOT_NULL = "isnotnull";
+  public static final String IS_TRUE = "istrue";
+  public static final String IS_NOT_TRUE = "isnottrue";
+  public static final String IS_FALSE = "isfalse";
+  public static final String IS_NOT_FALSE = "isnotfalse";
 
   /**
    * Finds ordering comparator ("compare_to...") FunctionHolderExpression with
@@ -51,7 +61,7 @@ public class FunctionGenerationHelper {
    *                    {@code false}) or the highest value (if {@code true})
    * @param  left  ...
    * @param  right  ...
-   * @param  registry  ...
+   * @param  functionLookupContext  ...
    * @return
    *     FunctionHolderExpression containing the found function implementation
    */
@@ -59,7 +69,7 @@ public class FunctionGenerationHelper {
       boolean null_high,
       HoldingContainer left,
       HoldingContainer right,
-      FunctionImplementationRegistry registry) {
+      FunctionLookupContext functionLookupContext) {
     final String comparator_name =
         null_high ? COMPARE_TO_NULLS_HIGH : COMPARE_TO_NULLS_LOW;
 
@@ -69,15 +79,14 @@ public class FunctionGenerationHelper {
       throw new UnsupportedOperationException(
           formatCanNotCompareMsg(left.getMajorType(), right.getMajorType()));
     }
-    LogicalExpression comparisonFunctionExpression = getFunctionExpression(comparator_name, Types.required(MinorType.INT),
-                                 registry, left, right);
+    LogicalExpression comparisonFunctionExpression = getFunctionExpression(comparator_name, left, right);
 
     ErrorCollector collector = new ErrorCollectorImpl();
     if (!isUnionType(left.getMajorType()) && !isUnionType(right.getMajorType())) {
-      return ExpressionTreeMaterializer.materialize(comparisonFunctionExpression, null, collector, registry);
+      return ExpressionTreeMaterializer.materialize(comparisonFunctionExpression, null, collector, functionLookupContext);
     } else {
       LogicalExpression typeComparisonFunctionExpression = getTypeComparisonFunction(comparisonFunctionExpression, left, right);
-      return ExpressionTreeMaterializer.materialize(typeComparisonFunctionExpression, null, collector, registry);
+      return ExpressionTreeMaterializer.materialize(typeComparisonFunctionExpression, null, collector, functionLookupContext);
     }
   }
 
@@ -96,12 +105,11 @@ public class FunctionGenerationHelper {
   public static LogicalExpression getOrderingComparatorNullsHigh(
       HoldingContainer left,
       HoldingContainer right,
-      FunctionImplementationRegistry registry) {
+      FunctionLookupContext registry) {
     return getOrderingComparator(true, left, right, registry);
   }
 
-  private static LogicalExpression getFunctionExpression(
-      String name, MajorType returnType, FunctionImplementationRegistry registry, HoldingContainer... args) {
+  private static LogicalExpression getFunctionExpression(String name, HoldingContainer... args) {
     List<MajorType> argTypes = new ArrayList<MajorType>(args.length);
     List<LogicalExpression> argExpressions = new ArrayList<LogicalExpression>(args.length);
     for(HoldingContainer c : args) {

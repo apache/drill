@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,12 +30,12 @@ import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -46,20 +46,23 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
 
   private final SystemTable table;
   private final SystemTablePlugin plugin;
+  private int maxRecordsToRead;
 
   @JsonCreator
-  public SystemTableScan( //
-      @JsonProperty("table") SystemTable table, //
-      @JacksonInject StoragePluginRegistry engineRegistry //
-  ) throws IOException, ExecutionSetupException {
-    super((String)null);
-    this.table = table;
-    this.plugin = (SystemTablePlugin) engineRegistry.getPlugin(SystemTablePluginConfig.INSTANCE);
+  public SystemTableScan(@JsonProperty("table") SystemTable table,
+                         @JsonProperty("maxRecordsToRead") int maxRecordsToRead,
+                         @JacksonInject StoragePluginRegistry engineRegistry) throws ExecutionSetupException {
+    this(table, maxRecordsToRead, (SystemTablePlugin) engineRegistry.getPlugin(SystemTablePluginConfig.INSTANCE));
   }
 
   public SystemTableScan(SystemTable table, SystemTablePlugin plugin) {
-    super((String)null);
+    this(table, Integer.MAX_VALUE, plugin);
+  }
+
+  public SystemTableScan(SystemTable table, int maxRecordsToRead, SystemTablePlugin plugin) {
+    super((String) null);
     this.table = table;
+    this.maxRecordsToRead = maxRecordsToRead;
     this.plugin = plugin;
   }
 
@@ -73,16 +76,16 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
-    return new SystemTableScan(table, plugin);
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
+    return new SystemTableScan(table, maxRecordsToRead, plugin);
   }
 
   @Override
-  public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+  public void applyAssignments(List<DrillbitEndpoint> endpoints) {
   }
 
   @Override
-  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
+  public SubScan getSpecificScan(int minorFragmentId) {
     return this;
   }
 
@@ -98,12 +101,6 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
     return table.isDistributed() ? plugin.getContext().getBits().size() : 1;
   }
 
-  // This enforces maximum parallelization width for distributed tables
-  @Override
-  public boolean enforceWidth() {
-    return table.isDistributed();
-  }
-
   @Override
   public long getInitialAllocation() {
     return initialAllocation;
@@ -114,10 +111,23 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
     return maxAllocation;
   }
 
+  /**
+   * Example: SystemTableScan [table=OPTION, distributed=false, maxRecordsToRead=1]
+   *
+   * @return string representation of system table scan
+   */
   @Override
   public String getDigest() {
-    return "SystemTableScan [table=" + table.name() +
-      ", distributed=" + table.isDistributed() + "]";
+    StringBuilder builder = new StringBuilder();
+    builder.append("SystemTableScan [");
+    builder.append("table=").append(table.name()).append(", ");
+    builder.append("distributed=").append(table.isDistributed());
+    if (maxRecordsToRead != Integer.MAX_VALUE) {
+      builder.append(", maxRecordsToRead=").append(maxRecordsToRead);
+    }
+    builder.append("]");
+
+    return builder.toString();
   }
 
   @Override
@@ -127,7 +137,7 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
 
   /**
    * If distributed, the scan needs to happen on every node. Since width is enforced, the number of fragments equals
-   * number of Drillbits. And here we set, endpoint affinities to Double.POSITIVE_INFINITY to ensure every
+   * number of Drillbits. And here we set, each endpoint as mandatory assignment required to ensure every
    * Drillbit executes a fragment.
    * @return the Drillbit endpoint affinities
    */
@@ -135,8 +145,10 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
   public List<EndpointAffinity> getOperatorAffinity() {
     if (table.isDistributed()) {
       final List<EndpointAffinity> affinities = Lists.newArrayList();
-      for (final DrillbitEndpoint endpoint : plugin.getContext().getBits()) {
-        affinities.add(new EndpointAffinity(endpoint, Double.POSITIVE_INFINITY));
+      final Collection<DrillbitEndpoint> bits = plugin.getContext().getBits();
+      final double affinityPerNode = 1d / bits.size();
+      for (final DrillbitEndpoint endpoint : bits) {
+        affinities.add(new EndpointAffinity(endpoint, affinityPerNode, true, /* maxWidth = */ 1));
       }
       return affinities;
     } else {
@@ -145,12 +157,38 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
   }
 
   @Override
+  public DistributionAffinity getDistributionAffinity() {
+    return table.isDistributed() ? DistributionAffinity.HARD : DistributionAffinity.SOFT;
+  }
+
+  @Override
   public GroupScan clone(List<SchemaPath> columns) {
     return this;
   }
 
+  public GroupScan clone(SystemTableScan systemTableScan, int maxRecordsToRead) {
+    return new SystemTableScan(systemTableScan.getTable(), maxRecordsToRead, systemTableScan.getPlugin());
+  }
+
+  @Override
+  public boolean supportsLimitPushdown() {
+    return true;
+  }
+
+  @Override
+  public GroupScan applyLimit(int maxRecords) {
+    if (this.maxRecordsToRead == maxRecords) {
+      return null;
+    }
+    return clone(this, maxRecords);
+  }
+
   public SystemTable getTable() {
     return table;
+  }
+
+  public int getMaxRecordsToRead() {
+    return maxRecordsToRead;
   }
 
   @JsonIgnore

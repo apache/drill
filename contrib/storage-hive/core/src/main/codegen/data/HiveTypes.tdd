@@ -20,79 +20,99 @@
       hiveType: "BOOLEAN",
       hiveOI: "BooleanObjectInspector",
       javaType: "boolean",
-      drillType: "Bit"
+      drillType: "Bit",
+      needOIForDrillType: true
     },
     {
       hiveType: "BYTE",
       hiveOI: "ByteObjectInspector",
       javaType: "byte",
-      drillType: "TinyInt"
+      drillType: "TinyInt",
+      needOIForDrillType: true
     },
     {
       hiveType: "SHORT",
       hiveOI: "ShortObjectInspector",
       javaType: "short",
-      drillType: "SmallInt"
+      drillType: "SmallInt",
+      needOIForDrillType: true
     },
     {
       hiveType: "INT",
       hiveOI: "IntObjectInspector",
       javaType: "int",
-      drillType: "Int"
+      drillType: "Int",
+      needOIForDrillType: true
     },
     {
       hiveType: "LONG",
       hiveOI: "LongObjectInspector",
       javaType: "long",
-      drillType: "BigInt"
+      drillType: "BigInt",
+      needOIForDrillType: true
     },
     {
       hiveType: "FLOAT",
       hiveOI: "FloatObjectInspector",
       javaType: "float",
-      drillType: "Float4"
+      drillType: "Float4",
+      needOIForDrillType: true
     },
     {
       hiveType: "DOUBLE",
       hiveOI: "DoubleObjectInspector",
       javaType: "double",
-      drillType: "Float8"
+      drillType: "Float8",
+      needOIForDrillType: true
     },
     {
       hiveType: "VARCHAR",
       hiveOI: "HiveVarcharObjectInspector",
       javaType: "",
-      drillType: "VarChar"
+      drillType: "VarChar",
+      needOIForDrillType: true
+    },
+    {
+      hiveType: "CHAR",
+      hiveOI: "HiveCharObjectInspector",
+      javaType: "",
+      drillType: "VarChar",
+      needOIForDrillType: false
     },
     {
       hiveType: "STRING",
       hiveOI: "StringObjectInspector",
       javaType: "",
-      drillType: "Var16Char"
+      drillType: "VarChar",
+      needOIForDrillType: true
     },
     {
       hiveType: "BINARY",
       hiveOI: "BinaryObjectInspector",
       javaType: "",
-      drillType: "VarBinary"
+      drillType: "VarBinary",
+      needOIForDrillType: true
     },
     {
       hiveType: "TIMESTAMP",
       hiveOI: "TimestampObjectInspector",
       javaType: "java.sql.Timestamp",
-      drillType: "TimeStamp"
+      drillType: "TimeStamp",
+      needOIForDrillType: true
     },
     {
       hiveType: "DECIMAL",
       hiveOI: "HiveDecimalObjectInspector",
       javaType: "org.apache.hadoop.hive.common.type.HiveDecimal",
-      drillType: "Decimal38Sparse"
+      drillType: "VarDecimal",
+      needOIForDrillType: true
     },
     {
       hiveType: "DATE",
       hiveOI: "DateObjectInspector",
       javaType: "java.sql.Date",
-      drillType: "Date"
+      drillType: "Date",
+      needOIForDrillType: true
     }
   ]
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
@@ -33,6 +32,7 @@ import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
 
 
 public class NestedLoopJoinPrule extends JoinPruleBase {
@@ -49,24 +49,21 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
       PlannerSettings settings) {
     JoinRelType type = join.getJoinType();
 
-    if (! (type == JoinRelType.INNER || type == JoinRelType.LEFT)) {
+    if (!(type == JoinRelType.INNER || type == JoinRelType.LEFT)) {
       return false;
     }
 
     List<Integer> leftKeys = Lists.newArrayList();
-    List<Integer> rightKeys = Lists.newArrayList() ;
-    JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(), leftKeys, rightKeys);
+    List<Integer> rightKeys = Lists.newArrayList();
+    List<Boolean> filterNulls = Lists.newArrayList();
+    JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(), leftKeys, rightKeys, filterNulls);
     if (category == JoinCategory.EQUALITY
         && (settings.isHashJoinEnabled() || settings.isMergeJoinEnabled())) {
       return false;
     }
 
     if (settings.isNlJoinForScalarOnly()) {
-      if (JoinUtils.isScalarSubquery(left) || JoinUtils.isScalarSubquery(right)) {
-        return true;
-      } else {
-        return false;
-      }
+      return JoinUtils.hasScalarSubqueryInput(left, right);
     }
 
     return true;
@@ -84,7 +81,7 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
       return;
     }
 
-    final DrillJoinRel join = (DrillJoinRel) call.rel(0);
+    final DrillJoinRel join = call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
 
@@ -100,7 +97,7 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
       }
 
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 

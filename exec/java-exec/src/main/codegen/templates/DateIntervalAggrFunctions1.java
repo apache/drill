@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,6 @@
 
 <#include "/@includes/license.ftl" />
 
-// Source code generated using FreeMarker template ${.template_name}
 
 <#-- A utility class that is used to generate java code for aggr functions for Date, Time, Interval types -->
 <#--  that maintain a single running counter to hold the result.  This includes: MIN, MAX, SUM, COUNT. -->
@@ -38,6 +37,10 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
+
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 @SuppressWarnings("unused")
 
@@ -83,14 +86,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
     <#if type.outputType?ends_with("Interval")>
 
-    long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
-                       in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    long inMS = (long) in.months * org.apache.drill.exec.vector.DateUtilities.monthsToMillis+
+                       in.days * (org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.min(value.value, inMS);
 
     <#elseif type.outputType?ends_with("IntervalDay")>
-    long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    long inMS = (long) in.days * (org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.min(value.value, inMS);
@@ -101,13 +104,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     </#if>
 	  <#elseif aggrtype.funcName == "max">
     <#if type.outputType?ends_with("Interval")>
-    long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
-                       in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    long inMS = (long) in.months * org.apache.drill.exec.vector.DateUtilities.monthsToMillis+
+                       in.days * (org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.max(value.value, inMS);
     <#elseif type.outputType?ends_with("IntervalDay")>
-    long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    long inMS = (long) in.days * (org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.max(value.value, inMS);
@@ -128,7 +131,16 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     </#if>
 	  <#elseif aggrtype.funcName == "count">
 	    value.value++;
-	  <#else>
+    <#elseif aggrtype.funcName == "any_value">
+      <#if type.outputType?ends_with("Interval")>
+        value.days = in.days;
+        value.months = in.months;
+        value.milliseconds = in.milliseconds;
+      <#elseif type.outputType?ends_with("IntervalDay")>
+        value.days = in.days;
+        value.milliseconds = in.milliseconds;
+      </#if>
+    <#else>
 	  // TODO: throw an error ?
 	  </#if>
 	<#if type.inputType?starts_with("Nullable")>
@@ -142,13 +154,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       out.isSet = 1;
       <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
       <#if type.outputType?ends_with("Interval")>
-      out.months = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis);
-      value.value = value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis;
-      out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-      out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      out.months = (int) (value.value / org.apache.drill.exec.vector.DateUtilities.monthsToMillis);
+      value.value = value.value % org.apache.drill.exec.vector.DateUtilities.monthsToMillis;
+      out.days = (int) (value.value / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+      out.milliseconds = (int) (value.value % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
       <#elseif type.outputType?ends_with("IntervalDay")>
-      out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-      out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      out.days = (int) (value.value / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+      out.milliseconds = (int) (value.value % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
       <#else>
       out.value = value.value;
       </#if>

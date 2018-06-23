@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,17 +45,17 @@ public class DrillConfig extends NestedConfig {
 
   private final ImmutableList<String> startupArguments;
 
-  public static final boolean ON_OSX = System.getProperty("os.name").contains("OS X");
-
   @SuppressWarnings("restriction")
   private static final long MAX_DIRECT_MEMORY = sun.misc.VM.maxDirectMemory();
 
   @VisibleForTesting
-  public DrillConfig(Config config, boolean enableServerConfigs) {
+  public DrillConfig(Config config) {
     super(config);
     logger.debug("Setting up DrillConfig object.");
-    logger.trace("Given Config object is:\n{}",
-                 config.root().render(ConfigRenderOptions.defaults()));
+    // we need to exclude sun.java.command config node while logging, because
+    // it contains user password along with other parameters
+    logger.trace("Given Config object is:\n{}", config.withoutPath("password").withoutPath("sun.java.command")
+                 .root().render(ConfigRenderOptions.defaults()));
     RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
     this.startupArguments = ImmutableList.copyOf(bean.getInputArguments());
     logger.debug("DrillConfig object initialized.");
@@ -116,11 +116,9 @@ public class DrillConfig extends NestedConfig {
 
 
   /**
-   * <p>
    * DrillConfig loads up Drill configuration information. It does this utilizing a combination of classpath scanning
    * and Configuration fallbacks provided by the TypeSafe configuration library. The order of precedence is as
    * follows:
-   * </p>
    * <p>
    * Configuration values are retrieved as follows:
    * <ul>
@@ -128,6 +126,8 @@ public class DrillConfig extends NestedConfig {
    *     on the classpath, which copy is read is indeterminate.
    *     If a non-null value for overrideFileResourcePathname is provided, this
    *     is used instead of "{@code drill-override.conf}".</li>
+   * <li>Check a single copy of "drill-distrib.conf". If multiple copies are
+   *     on the classpath, which copy is read is indeterminate. </li>
    * <li>Check all copies of "{@code drill-module.conf}".  Loading order is
    *     indeterminate.</li>
    * <li>Check a single copy of "{@code drill-default.conf}".  If multiple
@@ -138,7 +138,7 @@ public class DrillConfig extends NestedConfig {
    * @param overrideFileResourcePathname
    *          the classpath resource pathname of the file to use for
    *          configuration override purposes; {@code null} specifies to use the
-   *          default pathname ({@link CommonConstants.CONFIG_OVERRIDE}) (does
+   *          default pathname ({@link CommonConstants#CONFIG_OVERRIDE_RESOURCE_PATHNAME}) (does
    *          <strong>not</strong> specify to suppress trying to load an
    *          overrides file)
    *  @return A merged Config object.
@@ -161,6 +161,15 @@ public class DrillConfig extends NestedConfig {
    */
   public static DrillConfig create(String overrideFileResourcePathname, boolean enableServerConfigs) {
     return create(overrideFileResourcePathname, null, enableServerConfigs);
+  }
+
+  /**
+   * Creates a drill configuration using the provided config file.
+   * @param config custom configuration file
+   * @return {@link DrillConfig} instance
+   */
+  public static DrillConfig create(Config config) {
+    return new DrillConfig(config.resolve());
   }
 
   /**
@@ -207,12 +216,21 @@ public class DrillConfig extends NestedConfig {
     }
     logString.append("\n");
 
-    // 3. Load any specified overrides configuration file along with any
+    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    // 3. Load distribution specific configuration file.
+    final URL distribConfigFileUrl = classLoader.getResource(CommonConstants.CONFIG_DISTRIBUTION_RESOURCE_PATHNAME);
+    if (null != distribConfigFileUrl ) {
+      logString.append("Distribution Specific Configuration File: ").append(distribConfigFileUrl).append("\n");
+    }
+    fallback =
+      ConfigFactory.load(CommonConstants.CONFIG_DISTRIBUTION_RESOURCE_PATHNAME).withFallback(fallback);
+
+    // 4. Load any specified overrides configuration file along with any
     //    overrides from JVM system properties (e.g., {-Dname=value").
 
     // (Per ConfigFactory.load(...)'s mention of using Thread.getContextClassLoader():)
-    final URL overrideFileUrl =
-        Thread.currentThread().getContextClassLoader().getResource(overrideFileResourcePathname);
+    final URL overrideFileUrl = classLoader.getResource(overrideFileResourcePathname);
     if (null != overrideFileUrl ) {
       logString.append("Override File: ").append(overrideFileUrl).append("\n");
     }
@@ -223,7 +241,9 @@ public class DrillConfig extends NestedConfig {
     if (overriderProps != null) {
       logString.append("Overridden Properties:\n");
       for(Entry<Object, Object> entry : overriderProps.entrySet()){
-        logString.append("\t-").append(entry.getKey()).append(" = ").append(entry.getValue()).append("\n");
+        if (!entry.getKey().equals("password")) {
+          logString.append("\t-").append(entry.getKey()).append(" = ").append(entry.getValue()).append("\n");
+        }
       }
       logString.append("\n");
       effectiveConfig =
@@ -234,7 +254,7 @@ public class DrillConfig extends NestedConfig {
     logger.info("Configuration and plugin file(s) identified in {}ms.\n{}",
         watch.elapsed(TimeUnit.MILLISECONDS),
         logString);
-    return new DrillConfig(effectiveConfig.resolve(), enableServerConfigs);
+    return new DrillConfig(effectiveConfig.resolve());
   }
 
   public <T> Class<T> getClassAt(String location, Class<T> clazz) throws DrillConfigurationException {

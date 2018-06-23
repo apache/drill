@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,12 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.SqlFunctionTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(SqlFunctionTest.class)
 public class TestNewSimpleRepeatedFunctions extends BaseTestQuery {
   @Test
   public void testRepeatedContainsForWildCards() throws Exception {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,9 +19,12 @@ package org.apache.drill.exec.impersonation;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
+import org.apache.drill.categories.SecurityTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -30,16 +33,19 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests impersonation on metadata related queries as SHOW FILES, SHOW TABLES, CREATE VIEW, CREATE TABLE and DROP TABLE
  */
+@Category({SlowTest.class, SecurityTest.class})
 public class TestImpersonationMetadata extends BaseTestImpersonation {
   private static final String user1 = "drillTestUser1";
   private static final String user2 = "drillTestUser2";
@@ -99,17 +105,17 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     // create tables as user2
     updateClient(user2);
-    test(String.format("use `%s.user2_workspace1`", MINIDFS_STORAGE_PLUGIN_NAME));
+    test("use `%s.user2_workspace1`", MINIDFS_STORAGE_PLUGIN_NAME);
     // create a table that can be dropped by another user in a different group
     test("create table parquet_table_775 as select * from cp.`employee.json`");
 
     // create a table that cannot be dropped by another user
-    test(String.format("use `%s.user2_workspace2`", MINIDFS_STORAGE_PLUGIN_NAME));
+    test("use `%s.user2_workspace2`", MINIDFS_STORAGE_PLUGIN_NAME);
     test("create table parquet_table_700 as select * from cp.`employee.json`");
 
     // Drop tables as user1
     updateClient(user1);
-    test(String.format("use `%s.user2_workspace1`", MINIDFS_STORAGE_PLUGIN_NAME));
+    test("use `%s.user2_workspace1`", MINIDFS_STORAGE_PLUGIN_NAME);
     testBuilder()
         .sqlQuery("drop table parquet_table_775")
         .unOrdered()
@@ -117,7 +123,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
         .baselineValues(true, String.format("Table [%s] dropped", "parquet_table_775"))
         .go();
 
-    test(String.format("use `%s.user2_workspace2`", MINIDFS_STORAGE_PLUGIN_NAME));
+    test("use `%s.user2_workspace2`", MINIDFS_STORAGE_PLUGIN_NAME);
     boolean dropFailed = false;
     try {
       test("drop table parquet_table_700");
@@ -129,6 +135,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   }
 
   @Test // DRILL-3037
+  @Category(UnlikelyTest.class)
   public void testImpersonatingProcessUser() throws Exception {
     updateClient(processUser);
 
@@ -147,11 +154,11 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     updateClient(user1);
 
     // Try show tables in schema "drillTestGrp1_700" which is owned by "user1"
-    test(String.format("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME));
+    test("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME);
 
     // Try show tables in schema "drillTestGrp0_750" which is owned by "processUser" and has group permissions for
     // "user1"
-    test(String.format("SHOW FILES IN %s.drillTestGrp0_750", MINIDFS_STORAGE_PLUGIN_NAME));
+    test("SHOW FILES IN %s.drillTestGrp0_750", MINIDFS_STORAGE_PLUGIN_NAME);
   }
 
   @Test
@@ -159,7 +166,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     updateClient(user2);
     // Try show tables in schema "drillTestGrp0_755" which is owned by "processUser" and group0. "user2" is not part
     // of the "group0"
-    test(String.format("SHOW FILES IN %s.drillTestGrp0_755", MINIDFS_STORAGE_PLUGIN_NAME));
+    test("SHOW FILES IN %s.drillTestGrp0_755", MINIDFS_STORAGE_PLUGIN_NAME);
   }
 
   @Test
@@ -169,7 +176,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     updateClient(user2);
     try {
       // Try show tables in schema "drillTestGrp1_700" which is owned by "user1"
-      test(String.format("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME));
+      test("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME);
     } catch(UserRemoteException e) {
       ex = e;
     }
@@ -358,6 +365,29 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     assertNotNull("UserRemoteException is expected", ex);
     assertThat(ex.getMessage(),
         containsString("SYSTEM ERROR: RemoteException: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/drillTestGrp0_755/"));
+  }
+
+  @Test
+  public void testRefreshMetadata() throws Exception {
+    final String tableName = "nation1";
+    final String tableWS = "drillTestGrp1_700";
+
+    updateClient(user1);
+    test("USE " + Joiner.on(".").join(MINIDFS_STORAGE_PLUGIN_NAME, tableWS));
+
+    test("CREATE TABLE " + tableName + " partition by (n_regionkey) AS SELECT * " +
+              "FROM cp.`tpch/nation.parquet`;");
+
+    test( "refresh table metadata " + tableName + ";");
+
+    test("SELECT * FROM " + tableName + ";");
+
+    final Path tablePath = new Path(Path.SEPARATOR + tableWS + Path.SEPARATOR + tableName);
+    assertTrue ( fs.exists(tablePath) && fs.isDirectory(tablePath));
+    fs.mkdirs(new Path(tablePath, "tmp5"));
+
+    test("SELECT * from " + tableName + ";");
+
   }
 
   @AfterClass

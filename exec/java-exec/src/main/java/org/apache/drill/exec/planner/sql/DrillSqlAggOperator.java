@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,47 +17,80 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import java.util.List;
-
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.google.common.collect.Lists;
 import org.apache.calcite.sql.SqlAggFunction;
-import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorScope;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
-import com.google.common.collect.ImmutableList;
+import java.util.Collection;
+import java.util.List;
 
 public class DrillSqlAggOperator extends SqlAggFunction {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlAggOperator.class);
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlAggOperator.class);
+  private final List<DrillFuncHolder> functions;
 
-
-  public DrillSqlAggOperator(String name, int argCount) {
-    super(name, new SqlIdentifier(name, SqlParserPos.ZERO), SqlKind.OTHER_FUNCTION, DynamicReturnType.INSTANCE, null, new Checker(argCount), SqlFunctionCategory.USER_DEFINED_FUNCTION);
+  protected DrillSqlAggOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax, SqlReturnTypeInference sqlReturnTypeInference) {
+    super(name,
+        new SqlIdentifier(name, SqlParserPos.ZERO),
+        SqlKind.OTHER_FUNCTION,
+        sqlReturnTypeInference,
+        null,
+        Checker.getChecker(argCountMin, argCountMax),
+        SqlFunctionCategory.USER_DEFINED_FUNCTION,
+        false,
+        false);
+    this.functions = functions;
   }
 
-  @Override
-  public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
-    return getAny(validator.getTypeFactory());
+  private DrillSqlAggOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax) {
+    this(name,
+        functions,
+        argCountMin,
+        argCountMax,
+        TypeInferenceUtils.getDrillSqlReturnTypeInference(
+            name,
+            functions));
   }
 
-  private RelDataType getAny(RelDataTypeFactory factory){
-    return factory.createSqlType(SqlTypeName.ANY);
-//    return new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory);
+  public List<DrillFuncHolder> getFunctions() {
+    return functions;
   }
 
-//  @Override
-//  public List<RelDataType> getParameterTypes(RelDataTypeFactory typeFactory) {
-//    return ImmutableList.of(typeFactory.createSqlType(SqlTypeName.ANY));
-//  }
-//
-//  @Override
-//  public RelDataType getReturnType(RelDataTypeFactory typeFactory) {
-//    return getAny(typeFactory);
-//  }
+  public static class DrillSqlAggOperatorBuilder {
+    private String name = null;
+    private final List<DrillFuncHolder> functions = Lists.newArrayList();
+    private int argCountMin = Integer.MAX_VALUE;
+    private int argCountMax = Integer.MIN_VALUE;
+
+    public DrillSqlAggOperatorBuilder setName(final String name) {
+      this.name = name;
+      return this;
+    }
+
+    public DrillSqlAggOperatorBuilder addFunctions(Collection<DrillFuncHolder> functions) {
+      this.functions.addAll(functions);
+      return this;
+    }
+
+    public DrillSqlAggOperatorBuilder setArgumentCount(final int argCountMin, final int argCountMax) {
+      this.argCountMin = Math.min(this.argCountMin, argCountMin);
+      this.argCountMax = Math.max(this.argCountMax, argCountMax);
+      return this;
+    }
+
+    public DrillSqlAggOperator build() {
+      if(name == null || functions.isEmpty()) {
+        throw new AssertionError("The fields, name and functions, need to be set before build DrillSqlAggOperator");
+      }
+      return new DrillSqlAggOperator(
+          name,
+          functions,
+          argCountMin,
+          argCountMax);
+    }
+  }
 }

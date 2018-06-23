@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/ComplexCopier.java" />
 
@@ -98,9 +97,12 @@ public class ComplexCopier {
     <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
     <#assign fields = minor.fields!type.fields />
     <#assign uncappedName = name?uncap_first/>
-    <#if !minor.class?starts_with("Decimal")>
+    <#if !minor.class?contains("Decimal")>
     case ${name?upper_case}:
       return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>(name);
+    <#elseif minor.class?contains("VarDecimal")>
+    case ${name?upper_case}:
+      return (FieldWriter) writer.${uncappedName}(name, reader.getType().getScale(), reader.getType().getPrecision());
     </#if>
     </#list></#list>
     case MAP:
@@ -117,9 +119,12 @@ public class ComplexCopier {
     <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
     <#assign fields = minor.fields!type.fields />
     <#assign uncappedName = name?uncap_first/>
-    <#if !minor.class?starts_with("Decimal")>
+    <#if !minor.class?contains("Decimal")>
     case ${name?upper_case}:
-    return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>();
+      return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>();
+    <#elseif minor.class?contains("VarDecimal")>
+    case ${name?upper_case}:
+      return (FieldWriter) writer.${uncappedName}(reader.getType().getScale(), reader.getType().getPrecision());
     </#if>
     </#list></#list>
     case MAP:

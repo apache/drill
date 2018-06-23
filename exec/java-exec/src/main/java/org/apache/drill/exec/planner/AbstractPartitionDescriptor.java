@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,9 @@ package org.apache.drill.exec.planner;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.calcite.rel.core.TableScan;
+import org.apache.drill.exec.store.dfs.MetadataContext;
+
 /**
  * Abstract base class for file system based partition descriptors and Hive partition descriptors.
  *
@@ -28,7 +31,7 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
 
   /**
    * A sequence of sublists of partition locations combined into a single super list.
-   * The size of each sublist is at most {@link PartitionDescriptor.PARTITION_BATCH_SIZE}
+   * The size of each sublist is at most {@link PartitionDescriptor#PARTITION_BATCH_SIZE}
    * For example if the size is 3, the complete list could be: {(a, b, c), {d, e, f), (g, h)}
    */
   protected List<List<PartitionLocation>> locationSuperList;
@@ -39,7 +42,7 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
 
   /**
    * Create sublists of the partition locations, each sublist of size
-   * at most {@link PartitionDescriptor.PARTITION_BATCH_SIZE}
+   * at most {@link PartitionDescriptor#PARTITION_BATCH_SIZE}
    */
   protected abstract void createPartitionSublists() ;
 
@@ -53,6 +56,18 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
       createPartitionSublists();
     }
     return locationSuperList.iterator();
+  }
+
+  @Override
+  public boolean supportsMetadataCachePruning() {
+    return false;
+  }
+
+
+  @Override
+  public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot,
+      boolean isAllPruned, MetadataContext metaContext) throws Exception {
+    throw new UnsupportedOperationException();
   }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,6 @@ import javax.inject.Named;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
@@ -41,22 +40,33 @@ import com.google.common.base.Stopwatch;
 public abstract class PriorityQueueTemplate implements PriorityQueue {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueTemplate.class);
 
-  private SelectionVector4 heapSv4; //This holds the heap
+  // This holds the min heap of the record indexes. Heapify condition is based on actual record though. Only records
+  // meeting the heap condition have their indexes in this heap. Actual record are stored inside the hyperBatch. Since
+  // hyperBatch contains ValueVectors from all the incoming batches, the indexes here consider both BatchNumber and
+  // RecordNumber.
+  private SelectionVector4 heapSv4;
   private SelectionVector4 finalSv4; //This is for final sorted output
+
+  // This stores the actual incoming record batches
   private ExpandableHyperContainer hyperBatch;
-  private FragmentContext context;
   private BufferAllocator allocator;
+
+  // Limit determines the number of record to output and hold in queue.
   private int limit;
   private int queueSize = 0;
   private int batchCount = 0;
   private boolean hasSv2;
 
   @Override
-  public void init(int limit, FragmentContext context, BufferAllocator allocator,  boolean hasSv2) throws SchemaChangeException {
+  public void init(int limit, BufferAllocator allocator,  boolean hasSv2) throws SchemaChangeException {
     this.limit = limit;
-    this.context = context;
     this.allocator = allocator;
+    @SuppressWarnings("resource")
+    // It's allocating memory to store (limit+1) indexes. When first limit number of record indexes are stored then all
+    // the other record indexes are kept at (limit+1) and evaluated with the root element of heap to determine if
+    // this new element will reside in heap or not.
     final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
+    // Heap is a SelectionVector4 since it stores indexes for record relative to their batches.
     heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
     this.hasSv2 = hasSv2;
   }
@@ -67,7 +77,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     BatchSchema schema = container.getSchema();
     VectorContainer newContainer = new VectorContainer();
     for (MaterializedField field : schema) {
-      int[] ids = container.getValueVectorId(SchemaPath.getSimplePath(field.getPath())).getFieldIds();
+      int[] ids = container.getValueVectorId(SchemaPath.getSimplePath(field.getName())).getFieldIds();
       newContainer.add(container.getValueAccessorById(field.getValueClass(), ids).getValueVectors());
     }
     newContainer.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
@@ -75,6 +85,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     cleanup();
     hyperBatch = new ExpandableHyperContainer(newContainer);
     batchCount = hyperBatch.iterator().next().getValueVectors().length;
+    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
     heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
     // Reset queue size (most likely to be set to limit).
@@ -84,11 +95,12 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
       ++queueSize;
     }
     v4.clear();
-    doSetup(context, hyperBatch, null);
+    doSetup(hyperBatch, null);
   }
 
+  @SuppressWarnings("resource")
   @Override
-  public void add(FragmentContext context, RecordBatchData batch) throws SchemaChangeException{
+  public void add(RecordBatchData batch) throws SchemaChangeException{
     Stopwatch watch = Stopwatch.createStarted();
     if (hyperBatch == null) {
       hyperBatch = new ExpandableHyperContainer(batch.getContainer());
@@ -96,18 +108,24 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
       hyperBatch.addBatch(batch.getContainer());
     }
 
-    doSetup(context, hyperBatch, null); // may not need to do this every time
+    doSetup(hyperBatch, null); // may not need to do this every time
 
     int count = 0;
     SelectionVector2 sv2 = null;
     if (hasSv2) {
       sv2 = batch.getSv2();
     }
+    // Will only be called until queueSize has reached the limit which means it has seen limit number of records in
+    // one or many batches. For each new record siftUp (or heapify) to adjust min heap property is called.
     for (; queueSize < limit && count < batch.getRecordCount();  count++) {
       heapSv4.set(queueSize, batchCount, hasSv2 ? sv2.getIndex(count) : count);
       queueSize++;
       siftUp();
     }
+
+    // For all the other records which fall beyond limit, it compares them with the root element in the current heap
+    // and perform heapify if need be. Note: Even though heapSv4 stores only limit+1 indexes but in hyper batch we
+    // are still keeping all the records unless purge is called.
     for (; count < batch.getRecordCount(); count++) {
       heapSv4.set(limit, batchCount, hasSv2 ? sv2.getIndex(count) : count);
       if (compare(limit, 0) < 0) {
@@ -125,6 +143,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   @Override
   public void generate() throws SchemaChangeException {
     Stopwatch watch = Stopwatch.createStarted();
+    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * queueSize);
     finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
     for (int i = queueSize - 1; i >= 0; i--) {
@@ -139,7 +158,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   }
 
   @Override
-  public SelectionVector4 getHeapSv4() {
+  public SelectionVector4 getSv4() {
     return heapSv4;
   }
 
@@ -152,16 +171,36 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   public void cleanup() {
     if (heapSv4 != null) {
       heapSv4.clear();
+      heapSv4 = null;
     }
     if (hyperBatch != null) {
       hyperBatch.clear();
+      hyperBatch = null;
     }
     if (finalSv4 != null) {
       finalSv4.clear();
+      finalSv4 = null;
     }
+    batchCount = 0;
   }
 
-  private void siftUp() {
+  /**
+   * When cleanup is called then heapSv4 is cleared and set to null and is only initialized during init call. Hence
+   * this is used to determine if priority queue is initialized or not.
+   * @return - true - queue is still initialized
+   *           false - queue is not yet initialized and before using queue init should be called
+   */
+  public boolean isInitialized() {
+    return (heapSv4 != null);
+  }
+
+  /**
+   * Perform Heapify for the record stored at index which was added as leaf node in the array. The new record is
+   * compared with the record stored at parent index. Since the new record index will flow up in the array hence the
+   * name siftUp
+   * @throws SchemaChangeException
+   */
+  private void siftUp() throws SchemaChangeException {
     int p = queueSize - 1;
     while (p > 0) {
       if (compare(p, (p - 1) / 2) > 0) {
@@ -173,7 +212,15 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     }
   }
 
-  private void siftDown() {
+  /**
+   * Compares the record stored at the index of 0th index element of heapSv4 (or root element) with the record
+   * stored at index of limit index element of heapSv4 (or new element). If the root element is greater than new element
+   * then new element is discarded else root element is replaced with new element and again heapify is performed on
+   * new root element.
+   * This is done for all the records which are seen after the queue is filled with limit number of record indexes.
+   * @throws SchemaChangeException
+   */
+  private void siftDown() throws SchemaChangeException {
     int p = 0;
     int next;
     while (p * 2 + 1 < queueSize) {
@@ -195,11 +242,21 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     }
   }
 
+  /**
+   * Pop the root element which holds the minimum value in heap. In this case root element will be the index of
+   * record with minimum value. After extracting the root element it swaps the root element with last element in
+   * heapSv4 and does heapify (by calling siftDown) again.
+   * @return - Index for
+   */
   public int pop() {
     int value = heapSv4.get(0);
     swap(0, queueSize - 1);
     queueSize--;
-    siftDown();
+    try {
+      siftDown();
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
     return value;
   }
 
@@ -209,13 +266,32 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     heapSv4.set(sv1, tmp);
   }
 
-  public int compare(int leftIndex, int rightIndex) {
+  public int compare(int leftIndex, int rightIndex) throws SchemaChangeException {
     int sv1 = heapSv4.get(leftIndex);
     int sv2 = heapSv4.get(rightIndex);
     return doEval(sv1, sv2);
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorContainer incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
+  /**
+   * Stores the reference to the hyperBatch container which holds all the records across incoming batches in it. This
+   * is used in doEval function to compare records in this hyper batch at given indexes.
+   * @param incoming - reference to hyperBatch
+   * @param outgoing - null
+   * @throws SchemaChangeException
+   */
+  public abstract void doSetup(@Named("incoming") VectorContainer incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
 
+  /**
+   * Evaluates the value of record at leftIndex and rightIndex w.r.t min heap condition. It is used in
+   * {@link PriorityQueueTemplate#compare(int, int)} method while Heapifying the queue.
+   * @param leftIndex
+   * @param rightIndex
+   * @return
+   * @throws SchemaChangeException
+   */
+  public abstract int doEval(@Named("leftIndex") int leftIndex,
+                             @Named("rightIndex") int rightIndex)
+                      throws SchemaChangeException;
 }

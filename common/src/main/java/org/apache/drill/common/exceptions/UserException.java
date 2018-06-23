@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,12 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.slf4j.Logger;
 
+import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.lang.management.ManagementFactory;
+
+import static java.lang.Thread.sleep;
 /**
  * Base class for all user exception. The goal is to separate out common error conditions where we can give users
  * useful feedback.
@@ -38,6 +44,7 @@ import org.slf4j.Logger;
  * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType
  */
 public class UserException extends DrillRuntimeException {
+  private static final long serialVersionUID = -6720929331624621840L;
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserException.class);
 
   public static final String MEMORY_ERROR_MSG = "One or more nodes ran out of memory while executing the query.";
@@ -86,7 +93,7 @@ public class UserException extends DrillRuntimeException {
    * @deprecated This method should never need to be used explicitly, unless you are passing the exception to the
    *             Rpc layer or UserResultListener.submitFailed()
    */
-  @Deprecated
+
   public static Builder systemError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.SYSTEM, cause);
   }
@@ -352,6 +359,47 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
+   * Wraps an error that arises from execution due to issues in the query, in
+   * the environment and so on -- anything other than "this should never occur"
+   * type checks.
+   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   *              returned by the builder instead of creating a new user exception
+   * @return user exception builder
+   */
+
+  public static Builder executionError(final Throwable cause) {
+    return new Builder(DrillPBError.ErrorType.EXECUTION_ERROR, cause);
+  }
+
+  /**
+   * Indicates an internal validation failed or similar unexpected error. Indicates
+   * the problem is likely within Drill itself rather than due to the environment,
+   * query, etc.
+   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   *              returned by the builder instead of creating a new user exception
+   * @return user exception builder
+   */
+
+  public static Builder internalError(final Throwable cause) {
+    return new Builder(DrillPBError.ErrorType.INTERNAL_ERROR, cause);
+  }
+
+  /**
+   * Indicates an unspecified error: code caught the exception, but does not have
+   * visibility into the cause well enough to pick one of the more specific
+   * error types. In practice, using this exception indicates that error handling
+   * should be moved closer to the source of the exception so we can provide the
+   * user with a better explanation than "something went wrong."
+   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   *              returned by the builder instead of creating a new user exception
+   * @return user exception builder
+   */
+  public static Builder unspecifiedError(final Throwable cause) {
+    return new Builder(DrillPBError.ErrorType.UNSPECIFIED_ERROR, cause);
+  }
+
+
+  /**
    * Builder class for DrillUserException. You can wrap an existing exception, in this case it will first check if
    * this exception is, or wraps, a DrillUserException. If it does then the builder will use the user exception as it is
    * (it will ignore the message passed to the constructor) and will add any additional context information to the
@@ -389,6 +437,14 @@ public class UserException extends DrillRuntimeException {
       }
     }
 
+    private Builder(UserException uex) {
+      this.uex = uex;
+      cause = uex.getCause();
+      errorType = uex.errorType;
+      context = uex.context;
+      message = uex.getOriginalMessage();
+    }
+
     /**
      * sets or replaces the error message.
      * <p>This will be ignored if this builder is wrapping a user exception
@@ -402,7 +458,11 @@ public class UserException extends DrillRuntimeException {
     public Builder message(final String format, final Object... args) {
       // we can't replace the message of a user exception
       if (uex == null && format != null) {
-        this.message = String.format(format, args);
+        if (args.length == 0) {
+          message = format;
+        } else {
+          message = String.format(format, args);
+        }
       }
       return this;
     }
@@ -529,6 +589,36 @@ public class UserException extends DrillRuntimeException {
      * @return user exception
      */
     public UserException build(final Logger logger) {
+
+      // To allow for debugging:
+      //
+      //   A spinner code to make the execution stop here while the file '/tmp/drill/spin' exists
+      // Can be used to attach a debugger, use jstack, etc
+      // (do "clush -a touch /tmp/drill/spin" to turn this on across all the cluster nodes, and to
+      //  release the spinning threads do "clush -a rm /tmp/drill/spin")
+      // The processID of the spinning thread (along with the error message) should then be found
+      // in a file like  /tmp/drill/spin4148663301172491613.tmp
+      File spinFile = new File("/tmp/drill/spin");
+      if ( spinFile.exists() ) {
+        File tmpDir = new File("/tmp/drill");
+        File outErr = null;
+        try {
+          outErr = File.createTempFile("spin", ".tmp", tmpDir);
+          BufferedWriter bw = new BufferedWriter(new FileWriter(outErr));
+          bw.write("Spinning process: " + ManagementFactory.getRuntimeMXBean().getName()
+          /* After upgrading to JDK 9 - replace with: ProcessHandle.current().getPid() */);
+          bw.write("\nError cause: " +
+            (errorType == DrillPBError.ErrorType.SYSTEM ? ("SYSTEM ERROR: " + ErrorHelper.getRootMessage(cause)) : message));
+          bw.close();
+        } catch (Exception ex) {
+          logger.warn("Failed creating a spinner tmp message file: {}", ex);
+        }
+        while (spinFile.exists()) {
+          try { sleep(1_000); } catch (Exception ex) { /* ignore interruptions */ }
+        }
+        try { outErr.delete(); } catch (Exception ex) { } // cleanup - remove err msg file
+      }
+
       if (uex != null) {
         return uex;
       }
@@ -549,7 +639,15 @@ public class UserException extends DrillRuntimeException {
       if (isSystemError) {
         logger.error(newException.getMessage(), newException);
       } else {
-        logger.info("User Error Occurred", newException);
+        StringBuilder buf = new StringBuilder();
+        buf.append("User Error Occurred");
+        if (message != null) {
+          buf.append(": ").append(message);
+        }
+        if (cause != null) {
+          buf.append(" (").append(cause.getMessage()).append(")");
+        }
+        logger.info(buf.toString(), newException);
       }
 
       return newException;
@@ -583,6 +681,10 @@ public class UserException extends DrillRuntimeException {
     super(builder.message, builder.cause);
     this.errorType = builder.errorType;
     this.context = builder.context;
+  }
+
+  public Builder rebuild() {
+    return new Builder(this);
   }
 
   /**

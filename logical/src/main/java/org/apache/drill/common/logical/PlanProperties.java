@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.common.logical;
 
 import org.apache.drill.common.JSONOptions;
@@ -34,6 +34,12 @@ public class PlanProperties {
   public ResultMode resultMode;
   public JSONOptions options;
   public int queue;
+
+  /**
+   * Indicates if the plan has been planned for resource management
+   * (memory, etc.) or if this plan must still be computed.
+   */
+  public boolean hasResourcePlan;
 
 //  @JsonInclude(Include.NON_NULL)
   public static class Generator {
@@ -55,7 +61,8 @@ public class PlanProperties {
                          @JsonProperty("type") PlanType type,
                          @JsonProperty("mode") ResultMode resultMode,
                          @JsonProperty("options") JSONOptions options,
-                         @JsonProperty("queue") int queue
+                         @JsonProperty("queue") int queue,
+                         @JsonProperty("hasResourcePlan") boolean hasResourcePlan
                          ) {
     this.version = version;
     this.queue = queue;
@@ -63,6 +70,7 @@ public class PlanProperties {
     this.type = type;
     this.resultMode = resultMode == null ? ResultMode.EXEC : resultMode;
     this.options = options;
+    this.hasResourcePlan = hasResourcePlan;
   }
 
   public static PlanPropertiesBuilder builder() {
@@ -76,6 +84,7 @@ public class PlanProperties {
     private ResultMode mode = ResultMode.EXEC;
     private JSONOptions options;
     private int queueNumber = 0;
+    private boolean hasResourcePlan = false;
 
     public PlanPropertiesBuilder type(PlanType type) {
       this.type = type;
@@ -112,8 +121,13 @@ public class PlanProperties {
       return this;
     }
 
+    public PlanPropertiesBuilder generator(boolean hasResourcePlan) {
+      this.hasResourcePlan = hasResourcePlan;
+      return this;
+    }
+
     public PlanProperties build() {
-      return new PlanProperties(version, generator, type, mode, options, queueNumber);
+      return new PlanProperties(version, generator, type, mode, options, queueNumber, hasResourcePlan);
     }
 
   }

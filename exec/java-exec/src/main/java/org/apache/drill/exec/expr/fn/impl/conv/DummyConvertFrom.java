@@ -1,5 +1,4 @@
-/*******************************************************************************
-
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
@@ -29,7 +28,8 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
  * This and {@link DummyConvertTo} class merely act as a placeholder so that Optiq
  * allows 'convert_to()' and 'convert_from()' functions in SQL.
  */
-@FunctionTemplate(name = "convert_from", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "convert_from", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+                  outputWidthCalculatorType = FunctionTemplate.OutputWidthCalculatorType.DEFAULT)
 public class DummyConvertFrom implements DrillSimpleFunc {
 
   @Output VarBinaryHolder out;

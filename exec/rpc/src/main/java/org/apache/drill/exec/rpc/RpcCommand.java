@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,10 +17,17 @@
  */
 package org.apache.drill.exec.rpc;
 
+import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 
-public interface RpcCommand<T extends MessageLite, C extends RemoteConnection> extends RpcConnectionHandler<C>{
+public interface RpcCommand<T extends MessageLite, C extends RemoteConnection,
+  E extends EnumLite, M extends MessageLite> extends RpcConnectionHandler<C> {
 
-  public abstract void connectionAvailable(C connection);
+  void connectionAvailable(C connection);
 
+  E getRpcType();
+
+  M getMessage();
+
+  RpcOutcomeListener<T> getOutcomeListener();
 }

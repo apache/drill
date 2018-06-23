@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,6 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import org.apache.drill.jdbc.AlreadyClosedSqlException;
-import org.apache.drill.jdbc.DrillPreparedStatement;
-
 import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -27,9 +24,13 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 
-import net.hydromatic.avatica.AvaticaParameter;
-import net.hydromatic.avatica.AvaticaPrepareResult;
-import net.hydromatic.avatica.AvaticaPreparedStatement;
+import org.apache.calcite.avatica.AvaticaParameter;
+import org.apache.calcite.avatica.AvaticaPreparedStatement;
+import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.Meta.StatementHandle;
+import org.apache.drill.exec.proto.UserProtos.PreparedStatement;
+import org.apache.drill.jdbc.AlreadyClosedSqlException;
+import org.apache.drill.jdbc.DrillPreparedStatement;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement} for Drill.
@@ -37,21 +38,29 @@ import net.hydromatic.avatica.AvaticaPreparedStatement;
  * <p>
  * This class has sub-classes which implement JDBC 3.0 and JDBC 4.0 APIs; it is
  * instantiated using
- * {@link net.hydromatic.avatica.AvaticaFactory#newPreparedStatement}.
+ * {@link org.apache.calcite.avatica.AvaticaFactory#newPreparedStatement}.
  * </p>
  */
 abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
     implements DrillPreparedStatement,
                DrillRemoteStatement {
 
+  private final PreparedStatement preparedStatementHandle;
+
   protected DrillPreparedStatementImpl(DrillConnectionImpl connection,
-                                       AvaticaPrepareResult prepareResult,
+                                       StatementHandle h,
+                                       Meta.Signature signature,
+                                       PreparedStatement preparedStatementHandle,
                                        int resultSetType,
                                        int resultSetConcurrency,
                                        int resultSetHoldability) throws SQLException {
-    super(connection, prepareResult,
+    super(connection, h, signature,
           resultSetType, resultSetConcurrency, resultSetHoldability);
     connection.openStatementsRegistry.addStatement(this);
+    this.preparedStatementHandle = preparedStatementHandle;
+    if (preparedStatementHandle != null) {
+      ((DrillColumnMetaDataList) signature.columns).updateColumnMetaData(preparedStatementHandle.getColumnsList());
+    }
   }
 
   /**
@@ -85,6 +94,10 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
     return (DrillConnectionImpl) super.getConnection();
   }
 
+  PreparedStatement getPreparedStatementHandle() {
+    return preparedStatementHandle;
+  }
+
   @Override
   protected AvaticaParameter getParameter(int param) throws SQLException {
     throwIfClosed();
@@ -115,10 +128,10 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   }
 
   @Override
-  public int executeUpdate(String sql) throws SQLException {
+  public long executeLargeUpdate(String sql) throws SQLException {
     throwIfClosed();
     try {
-      return super.executeUpdate(sql);
+      return super.executeLargeUpdate(sql);
     }
     catch (UnsupportedOperationException e) {
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
@@ -150,21 +163,21 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   }
 
   @Override
-  public int getMaxRows() {
+  public long getLargeMaxRows() {
     try {
       throwIfClosed();
     } catch (AlreadyClosedSqlException e) {
       // Can't throw any SQLException because AvaticaConnection's
-      // getMaxRows() is missing "throws SQLException".
+      // getLargeMaxRows() is missing "throws SQLException".
       throw new RuntimeException(e.getMessage(), e);
     }
-    return super.getMaxRows();
+    return super.getLargeMaxRows();
   }
 
   @Override
-  public void setMaxRows(int max) throws SQLException {
+  public void setLargeMaxRows(long max) throws SQLException {
     throwIfClosed();
-    super.setMaxRows(max);
+    super.setLargeMaxRows(max);
   }
 
   @Override
@@ -318,13 +331,17 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   }
 
   @Override
-  public void clearBatch() throws SQLException {
-    throwIfClosed();
+  public void clearBatch() {
+    try {
+      throwIfClosed();
+    } catch (AlreadyClosedSqlException e) {
+      throw new RuntimeException(e);
+    }
     try {
       super.clearBatch();
     }
     catch (UnsupportedOperationException e) {
-      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+      throw new RuntimeException(new SQLFeatureNotSupportedException(e.getMessage(), e));
     }
   }
 
@@ -489,10 +506,10 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   }
 
   @Override
-  public int executeUpdate() throws SQLException {
+  public long executeLargeUpdate() throws SQLException {
     throwIfClosed();
     try {
-      return super.executeUpdate();
+      return super.executeLargeUpdate();
     }
     catch (UnsupportedOperationException e) {
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);

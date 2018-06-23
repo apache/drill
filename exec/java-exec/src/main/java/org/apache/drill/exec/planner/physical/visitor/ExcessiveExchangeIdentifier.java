@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,8 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.Collections;
 import java.util.List;
-
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
+import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
@@ -27,11 +28,11 @@ import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.calcite.rel.RelNode;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
 
 public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, ExcessiveExchangeIdentifier.MajorFragmentStat, RuntimeException> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExcessiveExchangeIdentifier.class);
-
   private final long targetSliceSize;
+  private LateralJoinPrel topMostLateralJoin = null;
 
   public ExcessiveExchangeIdentifier(long targetSliceSize) {
     this.targetSliceSize = targetSliceSize;
@@ -46,25 +47,72 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   public Prel visitExchange(ExchangePrel prel, MajorFragmentStat parent) throws RuntimeException {
     parent.add(prel);
     MajorFragmentStat newFrag = new MajorFragmentStat();
+    newFrag.setRightSideOfLateral(parent.isRightSideOfLateral());
     Prel newChild = ((Prel) prel.getInput()).accept(this, newFrag);
-
-    if (newFrag.isSingular() && parent.isSingular()) {
+    if (canRemoveExchange(parent, newFrag)) {
       return newChild;
     } else {
       return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode) newChild));
     }
   }
 
+  private boolean canRemoveExchange(MajorFragmentStat parentFrag, MajorFragmentStat childFrag) {
+    if (childFrag.isSingular() && parentFrag.isSingular() &&
+       (!childFrag.isDistributionStrict() || !parentFrag.isDistributionStrict())) {
+      return true;
+    }
+
+    if (parentFrag.isRightSideOfLateral()) {
+      return true;
+    }
+
+    return false;
+  }
+
   @Override
   public Prel visitScreen(ScreenPrel prel, MajorFragmentStat s) throws RuntimeException {
-    s.setSingular();
-    RelNode child = ((Prel)prel.getInput()).accept(this, s);
-    return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList(child));
+    s.addScreen(prel);
+    RelNode child = ((Prel) prel.getInput()).accept(this, s);
+    return prel.copy(prel.getTraitSet(), Collections.singletonList(child));
   }
 
   @Override
   public Prel visitScan(ScanPrel prel, MajorFragmentStat s) throws RuntimeException {
     s.addScan(prel);
+    return prel;
+  }
+
+  @Override
+  public Prel visitLateral(LateralJoinPrel prel, MajorFragmentStat s) throws RuntimeException {
+    List<RelNode> children = Lists.newArrayList();
+    s.add(prel);
+
+    for (Prel p : prel) {
+      s.add(p);
+    }
+
+    // Traverse the left side of the Lateral join first. Left side of the
+    // Lateral shouldn't have any restrictions on Exchanges.
+    children.add(((Prel)prel.getInput(0)).accept(this, s));
+    // Save the outermost Lateral join so as to unset the flag later.
+    if (topMostLateralJoin == null) {
+      topMostLateralJoin = prel;
+    }
+
+    // Right side of the Lateral shouldn't have any Exchanges. Hence set the
+    // flag so that visitExchange removes the exchanges.
+    s.setRightSideOfLateral(true);
+    children.add(((Prel)prel.getInput(1)).accept(this, s));
+    if (topMostLateralJoin == prel) {
+      topMostLateralJoin = null;
+      s.setRightSideOfLateral(false);
+    }
+    return (Prel) prel.copy(prel.getTraitSet(), children);
+  }
+
+  @Override
+  public Prel visitUnnest(UnnestPrel prel, MajorFragmentStat s) throws RuntimeException {
+    s.addUnnest(prel);
     return prel;
   }
 
@@ -92,27 +140,31 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   }
 
   class MajorFragmentStat {
+    private DistributionAffinity distributionAffinity = DistributionAffinity.NONE;
     private double maxRows = 0d;
     private int maxWidth = Integer.MAX_VALUE;
-    private boolean enforceWidth = false;
+    private boolean isMultiSubScan = false;
+    private boolean rightSideOfLateral = false;
 
     public void add(Prel prel) {
-      maxRows = Math.max(prel.getRows(), maxRows);
+      maxRows = Math.max(prel.estimateRowCount(prel.getCluster().getMetadataQuery()), maxRows);
     }
 
-    public void setSingular() {
+    public void addScreen(ScreenPrel screenPrel) {
       maxWidth = 1;
+      distributionAffinity = screenPrel.getDistributionAffinity();
     }
 
     public void addScan(ScanPrel prel) {
       maxWidth = Math.min(maxWidth, prel.getGroupScan().getMaxParallelizationWidth());
-      enforceWidth = prel.getGroupScan().enforceWidth();
+      isMultiSubScan = prel.getGroupScan().getMinParallelizationWidth() > 1;
+      distributionAffinity = prel.getDistributionAffinity();
       add(prel);
     }
 
     public boolean isSingular() {
-      // do not remove exchanges when a scan enforces width (e.g. SystemTableScan)
-      if (enforceWidth) {
+      // do not remove exchanges when a scan has more than one subscans (e.g. SystemTableScan)
+      if (isMultiSubScan) {
         return false;
       }
 
@@ -124,6 +176,21 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
       }
       return w == 1;
     }
-  }
 
+    public boolean isRightSideOfLateral() {
+      return this.rightSideOfLateral;
+    }
+
+    public void addUnnest(UnnestPrel prel) {
+      add(prel);
+    }
+
+    public void setRightSideOfLateral(boolean rightSideOfLateral) {
+      this.rightSideOfLateral = rightSideOfLateral;
+    }
+
+    public boolean isDistributionStrict() {
+      return distributionAffinity == DistributionAffinity.HARD;
+    }
+  }
 }

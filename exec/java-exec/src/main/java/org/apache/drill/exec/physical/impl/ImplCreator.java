@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,9 +23,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.validate.IteratorValidatorInjector;
@@ -64,13 +66,20 @@ public class ImplCreator {
    * @return RootExec of fragment.
    * @throws ExecutionSetupException
    */
-  public static RootExec getExec(FragmentContext context, FragmentRoot root) throws ExecutionSetupException {
+  public static RootExec getExec(ExecutorFragmentContext context, FragmentRoot root) throws ExecutionSetupException {
     Preconditions.checkNotNull(root);
     Preconditions.checkNotNull(context);
 
-    if (AssertionUtil.isAssertionsEnabled()) {
+    // Enable iterator (operator) validation if assertions are enabled (debug mode)
+    // or if in production mode and the ENABLE_ITERATOR_VALIDATION option is set
+    // to true.
+
+    if (AssertionUtil.isAssertionsEnabled() ||
+        context.getOptions().getOption(ExecConstants.ENABLE_ITERATOR_VALIDATOR) ||
+        context.getConfig().getBoolean(ExecConstants.ENABLE_ITERATOR_VALIDATION)) {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
+
     final ImplCreator creator = new ImplCreator();
     Stopwatch watch = Stopwatch.createStarted();
 
@@ -90,13 +99,14 @@ public class ImplCreator {
       return rootExec;
     } catch(Exception e) {
       AutoCloseables.close(e, creator.getOperators());
-      context.fail(e);
+      context.getExecutorState().fail(e);
     }
     return null;
   }
 
   /** Create RootExec and its children (RecordBatches) for given FragmentRoot */
-  private RootExec getRootExec(final FragmentRoot root, final FragmentContext context) throws ExecutionSetupException {
+
+  private RootExec getRootExec(final FragmentRoot root, final ExecutorFragmentContext context) throws ExecutionSetupException {
     final List<RecordBatch> childRecordBatches = getChildren(root, context);
 
     if (context.isImpersonationEnabled()) {
@@ -120,7 +130,8 @@ public class ImplCreator {
 
 
   /** Create a RecordBatch and its children for given PhysicalOperator */
-  private RecordBatch getRecordBatch(final PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
+  @VisibleForTesting
+  public RecordBatch getRecordBatch(final PhysicalOperator op, final ExecutorFragmentContext context) throws ExecutionSetupException {
     Preconditions.checkNotNull(op);
 
     final List<RecordBatch> childRecordBatches = getChildren(op, context);
@@ -131,6 +142,7 @@ public class ImplCreator {
         return proxyUgi.doAs(new PrivilegedExceptionAction<RecordBatch>() {
           @Override
           public RecordBatch run() throws Exception {
+            @SuppressWarnings("unchecked")
             final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(
                 context, op, childRecordBatches);
             operators.addFirst(batch);
@@ -143,6 +155,7 @@ public class ImplCreator {
         throw new ExecutionSetupException(errMsg, e);
       }
     } else {
+      @SuppressWarnings("unchecked")
       final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(context,
           op, childRecordBatches);
       operators.addFirst(batch);
@@ -151,9 +164,9 @@ public class ImplCreator {
   }
 
   /** Helper method to get OperatorCreator (RootCreator or BatchCreator) for given PhysicalOperator (root or non-root) */
-  private Object getOpCreator(PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
-    final Class opClass = op.getClass();
-    Object opCreator = context.getDrillbitContext().getOperatorCreatorRegistry().getOperatorCreator(opClass);
+  private Object getOpCreator(PhysicalOperator op, final ExecutorFragmentContext context) throws ExecutionSetupException {
+    final Class<? extends PhysicalOperator> opClass = op.getClass();
+    Object opCreator = context.getOperatorCreatorRegistry().getOperatorCreator(opClass);
     if (opCreator == null) {
       throw new UnsupportedOperationException(
           String.format("BatchCreator for PhysicalOperator type '%s' not found.", opClass.getCanonicalName()));
@@ -163,7 +176,7 @@ public class ImplCreator {
   }
 
   /** Helper method to traverse the children of given PhysicalOperator and create RecordBatches for children recursively */
-  private List<RecordBatch> getChildren(final PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
+  private List<RecordBatch> getChildren(final PhysicalOperator op, final ExecutorFragmentContext context) throws ExecutionSetupException {
     List<RecordBatch> children = Lists.newArrayList();
     for (PhysicalOperator child : op) {
       children.add(getRecordBatch(child, context));
@@ -171,5 +184,4 @@ public class ImplCreator {
 
     return children;
   }
-
 }

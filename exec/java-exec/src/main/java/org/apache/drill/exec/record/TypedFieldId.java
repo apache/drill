@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,6 +27,12 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.carrotsearch.hppc.IntArrayList;
 import com.google.common.base.Preconditions;
+
+/**
+ * Declares a value vector field, providing metadata about the field.
+ * Drives code generation by providing type and other structural
+ * information that determine code structure.
+ */
 
 public class TypedFieldId {
   final MajorType finalType;
@@ -103,6 +109,13 @@ public class TypedFieldId {
   public MajorType getIntermediateType() {
     return intermediateType;
   }
+
+  /**
+   * Return the class for the value vector (type, mode).
+   *
+   * @return the specific, generated ValueVector subclass that
+   * stores values of the given (type, mode) combination
+   */
 
   public Class<? extends ValueVector> getIntermediateClass() {
     return (Class<? extends ValueVector>) BasicTypeHelper.getValueVectorClass(intermediateType.getMinorType(),
@@ -268,6 +281,38 @@ public class TypedFieldId {
     return "TypedFieldId [fieldIds="
         + (fieldIds != null ? Arrays.toString(Arrays.copyOf(fieldIds, Math.min(fieldIds.length, maxLen))) : null)
         + ", remainder=" + remainder + "]";
+  }
+
+  /**
+   * Generates the full path to a field from the typefield ids
+   *
+   * @param typeFieldId
+   * @param recordBatch
+   * @return
+   */
+  public static String getPath(TypedFieldId typeFieldId, RecordBatch recordBatch) {
+    StringBuilder name = new StringBuilder();
+    final String SEPARATOR = ".";
+    final int[] fieldIds = typeFieldId.getFieldIds();
+    VectorWrapper<?> topLevel = recordBatch.getValueAccessorById(null, fieldIds[0]);
+    name.append(topLevel.getField().getName());
+    // getChildWrapper(int[] fieldIds) is used to walk down the list of fieldIds.
+    // getChildWrapper() has a quirk where if the fieldIds array is of length == 1
+    // then it would just return 'this'.
+    // For example, if you had a field 'a.b' with field ids {1, 2} and you had the
+    // VectorWrapper for 'a', say 'aVW'. Then calling aVW.getChildWrapper({2}) returns
+    // aVW and not the vectorWrapper for 'b'.
+    // The code works around this quirk by always querying 2 levels deep.
+    // i.e. childVectorWrapper = parentVectorWrapper.gerChildWrapper({parentFieldId, childFieldId})
+    int[] lookupLevel = new int[2];
+    for (int i = 0; i < fieldIds.length - 1; i++) {
+      lookupLevel[0] = fieldIds[i];
+      // this is the level for which the actual lookup is done
+      lookupLevel[1] = fieldIds[i + 1];
+      topLevel = topLevel.getChildWrapper(lookupLevel);
+      name.append(SEPARATOR + topLevel.getField().getName());
+    }
+    return name.toString();
   }
 
 }

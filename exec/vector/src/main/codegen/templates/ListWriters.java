@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 
 <#list ["Single", "Repeated"] as mode>
@@ -43,7 +42,10 @@ package org.apache.drill.exec.vector.complex.impl;
 public class ${mode}ListWriter extends AbstractFieldWriter {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${mode}ListWriter.class);
 
-  static enum Mode { INIT, IN_MAP, IN_LIST <#list vv.types as type><#list type.minor as minor>, IN_${minor.class?upper_case}</#list></#list> }
+  enum Mode {
+    INIT, IN_MAP, IN_LIST
+    <#list vv.types as type><#list type.minor as minor>,
+    IN_${minor.class?upper_case}</#list></#list> }
 
   private final String name;
   protected final ${containerClass} container;
@@ -69,7 +71,6 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
     if(writer != null) {
       writer.allocate();
     }
-
     <#if mode == "Repeated">
     container.allocateNew();
     </#if>
@@ -97,12 +98,14 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   }
 
   public void setValueCount(int count){
-    if(innerVector != null) innerVector.getMutator().setValueCount(count);
+    if (innerVector != null) {
+      innerVector.getMutator().setValueCount(count);
+    }
   }
 
   @Override
   public MapWriter map() {
-    switch(mode) {
+    switch (mode) {
     case INIT:
       int vectorCount = container.size();
       final RepeatedMapVector vector = container.addOrGet(name, RepeatedMapVector.TYPE, RepeatedMapVector.class);
@@ -116,21 +119,23 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
       return writer;
     case IN_MAP:
       return writer;
+    default:
+      throw UserException
+        .unsupportedError()
+        .message(getUnsupportedErrorMsg("MAP", mode.name()))
+        .build(logger);
     }
-
-  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("MAP", mode.name())).build(logger);
-
   }
 
   @Override
   public ListWriter list() {
-    switch(mode) {
+    switch (mode) {
     case INIT:
       final int vectorCount = container.size();
       final RepeatedListVector vector = container.addOrGet(name, RepeatedListVector.TYPE, RepeatedListVector.class);
       innerVector = vector;
       writer = new RepeatedListWriter(null, vector, this);
-      if(vectorCount != container.size()) {
+      if (vectorCount != container.size()) {
         writer.allocate();
       }
       writer.setPosition(${index});
@@ -138,10 +143,12 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
       return writer;
     case IN_LIST:
       return writer;
+    default:
+      throw UserException
+        .unsupportedError()
+        .message(getUnsupportedErrorMsg("LIST", mode.name()))
+        .build(logger);
     }
-
-  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("LIST", mode.name())).build(logger);
-
   }
 
   <#list vv.types as type><#list type.minor as minor>
@@ -150,11 +157,24 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   <#assign capName = minor.class?cap_first />
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
 
+  <#if minor.class?contains("Decimal") >
+  @Override
+  public ${capName}Writer ${lowerName}() {
+    // returns existing writer
+    assert mode == Mode.IN_${upperName};
+    return writer;
+  }
+
+  @Override
+  public ${capName}Writer ${lowerName}(int scale, int precision) {
+    final MajorType ${upperName}_TYPE = Types.withScaleAndPrecision(MinorType.${upperName}, DataMode.REPEATED, scale, precision);
+  <#else>
   private static final MajorType ${upperName}_TYPE = Types.repeated(MinorType.${upperName});
 
   @Override
   public ${capName}Writer ${lowerName}() {
-    switch(mode) {
+  </#if>
+    switch (mode) {
     case INIT:
       final int vectorCount = container.size();
       final Repeated${capName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, Repeated${capName}Vector.class);
@@ -168,19 +188,22 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
       return writer;
     case IN_${upperName}:
       return writer;
+    default:
+      throw UserException
+         .unsupportedError()
+         .message(getUnsupportedErrorMsg("${upperName}", mode.name()))
+         .build(logger);
     }
-
-  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("${upperName}", mode.name())).build(logger);
-
   }
-  </#list></#list>
 
+  </#list></#list>
+  @Override
   public MaterializedField getField() {
     return container.getField();
   }
-
   <#if mode == "Repeated">
 
+  @Override
   public void startList() {
     final RepeatedListVector list = (RepeatedListVector) container;
     final RepeatedListVector.RepeatedMutator mutator = list.getMutator();
@@ -202,11 +225,13 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
     }
   }
 
+  @Override
   public void endList() {
     // noop, we initialize state at start rather than end.
   }
   <#else>
 
+  @Override
   public void setPosition(int index) {
     super.setPosition(index);
     if(writer != null) {
@@ -214,10 +239,12 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
     }
   }
 
+  @Override
   public void startList() {
     // noop
   }
 
+  @Override
   public void endList() {
     // noop
   }

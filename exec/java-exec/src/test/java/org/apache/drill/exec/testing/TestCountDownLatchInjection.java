@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -45,7 +45,7 @@ public class TestCountDownLatchInjection extends BaseTestQuery {
   /**
    * Class whose methods we want to simulate count down latches at run-time for testing
    * purposes. The class must have access to {@link org.apache.drill.exec.ops.QueryContext} or
-   * {@link org.apache.drill.exec.ops.FragmentContext}.
+   * {@link FragmentContextImpl}.
    */
   private static class DummyClass {
     private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(DummyClass.class);
@@ -122,7 +122,7 @@ public class TestCountDownLatchInjection extends BaseTestQuery {
 
   @Test // test would hang if the correct init, wait and countdowns did not happen, and the test timeout mechanism will
   // catch that case
-  public void latchInjected() {
+  public void latchInjected() throws InterruptedException {
     final int threads = 10;
     final ExtendedLatch trigger = new ExtendedLatch(1);
     final Pointer<Long> countingDownTime = new Pointer<>();
@@ -144,6 +144,11 @@ public class TestCountDownLatchInjection extends BaseTestQuery {
       fail("Thread should not be interrupted; there is no deliberate attempt.");
       return;
     }
+
+    while (countingDownTime.value == null) {
+      Thread.sleep(100L);
+    }
+
     assertTrue(timeSpentWaiting >= countingDownTime.value);
     try {
       queryContext.close();

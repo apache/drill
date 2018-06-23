@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.curator.test.TestingServer;
+import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.serialization.InstanceSerializer;
 import org.junit.After;
@@ -61,6 +62,8 @@ public class TestEphemeralStore {
 
   @Before
   public void setUp() throws Exception {
+    ZookeeperTestUtil.setZookeeperSaslTestConfigProps();
+
     server = new TestingServer();
     final RetryPolicy policy = new RetryNTimes(2, 1000);
     curator = CuratorFrameworkFactory.newClient(server.getConnectString(), policy);

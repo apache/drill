@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 <@pp.dropOutputFile />
@@ -45,43 +44,40 @@ import io.netty.buffer.DrillBuf;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "to_char", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "to_char",
+                  scope = FunctionTemplate.FunctionScope.SIMPLE,
+                  nulls = NullHandling.NULL_IF_NULL)
 public class G${type}ToChar implements DrillSimpleFunc {
 
-    @Param  ${type}Holder left;
-    @Param  VarCharHolder right;
-    @Inject DrillBuf buffer;
-    @Workspace java.text.NumberFormat outputFormat;
-    @Output VarCharHolder out;
+  @Param  ${type}Holder left;
+  @Param  VarCharHolder right;
+  @Inject DrillBuf buffer;
+  @Workspace java.text.NumberFormat outputFormat;
+  @Output VarCharHolder out;
 
-    public void setup() {
-        buffer = buffer.reallocIfNeeded(100);
-        byte[] buf = new byte[right.end - right.start];
-        right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
-        String inputFormat = new String(buf);
-        outputFormat = new java.text.DecimalFormat(inputFormat);
-    }
+  public void setup() {
+    buffer = buffer.reallocIfNeeded(100);
+    byte[] buf = new byte[right.end - right.start];
+    right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
+    String inputFormat = new String(buf);
+    outputFormat = new java.text.DecimalFormat(inputFormat);
+  }
 
-    public void eval() {
-
-        <#if type == "Decimal9" || type == "Decimal18">
-        java.math.BigDecimal bigDecimal = new java.math.BigDecimal(java.math.BigInteger.valueOf(left.value), left.scale);
-        String str = outputFormat.format(bigDecimal);
-        <#elseif type == "Decimal28Sparse" || type == "Decimal38Sparse">
-        java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
-        String str = outputFormat.format(bigDecimal);
-        <#elseif type == "Decimal28Dense" || type == "Decimal38Dense">
-        java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDense(left.buffer, left.start, left.nDecimalDigits, left.scale, left.maxPrecision, left.WIDTH);
-        String str = outputFormat.format(bigDecimal);
-        <#else>
-        String str =  outputFormat.format(left.value);
-        </#if>
-        out.buffer = buffer;
-        out.start = 0;
-        out.end = Math.min(100, str.length()); // truncate if target type has length smaller than that of input's string
-        out.buffer.setBytes(0, str.substring(0,out.end).getBytes());
-
-    }
+  public void eval() {
+    <#if type == "VarDecimal">
+    java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer, left.start, left.end - left.start, left.scale);
+    String str = outputFormat.format(bigDecimal);
+    <#else>
+    String str =  outputFormat.format(left.value);
+    </#if>
+    out.buffer = buffer;
+    out.start = 0;
+    out.end = Math.min(100, str.length()); // truncate if target type has length smaller than that of input's string
+    out.buffer.setBytes(0, str.substring(0, out.end).getBytes());
+  }
 }
 </#list>

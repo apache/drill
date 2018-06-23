@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,12 +17,14 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class})
 public class TestTpchDistributed extends BaseTestQuery {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchDistributed.class);
-
   private static void testDistributed(final String fileName) throws Exception {
     final String query = getFile(fileName);
     test("alter session set `planner.slice_target` = 10; " + query);
@@ -136,7 +138,6 @@ public class TestTpchDistributed extends BaseTestQuery {
   }
 
   @Test
-  @Ignore
   public void tpch21() throws Exception{
     testDistributed("queries/tpch/21.sql");
   }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,24 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.drill.common.expression.SchemaPath;
 
 public class StarColumnHelper {
 
   public final static String PREFIX_DELIMITER = "\u00a6\u00a6";
 
-  public final static String STAR_COLUMN = "*";
-
-  public final static String PREFIXED_STAR_COLUMN = PREFIX_DELIMITER + STAR_COLUMN;
+  public final static String PREFIXED_STAR_COLUMN = PREFIX_DELIMITER + SchemaPath.DYNAMIC_STAR;
 
   public static boolean containsStarColumn(RelDataType type) {
     if (! type.isStruct()) {
@@ -41,8 +37,8 @@ public class StarColumnHelper {
 
     List<String> fieldNames = type.getFieldNames();
 
-    for (String s : fieldNames) {
-      if (s.startsWith(STAR_COLUMN)) {
+    for (String fieldName : fieldNames) {
+      if (SchemaPath.DYNAMIC_STAR.equals(fieldName)) {
         return true;
       }
     }
@@ -51,7 +47,7 @@ public class StarColumnHelper {
   }
 
   public static boolean containsStarColumnInProject(RelDataType inputRowType, List<RexNode> projExprs) {
-    if (! inputRowType.isStruct()) {
+    if (!inputRowType.isStruct()) {
       return false;
     }
 
@@ -59,7 +55,7 @@ public class StarColumnHelper {
       if (expr instanceof RexInputRef) {
         String name = inputRowType.getFieldNames().get(((RexInputRef) expr).getIndex());
 
-        if (name.startsWith(STAR_COLUMN)) {
+        if (SchemaPath.DYNAMIC_STAR.equals(name)) {
           return true;
         }
       }
@@ -73,7 +69,7 @@ public class StarColumnHelper {
   }
 
   public static boolean isNonPrefixedStarColumn(String fieldName) {
-    return fieldName.startsWith(STAR_COLUMN);
+    return SchemaPath.DYNAMIC_STAR.equals(fieldName);
   }
 
   public static boolean isStarColumn(String fieldName) {

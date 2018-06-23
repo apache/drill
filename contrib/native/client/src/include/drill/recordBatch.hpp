@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef RECORDBATCH_H
 #define RECORDBATCH_H
 
@@ -347,7 +346,8 @@ template <int DECIMAL_DIGITS, int WIDTH_IN_BYTES, bool IS_SPARSE, int MAX_PRECIS
                     strncpy(buf, str.c_str(), nChars);
                 } else {
                     size_t idxDecimalMark = str.length() - m_scale;
-                    const std::string& decStr= str.substr(0, idxDecimalMark) + "." + str.substr(idxDecimalMark, m_scale);
+                    const std::string& decStr =
+                            (idxDecimalMark == 0 ? "0" : str.substr(0, idxDecimalMark)) + "." + str.substr(idxDecimalMark, m_scale);
                     strncpy(buf, decStr.c_str(), nChars);
                 }
                 return;
@@ -647,7 +647,7 @@ template <class VALUEHOLDER_CLASS_TYPE, class VALUE_VECTOR_TYPE>
                     sstr<<"NULL";
                     strncpy(buf, sstr.str().c_str(), nChars);
                 }else{
-                    return m_pVector->getValueAt(index, buf, nChars);
+                    m_pVector->getValueAt(index, buf, nChars);
                 }
             }
 
@@ -735,6 +735,49 @@ class DECLSPEC_DRILL_CLIENT ValueVectorVarChar:public ValueVectorVarWidth{
         }
 };
 
+class DECLSPEC_DRILL_CLIENT ValueVectorVarDecimal:public ValueVectorVarWidth{
+    public:
+        ValueVectorVarDecimal(SlicedByteBuf *b, size_t rowCount, size_t scale):
+            ValueVectorVarWidth(b, rowCount),
+            m_scale(scale)
+        {
+        }
+        DecimalValue get(size_t index) const {
+            size_t length = getSize(index);
+            ByteBuf_t buff = getRaw(index);
+            SlicedByteBuf intermediateData(&buff[0], 0, length);
+            return getDecimalValueFromByteBuf(intermediateData, length, this->m_scale);
+        }
+
+        void getValueAt(size_t index, char* buf, size_t nChars) const {
+            const DecimalValue& val = this->get(index);
+            std::string str = boost::lexical_cast<std::string>(val.m_unscaledValue);
+            if (str[0] == '-') {
+                str = str.substr(1);
+                while (str.length() < m_scale) {
+                    str = "0" + str;
+                }
+                str = "-" + str;
+            } else {
+                while (str.length() < m_scale) {
+                    str = "0" + str;
+                }
+            }
+            if (m_scale == 0) {
+                strncpy(buf, str.c_str(), nChars);
+            } else {
+                size_t idxDecimalMark = str.length() - m_scale;
+                const std::string& decStr =
+                        (idxDecimalMark == 0 ? "0" : str.substr(0, idxDecimalMark)) + "." + str.substr(idxDecimalMark, m_scale);
+                strncpy(buf, decStr.c_str(), nChars);
+            }
+            return;
+        }
+
+    private:
+        int32_t m_scale;
+};
+
 class DECLSPEC_DRILL_CLIENT ValueVectorVarBinary:public ValueVectorVarWidth{
     public:
         ValueVectorVarBinary(SlicedByteBuf *b, size_t rowCount):ValueVectorVarWidth(b, rowCount){
@@ -765,10 +808,11 @@ typedef ValueVectorDecimal<6, 24, true, 38>  ValueVectorDecimal38Sparse;
 
 typedef NullableValueVectorTyped<int32_t, ValueVectorDecimal9> NullableValueVectorDecimal9;
 typedef NullableValueVectorTyped<int64_t, ValueVectorDecimal18> NullableValueVectorDecimal18;
-typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal28Dense> NullableValueVectorDecimal28Dense;
-typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal38Dense> NullableValueVectorDecimal38Dense;
-typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal28Sparse> NullableValueVectorDecimal28Sparse;
-typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal38Sparse> NullableValueVectorDecimal38Sparse;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorDecimal28Dense> NullableValueVectorDecimal28Dense;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorDecimal38Dense> NullableValueVectorDecimal38Dense;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorDecimal28Sparse> NullableValueVectorDecimal28Sparse;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorDecimal38Sparse> NullableValueVectorDecimal38Sparse;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorVarDecimal> NullableValueVectorVarDecimal;
 
 typedef ValueVectorTyped<DateHolder, int64_t> ValueVectorDate;
 typedef ValueVectorTyped<DateTimeHolder, int64_t> ValueVectorTimestamp;
@@ -785,39 +829,6 @@ typedef NullableValueVectorTyped<DateTimeTZHolder, ValueVectorTimestampTZ>  Null
 typedef NullableValueVectorTyped<IntervalHolder, ValueVectorInterval>  NullableValueVectorInterval;
 typedef NullableValueVectorTyped<IntervalDayHolder, ValueVectorIntervalDay>  NullableValueVectorIntervalDay;
 typedef NullableValueVectorTyped<IntervalYearHolder, ValueVectorIntervalYear>  NullableValueVectorIntervalYear;
-
-class DECLSPEC_DRILL_CLIENT FieldMetadata{
-    public:
-
-        FieldMetadata(){};
-        void set(const exec::shared::SerializedField& f);
-        const std::string& getName() const{ return m_name;}
-        common::MinorType getMinorType() const{ return m_minorType;}
-        common::DataMode getDataMode() const{return m_dataMode;}
-        uint32_t getValueCount() const{return m_valueCount;}
-        uint32_t getScale() const{return m_scale;}
-        uint32_t getPrecision() const{return m_precision;}
-        uint32_t getBufferLength() const{return m_bufferLength;}
-        void copy(Drill::FieldMetadata& f){
-            m_name=f.m_name;
-            m_minorType=f.m_minorType;
-            m_dataMode=f.m_dataMode;
-            m_valueCount=f.m_valueCount;
-            m_scale=f.m_scale;
-            m_precision=f.m_precision;
-            m_bufferLength=f.m_bufferLength;
-        }
-
-    private:
-        //exec::shared::FieldMetadata* m_pFieldMetadata;
-        std::string m_name;
-        common::MinorType m_minorType;
-        common::DataMode m_dataMode;
-        uint32_t m_valueCount;
-        uint32_t m_scale;
-        uint32_t m_precision;
-        uint32_t m_bufferLength;
-};
 
 class FieldBatch{
     public:

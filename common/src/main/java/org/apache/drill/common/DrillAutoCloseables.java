@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,13 +28,13 @@ public class DrillAutoCloseables {
   }
 
   /**
-   * close() an {@see java.lang.AutoCloseable} without throwing a (checked)
-   * {@see java.lang.Exception}. This wraps the close() call with a
+   * close() an {@link java.lang.AutoCloseable} without throwing a (checked)
+   * {@link java.lang.Exception}. This wraps the close() call with a
    * try-catch that will rethrow an Exception wrapped with a
-   * {@see java.lang.RuntimeException}, providing a way to call close()
+   * {@link java.lang.RuntimeException}, providing a way to call close()
    * without having to do the try-catch everywhere or propagate the Exception.
    *
-   * @param closeable the AutoCloseable to close; may be null
+   * @param autoCloseable the AutoCloseable to close; may be null
    * @throws RuntimeException if an Exception occurs; the Exception is
    *   wrapped by the RuntimeException
    */

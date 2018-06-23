@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="org/apache/drill/exec/store/JSONOutputRecordWriter.java" />
 <#include "/@includes/license.ftl" />
@@ -43,6 +42,7 @@ import java.util.List;
 public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implements RecordWriter {
 
   protected JsonOutput gen;
+  protected boolean skipNullFields = true;
 
 <#list vv.types as type>
   <#list type.minor as minor>
@@ -61,7 +61,13 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
 
     @Override
     public void startField() throws IOException {
+      <#if mode.prefix == "Nullable" >
+      if (!skipNullFields || this.reader.isSet()) {
+        gen.writeFieldName(fieldName);
+      }
+      <#else>
       gen.writeFieldName(fieldName);
+      </#if>
     }
 
     @Override
@@ -87,6 +93,7 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
   <#case "Decimal28Dense">
   <#case "Decimal38Dense">
   <#case "Decimal38Sparse">
+  <#case "VarDecimal">
     <#assign typeName = "Decimal">
     <#break>
   <#case "Float4">
@@ -120,7 +127,13 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
   <#elseif mode.prefix == "Repeated" >
     gen.write${typeName}(i, reader);
   <#else>
+    <#if mode.prefix == "Nullable" >
+    if (!skipNullFields || this.reader.isSet()) {
+      gen.write${typeName}(reader);
+    }
+    <#else>
     gen.write${typeName}(reader);
+    </#if>
   </#if>
 
   <#if mode.prefix == "Repeated">

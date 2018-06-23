@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,9 +21,11 @@ import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
+import org.apache.calcite.util.Litmus;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 
 import org.apache.calcite.sql.SqlSelectKeyword;
@@ -48,12 +50,17 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
   private QueryContext context;
   private static List<String> disabledType = Lists.newArrayList();
   private static List<String> disabledOperators = Lists.newArrayList();
+  private static List<String> dirExplorers = Lists.newArrayList();
 
   static {
     disabledType.add(SqlTypeName.TINYINT.name());
     disabledType.add(SqlTypeName.SMALLINT.name());
     disabledType.add(SqlTypeName.REAL.name());
     disabledOperators.add("CARDINALITY");
+    dirExplorers.add("MAXDIR");
+    dirExplorers.add("IMAXDIR");
+    dirExplorers.add("MINDIR");
+    dirExplorers.add("IMINDIR");
   }
 
   private UnsupportedOperatorCollector unsupportedOperatorCollector;
@@ -178,13 +185,30 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       // it is a default frame
       boolean isSupported = (lowerBound == null && upperBound == null);
 
-      // When OVER clause contain an ORDER BY clause the following frames are equivalent to the default frame:
+      // When OVER clause contain an ORDER BY clause the following frames are supported:
       // RANGE UNBOUNDED PRECEDING
       // RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      // RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
       if(window.getOrderList().size() != 0
           && !window.isRows()
           && SqlWindow.isUnboundedPreceding(lowerBound)
+          && (upperBound == null || SqlWindow.isCurrentRow(upperBound) || SqlWindow.isUnboundedFollowing(upperBound))) {
+        isSupported = true;
+      }
+
+      // ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      // is supported with and without the ORDER BY clause
+      if (window.isRows()
+          && SqlWindow.isUnboundedPreceding(lowerBound)
           && (upperBound == null || SqlWindow.isCurrentRow(upperBound))) {
+        isSupported = true;
+      }
+
+      // RANGE BETWEEN CURRENT ROW AND CURRENT ROW
+      // is supported with and without an ORDER BY clause
+      if (!window.isRows() &&
+          SqlWindow.isCurrentRow(lowerBound) &&
+          SqlWindow.isCurrentRow(upperBound)) {
         isSupported = true;
       }
 
@@ -242,6 +266,15 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
     }
 
+    //Disable UNNEST if the configuration disable it
+    if (sqlCall.getKind() == SqlKind.UNNEST) {
+      if (!context.getPlannerSettings().isUnnestLateralEnabled()) {
+        unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
+            "Unnest is not enabled per configuration");
+        throw new UnsupportedOperationException();
+      }
+    }
+
     // Disable Function
     for(String strOperator : disabledOperators) {
       if(sqlCall.getOperator().isName(strOperator)) {
@@ -252,15 +285,40 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
     }
 
-    // Disable complex functions being present in any place other than Select-Clause
+    // Disable complex functions incorrect placement
     if(sqlCall instanceof SqlSelect) {
       SqlSelect sqlSelect = (SqlSelect) sqlCall;
+
+      for (SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
+        if (checkDirExplorers(nodeInSelectList)) {
+          unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+              "Directory explorers " + dirExplorers + " functions are not supported in Select List\n" +
+                  "See Apache Drill JIRA: DRILL-3944");
+          throw new UnsupportedOperationException();
+        }
+      }
+
+      if (sqlSelect.hasWhere()) {
+        if (checkDirExplorers(sqlSelect.getWhere()) && !context.getPlannerSettings().isConstantFoldingEnabled()) {
+          unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+              "Directory explorers " + dirExplorers + " functions can not be used " +
+                  "when " + PlannerSettings.CONSTANT_FOLDING.getOptionName() + " option is set to false\n" +
+                  "See Apache Drill JIRA: DRILL-3944");
+          throw new UnsupportedOperationException();
+        }
+      }
+
       if(sqlSelect.hasOrderBy()) {
         for (SqlNode sqlNode : sqlSelect.getOrderList()) {
           if(containsFlatten(sqlNode)) {
             unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
                 "Flatten function is not supported in Order By\n" +
                 "See Apache Drill JIRA: DRILL-2181");
+            throw new UnsupportedOperationException();
+          } else if (checkDirExplorers(sqlNode)) {
+            unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                "Directory explorers " + dirExplorers + " functions are not supported in Order By\n" +
+                "See Apache Drill JIRA: DRILL-3944");
             throw new UnsupportedOperationException();
           }
         }
@@ -272,6 +330,11 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
             unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
                 "Flatten function is not supported in Group By\n" +
                 "See Apache Drill JIRA: DRILL-2181");
+            throw new UnsupportedOperationException();
+          } else if (checkDirExplorers(sqlNode)) {
+                unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                "Directory explorers " + dirExplorers + " functions are not supported in Group By\n" +
+                "See Apache Drill JIRA: DRILL-3944");
             throw new UnsupportedOperationException();
           }
         }
@@ -298,7 +361,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
     }
 
-    if(sqlCall.getOperator() instanceof SqlCountAggFunction) {
+    if(DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(sqlCall.getOperator()) instanceof SqlCountAggFunction) {
       for(SqlNode sqlNode : sqlCall.getOperandList()) {
         if(containsFlatten(sqlNode)) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
@@ -334,6 +397,12 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     }
   }
 
+  private boolean checkDirExplorers(SqlNode sqlNode) {
+    final ExprFinder dirExplorersFinder = new ExprFinder(DirExplorersCondition);
+    sqlNode.accept(dirExplorersFinder);
+    return dirExplorersFinder.find();
+  }
+
   /**
    * A function that replies true or false for a given expression.
    *
@@ -356,7 +425,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     @Override
     public boolean test(SqlNode sqlNode) {
       if (sqlNode instanceof SqlCall) {
-        final SqlOperator operator = ((SqlCall) sqlNode).getOperator();
+        final SqlOperator operator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
         if (operator == SqlStdOperatorTable.ROLLUP
             || operator == SqlStdOperatorTable.CUBE
             || operator == SqlStdOperatorTable.GROUPING_SETS) {
@@ -374,10 +443,10 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     @Override
     public boolean test(SqlNode sqlNode) {
       if (sqlNode instanceof SqlCall) {
-        final SqlOperator operator = ((SqlCall) sqlNode).getOperator();
-        if (operator == SqlStdOperatorTable.GROUPING
-            || operator == SqlStdOperatorTable.GROUPING_ID
-            || operator == SqlStdOperatorTable.GROUP_ID) {
+        final SqlOperator operator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
+          if (operator == SqlStdOperatorTable.GROUPING
+              || operator == SqlStdOperatorTable.GROUPING_ID
+              || operator == SqlStdOperatorTable.GROUP_ID) {
           return true;
         }
       }
@@ -386,11 +455,40 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
   };
 
   /**
+   * A condition that returns true if SqlNode has Directory Explorers.
+   */
+  private final SqlNodeCondition DirExplorersCondition = new SqlNodeCondition() {
+    @Override
+    public boolean test(SqlNode sqlNode) {
+      return sqlNode instanceof SqlCall && checkOperator((SqlCall) sqlNode, dirExplorers, true);
+    }
+
+    /**
+     * Checks recursively if operator and its operands are present in provided list of operators
+     */
+    private boolean checkOperator(SqlCall sqlCall, List<String> operators, boolean checkOperator) {
+      if (checkOperator) {
+        return operators.contains(sqlCall.getOperator().getName().toUpperCase()) || checkOperator(sqlCall, operators, false);
+      }
+      for (SqlNode sqlNode : sqlCall.getOperandList()) {
+        if (!(sqlNode instanceof SqlCall)) {
+          continue;
+        }
+        if (checkOperator((SqlCall) sqlNode, operators, true)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+  };
+
+  /**
    * A visitor to check if the given SqlNodeCondition is tested as true or not.
    * If the condition is true, mark flag 'find' as true.
    */
   private static class ExprFinder extends SqlBasicVisitor<Void> {
-    private boolean find = false;
+    private boolean find;
     private final SqlNodeCondition condition;
 
     public ExprFinder(SqlNodeCondition condition) {
@@ -423,15 +521,15 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
    * @param sqlSelect SELECT-CLAUSE in the query
    */
   private void detectMultiplePartitions(SqlSelect sqlSelect) {
-    for(SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
+    for (SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
       // If the window function is used with an alias,
       // enter the first operand of AS operator
-      if(nodeInSelectList.getKind() == SqlKind.AS
+      if (nodeInSelectList.getKind() == SqlKind.AS
           && (((SqlCall) nodeInSelectList).getOperandList().get(0).getKind() == SqlKind.OVER)) {
         nodeInSelectList = ((SqlCall) nodeInSelectList).getOperandList().get(0);
       }
 
-      if(nodeInSelectList.getKind() != SqlKind.OVER) {
+      if (nodeInSelectList.getKind() != SqlKind.OVER) {
         continue;
       }
 
@@ -441,10 +539,10 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
 
       // Partition window is referenced as a SqlIdentifier,
       // which is defined in the window list
-      if(window instanceof SqlIdentifier) {
+      if (window instanceof SqlIdentifier) {
         // Expand the SqlIdentifier as the expression defined in the window list
-        for(SqlNode sqlNode : sqlSelect.getWindowList()) {
-          if(((SqlWindow) sqlNode).getDeclName().equalsDeep(window, false)) {
+        for (SqlNode sqlNode : sqlSelect.getWindowList()) {
+          if (((SqlWindow) sqlNode).getDeclName().equalsDeep(window, Litmus.IGNORE)) {
             window = sqlNode;
             break;
           }
@@ -454,10 +552,10 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
 
       // In a SELECT-SCOPE, only a partition can be defined
-      if(definedWindow == null) {
+      if (definedWindow == null) {
         definedWindow = window;
       } else {
-        if(!definedWindow.equalsDeep(window, false)) {
+        if (!definedWindow.equalsDeep(window, Litmus.IGNORE)) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
               "Multiple window definitions in a single SELECT list is not currently supported \n" +
               "See Apache Drill JIRA: DRILL-3196");

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,31 +17,40 @@
  */
 package org.apache.drill.exec.server;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.codahale.metrics.MetricRegistry;
 import io.netty.channel.EventLoopGroup;
-
-import java.util.Collection;
-import java.util.concurrent.ExecutorService;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
+import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
+import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
+import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
+import org.apache.drill.exec.work.foreman.rm.ResourceManager;
+import org.apache.drill.exec.work.foreman.rm.ResourceManagerBuilder;
 
-import com.codahale.metrics.MetricRegistry;
+import java.util.Collection;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DrillbitContext implements AutoCloseable {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
@@ -61,7 +70,10 @@ public class DrillbitContext implements AutoCloseable {
   private final CodeCompiler compiler;
   private final ScanResult classpathScan;
   private final LogicalPlanPersistence lpPersistence;
-
+  // operator table for standard SQL operators and functions, Drill built-in UDFs
+  private final DrillOperatorTable table;
+  private final QueryProfileStoreContext profileStoreContext;
+  private ResourceManager resourceManager;
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -71,7 +83,20 @@ public class DrillbitContext implements AutoCloseable {
       DataConnectionCreator connectionsPool,
       WorkEventBus workBus,
       PersistentStoreProvider provider) {
-    this.classpathScan = context.getClasspathScan();
+    //PersistentStoreProvider is re-used for providing Query Profile Store as well
+    this(endpoint, context, coord, controller, connectionsPool, workBus, provider, provider);
+  }
+
+  public DrillbitContext(
+      DrillbitEndpoint endpoint,
+      BootStrapContext context,
+      ClusterCoordinator coord,
+      Controller controller,
+      DataConnectionCreator connectionsPool,
+      WorkEventBus workBus,
+      PersistentStoreProvider provider,
+      PersistentStoreProvider profileStoreProvider) {
+    classpathScan = context.getClasspathScan();
     this.workBus = workBus;
     this.controller = checkNotNull(controller);
     this.context = checkNotNull(context);
@@ -79,17 +104,38 @@ public class DrillbitContext implements AutoCloseable {
     this.connectionsPool = checkNotNull(connectionsPool);
     this.endpoint = checkNotNull(endpoint);
     this.provider = provider;
-    this.lpPersistence = new LogicalPlanPersistence(context.getConfig(), classpathScan);
+    DrillConfig config = context.getConfig();
+    lpPersistence = new LogicalPlanPersistence(config, classpathScan);
 
-    // TODO remove escaping "this".
-    this.storagePlugins = context.getConfig()
+    storagePlugins = config
         .getInstance(StoragePluginRegistry.STORAGE_PLUGIN_REGISTRY_IMPL, StoragePluginRegistry.class, this);
 
-    this.reader = new PhysicalPlanReader(context.getConfig(), classpathScan, lpPersistence, endpoint, storagePlugins);
-    this.operatorCreatorRegistry = new OperatorCreatorRegistry(classpathScan);
-    this.systemOptions = new SystemOptionManager(lpPersistence, provider);
-    this.functionRegistry = new FunctionImplementationRegistry(context.getConfig(), classpathScan, systemOptions);
-    this.compiler = new CodeCompiler(context.getConfig(), systemOptions);
+    reader = new PhysicalPlanReader(config, classpathScan, lpPersistence, endpoint, storagePlugins);
+    operatorCreatorRegistry = new OperatorCreatorRegistry(classpathScan);
+    systemOptions = new SystemOptionManager(lpPersistence, provider, config, context.getDefinitions());
+    functionRegistry = new FunctionImplementationRegistry(config, classpathScan, systemOptions);
+    compiler = new CodeCompiler(config, systemOptions);
+
+    // This operator table is built once and used for all queries which do not need dynamic UDF support.
+    table = new DrillOperatorTable(functionRegistry, systemOptions);
+
+    //This profile store context is built from the profileStoreProvider
+    profileStoreContext = new QueryProfileStoreContext(context.getConfig(), profileStoreProvider, coord);
+  }
+
+  public QueryProfileStoreContext getProfileStoreContext() {
+    return profileStoreContext;
+  }
+
+  /**
+   * Starts the resource manager. Must be called separately from the
+   * constructor after the system property mechanism is initialized
+   * since the builder will consult system options to determine the
+   * proper RM to use.
+   */
+
+  public void startRM() {
+    resourceManager = new ResourceManagerBuilder(this).build();
   }
 
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {
@@ -116,8 +162,37 @@ public class DrillbitContext implements AutoCloseable {
     return context.getConfig();
   }
 
-  public Collection<DrillbitEndpoint> getBits() {
+  public Collection<DrillbitEndpoint> getAvailableBits() {
     return coord.getAvailableEndpoints();
+  }
+
+  public Collection<DrillbitEndpoint> getBits() {
+    return coord.getOnlineEndPoints();
+  }
+
+  public boolean isOnline(DrillbitEndpoint endpoint) {
+    return endpoint.getState().equals(DrillbitEndpoint.State.ONLINE);
+  }
+
+  public boolean isForeman(DrillbitEndpoint endpoint) {
+    DrillbitEndpoint foreman = getEndpoint();
+    if(endpoint.getAddress().equals(foreman.getAddress()) &&
+            endpoint.getUserPort() == foreman.getUserPort()) {
+      return true;
+    }
+    return false;
+  }
+
+  public boolean isForemanOnline() {
+    Collection<DrillbitEndpoint> dbs = getAvailableBits();
+    for (DrillbitEndpoint db : dbs) {
+      if( isForeman(db)) {
+        if (isOnline(db)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public BufferAllocator getAllocator() {
@@ -171,6 +246,12 @@ public class DrillbitContext implements AutoCloseable {
   public ExecutorService getExecutor() {
     return context.getExecutor();
   }
+  public ExecutorService getScanExecutor() {
+    return context.getScanExecutor();
+  }
+  public ExecutorService getScanDecodeExecutor() {
+    return context.getScanDecodeExecutor();
+  }
 
   public LogicalPlanPersistence getLpPersistence() {
     return lpPersistence;
@@ -180,8 +261,42 @@ public class DrillbitContext implements AutoCloseable {
     return classpathScan;
   }
 
+  public RemoteFunctionRegistry getRemoteFunctionRegistry() { return functionRegistry.getRemoteFunctionRegistry(); }
+
+  /**
+   * Use the operator table built during startup when "exec.udf.use_dynamic" option
+   * is set to false.
+   * This operator table has standard SQL functions, operators and drill
+   * built-in user defined functions (UDFs).
+   * It does not include dynamic user defined functions (UDFs) that get added/removed
+   * at run time.
+   * This operator table is meant to be used for high throughput,
+   * low latency operational queries, for which cost of building operator table is
+   * high, both in terms of CPU and heap memory usage.
+   *
+   * @return - Operator table
+   */
+  public DrillOperatorTable getOperatorTable() {
+    return table;
+  }
+
+  public AuthenticatorProvider getAuthProvider() {
+    return context.getAuthProvider();
+  }
+
+  public Set<Entry<BitToUserConnection, BitToUserConnectionConfig>> getUserConnections() {
+    return UserServer.getUserConnections();
+  }
+
   @Override
   public void close() throws Exception {
     getOptionManager().close();
+    getFunctionImplementationRegistry().close();
+    getRemoteFunctionRegistry().close();
+    getCompiler().close();
+  }
+
+  public ResourceManager getResourceManager() {
+    return resourceManager;
   }
 }

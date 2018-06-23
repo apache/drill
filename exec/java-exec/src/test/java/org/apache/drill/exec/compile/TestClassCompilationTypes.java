@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ public class TestClassCompilationTypes extends ExecTest{
       long n2 = System.nanoTime();
       long janinoT = (n1 - n0)/1000;
       long jdkT = (n2 - n1)/1000;
-      System.out.println("Janino: " + janinoT + "micros.  JDK: " + jdkT + "micros. Val" + r);
+      logger.info("Janino: {} micros.  JDK: {} micros. Val {}", janinoT, jdkT, r);
     }
 
   }
@@ -51,7 +51,7 @@ public class TestClassCompilationTypes extends ExecTest{
 
     // Evaluate it with varying parameter values; very fast.
     return (Integer) ee.evaluate(new Object[] { // parameterValues
-        new Integer(10), new Integer(11), });
+        Integer.valueOf(10), Integer.valueOf(11), });
   }
 
   private int jdk() throws Exception{
@@ -64,6 +64,6 @@ public class TestClassCompilationTypes extends ExecTest{
 
     // Evaluate it with varying parameter values; very fast.
     return  (Integer) ee.evaluate(new Object[] { // parameterValues
-        new Integer(10), new Integer(11), });
+        Integer.valueOf(10), Integer.valueOf(11), });
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.client;
 
+import static org.junit.Assert.assertFalse;
 import java.util.List;
 
 import org.apache.drill.exec.DrillSystemTestBase;
@@ -37,8 +38,8 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
   private static String plan;
 
   @BeforeClass
-  public static void setUp() throws Exception {
-    DrillSystemTestBase.setUp();
+  public void setUp() throws Exception {
+    this.setUp();
     plan = Resources.toString(Resources.getResource("simple_plan.json"), Charsets.UTF_8);
 
   }
@@ -55,7 +56,6 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
     client.connect();
     List<QueryDataBatch> results = client.runQuery(QueryType.LOGICAL, plan);
     for (QueryDataBatch result : results) {
-      System.out.println(result);
       result.release();
     }
     client.close();
@@ -68,9 +68,30 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
     client.connect();
     List<QueryDataBatch> results = client.runQuery(QueryType.LOGICAL, plan);
     for (QueryDataBatch result : results) {
-      System.out.println(result);
       result.release();
     }
     client.close();
+  }
+
+  @Test
+  public void testSessionIdUDFWithTwoConnections() throws Exception {
+    final String sessionIdQuery = "select session_id as sessionId from (values(1));";
+    startCluster(1);
+
+    DrillClient client1 = new DrillClient();
+    client1.connect();
+    List<QueryDataBatch> results1 = client1.runQuery(QueryType.SQL, sessionIdQuery);
+    String sessionId1 = results1.get(0).getData().toString();
+    results1.get(0).release();
+    client1.close();
+
+    DrillClient client2 = new DrillClient();
+    client2.connect();
+    List<QueryDataBatch> results2 = client1.runQuery(QueryType.SQL, sessionIdQuery);
+    String sessionId2 = results2.get(0).getData().toString();
+    results2.get(0).release();
+    client2.close();
+
+    assertFalse(sessionId1.equals(sessionId2));
   }
 }

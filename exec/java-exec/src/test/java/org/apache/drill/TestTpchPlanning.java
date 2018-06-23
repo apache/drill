@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,15 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.test.TestTools;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-
+@Category(PlannerTest.class)
 public class TestTpchPlanning extends PlanningBase {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchPlanning.class);
 
@@ -139,7 +141,6 @@ public class TestTpchPlanning extends PlanningBase {
   }
 
   @Test
-  @Ignore // DRILL-519
   public void tpch21() throws Exception {
     testSqlPlanFromFile("queries/tpch/21.sql");
   }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,6 +36,7 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
+import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
@@ -95,23 +96,23 @@ public abstract class WindowFunction {
   abstract boolean supportsCustomFrames();
 
   /**
-   * @param hasOrderBy window definition contains an ORDER BY clause
+   * @param pop window group definition
    * @return true if this window function requires all batches of current partition to be available before processing
    * the first batch
    */
-  public boolean requiresFullPartition(final boolean hasOrderBy) {
+  public boolean requiresFullPartition(final WindowPOP pop) {
     return true;
   }
 
   /**
    * @param numBatchesAvailable number of batches available for current partition
-   * @param hasOrderBy window definition contains an ORDER BY clause
+   * @param pop window group definition
    * @param frameEndReached we found the last row of the first batch's frame
    * @param partitionEndReached all batches of current partition are available
    *
    * @return true if this window function can process the first batch immediately
    */
-  public boolean canDoWork(final int numBatchesAvailable, final boolean hasOrderBy, final boolean frameEndReached,
+  public boolean canDoWork(final int numBatchesAvailable, final WindowPOP pop, final boolean frameEndReached,
                            final boolean partitionEndReached) {
     return partitionEndReached;
   }
@@ -155,13 +156,13 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
-      return !hasOrderBy;
+    public boolean requiresFullPartition(final WindowPOP pop) {
+      return pop.getOrderings().isEmpty() || pop.getEnd().isUnbounded();
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
-      return partitionEndReached || (hasOrderBy && frameEndReached);
+    public boolean canDoWork(int numBatchesAvailable, WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
+      return partitionEndReached || (!requiresFullPartition(pop) && frameEndReached);
     }
 
     @Override
@@ -212,18 +213,26 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
+    public boolean requiresFullPartition(final WindowPOP pop) {
       // CUME_DIST, PERCENT_RANK and NTILE require the length of current partition before processing it's first batch
       return type == Type.CUME_DIST || type == Type.PERCENT_RANK || type == Type.NTILE;
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+    public boolean canDoWork(int numBatchesAvailable, final WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
       assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
+      if (type == Type.ROW_NUMBER) {
+        // row_number doesn't need to wait for anything
+        return true;
+      }
+      if (type == Type.RANK) {
+        // rank only works if we know how many rows we have in the current frame
+        // we could avoid this, but it requires more refactoring
+        return frameEndReached;
+      }
 
       // for CUME_DIST, PERCENT_RANK and NTILE we need the full partition
-      // otherwise we can process the first batch immediately
-      return partitionEndReached || ! requiresFullPartition(hasOrderBy);
+      return partitionEndReached;
     }
 
     @Override
@@ -319,12 +328,12 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
+    public boolean requiresFullPartition(final WindowPOP pop) {
       return false;
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+    public boolean canDoWork(int numBatchesAvailable, final WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
       return partitionEndReached || numBatchesAvailable > 1;
     }
 
@@ -389,12 +398,12 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
+    public boolean requiresFullPartition(final WindowPOP pop) {
       return false;
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+    public boolean canDoWork(int numBatchesAvailable, final WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
       assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
       return true;
     }
@@ -449,13 +458,13 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
-      return !hasOrderBy;
+    public boolean requiresFullPartition(final WindowPOP pop) {
+      return pop.getOrderings().isEmpty() || pop.getEnd().isUnbounded();
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
-      return partitionEndReached || (hasOrderBy && frameEndReached);
+    public boolean canDoWork(int numBatchesAvailable, WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
+      return partitionEndReached || (!requiresFullPartition(pop) && frameEndReached);
     }
 
     @Override
@@ -533,12 +542,12 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(boolean hasOrderBy) {
+    public boolean requiresFullPartition(final WindowPOP pop) {
       return false;
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+    public boolean canDoWork(int numBatchesAvailable, WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
       assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
       return true;
     }

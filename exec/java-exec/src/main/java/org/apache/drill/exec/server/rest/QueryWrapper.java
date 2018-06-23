@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,49 +15,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.server.rest;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
-import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserResultsListener;
-import org.apache.drill.exec.vector.ValueVector;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
+import org.apache.drill.exec.work.WorkManager;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @XmlRootElement
 public class QueryWrapper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWrapper.class);
+  // Heap usage threshold/trigger to provide resiliency on web server for queries submitted via HTTP
+  private static final double HEAP_MEMORY_FAILURE_THRESHOLD = 0.85;
 
-  private String query;
-  private String queryType;
+  private final String query;
+
+  private final String queryType;
+
+  private static MemoryMXBean memMXBean = ManagementFactory.getMemoryMXBean();
 
   @JsonCreator
   public QueryWrapper(@JsonProperty("query") String query, @JsonProperty("queryType") String queryType) {
     this.query = query;
-    this.queryType = queryType;
+    this.queryType = queryType.toUpperCase();
   }
 
   public String getQuery() {
@@ -68,41 +65,81 @@ public class QueryWrapper {
     return queryType;
   }
 
-  public UserBitShared.QueryType getType() {
-    UserBitShared.QueryType type = UserBitShared.QueryType.SQL;
-    switch (queryType) {
-      case "SQL" : type = UserBitShared.QueryType.SQL; break;
-      case "LOGICAL" : type = UserBitShared.QueryType.LOGICAL; break;
-      case "PHYSICAL" : type = UserBitShared.QueryType.PHYSICAL; break;
-    }
-    return type;
+  public QueryType getType() {
+    return QueryType.valueOf(queryType);
   }
 
-  public QueryResult run(final DrillClient client, final BufferAllocator allocator) throws Exception {
-    Listener listener = new Listener(allocator);
-    client.runQuery(getType(), query, listener);
-    listener.waitForCompletion();
-    if (listener.results.isEmpty()) {
-      listener.results.add(Maps.<String, String>newHashMap());
-    }
+  public QueryResult run(final WorkManager workManager, final WebUserConnection webUserConnection) throws Exception {
+    final RunQuery runQuery = RunQuery.newBuilder().setType(getType())
+        .setPlan(getQuery())
+        .setResultsMode(QueryResultsMode.STREAM_FULL)
+        .build();
 
-    final Map<String, String> first = listener.results.get(0);
-    for (String columnName : listener.columns) {
-      if (!first.containsKey(columnName)) {
-        first.put(columnName, null);
+    // Submit user query to Drillbit work queue.
+    final QueryId queryId = workManager.getUserWorker().submitWork(webUserConnection, runQuery);
+
+    boolean isComplete = false;
+    boolean nearlyOutOfHeapSpace = false;
+    float usagePercent = getHeapUsage();
+
+    // Wait until the query execution is complete or there is error submitting the query
+    logger.debug("Wait until the query execution is complete or there is error submitting the query");
+    do {
+      try {
+        isComplete = webUserConnection.await(TimeUnit.SECONDS.toMillis(1)); /*periodically timeout to check heap*/
+      } catch (Exception e) { }
+
+      usagePercent = getHeapUsage();
+      if (usagePercent >  HEAP_MEMORY_FAILURE_THRESHOLD) {
+        nearlyOutOfHeapSpace = true;
       }
+    } while (!isComplete && !nearlyOutOfHeapSpace);
+
+    //Fail if nearly out of heap space
+    if (nearlyOutOfHeapSpace) {
+      workManager.getBee().getForemanForQueryId(queryId)
+        .addToEventQueue(QueryState.FAILED,
+            UserException.resourceError(
+                new Throwable(
+                    "There is not enough heap memory to run this query using the web interface. "
+                    + "Please try a query with fewer columns or with a filter or limit condition to limit the data returned. "
+                    + "You can also try an ODBC/JDBC client. "
+                    )
+                )
+              .build(logger)
+            );
     }
 
-    return new QueryResult(listener.columns, listener.results);
+    if (logger.isTraceEnabled()) {
+      logger.trace("Query {} is completed ", queryId);
+    }
+
+    if (webUserConnection.results.isEmpty()) {
+      webUserConnection.results.add(Maps.<String, String>newHashMap());
+    }
+
+    // Return the QueryResult.
+    return new QueryResult(queryId, webUserConnection.columns, webUserConnection.results);
+  }
+
+  //Detect possible excess heap
+  private float getHeapUsage() {
+    return (float) memMXBean.getHeapMemoryUsage().getUsed() / memMXBean.getHeapMemoryUsage().getMax();
   }
 
   public static class QueryResult {
+    private final String queryId;
     public final Collection<String> columns;
     public final List<Map<String, String>> rows;
 
-    public QueryResult(Collection<String> columns, List<Map<String, String>> rows) {
+    public QueryResult(QueryId queryId, Collection<String> columns, List<Map<String, String>> rows) {
+      this.queryId = QueryIdHelper.getQueryId(queryId);
       this.columns = columns;
       this.rows = rows;
+    }
+
+    public String getQueryId() {
+      return queryId;
     }
   }
 
@@ -111,77 +148,4 @@ public class QueryWrapper {
     return "QueryRequest [queryType=" + queryType + ", query=" + query + "]";
   }
 
-
-  private static class Listener implements UserResultsListener {
-    private volatile UserException exception;
-    private final CountDownLatch latch = new CountDownLatch(1);
-    private final BufferAllocator allocator;
-    public final List<Map<String, String>> results = Lists.newArrayList();
-    public final Set<String> columns = Sets.newLinkedHashSet();
-
-    Listener(BufferAllocator allocator) {
-      this.allocator = Preconditions.checkNotNull(allocator, "allocator cannot be null");
-    }
-
-    @Override
-    public void submissionFailed(UserException ex) {
-      exception = ex;
-      logger.error("Query Failed", ex);
-      latch.countDown();
-    }
-
-    @Override
-    public void queryCompleted(QueryState state) {
-      latch.countDown();
-    }
-
-    @Override
-    public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
-      try {
-        final int rows = result.getHeader().getRowCount();
-        if (result.hasData()) {
-          RecordBatchLoader loader = null;
-          try {
-            loader = new RecordBatchLoader(allocator);
-            loader.load(result.getHeader().getDef(), result.getData());
-            // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
-            // SchemaChangeException, so check/clean catch clause below.
-            for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
-              columns.add(loader.getSchema().getColumn(i).getPath());
-            }
-            for (int i = 0; i < rows; ++i) {
-              final Map<String, String> record = Maps.newHashMap();
-              for (VectorWrapper<?> vw : loader) {
-                final String field = vw.getValueVector().getMetadata().getNamePart().getName();
-                final ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
-                final Object value = i < accessor.getValueCount() ? accessor.getObject(i) : null;
-                final String display = value == null ? null : value.toString();
-                record.put(field, display);
-              }
-              results.add(record);
-            }
-          } finally {
-            if (loader != null) {
-              loader.clear();
-            }
-          }
-        }
-      } catch (SchemaChangeException e) {
-        throw new RuntimeException(e);
-      } finally {
-        result.release();
-      }
-    }
-
-    @Override
-    public void queryIdArrived(UserBitShared.QueryId queryId) {
-    }
-
-    public void waitForCompletion() throws Exception {
-      latch.await();
-      if (exception != null) {
-        throw exception;
-      }
-    }
-  }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,20 +18,24 @@
 package org.apache.drill.hbase;
 
 import static org.junit.Assert.assertEquals;
-
-import java.util.Map.Entry;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.categories.HbaseStorageTest;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.store.hbase.config.HBasePersistentStoreProvider;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.categories.SlowTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HbaseStorageTest.class})
 public class TestHBaseTableProvider extends BaseHBaseTest {
 
   private static HBasePersistentStoreProvider provider;
@@ -57,12 +61,10 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
     assertEquals("v0", hbaseStore.get(""));
     assertEquals("testValue", hbaseStore.get(".test"));
 
-    int rowCount = 0;
-    for (Entry<String, String> entry : Lists.newArrayList(hbaseStore.getAll())) {
-      rowCount++;
-      System.out.println(entry.getKey() + "=" + entry.getValue());
-    }
-    assertEquals(7, rowCount);
+    assertTrue(hbaseStore.contains(""));
+    assertFalse(hbaseStore.contains("unknown_key"));
+
+    assertEquals(7, Lists.newArrayList(hbaseStore.getAll()).size());
 
     PersistentStore<String> hbaseTestStore = provider.getOrCreateStore(PersistentStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase.test").build());
     hbaseTestStore.put("", "v0");
@@ -75,12 +77,7 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
     assertEquals("v0", hbaseStore.get(""));
     assertEquals("testValue", hbaseStore.get(".test"));
 
-    rowCount = 0;
-    for (Entry<String, String> entry : Lists.newArrayList(hbaseTestStore.getAll())) {
-      rowCount++;
-      System.out.println(entry.getKey() + "=" + entry.getValue());
-    }
-    assertEquals(6, rowCount);
+    assertEquals(6, Lists.newArrayList(hbaseTestStore.getAll()).size());
   }
 
   @AfterClass

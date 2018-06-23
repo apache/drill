@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import java.lang.UnsupportedOperationException;
 
 <@pp.dropOutputFile />
@@ -33,6 +32,9 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 public abstract class AbstractRecordWriter implements RecordWriter {
 
   private Accessor newPartitionVector;

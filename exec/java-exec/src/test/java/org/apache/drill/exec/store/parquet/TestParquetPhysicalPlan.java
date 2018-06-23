@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.parquet;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -51,39 +50,41 @@ public class TestParquetPhysicalPlan extends ExecTest {
   @Test
   @Ignore
   public void testParseParquetPhysicalPlan() throws Exception {
+    final StringBuilder sb = new StringBuilder();
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     DrillConfig config = DrillConfig.create();
 
-    try (Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+    try (Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator())) {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8));
       RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
       int count = 0;
       for (QueryDataBatch b : results) {
-        System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
+        sb.append(String.format("Got %d results\n", b.getHeader().getRowCount()));
         count += b.getHeader().getRowCount();
         loader.load(b.getHeader().getDef(), b.getData());
         for (VectorWrapper vw : loader) {
-          System.out.print(vw.getValueVector().getField().getPath() + ": ");
+          sb.append(vw.getValueVector().getField().getName() + ": ");
           ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             Object o = vv.getAccessor().getObject(i);
             if (o instanceof byte[]) {
-              System.out.print(" [" + new String((byte[]) o) + "]");
+              sb.append(" [" + new String((byte[]) o) + "]");
             } else {
-              System.out.print(" [" + vv.getAccessor().getObject(i) + "]");
+              sb.append(" [" + vv.getAccessor().getObject(i) + "]");
             }
-//            break;
           }
-          System.out.println();
+          sb.append('\n');
         }
         loader.clear();
         b.release();
       }
       client.close();
-      System.out.println(String.format("Got %d total results", count));
+      sb.append(String.format("Got %d total results\n", count));
     }
+
+    logger.debug(sb.toString());
   }
 
   private class ParquetResultsListener implements UserResultsListener {
@@ -104,7 +105,6 @@ public class TestParquetPhysicalPlan extends ExecTest {
     @Override
     public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
       int rows = result.getHeader().getRowCount();
-      System.out.println(String.format("Result batch arrived. Number of records: %d", rows));
       count.addAndGet(rows);
       result.release();
     }
@@ -124,12 +124,11 @@ public class TestParquetPhysicalPlan extends ExecTest {
   public void testParseParquetPhysicalPlanRemote() throws Exception {
     DrillConfig config = DrillConfig.create();
 
-    try(DrillClient client = new DrillClient(config);) {
+    try (DrillClient client = new DrillClient(config)) {
       client.connect();
       ParquetResultsListener listener = new ParquetResultsListener();
       Stopwatch watch = Stopwatch.createStarted();
       client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8), listener);
-      System.out.println(String.format("Got %d total records in %d seconds", listener.await(), watch.elapsed(TimeUnit.SECONDS)));
       client.close();
     }
   }

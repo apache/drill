@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,55 +17,65 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
-
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
 import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.BasicClient;
+import org.apache.drill.exec.rpc.BitRpcUtility;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
-import org.apache.drill.exec.rpc.Response;
+import org.apache.drill.exec.rpc.ResponseSender;
+import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.server.BootStrapContext;
 
-import com.google.protobuf.MessageLite;
+import java.util.List;
 
-public class DataClient extends BasicClient<RpcType, DataClientConnection, BitClientHandshake, BitServerHandshake>{
+public class DataClient extends BasicClient<RpcType, DataClientConnection, BitClientHandshake, BitServerHandshake> {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClient.class);
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClient.class);
-
+  private final DrillbitEndpoint remoteEndpoint;
   private volatile DataClientConnection connection;
-  private final BufferAllocator allocator;
   private final DataConnectionManager.CloseHandlerCreator closeHandlerFactory;
+  private final DataConnectionConfig config;
 
-
-  public DataClient(DrillbitEndpoint remoteEndpoint, BootStrapContext context, DataConnectionManager.CloseHandlerCreator closeHandlerFactory) {
+  public DataClient(DrillbitEndpoint remoteEndpoint, DataConnectionConfig config,
+                    DataConnectionManager.CloseHandlerCreator closeHandlerFactory) {
     super(
-        DataRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
-        context.getAllocator().getAsByteBufAllocator(),
-        context.getBitClientLoopGroup(),
+        DataRpcConfig.getMapping(config.getBootstrapContext().getConfig(),
+            config.getBootstrapContext().getExecutor()),
+        config.getBootstrapContext().getAllocator().getAsByteBufAllocator(),
+        config.getBootstrapContext().getBitClientLoopGroup(),
         RpcType.HANDSHAKE,
         BitServerHandshake.class,
         BitServerHandshake.PARSER);
+
+    this.remoteEndpoint = remoteEndpoint;
+    this.config = config;
     this.closeHandlerFactory = closeHandlerFactory;
-    this.allocator = context.getAllocator();
   }
 
   @Override
-  public DataClientConnection initRemoteConnection(SocketChannel channel) {
+  protected DataClientConnection initRemoteConnection(SocketChannel channel) {
     super.initRemoteConnection(channel);
-    this.connection = new DataClientConnection(channel, this);
+    connection = new DataClientConnection(channel, this, config.getEncryptionCtxt());
+
+    // Increase the connection count here since at this point it means that we already have the TCP connection.
+    // Later when connection fails for any reason then we will decrease the counter based on Netty's connection close
+    // handler.
+    connection.incConnectionCounter();
     return connection;
   }
 
   @Override
-  protected GenericFutureListener<ChannelFuture> getCloseHandler(SocketChannel ch, DataClientConnection clientConnection) {
+  protected GenericFutureListener<ChannelFuture>
+  getCloseHandler(SocketChannel ch, DataClientConnection clientConnection) {
     return closeHandlerFactory.getHandler(clientConnection, super.getCloseHandler(ch, clientConnection));
   }
 
@@ -75,28 +85,26 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   }
 
   @Override
-  protected Response handle(DataClientConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
+  protected void handle(DataClientConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody,
+                        ResponseSender sender) throws RpcException {
     throw new UnsupportedOperationException("DataClient is unidirectional by design.");
   }
 
   BufferAllocator getAllocator() {
-    return allocator;
+    return config.getAllocator();
   }
 
   @Override
-  protected void validateHandshake(BitServerHandshake handshake) throws RpcException {
-    if (handshake.getRpcVersion() != DataRpcConfig.RPC_VERSION) {
-      throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", handshake.getRpcVersion(), DataRpcConfig.RPC_VERSION));
+  protected void prepareSaslHandshake(final RpcConnectionHandler<DataClientConnection> connectionHandler, List<String> serverAuthMechanisms) {
+    BitRpcUtility.prepareSaslHandshake(connectionHandler, serverAuthMechanisms, connection, config, remoteEndpoint,
+      this, RpcType.SASL_MESSAGE);
+  }
+
+    @Override
+    protected List<String> validateHandshake(BitServerHandshake handshake) throws RpcException {
+      return BitRpcUtility.validateHandshake(handshake.getRpcVersion(), handshake.getAuthenticationMechanismsList(),
+        DataRpcConfig.RPC_VERSION, connection, config, this);
     }
-  }
-
-  @Override
-  protected void finalizeConnection(BitServerHandshake handshake, DataClientConnection connection) {
-  }
-
-  public DataClientConnection getConnection() {
-    return this.connection;
-  }
 
   @Override
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {

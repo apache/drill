@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,13 +14,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-
+ */
 package org.apache.drill.exec.planner.cost;
 
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.util.Util;
+import org.apache.calcite.runtime.Utilities;
 
 /**
  * Implementation of the DrillRelOptCost, modeled similar to VolcanoCost
@@ -159,7 +158,8 @@ public class DrillCostBase implements DrillRelOptCost {
 
   @Override
   public int hashCode() {
-    return Util.hashCode(rowCount) + Util.hashCode(cpu) + Util.hashCode(io) + Util.hashCode(network);
+    return Utilities.hashCode(rowCount) + Utilities.hashCode(cpu)
+        + Utilities.hashCode(io) + Utilities.hashCode(network);
   }
 
   @Override

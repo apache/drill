@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,7 +41,7 @@ public class DataRecord {
             }
         } else {
             if(isList) {
-                ((List)dataMap.get(fieldId)).add(data);
+                ((List<Object>)dataMap.get(fieldId)).add(data);
             } else {
                 throw new IllegalStateException("Overriding field id existing data!");
             }

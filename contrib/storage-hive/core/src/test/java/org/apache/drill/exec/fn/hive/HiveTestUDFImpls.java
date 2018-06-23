@@ -1,6 +1,4 @@
-
-/*******************************************************************************
-
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,9 +14,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.fn.hive;
 
+import org.apache.hadoop.hive.common.type.HiveChar;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.hadoop.hive.ql.exec.Description;
@@ -36,6 +35,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.ByteObjectInspect
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.DateObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.DoubleObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.FloatObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.HiveCharObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.HiveDecimalObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.HiveVarcharObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.IntObjectInspector;
@@ -112,23 +112,30 @@ public class HiveTestUDFImpls {
         case BOOLEAN:
           return ((BooleanObjectInspector)argumentOI).get(input) ? Boolean.TRUE : Boolean.FALSE;
         case BYTE:
-          return new Byte(((ByteObjectInspector)argumentOI).get(input));
+          return Byte.valueOf(((ByteObjectInspector)argumentOI).get(input));
         case SHORT:
-          return new Short(((ShortObjectInspector)argumentOI).get(input));
+          return Short.valueOf(((ShortObjectInspector)argumentOI).get(input));
         case INT:
-          return new Integer(((IntObjectInspector)argumentOI).get(input));
+          return Integer.valueOf(((IntObjectInspector)argumentOI).get(input));
         case LONG:
-          return new Long(((LongObjectInspector)argumentOI).get(input));
+          return Long.valueOf(((LongObjectInspector)argumentOI).get(input));
         case FLOAT:
-          return new Float(((FloatObjectInspector)argumentOI).get(input));
+          return Float.valueOf(((FloatObjectInspector)argumentOI).get(input));
         case DOUBLE:
-          return new Double(((DoubleObjectInspector)argumentOI).get(input));
+          return Double.valueOf(((DoubleObjectInspector)argumentOI).get(input));
         case STRING:
           return PrimitiveObjectInspectorUtils.getString(input, (StringObjectInspector)argumentOI);
         case BINARY:
           return PrimitiveObjectInspectorUtils.getBinary(input, (BinaryObjectInspector) argumentOI).getBytes();
         case VARCHAR:
-          return PrimitiveObjectInspectorUtils.getHiveVarchar(input, (HiveVarcharObjectInspector)argumentOI);
+          if (outputType == PrimitiveCategory.CHAR) {
+            HiveVarchar hiveVarchar = PrimitiveObjectInspectorUtils.getHiveVarchar(input, (HiveVarcharObjectInspector) argumentOI);
+            return new HiveChar(hiveVarchar.getValue(), HiveChar.MAX_CHAR_LENGTH);
+          } else {
+            return PrimitiveObjectInspectorUtils.getHiveVarchar(input, (HiveVarcharObjectInspector)argumentOI);
+          }
+        case CHAR:
+          return PrimitiveObjectInspectorUtils.getHiveChar(input, (HiveCharObjectInspector) argumentOI);
         case DATE:
           return PrimitiveObjectInspectorUtils.getDate(input, (DateObjectInspector) argumentOI);
         case TIMESTAMP:
@@ -199,6 +206,13 @@ public class HiveTestUDFImpls {
   public static class GenericUDFTestVARCHAR extends GenericUDFTestBase {
     public GenericUDFTestVARCHAR() {
       super("testHiveUDFVARCHAR", PrimitiveCategory.VARCHAR);
+    }
+  }
+
+  @Description(name = "testHiveUDFCHAR", value = "_FUNC_(VARCHAR) - Tests varchar data as input and char data as output")
+  public static class GenericUDFTestCHAR extends GenericUDFTestBase {
+    public GenericUDFTestCHAR() {
+      super("testHiveUDFCHAR", PrimitiveCategory.VARCHAR, PrimitiveCategory.CHAR);
     }
   }
 

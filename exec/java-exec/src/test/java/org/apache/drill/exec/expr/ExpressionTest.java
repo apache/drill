@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,14 +18,10 @@
 package org.apache.drill.exec.expr;
 
 import static org.junit.Assert.assertEquals;
-import mockit.Expectations;
-import mockit.Injectable;
-import mockit.NonStrict;
-import mockit.NonStrictExpectations;
 
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -33,9 +29,6 @@ import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.parser.ExprLexer;
-import org.apache.drill.common.expression.parser.ExprParser;
-import org.apache.drill.common.expression.parser.ExprParser.parse_return;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -48,7 +41,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 public class ExpressionTest extends ExecTest {
@@ -58,74 +50,59 @@ public class ExpressionTest extends ExecTest {
   private final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
 
   @Test
-  public void testBasicExpression(@Injectable RecordBatch batch) throws Exception {
-    System.out.println(getExpressionCode("if(true) then 1 else 0 end", batch));
+  public void testBasicExpression() throws Exception {
+    getExpressionCode("if(true) then 1 else 0 end");
   }
 
   @Test
-  public void testExprParseUpperExponent(@Injectable RecordBatch batch) throws Exception {
-    getExpressionCode("multiply(`$f0`, 1.0E-4)", batch);
+  public void testExprParseUpperExponent() throws Exception {
+    getExpressionCode("multiply(`$f0`, 1.0E-4)");
   }
 
   @Test
-  public void testExprParseLowerExponent(@Injectable RecordBatch batch) throws Exception {
-    getExpressionCode("multiply(`$f0`, 1.0e-4)", batch);
+  public void testExprParseLowerExponent() throws Exception {
+    getExpressionCode("multiply(`$f0`, 1.0e-4)");
   }
 
   @Test
-  public void testSpecial(final @Injectable RecordBatch batch, @Injectable ValueVector vector) throws Exception {
+  public void testSpecial() throws Exception {
+    final RecordBatch batch = mock(RecordBatch.class);
+    final VectorWrapper wrapper = mock(VectorWrapper.class);
     final TypeProtos.MajorType type = Types.optional(MinorType.INT);
     final TypedFieldId tfid = new TypedFieldId(type, false, 0);
 
-    new NonStrictExpectations() {
-      @NonStrict VectorWrapper<?> wrapper;
-      {
-        batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
-        result = tfid;
-        batch.getValueAccessorById(IntVector.class, tfid.getFieldIds());
-        result = wrapper;
-        wrapper.getValueVector();
-        result = new IntVector(MaterializedField.create("result", type), RootAllocatorFactory.newRoot(c));
-      }
+    when(wrapper.getValueVector()).thenReturn(new IntVector(MaterializedField.create("result", type), RootAllocatorFactory.newRoot(c)));
 
-    };
-    System.out.println(getExpressionCode("1 + 1", batch));
+    when(batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN))).thenReturn(tfid);
+    when(batch.getValueAccessorById(IntVector.class, tfid.getFieldIds())).thenReturn(wrapper);
+
+    getExpressionCode("1 + 1", batch);
   }
 
   @Test
-  public void testSchemaExpression(final @Injectable RecordBatch batch) throws Exception {
-    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.BIGINT), false, 0);
+  public void testSchemaExpression() throws Exception {
+    final RecordBatch batch = mock(RecordBatch.class);
+    when(batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN)))
+      .thenReturn(new TypedFieldId(Types.optional(MinorType.BIGINT), false, 0));
 
-    new Expectations() {
-      {
-        batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
-        result = tfid;
-        // batch.getValueVectorById(tfid); result = new Fixed4(null, null);
-      }
-
-    };
-    System.out.println(getExpressionCode("1 + alpha", batch));
-
+    getExpressionCode("1 + alpha", batch);
   }
 
   @Test(expected = ExpressionParsingException.class)
-  public void testExprParseError(@Injectable RecordBatch batch) throws Exception {
-    getExpressionCode("less than(1, 2)", batch);
+  public void testExprParseError() throws Exception {
+    getExpressionCode("less than(1, 2)");
   }
 
   @Test
-  public void testExprParseNoError(@Injectable RecordBatch batch) throws Exception {
-    getExpressionCode("equal(1, 2)", batch);
+  public void testExprParseNoError() throws Exception {
+    getExpressionCode("equal(1, 2)");
   }
 
   // HELPER METHODS //
 
-  private LogicalExpression parseExpr(String expr) throws RecognitionException {
-    final ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-    final CommonTokenStream tokens = new CommonTokenStream(lexer);
-    final ExprParser parser = new ExprParser(tokens);
-    parse_return ret = parser.parse();
-    return ret.e;
+  private String getExpressionCode(String expression) throws Exception {
+    final RecordBatch batch = mock(RecordBatch.class);
+    return getExpressionCode(expression, batch);
   }
 
   private String getExpressionCode(String expression, RecordBatch batch) throws Exception {
@@ -137,7 +114,8 @@ public class ExpressionTest extends ExecTest {
       assertEquals(0, error.getErrorCount());
     }
 
-    final ClassGenerator<Projector> cg = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, new FunctionImplementationRegistry(DrillConfig.create())).getRoot();
+    FunctionImplementationRegistry funcReg = new FunctionImplementationRegistry(DrillConfig.create());
+    final ClassGenerator<Projector> cg = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, null).getRoot();
     cg.addExpr(new ValueVectorWriteExpression(new TypedFieldId(materializedExpr.getMajorType(), -1), materializedExpr));
     return cg.getCodeGenerator().generateAndGet();
   }

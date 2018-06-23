@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.Values;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
@@ -30,15 +30,14 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 
-import com.google.common.collect.Iterators;
-
 public class ValuesBatchCreator implements BatchCreator<Values> {
   @Override
-  public ScanBatch getBatch(FragmentContext context, Values config, List<RecordBatch> children)
+  public ScanBatch getBatch(ExecutorFragmentContext context, Values config, List<RecordBatch> children)
       throws ExecutionSetupException {
     assert children.isEmpty();
 
-    JSONRecordReader reader = new JSONRecordReader(context, config.getContent().asNode(), null, Collections.singletonList(SchemaPath.getSimplePath("*")));
-    return new ScanBatch(config, context, Iterators.singletonIterator((RecordReader) reader));
+    JSONRecordReader reader = new JSONRecordReader(context, config.getContent().asNode(),
+        null, Collections.singletonList(SchemaPath.STAR_COLUMN));
+    return new ScanBatch(config, context, Collections.singletonList((RecordReader) reader));
   }
 }

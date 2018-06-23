@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,10 +18,13 @@
 package org.apache.drill.exec.vector;
 
 import java.io.Closeable;
+import java.util.Set;
 
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
+import org.apache.drill.exec.memory.AllocationManager;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
@@ -29,33 +32,69 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 /**
- * An abstraction that is used to store a sequence of values in an individual column.
+ * An abstraction that is used to store a sequence of values in an individual
+ * column.
  *
- * A {@link ValueVector value vector} stores underlying data in-memory in a columnar fashion that is compact and
- * efficient. The column whose data is stored, is referred by {@link #getField()}.
+ * A {@link ValueVector value vector} stores underlying data in-memory in a
+ * columnar fashion that is compact and efficient. The column whose data is
+ * stored, is referred by {@link #getField()}.
  *
- * A vector when instantiated, relies on a {@link org.apache.drill.exec.record.DeadBuf dead buffer}. It is important
+ * A vector when instantiated, relies on a
+ * {@link org.apache.drill.exec.record.DeadBuf dead buffer}. It is important
  * that vector is allocated before attempting to read or write.
  *
  * There are a few "rules" around vectors:
  *
  * <ul>
- *   <li>values need to be written in order (e.g. index 0, 1, 2, 5)</li>
- *   <li>null vectors start with all values as null before writing anything</li>
- *   <li>for variable width types, the offset vector should be all zeros before writing</li>
- *   <li>you must call setValueCount before a vector can be read</li>
- *   <li>you should never write to a vector once it has been read.</li>
+ *   <li>Values need to be written in order (e.g. index 0, 1, 2, 5).</li>
+ *   <li>Null vectors start with all values as null before writing anything.</li>
+ *   <li>For variable width types, the offset vector should be all zeros before
+ *   writing.</li>
+ *   <li>You must call setValueCount before a vector can be read.</li>
+ *   <li>You should never write to a vector once it has been read.</li>
+ *   <li>Vectors may not grow larger than the number of bytes specified in
+ *   {@link #MAX_BUFFER_SIZE} to prevent memory fragmentation. Use the
+ *   <tt>setBounded()</tt> methods in the mutator to enforce this rule.</li>
  * </ul>
  *
- * Please note that the current implementation doesn't enfore those rules, hence we may find few places that
- * deviate from these rules (e.g. offset vectors in Variable Length and Repeated vector)
+ * Please note that the current implementation doesn't enforce those rules,
+ * hence we may find few places that deviate from these rules (e.g. offset
+ * vectors in Variable Length and Repeated vector)
  *
  * This interface "should" strive to guarantee this order of operation:
  * <blockquote>
- * allocate > mutate > setvaluecount > access > clear (or allocate to start the process over).
+ * allocate > mutate > setvaluecount > access > clear (or allocate
+ * to start the process over).
  * </blockquote>
  */
+
 public interface ValueVector extends Closeable, Iterable<ValueVector> {
+
+  /**
+   * Maximum allowed size of the buffer backing a value vector.
+   * Set to the Netty chunk size to prevent memory fragmentation.
+   */
+
+  int MAX_BUFFER_SIZE = AllocationManager.chunkSize();
+
+  /**
+   * Maximum allowed row count in a vector. Repeated vectors
+   * may have more items, but can have no more than this number
+   * or arrays. Limited by 2-byte length in SV2: 65536 = 2<sup>16</sup>.
+   */
+
+  int MAX_ROW_COUNT = Character.MAX_VALUE + 1;
+  int MIN_ROW_COUNT = 1;
+
+  // Commonly-used internal vector names
+
+  String BITS_VECTOR_NAME = "$bits$";
+  String OFFSETS_VECTOR_NAME = "$offsets$";
+
+  @Deprecated
+  // See DRILL-6216
+  String VALUES_VECTOR_NAME = "$values$";
+
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
    * @throws OutOfMemoryException Thrown if no memory can be allocated.
@@ -64,7 +103,7 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
 
   /**
    * Allocates new buffers. ValueVector implements logic to determine how much to allocate.
-   * @return Returns true if allocation was succesful.
+   * @return Returns true if allocation was successful.
    */
   boolean allocateNewSafe();
 
@@ -138,8 +177,22 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
 
   /**
    * Returns the number of bytes that is used by this vector instance.
+   * This is a bit of a misnomer. Returns the number of bytes used by
+   * data in this instance.
    */
   int getBufferSize();
+
+  /**
+   * Returns the total size of buffers allocated by this vector. Has
+   * meaning only when vectors are directly allocated and each vector
+   * has its own buffer. Does not have meaning for vectors deserialized
+   * from the network or disk in which multiple vectors share the
+   * same vector.
+   *
+   * @return allocated buffer size, in bytes
+   */
+
+  int getAllocatedSize();
 
   /**
    * Returns the number of bytes that is used by this vector if it holds the given number
@@ -175,6 +228,43 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
   void load(SerializedField metadata, DrillBuf buffer);
 
+  void copyEntry(int toIndex, ValueVector from, int fromIndex);
+
+  /**
+   * Add the ledgers underlying the buffers underlying the components of the
+   * vector to the set provided. Used to determine actual memory allocation.
+   *
+   * @param ledgers set of ledgers to which to add ledgers for this vector
+   */
+
+  void collectLedgers(Set<BufferLedger> ledgers);
+
+  /**
+   * Return the number of value bytes consumed by actual data.
+   */
+
+  int getPayloadByteCount(int valueCount);
+
+  /**
+   * Exchange state with another value vector of the same type.
+   * Used to implement look-ahead writers.
+   */
+
+  void exchange(ValueVector other);
+
+  /**
+   * Convert a non-nullable vector to nullable by shuffling the data from
+   * one to the other. Avoids the need to generate copy code just to change
+   * mode. If this vector is non-nullable, accepts a nullable dual (same
+   * minor type, different mode.) If the vector is non-nullable, or non-scalar,
+   * then throws an exception.
+   *
+   * @param nullableVector nullable vector of the same minor type as
+   * this vector
+   */
+
+  void toNullable(ValueVector nullableVector);
+
   /**
    * An abstraction that is used to read from this vector instance.
    */
@@ -199,11 +289,12 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   }
 
   /**
-   * An abstractiong that is used to write into this vector instance.
+   * An abstraction that is used to write into this vector instance.
    */
   interface Mutator {
     /**
-     * Sets the number of values that is stored in this vector to the given value count.
+     * Sets the number of values that is stored in this vector to the given value count. <b>WARNING!</b> Once the
+     * valueCount is set, the vector should be considered immutable.
      *
      * @param valueCount  value count to set.
      */
@@ -219,5 +310,12 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
      */
     @Deprecated
     void generateTestData(int values);
+
+    /**
+     * Exchanges state with the mutator of another mutator. Used when exchanging
+     * state with another vector.
+     */
+
+    void exchange(Mutator other);
   }
 }

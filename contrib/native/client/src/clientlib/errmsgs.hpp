@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef ERRMSGS_H
 #define ERRMSGS_H
 
@@ -49,7 +48,14 @@ namespace Drill{
 #define ERR_CONN_BAD_RPC_VER    DRILL_ERR_START+16
 #define ERR_CONN_AUTHFAIL       DRILL_ERR_START+17
 #define ERR_CONN_UNKNOWN_ERR    DRILL_ERR_START+18
-#define ERR_CONN_MAX            DRILL_ERR_START+18
+#define ERR_CONN_NOCONN         DRILL_ERR_START+19
+#define ERR_CONN_ALREADYCONN    DRILL_ERR_START+20
+#define ERR_CONN_NOCONNSTR      DRILL_ERR_START+21
+#define ERR_CONN_SSLCERTFAIL    DRILL_ERR_START+22
+#define ERR_CONN_NOSOCKET       DRILL_ERR_START+23
+#define ERR_CONN_NOSERVERAUTH   DRILL_ERR_START+24
+#define ERR_CONN_NOSERVERENC    DRILL_ERR_START+25
+#define ERR_CONN_MAX            DRILL_ERR_START+25
 
 #define ERR_QRY_OUTOFMEM    ERR_CONN_MAX+1
 #define ERR_QRY_COMMERR     ERR_CONN_MAX+2

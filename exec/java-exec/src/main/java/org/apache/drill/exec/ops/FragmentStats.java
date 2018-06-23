@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.ops;
 
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
-
-import com.codahale.metrics.MetricRegistry;
-import com.google.common.collect.Lists;
 
 /**
  * Holds statistics of a particular (minor) fragment.
@@ -32,12 +32,12 @@ import com.google.common.collect.Lists;
 public class FragmentStats {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStats.class);
 
-  private List<OperatorStats> operators = Lists.newArrayList();
+  private Map<ImmutablePair<Integer, Integer>, OperatorStats> operators = new LinkedHashMap<>();
   private final long startTime;
   private final DrillbitEndpoint endpoint;
   private final BufferAllocator allocator;
 
-  public FragmentStats(BufferAllocator allocator, MetricRegistry metrics, DrillbitEndpoint endpoint) {
+  public FragmentStats(BufferAllocator allocator, DrillbitEndpoint endpoint) {
     this.startTime = System.currentTimeMillis();
     this.endpoint = endpoint;
     this.allocator = allocator;
@@ -48,8 +48,8 @@ public class FragmentStats {
     prfB.setMaxMemoryUsed(allocator.getPeakMemoryAllocation());
     prfB.setEndTime(System.currentTimeMillis());
     prfB.setEndpoint(endpoint);
-    for(OperatorStats o : operators){
-      prfB.addOperatorProfile(o.getProfile());
+    for(Entry<ImmutablePair<Integer, Integer>, OperatorStats> o : operators.entrySet()){
+      prfB.addOperatorProfile(o.getValue().getProfile());
     }
   }
 
@@ -63,13 +63,14 @@ public class FragmentStats {
   public OperatorStats newOperatorStats(final OpProfileDef profileDef, final BufferAllocator allocator) {
     final OperatorStats stats = new OperatorStats(profileDef, allocator);
     if(profileDef.operatorType != -1) {
-      operators.add(stats);
+      @SuppressWarnings("unused")
+      OperatorStats existingStatsHolder = addOperatorStats(stats);
     }
     return stats;
   }
 
-  public void addOperatorStats(OperatorStats stats) {
-    operators.add(stats);
+  public OperatorStats addOperatorStats(OperatorStats stats) {
+    return operators.put(new ImmutablePair<>(stats.operatorId, stats.operatorType), stats);
   }
 
 }

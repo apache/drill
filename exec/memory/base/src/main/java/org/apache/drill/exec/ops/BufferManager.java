@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.ops;
 
 import io.netty.buffer.DrillBuf;
@@ -30,8 +30,8 @@ import io.netty.buffer.DrillBuf;
  * DrillBufs to give UDF writers general purpose buffers we can account for. To prevent the need
  * for UDFs to contain boilerplate to close all of the buffers they request, this list
  * is tracked at a higher level and all of the buffers are freed once we are sure that
- * the code depending on them is done executing (currently {@link FragmentContext}
- * and {@link QueryContext}.
+ * the code depending on them is done executing (currently FragmentContext
+ * and QueryContext.
  */
 public interface BufferManager extends AutoCloseable {
 

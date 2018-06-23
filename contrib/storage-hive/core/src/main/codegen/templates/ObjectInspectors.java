@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,8 @@
 <@pp.dropOutputFile />
 
 <#list drillOI.map as entry>
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.drillType}ObjectInspector.java" />
+<#if entry.needOIForDrillType == true>
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.drillType}${entry.hiveOI}.java" />
 
 <#include "/@includes/license.ftl" />
 
@@ -46,7 +47,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-public class Drill${entry.drillType}ObjectInspector {
+public class Drill${entry.drillType}${entry.hiveOI} {
 <#assign seq = ["Required", "Optional"]>
 <#list seq as mode>
 
@@ -55,7 +56,7 @@ public class Drill${entry.drillType}ObjectInspector {
       super(TypeInfoFactory.${entry.hiveType?lower_case}TypeInfo);
     }
 
-<#if entry.drillType == "VarChar">
+<#if entry.drillType == "VarChar" && entry.hiveType == "VARCHAR">
     @Override
     public HiveVarcharWritable getPrimitiveWritableObject(Object o) {
     <#if mode == "Optional">
@@ -84,31 +85,31 @@ public class Drill${entry.drillType}ObjectInspector {
       final String s = StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer);
       return new HiveVarchar(s, HiveVarchar.MAX_VARCHAR_LENGTH);
     }
-<#elseif entry.drillType == "Var16Char">
+<#elseif entry.drillType == "VarChar" && entry.hiveType == "STRING">
     @Override
     public Text getPrimitiveWritableObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
       }
-      final NullableVar16CharHolder h = (NullableVar16CharHolder)o;
+      final NullableVarCharHolder h = (NullableVarCharHolder)o;
     <#else>
-      final Var16CharHolder h = (Var16CharHolder)o;
+      final VarCharHolder h = (VarCharHolder)o;
     </#if>
-      return new Text(StringFunctionHelpers.toStringFromUTF16(h.start, h.end, h.buffer));
+      return new Text(StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer));
     }
 
     @Override
-    public String getPrimitiveJavaObject(Object o){
+    public String getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
       }
-      final NullableVar16CharHolder h = (NullableVar16CharHolder)o;
+      final NullableVarCharHolder h = (NullableVarCharHolder) o;
     <#else>
-      final Var16CharHolder h = (Var16CharHolder)o;
+      final VarCharHolder h = (VarCharHolder)o;
     </#if>
-      return StringFunctionHelpers.toStringFromUTF16(h.start, h.end, h.buffer);
+      return StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer);
     }
 <#elseif entry.drillType == "VarBinary">
     @Override
@@ -117,9 +118,9 @@ public class Drill${entry.drillType}ObjectInspector {
       if (o == null) {
         return null;
       }
-      final NullableVarBinaryHolder h = (NullableVarBinaryHolder)o;
+      final NullableVarBinaryHolder h = (NullableVarBinaryHolder) o;
     <#else>
-      final VarBinaryHolder h = (VarBinaryHolder)o;
+      final VarBinaryHolder h = (VarBinaryHolder) o;
     </#if>
       final byte[] buf = new byte[h.end-h.start];
       h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
@@ -132,9 +133,9 @@ public class Drill${entry.drillType}ObjectInspector {
       if (o == null) {
         return null;
       }
-      final NullableVarBinaryHolder h = (NullableVarBinaryHolder)o;
+      final NullableVarBinaryHolder h = (NullableVarBinaryHolder) o;
     <#else>
-      final VarBinaryHolder h = (VarBinaryHolder)o;
+      final VarBinaryHolder h = (VarBinaryHolder) o;
     </#if>
       final byte[] buf = new byte[h.end-h.start];
       h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
@@ -168,23 +169,23 @@ public class Drill${entry.drillType}ObjectInspector {
       if (o == null) {
         return null;
       }
-      return new Boolean(((NullableBitHolder)o).value == 0 ? false : true);
+      return Boolean.valueOf(((NullableBitHolder)o).value != 0);
     <#else>
-      return new Boolean(((BitHolder)o).value == 0 ? false : true);
+      return Boolean.valueOf(((BitHolder)o).value != 0);
     </#if>
     }
-<#elseif entry.drillType == "Decimal38Sparse">
+<#elseif entry.drillType == "VarDecimal">
     @Override
-    public HiveDecimal getPrimitiveJavaObject(Object o){
+    public HiveDecimal getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
       }
-      final NullableDecimal38SparseHolder h = (NullableDecimal38SparseHolder) o;
+      final NullableVarDecimalHolder h = (NullableVarDecimalHolder) o;
     <#else>
-      final Decimal38SparseHolder h = (Decimal38SparseHolder) o;
+      final VarDecimalHolder h = (VarDecimalHolder) o;
     </#if>
-      return HiveDecimal.create(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale));
+      return HiveDecimal.create(DecimalUtility.getBigDecimalFromDrillBuf(h.buffer, h.start, h.end - h.start, h.scale));
     }
 
     @Override
@@ -193,17 +194,17 @@ public class Drill${entry.drillType}ObjectInspector {
       if (o == null) {
         return null;
       }
-      final NullableDecimal38SparseHolder h = (NullableDecimal38SparseHolder) o;
+      final NullableVarDecimalHolder h = (NullableVarDecimalHolder) o;
     <#else>
-      final Decimal38SparseHolder h = (Decimal38SparseHolder) o;
+      final VarDecimalHolder h = (VarDecimalHolder) o;
     </#if>
       return new HiveDecimalWritable(
-          HiveDecimal.create(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale)));
+          HiveDecimal.create(DecimalUtility.getBigDecimalFromDrillBuf(h.buffer, h.start, h.end - h.start, h.scale)));
     }
 
 <#elseif entry.drillType == "TimeStamp">
     @Override
-    public java.sql.Timestamp getPrimitiveJavaObject(Object o){
+    public java.sql.Timestamp getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
@@ -212,7 +213,10 @@ public class Drill${entry.drillType}ObjectInspector {
     <#else>
       final TimeStampHolder h = (TimeStampHolder) o;
     </#if>
-      return new java.sql.Timestamp(h.value);
+      org.joda.time.LocalDateTime dateTime = new org.joda.time.LocalDateTime(h.value, org.joda.time.DateTimeZone.UTC);
+      // use "toDate()" to get java.util.Date object with exactly the same fields as this Joda date-time.
+      // See more in Javadoc for "LocalDateTime#toDate()"
+      return new java.sql.Timestamp(dateTime.toDate().getTime());
     }
 
     @Override
@@ -225,12 +229,15 @@ public class Drill${entry.drillType}ObjectInspector {
     <#else>
       final TimeStampHolder h = (TimeStampHolder) o;
     </#if>
-      return new TimestampWritable(new java.sql.Timestamp(h.value));
+      org.joda.time.LocalDateTime dateTime = new org.joda.time.LocalDateTime(h.value, org.joda.time.DateTimeZone.UTC);
+      // use "toDate()" to get java.util.Date object with exactly the same fields as this Joda date-time.
+      // See more in Javadoc for "LocalDateTime#toDate()"
+      return new TimestampWritable(new java.sql.Timestamp(dateTime.toDate().getTime()));
     }
 
 <#elseif entry.drillType == "Date">
     @Override
-    public java.sql.Date getPrimitiveJavaObject(Object o){
+    public java.sql.Date getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
@@ -239,7 +246,10 @@ public class Drill${entry.drillType}ObjectInspector {
     <#else>
       final DateHolder h = (DateHolder) o;
     </#if>
-      return new java.sql.Date(h.value);
+      org.joda.time.LocalDate localDate = new org.joda.time.LocalDate(h.value, org.joda.time.DateTimeZone.UTC);
+      // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
+      // See more in Javadoc for "LocalDate#toDate()"
+      return new java.sql.Date(localDate.toDate().getTime());
     }
 
     @Override
@@ -252,16 +262,19 @@ public class Drill${entry.drillType}ObjectInspector {
     <#else>
       final DateHolder h = (DateHolder) o;
     </#if>
-      return new DateWritable(new java.sql.Date(h.value));
+      org.joda.time.LocalDate localDate = new org.joda.time.LocalDate(h.value, org.joda.time.DateTimeZone.UTC);
+      // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
+      // See more in Javadoc for "LocalDate#toDate()"
+      return new DateWritable(new java.sql.Date(localDate.toDate().getTime()));
     }
 
 <#else>
     @Override
-    public ${entry.javaType} get(Object o){
+    public ${entry.javaType} get(Object o) {
     <#if mode == "Optional">
-      return ((Nullable${entry.drillType}Holder)o).value;
+      return ((Nullable${entry.drillType}Holder) o).value;
     <#else>
-      return ((${entry.drillType}Holder)o).value;
+      return ((${entry.drillType}Holder) o).value;
     </#if>
     }
 
@@ -273,7 +286,7 @@ public class Drill${entry.drillType}ObjectInspector {
         return null;
       }
     </#if>
-      return new Integer(get(o));
+      return Integer.valueOf(get(o));
     }
 <#else>
     @Override
@@ -282,9 +295,9 @@ public class Drill${entry.drillType}ObjectInspector {
       if (o == null) {
         return null;
       }
-      return new ${entry.javaType?cap_first}(((Nullable${entry.drillType}Holder)o).value);
+      return new ${entry.javaType?cap_first}(((Nullable${entry.drillType}Holder) o).value);
     <#else>
-      return new ${entry.javaType?cap_first}(((${entry.drillType}Holder)o).value);
+      return new ${entry.javaType?cap_first}(((${entry.drillType}Holder) o).value);
     </#if>
     }
 </#if>
@@ -297,7 +310,7 @@ public class Drill${entry.drillType}ObjectInspector {
       }
       final Nullable${entry.drillType}Holder h = (Nullable${entry.drillType}Holder) o;
     <#else>
-      final ${entry.drillType}Holder h = (${entry.drillType}Holder)o;
+      final ${entry.drillType}Holder h = (${entry.drillType}Holder) o;
     </#if>
       return new ${entry.javaType?cap_first}Writable(h.value);
     }
@@ -305,6 +318,6 @@ public class Drill${entry.drillType}ObjectInspector {
   }
 </#list>
 }
-
+</#if>
 </#list>
 

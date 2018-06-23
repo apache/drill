@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -170,7 +170,7 @@ public final class TypeProtos {
      * <code>FLOAT4 = 18;</code>
      *
      * <pre>
-     *  4 byte ieee 754 
+     *  4 byte ieee 754
      * </pre>
      */
     FLOAT4(17, 18),
@@ -321,6 +321,14 @@ public final class TypeProtos {
      * <code>UNION = 42;</code>
      */
     UNION(37, 42),
+    /**
+     * <code>VARDECIMAL = 43;</code>
+     *
+     * <pre>
+     * variable width decimal (arbitrary precision)
+     * </pre>
+     */
+    VARDECIMAL(38, 43),
     ;
 
     /**
@@ -463,7 +471,7 @@ public final class TypeProtos {
      * <code>FLOAT4 = 18;</code>
      *
      * <pre>
-     *  4 byte ieee 754 
+     *  4 byte ieee 754
      * </pre>
      */
     public static final int FLOAT4_VALUE = 18;
@@ -614,6 +622,14 @@ public final class TypeProtos {
      * <code>UNION = 42;</code>
      */
     public static final int UNION_VALUE = 42;
+    /**
+     * <code>VARDECIMAL = 43;</code>
+     *
+     * <pre>
+     * variable width decimal (arbitrary precision)
+     * </pre>
+     */
+    public static final int VARDECIMAL_VALUE = 43;
 
 
     public final int getNumber() { return value; }
@@ -658,6 +674,7 @@ public final class TypeProtos {
         case 40: return LIST;
         case 41: return GENERIC_OBJECT;
         case 42: return UNION;
+        case 43: return VARDECIMAL;
         default: return null;
       }
     }
@@ -850,18 +867,10 @@ public final class TypeProtos {
     // optional int32 width = 3;
     /**
      * <code>optional int32 width = 3;</code>
-     *
-     * <pre>
-     * optional width for fixed size values.
-     * </pre>
      */
     boolean hasWidth();
     /**
      * <code>optional int32 width = 3;</code>
-     *
-     * <pre>
-     * optional width for fixed size values.
-     * </pre>
      */
     int getWidth();
 
@@ -870,7 +879,7 @@ public final class TypeProtos {
      * <code>optional int32 precision = 4;</code>
      *
      * <pre>
-     * used for decimal types
+     * used for decimal types or as optional length for fixed size value
      * </pre>
      */
     boolean hasPrecision();
@@ -878,7 +887,7 @@ public final class TypeProtos {
      * <code>optional int32 precision = 4;</code>
      *
      * <pre>
-     * used for decimal types
+     * used for decimal types or as optional length for fixed size value
      * </pre>
      */
     int getPrecision();
@@ -1151,20 +1160,12 @@ public final class TypeProtos {
     private int width_;
     /**
      * <code>optional int32 width = 3;</code>
-     *
-     * <pre>
-     * optional width for fixed size values.
-     * </pre>
      */
     public boolean hasWidth() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <code>optional int32 width = 3;</code>
-     *
-     * <pre>
-     * optional width for fixed size values.
-     * </pre>
      */
     public int getWidth() {
       return width_;
@@ -1177,7 +1178,7 @@ public final class TypeProtos {
      * <code>optional int32 precision = 4;</code>
      *
      * <pre>
-     * used for decimal types
+     * used for decimal types or as optional length for fixed size value
      * </pre>
      */
     public boolean hasPrecision() {
@@ -1187,7 +1188,7 @@ public final class TypeProtos {
      * <code>optional int32 precision = 4;</code>
      *
      * <pre>
-     * used for decimal types
+     * used for decimal types or as optional length for fixed size value
      * </pre>
      */
     public int getPrecision() {
@@ -1694,30 +1695,18 @@ public final class TypeProtos {
       private int width_ ;
       /**
        * <code>optional int32 width = 3;</code>
-       *
-       * <pre>
-       * optional width for fixed size values.
-       * </pre>
        */
       public boolean hasWidth() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
        * <code>optional int32 width = 3;</code>
-       *
-       * <pre>
-       * optional width for fixed size values.
-       * </pre>
        */
       public int getWidth() {
         return width_;
       }
       /**
        * <code>optional int32 width = 3;</code>
-       *
-       * <pre>
-       * optional width for fixed size values.
-       * </pre>
        */
       public Builder setWidth(int value) {
         bitField0_ |= 0x00000004;
@@ -1727,10 +1716,6 @@ public final class TypeProtos {
       }
       /**
        * <code>optional int32 width = 3;</code>
-       *
-       * <pre>
-       * optional width for fixed size values.
-       * </pre>
        */
       public Builder clearWidth() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1745,7 +1730,7 @@ public final class TypeProtos {
        * <code>optional int32 precision = 4;</code>
        *
        * <pre>
-       * used for decimal types
+       * used for decimal types or as optional length for fixed size value
        * </pre>
        */
       public boolean hasPrecision() {
@@ -1755,7 +1740,7 @@ public final class TypeProtos {
        * <code>optional int32 precision = 4;</code>
        *
        * <pre>
-       * used for decimal types
+       * used for decimal types or as optional length for fixed size value
        * </pre>
        */
       public int getPrecision() {
@@ -1765,7 +1750,7 @@ public final class TypeProtos {
        * <code>optional int32 precision = 4;</code>
        *
        * <pre>
-       * used for decimal types
+       * used for decimal types or as optional length for fixed size value
        * </pre>
        */
       public Builder setPrecision(int value) {
@@ -1778,7 +1763,7 @@ public final class TypeProtos {
        * <code>optional int32 precision = 4;</code>
        *
        * <pre>
-       * used for decimal types
+       * used for decimal types or as optional length for fixed size value
        * </pre>
        */
       public Builder clearPrecision() {
@@ -2016,7 +2001,7 @@ public final class TypeProtos {
       "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001(" +
       "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t" +
       "imeZone\030\006 \001(\005\022#\n\010sub_type\030\007 \003(\0162\021.common" +
-      ".MinorType*\225\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n\003MA" +
+      ".MinorType*\245\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n\003MA" +
       "P\020\001\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT\020\005\022" +
       "\n\n\006BIGINT\020\006\022\014\n\010DECIMAL9\020\007\022\r\n\tDECIMAL18\020\010" +
       "\022\023\n\017DECIMAL28SPARSE\020\t\022\023\n\017DECIMAL38SPARSE" +
@@ -2029,10 +2014,10 @@ public final class TypeProtos {
       "\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\022\n\016DECIMAL28DENSE\020!" +
       "\022\022\n\016DECIMAL38DENSE\020\"\022\010\n\004NULL\020%\022\020\n\014INTERV" +
       "ALYEAR\020&\022\017\n\013INTERVALDAY\020\'\022\010\n\004LIST\020(\022\022\n\016G" +
-      "ENERIC_OBJECT\020)\022\t\n\005UNION\020**4\n\010DataMode\022\014" +
-      "\n\010OPTIONAL\020\000\022\014\n\010REQUIRED\020\001\022\014\n\010REPEATED\020\002",
-      "B-\n\035org.apache.drill.common.typesB\nTypeP" +
-      "rotosH\001"
+      "ENERIC_OBJECT\020)\022\t\n\005UNION\020*\022\016\n\nVARDECIMAL" +
+      "\020+*4\n\010DataMode\022\014\n\010OPTIONAL\020\000\022\014\n\010REQUIRED",
+      "\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apache.drill.com" +
+      "mon.typesB\nTypeProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

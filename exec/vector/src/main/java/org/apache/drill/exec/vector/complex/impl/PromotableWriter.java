@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -84,16 +84,16 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     state = State.SINGLE;
     vector = v;
     type = v.getField().getType().getMinorType();
-    Class writerClass = BasicTypeHelper
+    Class<?> writerClass = BasicTypeHelper
         .getWriterImpl(v.getField().getType().getMinorType(), v.getField().getDataMode());
     if (writerClass.equals(SingleListWriter.class)) {
       writerClass = UnionListWriter.class;
     }
-    Class vectorClass = BasicTypeHelper.getValueVectorClass(v.getField().getType().getMinorType(), v.getField()
+    Class<? extends ValueVector> vectorClass = BasicTypeHelper.getValueVectorClass(v.getField().getType().getMinorType(), v.getField()
         .getDataMode());
     try {
-      Constructor constructor = null;
-      for (Constructor c : writerClass.getConstructors()) {
+      Constructor<?> constructor = null;
+      for (Constructor<?> c : writerClass.getConstructors()) {
         if (c.getParameterTypes().length == 3) {
           constructor = c;
         }
@@ -120,6 +120,7 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     }
   }
 
+  @Override
   protected FieldWriter getWriter(MinorType type) {
     if (state == State.UNION) {
       return writer;
@@ -144,12 +145,13 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     return writer.isEmptyMap();
   }
 
+  @Override
   protected FieldWriter getWriter() {
     return getWriter(type);
   }
 
   private FieldWriter promoteToUnion() {
-    String name = vector.getField().getLastName();
+    String name = vector.getField().getName();
     TransferPair tp = vector.getTransferPair(vector.getField().getType().getMinorType().name().toLowerCase(), vector.getAllocator());
     tp.transfer();
     if (parentContainer != null) {

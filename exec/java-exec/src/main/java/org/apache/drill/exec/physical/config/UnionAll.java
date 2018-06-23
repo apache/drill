@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ public class UnionAll extends AbstractMultiple {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Filter.class);
 
   @JsonCreator
-  public UnionAll(@JsonProperty("children") PhysicalOperator[] children) {
+  public UnionAll(@JsonProperty("children") List<PhysicalOperator> children) {
     super(children);
   }
 
@@ -46,7 +46,7 @@ public class UnionAll extends AbstractMultiple {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    return new UnionAll(children.toArray(new PhysicalOperator[children.size()]));
+    return new UnionAll(children);
   }
 
   @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,9 +26,6 @@
 
 <#-- A utility class that is used to generate java code for covariance functions -->
 
-/*
- * This class is automatically generated from CovarType.tdd using FreeMarker.
- */
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 
@@ -60,6 +57,10 @@ import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
 import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
+
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 @SuppressWarnings("unused")
 

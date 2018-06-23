@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,8 @@
  */
 package org.apache.drill.common.logical.data.visitors;
 
+import org.apache.drill.common.logical.data.LateralJoin;
+import org.apache.drill.common.logical.data.Unnest;
 import org.apache.drill.common.logical.data.Values;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Flatten;
@@ -28,7 +30,6 @@ import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.RunningAggregate;
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.common.logical.data.Sequence;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Transform;
 import org.apache.drill.common.logical.data.Union;
@@ -95,11 +96,6 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     }
 
     @Override
-    public T visitSequence(Sequence sequence, X value) throws E {
-        return visitOp(sequence, value);
-    }
-
-    @Override
     public T visitTransform(Transform transform, X value) throws E {
         return visitOp(transform, value);
     }
@@ -122,5 +118,15 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     @Override
     public T visitWriter(Writer writer, X value) throws E {
       return visitOp(writer, value);
+    }
+
+    @Override
+    public T visitUnnest(Unnest unnest, X value) throws E {
+      return visitOp(unnest, value);
+    }
+
+    @Override
+    public T visitLateralJoin(LateralJoin lateralJoin, X value) throws E {
+        return visitOp(lateralJoin, value);
     }
 }

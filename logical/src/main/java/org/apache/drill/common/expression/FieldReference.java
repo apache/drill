@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,7 +38,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 @JsonSerialize(using = Se.class)
 @JsonDeserialize(using = De.class)
 public class FieldReference extends SchemaPath {
-  MajorType overrideType;
+  private MajorType overrideType;
 
   public FieldReference(SchemaPath sp) {
     super(sp);
@@ -49,29 +49,24 @@ public class FieldReference extends SchemaPath {
     if (getRootSegment().getChild() != null) {
       throw new UnsupportedOperationException("Field references must be singular names.");
     }
-
-  }
-
-
-  private void checkSimpleString(CharSequence value) {
-    if (value.toString().contains(".")) {
-      throw new UnsupportedOperationException(
-          String.format(
-              "Unhandled field reference \"%s\"; a field reference identifier"
-              + " must not have the form of a qualified name (i.e., with \".\").",
-              value));
-    }
   }
 
   public FieldReference(CharSequence value) {
     this(value, ExpressionPosition.UNKNOWN);
-    checkSimpleString(value);
   }
+
+  /**
+   * Create a {@link FieldReference} given an unquoted name. (Note: the
+   * name here is a misnomer: the name may have been quoted in SQL, but
+   * must be unquoted when passed in here.)
+   *
+   * @param safeString the unquoted field reference
+   * @return the field reference expression
+   */
 
   public static FieldReference getWithQuotedRef(CharSequence safeString) {
     return new FieldReference(safeString, ExpressionPosition.UNKNOWN, false);
   }
-
 
   public FieldReference(CharSequence value, ExpressionPosition pos) {
     this(value, pos, true);
@@ -81,9 +76,7 @@ public class FieldReference extends SchemaPath {
     super(new NameSegment(value), pos);
     if (check) {
       checkData();
-      checkSimpleString(value);
     }
-
   }
 
   public FieldReference(String value, ExpressionPosition pos, MajorType dataType) {
@@ -100,6 +93,7 @@ public class FieldReference extends SchemaPath {
     }
   }
 
+  @SuppressWarnings("serial")
   public static class De extends StdDeserializer<FieldReference> {
 
     public De() {
@@ -111,11 +105,11 @@ public class FieldReference extends SchemaPath {
         JsonProcessingException {
       String ref = this._parseString(jp, ctxt);
       ref = ref.replace("`", "");
-      return new FieldReference(ref, ExpressionPosition.UNKNOWN, false);
+      return new FieldReference(ref, ExpressionPosition.UNKNOWN, true);
     }
-
   }
 
+  @SuppressWarnings("serial")
   public static class Se extends StdSerializer<FieldReference> {
 
     public Se() {
@@ -127,7 +121,5 @@ public class FieldReference extends SchemaPath {
         JsonGenerationException {
       jgen.writeString('`' + value.getRootSegment().getNameSegment().getPath() + '`');
     }
-
   }
-
 }

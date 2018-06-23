@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,49 +17,67 @@
  */
 package org.apache.drill.exec.sql;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.drill.BaseTestQuery;
+import com.google.common.collect.Maps;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import java.io.File;
+import java.util.Map;
 
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
+import static org.junit.Assert.assertEquals;
+
+@Category(SqlTest.class)
 public class TestCTAS extends BaseTestQuery {
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef1() throws Exception {
-    ctasErrorTestHelper("CREATE TABLE %s.%s AS SELECT region_id, region_id FROM cp.`region.json`",
+    ctasErrorTestHelper("CREATE TABLE dfs.tmp.%s AS SELECT region_id, region_id FROM cp.`region.json`",
         String.format("Duplicate column name [%s]", "region_id")
     );
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef2() throws Exception {
-    ctasErrorTestHelper("CREATE TABLE %s.%s AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
+    ctasErrorTestHelper("CREATE TABLE dfs.tmp.%s AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
         String.format("Duplicate column name [%s]", "sales_city")
     );
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef3() throws Exception {
     ctasErrorTestHelper(
-        "CREATE TABLE %s.%s(regionid, regionid) " +
+        "CREATE TABLE dfs.tmp.%s(regionid, regionid) " +
             "AS SELECT region_id, sales_city FROM cp.`region.json`",
         String.format("Duplicate column name [%s]", "regionid")
     );
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef4() throws Exception {
     ctasErrorTestHelper(
-        "CREATE TABLE %s.%s(regionid, salescity, salescity) " +
+        "CREATE TABLE dfs.tmp.%s(regionid, salescity, salescity) " +
             "AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
         String.format("Duplicate column name [%s]", "salescity")
     );
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef5() throws Exception {
     ctasErrorTestHelper(
-        "CREATE TABLE %s.%s(regionid, salescity, SalesCity) " +
+        "CREATE TABLE dfs.tmp.%s(regionid, salescity, SalesCity) " +
             "AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
         String.format("Duplicate column name [%s]", "SalesCity")
     );
@@ -68,7 +86,7 @@ public class TestCTAS extends BaseTestQuery {
   @Test // DRILL-2589
   public void whenInEqualColumnCountInTableDefVsInTableQuery() throws Exception {
     ctasErrorTestHelper(
-        "CREATE TABLE %s.%s(regionid, salescity) " +
+        "CREATE TABLE dfs.tmp.%s(regionid, salescity) " +
             "AS SELECT region_id, sales_city, sales_region FROM cp.`region.json`",
         "table's field list and the table's query field list have different counts."
     );
@@ -77,169 +95,238 @@ public class TestCTAS extends BaseTestQuery {
   @Test // DRILL-2589
   public void whenTableQueryColumnHasStarAndTableFiledListIsSpecified() throws Exception {
     ctasErrorTestHelper(
-        "CREATE TABLE %s.%s(regionid, salescity) " +
+        "CREATE TABLE dfs.tmp.%s(regionid, salescity) " +
             "AS SELECT region_id, * FROM cp.`region.json`",
         "table's query field list has a '*', which is invalid when table's field list is specified."
     );
   }
 
   @Test // DRILL-2422
+  @Category(UnlikelyTest.class)
   public void createTableWhenATableWithSameNameAlreadyExists() throws Exception{
     final String newTblName = "createTableWhenTableAlreadyExists";
+    final String ctasQuery = String.format("CREATE TABLE dfs.tmp.%s AS SELECT * from cp.`region.json`", newTblName);
 
-    try {
-      final String ctasQuery =
-          String.format("CREATE TABLE %s.%s AS SELECT * from cp.`region.json`", TEMP_SCHEMA, newTblName);
-
-      test(ctasQuery);
-
-      errorMsgTestHelper(ctasQuery,
-          String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, TEMP_SCHEMA));
-    } finally {
-      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
-    }
+    test(ctasQuery);
+    errorMsgTestHelper(ctasQuery, String.format("A table or view with given name [%s] already exists in schema [dfs.tmp]", newTblName));
   }
 
   @Test // DRILL-2422
+  @Category(UnlikelyTest.class)
   public void createTableWhenAViewWithSameNameAlreadyExists() throws Exception{
     final String newTblName = "createTableWhenAViewWithSameNameAlreadyExists";
 
     try {
-      test(String.format("CREATE VIEW %s.%s AS SELECT * from cp.`region.json`", TEMP_SCHEMA, newTblName));
+      test("CREATE VIEW dfs.tmp.%s AS SELECT * from cp.`region.json`", newTblName);
 
-      final String ctasQuery =
-          String.format("CREATE TABLE %s.%s AS SELECT * FROM cp.`employee.json`", TEMP_SCHEMA, newTblName);
+      final String ctasQuery = String.format("CREATE TABLE dfs.tmp.%s AS SELECT * FROM cp.`employee.json`", newTblName);
 
       errorMsgTestHelper(ctasQuery,
           String.format("A table or view with given name [%s] already exists in schema [%s]",
-              newTblName, "dfs_test.tmp"));
+              newTblName, "dfs.tmp"));
     } finally {
-      test(String.format("DROP VIEW %s.%s", TEMP_SCHEMA, newTblName));
+      test("DROP VIEW dfs.tmp.%s", newTblName);
     }
   }
 
   @Test
   public void ctasPartitionWithEmptyList() throws Exception {
     final String newTblName = "ctasPartitionWithEmptyList";
+    final String ctasQuery = String.format("CREATE TABLE dfs.tmp.%s PARTITION BY AS SELECT * from cp.`region.json`", newTblName);
 
-    try {
-      final String ctasQuery = String.format("CREATE TABLE %s.%s PARTITION BY AS SELECT * from cp.`region.json`", TEMP_SCHEMA, newTblName);
-
-      errorMsgTestHelper(ctasQuery,
-          String.format("PARSE ERROR: Encountered \"AS\""));
-    } finally {
-      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
-    }
+    errorMsgTestHelper(ctasQuery,"PARSE ERROR: Encountered \"AS\"");
   }
 
   @Test // DRILL-3377
   public void partitionByCtasColList() throws Exception {
     final String newTblName = "partitionByCtasColList";
 
-    try {
-      final String ctasQuery = String.format("CREATE TABLE %s.%s (cnt, rkey) PARTITION BY (cnt) " +
-          "AS SELECT count(*), n_regionkey from cp.`tpch/nation.parquet` group by n_regionkey",
-          TEMP_SCHEMA, newTblName);
+    test("CREATE TABLE dfs.tmp.%s (cnt, rkey) PARTITION BY (cnt) " +
+      "AS SELECT count(*), n_regionkey from cp.`tpch/nation.parquet` group by n_regionkey", newTblName);
 
-      test(ctasQuery);
-
-      final String selectFromCreatedTable = String.format(" select cnt, rkey from %s.%s", TEMP_SCHEMA, newTblName);
-      final String baselineQuery = "select count(*) as cnt, n_regionkey as rkey from cp.`tpch/nation.parquet` group by n_regionkey";
-      testBuilder()
-          .sqlQuery(selectFromCreatedTable)
-          .unOrdered()
-          .sqlBaselineQuery(baselineQuery)
-          .build()
-          .run();
-    } finally {
-      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
-    }
+    testBuilder()
+        .sqlQuery("select cnt, rkey from dfs.tmp.%s", newTblName)
+        .unOrdered()
+        .sqlBaselineQuery("select count(*) as cnt, n_regionkey as rkey from cp.`tpch/nation.parquet` group by n_regionkey")
+        .build()
+        .run();
   }
 
   @Test // DRILL-3374
   public void partitionByCtasFromView() throws Exception {
-    final String newTblName = "partitionByCtasColList";
+    final String newTblName = "partitionByCtasFromView";
     final String newView = "partitionByCtasColListView";
-    try {
-      final String viewCreate = String.format("create or replace view %s.%s (col_int, col_varchar)  " +
-          "AS select cast(n_nationkey as int), cast(n_name as varchar(30)) from cp.`tpch/nation.parquet`",
-          TEMP_SCHEMA, newView);
 
-      final String ctasQuery = String.format("CREATE TABLE %s.%s PARTITION BY (col_int) AS SELECT * from %s.%s",
-          TEMP_SCHEMA, newTblName, TEMP_SCHEMA, newView);
+    test("create or replace view dfs.tmp.%s (col_int, col_varchar)  " +
+      "AS select cast(n_nationkey as int), cast(n_name as varchar(30)) from cp.`tpch/nation.parquet`", newView);
+    test("CREATE TABLE dfs.tmp.%s PARTITION BY (col_int) AS SELECT * from dfs.tmp.%s",
+      newTblName, newView);
 
-      test(viewCreate);
-      test(ctasQuery);
+    testBuilder()
+        .sqlQuery("select col_int, col_varchar from dfs.tmp.%s", newTblName)
+        .unOrdered()
+        .sqlBaselineQuery("select cast(n_nationkey as int) as col_int, cast(n_name as varchar(30)) as col_varchar " +
+          "from cp.`tpch/nation.parquet`")
+        .build()
+        .run();
 
-      final String baselineQuery = "select cast(n_nationkey as int) as col_int, cast(n_name as varchar(30)) as col_varchar " +
-        "from cp.`tpch/nation.parquet`";
-      final String selectFromCreatedTable = String.format("select col_int, col_varchar from %s.%s", TEMP_SCHEMA, newTblName);
-      testBuilder()
-          .sqlQuery(selectFromCreatedTable)
-          .unOrdered()
-          .sqlBaselineQuery(baselineQuery)
-          .build()
-          .run();
-
-      final String viewDrop = String.format("DROP VIEW %s.%s", TEMP_SCHEMA, newView);
-      test(viewDrop);
-    } finally {
-      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
-    }
+    test("DROP VIEW dfs.tmp.%s", newView);
   }
 
   @Test // DRILL-3382
   public void ctasWithQueryOrderby() throws Exception {
     final String newTblName = "ctasWithQueryOrderby";
 
-    try {
-      final String ctasQuery = String.format("CREATE TABLE %s.%s   " +
-          "AS SELECT n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` order by n_nationkey",
-          TEMP_SCHEMA, newTblName);
+    test("CREATE TABLE dfs.tmp.%s AS SELECT n_nationkey, n_name, n_comment from " +
+      "cp.`tpch/nation.parquet` order by n_nationkey", newTblName);
 
-      test(ctasQuery);
-
-      final String selectFromCreatedTable = String.format(" select n_nationkey, n_name, n_comment from %s.%s", TEMP_SCHEMA, newTblName);
-      final String baselineQuery = "select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` order by n_nationkey";
-
-      testBuilder()
-          .sqlQuery(selectFromCreatedTable)
-          .ordered()
-          .sqlBaselineQuery(baselineQuery)
-          .build()
-          .run();
-    } finally {
-      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
-    }
+    testBuilder()
+        .sqlQuery("select n_nationkey, n_name, n_comment from dfs.tmp.%s", newTblName)
+        .ordered()
+        .sqlBaselineQuery("select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` order by n_nationkey")
+        .build()
+        .run();
   }
 
   @Test // DRILL-4392
   public void ctasWithPartition() throws Exception {
     final String newTblName = "nation_ctas";
 
+    test("CREATE TABLE dfs.tmp.%s partition by (n_regionkey) AS " +
+      "SELECT n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by n_nationkey limit 1", newTblName);
+
+    testBuilder()
+        .sqlQuery("select * from dfs.tmp.%s", newTblName)
+        .ordered()
+        .sqlBaselineQuery("select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by n_nationkey limit 1")
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testPartitionByForAllTypes() throws Exception {
+    final String location = "partitioned_tables_with_nulls";
+    final String ctasQuery = "create table %s partition by (%s) as %s";
+    final String tablePath = "dfs.tmp.`%s/%s_%s`";
+
+    // key - new table suffix, value - data query
+    final Map<String, String> variations = Maps.newHashMap();
+    variations.put("required", "select * from cp.`parquet/alltypes_required.parquet`");
+    variations.put("optional", "select * from cp.`parquet/alltypes_optional.parquet`");
+    variations.put("nulls_only", "select * from cp.`parquet/alltypes_optional.parquet` where %s is null");
+
+    final QueryDataBatch result = testSqlWithResults("select * from cp.`parquet/alltypes_required.parquet` limit 0").get(0);
+    for (UserBitShared.SerializedField field : result.getHeader().getDef().getFieldList()) {
+      final String fieldName = field.getNamePart().getName();
+
+      for (Map.Entry<String, String> variation : variations.entrySet()) {
+        final String table = String.format(tablePath, location, fieldName, variation.getKey());
+        final String dataQuery = String.format(variation.getValue(), fieldName);
+        test(ctasQuery, table, fieldName, dataQuery, fieldName);
+        testBuilder()
+          .sqlQuery("select * from %s", table)
+          .unOrdered()
+          .sqlBaselineQuery(dataQuery)
+          .build()
+          .run();
+      }
+    }
+
+    result.release();
+  }
+
+  @Test
+  public void createTableWithCustomUmask() throws Exception {
+    test("use dfs.tmp");
+    String tableName = "with_custom_permission";
+    StorageStrategy storageStrategy = new StorageStrategy("000", false);
+    FileSystem fs = getLocalFileSystem();
     try {
-      final String ctasQuery = String.format("CREATE TABLE %s.%s   " +
-          "partition by (n_regionkey) AS SELECT n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by n_nationkey limit 1",
-          TEMP_SCHEMA, newTblName);
+      test("alter session set `%s` = '%s'", ExecConstants.PERSISTENT_TABLE_UMASK, storageStrategy.getUmask());
+      test("create table %s as select 'A' from (values(1))", tableName);
+      Path tableLocation = new Path(dirTestWatcher.getDfsTestTmpDir().getAbsolutePath(), tableName);
+      assertEquals("Directory permission should match",
+          storageStrategy.getFolderPermission(), fs.getFileStatus(tableLocation).getPermission());
+      assertEquals("File permission should match",
+          storageStrategy.getFilePermission(), fs.listLocatedStatus(tableLocation).next().getPermission());
+    } finally {
+      test("alter session reset `%s`", ExecConstants.PERSISTENT_TABLE_UMASK);
+      test("drop table if exists %s", tableName);
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTableIfNotExistsWhenTableWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTableIfNotExistsWhenATableWithSameNameAlreadyExists";
+
+    try {
+      String ctasQuery = String.format("CREATE TABLE %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
 
       test(ctasQuery);
 
-      final String selectFromCreatedTable = String.format(" select * from %s.%s", TEMP_SCHEMA, newTblName);
-      final String baselineQuery = "select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by n_nationkey limit 1";
+      ctasQuery =
+        String.format("CREATE TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
 
       testBuilder()
-          .sqlQuery(selectFromCreatedTable)
-          .ordered()
-          .sqlBaselineQuery(baselineQuery)
-          .build()
-          .run();
+        .sqlQuery(ctasQuery)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+        .go();
     } finally {
-      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
+      test("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTableIfNotExistsWhenViewWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTableIfNotExistsWhenAViewWithSameNameAlreadyExists";
+
+    try {
+      String ctasQuery = String.format("CREATE VIEW %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      ctasQuery =
+        String.format("CREATE TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+
+      testBuilder()
+        .sqlQuery(ctasQuery)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+        .go();
+    } finally {
+      test("DROP VIEW IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTableIfNotExistsWhenTableWithSameNameDoesNotExist() throws Exception{
+    final String newTblName = "createTableIfNotExistsWhenATableWithSameNameDoesNotExist";
+
+    try {
+      String ctasQuery = String.format("CREATE TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+    } finally {
+      test("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
+    }
+  }
+
+  @Test
+  public void testCTASWithEmptyJson() throws Exception {
+    final String newTblName = "tbl4444";
+    try {
+      test(String.format("CREATE TABLE %s.%s AS SELECT * FROM cp.`project/pushdown/empty.json`", DFS_TMP_SCHEMA, newTblName));
+    } finally {
+      test("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
     }
   }
 
   private static void ctasErrorTestHelper(final String ctasSql, final String expErrorMsg) throws Exception {
-    final String createTableSql = String.format(ctasSql, TEMP_SCHEMA, "testTableName");
+    final String createTableSql = String.format(ctasSql, "testTableName");
     errorMsgTestHelper(createTableSql, expErrorMsg);
   }
 }

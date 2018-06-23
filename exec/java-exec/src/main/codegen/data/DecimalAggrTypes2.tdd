@@ -17,14 +17,8 @@
 {
   aggrtypes: [
     {className: "Avg", funcName: "avg", types: [
-        {inputType: "Decimal9", outputType: "Decimal38Sparse", countRunningType: "BigInt",  major: "Numeric"},
-        {inputType: "NullableDecimal9", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
-        {inputType: "Decimal18", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
-        {inputType: "NullableDecimal18", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
-        {inputType: "Decimal28Sparse", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
-        {inputType: "NullableDecimal28Sparse", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
-        {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
-        {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"}
+        {inputType: "VarDecimal", outputType: "NullableVarDecimal", countRunningType: "BigInt"},
+        {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal", countRunningType: "BigInt"}
       ]
     }
   ]

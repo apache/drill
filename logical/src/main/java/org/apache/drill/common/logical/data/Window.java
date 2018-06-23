@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,26 +27,24 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 @JsonTypeName("window")
 public class Window extends SingleInputOperator {
-  private final NamedExpression[] withins;
-  private final NamedExpression[] aggregations;
-  private final Order.Ordering[] orderings;
+  private final List<NamedExpression> withins;
+  private final List<NamedExpression> aggregations;
+  private final List<Order.Ordering> orderings;
   private final long start;
   private final long end;
 
 
   @JsonCreator
-  public Window(@JsonProperty("withins") NamedExpression[] withins,
-                @JsonProperty("aggregations") NamedExpression[] aggregations,
-                @JsonProperty("orderings") Order.Ordering[] orderings,
+  public Window(@JsonProperty("withins") List<NamedExpression> withins,
+                @JsonProperty("aggregations") List<NamedExpression> aggregations,
+                @JsonProperty("orderings") List<Order.Ordering> orderings,
                 @JsonProperty("start") Long start,
                 @JsonProperty("end") Long end) {
     super();
@@ -57,7 +55,7 @@ public class Window extends SingleInputOperator {
     this.orderings = orderings;
   }
 
-  public NamedExpression[] getWithins() {
+  public List<NamedExpression> getWithins() {
     return withins;
   }
 
@@ -69,11 +67,11 @@ public class Window extends SingleInputOperator {
     return end;
   }
 
-  public NamedExpression[] getAggregations() {
+  public List<NamedExpression> getAggregations() {
     return aggregations;
   }
 
-  public Order.Ordering[] getOrderings() {
+  public List<Order.Ordering> getOrderings() {
     return orderings;
   }
 
@@ -109,7 +107,7 @@ public class Window extends SingleInputOperator {
       //TODO withins can actually be empty: over(), over(order by <expression>), ...
       checkState(!withins.isEmpty(), "Withins in window must not be empty.");
       checkState(!aggregations.isEmpty(), "Aggregations in window must not be empty.");
-      return new Window(aN(withins), aN(aggregations), aO(orderings), start, end);
+      return new Window(withins, aggregations, orderings, start, end);
     }
 
     public Builder addOrdering(Order.Ordering ordering) {

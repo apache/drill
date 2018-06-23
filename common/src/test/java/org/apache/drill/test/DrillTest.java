@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,13 +23,11 @@ import java.lang.management.MemoryMXBean;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillStringUtils;
-import org.apache.drill.common.util.TestTools;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
+import org.junit.rules.DisableOnDebug;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -39,7 +37,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DrillTest {
-//  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTest.class);
 
   protected static final ObjectMapper objectMapper;
   static {
@@ -55,24 +52,17 @@ public class DrillTest {
   static MemWatcher memWatcher;
   static String className;
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(50000);
+  @Rule public final TestRule TIMEOUT = new DisableOnDebug(TestTools.getTimeoutRule(1_000_000));
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
 
   @Rule public final TestRule REPEAT_RULE = TestTools.getRepeatRule(false);
 
   /**
    * Rule for tests that verify {@link org.apache.drill.common.exceptions.UserException} type and message. See
-   * {@link UserExceptionMatcher} and e.g. {@link org.apache.drill.exec.server.TestOptions#checkValidationException}.
+   * {@link UserExceptionMatcher} and e.g. apache.drill.exec.server.TestOptions#checkValidationException.
    * Tests that do not use this rule are not affected.
    */
   @Rule public final ExpectedException thrownException = ExpectedException.none();
-
-  @Rule public TestName TEST_NAME = new TestName();
-
-  @Before
-  public void printID() throws Exception {
-    System.out.printf("Running %s#%s\n", getClass().getName(), TEST_NAME.getMethodName());
-  }
 
   @BeforeClass
   public static void initDrillTest() throws Exception {
@@ -82,7 +72,8 @@ public class DrillTest {
   @AfterClass
   public static void finiDrillTest() throws InterruptedException{
     testReporter.info(String.format("Test Class done (%s): %s.", memWatcher.getMemString(true), className));
-    LOG_OUTCOME.sleepIfFailure();
+    // Clear interrupts for next test
+    Thread.interrupted();
   }
 
   protected static class MemWatcher {
@@ -113,13 +104,10 @@ public class DrillTest {
           DrillStringUtils.readable(endNonHeap - startNonHeap), DrillStringUtils.readable(endNonHeap) //
        );
     }
-
   }
 
   private static class TestLogReporter extends TestWatcher {
-
     private MemWatcher memWatcher;
-    private int failureCount = 0;
 
     @Override
     protected void starting(Description description) {
@@ -131,24 +119,12 @@ public class DrillTest {
     @Override
     protected void failed(Throwable e, Description description) {
       testReporter.error(String.format("Test Failed (%s): %s", memWatcher.getMemString(), description.getDisplayName()), e);
-      failureCount++;
     }
 
     @Override
     public void succeeded(Description description) {
       testReporter.info(String.format("Test Succeeded (%s): %s", memWatcher.getMemString(), description.getDisplayName()));
     }
-
-    public void sleepIfFailure() throws InterruptedException {
-      if(failureCount > 0){
-        Thread.sleep(2000);
-        failureCount = 0;
-      } else {
-        // pause to get logger to catch up.
-        Thread.sleep(250);
-      }
-    }
-
   }
 
   public static String escapeJsonString(String original) {
@@ -188,7 +164,5 @@ public class DrillTest {
     public long getMemNonHeap() {
       return memoryBean.getNonHeapMemoryUsage().getUsed();
     }
-
   }
-
 }

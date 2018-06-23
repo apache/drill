@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 /**
   NOTE: ComparisonFunctions.java does not contain/generate all comparison
   functions.  DecimalFunctions.java and DateIntervalFunctions.java contain
@@ -118,9 +116,18 @@
       {
         <@compareNullsSubblock leftType=leftType rightType=rightType
           output="out.value" breakTarget="outside" nullCompare=true nullComparesHigh=nullComparesHigh />
-
+    // NaN is the biggest possible value, and NaN == NaN
     <#if mode == "primitive">
-      ${output} = left.value < right.value ? -1 : (left.value == right.value ? 0 : 1);
+      if(Double.isNaN(left.value) && Double.isNaN(right.value)) {
+        ${output} = 0;
+      } else if (!Double.isNaN(left.value) && Double.isNaN(right.value)) {
+        ${output} = -1;
+      } else if (Double.isNaN(left.value) && !Double.isNaN(right.value)) {
+        ${output} = 1;
+      } else {
+        ${output} = left.value < right.value ? -1 : (left.value == right.value ? 0 : 1);
+      }
+
     <#elseif mode == "varString">
       ${output} = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(
           left.buffer, left.start, left.end, right.buffer, right.start, right.end );
@@ -168,6 +175,10 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import javax.inject.Inject;
 import io.netty.buffer.DrillBuf;
+
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 @SuppressWarnings("unused")
 public class GCompare${leftTypeBase}Vs${rightTypeBase} {
@@ -236,7 +247,14 @@ public class GCompare${leftTypeBase}Vs${rightTypeBase} {
       public void eval() {
 
         <#if typeGroup.mode == "primitive">
+        // NaN is the biggest possible value, and NaN == NaN
+        if (Double.isNaN(left.value) || ( Double.isNaN(left.value) && Double.isNaN(right.value))) {
+          out.value=0;
+        } else if (Double.isNaN(right.value) && !Double.isNaN(left.value)) {
+          out.value = 1;
+        } else {
           out.value = left.value < right.value ? 1 : 0;
+        }
         <#elseif typeGroup.mode == "varString"
             || typeGroup.mode == "intervalNameThis" || typeGroup.mode == "intervalDay" >
           int cmp;
@@ -267,7 +285,14 @@ public class GCompare${leftTypeBase}Vs${rightTypeBase} {
       public void eval() {
 
         <#if typeGroup.mode == "primitive">
+        // NaN is the biggest possible value, and NaN == NaN
+        if (Double.isNaN(right.value)){
+          out.value = 1;
+        } else if (!Double.isNaN(right.value) && Double.isNaN(left.value)) {
+          out.value = 0;
+        } else {
           out.value = left.value <= right.value ? 1 : 0;
+        }
         <#elseif typeGroup.mode == "varString"
             || typeGroup.mode == "intervalNameThis" || typeGroup.mode == "intervalDay" >
           int cmp;
@@ -298,7 +323,14 @@ public class GCompare${leftTypeBase}Vs${rightTypeBase} {
       public void eval() {
 
         <#if typeGroup.mode == "primitive">
+        // NaN is the biggest possible value, and NaN == NaN
+        if (Double.isNaN(right.value) || ( Double.isNaN(left.value) && Double.isNaN(right.value))) {
+          out.value = 0;
+        } else if (Double.isNaN(left.value) && !Double.isNaN(right.value)) {
+          out.value = 1;
+        } else {
           out.value = left.value > right.value ? 1 : 0;
+        }
         <#elseif typeGroup.mode == "varString"
             || typeGroup.mode == "intervalNameThis" || typeGroup.mode == "intervalDay" >
           int cmp;
@@ -329,7 +361,15 @@ public class GCompare${leftTypeBase}Vs${rightTypeBase} {
       public void eval() {
 
         <#if typeGroup.mode == "primitive">
+        // NaN is the biggest possible value, and NaN == NaN
+        if (Double.isNaN(left.value)){
+          out.value=1;
+        } else if (!Double.isNaN(left.value) && Double.isNaN(right.value)) {
+          out.value = 0;
+        } else {
           out.value = left.value >= right.value ? 1 : 0;
+        }
+
         <#elseif typeGroup.mode == "varString"
             || typeGroup.mode == "intervalNameThis" || typeGroup.mode == "intervalDay" >
           int cmp;
@@ -360,7 +400,12 @@ public class GCompare${leftTypeBase}Vs${rightTypeBase} {
       public void eval() {
 
         <#if typeGroup.mode == "primitive">
+        // NaN is the biggest possible value, and NaN == NaN
+        if (Double.isNaN(left.value) && Double.isNaN(right.value)) {
+          out.value = 1;
+        } else {
           out.value = left.value == right.value ? 1 : 0;
+        }
         <#elseif typeGroup.mode == "varString" >
           out.value = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.equal(
               left.buffer, left.start, left.end, right.buffer, right.start, right.end);
@@ -393,7 +438,12 @@ public class GCompare${leftTypeBase}Vs${rightTypeBase} {
       public void eval() {
 
         <#if typeGroup.mode == "primitive">
+        // NaN is the biggest possible value, and NaN == NaN
+        if (Double.isNaN(left.value) && Double.isNaN(right.value)) {
+          out.value = 0;
+        } else {
           out.value = left.value != right.value ? 1 : 0;
+        }
         <#elseif typeGroup.mode == "varString"
             || typeGroup.mode == "intervalNameThis" || typeGroup.mode == "intervalDay" >
           int cmp;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,22 +17,27 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
-import org.apache.drill.exec.testing.Controls;
-import org.apache.drill.exec.testing.ControlsInjectionUtil;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.util.Properties;
+import java.nio.file.Paths;
+
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
+import org.apache.drill.exec.testing.Controls;
+import org.apache.drill.exec.testing.ControlsInjectionUtil;
+import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Testing External Sort's spilling to disk.
@@ -42,33 +47,69 @@ import java.util.Properties;
  * <br>
  * {@link ExecConstants#EXTERNAL_SORT_SPILL_GROUP_SIZE} = 1
  */
-public class TestSortSpillWithException extends BaseTestQuery {
-  private static final String TEST_RES_PATH = TestTools.getWorkingPath() + "/src/test/resources";
+@Category(OperatorTest.class)
+public class TestSortSpillWithException extends ClusterTest {
+  @ClassRule
+  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
   @BeforeClass
-  public static void initCluster() {
-    // make sure memory sorter outputs 20 rows per batch
-    final Properties props = cloneDefaultTestConfigProperties();
-    props.put(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD, "1");
-    props.put(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE, "1");
+  public static void setup() throws Exception {
+    dirTestWatcher.copyResourceToRoot(Paths.get("xsort"));
 
-    updateTestCluster(1, DrillConfig.create(props));
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD, 1) // Unmanaged
+        .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE, 1) // Unmanaged
+        // Using EXTERNAL_SORT_MAX_MEMORY to set low values of memory for SORT instead
+        // of lowering MAX_QUERY_MEMORY_PER_NODE_KEY because computation of operator memory
+        // cannot go lower than MIN_MEMORY_PER_BUFFERED_OP (the default value of this parameter
+        // is 40MB). The 40MB memory is sufficient for this testcase to run sort without spilling.
+        .configProperty(ExecConstants.EXTERNAL_SORT_MAX_MEMORY, 10 * 1024 * 1024)
+        .sessionOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 60 * 1024 * 1024) // Spill early
+        // Prevent the percent-based memory rule from second-guessing the above.
+        .sessionOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.0)
+        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false)
+        .maxParallelization(1);
+    startCluster(builder);
   }
 
   @Test
-  public void testSpilLeak() throws Exception {
+  public void testSpillLeakLegacy() throws Exception {
+    client.alterSession(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION.getOptionName(), true);
     // inject exception in sort while spilling
     final String controls = Controls.newBuilder()
       .addExceptionOnBit(
           ExternalSortBatch.class,
           ExternalSortBatch.INTERRUPTION_WHILE_SPILLING,
           IOException.class,
-          bits[0].getContext().getEndpoint())
+          cluster.drillbit().getContext().getEndpoint())
       .build();
-    ControlsInjectionUtil.setControls(client, controls);
+    ControlsInjectionUtil.setControls(cluster.client(), controls);
     // run a simple order by query
     try {
-      test("select employee_id from dfs_test.`%s/xsort/2batches` order by employee_id", TEST_RES_PATH);
+      test("select employee_id from dfs.`xsort/2batches` order by employee_id");
+      fail("Query should have failed!");
+    } catch (UserRemoteException e) {
+      assertEquals(ErrorType.RESOURCE, e.getErrorType());
+      assertTrue("Incorrect error message",
+        e.getMessage().contains("External Sort encountered an error while spilling to disk"));
+    }
+  }
+
+  @Test
+  public void testSpillLeakManaged() throws Exception {
+    client.alterSession(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION.getOptionName(), false);
+    // inject exception in sort while spilling
+    final String controls = Controls.newBuilder()
+      .addExceptionOnBit(
+          ExternalSortBatch.class,
+          ExternalSortBatch.INTERRUPTION_WHILE_SPILLING,
+          IOException.class,
+          cluster.drillbit().getContext().getEndpoint())
+      .build();
+    ControlsInjectionUtil.setControls(cluster.client(), controls);
+    // run a simple order by query
+    try {
+      test("SELECT id_i, name_s250 FROM `mock`.`employee_500K` ORDER BY id_i");
       fail("Query should have failed!");
     } catch (UserRemoteException e) {
       assertEquals(ErrorType.RESOURCE, e.getErrorType());

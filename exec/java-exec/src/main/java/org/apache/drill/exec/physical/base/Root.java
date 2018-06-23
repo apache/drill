@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,5 +20,5 @@ package org.apache.drill.exec.physical.base;
 /**
  * Marker interface describe the root of a query plan.  Currently, this is constrained to Screen.
  */
-public interface Root extends FragmentRoot{
+public interface Root extends FragmentRoot {
 }

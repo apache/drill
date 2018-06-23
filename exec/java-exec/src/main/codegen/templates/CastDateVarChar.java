@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -47,9 +47,16 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
-  costCategory = FunctionCostCategory.COMPLEX)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.STRING_CAST,
+    nulls = NullHandling.NULL_IF_NULL,
+    costCategory = FunctionCostCategory.COMPLEX)
 public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
@@ -64,11 +71,11 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   public void eval() {
 
       <#if type.from == "Time">
-      org.joda.time.LocalTime temp = new org.joda.time.LocalTime(in.value, org.joda.time.DateTimeZone.UTC);
-      String str = temp.toString();
+      java.time.LocalDateTime temp = java.time.Instant.ofEpochMilli(in.value).atZone(java.time.ZoneOffset.UTC).toLocalDateTime();
+      String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.format(temp);
       <#else>
-      org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.UTC);
-      String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.print(temp);
+      java.time.LocalDateTime temp = java.time.Instant.ofEpochMilli(in.value).atZone(java.time.ZoneOffset.UTC).toLocalDateTime();
+      String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.format(temp);
       </#if>
       out.buffer = buffer;
       out.start = 0;

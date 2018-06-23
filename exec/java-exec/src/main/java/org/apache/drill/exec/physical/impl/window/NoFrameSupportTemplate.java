@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.window;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -53,7 +54,7 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
 
   @Override
   public void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext oContext,
-                    final boolean requireFullPartition) throws SchemaChangeException {
+                    final boolean requireFullPartition, final WindowPOP popConfig) throws SchemaChangeException {
     this.container = container;
     this.batches = batches;
 
@@ -116,7 +117,11 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
 
   private void cleanPartition() {
     partition = null;
-    resetValues();
+    try {
+      resetValues();
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
     for (VectorWrapper<?> vw : internal) {
       if ((vw.getValueVector() instanceof BaseDataValueVector)) {
         ((BaseDataValueVector) vw.getValueVector()).reset();
@@ -172,15 +177,23 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
 
   private void copyPrevToInternal(VectorAccessible current, int row) {
     logger.trace("copying {} into internal", row - 1);
-    setupCopyPrev(current, internal);
-    copyPrev(row - 1, 0);
+    try {
+      setupCopyPrev(current, internal);
+      copyPrev(row - 1, 0);
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
     lagCopiedToInternal = true;
   }
 
   private void copyPrevFromInternal() {
     if (lagCopiedToInternal) {
-      setupCopyFromInternal(internal, container);
-      copyFromInternal(0, 0);
+      try {
+        setupCopyFromInternal(internal, container);
+        copyFromInternal(0, 0);
+      } catch (SchemaChangeException e) {
+        throw new UnsupportedOperationException(e);
+      }
       lagCopiedToInternal = false;
     }
   }
@@ -217,8 +230,12 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
 
       // check first container from start row, and subsequent containers from first row
       for (; row < recordCount; row++, length++) {
-        if (!isSamePartition(start, current, row, batch)) {
-          break outer;
+        try {
+          if (!isSamePartition(start, current, row, batch)) {
+            break outer;
+          }
+        } catch (SchemaChangeException e) {
+          throw new UnsupportedOperationException(e);
         }
       }
 
@@ -230,11 +247,15 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
       row = 0;
     }
 
-    if (!requireFullPartition) {
-      // this is the last batch of current partition if
-      lastBatch = row < outputCount                           // partition ends before the end of the batch
-        || batches.size() == 1                                // it's the last available batch
-        || !isSamePartition(start, current, 0, batches.get(1)); // next batch contains a different partition
+    try {
+      if (!requireFullPartition) {
+        // this is the last batch of current partition if
+        lastBatch = row < outputCount                           // partition ends before the end of the batch
+          || batches.size() == 1                                // it's the last available batch
+          || !isSamePartition(start, current, 0, batches.get(1)); // next batch contains a different partition
+      }
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
     }
 
     partition.updateLength(length, !(requireFullPartition || lastBatch));
@@ -283,7 +304,9 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
    * @param outIndex index of row
    * @param partition object used by "computed" window functions
    */
-  public abstract void outputRow(@Named("outIndex") int outIndex, @Named("partition") Partition partition);
+  public abstract void outputRow(@Named("outIndex") int outIndex,
+                                 @Named("partition") Partition partition)
+                       throws SchemaChangeException;
 
   /**
    * Called once per partition, before processing the partition. Used to setup read/write vectors
@@ -293,7 +316,8 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
    * @throws SchemaChangeException
    */
   public abstract void setupPartition(@Named("incoming") WindowDataBatch incoming,
-                                      @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
+                                      @Named("outgoing") VectorAccessible outgoing)
+                       throws SchemaChangeException;
 
   /**
    * copies value(s) from inIndex row to outIndex row. Mostly used by LEAD. inIndex always points to the row next to
@@ -301,8 +325,12 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
    * @param inIndex source row of the copy
    * @param outIndex destination row of the copy.
    */
-  public abstract void copyNext(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-  public abstract void setupCopyNext(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
+  public abstract void copyNext(@Named("inIndex") int inIndex,
+                                @Named("outIndex") int outIndex)
+                       throws SchemaChangeException;
+  public abstract void setupCopyNext(@Named("incoming") VectorAccessible incoming,
+                                     @Named("outgoing") VectorAccessible outgoing)
+                       throws SchemaChangeException;
 
   /**
    * copies value(s) from inIndex row to outIndex row. Mostly used by LAG. inIndex always points to the previous row
@@ -310,16 +338,24 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
    * @param inIndex source row of the copy
    * @param outIndex destination row of the copy.
    */
-  public abstract void copyPrev(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-  public abstract void setupCopyPrev(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
+  public abstract void copyPrev(@Named("inIndex") int inIndex,
+                                @Named("outIndex") int outIndex)
+                       throws SchemaChangeException;
+  public abstract void setupCopyPrev(@Named("incoming") VectorAccessible incoming,
+                                     @Named("outgoing") VectorAccessible outgoing)
+                       throws SchemaChangeException;
 
-  public abstract void copyFromInternal(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-  public abstract void setupCopyFromInternal(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
+  public abstract void copyFromInternal(@Named("inIndex") int inIndex,
+                                        @Named("outIndex") int outIndex)
+                       throws SchemaChangeException;
+  public abstract void setupCopyFromInternal(@Named("incoming") VectorAccessible incoming,
+                                             @Named("outgoing") VectorAccessible outgoing)
+                       throws SchemaChangeException;
 
   /**
    * reset all window functions
    */
-  public abstract boolean resetValues();
+  public abstract boolean resetValues() throws SchemaChangeException;
 
   /**
    * compares two rows from different batches (can be the same), if they have the same value for the partition by
@@ -330,8 +366,12 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
    * @param b2 batch for second row
    * @return true if the rows are in the same partition
    */
-  public abstract boolean isSamePartition(@Named("b1Index") int b1Index, @Named("b1") VectorAccessible b1,
-                                          @Named("b2Index") int b2Index, @Named("b2") VectorAccessible b2);
+  @Override
+  public abstract boolean isSamePartition(@Named("b1Index") int b1Index,
+                                          @Named("b1") VectorAccessible b1,
+                                          @Named("b2Index") int b2Index,
+                                          @Named("b2") VectorAccessible b2)
+                          throws SchemaChangeException;
 
   /**
    * compares two rows from different batches (can be the same), if they have the same value for the order by
@@ -342,6 +382,10 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
    * @param b2 batch for second row
    * @return true if the rows are in the same partition
    */
-  public abstract boolean isPeer(@Named("b1Index") int b1Index, @Named("b1") VectorAccessible b1,
-                                 @Named("b2Index") int b2Index, @Named("b2") VectorAccessible b2);
+  @Override
+  public abstract boolean isPeer(@Named("b1Index") int b1Index,
+                                 @Named("b1") VectorAccessible b1,
+                                 @Named("b2Index") int b2Index,
+                                 @Named("b2") VectorAccessible b2)
+                          throws SchemaChangeException;
 }

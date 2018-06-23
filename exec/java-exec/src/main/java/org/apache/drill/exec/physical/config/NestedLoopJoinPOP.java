@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,86 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.config;
-
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.exec.physical.base.AbstractBase;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
-import org.apache.calcite.rel.core.JoinRelType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.exec.physical.base.AbstractJoinPop;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+
+import java.util.List;
 
 @JsonTypeName("nested-loop-join")
-public class NestedLoopJoinPOP extends AbstractBase {
+public class NestedLoopJoinPOP extends AbstractJoinPop {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinPOP.class);
-
-
-  private final PhysicalOperator left;
-  private final PhysicalOperator right;
-
-  /*
-   * Conditions and jointype are currently not used, since the condition is always true
-   * and we don't perform any special execution operation based on join type either. However
-   * when we enhance NLJ this would be used.
-   */
-  private final List<JoinCondition> conditions;
-  private final JoinRelType joinType;
 
   @JsonCreator
   public NestedLoopJoinPOP(
       @JsonProperty("left") PhysicalOperator left,
       @JsonProperty("right") PhysicalOperator right,
-      @JsonProperty("conditions") List<JoinCondition> conditions,
-      @JsonProperty("joinType") JoinRelType joinType
+      @JsonProperty("joinType") JoinRelType joinType,
+      @JsonProperty("condition") LogicalExpression condition
   ) {
-    this.left = left;
-    this.right = right;
-    this.conditions = conditions;
-    Preconditions.checkArgument(joinType != null, "Join type is missing!");
-    this.joinType = joinType;
-  }
-
-  @Override
-  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
-    return physicalVisitor.visitNestedLoopJoin(this, value);
+    super(left, right, joinType, condition, null);
   }
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    Preconditions.checkArgument(children.size() == 2);
-    return new NestedLoopJoinPOP(children.get(0), children.get(1), conditions, joinType);
-  }
-
-  @Override
-  public Iterator<PhysicalOperator> iterator() {
-    return Iterators.forArray(left, right);
-  }
-
-  public PhysicalOperator getLeft() {
-    return left;
-  }
-
-  public PhysicalOperator getRight() {
-    return right;
-  }
-
-  public JoinRelType getJoinType() {
-    return joinType;
-  }
-
-  public List<JoinCondition> getConditions() {
-    return conditions;
+    Preconditions.checkArgument(children.size() == 2, "Nested loop join should have two physical operators");
+    return new NestedLoopJoinPOP(children.get(0), children.get(1), joinType, condition);
   }
 
   @Override
@@ -102,4 +54,3 @@ public class NestedLoopJoinPOP extends AbstractBase {
     return CoreOperatorType.NESTED_LOOP_JOIN_VALUE;
   }
 }
-

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,72 +15,188 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.sql;
 
-import com.google.common.base.Preconditions;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorScope;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 public class DrillSqlOperator extends SqlFunction {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlOperator.class);
-
-  private static final MajorType NONE = MajorType.getDefaultInstance();
-  private final MajorType returnType;
+  // static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlOperator.class);
   private final boolean isDeterministic;
+  private final boolean isNiladic;
+  private final List<DrillFuncHolder> functions;
 
-  public DrillSqlOperator(String name, int argCount, boolean isDeterministic) {
-    this(name, argCount, MajorType.getDefaultInstance(), isDeterministic);
+  /**
+   * This constructor exists for the legacy reason.
+   *
+   * It is because Drill cannot access to DrillOperatorTable at the place where this constructor is being called.
+   * In principle, if Drill needs a DrillSqlOperator, it is supposed to go to DrillOperatorTable for pickup.
+   */
+  @Deprecated
+  public DrillSqlOperator(final String name, final int argCount, final boolean isDeterministic, final boolean isNiladic) {
+    this(name,
+        argCount,
+        isDeterministic,
+        DynamicReturnType.INSTANCE,
+        isNiladic);
   }
 
-  public DrillSqlOperator(String name, int argCount, MajorType returnType, boolean isDeterminisitic) {
-    super(new SqlIdentifier(name, SqlParserPos.ZERO), DynamicReturnType.INSTANCE, null, new Checker(argCount), null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
-    this.returnType = Preconditions.checkNotNull(returnType);
-    this.isDeterministic = isDeterminisitic;
+  /**
+   * This constructor exists for the legacy reason.
+   *
+   * It is because Drill cannot access to DrillOperatorTable at the place where this constructor is being called.
+   * In principle, if Drill needs a DrillSqlOperator, it is supposed to go to DrillOperatorTable for pickup.
+   */
+  @Deprecated
+  public DrillSqlOperator(final String name, final int argCount, final boolean isDeterministic,
+      final SqlReturnTypeInference sqlReturnTypeInference, final boolean isNiladic) {
+    this(name,
+        new ArrayList<DrillFuncHolder>(),
+        argCount,
+        argCount,
+        isDeterministic,
+        sqlReturnTypeInference,
+        isNiladic);
   }
 
+  /**
+   * This constructor exists for the legacy reason.
+   *
+   * It is because Drill cannot access to DrillOperatorTable at the place where this constructor is being called.
+   * In principle, if Drill needs a DrillSqlOperator, it is supposed to go to DrillOperatorTable for pickup.
+   */
+  @Deprecated
+  public DrillSqlOperator(final String name, final int argCount, final boolean isDeterministic, final RelDataType type, final boolean isNiladic) {
+    this(name,
+        new ArrayList<DrillFuncHolder>(),
+        argCount,
+        argCount,
+        isDeterministic, new SqlReturnTypeInference() {
+          @Override
+          public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+            return type;
+          }
+        }, isNiladic);
+  }
+
+  protected DrillSqlOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax, boolean isDeterministic,
+      SqlReturnTypeInference sqlReturnTypeInference, boolean isNiladic) {
+    super(new SqlIdentifier(name, SqlParserPos.ZERO),
+        sqlReturnTypeInference,
+        null,
+        Checker.getChecker(argCountMin, argCountMax),
+        null,
+        SqlFunctionCategory.USER_DEFINED_FUNCTION);
+    this.functions = functions;
+    this.isDeterministic = isDeterministic;
+    this.isNiladic = isNiladic;
+  }
+
+  @Override
   public boolean isDeterministic() {
     return isDeterministic;
   }
 
-  protected RelDataType getReturnDataType(final RelDataTypeFactory factory) {
-    if (MinorType.BIT.equals(returnType.getMinorType())) {
-      return factory.createSqlType(SqlTypeName.BOOLEAN);
+  public boolean isNiladic() {
+    return isNiladic;
+  }
+
+  public List<DrillFuncHolder> getFunctions() {
+    return functions;
+  }
+
+  public SqlSyntax getSyntax() {
+    if(isNiladic) {
+      return SqlSyntax.FUNCTION_ID;
     }
-    return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);
+    return super.getSyntax();
   }
 
-  private RelDataType getNullableReturnDataType(final RelDataTypeFactory factory) {
-    return factory.createTypeWithNullability(getReturnDataType(factory), true);
-  }
+  public static class DrillSqlOperatorBuilder {
+    private String name;
+    private final List<DrillFuncHolder> functions = Lists.newArrayList();
+    private int argCountMin = Integer.MAX_VALUE;
+    private int argCountMax = Integer.MIN_VALUE;
+    private boolean isDeterministic = true;
+    private boolean isNiladic = false;
 
-  @Override
-  public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
-    if (NONE.equals(returnType)) {
-      return validator.getTypeFactory().createSqlType(SqlTypeName.ANY);
+    public DrillSqlOperatorBuilder setName(final String name) {
+      this.name = name;
+      return this;
     }
-    /*
-     * We return a nullable output type both in validation phase and in
-     * Sql to Rel phase. We don't know the type of the output until runtime
-     * hence have to choose the least restrictive type to avoid any wrong
-     * results.
-     */
-    return getNullableReturnDataType(validator.getTypeFactory());
-  }
 
-  @Override
-  public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-    return getNullableReturnDataType(opBinding.getTypeFactory());
+    public DrillSqlOperatorBuilder addFunctions(Collection<DrillFuncHolder> functions) {
+      this.functions.addAll(functions);
+      return this;
+    }
+
+    public DrillSqlOperatorBuilder setArgumentCount(final int argCountMin, final int argCountMax) {
+      this.argCountMin = Math.min(this.argCountMin, argCountMin);
+      this.argCountMax = Math.max(this.argCountMax, argCountMax);
+      return this;
+    }
+
+    public DrillSqlOperatorBuilder setDeterministic(boolean isDeterministic) {
+      /* By the logic here, we will group the entire Collection as a DrillSqlOperator. and claim it is non-deterministic.
+       * Add if there is a non-deterministic DrillFuncHolder, then we claim this DrillSqlOperator is non-deterministic.
+       *
+       * In fact, in this case, separating all DrillFuncHolder into two DrillSqlOperator
+       * (one being deterministic and the other being non-deterministic does not help) since in DrillOperatorTable.lookupOperatorOverloads(),
+       * parameter list is not passed in. So even if we have two DrillSqlOperator, DrillOperatorTable.lookupOperatorOverloads()
+       * does not have enough information to pick the one matching the argument list.
+       */
+      if(this.isDeterministic) {
+        this.isDeterministic = isDeterministic;
+      }
+      return this;
+    }
+
+    public DrillSqlOperatorBuilder setNiladic(boolean isNiladic) {
+      /*
+       * Set Operand type-checking strategy for an operator which takes no operands and need to be invoked
+       * without parentheses. E.g.: session_id
+       *
+       * Niladic functions override columns that have names same as any niladic function. Such columns cannot be
+       * queried without the table qualification. Value of the niladic function is returned when table
+       * qualification is not used.
+       *
+       * For e.g. in the case of session_id:
+       *
+       * select session_id from <table> -> returns the value of niladic function session_id
+       * select t1.session_id from <table> t1 -> returns session_id column value from <table>
+       *
+       */
+      this.isNiladic = isNiladic;
+      return this;
+    }
+
+    public DrillSqlOperator build() {
+      if(name == null || functions.isEmpty()) {
+        throw new AssertionError("The fields, name and functions, need to be set before build DrillSqlAggOperator");
+      }
+
+      return new DrillSqlOperator(
+          name,
+          functions,
+          argCountMin,
+          argCountMax,
+          isDeterministic,
+          TypeInferenceUtils.getDrillSqlReturnTypeInference(
+              name,
+              functions),
+          isNiladic);
+    }
   }
 }

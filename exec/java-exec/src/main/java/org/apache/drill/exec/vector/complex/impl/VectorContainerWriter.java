@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -101,6 +101,7 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
       super("", null, callback);
     }
 
+    @SuppressWarnings("resource")
     @Override
     public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
       try {

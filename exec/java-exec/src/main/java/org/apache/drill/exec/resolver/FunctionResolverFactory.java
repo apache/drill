@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,13 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.resolver;
 
 import org.apache.drill.common.expression.FunctionCall;
 
 public class FunctionResolverFactory {
-
   public static FunctionResolver getResolver(FunctionCall call) {
     return new DefaultFunctionResolver();
   }
@@ -29,6 +27,4 @@ public class FunctionResolverFactory {
   public static FunctionResolver getExactResolver(FunctionCall call) {
     return new ExactFunctionResolver();
   }
-
-
 }

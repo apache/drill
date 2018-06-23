@@ -31,6 +31,7 @@ data: {
     aggrtypes1:               tdd(../data/AggrTypes1.tdd),
     decimalaggrtypes1:        tdd(../data/DecimalAggrTypes1.tdd),
     decimalaggrtypes2:        tdd(../data/DecimalAggrTypes2.tdd),
+    decimalaggrtypes3:        tdd(../data/DecimalAggrTypes3.tdd),
     aggrtypes2:               tdd(../data/AggrTypes2.tdd),
     aggrtypes3:               tdd(../data/AggrTypes3.tdd),
     covarTypes:               tdd(../data/CovarTypes.tdd),
@@ -42,6 +43,7 @@ data: {
     intervalNumericTypes:     tdd(../data/IntervalNumericTypes.tdd),
     extract:                  tdd(../data/ExtractTypes.tdd),
     sumzero:                  tdd(../data/SumZero.tdd),
+    singleValue:              tdd(../data/SingleValue.tdd),
     numericTypes:             tdd(../data/NumericTypes.tdd),
     casthigh:                 tdd(../data/CastHigh.tdd),
     countAggrTypes:           tdd(../data/CountAggrTypes.tdd)

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,7 +49,7 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
   }
 
   @Override
-  public NodeBuilder nodeBuilder() {
+  public NodeBuilder<?> nodeBuilder() {
     // FIXME: Implement this on all logical operators
     throw new UnsupportedOperationException("Not yet implemented.");
   }

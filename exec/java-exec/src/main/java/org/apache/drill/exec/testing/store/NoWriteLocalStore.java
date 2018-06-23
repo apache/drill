@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,12 +23,14 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
 
 public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   private final ConcurrentMap<String, V> store = Maps.newConcurrentMap();
 
+  @Override
   public void delete(final String key) {
     store.remove(key);
   }
@@ -36,6 +38,11 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   @Override
   public PersistentStoreMode getMode() {
     return PersistentStoreMode.PERSISTENT;
+  }
+
+  @Override
+  public boolean contains(final String key) {
+    return store.containsKey(key);
   }
 
   @Override
@@ -51,7 +58,10 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   @Override
   public boolean putIfAbsent(final String key, final V value) {
     final V old = store.putIfAbsent(key, value);
-    return value != old;
+    if (old == null) {
+      return true;
+    }
+    return false;
   }
 
   @Override
@@ -60,7 +70,7 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     store.clear();
   }
 }

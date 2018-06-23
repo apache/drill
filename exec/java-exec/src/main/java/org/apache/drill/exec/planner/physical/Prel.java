@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,31 +20,38 @@ package org.apache.drill.exec.planner.physical;
 import java.io.IOException;
 
 import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.common.DrillRelNode;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
-public interface Prel extends DrillRelNode, Iterable<Prel>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Prel.class);
+public interface Prel extends DrillRelNode, Iterable<Prel> {
+  org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Prel.class);
 
-  final static Convention DRILL_PHYSICAL = new Convention.Impl("PHYSICAL", Prel.class);
+  Convention DRILL_PHYSICAL = new Convention.Impl("PHYSICAL", Prel.class) {
+    public boolean canConvertConvention(Convention toConvention) {
+      return true;
+    }
 
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException;
+    public boolean useAbstractConvertersForConversion(RelTraitSet fromTraits,
+        RelTraitSet toTraits) {
+      return true;
+    }
+  };
 
-  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E;
+  PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException;
+
+  <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E;
 
   /**
    * Supported 'encodings' of a Prel indicates what are the acceptable modes of SelectionVector
    * of its child Prel
    */
-  public SelectionVectorMode[] getSupportedEncodings();
+  SelectionVectorMode[] getSupportedEncodings();
   /**
    * A Prel's own SelectionVector mode - i.e whether it generates an SV2, SV4 or None
    */
-  public SelectionVectorMode getEncoding();
+  SelectionVectorMode getEncoding();
   boolean needsFinalColumnReordering();
-
-  // DRILL-3011
-  // public abstract Prel copy(RelTraitSet paramRelTraitSet, List<RelNode> paramList);
 }

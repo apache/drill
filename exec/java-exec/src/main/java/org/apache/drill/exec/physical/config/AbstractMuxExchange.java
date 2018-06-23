@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -51,6 +51,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * for the 10 fragments is 300 instead of earlier number 10*300.
  */
 public abstract class AbstractMuxExchange extends AbstractExchange {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractMuxExchange.class);
 
   // Ephemeral info used when creating execution fragments.
   protected Map<Integer, MinorFragmentEndpoint> senderToReceiverMapping;
@@ -88,6 +89,19 @@ public abstract class AbstractMuxExchange extends AbstractExchange {
     }
 
     return new SingleSender(receiverMajorFragmentId, receiver.getId(), child, receiver.getEndpoint());
+  }
+
+  protected final List<MinorFragmentEndpoint> getSenders(int minorFragmentId) {
+    createSenderReceiverMapping();
+
+    List<MinorFragmentEndpoint> senders = receiverToSenderMapping.get(minorFragmentId);
+
+    logger.debug("Minor fragment {}, receives data from following senders {}", minorFragmentId, senders);
+    if (senders == null || senders.size() <= 0) {
+      throw new IllegalStateException(String.format("Failed to find senders for receiver [%d]", minorFragmentId));
+    }
+
+    return senders;
   }
 
   protected void createSenderReceiverMapping() {

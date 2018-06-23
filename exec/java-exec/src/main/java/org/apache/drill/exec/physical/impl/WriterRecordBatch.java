@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.impl;
 
 import java.io.IOException;
@@ -96,8 +95,14 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
             return upstream;
 
           case NOT_YET:
-          case NONE:
             break;
+          case NONE:
+            if (schema != null) {
+              // Schema is for the output batch schema which is setup in setupNewSchema(). Since the output
+              // schema is fixed ((Fragment(VARCHAR), Number of records written (BIGINT)) we should set it
+              // up even with 0 records for it to be reported back to the client.
+              break;
+            }
 
           case OK_NEW_SCHEMA:
             setupNewSchema();
@@ -118,7 +123,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     } catch(IOException ex) {
       logger.error("Failure during query", ex);
       kill(false);
-      context.fail(ex);
+      context.getExecutorState().fail(ex);
       return IterOutcome.STOP;
     }
 
@@ -131,11 +136,13 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   }
 
   private void addOutputContainerData() {
+    @SuppressWarnings("resource")
     final VarCharVector fragmentIdVector = (VarCharVector) container.getValueAccessorById(
         VarCharVector.class,
         container.getValueVectorId(SchemaPath.getSimplePath("Fragment")).getFieldIds())
       .getValueVector();
     AllocationHelper.allocate(fragmentIdVector, 1, 50);
+    @SuppressWarnings("resource")
     final BigIntVector summaryVector = (BigIntVector) container.getValueAccessorById(BigIntVector.class,
             container.getValueVectorId(SchemaPath.getSimplePath("Number of records written")).getFieldIds())
           .getValueVector();
@@ -174,13 +181,25 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     schema = container.getSchema();
   }
 
+  /** Clean up needs to be performed before closing writer. Partially written data will be removed. */
   private void closeWriter() {
-    if (recordWriter != null) {
+    if (recordWriter == null) {
+      return;
+    }
+
+    try {
+      recordWriter.cleanup();
+    } catch(IOException ex) {
+      context.getExecutorState().fail(ex);
+    } finally {
       try {
-        recordWriter.cleanup();
+        if (!processed) {
+          recordWriter.abort();
+        }
+      } catch (IOException e) {
+        logger.error("Abort failed. There could be leftover output files.", e);
+      } finally {
         recordWriter = null;
-      } catch(IOException ex) {
-        context.fail(ex);
       }
     }
   }

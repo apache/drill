@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.limit;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -32,15 +33,18 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 
 import com.google.common.collect.Lists;
 
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
+
 public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
 
   private SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
-  private int recordsToSkip;
-  private int recordsLeft;
-  private final boolean noEndLimit;
-  private boolean skipBatch;
+
+  // Start offset of the records
+  private int recordStartOffset;
+  private int numberOfRecords;
   private boolean first = true;
   private final List<TransferPair> transfers = Lists.newArrayList();
 
@@ -48,12 +52,55 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       throws OutOfMemoryException {
     super(popConfig, context, incoming);
     outgoingSv = new SelectionVector2(oContext.getAllocator());
-    recordsToSkip = popConfig.getFirst();
-    noEndLimit = popConfig.getLast() == null;
-    if(!noEndLimit) {
-      recordsLeft = popConfig.getLast() - recordsToSkip;
-    }
-    skipBatch = false;
+    refreshLimitState();
+  }
+
+  @Override
+  public IterOutcome innerNext() {
+    if (!first && !needMoreRecords(numberOfRecords)) {
+        outgoingSv.setRecordCount(0);
+        incoming.kill(true);
+
+        IterOutcome upStream = next(incoming);
+        if (upStream == IterOutcome.OUT_OF_MEMORY) {
+          return upStream;
+        }
+
+        while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {
+          // Clear the memory for the incoming batch
+          for (VectorWrapper<?> wrapper : incoming) {
+            wrapper.getValueVector().clear();
+          }
+          upStream = next(incoming);
+          if (upStream == IterOutcome.OUT_OF_MEMORY) {
+            return upStream;
+          }
+        }
+        // If EMIT that means leaf operator is UNNEST, in this case refresh the limit states and return EMIT.
+        if (upStream == EMIT) {
+          refreshLimitState();
+          return upStream;
+        }
+        // other leaf operator behave as before.
+        return NONE;
+      }
+    return super.innerNext();
+  }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    return outgoingSv;
+  }
+
+  @Override
+  public int getRecordCount() {
+    return outgoingSv.getCount();
+  }
+
+  @Override
+  public void close() {
+    outgoingSv.clear();
+    super.close();
   }
 
   @Override
@@ -61,10 +108,9 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     container.zeroVectors();
     transfers.clear();
 
-
     for(final VectorWrapper<?> v : incoming) {
       final TransferPair pair = v.getValueVector().makeTransferPair(
-          container.addOrGet(v.getField(), callBack));
+        container.addOrGet(v.getField(), callBack));
       transfers.add(pair);
     }
 
@@ -88,36 +134,22 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     return false;
   }
 
+  /**
+   * Gets the outcome to return from super implementation and then in case of EMIT outcome it refreshes the state of
+   * operator. Refresh is done to again apply limit on all the future incoming batches which will be part of next
+   * record boundary.
+   * @param hasRemainder
+   * @return - IterOutcome to send downstream
+   */
   @Override
-  public IterOutcome innerNext() {
-    if(!first && !noEndLimit && recordsLeft <= 0) {
-      incoming.kill(true);
+  protected IterOutcome getFinalOutcome(boolean hasRemainder) {
+    final IterOutcome outcomeToReturn = super.getFinalOutcome(hasRemainder);
 
-      IterOutcome upStream = next(incoming);
-      if (upStream == IterOutcome.OUT_OF_MEMORY) {
-        return upStream;
-      }
-
-      while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {
-        // Clear the memory for the incoming batch
-        for (VectorWrapper<?> wrapper : incoming) {
-          wrapper.getValueVector().clear();
-        }
-        upStream = next(incoming);
-        if (upStream == IterOutcome.OUT_OF_MEMORY) {
-          return upStream;
-        }
-      }
-
-      return IterOutcome.NONE;
+    // EMIT outcome means leaf operator is UNNEST, hence refresh the state no matter limit is reached or not.
+    if (outcomeToReturn == EMIT) {
+      refreshLimitState();
     }
-
-    return super.innerNext();
-  }
-
-  @Override
-  public SelectionVector2 getSelectionVector2() {
-    return outgoingSv;
+    return outcomeToReturn;
   }
 
   @Override
@@ -125,78 +157,92 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     if (first) {
       first = false;
     }
-    skipBatch = false;
-    final int recordCount = incoming.getRecordCount();
-    if (recordCount == 0) {
-      skipBatch = true;
-      return IterOutcome.OK;
+    final int inputRecordCount = incoming.getRecordCount();
+    if (inputRecordCount == 0) {
+      setOutgoingRecordCount(0);
+      return getFinalOutcome(false);
     }
+
     for(final TransferPair tp : transfers) {
       tp.transfer();
     }
-    if (recordCount <= recordsToSkip) {
-      recordsToSkip -= recordCount;
-      skipBatch = true;
+    // Check if current input record count is less than start offset. If yes then adjust the start offset since we
+    // have to ignore all these records and return empty batch.
+    if (inputRecordCount <= recordStartOffset) {
+      recordStartOffset -= inputRecordCount;
+      setOutgoingRecordCount(0);
     } else {
-      outgoingSv.allocateNew(recordCount);
-      if(incomingSv != null) {
-       limitWithSV(recordCount);
+      // Allocate SV2 vectors for the record count size since we transfer all the vectors buffer from input record
+      // batch to output record batch and later an SV2Remover copies the needed records.
+      outgoingSv.allocateNew(inputRecordCount);
+      limit(inputRecordCount);
+    }
+    return getFinalOutcome(false);
+  }
+
+  /**
+   * limit call when incoming batch has number of records more than the start offset such that it can produce some
+   * output records. After first call of this method recordStartOffset should be 0 since we have already skipped the
+   * required number of records as part of first incoming record batch.
+   * @param inputRecordCount - number of records in incoming batch
+   */
+  private void limit(int inputRecordCount) {
+    int endRecordIndex;
+
+    if (numberOfRecords == Integer.MIN_VALUE) {
+      endRecordIndex = inputRecordCount;
+    } else {
+      endRecordIndex = Math.min(inputRecordCount, recordStartOffset + numberOfRecords);
+      numberOfRecords -= Math.max(0, endRecordIndex - recordStartOffset);
+    }
+
+    int svIndex = 0;
+    for(int i = recordStartOffset; i < endRecordIndex; svIndex++, i++) {
+      if (incomingSv != null) {
+        outgoingSv.setIndex(svIndex, incomingSv.getIndex(i));
       } else {
-       limitWithNoSV(recordCount);
+        outgoingSv.setIndex(svIndex, (char) i);
       }
     }
-
-    return IterOutcome.OK;
-  }
-
-  // These two functions are identical except for the computation of the index; merge
-  private void limitWithNoSV(int recordCount) {
-    final int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
-    recordsToSkip -= offset;
-    int fetch;
-
-    if(noEndLimit) {
-      fetch = recordCount;
-    } else {
-      fetch = Math.min(recordCount, offset + recordsLeft);
-      recordsLeft -= Math.max(0, fetch - offset);
-    }
-
-    int svIndex = 0;
-    for(char i = (char) offset; i < fetch; svIndex++, i++) {
-      outgoingSv.setIndex(svIndex, i);
-    }
     outgoingSv.setRecordCount(svIndex);
+    // Update the start offset
+    recordStartOffset = 0;
   }
 
-  private void limitWithSV(int recordCount) {
-    final int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
-    recordsToSkip -= offset;
-    int fetch;
+  private void setOutgoingRecordCount(int outputCount) {
+    outgoingSv.setRecordCount(outputCount);
+  }
 
-    if(noEndLimit) {
-      fetch = recordCount;
-    } else {
-      fetch = Math.min(recordCount, recordsLeft);
-      recordsLeft -= Math.max(0, fetch - offset);
+  /**
+   * Method which returns if more output records are needed from LIMIT operator. When numberOfRecords is set to
+   * {@link Integer#MIN_VALUE} that means there is no end bound on LIMIT, so get all the records past start offset.
+   * @return - true - more output records is expected.
+   *           false - limit bound is reached and no more record is expected
+   */
+  private boolean needMoreRecords(int recordsToRead) {
+    boolean readMore = true;
+
+    Preconditions.checkState(recordsToRead == Integer.MIN_VALUE || recordsToRead >= 0,
+      String.format("Invalid value of numberOfRecords %d inside LimitRecordBatch", recordsToRead));
+
+    // Above check makes sure that either numberOfRecords has no bound or if it has bounds then either we have read
+    // all the records or still left to read some.
+    // Below check just verifies if there is bound on numberOfRecords and we have read all of it.
+    if (recordsToRead == 0) {
+      readMore = false;
     }
-
-    int svIndex = 0;
-    for(int i = offset; i < fetch; svIndex++, i++) {
-      final char index = incomingSv.getIndex(i);
-      outgoingSv.setIndex(svIndex, index);
-    }
-    outgoingSv.setRecordCount(svIndex);
+    return readMore;
   }
 
-  @Override
-  public int getRecordCount() {
-    return skipBatch ? 0 : outgoingSv.getCount();
-  }
-
-  @Override
-  public void close() {
-    outgoingSv.clear();
-    super.close();
+  /**
+   * Reset the states for recordStartOffset and numberOfRecords based on the popConfig passed to the operator.
+   * This method is called for the outcome EMIT no matter if limit is reached or not.
+   */
+  private void refreshLimitState() {
+    // Make sure startOffset is non-negative
+    recordStartOffset = Math.max(0, popConfig.getFirst());
+    numberOfRecords = (popConfig.getLast() == null) ?
+      Integer.MIN_VALUE : Math.max(0, popConfig.getLast()) - recordStartOffset;
+    first = true;
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,9 +34,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.tools.RuleSet;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -47,8 +45,6 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.exception.StoreException;
-import org.apache.drill.exec.ops.OptimizerRulesContext;
-import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
@@ -68,8 +64,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -121,17 +115,20 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         });
   }
 
+  @Override
   public PersistentStore<StoragePluginConfig> getStore() {
     return pluginSystemTable;
   }
 
+  @Override
   public void init() throws DrillbitStartupException {
     availablePlugins = findAvailablePlugins(classpathScan);
 
     // create registered plugins defined in "storage-plugins.json"
-    this.plugins.putAll(createPlugins());
+    plugins.putAll(createPlugins());
   }
 
+  @SuppressWarnings("resource")
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
     try {
       /*
@@ -149,7 +146,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
             String pluginsData = Resources.toString(url, Charsets.UTF_8);
             StoragePlugins plugins = lpPersistence.getMapper().readValue(pluginsData, StoragePlugins.class);
             for (Map.Entry<String, StoragePluginConfig> config : plugins) {
-              if (!pluginSystemTable.putIfAbsent(config.getKey(), config.getValue())) {
+              if (!definePluginConfig(config.getKey(), config.getValue())) {
                 logger.warn("Duplicate plugin instance '{}' defined in [{}, {}], ignoring the later one.",
                     config.getKey(), pluginURLMap.get(config.getKey()), url);
                 continue;
@@ -189,12 +186,32 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
   }
 
+  /**
+   * Add a plugin and configuration. Assumes neither exists. Primarily
+   * for testing.
+   *
+   * @param name plugin name
+   * @param config plugin config
+   * @param plugin plugin implementation
+   */
+
+  public void definePlugin(String name, StoragePluginConfig config, StoragePlugin plugin) {
+    addPlugin(name, plugin);
+    definePluginConfig(name, config);
+  }
+
+  private boolean definePluginConfig(String name, StoragePluginConfig config) {
+    return pluginSystemTable.putIfAbsent(name, config);
+  }
+
   @Override
   public void addPlugin(String name, StoragePlugin plugin) {
     plugins.put(name, plugin);
   }
 
+  @Override
   public void deletePlugin(String name) {
+    @SuppressWarnings("resource")
     StoragePlugin plugin = plugins.remove(name);
     closePlugin(plugin);
     pluginSystemTable.delete(name);
@@ -212,6 +229,8 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
   }
 
+  @SuppressWarnings("resource")
+  @Override
   public StoragePlugin createOrUpdate(String name, StoragePluginConfig config, boolean persist)
       throws ExecutionSetupException {
     for (;;) {
@@ -249,6 +268,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
   }
 
+  @Override
   public StoragePlugin getPlugin(String name) throws ExecutionSetupException {
     StoragePlugin plugin = plugins.get(name);
     if (name.equals(SYS_PLUGIN) || name.equals(INFORMATION_SCHEMA_PLUGIN)) {
@@ -273,6 +293,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   }
 
 
+  @Override
   public StoragePlugin getPlugin(StoragePluginConfig config) throws ExecutionSetupException {
     if (config instanceof NamedStoragePluginConfig) {
       return getPlugin(((NamedStoragePluginConfig) config).name);
@@ -299,6 +320,8 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
   }
 
+  @SuppressWarnings("resource")
+  @Override
   public FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig)
       throws ExecutionSetupException {
     StoragePlugin p = getPlugin(storageConfig);
@@ -338,46 +361,14 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     return plugins.iterator();
   }
 
-  /**
-   * Return StoragePlugin rule sets.
-   *
-   * @param optimizerRulesContext
-   * @return Array of logical and physical rule sets.
-   */
-  public RuleSet[] getStoragePluginRuleSet(OptimizerRulesContext optimizerRulesContext) {
-    // query registered engines for optimizer rules and build the storage plugin RuleSet
-    Builder<RelOptRule> logicalRulesBuilder = ImmutableSet.builder();
-    Builder<RelOptRule> physicalRulesBuilder = ImmutableSet.builder();
-    for (StoragePlugin plugin : this.plugins.plugins()) {
-      if (plugin instanceof AbstractStoragePlugin) {
-        final AbstractStoragePlugin abstractPlugin = (AbstractStoragePlugin) plugin;
-        Set<? extends RelOptRule> rules = abstractPlugin.getLogicalOptimizerRules(optimizerRulesContext);
-        if (rules != null && rules.size() > 0) {
-          logicalRulesBuilder.addAll(rules);
-        }
-        rules = abstractPlugin.getPhysicalOptimizerRules(optimizerRulesContext);
-        if (rules != null && rules.size() > 0) {
-          physicalRulesBuilder.addAll(rules);
-        }
-      } else {
-        final Set<? extends RelOptRule> rules = plugin.getOptimizerRules(optimizerRulesContext);
-        if (rules != null && rules.size() > 0) {
-          physicalRulesBuilder.addAll(rules);
-        }
-      }
-    }
-
-    return new RuleSet[] {
-        DrillRuleSets.create(logicalRulesBuilder.build()),
-        DrillRuleSets.create(physicalRulesBuilder.build()) };
-  }
-
+  @Override
   public SchemaFactory getSchemaFactory() {
     return schemaFactory;
   }
 
   public class DrillSchemaFactory implements SchemaFactory {
 
+    @SuppressWarnings("resource")
     @Override
     public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
       Stopwatch watch = Stopwatch.createStarted();
@@ -502,5 +493,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
     return availablePlugins;
   }
+
+
 
 }

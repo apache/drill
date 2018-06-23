@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec;
 
 import static org.junit.Assert.assertTrue;
@@ -24,38 +23,28 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.BigIntVector;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class})
 public class TestQueriesOnLargeFile extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestQueriesOnLargeFile.class);
-
   private static File dataFile = null;
   private static int NUM_RECORDS = 15000;
 
   @BeforeClass
   public static void generateTestData() throws Exception {
     // Generate a json file with NUM_RECORDS number of records
-    while (true) {
-      dataFile = File.createTempFile("drill-json", ".json");
-      if (dataFile.exists()) {
-        boolean success = dataFile.delete();
-        if (success) {
-          break;
-        }
-      }
-      logger.trace("retry creating tmp file");
-    }
-
+    dataFile = File.createTempFile("drill-json", ".json", dirTestWatcher.getRootDir());
     PrintWriter printWriter = new PrintWriter(dataFile);
 
     for (int i=1; i<=NUM_RECORDS; i++) {
@@ -73,7 +62,7 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
   @Test
   public void testRead() throws Exception {
     List<QueryDataBatch> results = testSqlWithResults(
-        String.format("SELECT count(*) FROM dfs_test.`default`.`%s`", dataFile.getPath()));
+        String.format("SELECT count(*) FROM dfs.`default`.`%s`", dataFile.getName()));
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
 
@@ -94,7 +83,7 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
 
   @Test
   public void testMergingReceiver() throws Exception {
-    String plan = Files.toString(FileUtils.getResourceAsFile("/largefiles/merging_receiver_large_data.json"),
+    String plan = Files.toString(DrillFileUtils.getResourceAsFile("/largefiles/merging_receiver_large_data.json"),
         Charsets.UTF_8).replace("#{TEST_FILE}", escapeJsonString(dataFile.getPath()));
     List<QueryDataBatch> results = testPhysicalWithResults(plan);
 
@@ -106,14 +95,5 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
 
     assertTrue(String.format("Number of records in output is wrong: expected=%d, actual=%s",
         NUM_RECORDS, recordsInOutput), NUM_RECORDS == recordsInOutput);
-  }
-
-  @AfterClass
-  public static void deleteTestData() throws Exception {
-    if (dataFile != null) {
-      if (dataFile.exists()) {
-        org.apache.commons.io.FileUtils.forceDelete(dataFile);
-      }
-    }
   }
 }

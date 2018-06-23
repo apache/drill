@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,14 +18,17 @@
 package org.apache.drill.exec;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.categories.SlowTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveProjectPushDown extends HiveTestBase {
 
   // enable decimal data type
@@ -105,16 +108,4 @@ public class TestHiveProjectPushDown extends HiveTestBase {
     testHelper(query, 1, expectedColNames);
   }
 
-  @Test
-  public void projectPushDownOnHiveParquetTable() throws Exception {
-    try {
-      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
-      String query = "SELECT boolean_field, boolean_part, int_field, int_part FROM hive.readtest_parquet";
-      String expectedColNames = "\"columns\" : [ \"`boolean_field`\", \"`dir0`\", \"`int_field`\", \"`dir9`\" ]";
-
-      testHelper(query, 2, expectedColNames, "hive-drill-native-parquet-scan");
-    } finally {
-      test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
-    }
-  }
 }

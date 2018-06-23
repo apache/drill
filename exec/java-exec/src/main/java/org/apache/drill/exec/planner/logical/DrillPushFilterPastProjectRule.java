@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,70 +17,40 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.util.List;
-
 import com.google.common.collect.Lists;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
-import org.apache.calcite.rex.RexVisitor;
-import org.apache.calcite.rex.RexVisitorImpl;
-import org.apache.calcite.util.Util;
+import org.apache.calcite.tools.RelBuilder;
+import org.apache.calcite.tools.RelBuilderFactory;
+import org.apache.calcite.util.Pair;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class DrillPushFilterPastProjectRule extends RelOptRule {
 
-  public final static RelOptRule INSTANCE = new DrillPushFilterPastProjectRule();
+  public final static RelOptRule INSTANCE = new DrillPushFilterPastProjectRule(DrillRelFactories.LOGICAL_BUILDER);
 
-  private RexCall findItemOrFlatten(
-      final RexNode node,
-      final List<RexNode> projExprs) {
-    try {
-      RexVisitor<Void> visitor =
-          new RexVisitorImpl<Void>(true) {
-        public Void visitCall(RexCall call) {
-          if ("item".equals(call.getOperator().getName().toLowerCase()) ||
-            "flatten".equals(call.getOperator().getName().toLowerCase())) {
-            throw new Util.FoundOne(call); /* throw exception to interrupt tree walk (this is similar to
-                                              other utility methods in RexUtil.java */
-          }
-          return super.visitCall(call);
-        }
+  private static final Collection<String> BANNED_OPERATORS;
 
-        public Void visitInputRef(RexInputRef inputRef) {
-          final int index = inputRef.getIndex();
-          RexNode n = projExprs.get(index);
-          if (n instanceof RexCall) {
-            RexCall r = (RexCall) n;
-            if ("item".equals(r.getOperator().getName().toLowerCase()) ||
-                "flatten".equals(r.getOperator().getName().toLowerCase())) {
-              throw new Util.FoundOne(r);
-            }
-          }
-
-          return super.visitInputRef(inputRef);
-        }
-      };
-      node.accept(visitor);
-      return null;
-    } catch (Util.FoundOne e) {
-      Util.swallow(e, null);
-      return (RexCall) e.getNode();
-    }
+  static {
+    BANNED_OPERATORS = new ArrayList<>(2);
+    BANNED_OPERATORS.add("flatten");
+    BANNED_OPERATORS.add("item");
   }
 
-  protected DrillPushFilterPastProjectRule() {
-    super(
-        operand(
-            LogicalFilter.class,
-            operand(LogicalProject.class, any())));
+  private DrillPushFilterPastProjectRule(RelBuilderFactory relBuilderFactory) {
+    super(operand(LogicalFilter.class, operand(LogicalProject.class, any())), relBuilderFactory,null);
   }
 
   //~ Methods ----------------------------------------------------------------
@@ -89,6 +59,7 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
   public void onMatch(RelOptRuleCall call) {
     Filter filterRel = call.rel(0);
     Project projRel = call.rel(1);
+    RelBuilder builder = call.builder();
 
     // get a conjunctions of the filter condition. For each conjunction, if it refers to ITEM or FLATTEN expression
     // then we could not pushed down. Otherwise, it's qualified to be pushed down.
@@ -99,14 +70,14 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
 
 
     for (final RexNode pred : predList) {
-      if (findItemOrFlatten(pred, projRel.getProjects()) == null) {
+      if (DrillRelOptUtil.findOperators(pred, projRel.getProjects(), BANNED_OPERATORS) == null) {
         qualifiedPredList.add(pred);
       } else {
         unqualifiedPredList.add(pred);
       }
     }
 
-    final RexNode qualifedPred =RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), qualifiedPredList, true);
+    final RexNode qualifedPred = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), qualifiedPredList, true);
 
     if (qualifedPred == null) {
       return;
@@ -114,15 +85,19 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
 
     // convert the filter to one that references the child of the project
     RexNode newCondition =
-        RelOptUtil.pushFilterPastProject(qualifedPred, projRel);
+        RelOptUtil.pushPastProject(qualifedPred, projRel);
 
-    Filter newFilterRel = LogicalFilter.create(projRel.getInput(), newCondition);
+    RelNode newFilterRel =
+        builder
+            .push(projRel.getInput())
+            .filter(newCondition)
+            .build();
 
-    Project newProjRel =
-        (Project) RelOptUtil.createProject(
-            newFilterRel,
-            projRel.getNamedProjects(),
-            false);
+    RelNode newProjRel =
+        builder
+            .push(newFilterRel)
+            .projectNamed(Pair.left(projRel.getNamedProjects()), Pair.right(projRel.getNamedProjects()), true)
+            .build();
 
     final RexNode unqualifiedPred = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), unqualifiedPredList, true);
 
@@ -136,7 +111,11 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
       //    Project
       //     \
       //      Filter  -- qualified filters
-      Filter filterNotPushed = LogicalFilter.create(newProjRel, unqualifiedPred);
+      RelNode filterNotPushed =
+          builder
+              .push(newProjRel)
+              .filter(unqualifiedPred)
+              .build();
       call.transformTo(filterNotPushed);
     }
   }

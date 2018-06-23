@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,26 +21,26 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.Convention;
-import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.logical.LogicalFilter;
 
 /**
- * Rule that converts a {@link org.apache.calcite.rel.FilterRel} to a Drill "filter" operation.
+ * Rule that converts a {@link org.apache.calcite.rel.logical.LogicalFilter} to a Drill "filter" operation.
  */
 public class DrillFilterRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillFilterRule();
 
   private DrillFilterRule() {
-    super(RelOptHelper.any(LogicalFilter.class, Convention.NONE), "DrillFilterRule");
+    super(RelOptHelper.any(LogicalFilter.class, Convention.NONE),
+        DrillRelFactories.LOGICAL_BUILDER, "DrillFilterRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final LogicalFilter filter = (LogicalFilter) call.rel(0);
+    final LogicalFilter filter = call.rel(0);
     final RelNode input = filter.getInput();
-    //final RelTraitSet traits = filter.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
-    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
-    call.transformTo(new DrillFilterRel(filter.getCluster(), convertedInput.getTraitSet(), convertedInput, filter.getCondition()));
+    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
+    call.transformTo(new DrillFilterRel(
+        filter.getCluster(), convertedInput.getTraitSet(),
+        convertedInput, filter.getCondition()));
   }
 }

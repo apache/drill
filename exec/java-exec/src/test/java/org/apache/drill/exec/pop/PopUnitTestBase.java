@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,9 +18,12 @@
 package org.apache.drill.exec.pop;
 
 import java.io.IOException;
+import java.util.Properties;
 
+import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -29,6 +32,7 @@ import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
+import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.junit.BeforeClass;
 
@@ -36,13 +40,23 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public abstract class PopUnitTestBase  extends ExecTest{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PopUnitTestBase.class);
+//  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PopUnitTestBase.class);
 
   protected static DrillConfig CONFIG;
 
   @BeforeClass
   public static void setup() {
-    CONFIG = DrillConfig.create();
+    Properties props = new Properties();
+
+    // Properties here mimic those in drill-root/pom.xml, Surefire plugin
+    // configuration. They allow tests to run successfully in Eclipse.
+
+    props.put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
+    props.put(ExecConstants.HTTP_ENABLE, "false");
+    props.put(Drillbit.SYSTEM_OPTIONS_NAME, "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on");
+    props.put(QueryTestUtil.TEST_QUERY_PRINTING_SILENT, "true");
+    props.put("drill.catastrophic_to_standard_out", "true");
+    CONFIG = DrillConfig.create(props);
   }
 
 
@@ -56,7 +70,7 @@ public abstract class PopUnitTestBase  extends ExecTest{
 
   public static Fragment getRootFragment(PhysicalPlanReader reader, String file) throws FragmentSetupException,
       IOException, ForemanSetupException {
-    return getRootFragmentFromPlanString(reader, Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
+    return getRootFragmentFromPlanString(reader, Files.toString(DrillFileUtils.getResourceAsFile(file), Charsets.UTF_8));
   }
 
 

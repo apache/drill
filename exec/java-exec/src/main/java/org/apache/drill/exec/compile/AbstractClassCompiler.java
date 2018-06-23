@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.codehaus.commons.compiler.CompileException;
 
+@SuppressWarnings("unused")
 public abstract class AbstractClassCompiler {
   protected boolean debug = false;
 
@@ -74,9 +74,10 @@ public abstract class AbstractClassCompiler {
     return out.toString();
   }
 
-  protected abstract byte[][] getByteCode(ClassNames className, String sourcecode)
+  protected abstract byte[][] getByteCode(final ClassNames className, final String sourcecode)
       throws CompileException, IOException, ClassNotFoundException, ClassTransformationException;
-
+  public abstract Map<String,byte[]> compile(final ClassNames className, final String sourceCode)
+      throws CompileException, IOException, ClassNotFoundException;
   protected abstract org.slf4j.Logger getLogger();
 
 }

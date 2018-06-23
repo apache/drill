@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.ops;
 
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -28,12 +28,14 @@ public class ContextInformation {
   private final String currentDefaultSchema;
   private final long queryStartTime;
   private final int rootFragmentTimeZone;
+  private final String sessionId;
 
   public ContextInformation(final UserCredentials userCredentials, final QueryContextInformation queryContextInfo) {
     this.queryUser = userCredentials.getUserName();
     this.currentDefaultSchema = queryContextInfo.getDefaultSchemaName();
     this.queryStartTime = queryContextInfo.getQueryStartTime();
     this.rootFragmentTimeZone = queryContextInfo.getTimeZone();
+    this.sessionId = queryContextInfo.getSessionId();
   }
 
   /**
@@ -62,5 +64,12 @@ public class ContextInformation {
    */
   public int getRootFragmentTimeZone() {
     return rootFragmentTimeZone;
+  }
+
+  /**
+   * @return Unique id of the user session
+   */
+  public String getSessionId() {
+    return sessionId;
   }
 }

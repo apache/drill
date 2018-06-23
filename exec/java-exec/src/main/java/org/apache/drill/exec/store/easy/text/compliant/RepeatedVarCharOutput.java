@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -128,13 +127,13 @@ class RepeatedVarCharOutput extends TextOutput {
 
 
     { // setup fields
-      List<Integer> columnIds = new ArrayList<Integer>();
+      List<Integer> columnIds = new ArrayList<>();
       if (!isStarQuery) {
         String pathStr;
         for (SchemaPath path : columns) {
           assert path.getRootSegment().isNamed() : "root segment should be named";
           pathStr = path.getRootSegment().getPath();
-          Preconditions.checkArgument(pathStr.equals(COL_NAME) || (pathStr.equals("*") && path.getRootSegment().getChild() == null),
+          Preconditions.checkArgument(COL_NAME.equals(pathStr) || (SchemaPath.DYNAMIC_STAR.equals(pathStr) && path.getRootSegment().getChild() == null),
               String.format("Selected column '%s' must have name 'columns' or must be plain '*'", pathStr));
 
           if (path.getRootSegment().getChild() != null) {
@@ -172,6 +171,7 @@ class RepeatedVarCharOutput extends TextOutput {
    * Start a new record batch. Resets all the offsets and pointers that
    * store buffer addresses
    */
+  @Override
   public void startBatch() {
     this.recordStart = characterDataOriginal;
     this.fieldOpen = false;
@@ -185,6 +185,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadRepeatedOffsetAddress(){
+    @SuppressWarnings("resource")
     DrillBuf buf = vector.getOffsetVector().getBuffer();
     checkBuf(buf);
     this.repeatedOffset = buf.memoryAddress() + 4;
@@ -193,6 +194,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharDataAddress(){
+    @SuppressWarnings("resource")
     DrillBuf buf = vector.getDataVector().getBuffer();
     checkBuf(buf);
     this.characterData = buf.memoryAddress();
@@ -201,6 +203,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharOffsetAddress(){
+    @SuppressWarnings("resource")
     DrillBuf buf = vector.getDataVector().getOffsetVector().getBuffer();
     checkBuf(buf);
     this.charLengthOffset = buf.memoryAddress() + 4;
@@ -341,9 +344,6 @@ class RepeatedVarCharOutput extends TextOutput {
     return out;
   }
 
-  // Sets the record count in this batch within the value vector
   @Override
-  public void finishBatch() {
-    mutator.setValueCount(batchIndex);
-  }
+  public void finishBatch() { }
 }

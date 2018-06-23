@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,8 +18,7 @@
 package org.apache.drill.exec.physical.base;
 
 import java.util.Iterator;
-
-import com.google.common.collect.Iterators;
+import java.util.List;
 
 /**
  * Describes an operator that expects more than one children operators as its input.
@@ -27,19 +26,19 @@ import com.google.common.collect.Iterators;
 public abstract class AbstractMultiple extends AbstractBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractMultiple.class);
 
-  protected final PhysicalOperator[] children;
+  protected final List<PhysicalOperator> children;
 
-  protected AbstractMultiple(PhysicalOperator[] children) {
+  protected AbstractMultiple(List<PhysicalOperator> children) {
     this.children = children;
   }
 
-  public PhysicalOperator[] getChildren() {
+  public List<PhysicalOperator> getChildren() {
     return children;
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.forArray(children);
+    return children.iterator();
   }
 
 

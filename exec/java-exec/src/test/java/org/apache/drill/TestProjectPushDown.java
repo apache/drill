@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,20 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.nio.file.Paths;
 
 // Test the optimizer plan in terms of project pushdown.
 // When a query refers to a subset of columns in a table, optimizer should push the list
 // of refereed columns to the SCAN operator, so that SCAN operator would only retrieve
 // the column values in the subset of columns.
 
+@Category(PlannerTest.class)
 public class TestProjectPushDown extends PlanTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(TestProjectPushDown.class);
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data", "nation.parquet"));
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data", "region.parquet"));
+  }
 
   @Test
   @Ignore
@@ -73,11 +81,11 @@ public class TestProjectPushDown extends PlanTestBase {
     String expectedColNames1 = "\"columns\" : [ \"`N_REGIONKEY`\", \"`N_NAME`\" ]";
     String expectedColNames2 = "\"columns\" : [ \"`R_REGIONKEY`\", \"`R_NAME`\" ]";
 
-    testPhysicalPlan("SELECT\n" + "  nations.N_NAME,\n" + "  regions.R_NAME\n"
+    testPhysicalPlan("SELECT nations.N_NAME, regions.R_NAME "
         + "FROM\n"
-        + "  dfs_test.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n"
+        + "  dfs.`sample-data/nation.parquet` nations\n"
         + "JOIN\n"
-        + "  dfs_test.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n"
+        + "  dfs.`sample-data/region.parquet` regions\n"
         + "  on nations.N_REGIONKEY = regions.R_REGIONKEY", expectedColNames1,
         expectedColNames2);
   }
@@ -93,14 +101,14 @@ public class TestProjectPushDown extends PlanTestBase {
 
   @Test
   public void testTPCH1() throws Exception {
-    String expectedColNames = " \"columns\" : [ \"`l_returnflag`\", \"`l_linestatus`\", \"`l_shipdate`\", \"`l_quantity`\", \"`l_extendedprice`\", \"`l_discount`\", \"`l_tax`\" ]";
+    String expectedColNames = " \"columns\" : [ \"`l_shipdate`\", \"`l_returnflag`\", \"`l_linestatus`\", \"`l_quantity`\", \"`l_extendedprice`\", \"`l_discount`\", \"`l_tax`\" ]";
     testPhysicalPlanFromFile("queries/tpch/01.sql", expectedColNames);
   }
 
   @Test
   public void testTPCH3() throws Exception {
     String expectedColNames1 = "\"columns\" : [ \"`c_mktsegment`\", \"`c_custkey`\" ]";
-    String expectedColNames2 = " \"columns\" : [ \"`o_orderdate`\", \"`o_shippriority`\", \"`o_custkey`\", \"`o_orderkey`\" ";
+    String expectedColNames2 = " \"columns\" : [ \"`o_custkey`\", \"`o_orderkey`\", \"`o_orderdate`\", \"`o_shippriority`\" ]";
     String expectedColNames3 = "\"columns\" : [ \"`l_orderkey`\", \"`l_shipdate`\", \"`l_extendedprice`\", \"`l_discount`\" ]";
     testPhysicalPlanFromFile("queries/tpch/03.sql", expectedColNames1, expectedColNames2, expectedColNames3);
   }
@@ -265,10 +273,6 @@ public class TestProjectPushDown extends PlanTestBase {
 
   @Test
   public void testSimpleProjectPastJoinPastFilterPastJoinPushDown() throws Exception {
-//    String sql = "select * " +
-//        "from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 " +
-//        "where t0.fname = t1.sname and t1.slastname = t2.tlastname and t0.fcolumns[0] + t1.scolumns = 100";
-
     final String firstExpected = "\"columns\" : [ \"`a`\", \"`fa`\", \"`fcolumns`[0]\" ],";
     final String secondExpected = "\"columns\" : [ \"`a`\", \"`b`\", \"`c`\", \"`sa`\" ],";
     final String thirdExpected = "\"columns\" : [ \"`d`\", \"`ta`\" ],";
@@ -280,6 +284,17 @@ public class TestProjectPushDown extends PlanTestBase {
     testPushDown(new PushDownTestInstance(sql,
         new String[]{firstExpected, secondExpected, thirdExpected}, table,table,table));
     }
+  }
+
+  @Test
+  public void testProjectPushdownPastJoinWithJoinPushExpressions() throws Exception {
+    final String query = "SELECT L.L_QUANTITY FROM cp.`tpch/lineitem.parquet` L, cp.`tpch/orders.parquet` O" +
+        " WHERE cast(L.L_ORDERKEY as int) = cast(O.O_ORDERKEY as int)";
+    final String[] expectedPatterns = {
+        ".*HashJoin.*", "Project.*\\(L_QUANTITY.*CAST\\(\\$0\\)\\:INTEGER.*", "Project.*CAST\\(\\$0\\)\\:INTEGER.*"};
+    // L_ORDERKEY, O_ORDERKEY should not be present in the projects below the join
+    final String[] excludedPatterns = {".*Project\\(L_ORDERKEY=.*", ".*Project\\(O_ORDERKEY=.*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPatterns, excludedPatterns);
   }
 
   protected void testPushDown(PushDownTestInstance test) throws Exception {

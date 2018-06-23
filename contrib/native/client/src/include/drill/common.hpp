@@ -15,10 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #ifndef _COMMON_H_
 #define _COMMON_H_
+
+#if defined _WIN32 || defined __CYGWIN__
+  #ifdef DRILL_CLIENT_EXPORTS
+      #define DECLSPEC_DRILL_CLIENT __declspec(dllexport)
+  #else
+    #ifdef USE_STATIC_LIBDRILL
+      #define DECLSPEC_DRILL_CLIENT
+    #else
+      #define DECLSPEC_DRILL_CLIENT  __declspec(dllimport)
+    #endif
+  #endif
+#else
+  #if __GNUC__ >= 4
+    #define DECLSPEC_DRILL_CLIENT __attribute__ ((visibility ("default")))
+  #else
+    #define DECLSPEC_DRILL_CLIENT
+  #endif
+#endif
 
 #ifdef _WIN32
 // The order of inclusion is important. Including winsock2 before everything else
@@ -38,12 +54,18 @@
 
 #define LENGTH_PREFIX_MAX_LENGTH 5
 #define LEN_PREFIX_BUFLEN LENGTH_PREFIX_MAX_LENGTH
+#define ENCRYPT_LEN_PREFIX_BUFLEN 4
 
 #define MAX_CONNECT_STR 4096
 #define MAX_SOCK_RD_BUFSIZE  1024
 
 #define MEM_CHUNK_SIZE 64*1024; // 64K
 #define MAX_MEM_ALLOC_SIZE 256*1024*1024; // 256 MB
+
+#define MAX_BATCH_SIZE  65536; // see RecordBatch.java 
+#define ENABLE_CONNECTION_POOL_ENV  "DRILL_ENABLE_CONN_POOL"
+#define DEFAULT_MAX_CONCURRENT_CONNECTIONS 10
+#define MAX_CONCURRENT_CONNECTIONS_ENV  "DRILL_MAX_CONN"
 
 #ifdef _DEBUG
 #define EXTRA_DEBUGGING
@@ -82,6 +104,11 @@ class AllocatedBuffer;
 typedef AllocatedBuffer* AllocatedBufferPtr;
 
 typedef enum{
+    CHANNEL_TYPE_SOCKET=1,
+    CHANNEL_TYPE_SSLSTREAM=2
+} channelType_t;
+
+typedef enum{
     QRY_SUCCESS=0,
     QRY_FAILURE=1,
     QRY_SUCCESS_WITH_INFO=2,
@@ -110,7 +137,11 @@ typedef enum{
     CONN_HOSTNAME_RESOLUTION_ERROR=6,
     CONN_AUTH_FAILED=7,
     CONN_BAD_RPC_VER=8,
-    CONN_DEAD=9
+    CONN_DEAD=9,
+    CONN_NOTCONNECTED=10,
+    CONN_ALREADYCONNECTED=11,
+    CONN_SSLERROR=12,
+    CONN_NOSOCKET=13
 } connectionStatus_t;
 
 typedef enum{
@@ -132,14 +163,28 @@ typedef enum{
     RET_FAILURE=1
 } ret_t;
 
+// Connect string protocol types
+#define PROTOCOL_TYPE_ZK     "zk"
+#define PROTOCOL_TYPE_DIRECT "drillbit"
+#define PROTOCOL_TYPE_DIRECT_2 "local"
 
 // User Property Names
 #define USERPROP_USERNAME "userName"
 #define USERPROP_PASSWORD "password"
 #define USERPROP_SCHEMA   "schema"
-#define USERPROP_USESSL   "useSSL"        // Not implemented yet
-#define USERPROP_FILEPATH "pemLocation"   // Not implemented yet
-#define USERPROP_FILENAME "pemFile"       // Not implemented yet
+#define USERPROP_USESSL   "enableTLS"
+#define USERPROP_TLSPROTOCOL "TLSProtocol" //TLS version
+#define USERPROP_CERTFILEPATH "certFilePath" // pem file path and name
+// TODO: support truststore protected by password. 
+// #define USERPROP_CERTPASSWORD "certPassword" // Password for certificate file. 
+#define USERPROP_DISABLE_HOSTVERIFICATION "disableHostVerification"
+#define USERPROP_DISABLE_CERTVERIFICATION "disableCertVerification"
+#define USERPROP_USESYSTEMTRUSTSTORE "useSystemTrustStore" //Windows only, use the system trust store
+#define USERPROP_IMPERSONATION_TARGET "impersonation_target"
+#define USERPROP_AUTH_MECHANISM "auth"
+#define USERPROP_SERVICE_NAME "service_name"
+#define USERPROP_SERVICE_HOST "service_host"
+#define USERPROP_SASL_ENCRYPT "sasl_encrypt"
 
 // Bitflags to describe user properties
 // Used in DrillUserProperties::USER_PROPERTIES

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,33 +17,25 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.io.IOException;
-
 import org.apache.calcite.plan.RelOptRule;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillValuesRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 
 public class ValuesPrule extends RelOptRule {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValuesPrule.class);
 
   public static final ValuesPrule INSTANCE = new ValuesPrule();
 
-  private ValuesPrule(){
-    super(RelOptHelper.any(DrillValuesRel.class), "Prel.ValuesPrule");
+  private ValuesPrule() {
+    super(RelOptHelper.any(DrillValuesRel.class), DrillRelFactories.LOGICAL_BUILDER, "Prel.ValuesPrule");
   }
 
   @Override
   public void onMatch(final RelOptRuleCall call) {
-    final DrillValuesRel rel = (DrillValuesRel) call.rel(0);
-    try{
-      call.transformTo(new ValuesPrel(rel.getCluster(), rel.getTraitSet().plus(Prel.DRILL_PHYSICAL), rel.getRowType(), rel.getTuplesAsJsonOptions()));
-    }catch(IOException e){
-      logger.warn("Failure while converting JSONOptions.", e);
-    }
+    final DrillValuesRel rel = call.rel(0);
+    call.transformTo(new ValuesPrel(rel.getCluster(), rel.getRowType(), rel.getTuples(),
+        rel.getTraitSet().plus(Prel.DRILL_PHYSICAL), rel.getContent()));
   }
-
-
 
 }

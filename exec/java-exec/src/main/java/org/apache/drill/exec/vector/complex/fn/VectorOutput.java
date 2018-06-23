@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,11 @@
 package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
@@ -30,6 +35,7 @@ import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.BigIntWriter;
@@ -40,8 +46,6 @@ import org.apache.drill.exec.vector.complex.writer.TimeWriter;
 import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.joda.time.format.ISOPeriodFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,8 +231,9 @@ abstract class VectorOutput {
     public void writeTime(boolean isNull) throws IOException {
       TimeWriter t = writer.time();
       if(!isNull){
-        DateTimeFormatter f = ISODateTimeFormat.time();
-        t.writeTime((int) ((f.parseDateTime(parser.getValueAsString())).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis()));
+        // read time and obtain the local time in the provided time zone.
+        LocalTime localTime = OffsetTime.parse(parser.getValueAsString(), DateUtility.isoFormatTime).toLocalTime();
+        t.writeTime((int) ((localTime.toNanoOfDay() + 500000L) / 1000000L)); // round to milliseconds
       }
     }
 
@@ -242,8 +247,9 @@ abstract class VectorOutput {
           ts.writeTimeStamp(dt.getMillis());
           break;
         case VALUE_STRING:
-          DateTimeFormatter f = ISODateTimeFormat.dateTime();
-          ts.writeTimeStamp(DateTime.parse(parser.getValueAsString(), f).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
+          OffsetDateTime originalDateTime = OffsetDateTime.parse(parser.getValueAsString(), DateUtility.isoFormatTimeStamp);
+          OffsetDateTime utcDateTime = OffsetDateTime.of(originalDateTime.toLocalDateTime(), ZoneOffset.UTC);   // strips the time zone from the original
+          ts.writeTimeStamp(utcDateTime.toInstant().toEpochMilli());
           break;
         default:
           throw UserException.unsupportedError()
@@ -258,9 +264,9 @@ abstract class VectorOutput {
       IntervalWriter intervalWriter = writer.interval();
       if(!isNull){
         final Period p = ISOPeriodFormat.standard().parsePeriod(parser.getValueAsString());
-        int months = DateUtility.monthsFromPeriod(p);
+        int months = DateUtilities.monthsFromPeriod(p);
         int days = p.getDays();
-        int millis = DateUtility.millisFromPeriod(p);
+        int millis = DateUtilities.periodToMillis(p);
         intervalWriter.writeInterval(months, days, millis);
       }
     }
@@ -295,6 +301,7 @@ abstract class VectorOutput {
       return innerRun();
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void writeBinary(boolean isNull) throws IOException {
       VarBinaryWriter bin = writer.varBinary(fieldName);
@@ -318,21 +325,24 @@ abstract class VectorOutput {
     public void writeDate(boolean isNull) throws IOException {
       DateWriter dt = writer.date(fieldName);
       if(!isNull){
-        DateTimeFormatter f = ISODateTimeFormat.date();
-        DateTime date = f.parseDateTime(parser.getValueAsString());
-        dt.writeDate(date.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
+        LocalDate    localDate = LocalDate.parse(parser.getValueAsString(), DateUtility.isoFormatDate);
+        OffsetDateTime utcDate = OffsetDateTime.of(localDate, LocalTime.MIDNIGHT, ZoneOffset.UTC);
+
+        dt.writeDate(utcDate.toInstant().toEpochMilli()); // round to milliseconds
       }
     }
 
     @Override
     public void writeTime(boolean isNull) throws IOException {
+      @SuppressWarnings("resource")
       TimeWriter t = writer.time(fieldName);
       if(!isNull){
-        DateTimeFormatter f = ISODateTimeFormat.time();
-        t.writeTime((int) ((f.parseDateTime(parser.getValueAsString())).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis()));
+        LocalTime localTime = OffsetTime.parse(parser.getValueAsString(), DateUtility.isoFormatTime).toLocalTime();
+        t.writeTime((int) ((localTime.toNanoOfDay() + 500000L) / 1000000L)); // round to milliseconds
       }
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void writeTimestamp(boolean isNull) throws IOException {
       TimeStampWriter ts = writer.timeStamp(fieldName);
@@ -343,8 +353,9 @@ abstract class VectorOutput {
           ts.writeTimeStamp(dt.getMillis());
           break;
         case VALUE_STRING:
-          DateTimeFormatter f = ISODateTimeFormat.dateTime();
-          ts.writeTimeStamp(DateTime.parse(parser.getValueAsString(), f).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
+          OffsetDateTime originalDateTime = OffsetDateTime.parse(parser.getValueAsString(), DateUtility.isoFormatTimeStamp);
+          OffsetDateTime utcDateTime = OffsetDateTime.of(originalDateTime.toLocalDateTime(), ZoneOffset.UTC);   // strips the time zone from the original
+          ts.writeTimeStamp(utcDateTime.toInstant().toEpochMilli());
           break;
         default:
           throw UserException.unsupportedError()
@@ -359,15 +370,16 @@ abstract class VectorOutput {
       IntervalWriter intervalWriter = writer.interval(fieldName);
       if(!isNull){
         final Period p = ISOPeriodFormat.standard().parsePeriod(parser.getValueAsString());
-        int months = DateUtility.monthsFromPeriod(p);
+        int months = DateUtilities.monthsFromPeriod(p);
         int days = p.getDays();
-        int millis = DateUtility.millisFromPeriod(p);
+        int millis = DateUtilities.periodToMillis(p);
         intervalWriter.writeInterval(months, days, millis);
       }
     }
 
     @Override
     public void writeInteger(boolean isNull) throws IOException {
+      @SuppressWarnings("resource")
       BigIntWriter intWriter = writer.bigInt(fieldName);
       if(!isNull){
         intWriter.writeBigInt(Long.parseLong(parser.getValueAsString()));

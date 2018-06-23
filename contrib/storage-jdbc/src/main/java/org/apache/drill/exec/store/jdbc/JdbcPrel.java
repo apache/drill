@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,7 @@ import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
@@ -43,7 +44,6 @@ import org.apache.drill.exec.store.jdbc.JdbcStoragePlugin.DrillJdbcConvention;
  * Represents a JDBC Plan once the children nodes have been rewritten into SQL.
  */
 public class JdbcPrel extends AbstractRelNode implements Prel {
-
   private final String sql;
   private final double rows;
   private final DrillJdbcConvention convention;
@@ -51,7 +51,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
   public JdbcPrel(RelOptCluster cluster, RelTraitSet traitSet, JdbcIntermediatePrel prel) {
     super(cluster, traitSet);
     final RelNode input = prel.getInput();
-    rows = input.getRows();
+    rows = input.estimateRowCount(cluster.getMetadataQuery());
     convention = (DrillJdbcConvention) input.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
 
     // generate sql for tree.
@@ -61,8 +61,20 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
         (JavaTypeFactory) getCluster().getTypeFactory());
     final JdbcImplementor.Result result =
         jdbcImplementor.visitChild(0, input.accept(new SubsetRemover()));
-    sql = result.asQuery().toSqlString(dialect).getSql();
+    sql = result.asStatement().toSqlString(dialect).getSql();
     rowType = input.getRowType();
+  }
+
+  //Substitute newline. Also stripping away single line comments. Expecting hints to be nested in '/* <hint> */'
+  private String stripToOneLineSql(String sql) {
+    StringBuilder strippedSqlTextBldr = new StringBuilder(sql.length());
+    String sqlToken[] = sql.split("\\n");
+    for (String sqlTextLine : sqlToken) {
+      if (!sqlTextLine.trim().startsWith("--")) { //Skip comments
+        strippedSqlTextBldr.append(sqlTextLine).append(' ');
+      }
+    }
+    return strippedSqlTextBldr.toString();
   }
 
   private class SubsetRemover extends RelShuttleImpl {
@@ -86,11 +98,11 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
-    return super.explainTerms(pw).item("sql", sql);
+    return super.explainTerms(pw).item("sql", stripToOneLineSql(sql));
   }
 
   @Override
-  public double getRows() {
+  public double estimateRowCount(RelMetadataQuery mq) {
     return rows;
   }
 

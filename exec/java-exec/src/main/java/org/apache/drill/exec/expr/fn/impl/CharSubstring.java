@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,7 +46,8 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
  */
 @FunctionTemplate(names = {"charsubstring", "substring2", "substr2"},
                   scope = FunctionTemplate.FunctionScope.SIMPLE,
-                  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+                  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+                  outputWidthCalculatorType = FunctionTemplate.OutputWidthCalculatorType.CLONE)
 public class CharSubstring implements DrillSimpleFunc {
 
   @Param VarCharHolder string;

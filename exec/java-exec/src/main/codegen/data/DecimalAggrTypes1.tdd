@@ -17,37 +17,30 @@
 {
   aggrtypes: [
    {className: "Max", funcName: "max", types: [
-      {inputType: "Decimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MIN_VALUE"},
-      {inputType: "NullableDecimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MIN_VALUE"},
-      {inputType: "Decimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Long.MIN_VALUE"},
-      {inputType: "NullableDecimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Long.MIN_VALUE"},
-      {inputType: "Decimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
-      {inputType: "NullableDecimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
-      {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
-      {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"}
+      {inputType: "VarDecimal", outputType: "NullableVarDecimal"},
+      {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal"}
      ]
    },
    {className: "Min", funcName: "min", types: [
-      {inputType: "Decimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MAX_VALUE"},
-      {inputType: "NullableDecimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MAX_VALUE"},
-      {inputType: "Decimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Integer.MAX_VALUE"},
-      {inputType: "NullableDecimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Integer.MAX_VALUE"},
-      {inputType: "Decimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
-      {inputType: "NullableDecimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
-      {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
-      {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"}
+      {inputType: "VarDecimal", outputType: "NullableVarDecimal"},
+      {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal"}
      ]
+   },
+   {className: "Sum", funcName: "sum", types: [
+       {inputType: "VarDecimal", outputType: "NullableVarDecimal"},
+       {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal"}
+      ]
+   },
+   {className: "SumZero", funcName: "$sum0", types: [
+       {inputType: "VarDecimal", outputType: "NullableVarDecimal"},
+       {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal"}
+      ]
+   },
+   {className: "AnyValue", funcName: "any_value", types: [
+       {inputType: "VarDecimal", outputType: "NullableVarDecimal"},
+       {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal"}
+       {inputType: "RepeatedVarDecimal", outputType: "RepeatedVarDecimal"}
+      ]
    }
-      {className: "Sum", funcName: "sum", types: [
-        {inputType: "Decimal9", outputType: "Decimal38Sparse", major: "Numeric"},
-        {inputType: "NullableDecimal9", outputType: "Decimal38Sparse", major: "Numeric"},
-        {inputType: "Decimal18", outputType: "Decimal38Sparse", major: "Numeric"},
-        {inputType: "NullableDecimal18", outputType: "Decimal38Sparse", major: "Numeric"},
-        {inputType: "Decimal28Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
-        {inputType: "NullableDecimal28Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
-        {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
-        {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", major: "Numeric"}
-        ]
-      }
-   ]
+  ]
 }

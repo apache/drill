@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,10 +21,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.BufferManager;
+import org.apache.drill.exec.ops.BufferManagerImpl;
 import org.apache.drill.exec.store.TestOutputMutator;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
@@ -45,21 +48,24 @@ import org.bson.BsonSymbol;
 import org.bson.BsonTimestamp;
 import org.bson.BsonWriter;
 import org.bson.types.ObjectId;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class TestBsonRecordReader extends BaseTestQuery {
-  private static VectorContainerWriter writer;
-  private static TestOutputMutator mutator;
-  private static BsonRecordReader bsonReader;
+public class TestBsonRecordReader {
+  private BufferAllocator allocator;
+  private VectorContainerWriter writer;
+  private TestOutputMutator mutator;
+  private BufferManager bufferManager;
+  private BsonRecordReader bsonReader;
 
-  @BeforeClass
-  public static void setUp() {
-    BufferAllocator bufferAllocator = getDrillbitContext().getAllocator();
-    mutator = new TestOutputMutator(bufferAllocator);
+  @Before
+  public void setUp() {
+    allocator = new RootAllocator(Long.MAX_VALUE);
+    mutator = new TestOutputMutator(allocator);
     writer = new VectorContainerWriter(mutator);
-    bsonReader = new BsonRecordReader(bufferAllocator.buffer(1024), false, false);
+    bufferManager = new BufferManagerImpl(allocator);
+    bsonReader = new BsonRecordReader(bufferManager.getManagedBuffer(1024), false, false);
   }
 
   @Test
@@ -79,7 +85,7 @@ public class TestBsonRecordReader extends BaseTestQuery {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(1000l, mapReader.reader("ts").readDateTime().getMillis());
+    assertEquals(1000000l, mapReader.reader("ts").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
   }
 
   @Test
@@ -100,6 +106,17 @@ public class TestBsonRecordReader extends BaseTestQuery {
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
     assertEquals("test_string", mapReader.reader("stringKey").readText().toString());
+  }
+
+  @Test
+  public void testSpecialCharStringType() throws IOException {
+    BsonDocument bsonDoc = new BsonDocument();
+    bsonDoc.append("stringKey", new BsonString("§§§§§§§§§1"));
+    writer.reset();
+    bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
+    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    assertEquals("§§§§§§§§§1",
+        mapReader.reader("stringKey").readText().toString());
   }
 
   @Test
@@ -191,7 +208,7 @@ public class TestBsonRecordReader extends BaseTestQuery {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(5262729712L, mapReader.reader("dateTimeKey").readDateTime().getMillis());
+    assertEquals(5262729712L, mapReader.reader("dateTimeKey").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
   }
 
   @Test
@@ -254,13 +271,15 @@ public class TestBsonRecordReader extends BaseTestQuery {
     assertEquals(3, reader.size());
   }
 
-  @AfterClass
-  public static void cleanUp() {
+  @After
+  public void cleanUp() {
     try {
       writer.close();
     } catch (Exception e) {
 
     }
-  }
 
+    bufferManager.close();
+    allocator.close();
+  }
 }

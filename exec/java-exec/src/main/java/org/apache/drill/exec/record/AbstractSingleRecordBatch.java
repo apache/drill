@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,111 +18,44 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.vector.SchemaChangeCallBack;
 
-public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
+
+/**
+ * Implements an AbstractUnaryRecordBatch where the inoming record batch is known at the time of creation
+ * @param <T>
+ */
+public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractUnaryRecordBatch<T> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
 
   protected final RecordBatch incoming;
-  protected boolean outOfMemory = false;
-  protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();
 
   public AbstractSingleRecordBatch(T popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
-    super(popConfig, context, false);
+    super(popConfig, context);
     this.incoming = incoming;
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
+  protected RecordBatch getIncoming() {
+    return incoming;
   }
 
-  @Override
-  public IterOutcome innerNext() {
-    // Short circuit if record batch has already sent all data and is done
-    if (state == BatchState.DONE) {
-      return IterOutcome.NONE;
+  /**
+   * Based on lastKnownOutcome and if there are more records to be output for current record boundary detected by
+   * EMIT outcome, this method returns EMIT or OK outcome.
+   * @param hasMoreRecordInBoundary
+   * @return - EMIT - If the lastknownOutcome was EMIT and output records corresponding to all the incoming records in
+   * current record boundary is already produced.
+   *         - OK - otherwise
+   */
+  protected IterOutcome getFinalOutcome(boolean hasMoreRecordInBoundary) {
+    final IterOutcome lastOutcome = getLastKnownOutcome();
+    final boolean isLastOutcomeEmit = (IterOutcome.EMIT == lastOutcome);
+    if (isLastOutcomeEmit && !hasMoreRecordInBoundary) {
+      setLastKnownOutcome(IterOutcome.OK);
+      return IterOutcome.EMIT;
     }
-
-    IterOutcome upstream = next(incoming);
-    if (state != BatchState.FIRST && upstream == IterOutcome.OK && incoming.getRecordCount() == 0) {
-      do {
-        for (final VectorWrapper<?> w : incoming) {
-          w.clear();
-        }
-      } while ((upstream = next(incoming)) == IterOutcome.OK && incoming.getRecordCount() == 0);
-    }
-    if ((state == BatchState.FIRST) && upstream == IterOutcome.OK) {
-      upstream = IterOutcome.OK_NEW_SCHEMA;
-    }
-    switch (upstream) {
-    case NONE:
-    case NOT_YET:
-    case STOP:
-      if (state == BatchState.FIRST) {
-        container.buildSchema(SelectionVectorMode.NONE);
-      }
-      return upstream;
-    case OUT_OF_MEMORY:
-      return upstream;
-    case OK_NEW_SCHEMA:
-      if (state == BatchState.FIRST) {
-        state = BatchState.NOT_FIRST;
-      }
-      try {
-        stats.startSetup();
-        if (!setupNewSchema()) {
-          upstream = IterOutcome.OK;
-        }
-      } catch (SchemaChangeException ex) {
-        kill(false);
-        logger.error("Failure during query", ex);
-        context.fail(ex);
-        return IterOutcome.STOP;
-      } finally {
-        stats.stopSetup();
-      }
-      // fall through.
-    case OK:
-      assert state != BatchState.FIRST : "First batch should be OK_NEW_SCHEMA";
-      container.zeroVectors();
-      IterOutcome out = doWork();
-
-      // since doWork method does not know if there is a new schema, it will always return IterOutcome.OK if it was successful.
-      // But if upstream is IterOutcome.OK_NEW_SCHEMA, we should return that
-      if (out != IterOutcome.OK) {
-        upstream = out;
-      }
-
-      if (outOfMemory) {
-        outOfMemory = false;
-        return IterOutcome.OUT_OF_MEMORY;
-      }
-
-      // Check if schema has changed
-      if (callBack.getSchemaChangedAndReset()) {
-        return IterOutcome.OK_NEW_SCHEMA;
-      }
-
-      return upstream; // change if upstream changed, otherwise normal.
-    default:
-      throw new UnsupportedOperationException();
-    }
+    return IterOutcome.OK;
   }
-
-  @Override
-  public BatchSchema getSchema() {
-    if (container.hasSchema()) {
-      return container.getSchema();
-    }
-
-    return null;
-  }
-
-  protected abstract boolean setupNewSchema() throws SchemaChangeException;
-  protected abstract IterOutcome doWork();
 }

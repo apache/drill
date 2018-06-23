@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,36 +17,39 @@
  */
 package org.apache.drill.exec.physical.base;
 
-
 public class ScanStats {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanStats.class);
-
 
   public static final ScanStats TRIVIAL_TABLE = new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, 20, 1, 1);
 
-  private final long recordCount;
-  private final float cpuCost;
-  private final float diskCost;
+  public static final ScanStats ZERO_RECORD_TABLE = new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, 0, 1, 1);
+
+  private final double recordCount;
+  private final double cpuCost;
+  private final double diskCost;
   private final GroupScanProperty property;
 
-  public ScanStats(GroupScanProperty property, long recordCount, float cpuCost, float diskCost) {
-    super();
+  public ScanStats(GroupScanProperty property, double recordCount, double cpuCost, double diskCost) {
     this.recordCount = recordCount;
     this.cpuCost = cpuCost;
     this.diskCost = diskCost;
     this.property = property;
   }
 
-  public long getRecordCount() {
+  public double getRecordCount() {
     return recordCount;
   }
 
-  public float getCpuCost() {
+  public double getCpuCost() {
     return cpuCost;
   }
 
-  public float getDiskCost() {
+  public double getDiskCost() {
     return diskCost;
+  }
+
+  @Override
+  public String toString() {
+    return "ScanStats{" + "recordCount=" + recordCount + ", cpuCost=" + cpuCost + ", diskCost=" + diskCost + ", property=" + property + '}';
   }
 
   /**
@@ -60,7 +63,7 @@ public class ScanStats {
 
 
 
-  public static enum GroupScanProperty {
+  public enum GroupScanProperty {
     NO_EXACT_ROW_COUNT(false, false),
     EXACT_ROW_COUNT(true, true);
 

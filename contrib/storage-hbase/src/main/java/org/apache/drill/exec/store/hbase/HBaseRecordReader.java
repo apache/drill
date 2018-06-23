@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,6 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -43,14 +42,13 @@ import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 
 import com.google.common.base.Preconditions;
@@ -60,6 +58,10 @@ import com.google.common.collect.Sets;
 public class HBaseRecordReader extends AbstractRecordReader implements DrillHBaseConstants {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRecordReader.class);
 
+  // batch should not exceed this value to avoid OOM on a busy system
+  private static final int MAX_ALLOCATED_MEMORY_PER_BATCH = 64 * 1024 * 1024; // 64 mb in bytes
+
+  // batch size should not exceed max allowed record count
   private static final int TARGET_RECORD_COUNT = 4000;
 
   private OutputMutator outputMutator;
@@ -67,21 +69,26 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   private Map<String, MapVector> familyVectorMap;
   private VarBinaryVector rowKeyVector;
 
-  private HTable hTable;
+  private Table hTable;
   private ResultScanner resultScanner;
 
-  private String hbaseTableName;
+  private TableName hbaseTableName;
   private Scan hbaseScan;
-  private Configuration hbaseConf;
+  // scan instance to capture columns for vector creation
+  private Scan hbaseScanColumnsOnly;
+  private Set<String> completeFamilies;
   private OperatorContext operatorContext;
 
   private boolean rowKeyOnly;
 
-  public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec subScanSpec,
-      List<SchemaPath> projectedColumns, FragmentContext context) {
-    hbaseConf = conf;
-    hbaseTableName = Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName();
+  private final Connection connection;
+
+  public HBaseRecordReader(Connection connection, HBaseSubScan.HBaseSubScanSpec subScanSpec, List<SchemaPath> projectedColumns) {
+    this.connection = connection;
+    hbaseTableName = TableName.valueOf(
+        Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName());
     hbaseScan = new Scan(subScanSpec.getStartRow(), subScanSpec.getStopRow());
+    hbaseScanColumnsOnly = new Scan();
     hbaseScan
         .setFilter(subScanSpec.getScanFilter())
         .setCaching(TARGET_RECORD_COUNT);
@@ -89,9 +96,22 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     setColumns(projectedColumns);
   }
 
+  /**
+   * Provides the projected columns information to the Hbase Scan instance. If the
+   * projected columns list contains a column family and also a column in the
+   * column family, only the column family is passed to the Scan instance.
+   *
+   * For example, if the projection list is {cf1, cf1.col1, cf2.col1} then we only
+   * pass {cf1, cf2.col1} to the Scan instance.
+   *
+   * @param columns collection of projected columns
+   * @return collection of projected column family names
+   */
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    completeFamilies = Sets.newHashSet();
+
     rowKeyOnly = true;
     if (!isStarQuery()) {
       for (SchemaPath column : columns) {
@@ -106,11 +126,16 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         PathSegment child = root.getChild();
         if (child != null && child.isNamed()) {
           byte[] qualifier = child.getNameSegment().getPath().getBytes();
-          hbaseScan.addColumn(family, qualifier);
+          hbaseScanColumnsOnly.addColumn(family, qualifier);
+          if (!completeFamilies.contains(root.getPath())) {
+            hbaseScan.addColumn(family, qualifier);
+          }
         } else {
           hbaseScan.addFamily(family);
+          completeFamilies.add(root.getPath());
         }
       }
+
       /* if only the row key was requested, add a FirstKeyOnlyFilter to the scan
        * to fetch only one KV from each row. If a filter is already part of this
        * scan, add the FirstKeyOnlyFilter as the LAST filter of a MUST_PASS_ALL
@@ -125,7 +150,6 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
       transformed.add(ROW_KEY_PATH);
     }
 
-
     return transformed;
   }
 
@@ -133,13 +157,10 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     this.operatorContext = context;
     this.outputMutator = output;
-    familyVectorMap = new HashMap<String, MapVector>();
+    familyVectorMap = new HashMap<>();
 
     try {
-      logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
-          hbaseTableName, hbaseConf.get(HConstants.ZOOKEEPER_QUORUM),
-          hbaseConf.get(HBASE_ZOOKEEPER_PORT), hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
-      hTable = new HTable(hbaseConf, hbaseTableName);
+      hTable = connection.getTable(hbaseTableName);
 
       // Add top-level column-family map vectors to output in the order specified
       // when creating reader (order of first appearance in query).
@@ -152,11 +173,10 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         }
       }
 
-      // Add map and child vectors for any HBase column families and/or HBase
-      // columns that are requested (in order to avoid later creation of dummy
-      // NullableIntVectors for them).
+      // Add map and child vectors for any HBase columns that are requested (in
+      // order to avoid later creation of dummy NullableIntVectors for them).
       final Set<Map.Entry<byte[], NavigableSet<byte []>>> familiesEntries =
-          hbaseScan.getFamilyMap().entrySet();
+          hbaseScanColumnsOnly.getFamilyMap().entrySet();
       for (Map.Entry<byte[], NavigableSet<byte []>> familyEntry : familiesEntries) {
         final String familyName = new String(familyEntry.getKey(),
                                              StandardCharsets.UTF_8);
@@ -170,6 +190,12 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
           }
         }
       }
+
+      // Add map vectors for any HBase column families that are requested.
+      for (String familyName : completeFamilies) {
+        getOrCreateFamilyVector(familyName, false);
+      }
+
       resultScanner = hTable.getScanner(hbaseScan);
     } catch (SchemaChangeException | IOException e) {
       throw new ExecutionSetupException(e);
@@ -189,8 +215,8 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     }
 
     int rowCount = 0;
-    done:
-    for (; rowCount < TARGET_RECORD_COUNT; rowCount++) {
+    // if allocated memory for the first row is larger than allowed max in batch, it will be added anyway
+    do {
       Result result = null;
       final OperatorStats operatorStats = operatorContext == null ? null : operatorContext.getStats();
       try {
@@ -208,13 +234,17 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         throw new DrillRuntimeException(e);
       }
       if (result == null) {
-        break done;
+        break;
       }
 
       // parse the result and populate the value vectors
       Cell[] cells = result.rawCells();
       if (rowKeyVector != null) {
-        rowKeyVector.getMutator().setSafe(rowCount, cells[0].getRowArray(), cells[0].getRowOffset(), cells[0].getRowLength());
+        rowKeyVector.getMutator().setSafe(
+            rowCount,
+            cells[0].getRowArray(),
+            cells[0].getRowOffset(),
+            cells[0].getRowLength());
       }
       if (!rowKeyOnly) {
         for (final Cell cell : cells) {
@@ -226,7 +256,8 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
           final int qualifierOffset = cell.getQualifierOffset();
           final int qualifierLength = cell.getQualifierLength();
           final byte[] qualifierArray = cell.getQualifierArray();
-          final NullableVarBinaryVector v = getOrCreateColumnVector(mv, new String(qualifierArray, qualifierOffset, qualifierLength));
+          final NullableVarBinaryVector v = getOrCreateColumnVector(mv,
+              new String(qualifierArray, qualifierOffset, qualifierLength));
 
           final int valueOffset = cell.getValueOffset();
           final int valueLength = cell.getValueLength();
@@ -234,7 +265,8 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
           v.getMutator().setSafe(rowCount, valueArray, valueOffset, valueLength);
         }
       }
-    }
+      rowCount++;
+    } while (canAddNewRow(rowCount));
 
     setOutputRowCount(rowCount);
     logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
@@ -290,5 +322,20 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     if (rowKeyVector != null) {
       rowKeyVector.getMutator().setValueCount(count);
     }
+  }
+
+  /**
+   * Checks if new row can be added in batch. Row can be added if:
+   * <ul>
+   *   <li>current row count does not exceed max allowed one</li>
+   *   <li>allocated memory does not exceed max allowed one</li>
+   * </ul>
+   *
+   * @param rowCount current row count
+   * @return true if new row can be added in batch, false otherwise
+   */
+  private boolean canAddNewRow(int rowCount) {
+    return rowCount < TARGET_RECORD_COUNT &&
+        operatorContext.getAllocator().getAllocatedMemory() < MAX_ALLOCATED_MEMORY_PER_BATCH;
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -82,7 +82,7 @@ public class CodeGeneratorMethod implements Iterable<CodeGeneratorArgument> {
 
   @Override
   public String toString() {
-    return "CodeGeneratorMethod [" + underlyingMethod.toGenericString() + "]";
+    return "CodeGeneratorMethod [" + ((underlyingMethod == null) ? "null" : underlyingMethod.toGenericString()) + "]";
   }
 
 }

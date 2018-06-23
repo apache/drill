@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,12 +17,9 @@
  */
 package org.apache.drill.exec.util;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -44,7 +41,8 @@ public class MiniZooKeeperCluster {
   private static final Log LOG = LogFactory.getLog(MiniZooKeeperCluster.class);
 
   private static final int TICK_TIME = 2000;
-  private static final int CONNECTION_TIMEOUT = 30000;
+  private static final int CONNECTION_TIMEOUT = 10000;
+  public static final int DEFAULT_PORT = 2181;
 
   private boolean started;
 
@@ -146,27 +144,39 @@ public class MiniZooKeeperCluster {
       } else {
         tickTimeToUse = TICK_TIME;
       }
+
       ZooKeeperServer server = new ZooKeeperServer(dir, dir, tickTimeToUse);
       NIOServerCnxnFactory standaloneServerFactory;
+
       while (true) {
         try {
           standaloneServerFactory = new NIOServerCnxnFactory();
-          standaloneServerFactory.configure(
-            new InetSocketAddress(tentativePort), 1000);
+          standaloneServerFactory.configure(new InetSocketAddress(tentativePort), 1000);
         } catch (BindException e) {
-          LOG.debug("Failed binding ZK Server to client port: " +
-            tentativePort);
+          LOG.debug("Failed binding ZK Server to client port: " + tentativePort);
           // This port is already in use, try to use another.
           tentativePort++;
           continue;
         }
-        break;
-      }
 
-      // Start up this ZK server
-      standaloneServerFactory.startup(server);
-      if (!waitForServerUp(tentativePort, CONNECTION_TIMEOUT)) {
-        throw new IOException("Waiting for startup of standalone server");
+        // Start up this ZK server
+
+        try {
+          standaloneServerFactory.startup(server);
+        } catch (IOException e) {
+          LOG.error("Zookeeper startup error", e);
+          tentativePort++;
+          continue;
+        }
+
+        if (!waitForServerUp(server, CONNECTION_TIMEOUT)) {
+          server.shutdown();
+          server = new ZooKeeperServer(dir, dir, tickTimeToUse);
+          tentativePort++;
+          continue;
+        }
+
+        break;
       }
 
       // We have selected this port as a client port.
@@ -326,32 +336,13 @@ public class MiniZooKeeperCluster {
   }
 
   // XXX: From o.a.zk.t.ClientBase
-  private static boolean waitForServerUp(int port, long timeout) {
+  private static boolean waitForServerUp(ZooKeeperServer server, long timeout) {
     long start = System.currentTimeMillis();
     while (true) {
-      try {
-        Socket sock = new Socket("localhost", port);
-        BufferedReader reader = null;
-        try {
-          OutputStream outstream = sock.getOutputStream();
-          outstream.write("stat".getBytes());
-          outstream.flush();
+      // Doing it this way instead of openning a connection to zookeeper because of ZOOKEEPER-2383
 
-          Reader isr = new InputStreamReader(sock.getInputStream());
-          reader = new BufferedReader(isr);
-          String line = reader.readLine();
-          if (line != null && line.startsWith("Zookeeper version:")) {
-            return true;
-          }
-        } finally {
-          sock.close();
-          if (reader != null) {
-            reader.close();
-          }
-        }
-      } catch (IOException e) {
-        // ignore as this is expected
-        LOG.info("server localhost:" + port + " not up " + e);
+      if (server.isRunning()) {
+        return true;
       }
 
       if (System.currentTimeMillis() > start + timeout) {

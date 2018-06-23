@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,10 +20,10 @@ package org.apache.drill.exec.record.selection;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.DeadBuf;
 
 public class SelectionVector4 implements AutoCloseable {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4.class);
 
   private ByteBuf data;
   private int recordCount;
@@ -31,13 +31,25 @@ public class SelectionVector4 implements AutoCloseable {
   private int length;
 
   public SelectionVector4(ByteBuf vector, int recordCount, int batchRecordCount) throws SchemaChangeException {
-    if (recordCount > Integer.MAX_VALUE /4) {
-      throw new SchemaChangeException(String.format("Currently, Drill can only support allocations up to 2gb in size.  You requested an allocation of %d bytes.", recordCount * 4));
+    if (recordCount > Integer.MAX_VALUE / 4) {
+      throw new SchemaChangeException(String.format("Currently, Drill can only support allocations up to 2gb in size. " +
+          "You requested an allocation of %d bytes.", recordCount * 4L));
     }
     this.recordCount = recordCount;
     this.start = 0;
     this.length = Math.min(batchRecordCount, recordCount);
     this.data = vector;
+  }
+
+  public SelectionVector4(BufferAllocator allocator, int recordCount) {
+    if (recordCount > Integer.MAX_VALUE / 4) {
+      throw new IllegalStateException(String.format("Currently, Drill can only support allocations up to 2gb in size. " +
+          "You requested an allocation of %d bytes.", recordCount * 4L));
+    }
+    this.recordCount = recordCount;
+    this.start = 0;
+    this.length = recordCount;
+    this.data = allocator.buffer(recordCount * 4);
   }
 
   public int getTotalCount() {
@@ -48,21 +60,25 @@ public class SelectionVector4 implements AutoCloseable {
     return length;
   }
 
+  private ByteBuf getData() {
+    return data;
+  }
+
   public void setCount(int length) {
     this.length = length;
     this.recordCount = length;
   }
 
   public void set(int index, int compound) {
-    data.setInt(index*4, compound);
+    data.setInt(index * 4, compound);
   }
 
   public void set(int index, int recordBatch, int recordIndex) {
-    data.setInt(index*4, (recordBatch << 16) | (recordIndex & 65535));
+    data.setInt(index * 4, (recordBatch << 16) | (recordIndex & 65535));
   }
 
   public int get(int index) {
-    return data.getInt( (start+index)*4);
+    return data.getInt((start+index) * 4);
   }
 
   /**
@@ -92,28 +108,53 @@ public class SelectionVector4 implements AutoCloseable {
   public boolean next() {
 //    logger.debug("Next called. Start: {}, Length: {}, recordCount: " + recordCount, start, length);
 
-    if (start + length >= recordCount) {
-
+    if (!hasNext()) {
       start = recordCount;
       length = 0;
 //      logger.debug("Setting count to zero.");
       return false;
     }
 
-    start = start+length;
-    int newEnd = Math.min(start+length, recordCount);
+    start = start + length;
+    int newEnd = Math.min(start + length, recordCount);
     length = newEnd - start;
 //    logger.debug("New start {}, new length {}", start, length);
     return true;
   }
 
+  public boolean hasNext() {
+    final int endIndex = start + length;
+    return endIndex < recordCount;
+  }
+
   public void clear() {
     start = 0;
     length = 0;
+    recordCount = 0;
     if (data != DeadBuf.DEAD_BUFFER) {
       data.release();
       data = DeadBuf.DEAD_BUFFER;
     }
+  }
+
+  public void copy(SelectionVector4 fromSV4) {
+    clear();
+    this.recordCount = fromSV4.getTotalCount();
+    this.length = fromSV4.getCount();
+    this.data = fromSV4.getData();
+    // Need to retain the data buffer since if fromSV4 clears out the buffer it's not actually released unless the
+    // copied SV4 has also released it
+    if (data != DeadBuf.DEAD_BUFFER) {
+      this.data.retain();
+    }
+  }
+
+  public static int getBatchIndex(int sv4Index) {
+    return (sv4Index >> 16) & 0xFFFF;
+  }
+
+  public static int getRecordIndex(int sv4Index) {
+    return (sv4Index) & 0xFFFF;
   }
 
   @Override

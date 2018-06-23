@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,8 +27,6 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
 public class JsonWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonWriter.class);
@@ -37,7 +35,7 @@ public class JsonWriter {
   private final JsonOutput gen;
 
   public JsonWriter(OutputStream out, boolean pretty, boolean useExtendedOutput) throws IOException{
-    JsonGenerator writer = factory.createJsonGenerator(out);
+    JsonGenerator writer = factory.configure(JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS, false).createJsonGenerator(out);
     if(pretty){
       writer = writer.useDefaultPrettyPrinter();
     }
@@ -110,6 +108,7 @@ public class JsonWriter {
       case DECIMAL38SPARSE:
       case DECIMAL9:
       case DECIMAL18:
+      case VARDECIMAL:
         gen.writeDecimal(reader);
         break;
 
@@ -220,6 +219,7 @@ public class JsonWriter {
       case DECIMAL38SPARSE:
       case DECIMAL9:
       case DECIMAL18:
+      case VARDECIMAL:
         for(int i = 0; i < reader.size(); i++){
           gen.writeDecimal(i, reader);
         }
