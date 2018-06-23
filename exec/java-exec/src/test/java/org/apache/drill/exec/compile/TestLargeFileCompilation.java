@@ -29,7 +29,7 @@ import org.junit.rules.TestRule;
 
 @Category({SlowTest.class})
 public class TestLargeFileCompilation extends BaseTestQuery {
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(150000); // 150secs
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(200000); // 200 secs
 
   private static final String LARGE_QUERY_GROUP_BY;
 
@@ -49,7 +49,9 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   private static final int ITERATION_COUNT = Integer.valueOf(System.getProperty("TestLargeFileCompilation.iteration", "1"));
 
-  private static final int NUM_PROJECT_COLUMNS = 5000;
+  private static final int NUM_PROJECT_COLUMNS = 2500;
+
+  private static final int NUM_PROJECT_TEST_COLUMNS = 10000;
 
   private static final int NUM_ORDERBY_COLUMNS = 500;
 
@@ -77,7 +79,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   static {
     StringBuilder sb = new StringBuilder("select\n\t");
-    for (int i = 0; i < NUM_PROJECT_COLUMNS; i++) {
+    for (int i = 0; i < NUM_PROJECT_TEST_COLUMNS; i++) {
       sb.append("employee_id+").append(i).append(" as col").append(i).append(", ");
     }
     sb.append("full_name\nfrom cp.`employee.json`\n\n\t");
@@ -145,14 +147,12 @@ public class TestLargeFileCompilation extends BaseTestQuery {
     testNoResult(ITERATION_COUNT, LARGE_QUERY_GROUP_BY);
   }
 
-  @Ignore // TODO: DRILL-6529
   @Test
   public void testEXTERNAL_SORT() throws Exception {
     testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_ORDER_BY);
   }
 
-  @Ignore // TODO: DRILL-6529
   @Test
   public void testTOP_N_SORT() throws Exception {
     testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
