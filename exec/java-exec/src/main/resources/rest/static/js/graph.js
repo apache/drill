@@ -95,7 +95,7 @@ $(window).on('load',(function () {
     // parse the short physical plan into a dagreeD3 structure
     function parseplan (planstring, implicitSrcMap) {
         var g = new dagreD3.Digraph();
-        //Produce 2D array (3 x M): [[0:majorMinor] [1:] [2:opName]]
+        //Produce 2D array (3 x M): [[0:majorMinor] [1:] [2:opName]] / [[<major>-<minor>, "<indent>", opName]]
         let opPlanArray = planstring.trim().split("\n");
         var operatorRegex = new RegExp("^([0-9-]+)( *)([a-zA-Z]*)");
         //Regex to capture source operator 
@@ -128,6 +128,7 @@ $(window).on('load',(function () {
         }
 
         // Define edges by traversing graph from root node (Screen)
+        //NOTE: The indentation value in opTuple which is opTuple[1] represents the relative level of each operator in tree w.r.t root operator
         var nodeStack = [opTuple[0]]; //Add Root
         for (var i = 1; i < opTuple.length; i++) {
             let top = nodeStack.pop();
