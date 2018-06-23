@@ -112,7 +112,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.8</version>
+        
         <executions>
           <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put 
             it under ${project.build.directory}/codegen/data where all freemarker data 
@@ -142,7 +142,7 @@
       <plugin> <!-- generate sources from fmpp -->
         <groupId>org.apache.drill.tools</groupId>
         <artifactId>drill-fmpp-maven-plugin</artifactId>
-        <version>${project.version}</version>
+        <version>1.6.0-SNAPSHOT</version>
         <executions>
           <execution>
             <id>generate-fmpp</id>

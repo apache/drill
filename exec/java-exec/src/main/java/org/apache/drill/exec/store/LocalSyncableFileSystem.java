@@ -65,7 +65,7 @@ public class LocalSyncableFileSystem extends FileSystem {
 
   @Override
   public FSDataOutputStream create(Path path, FsPermission fsPermission, boolean b, int i, short i2, long l, Progressable progressable) throws IOException {
-    return new FSDataOutputStream(new LocalSyncableOutputStream(path));
+    return new FSDataOutputStream(new LocalSyncableOutputStream(path), statistics);
   }
 
   @Override
@@ -141,11 +141,11 @@ public class LocalSyncableFileSystem extends FileSystem {
       output = new BufferedOutputStream(fos, 64*1024);
     }
 
-    @Override
-    public void sync() throws IOException {
+
+   /* public void sync() throws IOException {
       output.flush();
       fos.getFD().sync();
-    }
+    }*/
 
     @Override
     public void hsync() throws IOException {

@@ -984,6 +984,68 @@
   <!-- Managed Dependencies -->
   <dependencyManagement>
     <dependencies>
+
+      <dependency>
+        <groupId>net.java.dev.jets3t</groupId>
+        <artifactId>jets3t</artifactId>
+        <version>0.9.5-SNAPSHOT</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>4.4.1</version>
+        <scope>compile</scope>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-core-asl</artifactId>
+        <version>1.9.13</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-mapper-asl</artifactId>
+        <version>1.9.13</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>javax.activation</groupId>
+        <artifactId>activation</artifactId>
+        <version>1.1.1</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>mx4j</groupId>
+        <artifactId>mx4j</artifactId>
+        <version>3.0.2</version>
+      </dependency>
+      
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk15on</artifactId>
+        <version>1.52</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>com.jamesmurty.utils</groupId>
+        <artifactId>java-xmlbuilder</artifactId>
+        <version>1.1</version>
+      </dependency>
+      
       <dependency>
         <groupId>org.apache.calcite.avatica</groupId>
         <artifactId>avatica</artifactId>
@@ -1052,6 +1114,7 @@
           </exclusion>
         </exclusions>
       </dependency>
+      
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-yarn-api</artifactId>

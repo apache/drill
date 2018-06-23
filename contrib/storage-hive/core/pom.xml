@@ -155,6 +155,7 @@
         <groupId>org.apache.drill.tools</groupId>
         <artifactId>drill-fmpp-maven-plugin</artifactId>
         <version>${project.version}</version>
+<!--          -->
         <executions>
           <execution>
             <id>generate-fmpp-sources</id>
