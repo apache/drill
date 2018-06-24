@@ -17,22 +17,53 @@
  */
 package org.apache.drill.exec.store;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("named")
+@JsonTypeName(NamedStoragePluginConfig.NAME)
 public class NamedStoragePluginConfig extends StoragePluginConfig {
-  public String name;
+
+  public static final String NAME = "named";
+
+  private final String name;
+
+  @JsonCreator
+  public NamedStoragePluginConfig(@JsonProperty("name") String name) {
+    this.name = name;
+  }
+
+  public String getName() {
+    return name;
+  }
 
   @Override
-  public boolean equals(Object o) {
-    return this == o;
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    NamedStoragePluginConfig other = (NamedStoragePluginConfig) obj;
+    if (name == null) {
+      return other.name == null;
+    } else {
+      return name.equals(other.name);
+    }
   }
 
   @Override
   public int hashCode() {
-    return name.hashCode();
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + (name == null ? 0 : name.hashCode());
+    return result;
   }
 
 }

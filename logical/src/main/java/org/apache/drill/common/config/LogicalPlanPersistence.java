@@ -35,14 +35,14 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 
 public class LogicalPlanPersistence {
-  private ObjectMapper mapper;
-
-  public ObjectMapper getMapper() {
-    return mapper;
-  }
+  private final ObjectMapper mapper;
 
   public LogicalPlanPersistence(DrillConfig conf, ScanResult scanResult) {
-    mapper = new ObjectMapper();
+    this(conf, scanResult, new ObjectMapper());
+  }
+
+  public LogicalPlanPersistence(DrillConfig conf, ScanResult scanResult, ObjectMapper mapper) {
+    this.mapper = mapper;
 
     SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule")
         .addDeserializer(LogicalExpression.class, new LogicalExpression.De(conf))
@@ -57,6 +57,10 @@ public class LogicalPlanPersistence {
     registerSubtypes(LogicalOperatorBase.getSubTypes(scanResult));
     registerSubtypes(StoragePluginConfigBase.getSubTypes(scanResult));
     registerSubtypes(FormatPluginConfigBase.getSubTypes(scanResult));
+  }
+
+  public ObjectMapper getMapper() {
+    return mapper;
   }
 
   private <T> void registerSubtypes(Set<Class<? extends T>> types) {

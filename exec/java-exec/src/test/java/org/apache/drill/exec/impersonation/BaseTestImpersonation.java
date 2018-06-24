@@ -131,6 +131,7 @@ public class BaseTestImpersonation extends PlanTestBase {
     createAndAddWorkspace("tmp", "/tmp", (short) 0777, processUser, processUser, workspaces);
 
     FileSystemConfig miniDfsPluginConfig = new FileSystemConfig(connection, null, workspaces, lfsPluginConfig.getFormats());
+    miniDfsPluginConfig.setEnabled(true);
     pluginRegistry.createOrUpdate(MINIDFS_STORAGE_PLUGIN_NAME, miniDfsPluginConfig, true);
   }
 

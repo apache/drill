@@ -68,12 +68,13 @@
             "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f"
           ]
         }
-      }
+      },
+      enabled : true
     },
+
     s3: {
       type: "file",
       connection: "s3a://my.bucket.location.com",
-      enabled : false,
       config : {
         "fs.s3a.access.key": "ID",
         "fs.s3a.secret.key": "SECRET"
@@ -124,7 +125,8 @@
           delimiter: ",",
           extractHeader: true
         }
-      }
+      },
+      enabled : false
     },
 
     cp: {
@@ -166,7 +168,8 @@
             "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f"
           ]
         }
-      }
+      },
+      enabled : true
     }
   }
 }

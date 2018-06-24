@@ -51,7 +51,6 @@ import org.reflections.util.FilterBuilder;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.AnnotationsAttribute;
@@ -320,15 +319,12 @@ public final class ClassPathScanner {
    *           to scan for (relative to specified class loaders' classpath roots)
    * @param  returnRootPathname  whether to collect classpath root portion of
    *           URL for each resource instead of full URL of each resource
-   * @param  classLoaders  set of class loaders in which to look up resource;
-   *           none (empty array) to specify to use current thread's context
-   *           class loader and {@link Reflections}'s class loader
    * @returns  ...; empty set if none
    */
   public static Set<URL> forResource(final String resourcePathname, final boolean returnRootPathname) {
     logger.debug("Scanning classpath for resources with pathname \"{}\".",
                  resourcePathname);
-    final Set<URL> resultUrlSet = Sets.newHashSet();
+    final Set<URL> resultUrlSet = new HashSet<>();
     final ClassLoader classLoader = ClassPathScanner.class.getClassLoader();
     try {
       final Enumeration<URL> resourceUrls = classLoader.getResources(resourcePathname);

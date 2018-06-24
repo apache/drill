@@ -277,7 +277,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     MockStorageEngine plugin = new MockStorageEngine(
         MockStorageEngineConfig.INSTANCE, bit.getContext(),
         MockStorageEngineConfig.NAME);
-    ((StoragePluginRegistryImpl) pluginRegistry).definePlugin(MockStorageEngineConfig.NAME, config, plugin);
+    ((StoragePluginRegistryImpl) pluginRegistry).addPluginToPersistentStoreIfAbsent(MockStorageEngineConfig.NAME, config, plugin);
   }
 
   private void applyOptions() throws Exception {
@@ -515,6 +515,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
         pluginConfig.getConfig(),
         newWorkspaces,
         newFormats);
+    newPluginConfig.setEnabled(pluginConfig.isEnabled());
+
 
     pluginRegistry.createOrUpdate(pluginName, newPluginConfig, true);
   }

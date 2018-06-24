@@ -27,7 +27,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -72,6 +71,7 @@ public class HiveSchemaFactory implements SchemaFactory {
     isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
 
     try {
+      // TODO: DRILL-6412. Clients for plugin should be instantiated only for the case, when plugin is enabled
       processUserMetastoreClient =
           DrillHiveMetaStoreClient.createCloseableClientWithCaching(hiveConf);
     } catch (MetaException e) {
@@ -82,12 +82,9 @@ public class HiveSchemaFactory implements SchemaFactory {
         .newBuilder()
         .expireAfterAccess(10, TimeUnit.MINUTES)
         .maximumSize(5) // Up to 5 clients for impersonation-enabled.
-        .removalListener(new RemovalListener<String, DrillHiveMetaStoreClient>() {
-          @Override
-          public void onRemoval(RemovalNotification<String, DrillHiveMetaStoreClient> notification) {
-            DrillHiveMetaStoreClient client = notification.getValue();
-            client.close();
-          }
+        .removalListener((RemovalListener<String, DrillHiveMetaStoreClient>) notification -> {
+          DrillHiveMetaStoreClient client = notification.getValue();
+          client.close();
         })
         .build(new CacheLoader<String, DrillHiveMetaStoreClient>() {
           @Override
