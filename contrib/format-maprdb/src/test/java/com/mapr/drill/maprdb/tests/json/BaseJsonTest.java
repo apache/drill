@@ -55,11 +55,11 @@ public class BaseJsonTest extends BaseTestQuery {
 
   protected void runSQLAndVerifyCount(String sql, int expectedRowCount) throws Exception{
     List<QueryDataBatch> results = runHBaseSQLlWithResults(sql);
-    printResultAndVerifyRowCount(results, expectedRowCount);
+    logResultAndVerifyRowCount(results, expectedRowCount);
   }
 
-  private void printResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount) throws SchemaChangeException {
-    int rowCount = printResult(results);
+  private void logResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount) throws SchemaChangeException {
+    int rowCount = logResult(results);
     if (expectedRowCount != -1) {
       Assert.assertEquals(expectedRowCount, rowCount);
     }

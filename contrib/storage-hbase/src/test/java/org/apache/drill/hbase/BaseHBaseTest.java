@@ -79,7 +79,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   protected void runHBasePhysicalVerifyCount(String planFile, String tableName, int expectedRowCount) throws Exception{
     String physicalPlan = getPlanText(planFile, tableName);
     List<QueryDataBatch> results = testPhysicalWithResults(physicalPlan);
-    printResultAndVerifyRowCount(results, expectedRowCount);
+    logResultAndVerifyRowCount(results, expectedRowCount);
   }
 
   protected List<QueryDataBatch> runHBaseSQLlWithResults(String sql) throws Exception {
@@ -89,11 +89,11 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected void runHBaseSQLVerifyCount(String sql, int expectedRowCount) throws Exception{
     List<QueryDataBatch> results = runHBaseSQLlWithResults(sql);
-    printResultAndVerifyRowCount(results, expectedRowCount);
+    logResultAndVerifyRowCount(results, expectedRowCount);
   }
 
-  private void printResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount) throws SchemaChangeException {
-    int rowCount = printResult(results);
+  private void logResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount) throws SchemaChangeException {
+    int rowCount = logResult(results);
     if (expectedRowCount != -1) {
       Assert.assertEquals(expectedRowCount, rowCount);
     }

@@ -181,7 +181,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
 
   @Test
   public void testConcurrentQueries() throws Exception {
-    QueryTestUtil.testRunAndPrint(client, UserBitShared.QueryType.SQL, alterSession);
+    QueryTestUtil.testRunAndLog(client, UserBitShared.QueryType.SQL, alterSession);
 
     testThread = Thread.currentThread();
     final QuerySubmitter querySubmitter = new QuerySubmitter();

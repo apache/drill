@@ -86,7 +86,7 @@ public class TestSortSpillWithException extends ClusterTest {
     ControlsInjectionUtil.setControls(cluster.client(), controls);
     // run a simple order by query
     try {
-      test("select employee_id from dfs.`xsort/2batches` order by employee_id");
+      runAndLog("select employee_id from dfs.`xsort/2batches` order by employee_id");
       fail("Query should have failed!");
     } catch (UserRemoteException e) {
       assertEquals(ErrorType.RESOURCE, e.getErrorType());
@@ -109,7 +109,7 @@ public class TestSortSpillWithException extends ClusterTest {
     ControlsInjectionUtil.setControls(cluster.client(), controls);
     // run a simple order by query
     try {
-      test("SELECT id_i, name_s250 FROM `mock`.`employee_500K` ORDER BY id_i");
+      runAndLog("SELECT id_i, name_s250 FROM `mock`.`employee_500K` ORDER BY id_i");
       fail("Query should have failed!");
     } catch (UserRemoteException e) {
       assertEquals(ErrorType.RESOURCE, e.getErrorType());

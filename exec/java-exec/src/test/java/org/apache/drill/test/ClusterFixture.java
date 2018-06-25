@@ -91,7 +91,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
       put(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE, DFS_TMP_SCHEMA);
       put(ExecConstants.HTTP_ENABLE, false);
-      put(QueryTestUtil.TEST_QUERY_PRINTING_SILENT, true);
       put("drill.catastrophic_to_standard_out", true);
 
       // Verbose errors.
@@ -570,7 +569,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
     @Override
     public void test(String query) throws Exception {
-      client.runQueries(query);
+      client.runQueriesAndLog(query);
     }
 
     @Override

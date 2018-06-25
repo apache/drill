@@ -94,7 +94,7 @@ public class TestResourceLeak extends DrillTest {
   public void tpch01() throws Exception {
     final String query = getFile("memory/tpch01_memory_leak.sql");
     try {
-      QueryTestUtil.test(client, "alter session set `planner.slice_target` = 10; " + query);
+      QueryTestUtil.testRunAndLog(client, "alter session set `planner.slice_target` = 10; " + query);
     } catch (UserRemoteException e) {
       if (e.getMessage().contains("Allocator closed with outstanding buffers allocated")) {
         return;

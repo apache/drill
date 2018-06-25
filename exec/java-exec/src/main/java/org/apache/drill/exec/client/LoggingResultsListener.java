@@ -40,8 +40,8 @@ import com.google.common.base.Stopwatch;
 
 import io.netty.buffer.DrillBuf;
 
-public class PrintingResultsListener implements UserResultsListener {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrintingResultsListener.class);
+public class LoggingResultsListener implements UserResultsListener {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LoggingResultsListener.class);
 
   private final AtomicInteger count = new AtomicInteger();
   private final Stopwatch w = Stopwatch.createUnstarted();
@@ -50,7 +50,7 @@ public class PrintingResultsListener implements UserResultsListener {
   private final int columnWidth;
   private final BufferAllocator allocator;
 
-  public PrintingResultsListener(DrillConfig config, Format format, int columnWidth) {
+  public LoggingResultsListener(DrillConfig config, Format format, int columnWidth) {
     this.allocator = RootAllocatorFactory.newRoot(config);
     this.loader = new RecordBatchLoader(allocator);
     this.format = format;
@@ -59,15 +59,13 @@ public class PrintingResultsListener implements UserResultsListener {
 
   @Override
   public void submissionFailed(UserException ex) {
-    System.out.println("Exception (no rows returned): " + ex + ".  Returned in " + w.elapsed(TimeUnit.MILLISECONDS)
-        + "ms.");
+    logger.info("Exception (no rows returned). Returned in {} ms.", w.elapsed(TimeUnit.MILLISECONDS), ex);
   }
 
   @Override
   public void queryCompleted(QueryState state) {
     DrillAutoCloseables.closeNoChecked(allocator);
-    System.out.println("Total rows returned : " + count.get() + ".  Returned in " + w.elapsed(TimeUnit.MILLISECONDS)
-        + "ms.");
+    logger.info("Total rows returned: {}. Returned in {} ms.", count.get(), w.elapsed(TimeUnit.MILLISECONDS));
   }
 
   @Override
@@ -90,13 +88,13 @@ public class PrintingResultsListener implements UserResultsListener {
         try {
           switch(format) {
             case TABLE:
-              VectorUtil.showVectorAccessibleContent(loader, columnWidth);
+              VectorUtil.logVectorAccessibleContent(loader, columnWidth);
               break;
             case TSV:
-              VectorUtil.showVectorAccessibleContent(loader, "\t");
+              VectorUtil.logVectorAccessibleContent(loader, "\t");
               break;
             case CSV:
-              VectorUtil.showVectorAccessibleContent(loader, ",");
+              VectorUtil.logVectorAccessibleContent(loader, ",");
               break;
             default:
               throw new IllegalStateException(format.toString());
