@@ -93,7 +93,9 @@ $(window).on('load',(function () {
     }
 
     // parse the short physical plan into a dagreeD3 structure
-    function parseplan (planstring, implicitSrcMap) {
+    function parseplan (planstring) {
+        //Map for implicit links
+        var implicitSrcMap = {};
         var g = new dagreD3.Digraph();
         //Produce 2D array (3 x M): [[0:majorMinor] [1:] [2:opName]] / [[<major>-<minor>, "<indent>", opName]]
         let opPlanArray = planstring.trim().split("\n");
@@ -167,9 +169,7 @@ $(window).on('load',(function () {
     // graph a "planstring" into the d3 svg handle "svg"
     function buildplangraph (svg, planstring) {
         var padding = 20;
-        //Map for implicit links
-        var implicitSrcMap = {}; //Populated by parseplan()
-        var graph = parseplan(planstring, implicitSrcMap);
+        var graph = parseplan(planstring);
 
         var renderer = new dagreD3.Renderer();
         renderer.zoom(function () {return function (graph, root) {}});
