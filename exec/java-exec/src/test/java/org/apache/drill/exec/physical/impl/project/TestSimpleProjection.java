@@ -63,7 +63,7 @@ public class TestSimpleProjection extends ExecTest {
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     while (exec.next()) {
-      VectorUtil.showVectorAccessibleContent(exec.getIncoming(), "\t");
+      VectorUtil.logVectorAccessibleContent(exec.getIncoming(), "\t");
       final NullableBigIntVector c1 = exec.getValueVectorById(new SchemaPath("col1", ExpressionPosition.UNKNOWN), NullableBigIntVector.class);
       final NullableBigIntVector c2 = exec.getValueVectorById(new SchemaPath("col2", ExpressionPosition.UNKNOWN), NullableBigIntVector.class);
       final NullableBigIntVector.Accessor a1 = c1.getAccessor();

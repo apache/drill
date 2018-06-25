@@ -189,7 +189,7 @@ public class QuerySubmitter {
     Stopwatch watch = Stopwatch.createUnstarted();
     for (String query : queries) {
       AwaitableUserResultsListener listener =
-          new AwaitableUserResultsListener(new PrintingResultsListener(client.getConfig(), outputFormat, width));
+          new AwaitableUserResultsListener(new LoggingResultsListener(client.getConfig(), outputFormat, width));
       watch.start();
       client.runQuery(queryType, query, listener);
       int rows = listener.await();

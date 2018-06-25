@@ -64,12 +64,12 @@ public class MongoTestBase extends PlanTestBase implements MongoTestConstants {
   public void runMongoSQLVerifyCount(String sql, int expectedRowCount)
       throws Exception {
     List<QueryDataBatch> results = runMongoSQLWithResults(sql);
-    printResultAndVerifyRowCount(results, expectedRowCount);
+    logResultAndVerifyRowCount(results, expectedRowCount);
   }
 
-  public void printResultAndVerifyRowCount(List<QueryDataBatch> results,
-      int expectedRowCount) throws SchemaChangeException {
-    int rowCount = printResult(results);
+  public void logResultAndVerifyRowCount(List<QueryDataBatch> results,
+                                         int expectedRowCount) throws SchemaChangeException {
+    int rowCount = logResult(results);
     if (expectedRowCount != -1) {
       Assert.assertEquals(expectedRowCount, rowCount);
     }

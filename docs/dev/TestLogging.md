@@ -103,3 +103,40 @@ Then, if for some reason you want to see the Logback logging, add the following 
 -Dlogback.statusListenerClass=ch.qos.logback.core.status.OnConsoleStatusListener
 ```
 The launch configuration option overrides (appears on the Java command line after) the global setting.
+
+## Test Logging Configurations
+
+### Default Test Log Levels
+
+There is a global `logback-test.xml` configuration file in [common/src/test/resources/logback-test.xml](../../common/src/test/resources/logback-test.xml). This
+logging configuration by default outputs error level logs to stdout.
+
+Debug level logging to lilith can be turned on by adding `-Ddrill.lilith.enable=true` to the command used to run tests.
+
+### Changing Test Log Levels
+
+Often times it is most convenient to output logs to the console for debugging. This is best done programatically
+by using the [LogFixture](../../exec/java-exec/src/test/java/org/apache/drill/test/LogFixture.java). The [LogFixture](../../exec/java-exec/src/test/java/org/apache/drill/test/LogFixture.java)
+allows temporarily changing log levels for blocks of code programatically for debugging. An example of doing this is
+the following.
+
+```
+    try(LogFixture logFixture = new LogFixture.LogFixtureBuilder()
+      .logger(MyClass.class, Level.INFO)
+      .toConsole() // This redirects output to stdout
+      .build()) {
+      // Code block with different log levels.
+    }
+```
+
+More details on how to use the [LogFixture](../../exec/java-exec/src/test/java/org/apache/drill/test/LogFixture.java) can be found
+int the javadocs for the class. Additionally, there are several methods that allow printing of query results to the console for debugging:
+
+ * BaseTestQuery.printResult
+ * QueryTestUtil.testRunAndPrint
+ * QueryBuilder.print
+ * ClusterTest.runAndPrint
+ * ClientFixture.runQueriesAndPrint
+ 
+**IMPORTANT NOTE:** The methods described above along with LogFixtureBuilder.toConsole() should only be used for debugging. Code
+that uses these methods should not be committed, since it produces excess logging on our build servers.

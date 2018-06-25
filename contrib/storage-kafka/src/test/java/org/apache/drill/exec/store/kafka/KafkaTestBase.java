@@ -66,12 +66,12 @@ public class KafkaTestBase extends PlanTestBase {
 
   public void runKafkaSQLVerifyCount(String sql, int expectedRowCount) throws Exception {
     List<QueryDataBatch> results = runKafkaSQLWithResults(sql);
-    printResultAndVerifyRowCount(results, expectedRowCount);
+    logResultAndVerifyRowCount(results, expectedRowCount);
   }
 
-  public void printResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount)
+  public void logResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount)
       throws SchemaChangeException {
-    int rowCount = printResult(results);
+    int rowCount = logResult(results);
     if (expectedRowCount != -1) {
       Assert.assertEquals(expectedRowCount, rowCount);
     }

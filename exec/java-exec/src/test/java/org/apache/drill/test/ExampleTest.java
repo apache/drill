@@ -90,7 +90,7 @@ public class ExampleTest {
   public void firstTest() throws Exception {
     try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
          ClientFixture client = cluster.clientFixture()) {
-      client.queryBuilder().sql("SELECT * FROM `cp`.`employee.json` LIMIT 10").printCsv();
+      client.queryBuilder().sql("SELECT * FROM `cp`.`employee.json` LIMIT 10").logCsv();
     }
   }
 
@@ -170,7 +170,7 @@ public class ExampleTest {
     try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
          ClientFixture client = cluster.clientFixture()) {
       String sql = "SELECT id_i, name_s10 FROM `mock`.`employees_5`";
-      client.queryBuilder().sql(sql).printCsv();
+      client.queryBuilder().sql(sql).logCsv();
     }
   }
 
@@ -268,7 +268,7 @@ public class ExampleTest {
     try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
          ClientFixture client = cluster.clientFixture()) {
       cluster.defineWorkspace("dfs", "resources", TestTools.TEST_RESOURCES_ABS.toFile().getAbsolutePath(), "tsv");
-      client.queryBuilder().sql("SELECT * from dfs.resources.`testframework/small_test_data.tsv`").printCsv();
+      client.queryBuilder().sql("SELECT * from dfs.resources.`testframework/small_test_data.tsv`").logCsv();
     }
   }
 
@@ -280,7 +280,7 @@ public class ExampleTest {
     try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
          ClientFixture client = cluster.clientFixture()) {
       cluster.defineWorkspace("dfs", "sampledata", TestTools.SAMPLE_DATA.toFile().getAbsolutePath(), "parquet");
-      client.queryBuilder().sql("SELECT * from dfs.sampledata.`nation.parquet`").printCsv();
+      client.queryBuilder().sql("SELECT * from dfs.sampledata.`nation.parquet`").logCsv();
     }
   }
 

@@ -317,8 +317,8 @@ public class TestConfigLinkage {
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("ALTER SYSTEM SET `%s` = 'bleh'", MOCK_PROPERTY).run();
 
-      client.queryBuilder().sql("SELECT * FROM sys.%s", SystemTable.INTERNAL_OPTIONS.getTableName()).printCsv();
-      client.queryBuilder().sql("SELECT * FROM sys.%s", SystemTable.INTERNAL_OPTIONS_VAL.getTableName()).printCsv();
+      client.queryBuilder().sql("SELECT * FROM sys.%s", SystemTable.INTERNAL_OPTIONS.getTableName()).logCsv();
+      client.queryBuilder().sql("SELECT * FROM sys.%s", SystemTable.INTERNAL_OPTIONS_VAL.getTableName()).logCsv();
 
       String mockProp = client.queryBuilder().
         sql("SELECT string_val FROM sys.%s where name='%s'", SystemTable.INTERNAL_OPTIONS, MOCK_PROPERTY).singletonString();
