@@ -1,6 +1,6 @@
 ---
 title: "Querying Hive"
-date: 2016-08-04 00:23:09 UTC
+date: 2018-06-26 00:42:18 UTC
 parent: "Query Data"
 ---
 This is a simple exercise that provides steps for creating a Hive table and
@@ -47,6 +47,6 @@ To create a Hive table and query it with Drill, complete the following steps:
 
 ## Optimizing Reads of Parquet-Backed Tables
 
-Use the `store.hive.optimize_scan_with_native_readers` option to optimize reads of Parquet-backed external tables from Hive. When set to TRUE, this option uses Drill native readers instead of the Hive Serde interface, resulting in more performant queries of Parquet-backed external tables. (Drill 1.2 and later)
+Use the `store.hive.parquet.optimize_scan_with_native_reader` option to optimize reads of Parquet-backed external tables from Hive. When set to TRUE, this option uses Drill native readers instead of the Hive Serde interface, resulting in more performant queries of Parquet-backed external tables. (Drill 1.2 and later)
 
-Set the `store.hive.optimize_scan_with_native_readers` option as described in the section, ["Planning and Execution Options"]({{site.baseurl}}/docs/planning-and-execution-options/).
+Set the `store.hive.parquet.optimize_scan_with_native_reader` option as described in the section, ["Planning and Execution Options"]({{site.baseurl}}/docs/planning-and-execution-options/).

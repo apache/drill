@@ -1,24 +1,24 @@
 ---
 title: "Aggregate and Aggregate Statistical"
-date:  
+date: 2018-06-26 00:42:19 UTC
 parent: "SQL Functions"
 ---
 
 ## Aggregate Functions
 
 The following tables list the aggregate and aggregate statistical functions that you can use in 
-Drill queries:
+Drill queries:  
 
-**Function** | **Argument Type** | **Return Type**  
-  --------   |   -------------   |   -----------
-AVG(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL| DECIMAL for any integer-type argument, DOUBLE for a floating-point argument, otherwise the same as the argument data type
-COUNT(*)| _-_| BIGINT
-COUNT([DISTINCT] expression)| any| BIGINT
-MAX(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as argument type
-MIN(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as argument type
-SUM(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL| BIGINT for SMALLINT or INTEGER arguments, DECIMAL for BIGINT arguments, DOUBLE for floating-point arguments, otherwise the same as the argument data type
+| **Function**                     | **Argument Type**                                                 | **Return Type**                                                                                                                        |
+|------------------------------|---------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| AVG(expression)              | SMALLINT,   INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL | DECIMAL for DECIMAL argument,   DOUBLE for all other arguments                                                                     |
+| COUNT(*)                     | -                                                             | BIGINT                                                                                                                             |
+| COUNT([DISTINCT] expression) | any                                                           | BIGINT                                                                                                                             |
+| MAX(expression)              | BINARY,   DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP          | same   as argument type                                                                                                            |
+| MIN(expression)              | BINARY,   DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP          | same   as argument type                                                                                                            |
+| SUM(expression)              | SMALLINT,   INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL | DECIMAL for DECIMAL   argument,     BIGINT for any integer-type argument (including BIGINT), DOUBLE for   floating-point arguments |  
 
-\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.
+Starting in Drill 1.14, the DECIMAL data type is enabled by default. 
 
 AVG, COUNT, MIN, MAX, and SUM accept ALL and DISTINCT keywords. The default is ALL.
 
@@ -251,4 +251,4 @@ Drill provides following aggregate statistics functions:
 * var_samp(expression)
   Sample variance of input values (sample standard deviation squared)
   
-These functions take a SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, or DECIMAL expression as the argument. If the expression is FLOAT, the function returns  DOUBLE; otherwise, the function returns DECIMAL. As previously mentioned, DECIMAL is disabled. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.
+These functions take a SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, or DECIMAL expression as the argument. The functions return DECIMAL for DECIMAL arguments and DOUBLE for all other arguments.
