@@ -17,17 +17,15 @@
  */
 package org.apache.drill.exec.server;
 
-import com.codahale.metrics.MetricRegistry;
-import io.netty.channel.EventLoopGroup;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.SynchronousQueue;
+
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.KerberosUtil;
 import org.apache.drill.common.config.DrillConfig;
@@ -43,9 +41,14 @@ import org.apache.drill.exec.rpc.TransportCheck;
 import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
 import org.apache.drill.exec.rpc.security.AuthenticatorProviderImpl;
 import org.apache.drill.exec.server.options.OptionDefinition;
+import org.apache.drill.exec.util.ExecutorServiceUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.UserGroupInformation;
+
+import com.codahale.metrics.MetricRegistry;
+
+import io.netty.channel.EventLoopGroup;
 
 public class BootStrapContext implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
@@ -109,9 +112,9 @@ public class BootStrapContext implements AutoCloseable {
         MIN_SCAN_THREADPOOL_SIZE > numScanThreads ? MIN_SCAN_THREADPOOL_SIZE : numScanThreads;
     final int scanDecodeThreadPoolSize =
         (numCores + 1) / 2 > numScanDecodeThreads ? (numCores + 1) / 2 : numScanDecodeThreads;
-    this.scanExecutor = Executors.newFixedThreadPool(scanThreadPoolSize, new NamedThreadFactory("scan-"));
+    this.scanExecutor = ExecutorServiceUtil.newFixedThreadPool(scanThreadPoolSize, new NamedThreadFactory("scan-"));
     this.scanDecodeExecutor =
-        Executors.newFixedThreadPool(scanDecodeThreadPoolSize, new NamedThreadFactory("scan-decode-"));
+      ExecutorServiceUtil.newFixedThreadPool(scanDecodeThreadPoolSize, new NamedThreadFactory("scan-decode-"));
   }
 
   private void login(final DrillConfig config) throws DrillbitStartupException {
