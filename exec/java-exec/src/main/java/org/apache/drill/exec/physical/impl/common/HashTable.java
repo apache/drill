@@ -82,7 +82,7 @@ public interface HashTable {
    */
   int getProbeHashCode(int incomingRowIdx) throws SchemaChangeException;
 
-  PutStatus put(int incomingRowIdx, IndexPointer htIdxHolder, int hashCode) throws SchemaChangeException, RetryAfterSpillException;
+  PutStatus put(int incomingRowIdx, IndexPointer htIdxHolder, int hashCode, int batchSize) throws SchemaChangeException, RetryAfterSpillException;
 
   /**
    * @param incomingRowIdx The index of the key in the probe batch.
@@ -130,12 +130,10 @@ public interface HashTable {
    * Retrieves the key columns and transfers them to the output container. Note this operation removes the key columns from the {@link HashTable}.
    * @param batchIdx The index of a {@link HashTableTemplate.BatchHolder} in the HashTable.
    * @param outContainer The destination container for the key columns.
-   * @param outStartIndex The start index of the key records to transfer.
    * @param numRecords The number of key recorts to transfer.
-   * @param numExpectedRecords
    * @return
    */
-  boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords, int numExpectedRecords);
+  boolean outputKeys(int batchIdx, VectorContainer outContainer, int numRecords);
 
   /**
    * Returns a message containing memory usage statistics. Intended to be used for printing debugging or error messages.
@@ -148,6 +146,10 @@ public interface HashTable {
    * @return
    */
   long getActualSize();
+
+  void setTargetBatchRowCount(int batchRowCount);
+
+  int getTargetBatchRowCount();
 }
 
 
