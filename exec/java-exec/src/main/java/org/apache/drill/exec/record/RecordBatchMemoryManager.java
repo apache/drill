@@ -94,19 +94,19 @@ public class RecordBatchMemoryManager {
   }
 
   public long getNumIncomingBatches() {
-    return inputBatchStats[DEFAULT_INPUT_INDEX].getNumBatches();
+    return inputBatchStats[DEFAULT_INPUT_INDEX] == null ? 0 : inputBatchStats[DEFAULT_INPUT_INDEX].getNumBatches();
   }
 
   public long getAvgInputBatchSize() {
-    return inputBatchStats[DEFAULT_INPUT_INDEX].getAvgBatchSize();
+    return inputBatchStats[DEFAULT_INPUT_INDEX] == null ? 0 : inputBatchStats[DEFAULT_INPUT_INDEX].getAvgBatchSize();
   }
 
   public long getAvgInputRowWidth() {
-    return inputBatchStats[DEFAULT_INPUT_INDEX].getAvgRowWidth();
+    return inputBatchStats[DEFAULT_INPUT_INDEX] == null ? 0 : inputBatchStats[DEFAULT_INPUT_INDEX].getAvgRowWidth();
   }
 
   public long getTotalInputRecords() {
-    return inputBatchStats[DEFAULT_INPUT_INDEX].getTotalRecords();
+    return inputBatchStats[DEFAULT_INPUT_INDEX] == null ? 0 : inputBatchStats[DEFAULT_INPUT_INDEX].getTotalRecords();
   }
 
   public long getNumIncomingBatches(int index) {
@@ -176,6 +176,22 @@ public class RecordBatchMemoryManager {
     return getOutputRowCount();
   }
 
+  public boolean updateIfNeeded(int newOutgoingRowWidth) {
+    // We do not want to keep adjusting batch holders target row count
+    // for small variations in row width.
+    // If row width changes, calculate actual adjusted row count i.e. row count
+    // rounded down to nearest power of two and do nothing if that does not change.
+    if (newOutgoingRowWidth == outgoingRowWidth ||
+      computeOutputRowCount(outputBatchSize, newOutgoingRowWidth) == computeOutputRowCount(outputBatchSize, outgoingRowWidth)) {
+      return false;
+    }
+
+    // Set number of rows in outgoing batch. This number will be used for new batch creation.
+    setOutputRowCount(outputBatchSize, newOutgoingRowWidth);
+    setOutgoingRowWidth(newOutgoingRowWidth);
+    return true;
+  }
+
   public int getOutputRowCount() {
     return outputRowCount;
   }
@@ -201,7 +217,7 @@ public class RecordBatchMemoryManager {
     return (Math.min(MAX_NUM_ROWS, Math.max(Integer.highestOneBit(rowCount) - 1, MIN_NUM_ROWS)));
   }
 
-  public static int computeRowCount(int batchSize, int rowWidth) {
+  public static int computeOutputRowCount(int batchSize, int rowWidth) {
     return adjustOutputRowCount(RecordBatchSizer.safeDivide(batchSize, rowWidth));
   }
 

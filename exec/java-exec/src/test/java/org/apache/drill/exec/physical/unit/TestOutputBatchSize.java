@@ -26,11 +26,13 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.FlattenPOP;
+import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -2086,6 +2088,203 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     opTestBuilder.go();
 
+  }
+
+  @Test
+  public void testSimpleHashAgg() {
+    HashAggregate aggConf = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("sum(b)", "b_sum"), 1.0f);
+    List<String> inputJsonBatches = Lists.newArrayList(
+       "[{\"a\": 5, \"b\" : 1 }]",
+         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
+
+    opTestBuilder()
+      .physicalOperator(aggConf)
+      .inputDataStreamJson(inputJsonBatches)
+      .baselineColumns("b_sum", "a")
+      .baselineValues(6l, 5l)
+      .baselineValues(8l, 3l)
+      .go();
+  }
+
+  @Test
+  public void testHashAggSum() throws ExecutionSetupException {
+    HashAggregate hashAgg = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("sum(b)", "b_sum"), 1.0f);
+
+    // create input rows like this.
+    // "a" : 1, "b" : 1
+    // "a" : 1, "b" : 1
+    // "a" : 1, "b" : 1
+    List<String> inputJsonBatches = Lists.newArrayList();
+    StringBuilder batchString = new StringBuilder();
+    batchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+        batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+        batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+        batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+    }
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}" );
+
+    batchString.append("]");
+    inputJsonBatches.add(batchString.toString());
+
+    // Figure out what will be approximate total output size out of hash agg for input above
+    // We will use this sizing information to set output batch size so we can produce desired
+    // number of batches that can be verified.
+
+    // output rows will be like this.
+    // "a" : 1, "b" : 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a\": " + i + ", \"b\": " + (3*i) + "},");
+    }
+    expectedBatchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}" );
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately get 2 batches and max of 4.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashAgg)
+      .inputDataStreamJson(inputJsonBatches)
+      .baselineColumns("a", "b_sum")
+      .expectedNumBatches(4)  // verify number of batches
+      .expectedBatchSize(totalSize/2); // verify batch size.
+
+
+    for (int i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues((long)i, (long)3*i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testHashAggAvg() throws ExecutionSetupException {
+    HashAggregate hashAgg = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("avg(b)", "b_avg"), 1.0f);
+
+    // create input rows like this.
+    // "a" : 1, "b" : 1
+    // "a" : 1, "b" : 1
+    // "a" : 1, "b" : 1
+    List<String> inputJsonBatches = Lists.newArrayList();
+    StringBuilder batchString = new StringBuilder();
+    batchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+      batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+      batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+    }
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}" );
+
+    batchString.append("]");
+    inputJsonBatches.add(batchString.toString());
+
+    // Figure out what will be approximate total output size out of hash agg for input above
+    // We will use this sizing information to set output batch size so we can produce desired
+    // number of batches that can be verified.
+
+    // output rows will be like this.
+    // "a" : 1, "b" : 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a\": " + i + ", \"b\": " + (3*i) + "},");
+    }
+    expectedBatchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}" );
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately get 2 batches and max of 4.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashAgg)
+      .inputDataStreamJson(inputJsonBatches)
+      .baselineColumns("a", "b_avg")
+      .expectedNumBatches(4)  // verify number of batches
+      .expectedBatchSize(totalSize/2); // verify batch size.
+
+    for (int i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues((long)i, (double)i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testHashAggMax() throws ExecutionSetupException {
+    HashAggregate hashAgg = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("max(b)", "b_max"), 1.0f);
+
+    // create input rows like this.
+    // "a" : 1, "b" : "a"
+    // "a" : 2, "b" : "aa"
+    // "a" : 3, "b" : "aaa"
+    List<String> inputJsonBatches = Lists.newArrayList();
+    StringBuilder batchString = new StringBuilder();
+    batchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      batchString.append("{\"a\": " + i + ", \"b\": " + "\"a\"" + "},");
+      batchString.append("{\"a\": " + i + ", \"b\": " + "\"aa\"" + "},");
+      batchString.append("{\"a\": " + i + ", \"b\": " + "\"aaa\"" + "},");
+    }
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + "\"a\"" + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + "\"aa\"" + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + "\"aaa\"" + "}" );
+
+    batchString.append("]");
+    inputJsonBatches.add(batchString.toString());
+
+    // Figure out what will be approximate total output size out of hash agg for input above
+    // We will use this sizing information to set output batch size so we can produce desired
+    // number of batches that can be verified.
+
+    // output rows will be like this.
+    // "a" : 1, "b" : "aaa"
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a\": " + i + ", \"b\": " + "\"aaa\"" + "},");
+    }
+    expectedBatchString.append("{\"a\": " + numRows + ", \"b\": " + "\"aaa\"" + "}" );
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately get 2 batches and max of 4.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashAgg)
+      .inputDataStreamJson(inputJsonBatches)
+      .baselineColumns("a", "b_max")
+      .expectedNumBatches(2)  // verify number of batches
+      .expectedBatchSize(totalSize); // verify batch size.
+
+    for (int i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues((long)i, "aaa");
+    }
+
+    opTestBuilder.go();
   }
 
   @Test
