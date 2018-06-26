@@ -157,9 +157,9 @@ public class RecordBatchMemoryManager {
   public void update(RecordBatch recordBatch, int index) {
     // Get sizing information for the batch.
     setRecordBatchSizer(index, new RecordBatchSizer(recordBatch));
-    setOutgoingRowWidth(getRecordBatchSizer(index).netRowWidth());
+    setOutgoingRowWidth(getRecordBatchSizer(index).getNetRowWidth());
     // Number of rows in outgoing batch
-    setOutputRowCount(getOutputBatchSize(), getRecordBatchSizer(index).netRowWidth());
+    setOutputRowCount(getOutputBatchSize(), getRecordBatchSizer(index).getNetRowWidth());
     updateIncomingStats(index);
   }
 
@@ -199,6 +199,10 @@ public class RecordBatchMemoryManager {
    */
   public static int adjustOutputRowCount(int rowCount) {
     return (Math.min(MAX_NUM_ROWS, Math.max(Integer.highestOneBit(rowCount) - 1, MIN_NUM_ROWS)));
+  }
+
+  public static int computeRowCount(int batchSize, int rowWidth) {
+    return adjustOutputRowCount(RecordBatchSizer.safeDivide(batchSize, rowWidth));
   }
 
   public void setOutgoingRowWidth(int outgoingRowWidth) {
@@ -249,13 +253,13 @@ public class RecordBatchMemoryManager {
     Preconditions.checkArgument(index >= 0 && index < numInputs);
     Preconditions.checkArgument(inputBatchStats[index] != null);
     inputBatchStats[index].incNumBatches();
-    inputBatchStats[index].incSumBatchSizes(sizer[index].netSize());
+    inputBatchStats[index].incSumBatchSizes(sizer[index].getNetBatchSize());
     inputBatchStats[index].incTotalRecords(sizer[index].rowCount());
   }
 
   public void updateIncomingStats() {
     inputBatchStats[DEFAULT_INPUT_INDEX].incNumBatches();
-    inputBatchStats[DEFAULT_INPUT_INDEX].incSumBatchSizes(sizer[DEFAULT_INPUT_INDEX].netSize());
+    inputBatchStats[DEFAULT_INPUT_INDEX].incSumBatchSizes(sizer[DEFAULT_INPUT_INDEX].getNetBatchSize());
     inputBatchStats[DEFAULT_INPUT_INDEX].incTotalRecords(sizer[DEFAULT_INPUT_INDEX].rowCount());
   }
 

@@ -260,14 +260,14 @@ public class SortImpl {
     // during the transfer, we immediately follow the transfer with an SV2
     // allocation that will fail if we are over the allocation limit.
 
-    if (isSpillNeeded(sizer.actualSize())) {
+    if (isSpillNeeded(sizer.getActualSize())) {
       spillFromMemory();
     }
 
     // Sanity check. We should now be below the buffer memory maximum.
 
     long startMem = allocator.getAllocatedMemory();
-    bufferedBatches.add(incoming, sizer.netSize());
+    bufferedBatches.add(incoming, sizer.getNetBatchSize());
 
     // Compute batch size, including allocation of an sv2.
 
@@ -276,7 +276,7 @@ public class SortImpl {
 
     // Update the minimum buffer space metric.
 
-    metrics.updateInputMetrics(sizer.rowCount(), sizer.actualSize());
+    metrics.updateInputMetrics(sizer.rowCount(), sizer.getActualSize());
     metrics.updateMemory(memManager.freeMemory(endMem));
     metrics.updatePeakBatches(bufferedBatches.size());
 
@@ -284,8 +284,8 @@ public class SortImpl {
     // the effective count as given by the selection vector
     // (which may exclude some records due to filtering.)
 
-    validateBatchSize(sizer.actualSize(), batchSize);
-    if (memManager.updateEstimates((int) batchSize, sizer.netRowWidth(), sizer.rowCount())) {
+    validateBatchSize(sizer.getActualSize(), batchSize);
+    if (memManager.updateEstimates((int) batchSize, sizer.getNetRowWidth(), sizer.rowCount())) {
 
       // If estimates changed, discard the helper based on the old estimates.
 
