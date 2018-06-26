@@ -2442,7 +2442,7 @@
         <hive.version>2.1.1-mapr-1710</hive.version>
         <hbase.version>1.1.1-mapr-1602-m7-5.2.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1707</hadoop.version>
-        <zookeeper.version>3.4.5-mapr-1710</zookeeper.version>
+        <zookeeper.version>3.4.11-mapr-1808</zookeeper.version>
       </properties>
       <dependencyManagement>
         <dependencies>
