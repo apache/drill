@@ -1,6 +1,6 @@
 ---
 title: "Data Type Conversion"
-date: 2018-03-26 17:37:51 UTC
+date: 2018-06-26 01:02:26 UTC
 parent: "SQL Functions"
 ---
 Drill supports the following functions for casting and converting data types:
@@ -42,9 +42,8 @@ See the following tables for information about the data types to use for casting
 The following examples show how to cast a string to a number, a number to a string, and one type of number to another.
 
 ### Casting a Character String to a Number
-You cannot cast a character string that includes a decimal point to an INT or BIGINT. For example, if you have "1200.50" in a JSON file, attempting to select and cast the string to an INT fails. As a workaround, cast to a FLOAT or DOUBLE type, and then cast to an INT, assuming you want to lose digits to the right of the decimal point. 
+You cannot cast a character string that includes a decimal point to an INT or BIGINT. For example, if you have "1200.50" in a JSON file, attempting to select and cast the string to an INT fails. As a workaround, cast to a FLOAT or DOUBLE type, and then cast to an INT, assuming you want to lose digits to the right of the decimal point.  
 
-{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
 
 The following example shows how to cast a character to a DECIMAL having two decimal places.
 
@@ -83,9 +82,9 @@ Cast an integer to a decimal.
     |     EXPR$0      |
     +-----------------+
     | -2.147483648E9  |
-    +-----------------+
+    +-----------------+  
 
-{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
+
 
 ### Casting Intervals
 
