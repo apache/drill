@@ -37,13 +37,14 @@ public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
 
   private int updateInternal(int inputIndex, int outputPosition,  boolean useAggregate) {
     updateIncomingStats(inputIndex);
-    rowWidth[inputIndex] = useAggregate ? (int) getAvgInputRowWidth(inputIndex) : getRecordBatchSizer(inputIndex).getRowAllocSize();
+    rowWidth[inputIndex] = useAggregate ? (int) getAvgInputRowWidth(inputIndex) : getRecordBatchSizer(inputIndex).getRowAllocWidth();
 
     final int newOutgoingRowWidth = rowWidth[LEFT_INDEX] + rowWidth[RIGHT_INDEX];
 
-    // If outgoing row width is 0, just return. This is possible for empty batches or
+    // If outgoing row width is 0 or there is no change in outgoing row width, just return.
+    // This is possible for empty batches or
     // when first set of batches come with OK_NEW_SCHEMA and no data.
-    if (newOutgoingRowWidth == 0) {
+    if (newOutgoingRowWidth == 0 || newOutgoingRowWidth == getOutgoingRowWidth()) {
       return getOutputRowCount();
     }
 

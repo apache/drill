@@ -27,7 +27,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.memory.BaseAllocator;
-import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVector;
@@ -53,11 +52,6 @@ import static org.apache.drill.exec.vector.AllocationHelper.STD_REPETITION_FACTO
  */
 
 public class RecordBatchSizer {
-  // TODO consolidate common memory estimation helpers
-  public static final double PAYLOAD_FROM_BUFFER = SortMemoryManager.PAYLOAD_FROM_BUFFER;
-  public static final double FRAGMENTATION_FACTOR = 1.0 / PAYLOAD_FROM_BUFFER;
-  public static final double BUFFER_FROM_PAYLOAD = SortMemoryManager.BUFFER_FROM_PAYLOAD;
-
   private static final int OFFSET_VECTOR_WIDTH = UInt4Vector.VALUE_WIDTH;
   private static final int BIT_VECTOR_WIDTH = UInt1Vector.VALUE_WIDTH;
 
@@ -644,12 +638,6 @@ public class RecordBatchSizer {
    */
   private int rowCount;
   /**
-   * Standard row width using Drill meta-data. Note: this information is
-   * 100% bogus. Do not use it.
-   */
-  @Deprecated
-  private int stdRowWidth;
-  /**
    * Actual batch size summing all buffers used to store data
    * for the batch.
    */
@@ -669,9 +657,12 @@ public class RecordBatchSizer {
   /**
    * actual row size if input is not empty. Otherwise, standard size.
    */
-  private int rowAllocSize;
-  private boolean hasSv2;
+  private int rowAllocWidth;
+  private int stdRowWidth;
+
+  public SelectionVector2 sv2 = null;
   private int sv2Size;
+
   private int avgDensity;
 
   private Set<BufferLedger> ledgers = Sets.newIdentityHashSet();
@@ -724,47 +715,24 @@ public class RecordBatchSizer {
     for (VectorWrapper<?> vw : va) {
       ColumnSize colSize = measureColumn(vw.getValueVector(), "");
       columnSizes.put(vw.getField().getName(), colSize);
-      stdRowWidth += colSize.getStdDataSizePerEntry();
       netBatchSize += colSize.getTotalNetSize();
       maxSize = Math.max(maxSize, colSize.getTotalDataSize());
       if (colSize.metadata.isNullable()) {
         nullableCount++;
       }
       netRowWidth += colSize.getNetSizePerEntry();
-      rowAllocSize += colSize.getAllocSizePerEntry();
     }
-
-    for (BufferLedger ledger : ledgers) {
-      accountedMemorySize += ledger.getAccountedSize();
-    }
-
-    if (rowCount > 0) {
-      grossRowWidth = safeDivide(accountedMemorySize, rowCount);
-    }
-
-    if (sv2 != null) {
-      sv2Size = sv2.getBuffer(false).capacity();
-      accountedMemorySize += sv2Size;
-      hasSv2 = true;
-    }
-
-    computeEstimates();
-  }
-
-  private void computeEstimates() {
-    grossRowWidth = safeDivide(accountedMemorySize, rowCount);
-    avgDensity = safeDivide(netBatchSize * 100L, accountedMemorySize);
+    this.sv2 = sv2;
   }
 
   public void applySv2() {
-    if (hasSv2) {
+    if (sv2 == null) {
       return;
     }
 
-    hasSv2 = true;
     sv2Size = BaseAllocator.nextPowerOfTwo(2 * rowCount);
+    avgDensity = safeDivide(netBatchSize * 100L, getActualSize());
     accountedMemorySize += sv2Size;
-    computeEstimates();
   }
 
   /**
@@ -856,10 +824,64 @@ public class RecordBatchSizer {
   }
 
   public int rowCount() { return rowCount; }
-  public int stdRowWidth() { return stdRowWidth; }
-  public int grossRowWidth() { return grossRowWidth; }
-  public int netRowWidth() { return netRowWidth; }
-  public int getRowAllocSize() { return rowAllocSize; }
+
+  public int getStdRowWidth() {
+    if (stdRowWidth != 0) {
+      return stdRowWidth;
+    }
+
+    for (ColumnSize columnSize : columnSizes.values()) {
+      stdRowWidth += columnSize.getStdDataSizePerEntry();
+    }
+
+    return stdRowWidth;
+  }
+
+  public int getRowAllocWidth() {
+    if (rowAllocWidth != 0) {
+      return rowAllocWidth;
+    }
+
+    for (ColumnSize columnSize : columnSizes.values()) {
+      rowAllocWidth += columnSize.getAllocSizePerEntry();
+    }
+
+    return rowAllocWidth;
+  }
+
+  public long getActualSize() {
+    if (accountedMemorySize != 0) {
+      return accountedMemorySize;
+    }
+
+    for (BufferLedger ledger : ledgers) {
+      accountedMemorySize += ledger.getAccountedSize();
+    }
+
+    if (sv2 != null) {
+      sv2Size = sv2.getBuffer(false).capacity();
+      accountedMemorySize += sv2Size;
+    }
+
+    return accountedMemorySize;
+  }
+
+  public int getGrossRowWidth() {
+    if (grossRowWidth != 0) {
+      return grossRowWidth;
+    }
+
+    grossRowWidth = safeDivide(getActualSize(), rowCount);
+
+    return grossRowWidth;
+  }
+
+  public int getAvgDensity() {
+    return safeDivide(netBatchSize * 100L, getActualSize());
+  }
+
+
+  public int getNetRowWidth() { return netRowWidth; }
   public Map<String, ColumnSize> columns() { return columnSizes; }
 
   /**
@@ -868,12 +890,10 @@ public class RecordBatchSizer {
    * and null marking columns.
    * @return "real" width of the row
    */
-  public int netRowWidthCap50() { return netRowWidthCap50 + nullableCount; }
-  public long actualSize() { return accountedMemorySize; }
-  public boolean hasSv2() { return hasSv2; }
-  public int avgDensity() { return avgDensity; }
-  public long netSize() { return netBatchSize; }
-  public int maxAvgColumnSize() { return maxSize / rowCount; }
+  public int getNetRowWidthCap50() { return netRowWidthCap50 + nullableCount; }
+  public boolean hasSv2() { return sv2 != null; }
+  public long getNetBatchSize() { return netBatchSize; }
+  public int getMaxAvgColumnSize() { return safeDivide(maxSize, rowCount); }
 
   @Override
   public String toString() {

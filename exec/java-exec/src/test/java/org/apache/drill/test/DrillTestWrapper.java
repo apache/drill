@@ -373,7 +373,7 @@ public class DrillTestWrapper {
         RecordBatchSizer sizer = new RecordBatchSizer(loader);
         // Not checking actualSize as accounting is not correct when we do
         // split and transfer ownership across operators.
-        Assert.assertTrue(sizer.netSize() <= expectedBatchSize);
+        Assert.assertTrue(sizer.getNetBatchSize() <= expectedBatchSize);
       }
 
       // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
