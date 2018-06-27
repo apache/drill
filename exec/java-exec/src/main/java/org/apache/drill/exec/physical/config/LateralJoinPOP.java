@@ -43,6 +43,10 @@ public class LateralJoinPOP extends AbstractJoinPop {
       @JsonProperty("right") PhysicalOperator right,
       @JsonProperty("joinType") JoinRelType joinType) {
     super(left, right, joinType, null, null);
+    Preconditions.checkArgument(joinType != JoinRelType.FULL,
+      "Full outer join is currently not supported with Lateral Join");
+    Preconditions.checkArgument(joinType != JoinRelType.RIGHT,
+      "Right join is currently not supported with Lateral Join");
   }
 
   @Override
