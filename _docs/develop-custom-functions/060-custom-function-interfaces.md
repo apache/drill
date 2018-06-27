@@ -1,6 +1,6 @@
 ---
 title: "Custom Function Interfaces"
-date:  
+date: 2018-06-27 22:03:09 UTC
 parent: "Develop Custom Functions"
 ---
 Implement the Drill interface appropriate for the type of function that you
@@ -101,7 +101,7 @@ The aggregate function interface also includes the following methods that Drill 
 
 ## Example
 
-The following example shows the program created for the `mysecondmin` function:
+The following example shows the program created for the `mysecondmin` function. The `mysecondmin` function looks at all the incoming values to determine if there is a new minimum value. When an incoming value is less than the minimum value, the function replaces the second minimum value with the value that was previously the minimum value.
 
     package org.apache.drill.udfs;
     import java.util.regex.Matcher;
@@ -138,8 +138,8 @@ The following example shows the program created for the `mysecondmin` function:
         public void add() {
              
             if (in.value < min.value) {
-              min.value = in.value;
               secondMin.value = min.value;
+              min.value = in.value;
             }
              
         }
@@ -149,8 +149,8 @@ The following example shows the program created for the `mysecondmin` function:
         }
         @Override
         public void reset() {
-          min.value = 0;
-          secondMin.value = 0;
+          min.value = 999999999;
+          secondMin.value = 999999999;
         }
         
        }
