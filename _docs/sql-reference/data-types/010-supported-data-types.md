@@ -1,6 +1,6 @@
 ---
 title: "Supported Data Types"
-date: 2018-06-27 01:59:34 UTC
+date: 2018-06-27 20:52:59 UTC
 parent: "Data Types"
 ---
 Drill reads from and writes to data sources having a wide variety of types. 
@@ -29,25 +29,49 @@ Drill reads from and writes to data sources having a wide variety of types.
 
 ## DECIMAL Data Type  
 
+Starting in Drill 1.14, DECIMAL data type support is enabled by default. Drill uses the vardecimal data type to store decimal and numeric data types in a compressed format that optimizes storage space. The vardecimal data type stores decimal and numeric values as variable length columns that can represent any decimal precision.  
 
-### Enabling the DECIMAL Type
+In Drill, the SQL DECIMAL and NUMERIC data types map to the [java.math.BigDecimal](https://docs.oracle.com/javase/7/docs/api/java/math/BigDecimal.html) Java data type.   
 
-To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`. The DECIMAL type is released as an alpha feature and not recommended for production use.
+### Syntax  
+  
+The DECIMAL data type accepts numeric values, for which you can define a precision and a scale, as shown:  
 
-     ALTER SYSTEM SET `planner.enable_decimal_data_type` = true;
+       column_name DECIMAL[(precision[,scale])]  
+  
+Precision is an integer that indicates how many digits the number will contain. Scale is an integer that indicates the number of digits to the right of the decimal point. For example, the number 2325.67 has a precision of 6 and scale of 2. In a query, DECIMAL (6,2). 
+ 
+Scale cannot be greater than the precision. If you do not indicate a precision or scale, the default precision is 38 and scale is 0.  
 
-    +-------+--------------------------------------------+
-    |  ok   |                  summary                   |
-    +-------+--------------------------------------------+
-    | true  | planner.enable_decimal_data_type updated.  |
-    +-------+--------------------------------------------+
-    1 row selected (0.08 seconds)
+### Decimal Data Type Storage Format Support 
 
-### Disabling the DECIMAL Type
+Drill can read and write decimal data types for the following storage formats:  
+  
+- hive  
+- jdbc 
+- avro  
 
-By default, Drill disables the DECIMAL data type (an alpha feature), including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. If you enabled the DECIMAL type by setting `planner.enable_decimal_data_type` = true, set the option to false to disable DECIMAL.
+Drill can only write decimal data types to the following storage format: 
+  
+- parquet    
 
-When the DECIMAL type is disabled, you might see DECIMAL in the query plan, but Drill internally converts DECIMAL to NUMERIC.
+### Decimal Type Options 
+
+You can use the [SET command]({{site.baseurl}}/docs/set/) with the `planner.enable_decimal_data_type` option to turn DECIMAL data type support off and on. If you disable the `planner.enable_decimal_data_type` option (by setting it to false), Drill treats decimal literals as DOUBLE.  
+
+Drill 1.14 introduces the following additional decimal-related options for the Parquet storage format that you can modify using the [SET command]({{site.baseurl}}/docs/set/):  
+
+- `store.parquet.writer.use_primitive_types_for_decimals (boolean)`  
+Allows Drill to use INT32 and INT64 logical types when storing decimal values in Parquet if the precision of the value allows it. Default is true. Set to false to prevent Drill from using INT32 and INT64 logical types, as shown:   
+
+        SET `store.parquet.writer.use_primitive_types_for_decimals` = false;   
+
+
+- `store.parquet.writer.logical_type_for_decimals` 
+Indicates the logical type that Drill should use to store decimals. The default is fixed_len_byte_array. Alternatively, you can set this option to binary, as shown:  
+
+        SET `store.parquet.writer.logical_type_for_decimals` = 'binary';  
+
 
 ## Composite Types
 

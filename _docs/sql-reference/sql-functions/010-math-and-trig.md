@@ -1,6 +1,6 @@
 ---
 title: "Math and Trig"
-date: 2018-06-27 01:59:35 UTC
+date: 2018-06-27 20:53:00 UTC
 parent: "SQL Functions"
 ---
 Drill supports the math functions shown in the following table of math functions plus trig functions listed at the end of this section. Most math functions and all trig functions take these input types:
@@ -9,9 +9,11 @@ Drill supports the math functions shown in the following table of math functions
 * BIGINT
 * FLOAT
 * DOUBLE
-* SMALLINT*
+* SMALLINT*  
+* DECIMAL**
 
-\* Not supported.
+\* Not supported. Drill treats SMALLINT as INT when reading from Parquet.  
+\** Drill implicitly casts DECIMAL to DOUBLE for functions that take DOUBLE.  
 
 Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOAT and DOUBLE types. DEGREES, EXP, RADIANS, and the multiple LOG functions take the input types in this list plus the DECIMAL type. 
 
