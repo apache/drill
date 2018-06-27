@@ -257,7 +257,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
                                     RecordBatch.IterOutcome outcome, BatchSchema schema) {
 
     final VectorContainer inputDataContainer = getContainer();
-
+    // First output batch of current schema, populate container with ValueVectors
     if (container.getNumberOfColumns() == 0) {
       for (VectorWrapper<?> w : inputDataContainer) {
         container.add(w.getValueVectors());

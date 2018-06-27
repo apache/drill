@@ -358,7 +358,7 @@ public class PriorityQueueCopierWrapper extends BaseSortWrapper {
       }
 
       VectorContainer dataContainer = getContainer();
-      // First output batch, let's create the container.
+      // First output batch of current schema, populate container with ValueVectors
       if (container.getNumberOfColumns() == 0) {
         for (VectorWrapper<?> vw : dataContainer) {
           container.add(vw.getValueVector());
@@ -366,7 +366,7 @@ public class PriorityQueueCopierWrapper extends BaseSortWrapper {
         // In future when we want to support spilling with EMIT outcome then we have to create SV4 container all the
         // time. But that will have effect of copying data again by SelectionVectorRemover from SV4 to SV_None. Other
         // than that we have to send OK_NEW_SCHEMA each time. There can be other operators like StreamAgg in downstream
-        // as well, so we cannot have special handlnig in SVRemover for EMIT phase.
+        // as well, so we cannot have special handling in SVRemover for EMIT phase.
         container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
       } else { // preserve ValueVectors references for subsequent output batches
         container.transferIn(dataContainer);

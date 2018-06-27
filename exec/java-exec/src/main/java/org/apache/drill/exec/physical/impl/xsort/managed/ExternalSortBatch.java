@@ -650,17 +650,29 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   /**
-   * Provides the final IterOutcome which Sort should return downstream with current output batch.
+   * Provides the final IterOutcome which Sort should return downstream with current output batch. It considers
+   * following cases:
+   * 1) If it is the first output batch of current known schema then return OK_NEW_SCHEMA to downstream and reset the
+   * flag firstBatchOfSchema.
+   * 2) If the current output row count is zero, then return outcome of EMIT or NONE based on the received outcome
+   * from upstream and also reset the SortState.
+   * 3) If EMIT is received from upstream and all output rows can fit in current output batch then send it downstream
+   * with EMIT outcome and set SortState to LOAD for next EMIT boundary. Otherwise if all output rows cannot fit in
+   * current output batch then send current batch with OK outcome and set SortState to DELIVER.
+   * 4) In other cases send current output batch with OK outcome and set SortState to DELIVER. This is for cases when
+   * all the incoming batches are received with OK outcome and EMIT is not seen.
+   *
    * @return - IterOutcome - outcome to send downstream
    */
   private IterOutcome getFinalOutcome() {
     IterOutcome outcomeToReturn;
 
+    // If this is the first output batch for current known schema then return OK_NEW_SCHEMA to downstream
     if (firstBatchOfSchema) {
       outcomeToReturn = OK_NEW_SCHEMA;
       firstBatchOfSchema = false;
       sortState = SortState.DELIVER;
-    } else if (getRecordCount() == 0) {
+    } else if (getRecordCount() == 0) { // There is no record to send downstream
       outcomeToReturn = lastKnownOutcome == EMIT ? EMIT : NONE;
       resetSortState();
     } else if (lastKnownOutcome == EMIT) {

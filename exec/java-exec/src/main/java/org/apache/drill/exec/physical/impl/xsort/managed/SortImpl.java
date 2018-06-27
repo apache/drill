@@ -118,6 +118,7 @@ public class SortImpl {
     public void updateOutputContainer(VectorContainer container, SelectionVector4 sv4,
                                       IterOutcome outcome, BatchSchema schema) {
 
+      // First output batch of current schema, populate container with ValueVectors
       if (container.getNumberOfColumns() == 0) {
         for (MaterializedField field : schema) {
           final ValueVector vv = TypeHelper.getNewVector(field, container.getAllocator());
