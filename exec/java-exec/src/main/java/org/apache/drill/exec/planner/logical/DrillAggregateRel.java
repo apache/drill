@@ -17,11 +17,15 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
+import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -36,14 +40,8 @@ import org.apache.drill.common.logical.data.GroupingAggregate;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.core.Aggregate;
-import org.apache.calcite.rel.InvalidRelException;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelTraitSet;
 
-import com.google.common.collect.Lists;
+import java.util.List;
 
 /**
  * Aggregation implemented in Drill.
@@ -51,17 +49,13 @@ import com.google.common.collect.Lists;
 public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel {
   /** Creates a DrillAggregateRel. */
   public DrillAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator, ImmutableBitSet groupSet,
-      List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) throws InvalidRelException {
+      List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)  {
     super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls);
   }
 
   @Override
   public Aggregate copy(RelTraitSet traitSet, RelNode input, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
-    try {
-      return new DrillAggregateRel(getCluster(), traitSet, input, indicator, groupSet, groupSets, aggCalls);
-    } catch (InvalidRelException e) {
-      throw new AssertionError(e);
-    }
+    return new DrillAggregateRel(getCluster(), traitSet, input, indicator, groupSet, groupSets, aggCalls);
   }
 
   @Override

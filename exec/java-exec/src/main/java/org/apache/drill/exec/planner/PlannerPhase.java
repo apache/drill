@@ -559,6 +559,7 @@ public enum PlannerPhase {
             RuleInstance.DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE,
             DrillFilterJoinRules.DRILL_FILTER_INTO_JOIN,
             RuleInstance.REMOVE_IS_NOT_DISTINCT_FROM_RULE,
+            DrillFilterAggregateTransposeRule.DRILL_LOGICAL_INSTANCE,
             RuleInstance.DRILL_FILTER_MERGE_RULE
         ).build());
   }
