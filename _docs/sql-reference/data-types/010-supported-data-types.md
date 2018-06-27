@@ -1,6 +1,6 @@
 ---
 title: "Supported Data Types"
-date: 2018-03-26 17:37:51 UTC
+date: 2018-06-27 01:59:34 UTC
 parent: "Data Types"
 ---
 Drill reads from and writes to data sources having a wide variety of types. 
@@ -22,12 +22,15 @@ Drill reads from and writes to data sources having a wide variety of types.
 | CHARACTER VARYING, CHARACTER, CHAR,**** or VARCHAR   | UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647.   | CHAR(30) casts data to a 30-character string maximum.                          |
 
 
-\* In the 1.0 release, Drill disables the DECIMAL data type (an alpha feature), including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. The NUMERIC data type is an alias for the DECIMAL data type.  
+\* Starting in Drill 1.14, the DECIMAL data type is enabled by default.  
 \*\* Internally, INTERVAL is represented as INTERVALDAY or INTERVALYEAR.  
 \*\*\* SMALLINT is not currently supported.  
-\*\*\*\* The CHAR data type is internally represented as VARCHAR by Drill.  
+\*\*\*\* The CHAR data type is internally represented as VARCHAR by Drill.    
 
-## Enabling the DECIMAL Type
+## DECIMAL Data Type  
+
+
+### Enabling the DECIMAL Type
 
 To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`. The DECIMAL type is released as an alpha feature and not recommended for production use.
 
@@ -40,7 +43,7 @@ To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to
     +-------+--------------------------------------------+
     1 row selected (0.08 seconds)
 
-## Disabling the DECIMAL Type
+### Disabling the DECIMAL Type
 
 By default, Drill disables the DECIMAL data type (an alpha feature), including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. If you enabled the DECIMAL type by setting `planner.enable_decimal_data_type` = true, set the option to false to disable DECIMAL.
 

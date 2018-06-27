@@ -1,6 +1,6 @@
 ---
 title: "Parquet Format"
-date: 2017-08-09 21:05:20 UTC
+date: 2018-06-27 01:59:33 UTC
 parent: "Data Sources and File Formats"
 ---
 [Apache Parquet](http://parquet.incubator.apache.org/documentation/latest) has the following characteristics:
@@ -196,7 +196,7 @@ Parquet also supports logical types, fully described on the [Apache Parquet site
 | TIMESTAMP  | Year, month, day, and seconds                                                  | TIMESTAMP_MILLIS     | Logical date and time. Annotates an int64 that stores the number of milliseconds from the Unix epoch, 00:00:00.000 on 1 January 1970, UTC. |
 | INTERVAL   | Integer fields representing a period of time depending on the type of interval | INTERVAL             | An interval of time. Annotates a fixed_len_byte_array of length 12. Months, days, and ms in unsigned little-endian encoding.                 |
 
-\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`.
+\* Starting in Drill 1.14, the DECIMAL data type is enabled by default.
 
 ## Data Description Language Support
 Parquet supports the following data description languages:

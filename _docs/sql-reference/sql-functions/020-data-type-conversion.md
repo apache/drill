@@ -1,6 +1,6 @@
 ---
 title: "Data Type Conversion"
-date: 2018-06-26 01:02:26 UTC
+date: 2018-06-27 01:59:35 UTC
 parent: "SQL Functions"
 ---
 Drill supports the following functions for casting and converting data types:
@@ -41,7 +41,9 @@ See the following tables for information about the data types to use for casting
 
 The following examples show how to cast a string to a number, a number to a string, and one type of number to another.
 
-### Casting a Character String to a Number
+### Casting a Character String to a Number  
+You can cast strings or numeric values to decimals, even if they contain decimal points. In cases where a value has a scale and precision greater than the scale and precision specified in the query, the value is rounded to fit the specified scale and precision.
+
 You cannot cast a character string that includes a decimal point to an INT or BIGINT. For example, if you have "1200.50" in a JSON file, attempting to select and cast the string to an INT fails. As a workaround, cast to a FLOAT or DOUBLE type, and then cast to an INT, assuming you want to lose digits to the right of the decimal point.  
 
 

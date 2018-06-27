@@ -1,6 +1,6 @@
 ---
 title: "Handling Different Data Types"
-date:  
+date: 2018-06-27 01:59:34 UTC
 parent: "Data Types"
 ---
 ## Handling HBase Data
@@ -64,7 +64,7 @@ To prevent Drill from attempting to read such data, set `store.json.read_numbers
 
 FLOAT and DOUBLE yield approximate results. These are variable-precision numeric types. Drill does not cast/convert all values precisely to the internal format, but instead stores approximations. Slight differences can occur in the value stored and retrieved. The following guidelines are recommended:
 
-* For conversions involving monetary calculations, for example, that require precise results use the DECIMAL type instead of FLOAT or DOUBLE. In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. 
+* For conversions involving monetary calculations, for example, that require precise results use the DECIMAL type instead of FLOAT or DOUBLE. Starting in Drill 1.14, the DECIMAL data type is enabled by default. 
 * For complex calculations or mission-critical applications, especially those involving infinity and underflow situations, carefully consider the limitations of type casting that involves FLOAT or DOUBLE.
 * Equality comparisons between floating-point values can produce unexpected results.
 

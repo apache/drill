@@ -1,6 +1,6 @@
 ---
 title: "Math and Trig"
-date:  
+date: 2018-06-27 01:59:35 UTC
 parent: "SQL Functions"
 ---
 Drill supports the math functions shown in the following table of math functions plus trig functions listed at the end of this section. Most math functions and all trig functions take these input types:
@@ -11,9 +11,9 @@ Drill supports the math functions shown in the following table of math functions
 * DOUBLE
 * SMALLINT*
 
-\* Not supported in this release.
+\* Not supported.
 
-Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOAT and DOUBLE types. DEGREES, EXP, RADIANS, and the multiple LOG functions take the input types in this list plus the DECIMAL type. In this release, Drill disables the DECIMAL data type. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`.
+Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOAT and DOUBLE types. DEGREES, EXP, RADIANS, and the multiple LOG functions take the input types in this list plus the DECIMAL type. 
 
 ## Table of Math Functions
 
@@ -35,7 +35,7 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOA
 | NEGATIVE(x)  | Same as input | Returns x as a negative number.                                           |
 | PI           | FLOAT8        | Returns pi.                                                               |
 | POW(x, y)    | FLOAT8        | Returns the value of x to the y power.                                    |
-| RADIANS      | FLOAT8        | Converts x degress to radians.                                            |
+| RADIANS(x)   | FLOAT8        | Converts x degrees to radians.                                            |
 | RAND         | FLOAT8        | Returns a random number from 0-1.                                         |
 | ROUND(x)     | Same as input | Rounds to the nearest integer.                                            |
 | ROUND(x, y)  | DECIMAL       | Rounds x to y decimal places.                                             |
