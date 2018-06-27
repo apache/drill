@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.stat;
 
+import org.apache.parquet.Preconditions;
 import org.apache.parquet.column.statistics.Statistics;
 
 /**
@@ -28,7 +29,7 @@ class ParquetPredicatesHelper {
 
   /**
    * @param stat statistics object
-   * @return true if the input stat object has valid statistics; false otherwise
+   * @return <tt>true</tt> if the input stat object has valid statistics; false otherwise
    */
   static boolean isNullOrEmpty(Statistics stat) {
     return stat == null || stat.isEmpty();
@@ -39,22 +40,21 @@ class ParquetPredicatesHelper {
    *
    * @param stat parquet column statistics
    * @param rowCount number of rows in the parquet file
-   * @return True if all rows are null in the parquet file
-   *          False if at least one row is not null.
+   * @return <tt>true</tt> if all rows are null in the parquet file and <tt>false</tt> otherwise
    */
   static boolean isAllNulls(Statistics stat, long rowCount) {
-    return stat.isNumNullsSet() && stat.getNumNulls() == rowCount;
+    Preconditions.checkArgument(rowCount >= 0, String.format("negative rowCount %d is not valid", rowCount));
+    return stat.getNumNulls() == rowCount;
   }
 
   /**
-   * Checks that column chunk's statistics has at least one null
+   * Checks that column chunk's statistics does not have nulls
    *
    * @param stat parquet column statistics
-   * @return True if the parquet file has nulls
-   *          False if the parquet file hasn't nulls.
+   * @return <tt>true</tt> if the parquet file does not have nulls and <tt>false</tt> otherwise
    */
   static boolean hasNoNulls(Statistics stat) {
-    return !stat.isNumNullsSet() || stat.getNumNulls() == 0;
+    return stat.getNumNulls() <= 0;
   }
 
 }
