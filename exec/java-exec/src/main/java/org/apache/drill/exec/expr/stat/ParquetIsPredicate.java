@@ -113,9 +113,9 @@ public class ParquetIsPredicate<C extends Comparable<C>> extends LogicalExpressi
    * IS TRUE predicate.
    */
   private static LogicalExpression createIsTruePredicate(LogicalExpression expr) {
-    return new ParquetIsPredicate<Boolean>(expr,
+    return new ParquetIsPredicate<Boolean>(expr, (exprStat, evaluator) ->
         //if max value is not true or if there are all nulls  -> canDrop
-        (exprStat, evaluator) -> !((BooleanStatistics)exprStat).getMax() || isAllNulls(exprStat, evaluator.getRowCount())
+        isAllNulls(exprStat, evaluator.getRowCount()) || exprStat.hasNonNullValue() && !((BooleanStatistics) exprStat).getMax()
     );
   }
 
@@ -123,9 +123,9 @@ public class ParquetIsPredicate<C extends Comparable<C>> extends LogicalExpressi
    * IS FALSE predicate.
    */
   private static LogicalExpression createIsFalsePredicate(LogicalExpression expr) {
-    return new ParquetIsPredicate<Boolean>(expr,
+    return new ParquetIsPredicate<Boolean>(expr, (exprStat, evaluator) ->
         //if min value is not false or if there are all nulls  -> canDrop
-        (exprStat, evaluator) -> ((BooleanStatistics)exprStat).getMin() || isAllNulls(exprStat, evaluator.getRowCount())
+        isAllNulls(exprStat, evaluator.getRowCount()) || exprStat.hasNonNullValue() && ((BooleanStatistics) exprStat).getMin()
     );
   }
 
@@ -133,9 +133,9 @@ public class ParquetIsPredicate<C extends Comparable<C>> extends LogicalExpressi
    * IS NOT TRUE predicate.
    */
   private static LogicalExpression createIsNotTruePredicate(LogicalExpression expr) {
-    return new ParquetIsPredicate<Boolean>(expr,
+    return new ParquetIsPredicate<Boolean>(expr, (exprStat, evaluator) ->
         //if min value is not false or if there are no nulls  -> canDrop
-        (exprStat, evaluator) -> ((BooleanStatistics)exprStat).getMin() && hasNoNulls(exprStat)
+        hasNoNulls(exprStat) && exprStat.hasNonNullValue() && ((BooleanStatistics) exprStat).getMin()
     );
   }
 
@@ -143,9 +143,9 @@ public class ParquetIsPredicate<C extends Comparable<C>> extends LogicalExpressi
    * IS NOT FALSE predicate.
    */
   private static LogicalExpression createIsNotFalsePredicate(LogicalExpression expr) {
-    return new ParquetIsPredicate<Boolean>(expr,
+    return new ParquetIsPredicate<Boolean>(expr, (exprStat, evaluator) ->
         //if max value is not true or if there are no nulls  -> canDrop
-        (exprStat, evaluator) -> !((BooleanStatistics)exprStat).getMax() && hasNoNulls(exprStat)
+        hasNoNulls(exprStat) && exprStat.hasNonNullValue() && !((BooleanStatistics) exprStat).getMax()
     );
   }
 

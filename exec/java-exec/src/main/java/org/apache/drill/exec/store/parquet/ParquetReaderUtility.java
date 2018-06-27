@@ -32,7 +32,7 @@ import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.parquet.SemanticVersion;
 import org.apache.parquet.VersionParser;
 import org.apache.parquet.column.ColumnDescriptor;
-import org.apache.parquet.column.statistics.Statistics;
+import org.apache.parquet.column.statistics.IntStatistics;
 import org.apache.parquet.format.ConvertedType;
 import org.apache.parquet.format.FileMetaData;
 import org.apache.parquet.format.SchemaElement;
@@ -417,16 +417,9 @@ public class ParquetReaderUtility {
             // column does not appear in this file, skip it
             continue;
           }
-          Statistics statistics = footer.getBlocks().get(rowGroupIndex).getColumns().get(colIndex).getStatistics();
-          Integer max = (Integer) statistics.genericGetMax();
-          if (statistics.hasNonNullValue()) {
-            if (max > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
-              return DateCorruptionStatus.META_SHOWS_CORRUPTION;
-            }
-          } else {
-            // no statistics, go check the first page
-            return DateCorruptionStatus.META_UNCLEAR_TEST_VALUES;
-          }
+          IntStatistics statistics = (IntStatistics) footer.getBlocks().get(rowGroupIndex).getColumns().get(colIndex).getStatistics();
+          return (statistics.hasNonNullValue() && statistics.compareMaxToValue(ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) > 0) ?
+              DateCorruptionStatus.META_SHOWS_CORRUPTION : DateCorruptionStatus.META_UNCLEAR_TEST_VALUES;
         }
       }
     }
