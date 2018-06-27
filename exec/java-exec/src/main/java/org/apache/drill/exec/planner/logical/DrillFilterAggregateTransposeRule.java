@@ -24,18 +24,22 @@ import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.rules.FilterAggregateTransposeRule;
+import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.drill.exec.planner.DrillRelBuilder;
 
 public class DrillFilterAggregateTransposeRule extends FilterAggregateTransposeRule{
 
   // Since Calcite's default FilterAggregateTransposeRule would match Filter on top of Aggregate, it potentially will match Rels with mixed CONVENTION trait.
-  // Here override match method, such that the rule matchs with Rel in the same CONVENTION.
+  // Here override match method, such that the rule matches with Rel in the same CONVENTION.
 
-  public static final FilterAggregateTransposeRule INSTANCE = new DrillFilterAggregateTransposeRule();
+  public static final FilterAggregateTransposeRule INSTANCE = new DrillFilterAggregateTransposeRule(
+      DrillRelBuilder.proto(Contexts.of(RelFactories.DEFAULT_FILTER_FACTORY)));
 
-  private DrillFilterAggregateTransposeRule() {
-    super(Filter.class, DrillRelBuilder.proto(Contexts.of(RelFactories.DEFAULT_FILTER_FACTORY)),
-        Aggregate.class);
+  public static final FilterAggregateTransposeRule DRILL_LOGICAL_INSTANCE = new DrillFilterAggregateTransposeRule(
+      DrillRelBuilder.proto(DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY, DrillRelFactories.DRILL_LOGICAL_AGGREGATE_FACTORY));
+
+  private DrillFilterAggregateTransposeRule(RelBuilderFactory relBuilderFactory) {
+    super(Filter.class, relBuilderFactory, Aggregate.class);
   }
 
   @Override

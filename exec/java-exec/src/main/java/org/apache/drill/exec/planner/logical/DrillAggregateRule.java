@@ -17,15 +17,12 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.calcite.rel.InvalidRelException;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalAggregate;
-import org.apache.calcite.util.trace.CalciteTrace;
-import org.slf4j.Logger;
 
 /**
  * Rule that converts an {@link LogicalAggregate} to a {@link DrillAggregateRel}, implemented by a Drill "segment" operation
@@ -33,7 +30,6 @@ import org.slf4j.Logger;
  */
 public class DrillAggregateRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillAggregateRule();
-  protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private DrillAggregateRule() {
     super(
@@ -55,11 +51,7 @@ public class DrillAggregateRule extends RelOptRule {
 
     final RelTraitSet traits = aggregate.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
-    try {
-      call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput, aggregate.indicator,
-          aggregate.getGroupSet(), aggregate.getGroupSets(), aggregate.getAggCallList()));
-    } catch (InvalidRelException e) {
-      tracer.warn(e.toString());
-    }
+    call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput, aggregate.indicator,
+        aggregate.getGroupSet(), aggregate.getGroupSets(), aggregate.getAggCallList()));
   }
 }

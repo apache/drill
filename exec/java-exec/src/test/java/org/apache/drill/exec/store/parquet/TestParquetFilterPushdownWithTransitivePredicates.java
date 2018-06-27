@@ -269,5 +269,19 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
     final String[] expectedPlan = {"first.*numRowGroups=2", "second.*numRowGroups=1"};
     testPlanMatchingPatterns(query, expectedPlan);
   }
+
+  @Test
+  public void testForTransitiveFilterPushPastAgg() throws Exception {
+    String query = String.format("SELECT t1.`year` FROM %s t1 WHERE t1.`month` = 7 AND t1.`period` = 2 AND t1.`month` IN " +
+        "(SELECT t2.`month` FROM %s t2)", FIRST_TABLE_NAME, SECOND_TABLE_NAME);
+
+    // Validate the plan
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 2;
+    assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
+
+    final String[] expectedPlan = {"first.*numRowGroups=1", "second.*numRowGroups=1"};
+    testPlanMatchingPatterns(query, expectedPlan);
+  }
 }
 
