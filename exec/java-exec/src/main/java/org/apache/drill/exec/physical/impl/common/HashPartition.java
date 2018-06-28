@@ -249,7 +249,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
       tmpBatchesList.add(currentBatch);
       partitionBatchesCount++;
 
-      long batchSize = new RecordBatchSizer(currentBatch).actualSize();
+      long batchSize = new RecordBatchSizer(currentBatch).getActualSize();
       inMemoryBatchStats.add(new HashJoinMemoryCalculator.BatchStat(currentBatch.getRecordCount(), batchSize));
 
       partitionInMemorySize += batchSize;
