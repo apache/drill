@@ -17,16 +17,20 @@
  */
 package org.apache.drill.exec.physical.impl.lateraljoin;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
 
 import static junit.framework.TestCase.fail;
 
-public class TestE2EUnnestAndLateral extends BaseTestQuery {
+@Category(OperatorTest.class)
+public class TestE2EUnnestAndLateral extends ClusterTest {
 
   private static final String regularTestFile_1 = "cust_order_10_1.json";
   private static final String regularTestFile_2 = "cust_order_10_2.json";
@@ -38,7 +42,8 @@ public class TestE2EUnnestAndLateral extends BaseTestQuery {
   public static void setupTestFiles() throws Exception {
     dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_1));
     dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_2));
-    test("alter session set `planner.enable_unnest_lateral`=true");
+    startCluster(ClusterFixture.builder(dirTestWatcher).maxParallelization(1));
+    test("alter session set `planner.enable_unnest_lateral`=%s", true);
   }
 
   /***********************************************************************************************
@@ -85,6 +90,53 @@ public class TestE2EUnnestAndLateral extends BaseTestQuery {
       .baselineValues("customer2", 10.0,  724.5)
       .baselineValues("customer3", 23.0,  772.2)
       .baselineValues("customer4", 32.0,  1030.1)
+      .go();
+  }
+
+  /**
+   * Test which disables the TopN operator from planner settings before running query using SORT and LIMIT in
+   * subquery. The same query as in above test is executed and same result is expected.
+   * @throws Exception
+   */
+  @Test
+  public void testLateral_WithSortAndLimitInSubQuery() throws Exception {
+
+    test("alter session set `planner.enable_topn`=false");
+
+    String Sql = "SELECT customer.c_name, orders.o_id, orders.o_amount " +
+      "FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
+      "(SELECT t.ord.o_id as o_id, t.ord.o_amount as o_amount FROM UNNEST(customer.orders) t(ord) ORDER BY " +
+      "o_amount DESC LIMIT 1) orders";
+
+    try {
+      testBuilder()
+        .sqlQuery(Sql)
+        .unOrdered()
+        .baselineColumns("c_name", "o_id", "o_amount")
+        .baselineValues("customer1", 3.0,  294.5)
+        .baselineValues("customer2", 10.0,  724.5)
+        .baselineValues("customer3", 23.0,  772.2)
+        .baselineValues("customer4", 32.0,  1030.1)
+        .go();
+    } finally {
+      test("alter session set `planner.enable_topn`=true");
+    }
+  }
+
+  @Test
+  public void testLateral_WithSortInSubQuery() throws Exception {
+    String Sql = "SELECT customer.c_name, orders.o_id, orders.o_amount " +
+      "FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
+      "(SELECT t.ord.o_id as o_id, t.ord.o_amount as o_amount FROM UNNEST(customer.orders) t(ord) ORDER BY " +
+      "o_amount DESC) orders WHERE customer.c_id = 1.0";
+
+    testBuilder()
+      .sqlQuery(Sql)
+      .ordered()
+      .baselineColumns("c_name", "o_id", "o_amount")
+      .baselineValues("customer1", 3.0,  294.5)
+      .baselineValues("customer1", 2.0,  104.5)
+      .baselineValues("customer1", 1.0,  4.5)
       .go();
   }
 
@@ -155,6 +207,46 @@ public class TestE2EUnnestAndLateral extends BaseTestQuery {
       .baselineValues("Customer#000951313", (long)47035683, 306996.2)
       .baselineValues("Customer#000007180", (long)54646821, 367189.55)
       .go();
+  }
+
+  @Test
+  public void testMultipleBatchesLateral_WithSortAndLimitInSubQuery() throws Exception {
+
+    test("alter session set `planner.enable_topn`=false");
+
+    String sql = "SELECT customer.c_name, orders.o_orderkey, orders.o_totalprice " +
+      "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
+      "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord)" +
+      " ORDER BY o_totalprice DESC LIMIT 1) orders";
+
+    try {
+      testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("c_name", "o_orderkey", "o_totalprice")
+        .baselineValues("Customer#000951313", (long)47035683, 306996.2)
+        .baselineValues("Customer#000007180", (long)54646821, 367189.55)
+        .go();
+    } finally {
+      test("alter session set `planner.enable_topn`=true");
+    }
+  }
+
+  @Test
+  public void testMultipleBatchesLateral_WithSortInSubQuery() throws Exception {
+
+    String sql = "SELECT customer.c_name, customer.c_custkey, orders.o_orderkey, orders.o_totalprice " +
+      "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
+      "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord)" +
+      " ORDER BY o_totalprice DESC) orders WHERE customer.c_custkey = '7180' LIMIT 1";
+
+    testBuilder()
+      .sqlQuery(sql)
+      .ordered()
+      .baselineColumns("c_name", "c_custkey", "o_orderkey", "o_totalprice")
+      .baselineValues("Customer#000007180", "7180", (long) 54646821, 367189.55)
+      .go();
+
   }
 
   @Test
