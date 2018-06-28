@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.physical.impl.lateraljoin;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.PlanTestBase;
@@ -497,6 +500,36 @@ public class TestLateralPlans extends BaseTestQuery {
       assertTrue(correlateFragmentPattern != null && correlateFragmentPattern.length() > 0);
       Matcher matcher = Pattern.compile(correlateFragmentPattern + ".*LateralJoin", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
       assertTrue(matcher.find());
+    }
+  }
+
+  @Test
+  public void testUnnestTopN() throws Exception {
+    String query =
+        "select customer.c_custkey," +
+                "customer.c_name," +
+                "t.o.o_orderkey," +
+                "t.o.o_totalprice\n" +
+        "from dfs.`lateraljoin/multipleFiles` customer," +
+              "unnest(customer.c_orders) t(o)\n" +
+        "order by customer.c_custkey," +
+                  "t.o.o_orderkey," +
+                  "t.o.o_totalprice\n" +
+        "limit 50";
+
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String plan = client.queryBuilder()
+          .sql(query)
+          .explainText();
+
+      assertThat("Query plan doesn't contain TopN operator",
+          plan, containsString("TopN(limit=[50])"));
+      assertThat("Query plan shouldn't contain Sort operator",
+          plan, not(containsString("Sort")));
     }
   }
 }
