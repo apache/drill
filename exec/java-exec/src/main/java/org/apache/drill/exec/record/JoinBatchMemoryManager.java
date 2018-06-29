@@ -17,29 +17,44 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.Set;
+
 public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinBatchMemoryManager.class);
 
   private int rowWidth[];
   private RecordBatch recordBatch[];
+  private Set<String> columnsToExclude;
 
   private static final int numInputs = 2;
   public static final int LEFT_INDEX = 0;
   public static final int RIGHT_INDEX = 1;
 
-  public JoinBatchMemoryManager(int outputBatchSize, RecordBatch leftBatch, RecordBatch rightBatch) {
+  public JoinBatchMemoryManager(int outputBatchSize, RecordBatch leftBatch,
+                                RecordBatch rightBatch, Set<String> excludedColumns) {
     super(numInputs, outputBatchSize);
     recordBatch = new RecordBatch[numInputs];
     recordBatch[LEFT_INDEX] = leftBatch;
     recordBatch[RIGHT_INDEX] = rightBatch;
     rowWidth = new int[numInputs];
+    this.columnsToExclude = excludedColumns;
   }
 
   private int updateInternal(int inputIndex, int outputPosition,  boolean useAggregate) {
     updateIncomingStats(inputIndex);
     rowWidth[inputIndex] = useAggregate ? (int) getAvgInputRowWidth(inputIndex) : getRecordBatchSizer(inputIndex).getRowAllocWidth();
 
-    final int newOutgoingRowWidth = rowWidth[LEFT_INDEX] + rowWidth[RIGHT_INDEX];
+    // Reduce the width of excluded columns from actual rowWidth
+    for (String columnName : columnsToExclude) {
+      final RecordBatchSizer.ColumnSize currentColSizer = getColumnSize(inputIndex, columnName);
+      if (currentColSizer == null) {
+        continue;
+      }
+      rowWidth[inputIndex] -= currentColSizer.getAllocSizePerEntry();
+    }
+
+    // Get final net outgoing row width after reducing the excluded columns width
+    int newOutgoingRowWidth = rowWidth[LEFT_INDEX] + rowWidth[RIGHT_INDEX];
 
     // If outgoing row width is 0 or there is no change in outgoing row width, just return.
     // This is possible for empty batches or

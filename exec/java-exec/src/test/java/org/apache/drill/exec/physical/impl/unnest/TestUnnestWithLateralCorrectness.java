@@ -37,8 +37,8 @@ import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.planner.logical.DrillLogicalTestutils;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.mock.MockStorePOP;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
@@ -106,7 +106,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     RecordBatch.IterOutcome[] iterOutcomes = {RecordBatch.IterOutcome.OK_NEW_SCHEMA, RecordBatch.IterOutcome.OK};
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, data, baseline);
+      testUnnest(incomingSchemas, iterOutcomes, data, baseline, false);
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
@@ -140,7 +140,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     RecordBatch.IterOutcome[] iterOutcomes = {RecordBatch.IterOutcome.OK_NEW_SCHEMA, RecordBatch.IterOutcome.OK};
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, data, baseline);
+      testUnnest(incomingSchemas, iterOutcomes, data, baseline, false);
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
@@ -161,7 +161,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     RecordBatch.IterOutcome[] iterOutcomes = {RecordBatch.IterOutcome.OK_NEW_SCHEMA, RecordBatch.IterOutcome.OK};
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, data, baseline);
+      testUnnest(incomingSchemas, iterOutcomes, data, baseline, false);
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
@@ -192,7 +192,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     RecordBatch.IterOutcome[] iterOutcomes = {RecordBatch.IterOutcome.OK_NEW_SCHEMA, RecordBatch.IterOutcome.OK};
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, data, baseline);
+      testUnnest(incomingSchemas, iterOutcomes, data, baseline, false);
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
@@ -240,7 +240,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
         RecordBatch.IterOutcome.OK_NEW_SCHEMA};
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, data, baseline);
+      testUnnest(incomingSchemas, iterOutcomes, data, baseline, false);
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
@@ -289,28 +289,15 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
         RecordBatch.IterOutcome.OK_NEW_SCHEMA};
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, data, baseline);
+      testUnnest(incomingSchemas, iterOutcomes, data, baseline, false);
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
 
   }
 
-  @Test
-  public void testUnnestLimitBatchSize() {
-
-    final int limitedOutputBatchSize = 127;
-    final int inputBatchSize = limitedOutputBatchSize + 1;
-    // size of lateral output batch = 4N * (N + 5) bytes, where N = output batch row count
-    //  Lateral output batch size =  N * input row size + N * size of single unnest column
-    //                            =  N * (size of row id + size of array offset vector + (N + 1 )*size of single array entry))
-    //                              + N * 4
-    //                            = N * (4 + 2*4 + (N+1)*4 )  + N * 4
-    //                            = N * (16 + 4N) + N * 4
-    //                            = 4N * (N + 5)
-    // configure the output batch size to be one more record than that so that the batch sizer can round down
-    final int limitedOutputBatchSizeBytes = 4 * limitedOutputBatchSize * (limitedOutputBatchSize + 6);
-
+  private void testUnnestBatchSizing(int inputBatchSize, int limitOutputBatchSize,
+                                     int limitOutputBatchSizeBytes, boolean excludeUnnestColumn) {
     // single record batch with single row. The unnest column has one
     // more record than the batch size we want in the output
     Object[][] data = new Object[1][1];
@@ -323,39 +310,76 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
         }
       }
     }
+
     Integer[][][] baseline = new Integer[2][2][];
-    baseline[0][0] = new Integer[limitedOutputBatchSize];
-    baseline[0][1] = new Integer[limitedOutputBatchSize];
+    baseline[0][0] = new Integer[limitOutputBatchSize];
+    baseline[0][1] = new Integer[limitOutputBatchSize];
     baseline[1][0] = new Integer[1];
     baseline[1][1] = new Integer[1];
-    for (int i = 0; i < limitedOutputBatchSize; i++) {
+    for (int i = 0; i < limitOutputBatchSize; i++) {
       baseline[0][0][i] = 1;
       baseline[0][1][i] = i;
     }
     baseline[1][0][0] = 1; // row Num
-    baseline[1][1][0] = limitedOutputBatchSize; // value
+    baseline[1][1][0] = limitOutputBatchSize; // value
 
     // Create input schema
     TupleMetadata incomingSchema = new SchemaBuilder()
-        .add("rowNumber", TypeProtos.MinorType.INT)
-        .addArray("unnestColumn", TypeProtos.MinorType.INT).buildSchema();
+      .add("rowNumber", TypeProtos.MinorType.INT)
+      .addArray("unnestColumn", TypeProtos.MinorType.INT).buildSchema();
 
     TupleMetadata[] incomingSchemas = {incomingSchema};
 
     RecordBatch.IterOutcome[] iterOutcomes = {RecordBatch.IterOutcome.OK};
 
     final long outputBatchSize = fixture.getFragmentContext().getOptions().getOption(ExecConstants
-        .OUTPUT_BATCH_SIZE_VALIDATOR);
-    fixture.getFragmentContext().getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, limitedOutputBatchSizeBytes);
+      .OUTPUT_BATCH_SIZE_VALIDATOR);
+    fixture.getFragmentContext().getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, limitOutputBatchSizeBytes);
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, data, baseline);
+      testUnnest(incomingSchemas, iterOutcomes, data, baseline, excludeUnnestColumn);
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     } finally {
       fixture.getFragmentContext().getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, outputBatchSize);
     }
+  }
 
+  @Test
+  public void testUnnestLimitBatchSize_WithExcludedCols() {
+    LateralJoinPOP previoudPop = ljPopConfig;
+    List<SchemaPath> excludedCols = new ArrayList<>();
+    excludedCols.add(SchemaPath.getSimplePath("unnestColumn"));
+    ljPopConfig = new LateralJoinPOP(null, null, JoinRelType.INNER, excludedCols);
+    final int limitedOutputBatchSize = 127;
+    final int inputBatchSize = limitedOutputBatchSize + 1;
+    // Since we want 127 row count and because of nearest power of 2 adjustment output row count will be reduced to
+    // 64. So we should configure batch size for (N+1) rows if we want to output N rows where N is not power of 2
+    // size of lateral output batch = (N+1)*8 bytes, where N = output batch row count
+    //  Lateral output batch size = (N+1) * (input row size without unnest field) + (N+1) * size of single unnest column
+    //                            = (N+1) * (size of row id) + (N+1) * (size of single array entry)
+    //                            = (N+1)*4 + (N+1) * 4
+    //                            = (N+1) * 8
+    // configure the output batch size to be one more record than that so that the batch sizer can round down
+    final int limitedOutputBatchSizeBytes = 8 * (limitedOutputBatchSize + 1);
+    testUnnestBatchSizing(inputBatchSize, limitedOutputBatchSize, limitedOutputBatchSizeBytes, true);
+    ljPopConfig = previoudPop;
+  }
+
+  @Test
+  public void testUnnestLimitBatchSize() {
+    final int limitedOutputBatchSize = 127;
+    final int inputBatchSize = limitedOutputBatchSize + 1;
+    // size of lateral output batch = 4N * (N + 5) bytes, where N = output batch row count
+    //  Lateral output batch size =  N * input row size + N * size of single unnest column
+    //                            =  N * (size of row id + size of array offset vector + (N + 1 )*size of single array entry))
+    //                              + N * 4
+    //                            = N * (4 + 2*4 + (N+1)*4 )  + N * 4
+    //                            = N * (16 + 4N) + N * 4
+    //                            = 4N * (N + 5)
+    // configure the output batch size to be one more record than that so that the batch sizer can round down
+    final int limitedOutputBatchSizeBytes = 4 * limitedOutputBatchSize * (limitedOutputBatchSize + 6);
+    testUnnestBatchSizing(inputBatchSize, limitedOutputBatchSize, limitedOutputBatchSizeBytes, false);
   }
 
   @Test
@@ -405,7 +429,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     fixture.getFragmentContext().getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, limitedOutputBatchSizeBytes);
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, -1, 1, data, baseline); // Limit of 100 values for unnest.
+      testUnnest(incomingSchemas, iterOutcomes, -1, 1, data, baseline, false); // Limit of 100 values for unnest.
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     } finally {
@@ -463,7 +487,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     fixture.getFragmentContext().getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, limitedOutputBatchSizeBytes);
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, -1, 1, data, baseline); // Limit of 100 values for unnest.
+      testUnnest(incomingSchemas, iterOutcomes, -1, 1, data, baseline, false); // Limit of 100 values for unnest.
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     } finally {
@@ -496,7 +520,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     RecordBatch.IterOutcome[] iterOutcomes = {RecordBatch.IterOutcome.OK_NEW_SCHEMA, RecordBatch.IterOutcome.OK};
 
     try {
-      testUnnest(incomingSchemas, iterOutcomes, data, baseline);
+      testUnnest(incomingSchemas, iterOutcomes, data, baseline, false);
     } catch (UserException|UnsupportedOperationException e) {
       return; // succeeded
     } catch (Exception e) {
@@ -511,8 +535,9 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
       TupleMetadata[] incomingSchemas,
       RecordBatch.IterOutcome[] iterOutcomes,
       T[][] data,
-      T[][][] baseline ) throws Exception{
-    testUnnest(incomingSchemas, iterOutcomes, -1, -1, data, baseline);
+      T[][][] baseline,
+      boolean excludeUnnestColumn) throws Exception{
+    testUnnest(incomingSchemas, iterOutcomes, -1, -1, data, baseline, excludeUnnestColumn);
   }
 
   // test unnest for various input conditions optionally invoking kill. if the kill or killBatch
@@ -522,7 +547,8 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
       int unnestLimit, // kill unnest after every 'unnestLimit' number of values in every record
       int execKill, // number of batches after which to kill the execution (!)
       T[][] data,
-      T[][][] baseline) throws Exception {
+      T[][][] baseline,
+      boolean excludeUnnestColumn) throws Exception {
 
     // Get the incoming container with dummy data for LJ
     final List<VectorContainer> incomingContainer = new ArrayList<>(data.length);
@@ -606,7 +632,9 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
       //int valueIndex = 0;
       for ( List<ValueVector> batch: results) {
         int vectorCount= batch.size();
-        if (vectorCount!= baseline[batchIndex].length+1) { // baseline does not include the original unnest column
+        int expectedVectorCount = (excludeUnnestColumn) ? 0 : 1;
+        expectedVectorCount += baseline[batchIndex].length;
+        if (vectorCount!= expectedVectorCount) { // baseline does not include the original unnest column
           fail("Test failed in validating unnest output. Batch column count mismatch.");
         }
         for (ValueVector vv : batch) {
