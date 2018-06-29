@@ -638,4 +638,20 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.NONE);
   }
+
+  @Test
+  public void testRegularTopNWithEmptyDataSetAndNoneOutcome() {
+    inputContainer.add(emptyInputRowSet.container());
+    inputOutcomes.add(RecordBatch.IterOutcome.NONE);
+
+    final MockRecordBatch mockInputBatch = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
+      inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
+
+    final TopN topNConfig = new TopN(null,
+      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+        RelFieldCollation.NullDirection.FIRST)), false, 4);
+    final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.NONE);
+  }
 }
