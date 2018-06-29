@@ -59,8 +59,8 @@ public class TestLateralPlans extends BaseTestQuery {
     String Sql = "select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t," +
         " unnest(t.orders) t2(ord) limit 1";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[\\`orders\\`\\]"},
-      new String[]{"correlate Column: =\\[\\`None\\`\\]"});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"},
+      new String[]{});
 
     testBuilder()
         .unOrdered()
@@ -78,8 +78,8 @@ public class TestLateralPlans extends BaseTestQuery {
     String Sql = "select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t," +
       " unnest(t.orders) t2(ord) limit 1";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[\\`orders\\`\\]"},
-      new String[]{"correlate Column: =\\[\\`None\\`\\]"});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"},
+      new String[]{});
 
     test(explainSql);
   }
@@ -93,8 +93,8 @@ public class TestLateralPlans extends BaseTestQuery {
     PlanTestBase.testPlanMatchingPatterns(query, new String[]{"LateralJoin(.*[\n\r])+.*Filter(.*[\n\r])+.*Scan(.*[\n\r])+.*Filter"},
         new String[]{});
 
-    PlanTestBase.testPlanMatchingPatterns(query, new String[]{"correlate Column: =\\[\\`orders\\`\\]"},
-      new String[]{"correlate Column: =\\[\\`None\\`\\]"});
+    PlanTestBase.testPlanMatchingPatterns(query, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"},
+      new String[]{});
 
     testBuilder()
         .unOrdered()
@@ -109,8 +109,8 @@ public class TestLateralPlans extends BaseTestQuery {
     String Sql = "select t.c_name, t2.phone as c_phone from cp.`lateraljoin/nested-customer.json` t,"
         + " unnest(t.c_phone) t2(phone) limit 1";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[\\`c_phone\\`\\]"},
-      new String[]{"correlate Column: =\\[\\`None\\`\\]"});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`c_phone\\`\\]"},
+      new String[]{});
 
     testBuilder()
         .unOrdered()
@@ -124,8 +124,8 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testLateralSqlStar() throws Exception {
     String Sql = "select * from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) Orders(ord) limit 0";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[None\\]"},
-      new String[]{"correlate Column: =\\[\\`orders\\`\\]"});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{},
+      new String[]{"column excluded from output: =\\[\\`orders\\`\\]"});
 
     testBuilder()
         .unOrdered()
@@ -139,8 +139,8 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testLateralSqlStar2() throws Exception {
     String Sql = "select c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord) limit 0";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[None\\]"},
-      new String[]{"correlate Column: =\\[\\`orders\\`\\]"});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{},
+      new String[]{"column excluded from output: =\\[\\`orders\\`\\]"});
 
     testBuilder()
         .unOrdered()
@@ -154,8 +154,8 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testLateralSqlStar3() throws Exception {
     String Sql = "select Orders.*, c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord) limit 0";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[None\\]"},
-      new String[]{"correlate Column: =\\[\\`orders\\`\\]"});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{},
+      new String[]{"column excluded from output: =\\[\\`orders\\`\\]"});
 
     testBuilder()
         .unOrdered()
@@ -169,7 +169,7 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testLateralSqlStar4() throws Exception {
     String Sql = "select Orders.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord) limit 0";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[\\`orders\\`\\]"}, new String[]{"correlate Column: =\\[None\\]"});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{});
 
     testBuilder()
         .unOrdered()
@@ -187,7 +187,7 @@ public class TestLateralPlans extends BaseTestQuery {
         " (select c_name, flatten(orders) from cp" +
         ".`lateraljoin/nested-customer.parquet` ) as t2(name, orders) on t.c_name = t2.name";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[\\`orders\\`\\]"}, new String[]{"correlate Column: =\\[None\\]"});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{});
 
     testBuilder()
         .unOrdered()
@@ -206,7 +206,7 @@ public class TestLateralPlans extends BaseTestQuery {
         " (select c_name, flatten(orders) from cp.`lateraljoin/nested-customer.parquet` ) as t2 (name, orders) on t.c_name = t2.name " +
         " inner join (select c_name, flatten(orders) from cp.`lateraljoin/nested-customer.parquet` ) as t3(name, orders) on t.c_name = t3.name";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[\\`orders\\`\\]", "correlate Column: =\\[None\\]"}, new String[]{});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{});
 
     testBuilder()
         .unOrdered()
@@ -225,7 +225,7 @@ public class TestLateralPlans extends BaseTestQuery {
         " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
         "t3(name, orders, items) on t.c_name = t3.name ";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[\\`orders\\`\\]","correlate Column: =\\[None\\]"}, new String[]{});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{"column excluded from output: =\\[\\`items\\`\\]"});
 
     testBuilder()
         .unOrdered()
@@ -244,7 +244,7 @@ public class TestLateralPlans extends BaseTestQuery {
         " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
         "t3(name, orders, items) on t.c_name = t3.name where t.c_id > 1";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[\\`orders\\`\\]", "correlate Column: =\\[None\\]"}, new String[]{});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{"column excluded from output: =\\[\\`items\\`\\]"});
 
     testBuilder()
         .unOrdered()
@@ -286,7 +286,7 @@ public class TestLateralPlans extends BaseTestQuery {
         " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
         "t3(name, orders, items) on t.c_name = t3.name where t.c_id > 1 group by t.c_id";
 
-    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"correlate Column: =\\[\\`orders\\`\\]", "correlate Column: =\\[\\`items\\`\\]"}, new String[]{ "correlate Column: =\\[None\\]"});
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]", "column excluded from output: =\\[\\`items\\`\\]"}, new String[]{});
 
     testBuilder()
         .unOrdered()

@@ -287,6 +287,11 @@ public abstract class DrillRelOptUtil {
     return false;
   }
 
+  /**
+   * InputRefVisitor is a utility class used to collect all the RexInputRef nodes in a
+   * RexNode.
+   *
+   */
   public static class InputRefVisitor extends RexVisitorImpl<Void> {
     private final List<RexInputRef> inputRefList;
 
@@ -312,6 +317,13 @@ public abstract class DrillRelOptUtil {
     }
   }
 
+
+  /**
+   * RexFieldsTransformer is a utility class used to convert column refs in a RexNode
+   * based on inputRefMap (input to output ref map).
+   *
+   * This transformer can be used to find and replace the existing inputRef in a RexNode with a new inputRef.
+   */
   public static class RexFieldsTransformer {
     private final RexBuilder rexBuilder;
     private final Map<Integer, Integer> inputRefMap;

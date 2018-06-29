@@ -37,7 +37,11 @@ public class DrillProjectLateralJoinTransposeRule extends ProjectCorrelateTransp
   public boolean matches(RelOptRuleCall call) {
     Correlate correlate = call.rel(1);
 
-    if (correlate instanceof DrillLateralJoinRel && ((DrillLateralJoinRel)correlate).excludeCorrelateColumn) {
+
+    // No need to call ProjectCorrelateTransposeRule if the current lateralJoin contains excludeCorrelationColumn set to true.
+    // This is needed as the project push into Lateral join rule changes the output row type which will fail assertions in ProjectCorrelateTransposeRule.
+    if (correlate instanceof DrillLateralJoinRel &&
+        ((DrillLateralJoinRel)correlate).excludeCorrelateColumn) {
       return false;
     }
 
