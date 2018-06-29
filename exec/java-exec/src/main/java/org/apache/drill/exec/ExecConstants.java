@@ -469,7 +469,8 @@ public final class ExecConstants {
    * Suggestion for computation.
    * <ul>
    * <li>Assume an allowance for non-managed operators. Default assumption:
-   * 50%</li>
+   * 50% (later verified no less than the value of
+   * "planner.memory.percent_reserved_allowance_from_direct") </li>
    * <li>Assume a desired number of concurrent queries. Default assumption:
    * 10.</li>
    * <li>The value of this parameter is<br>
@@ -489,6 +490,31 @@ public final class ExecConstants {
   public static String PERCENT_MEMORY_PER_QUERY_KEY = "planner.memory.percent_per_query";
   public static DoubleValidator PERCENT_MEMORY_PER_QUERY = new RangeDoubleValidator(
       PERCENT_MEMORY_PER_QUERY_KEY, 0, 1.0);
+
+  /**
+   * Enforce reserving some percentage of the JVM's Direct Memory for the
+   * non-buffered operators. I.e., whether using max_query_memory_per_node or
+   * percent_per_query, the memory result (for all the buffered operators) can
+   * not exceed the size of the Direct Memory minus this reserved allowance.
+   * <p>
+   * This allowance is needed to prevent a potential OOM. In case the total memory
+   * promised for the buffered operators is very close to the Direct Memory's size,
+   * then if some non-buffered operators (e.g., scanners) also grab significant memory,
+   * then the remaining memory is less than the promised memory, leading to an OOM.
+   * </p>
+   * <p>
+   * Note that this enforcement is only good for the non concurrent case. For multiple
+   * concurrent queries, other queries may grab some unaccounted for Direct Memory. For
+   * concurrent work, better set the option "planner.memory.percent_per_query" correctly.
+   * </p>
+   * <p>
+   * DEFAULT: 25%
+   * </p>
+   */
+
+  public static String PERCENT_RESERVED_ALLOWANCE_FROM_DIRECT_KEY =  "planner.memory.percent_reserved_allowance_from_direct";
+  public static DoubleValidator PERCENT_RESERVED_ALLOWANCE_FROM_DIRECT = new RangeDoubleValidator(
+    PERCENT_RESERVED_ALLOWANCE_FROM_DIRECT_KEY, 0, 1.0);
 
   /**
    * Minimum memory allocated to each buffered operator instance.

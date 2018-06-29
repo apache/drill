@@ -19,11 +19,14 @@ package org.apache.drill.exec.util;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -118,6 +121,53 @@ public class TestQueryMemoryAlloc extends DrillTest {
       mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 30 * ONE_GB);
       assertEquals(3 * ONE_GB, mem);
     }
+  }
+
+  /**
+   *  Test that the percent_reserved_allowance_from_direct limitation works
+   */
+  @Test
+  public void testReservedAllowanceCheck() throws Exception {
+    OperatorFixture.Builder builder = OperatorFixture.builder(dirTestWatcher);
+    builder.systemOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.10);
+    builder.systemOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2 * ONE_GB);
+    builder.systemOption(ExecConstants.PERCENT_RESERVED_ALLOWANCE_FROM_DIRECT_KEY, 0.25);
+
+    int exceptions_thrown = 0; // count the exceptions thrown
+
+    try (OperatorFixture fixture = builder.build()) {
+      final OptionManager optionManager = fixture.getOptionManager();
+
+      // set percent memory too high
+      optionManager.setLocalOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.80);
+
+      long mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 8 * ONE_GB);
+
+    } catch(UserException uex) {
+      UserBitShared.DrillPBError error = uex.getOrCreatePBError(false);
+      Assert.assertEquals(UserBitShared.DrillPBError.ErrorType.RESOURCE, error.getErrorType());
+      Assert.assertTrue("Error message isn't related to percent memory error",
+         uex.getMessage().contains("Need to reserve memory allowance"));
+      exceptions_thrown++;
+    }
+
+    try (OperatorFixture fixture = builder.build()) {
+      final OptionManager optionManager = fixture.getOptionManager();
+
+      // query memory takes over ( 2GB ), but would fail if reserved allowance is higher
+      optionManager.setLocalOption(ExecConstants.PERCENT_RESERVED_ALLOWANCE_FROM_DIRECT_KEY, 0.8);
+
+      long mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 8 * ONE_GB);
+
+    } catch(UserException uex) {
+      UserBitShared.DrillPBError error = uex.getOrCreatePBError(false);
+      Assert.assertEquals(UserBitShared.DrillPBError.ErrorType.RESOURCE, error.getErrorType());
+      Assert.assertTrue("Error message isn't related to query memory error",
+         uex.getMessage().contains("out of which need to reserve memory allowance"));
+      exceptions_thrown++;
+    }
+
+    Assert.assertEquals(exceptions_thrown, 2);
   }
 
   /**

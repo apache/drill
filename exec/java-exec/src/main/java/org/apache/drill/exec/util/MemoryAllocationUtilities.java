@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.QueryContext;
@@ -138,16 +139,36 @@ public class MemoryAllocationUtilities {
   @VisibleForTesting
   public static long computeQueryMemory(DrillConfig config, OptionSet optionManager, long directMemory) {
 
+    // Get the options
+    double percentPerQuery = optionManager.getOption(ExecConstants.PERCENT_MEMORY_PER_QUERY);
+    long maxQueryPerNode = optionManager.getOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE);
+    double percentAllowance = optionManager.getOption(ExecConstants.PERCENT_RESERVED_ALLOWANCE_FROM_DIRECT);
+
+    // verify that the allowance is kept
+    if ( percentPerQuery + percentAllowance > 1.0 ) {
+      throw UserException.resourceError()
+        .message(String.format("%s is set too high (%f). Need to reserve memory allowance of %f (see %s).",
+          ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, percentPerQuery, percentAllowance,
+          ExecConstants.PERCENT_RESERVED_ALLOWANCE_FROM_DIRECT_KEY))
+        .build(logger);
+    }
+    if ( directMemory * ( 1.0 - percentAllowance ) < maxQueryPerNode ) {
+      throw UserException.resourceError()
+        .message(String.format("%s is set too high (%d). Direct memory is %d, out of which need to reserve memory allowance of %d (i.e. %f, see %s).",
+          ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, maxQueryPerNode,
+          directMemory, Math.round(directMemory * percentAllowance) , percentAllowance,
+          ExecConstants.PERCENT_RESERVED_ALLOWANCE_FROM_DIRECT_KEY))
+        .build(logger);
+    }
+
     // Memory computed as a percent of total memory.
 
-    long perQueryMemory = Math.round(directMemory *
-        optionManager.getOption(ExecConstants.PERCENT_MEMORY_PER_QUERY));
+    long perQueryMemory = Math.round(directMemory * percentPerQuery);
 
     // But, must allow at least the amount given explicitly for
     // backward compatibility.
 
-    perQueryMemory = Math.max(perQueryMemory,
-        optionManager.getOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE));
+    perQueryMemory = Math.max(perQueryMemory, maxQueryPerNode);
 
     // Compute again as either the total direct memory, or the
     // configured maximum top-level allocation (10 GB).

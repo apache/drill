@@ -190,6 +190,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.ENABLE_MEMORY_ESTIMATION),
       new OptionDefinition(ExecConstants.MAX_QUERY_MEMORY_PER_NODE),
       new OptionDefinition(ExecConstants.PERCENT_MEMORY_PER_QUERY),
+      new OptionDefinition(ExecConstants.PERCENT_RESERVED_ALLOWANCE_FROM_DIRECT),
       new OptionDefinition(ExecConstants.MIN_MEMORY_PER_BUFFERED_OP),
       new OptionDefinition(ExecConstants.NON_BLOCKING_OPERATORS_MEMORY),
       new OptionDefinition(ExecConstants.HASH_JOIN_TABLE_FACTOR),
