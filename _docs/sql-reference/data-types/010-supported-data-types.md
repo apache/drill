@@ -1,6 +1,6 @@
 ---
 title: "Supported Data Types"
-date: 2018-06-27 20:52:59 UTC
+date: 2018-06-29 22:31:50 UTC
 parent: "Data Types"
 ---
 Drill reads from and writes to data sources having a wide variety of types. 
@@ -45,15 +45,16 @@ Scale cannot be greater than the precision. If you do not indicate a precision o
 
 ### Decimal Data Type Storage Format Support 
 
-Drill can read and write decimal data types for the following storage formats:  
-  
-- hive  
-- jdbc 
-- avro  
+Drill can read decimal data types from and write decimal data types to the following storage format: 
 
-Drill can only write decimal data types to the following storage format: 
-  
-- parquet    
+- parquet
+
+Drill can read decimal data types from the following storage formats, but cannot write decimal data types to them:  
+
+- hive  
+- jdbc  
+- avro
+
 
 ### Decimal Type Options 
 
