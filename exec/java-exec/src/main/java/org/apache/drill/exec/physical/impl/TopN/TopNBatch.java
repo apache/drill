@@ -174,6 +174,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         return;
       case NONE:
         state = BatchState.DONE;
+        return;
       case EMIT:
         throw new IllegalStateException("Unexpected EMIT outcome received in buildSchema phase");
       default:
