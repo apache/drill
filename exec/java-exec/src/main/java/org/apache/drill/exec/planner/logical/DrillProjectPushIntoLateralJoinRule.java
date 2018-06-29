@@ -26,11 +26,11 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilderFactory;
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -100,7 +100,7 @@ public class DrillProjectPushIntoLateralJoinRule extends RelOptRule {
 
   private Map<Integer, Integer> buildMapWithoutCorrColumn(RelNode corr, int correlationIndex) {
     int index = 0;
-    Map<Integer, Integer> result = new HashedMap();
+    Map<Integer, Integer> result = new HashMap();
     for (int i=0;i<corr.getRowType().getFieldList().size();i++) {
       if (i == correlationIndex) {
         continue;

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
@@ -90,6 +91,8 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
   }
 
   public RelDataType constructRowType(RelDataType inputRowType) {
+    Preconditions.checkArgument(this.requiredColumns.cardinality() == 1);
+
     List<RelDataType> fields = new ArrayList<>();
     List<String> fieldNames = new ArrayList<>();
     if (excludeCorrelateColumn) {

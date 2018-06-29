@@ -69,7 +69,9 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
 
     SemiJoinType jtype = this.getJoinType();
     List<SchemaPath> excludedColumns = new ArrayList<>();
-    excludedColumns.add(getColumn());
+    if (getColumn() != null) {
+      excludedColumns.add(getColumn());
+    }
     LateralJoinPOP ljoin = new LateralJoinPOP(leftPop, rightPop, jtype.toJoinType(), excludedColumns);
     return creator.addMetadata(this, ljoin);
   }
@@ -120,7 +122,11 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
-    return super.explainTerms(pw).item("correlate Column: ", this.excludeCorrelateColumn ? this.getColumn() : "None");
+    if (this.excludeCorrelateColumn) {
+      return super.explainTerms(pw).item("column excluded from output: ", this.getColumn());
+    } else {
+      return super.explainTerms(pw);
+    }
   }
 
 
