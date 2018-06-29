@@ -38,9 +38,9 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
   /** Definition level wrapper to handle {@link ValueVector} limitations */
   private final DefLevelReaderWrapper definitionLevelWrapper = new DefLevelReaderWrapper();
 
-  NullableColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+  NullableColumnReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
 
     castedBaseVector = (BaseDataValueVector) v;
     castedVectorMutator = (NullableVectorDefinitionSetter) v.getMutator();

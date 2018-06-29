@@ -395,6 +395,13 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     return v;
   }
 
+  /**
+   * @return Underlying "bits" vector value capacity
+   */
+  public int getBitsValueCapacity() {
+    return bits.getValueCapacity();
+  }
+
   public void copyFrom(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
     final Accessor fromAccessor = from.getAccessor();
     if (!fromAccessor.isNull(fromIndex)) {

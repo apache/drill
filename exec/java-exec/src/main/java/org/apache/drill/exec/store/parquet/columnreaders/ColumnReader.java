@@ -83,7 +83,7 @@ public abstract class ColumnReader<V extends ValueVector> {
 
   volatile boolean isShuttingDown; //Indicate to not submit any new AsyncPageReader Tasks during clear()
 
-  protected ColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+  protected ColumnReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
       ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
     this.parentReader = parentReader;
     this.columnDescriptor = descriptor;

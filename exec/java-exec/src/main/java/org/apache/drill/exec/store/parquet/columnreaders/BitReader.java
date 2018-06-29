@@ -25,9 +25,9 @@ import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 
 final class BitReader extends ColumnReader<BitVector> {
 
-  BitReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+  BitReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
             boolean fixedLength, BitVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
   @Override
