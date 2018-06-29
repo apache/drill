@@ -19,15 +19,25 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
+import com.google.common.base.Preconditions;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexNode;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.calcite.rel.RelNode;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
 
 public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{
+
+  private final Map<String, Prel> sourceOperatorRegistry = new HashMap();
 
   private static JoinPrelRenameVisitor INSTANCE = new JoinPrelRenameVisitor();
 
@@ -35,18 +45,42 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
     return prel.accept(INSTANCE, null);
   }
 
+  private void register(Prel toRegister) {
+    this.sourceOperatorRegistry.put(toRegister.getClass().getSimpleName(), toRegister);
+  }
+
+  private Prel getRegisteredPrel(Class<?> classname) {
+    return this.sourceOperatorRegistry.get(classname.getSimpleName());
+  }
+
   @Override
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
     return preparePrel(prel, getChildren(prel));
   }
 
-  private List<RelNode> getChildren(Prel prel) {
+  public void unRegister(Prel unregister) {
+    this.sourceOperatorRegistry.remove(unregister.getClass().getSimpleName());
+  }
+
+  private List<RelNode> getChildren(Prel prel, int registerForChild) {
+    int ch = 0;
     List<RelNode> children = Lists.newArrayList();
     for(Prel child : prel){
+      if (ch == registerForChild) {
+        register(prel);
+      }
       child = child.accept(this, null);
+      if (ch == registerForChild) {
+        unRegister(prel);
+      }
       children.add(child);
+      ch++;
     }
     return children;
+  }
+
+  private List<RelNode> getChildren(Prel prel) {
+    return getChildren(prel, -1);
   }
 
   private Prel preparePrel(Prel prel, List<RelNode> renamedNodes) {
@@ -71,11 +105,10 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
     return preparePrel(prel, reNamedChildren);
   }
 
-  //TODO: consolidate this code with join column renaming.
   @Override
   public Prel visitLateral(LateralJoinPrel prel, Void value) throws RuntimeException {
 
-    List<RelNode> children = getChildren(prel);
+    List<RelNode> children = getChildren(prel, 1);
     List<RelNode> reNamedChildren = new ArrayList<>();
 
     for (int i = 0; i < children.size(); i++) {
@@ -83,5 +116,29 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
     }
 
     return preparePrel(prel, reNamedChildren);
+  }
+
+  @Override
+  public Prel visitUnnest(UnnestPrel prel, Void value) throws RuntimeException {
+    Preconditions.checkArgument(getRegisteredPrel(prel.getParentClass()) instanceof LateralJoinPrel);
+    Preconditions.checkArgument(prel.getRowType().getFieldCount() == 1);
+    RexBuilder builder = prel.getCluster().getRexBuilder();
+
+    LateralJoinPrel lateralJoinPrel = (LateralJoinPrel) getRegisteredPrel(prel.getParentClass());
+    int correlationIndex = lateralJoinPrel.getRequiredColumns().nextSetBit(0);
+    String correlationColumnName = lateralJoinPrel.getLeft().getRowType().getFieldNames().get(correlationIndex);
+    RexNode corrRef = builder.makeCorrel(lateralJoinPrel.getLeft().getRowType(), lateralJoinPrel.getCorrelationId());
+    RexNode fieldAccess = builder.makeFieldAccess(corrRef, correlationColumnName, false);
+
+    List<String> fieldNames = new ArrayList<>();
+    List<RelDataType> fieldTypes = new ArrayList<>();
+    for (RelDataTypeField field : prel.getRowType().getFieldList()) {
+      fieldNames.add(correlationColumnName);
+      fieldTypes.add(field.getType());
+    }
+
+    UnnestPrel unnestPrel = new UnnestPrel(prel.getCluster(), prel.getTraitSet(),
+            prel.getCluster().getTypeFactory().createStructType(fieldTypes, fieldNames), fieldAccess);
+    return unnestPrel;
   }
 }
