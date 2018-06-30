@@ -473,7 +473,7 @@ public class Metadata {
           // Write stats when they are not null
           Object minValue = null;
           Object maxValue = null;
-          if (stats.genericGetMax() != null && stats.genericGetMin() != null ) {
+          if (stats.hasNonNullValue()) {
             minValue = stats.genericGetMin();
             maxValue = stats.genericGetMax();
             if (containsCorruptDates == ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION
