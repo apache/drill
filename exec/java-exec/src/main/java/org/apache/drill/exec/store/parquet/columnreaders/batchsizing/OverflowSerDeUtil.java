@@ -26,6 +26,8 @@ import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatch
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchOverflow.FieldOverflowEntry;
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchOverflow.RecordOverflowContainer;
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchOverflow.RecordOverflowDefinition;
+import org.apache.drill.exec.util.record.RecordBatchStats;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchStatsContext;
 import org.apache.drill.exec.vector.UInt1Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
 
@@ -44,7 +46,6 @@ import org.apache.drill.exec.vector.UInt4Vector;
  * </ul>
  */
 final class OverflowSerDeUtil {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OverflowSerDeUtil.class);
 
   /**
    * Serializes a collection of overflow fields into a memory buffer:
@@ -56,10 +57,12 @@ final class OverflowSerDeUtil {
    *
    * @param fieldOverflowEntries input collection of field overflow entries
    * @param allocator buffer allocator
+   * @param batchStatsContext batch statistics context object
    * @return record overflow container; null if the input buffer is empty
    */
   static RecordOverflowContainer serialize(List<FieldOverflowEntry> fieldOverflowEntries,
-    BufferAllocator allocator) {
+    BufferAllocator allocator,
+    RecordBatchStatsContext batchStatsContext) {
 
     if (fieldOverflowEntries == null || fieldOverflowEntries.isEmpty()) {
       return null;
@@ -82,8 +85,9 @@ final class OverflowSerDeUtil {
     // Allocate the required memory to serialize the overflow fields
     final DrillBuf buffer = allocator.buffer(bufferLength);
 
-    if (logger.isDebugEnabled()) {
-      logger.debug(String.format("Allocated a buffer of length %d to handle overflow", bufferLength));
+    if (batchStatsContext.isEnableBatchSzLogging()) {
+      final String msg = String.format("Allocated a buffer of length [%d] to handle overflow", bufferLength);
+      RecordBatchStats.logRecordBatchStats(msg, batchStatsContext);
     }
 
     // Create the result object
