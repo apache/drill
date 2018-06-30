@@ -35,6 +35,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -132,6 +133,15 @@ public class StorageResources {
       logger.debug("Error in enabling storage name: " + name + " flag: " + enable);
       return message("error (unable to enable/ disable storage)");
     }
+  }
+
+  @GET
+  @Path("/storage/{name}/export")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response exportPlugin(@PathParam("name") String name) {
+    Response.ResponseBuilder response = Response.ok(getStoragePluginJSON(name));
+    response.header("Content-Disposition", String.format("attachment;filename=\"%s.json\"", name));
+    return response.build();
   }
 
   @DELETE
