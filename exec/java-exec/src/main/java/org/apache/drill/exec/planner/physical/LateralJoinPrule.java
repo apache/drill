@@ -48,7 +48,7 @@ public class LateralJoinPrule extends Prule {
 
     final LateralJoinPrel lateralJoinPrel = new LateralJoinPrel(lateralJoinRel.getCluster(),
                                   corrTraits,
-                                  convertedLeft, convertedRight, lateralJoinRel.getCorrelationId(),
+                                  convertedLeft, convertedRight, lateralJoinRel.excludeCorrelateColumn, lateralJoinRel.getCorrelationId(),
                                   lateralJoinRel.getRequiredColumns(),lateralJoinRel.getJoinType());
     call.transformTo(lateralJoinPrel);
   }
