@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.util.record;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -25,7 +24,6 @@ import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
@@ -34,13 +32,14 @@ import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
  * Utility class to capture key record batch statistics.
  */
 public final class RecordBatchStats {
+  // Logger
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchStats.class);
+
   /** A prefix for all batch stats to simplify search */
   public static final String BATCH_STATS_PREFIX = "BATCH_STATS";
 
   /** Helper class which loads contextual record batch logging options */
   public static final class RecordBatchStatsContext {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchStatsContext.class);
-
     /** batch size logging for all readers */
     private final boolean enableBatchSzLogging;
     /** Fine grained batch size logging */
@@ -52,8 +51,17 @@ public final class RecordBatchStats {
      * @param options options manager
      */
     public RecordBatchStatsContext(FragmentContext context, OperatorContext oContext) {
-      enableBatchSzLogging = context.getOptions().getBoolean(ExecConstants.STATS_LOGGING_BATCH_SIZE_OPTION);
-      enableFgBatchSzLogging = context.getOptions().getBoolean(ExecConstants.STATS_LOGGING_FG_BATCH_SIZE_OPTION);
+      final boolean operatorEnabledForStatsLogging = isBatchStatsEnabledForOperator(context, oContext);
+
+      if (operatorEnabledForStatsLogging) {
+        enableBatchSzLogging = context.getOptions().getBoolean(ExecConstants.STATS_LOGGING_BATCH_SIZE_OPTION);
+        enableFgBatchSzLogging = context.getOptions().getBoolean(ExecConstants.STATS_LOGGING_FG_BATCH_SIZE_OPTION);
+
+      } else {
+        enableBatchSzLogging = false;
+        enableFgBatchSzLogging = false;
+      }
+
       contextOperatorId = new StringBuilder()
         .append(getQueryId(context))
         .append(":")
@@ -100,6 +108,104 @@ public final class RecordBatchStats {
       }
       return "NA";
     }
+
+    private boolean isBatchStatsEnabledForOperator(FragmentContext context, OperatorContext oContext) {
+      // The configuration can select what operators should log batch statistics
+      final String statsLoggingOperator = context.getOptions().getString(ExecConstants.STATS_LOGGING_BATCH_OPERATOR_OPTION).toUpperCase();
+      final String allOperatorsStr = "ALL";
+
+      // All operators are allowed to log batch statistics
+      if (allOperatorsStr.equals(statsLoggingOperator)) {
+        return true;
+      }
+
+      // No, only a select few are allowed; syntax: operator-id-1,operator-id-2,..
+      final String[] operators = statsLoggingOperator.split(",");
+      final String operatorId = oContext.getStats().getId().toUpperCase();
+
+      for (int idx = 0; idx < operators.length; idx++) {
+        // We use "contains" because the operator identifier is a composite string; e.g., 3:[PARQUET_ROW_GROUP_SCAN]
+        if (operatorId.contains(operators[idx].trim())) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+  }
+
+  /**
+   * @see {@link RecordBatchStats#logRecordBatchStats(String, RecordBatch, RecordBatchStatsContext)}
+   */
+  public static void logRecordBatchStats(RecordBatch recordBatch,
+    RecordBatchStatsContext batchStatsContext) {
+
+    logRecordBatchStats(null, recordBatch, batchStatsContext);
+  }
+
+  /**
+   * Logs record batch statistics for the input record batch (logging happens only
+   * when record statistics logging is enabled).
+   *
+   * @param sourceId optional source identifier for scanners
+   * @param recordBatch a set of records
+   * @param batchStatsContext batch stats context object
+   */
+  public static void logRecordBatchStats(String sourceId,
+    RecordBatch recordBatch,
+    RecordBatchStatsContext batchStatsContext) {
+
+    if (!batchStatsContext.isEnableBatchSzLogging()) {
+      return; // NOOP
+    }
+
+    final String statsId = batchStatsContext.getContextOperatorId();
+    final boolean verbose = batchStatsContext.isEnableFgBatchSzLogging();
+    final String msg = printRecordBatchStats(statsId, sourceId, recordBatch, verbose);
+
+    logBatchStatsMsg(batchStatsContext, msg, false);
+  }
+
+  /**
+   * Logs a generic batch statistics message
+   *
+   * @param message log message
+   * @param batchStatsLogging
+   * @param batchStatsContext batch stats context object
+   */
+  public static void logRecordBatchStats(String message,
+    RecordBatchStatsContext batchStatsContext) {
+
+    if (!batchStatsContext.isEnableBatchSzLogging()) {
+      return; // NOOP
+    }
+
+    logBatchStatsMsg(batchStatsContext, message, true);
+  }
+
+  /**
+   * @param allocator dumps allocator statistics
+   * @return string with allocator statistics
+   */
+  public static String printAllocatorStats(BufferAllocator allocator) {
+    StringBuilder msg = new StringBuilder();
+    msg.append(BATCH_STATS_PREFIX);
+    msg.append(": dumping allocator statistics:\n");
+    msg.append(BATCH_STATS_PREFIX);
+    msg.append(": ");
+    msg.append(allocator.toString());
+
+    return msg.toString();
+  }
+
+// ----------------------------------------------------------------------------
+// Local Implementation
+// ----------------------------------------------------------------------------
+
+  /**
+   * Disabling class object instantiation.
+   */
+  private RecordBatchStats() {
   }
 
   /**
@@ -112,7 +218,7 @@ public final class RecordBatchStats {
    *
    * @return a string containing the record batch statistics
    */
-  public static String printRecordBatchStats(String statsId,
+  private static String printRecordBatchStats(String statsId,
     String sourceId,
     RecordBatch recordBatch,
     boolean verbose) {
@@ -158,68 +264,19 @@ public final class RecordBatchStats {
     return msg.toString();
   }
 
-  /**
-   * Logs record batch statistics for the input record batch (logging happens only
-   * when record statistics logging is enabled).
-   *
-   * @param stats instance identifier
-   * @param sourceId optional source identifier for scanners
-   * @param recordBatch a set of records
-   * @param verbose whether to include fine-grained stats
-   * @param logger Logger where to print the record batch statistics
-   */
-  public static void logRecordBatchStats(String statsId,
-    String sourceId,
-    RecordBatch recordBatch,
-    RecordBatchStatsContext batchStatsLogging,
-    org.slf4j.Logger logger) {
+  private static void logBatchStatsMsg(RecordBatchStatsContext batchStatsContext,
+    String msg,
+    boolean includePrefix) {
 
-    if (!batchStatsLogging.isEnableBatchSzLogging()) {
-      return; // NOOP
+    if (includePrefix) {
+      msg = BATCH_STATS_PREFIX + '\t' + msg;
     }
 
-    final boolean verbose = batchStatsLogging.isEnableFgBatchSzLogging();
-    final String msg = printRecordBatchStats(statsId, sourceId, recordBatch, verbose);
-
-    if (batchStatsLogging.useInfoLevelLogging()) {
+    if (batchStatsContext.useInfoLevelLogging()) {
       logger.info(msg);
     } else {
       logger.debug(msg);
     }
-  }
-
-  /**
-   * Prints a materialized field type
-   * @param field materialized field
-   * @param msg string builder where to append the field type
-   */
-  public static void printFieldType(MaterializedField field, StringBuilder msg) {
-    final MajorType type = field.getType();
-
-    msg.append(type.getMinorType().name());
-    msg.append(':');
-    msg.append(type.getMode().name());
-  }
-
-  /**
-   * @param allocator dumps allocator statistics
-   * @return string with allocator statistics
-   */
-  public static String printAllocatorStats(BufferAllocator allocator) {
-    StringBuilder msg = new StringBuilder();
-    msg.append(BATCH_STATS_PREFIX);
-    msg.append(": dumping allocator statistics:\n");
-    msg.append(BATCH_STATS_PREFIX);
-    msg.append(": ");
-    msg.append(allocator.toString());
-
-    return msg.toString();
-  }
-
-  /**
-   * Disabling class object instantiation.
-   */
-  private RecordBatchStats() {
   }
 
 }

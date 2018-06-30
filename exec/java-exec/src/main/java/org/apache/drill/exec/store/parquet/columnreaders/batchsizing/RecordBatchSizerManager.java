@@ -30,6 +30,8 @@ import org.apache.drill.exec.store.parquet.columnreaders.ParquetColumnMetadata;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetSchema;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput;
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchOverflow.FieldOverflowDefinition;
+import org.apache.drill.exec.util.record.RecordBatchStats;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchStatsContext;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -39,7 +41,7 @@ import org.apache.drill.exec.vector.ValueVector;
  */
 public final class RecordBatchSizerManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchSizerManager.class);
-  public static final String BATCH_STATS_PREFIX = "BATCH_STATS";
+
 
   /** Minimum column memory size */
   private static final int MIN_COLUMN_MEMORY_SZ = VarLenColumnBulkInput.getMinVLColumnMemorySize();
@@ -78,6 +80,9 @@ public final class RecordBatchSizerManager {
    */
   private Map<String, FieldOverflowStateContainer> fieldOverflowMap = CaseInsensitiveMap.newHashMap();
 
+  /** For controlling batch statistics logging */
+  private final RecordBatchStatsContext batchStatsContext;
+
   /**
    * Constructor.
    *
@@ -87,7 +92,8 @@ public final class RecordBatchSizerManager {
    */
   public RecordBatchSizerManager(OptionManager options,
     ParquetSchema schema,
-    long totalRecordsToRead) {
+    long totalRecordsToRead,
+    RecordBatchStatsContext batchStatsContext) {
 
     this.schema = schema;
     this.totalRecordsToRead = totalRecordsToRead;
@@ -97,6 +103,7 @@ public final class RecordBatchSizerManager {
     this.maxRecordsPerBatch = this.configRecordsPerBatch;
     this.recordsPerBatch = this.configRecordsPerBatch;
     this.overflowOptimizer = new BatchOverflowOptimizer(columnMemoryInfoMap);
+    this.batchStatsContext = batchStatsContext;
   }
 
   /**
@@ -128,6 +135,13 @@ public final class RecordBatchSizerManager {
    */
   public ParquetSchema getSchema() {
     return schema;
+  }
+
+  /**
+   * @return batch statistics context
+   */
+  public RecordBatchStatsContext getBatchStatsContext() {
+    return batchStatsContext;
   }
 
   /**
@@ -282,10 +296,9 @@ public final class RecordBatchSizerManager {
       normalizedNumRecords = (int) totalRecordsToRead;
     }
 
-    if (logger.isDebugEnabled()) {
-      final String message = String.format("%s: The Parquet reader number of record(s) has been set to [%d]",
-        BATCH_STATS_PREFIX, normalizedNumRecords);
-      logger.debug(message);
+    if (batchStatsContext.isEnableBatchSzLogging()) {
+      final String message = String.format("The Parquet reader number of record(s) has been set to [%d]", normalizedNumRecords);
+      RecordBatchStats.logRecordBatchStats(message, batchStatsContext);
     }
 
     return normalizedNumRecords;
@@ -319,10 +332,9 @@ public final class RecordBatchSizerManager {
       logger.warn(message);
     }
 
-    if (logger.isDebugEnabled()) {
-      final String message = String.format("%s: The Parquet reader batch memory has been set to [%d] byte(s)",
-        BATCH_STATS_PREFIX, normalizedMemorySize);
-      logger.debug(message);
+    if (batchStatsContext.isEnableBatchSzLogging()) {
+      final String message = String.format("The Parquet reader batch memory has been set to [%d] byte(s)", normalizedMemorySize);
+      RecordBatchStats.logRecordBatchStats(message, batchStatsContext);
     }
 
     return normalizedMemorySize;
@@ -370,13 +382,12 @@ public final class RecordBatchSizerManager {
     assignFineGrainedMemoryQuota();
 
     // log the new record batch if it changed
-    if (logger.isDebugEnabled()) {
+    if (batchStatsContext.isEnableBatchSzLogging()) {
       assert recordsPerBatch <= maxRecordsPerBatch;
 
       if (originalRecordsPerBatch != recordsPerBatch) {
-        final String message = String.format("%s: The Parquet records per batch [%d] has been decreased to [%d]",
-          BATCH_STATS_PREFIX, originalRecordsPerBatch, recordsPerBatch);
-        logger.debug(message);
+        final String message = String.format("The Parquet records per batch [%d] has been decreased to [%d]", originalRecordsPerBatch, recordsPerBatch);
+        RecordBatchStats.logRecordBatchStats(message, batchStatsContext);
       }
 
       // Now dump the per column memory quotas
@@ -504,12 +515,12 @@ public final class RecordBatchSizerManager {
   }
 
   private void dumpColumnMemoryQuotas() {
-    StringBuilder msg = new StringBuilder(BATCH_STATS_PREFIX);
+    StringBuilder msg = new StringBuilder();
     msg.append(": Field Quotas:\n\tName\tType\tPrec\tQuota\n");
 
     for (ColumnMemoryInfo columnInfo : columnMemoryInfoMap.values()) {
       msg.append("\t");
-      msg.append(BATCH_STATS_PREFIX);
+      msg.append(RecordBatchStats.BATCH_STATS_PREFIX);
       msg.append("\t");
       msg.append(columnInfo.columnMeta.getField().getName());
       msg.append("\t");
@@ -521,7 +532,7 @@ public final class RecordBatchSizerManager {
       msg.append("\n");
     }
 
-    logger.debug(msg.toString());
+    RecordBatchStats.logRecordBatchStats(msg.toString(), batchStatsContext);
   }
 
   private  static void printType(MaterializedField field, StringBuilder msg) {
