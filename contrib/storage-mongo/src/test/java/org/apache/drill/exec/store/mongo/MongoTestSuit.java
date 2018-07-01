@@ -26,10 +26,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.categories.MongoStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -63,6 +66,7 @@ import de.flapdoodle.embed.process.runtime.Network;
 @RunWith(Suite.class)
 @SuiteClasses({ TestMongoFilterPushDown.class, TestMongoProjectPushDown.class,
     TestMongoQueries.class, TestMongoChunkAssignment.class })
+@Category({SlowTest.class, MongoStorageTest.class})
 public class MongoTestSuit implements MongoTestConstants {
 
   private static final Logger logger = LoggerFactory
