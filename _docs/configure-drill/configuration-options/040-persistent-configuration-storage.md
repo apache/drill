@@ -1,6 +1,6 @@
 ---
 title: "Persistent Configuration Storage"
-date: 2017-08-08 21:29:41 UTC
+date: 2018-07-01 23:48:26 UTC
 parent: "Configuration Options"
 ---
 Drill stores persistent configuration data in a persistent configuration store
@@ -40,7 +40,7 @@ Drill node and then restart the Drillbit service.
 	drill.exec: {
 	 cluster-id: "my_cluster_com-drillbits",
 	 zk.connect: "<zkhostname>:<port>",
-	 sys.store.provider.zk.blobroot: "hdfs://<directory to store pstore data>/"
+	 sys.store.provider.zk.blobroot: "hdfs:///apps/drill/pstore/"
 	}
 
 [Restart the Drillbit]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/).
