@@ -1142,14 +1142,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Ports Used by Drill", 
-                    "next_url": "/docs/ports-used-by-drill/", 
+                    "next_title": "Global Query List", 
+                    "next_url": "/docs/global-query-list/", 
                     "parent": "Configuration Options", 
                     "previous_title": "Planning and Execution Options", 
                     "previous_url": "/docs/planning-and-execution-options/", 
                     "relative_path": "_docs/configure-drill/configuration-options/040-persistent-configuration-storage.md", 
                     "title": "Persistent Configuration Storage", 
                     "url": "/docs/persistent-configuration-storage/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuration Options", 
+                            "url": "/docs/configuration-options/"
+                        }, 
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Ports Used by Drill", 
+                    "next_url": "/docs/ports-used-by-drill/", 
+                    "parent": "Configuration Options", 
+                    "previous_title": "Persistent Configuration Storage", 
+                    "previous_url": "/docs/persistent-configuration-storage/", 
+                    "relative_path": "_docs/configure-drill/configuration-options/041-global-query-list.md", 
+                    "title": "Global Query List", 
+                    "url": "/docs/global-query-list/"
                 }
             ], 
             "next_title": "Configuration Options Introduction", 
@@ -1670,14 +1691,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Ports Used by Drill", 
-                            "next_url": "/docs/ports-used-by-drill/", 
+                            "next_title": "Global Query List", 
+                            "next_url": "/docs/global-query-list/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Planning and Execution Options", 
                             "previous_url": "/docs/planning-and-execution-options/", 
                             "relative_path": "_docs/configure-drill/configuration-options/040-persistent-configuration-storage.md", 
                             "title": "Persistent Configuration Storage", 
                             "url": "/docs/persistent-configuration-storage/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Ports Used by Drill", 
+                            "next_url": "/docs/ports-used-by-drill/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Persistent Configuration Storage", 
+                            "previous_url": "/docs/persistent-configuration-storage/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/041-global-query-list.md", 
+                            "title": "Global Query List", 
+                            "url": "/docs/global-query-list/"
                         }
                     ], 
                     "next_title": "Configuration Options Introduction", 
@@ -1700,8 +1742,8 @@
                     "next_title": "Configuring the Drill Shell", 
                     "next_url": "/docs/configuring-the-drill-shell/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Persistent Configuration Storage", 
-                    "previous_url": "/docs/persistent-configuration-storage/", 
+                    "previous_title": "Global Query List", 
+                    "previous_url": "/docs/global-query-list/", 
                     "relative_path": "_docs/configure-drill/100-ports-used-by-drill.md", 
                     "title": "Ports Used by Drill", 
                     "url": "/docs/ports-used-by-drill/"
@@ -4756,6 +4798,27 @@
             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md", 
             "title": "Getting to Know the Drill Sandbox", 
             "url": "/docs/getting-to-know-the-drill-sandbox/"
+        }, 
+        "Global Query List": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuration Options", 
+                    "url": "/docs/configuration-options/"
+                }, 
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Ports Used by Drill", 
+            "next_url": "/docs/ports-used-by-drill/", 
+            "parent": "Configuration Options", 
+            "previous_title": "Persistent Configuration Storage", 
+            "previous_url": "/docs/persistent-configuration-storage/", 
+            "relative_path": "_docs/configure-drill/configuration-options/041-global-query-list.md", 
+            "title": "Global Query List", 
+            "url": "/docs/global-query-list/"
         }, 
         "Guidelines for Optimizing Aggregation": {
             "breadcrumbs": [
@@ -8082,8 +8145,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Ports Used by Drill", 
-            "next_url": "/docs/ports-used-by-drill/", 
+            "next_title": "Global Query List", 
+            "next_url": "/docs/global-query-list/", 
             "parent": "Configuration Options", 
             "previous_title": "Planning and Execution Options", 
             "previous_url": "/docs/planning-and-execution-options/", 
@@ -8165,8 +8228,8 @@
             "next_title": "Configuring the Drill Shell", 
             "next_url": "/docs/configuring-the-drill-shell/", 
             "parent": "Configure Drill", 
-            "previous_title": "Persistent Configuration Storage", 
-            "previous_url": "/docs/persistent-configuration-storage/", 
+            "previous_title": "Global Query List", 
+            "previous_url": "/docs/global-query-list/", 
             "relative_path": "_docs/configure-drill/100-ports-used-by-drill.md", 
             "title": "Ports Used by Drill", 
             "url": "/docs/ports-used-by-drill/"
@@ -16146,14 +16209,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Ports Used by Drill", 
-                            "next_url": "/docs/ports-used-by-drill/", 
+                            "next_title": "Global Query List", 
+                            "next_url": "/docs/global-query-list/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Planning and Execution Options", 
                             "previous_url": "/docs/planning-and-execution-options/", 
                             "relative_path": "_docs/configure-drill/configuration-options/040-persistent-configuration-storage.md", 
                             "title": "Persistent Configuration Storage", 
                             "url": "/docs/persistent-configuration-storage/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Ports Used by Drill", 
+                            "next_url": "/docs/ports-used-by-drill/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Persistent Configuration Storage", 
+                            "previous_url": "/docs/persistent-configuration-storage/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/041-global-query-list.md", 
+                            "title": "Global Query List", 
+                            "url": "/docs/global-query-list/"
                         }
                     ], 
                     "next_title": "Configuration Options Introduction", 
@@ -16176,8 +16260,8 @@
                     "next_title": "Configuring the Drill Shell", 
                     "next_url": "/docs/configuring-the-drill-shell/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Persistent Configuration Storage", 
-                    "previous_url": "/docs/persistent-configuration-storage/", 
+                    "previous_title": "Global Query List", 
+                    "previous_url": "/docs/global-query-list/", 
                     "relative_path": "_docs/configure-drill/100-ports-used-by-drill.md", 
                     "title": "Ports Used by Drill", 
                     "url": "/docs/ports-used-by-drill/"
