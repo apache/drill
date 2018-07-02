@@ -44,8 +44,7 @@ public class DrillResultSetMetaDataImpl extends AvaticaResultSetMetaData {
    * @throws  AlreadyClosedSqlException  if ResultSet is closed
    * @throws  SQLException  if error in checking ResultSet's status
    */
-  private void throwIfClosed() throws AlreadyClosedSqlException,
-                                      SQLException {
+  private void checkOpen() throws AlreadyClosedSqlException, SQLException {
     // Statement.isClosed() call is to avoid exception from getResultSet().
     if (statement.isClosed()
         || (statement.getResultSet() != null // result set doesn't exist for prepared statement cases
@@ -56,9 +55,8 @@ public class DrillResultSetMetaDataImpl extends AvaticaResultSetMetaData {
   }
 
   private void throwIfClosedOrOutOfBounds(int columnNumber)
-      throws InvalidParameterSqlException,
-             SQLException {
-    throwIfClosed();
+      throws SQLException {
+    checkOpen();
     if (1 > columnNumber || columnNumber > getColumnCount()) {
       throw new InvalidParameterSqlException(
           "Column number " + columnNumber + " out of range of from 1 through "
@@ -81,7 +79,7 @@ public class DrillResultSetMetaDataImpl extends AvaticaResultSetMetaData {
 
   @Override
   public int getColumnCount() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getColumnCount();
   }
 

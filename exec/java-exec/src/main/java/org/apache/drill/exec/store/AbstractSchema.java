@@ -22,10 +22,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.calcite.linq4j.tree.DefaultExpression;
 import org.apache.calcite.linq4j.tree.Expression;
+import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
@@ -161,6 +164,30 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   @Override
   public Collection<Function> getFunctions(String name) {
     return Collections.emptyList();
+  }
+
+  /**
+   * Returns a map of types in this schema by name.
+   *
+   * <p>The implementations of {@link #getTypeNames()}
+   * and {@link #getType(String)} depend on this map.
+   * The default implementation of this method returns the empty map.
+   * Override this method to change their behavior.</p>
+   *
+   * @return Map of types in this schema by name
+   */
+  protected Map<String, RelProtoDataType> getTypeMap() {
+    return ImmutableMap.of();
+  }
+
+  @Override
+  public Set<String> getTypeNames() {
+    return getTypeMap().keySet();
+  }
+
+  @Override
+  public RelProtoDataType getType(String name) {
+    return getTypeMap().get(name);
   }
 
   @Override

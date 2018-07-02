@@ -17,14 +17,9 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.sql.NClob;
 import java.sql.ResultSetMetaData;
-import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
-import java.sql.SQLXML;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -42,17 +37,17 @@ import org.apache.drill.exec.rpc.DrillRpcFuture;
 
 
 /**
- * Implementation of {@link net.hydromatic.avatica.AvaticaFactory} for Drill and
+ * Implementation of {@link org.apache.calcite.avatica.AvaticaFactory} for Drill and
  * JDBC 4.1 (corresponds to JDK 1.7).
  */
-// Note:  Must be public so net.hydromatic.avatica.UnregisteredDriver can
+// Note:  Must be public so org.apache.calcite.avatica.UnregisteredDriver can
 // (reflectively) call no-args constructor.
 public class DrillJdbc41Factory extends DrillFactory {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(DrillJdbc41Factory.class);
 
   /** Creates a factory for JDBC version 4.1. */
-  // Note:  Must be public so net.hydromatic.avatica.UnregisteredDriver can
+  // Note:  Must be public so org.apache.calcite.avatica.UnregisteredDriver can
   // (reflectively) call this constructor.
   public DrillJdbc41Factory() {
     this(4, 1);
@@ -161,8 +156,6 @@ public class DrillJdbc41Factory extends DrillFactory {
           resultSetHoldability);
     } catch (SQLException e) {
       throw e;
-    } catch (RuntimeException e) {
-      throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
     } catch (Exception e) {
       throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
     }
@@ -173,7 +166,7 @@ public class DrillJdbc41Factory extends DrillFactory {
                                          QueryState state,
                                          Meta.Signature signature,
                                          TimeZone timeZone,
-                                         Meta.Frame firstFrame) {
+                                         Meta.Frame firstFrame) throws SQLException {
     final ResultSetMetaData metaData =
         newResultSetMetaData(statement, signature);
     return new DrillResultSetImpl(statement, state, signature, metaData, timeZone, firstFrame);
@@ -201,111 +194,6 @@ public class DrillJdbc41Factory extends DrillFactory {
       super(connection, h, signature, pstmt,
             resultSetType, resultSetConcurrency, resultSetHoldability);
     }
-
-    // These don't need throwIfClosed(), since getParameter already calls it.
-
-    @Override
-    public void setRowId(int parameterIndex, RowId x) throws SQLException {
-      getSite(parameterIndex).setRowId(x);
-    }
-
-    @Override
-    public void setNString(int parameterIndex, String value) throws SQLException {
-      getSite(parameterIndex).setNString(value);
-    }
-
-    @Override
-    public void setNCharacterStream(int parameterIndex, Reader value,
-                                    long length) throws SQLException {
-      getSite(parameterIndex).setNCharacterStream(value, length);
-    }
-
-    @Override
-    public void setNClob(int parameterIndex, NClob value) throws SQLException {
-      getSite(parameterIndex).setNClob(value);
-    }
-
-    @Override
-    public void setClob(int parameterIndex, Reader reader,
-                        long length) throws SQLException {
-      getSite(parameterIndex).setClob(reader, length);
-    }
-
-    @Override
-    public void setBlob(int parameterIndex, InputStream inputStream,
-                        long length) throws SQLException {
-      getSite(parameterIndex).setBlob(inputStream, length);
-    }
-
-    @Override
-    public void setNClob(int parameterIndex, Reader reader,
-                         long length) throws SQLException {
-      getSite(parameterIndex).setNClob(reader, length);
-    }
-
-    @Override
-    public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
-      getSite(parameterIndex).setSQLXML(xmlObject);
-    }
-
-    @Override
-    public void setAsciiStream(int parameterIndex, InputStream x,
-                               long length) throws SQLException {
-      getSite(parameterIndex).setAsciiStream(x, length);
-    }
-
-    @Override
-    public void setBinaryStream(int parameterIndex, InputStream x,
-                                long length) throws SQLException {
-      getSite(parameterIndex).setBinaryStream(x, length);
-    }
-
-    @Override
-    public void setCharacterStream(int parameterIndex, Reader reader,
-                                   long length) throws SQLException {
-      getSite(parameterIndex).setCharacterStream(reader, length);
-    }
-
-    @Override
-    public void setAsciiStream(int parameterIndex,
-                               InputStream x) throws SQLException {
-      getSite(parameterIndex).setAsciiStream(x);
-    }
-
-    @Override
-    public void setBinaryStream(int parameterIndex,
-                                InputStream x) throws SQLException {
-      getSite(parameterIndex).setBinaryStream(x);
-    }
-
-    @Override
-    public void setCharacterStream(int parameterIndex,
-                                   Reader reader) throws SQLException {
-      getSite(parameterIndex).setCharacterStream(reader);
-    }
-
-    @Override
-    public void setNCharacterStream(int parameterIndex,
-                                    Reader value) throws SQLException {
-      getSite(parameterIndex).setNCharacterStream(value);
-    }
-
-    @Override
-    public void setClob(int parameterIndex, Reader reader) throws SQLException {
-      getSite(parameterIndex).setClob(reader);
-    }
-
-    @Override
-    public void setBlob(int parameterIndex,
-                        InputStream inputStream) throws SQLException {
-      getSite(parameterIndex).setBlob(inputStream);
-    }
-
-    @Override
-    public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-      getSite(parameterIndex).setNClob(reader);
-    }
-
   }
 
 }
