@@ -1,12 +1,14 @@
 ---
 title: "Global Query List"
-date: 2018-07-02 00:09:04 UTC
+date: 2018-07-02 01:09:32 UTC
 parent: "Configuration Options"
 ---
 
-A query profile is a summary of metrics collected for each query that Drill executes. Query profiles provide important information that you can use to monitor and analyze query performance. You can view query profiles in the Drill Web UI at `http(s)://<drill-hostname>:8047`. 
- 
-By default, you can only see the queries that run on the Drill node from which you access the Drill Web UI. For example, if you access the Drill Web UI at `http://10.10.20.56:8047`, you can only see the queries that have run on node 10.10.20.56. To see a global query list (view of profiles for queries run on all Drill nodes), you must configure the ZooKeeper [PStore (persistent configuration storage)]({{site.baseurl}}/docs/persistent-configuration-storage/) to point to a location on the distributed file system. 
+A query profile is a summary of metrics collected for each query that Drill executes. Query profiles provide important information that you can use to monitor and analyze query performance. You can view query profiles in the Drill Web UI at `http(s)://<drill-hostname>:8047`.  
+
+By default, you can only see the queries coordinated by the Drill node from which you access the Drill Web UI. For example, if you access the Drill Web UI at `http://10.10.20.56:8047`, you can only see the queries coordinated by Drill running on node 10.10.20.56. A Drill node that receives a query, coordinates the query and serves as the [Foreman]({{site.baseurl}}/docs/drill-query-execution/) for that query. Each Drill node can act as a Foreman for queries. If ZooKeeper or Load Balancer is distributing queries to multiple Drill nodes, query profiles are spread across all Drill nodes and you cannot see a global timeline of the queries when accessing the Web UI from one Drill node. 
+
+To see a global query list (view of query profiles coordinated by all Drill nodes in one Web UI), you must configure the ZooKeeper [PStore (persistent configuration storage)]({{site.baseurl}}/docs/persistent-configuration-storage/) to point to a location on the distributed file system.  
 
 **Note:** On MapR-FS, the query profiles are written to the distributed file system by default. You do not need to configure the ZooKeeper PStore.  
 
