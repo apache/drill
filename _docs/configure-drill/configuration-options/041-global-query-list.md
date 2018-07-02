@@ -1,6 +1,6 @@
 ---
 title: "Global Query List"
-date: 2017-07-01 21:29:41 UTC
+date: 2018-07-02 00:09:04 UTC
 parent: "Configuration Options"
 ---
 
@@ -14,7 +14,7 @@ By default, you can only see the queries that run on the Drill node from which y
 
 Drill uses ZooKeeper to store persistent configuration data. The ZooKeeper PStore provider stores all of the persistent configuration data in ZooKeeper, except for query profile data. The ZooKeeper PStore provider offloads query profile data to the Drill log directory on each Drill node, for example `<drill_installation_directory>/logs/profiles`. 
  
-Configure the ZooKeeper PStore location when you have Drill running on multiple nodes in a cluster, and you want to monitor query profiles for all of the queries in the Drill Web UI. Configuring a ZooKeeper PStore is also beneficial when space is limited on the local file system because you do not to have to frequently purge or archive the query profiles due to the limited space.  
+Configure the ZooKeeper PStore location when you have Drill running on multiple nodes in a cluster, and you want to monitor query profiles for all of the queries in the Drill Web UI. Configuring a ZooKeeper PStore is also beneficial when space is limited on the local file system; you do not have to purge or archive the query profiles frequently due to the limited space.  
 
 ## Configuring the ZooKeeper PStore Location   
 
