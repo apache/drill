@@ -107,11 +107,13 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   public MapWriter map() {
     switch (mode) {
     case INIT:
-      int vectorCount = container.size();
+      final ValueVector oldVector = container.getChild(name);
       final RepeatedMapVector vector = container.addOrGet(name, RepeatedMapVector.TYPE, RepeatedMapVector.class);
       innerVector = vector;
       writer = new RepeatedMapWriter(vector, this);
-      if(vectorCount != container.size()) {
+      // oldVector will be null if it's first batch being created and it might not be same as newly added vector
+      // if new batch has schema change
+      if (oldVector == null || oldVector != vector) {
         writer.allocate();
       }
       writer.setPosition(${index});
@@ -131,11 +133,13 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   public ListWriter list() {
     switch (mode) {
     case INIT:
-      final int vectorCount = container.size();
+      final ValueVector oldVector = container.getChild(name);
       final RepeatedListVector vector = container.addOrGet(name, RepeatedListVector.TYPE, RepeatedListVector.class);
       innerVector = vector;
       writer = new RepeatedListWriter(null, vector, this);
-      if (vectorCount != container.size()) {
+      // oldVector will be null if it's first batch being created and it might not be same as newly added vector
+      // if new batch has schema change
+      if (oldVector == null || oldVector != vector) {
         writer.allocate();
       }
       writer.setPosition(${index});
@@ -176,11 +180,13 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   </#if>
     switch (mode) {
     case INIT:
-      final int vectorCount = container.size();
+      final ValueVector oldVector = container.getChild(name);
       final Repeated${capName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, Repeated${capName}Vector.class);
       innerVector = vector;
       writer = new Repeated${capName}WriterImpl(vector, this);
-      if(vectorCount != container.size()) {
+      // oldVector will be null if it's first batch being created and it might not be same as newly added vector
+      // if new batch has schema change
+      if (oldVector == null || oldVector != vector) {
         writer.allocate();
       }
       writer.setPosition(${index});
