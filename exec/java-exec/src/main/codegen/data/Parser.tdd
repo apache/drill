@@ -85,13 +85,17 @@
 
   # List of methods for parsing extensions to "DROP" calls.
   # Each must accept arguments "(SqlParserPos pos)".
-    dropStatementParserMethods: [
+  dropStatementParserMethods: [
   ]
 
   # List of keywords from "keywords" section that are not reserved.
-    nonReservedKeywords: [
+  nonReservedKeywords: [
   ]
 
+  # List of additional join types. Each is a method with no arguments.
+  # Example: LeftSemiJoin()
+  joinTypes: [
+  ]
   
   includeCompoundIdentifier: false,
   includeBraces: true,

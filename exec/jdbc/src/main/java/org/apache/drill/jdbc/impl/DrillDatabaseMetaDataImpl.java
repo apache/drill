@@ -53,9 +53,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
-
 /**
- * Drill's implementation of {@link DatabaseMetaData}.
+ * Drill's implementation of {@link java.sql.DatabaseMetaData}.
  */
 class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
                                 implements DrillDatabaseMetaData {
@@ -126,11 +125,10 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
    * @throws AlreadyClosedSqlException if Connection is closed
    * @throws SQLException if error in calling {@link Connection#isClosed()}
    */
-  private void throwIfClosed() throws AlreadyClosedSqlException,
-                                      SQLException {
-    if ( getConnection().isClosed() ) {
+  protected void checkOpen() throws AlreadyClosedSqlException, SQLException {
+    if (getConnection().isClosed()) {
       throw new AlreadyClosedSqlException(
-          "DatabaseMetaData's Connection is already closed." );
+          "DatabaseMetaData's Connection is already closed.");
     }
   }
 
@@ -196,13 +194,13 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean allProceduresAreCallable() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.allProceduresAreCallable();
   }
 
   @Override
   public boolean allTablesAreSelectable() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.allTablesAreSelectable();
     }
@@ -211,19 +209,19 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getURL() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getURL();
   }
 
   @Override
   public String getUserName() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getUserName();
   }
 
   @Override
   public boolean isReadOnly() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.isReadOnly();
     }
@@ -235,7 +233,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean nullsAreSortedHigh() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return true;
     }
@@ -244,7 +242,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean nullsAreSortedLow() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return false;
     }
@@ -253,7 +251,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean nullsAreSortedAtStart() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return false;
     }
@@ -262,7 +260,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean nullsAreSortedAtEnd() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return false;
     }
@@ -271,7 +269,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getDatabaseProductName() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     String name = getServerName();
     if (name == null) {
       return super.getDatabaseProductName();
@@ -281,7 +279,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getDatabaseProductVersion() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     Version version = getServerVersion();
     if (version == null) {
       return super.getDatabaseProductVersion();
@@ -291,13 +289,13 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getDriverName() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getDriverName();
   }
 
   @Override
   public String getDriverVersion() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getDriverVersion();
   }
 
@@ -315,19 +313,19 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean usesLocalFiles() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.usesLocalFiles();
   }
 
   @Override
   public boolean usesLocalFilePerTable() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.usesLocalFilePerTable();
   }
 
   @Override
   public boolean supportsMixedCaseIdentifiers() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsMixedCaseIdentifiers();
     }
@@ -336,7 +334,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean storesUpperCaseIdentifiers() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.storesUpperCaseIdentifiers();
     }
@@ -345,7 +343,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean storesLowerCaseIdentifiers() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.storesLowerCaseIdentifiers();
     }
@@ -354,7 +352,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean storesMixedCaseIdentifiers() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.storesMixedCaseIdentifiers();
     }
@@ -363,7 +361,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsMixedCaseQuotedIdentifiers() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsMixedCaseQuotedIdentifiers();
     }
@@ -372,7 +370,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean storesUpperCaseQuotedIdentifiers() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.storesUpperCaseQuotedIdentifiers();
     }
@@ -381,7 +379,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean storesLowerCaseQuotedIdentifiers() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.storesLowerCaseQuotedIdentifiers();
     }
@@ -390,7 +388,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean storesMixedCaseQuotedIdentifiers() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.storesMixedCaseQuotedIdentifiers();
     }
@@ -399,7 +397,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getIdentifierQuoteString() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return Quoting.BACK_TICK.string;
     }
@@ -408,7 +406,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getSQLKeywords() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getSQLKeywords();
     }
@@ -417,7 +415,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getNumericFunctions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getNumericFunctions();
     }
@@ -426,7 +424,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getStringFunctions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getStringFunctions();
     }
@@ -435,7 +433,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getSystemFunctions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getSystemFunctions();
     }
@@ -444,7 +442,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getTimeDateFunctions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getTimeDateFunctions();
     }
@@ -453,7 +451,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getSearchStringEscape() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getSearchStringEscape();
     }
@@ -462,7 +460,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getExtraNameCharacters() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getExtraNameCharacters();
     }
@@ -471,19 +469,19 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsAlterTableWithAddColumn() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsAlterTableWithAddColumn();
   }
 
   @Override
   public boolean supportsAlterTableWithDropColumn() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsAlterTableWithDropColumn();
   }
 
   @Override
   public boolean supportsColumnAliasing() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsColumnAliasing();
     }
@@ -492,7 +490,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean nullPlusNonNullIsNull() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.nullPlusNonNullIsNull();
     }
@@ -501,7 +499,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsConvert() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsConvert();
     }
@@ -512,7 +510,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsConvert(int fromType, int toType) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsConvert(fromType, toType);
     }
@@ -523,7 +521,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsTableCorrelationNames() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsTableCorrelationNames();
     }
@@ -533,7 +531,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsDifferentTableCorrelationNames() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsDifferentTableCorrelationNames();
     }
@@ -542,7 +540,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsExpressionsInOrderBy() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsExpressionsInOrderBy();
     }
@@ -551,7 +549,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsOrderByUnrelated() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsOrderByUnrelated();
     }
@@ -560,7 +558,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsGroupBy() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsGroupBy();
     }
@@ -569,7 +567,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsGroupByUnrelated() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsGroupByUnrelated();
     }
@@ -578,7 +576,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsGroupByBeyondSelect() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsGroupByBeyondSelect();
     }
@@ -587,7 +585,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsLikeEscapeClause() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsLikeEscapeClause();
     }
@@ -596,67 +594,67 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsMultipleResultSets() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsMultipleResultSets();
   }
 
   @Override
   public boolean supportsMultipleTransactions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsMultipleTransactions();
   }
 
   @Override
   public boolean supportsNonNullableColumns() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsNonNullableColumns();
   }
 
   @Override
   public boolean supportsMinimumSQLGrammar() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsMinimumSQLGrammar();
   }
 
   @Override
   public boolean supportsCoreSQLGrammar() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsCoreSQLGrammar();
   }
 
   @Override
   public boolean supportsExtendedSQLGrammar() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsExtendedSQLGrammar();
   }
 
   @Override
   public boolean supportsANSI92EntryLevelSQL() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsANSI92EntryLevelSQL();
   }
 
   @Override
   public boolean supportsANSI92IntermediateSQL() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsANSI92IntermediateSQL();
   }
 
   @Override
   public boolean supportsANSI92FullSQL() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsANSI92FullSQL();
   }
 
   @Override
   public boolean supportsIntegrityEnhancementFacility() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsIntegrityEnhancementFacility();
   }
 
   @Override
   public boolean supportsOuterJoins() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsOuterJoins();
     }
@@ -665,7 +663,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsFullOuterJoins() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsFullOuterJoins();
     }
@@ -674,7 +672,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsLimitedOuterJoins() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsFullOuterJoins();
     }
@@ -684,7 +682,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getSchemaTerm() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getSchemaTerm();
     }
@@ -693,13 +691,13 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getProcedureTerm() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getProcedureTerm();
   }
 
   @Override
   public String getCatalogTerm() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getCatalogTerm();
     }
@@ -708,7 +706,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean isCatalogAtStart() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.isCatalogAtStart();
     }
@@ -717,7 +715,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public String getCatalogSeparator() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getCatalogSeparator();
     }
@@ -726,79 +724,79 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsSchemasInDataManipulation() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsSchemasInDataManipulation();
   }
 
   @Override
   public boolean supportsSchemasInProcedureCalls() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsSchemasInProcedureCalls();
   }
 
   @Override
   public boolean supportsSchemasInTableDefinitions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsSchemasInTableDefinitions();
   }
 
   @Override
   public boolean supportsSchemasInIndexDefinitions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsSchemasInIndexDefinitions();
   }
 
   @Override
   public boolean supportsSchemasInPrivilegeDefinitions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsSchemasInPrivilegeDefinitions();
   }
 
   @Override
   public boolean supportsCatalogsInDataManipulation() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsCatalogsInDataManipulation();
   }
 
   @Override
   public boolean supportsCatalogsInProcedureCalls() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsCatalogsInProcedureCalls();
   }
 
   @Override
   public boolean supportsCatalogsInTableDefinitions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsCatalogsInTableDefinitions();
   }
 
   @Override
   public boolean supportsCatalogsInIndexDefinitions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsCatalogsInIndexDefinitions();
   }
 
   @Override
   public boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsCatalogsInPrivilegeDefinitions();
   }
 
   @Override
   public boolean supportsPositionedDelete() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsPositionedDelete();
   }
 
   @Override
   public boolean supportsPositionedUpdate() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsPositionedUpdate();
   }
 
   @Override
   public boolean supportsSelectForUpdate() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsSelectForUpdate();
     }
@@ -807,13 +805,13 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsStoredProcedures() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsStoredProcedures();
   }
 
   @Override
   public boolean supportsSubqueriesInComparisons() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsSubqueriesInComparisons();
     }
@@ -822,7 +820,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsSubqueriesInExists() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsSubqueriesInExists();
     }
@@ -831,7 +829,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsSubqueriesInIns() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsSubqueriesInIns();
     }
@@ -840,7 +838,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsSubqueriesInQuantifieds() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsSubqueriesInQuantifieds();
     }
@@ -849,7 +847,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsCorrelatedSubqueries() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsCorrelatedSubqueries();
     }
@@ -858,7 +856,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsUnion() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsUnion();
     }
@@ -867,7 +865,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsUnionAll() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsUnionAll();
     }
@@ -876,31 +874,31 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsOpenCursorsAcrossCommit() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsOpenCursorsAcrossCommit();
   }
 
   @Override
   public boolean supportsOpenCursorsAcrossRollback() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsOpenCursorsAcrossRollback();
   }
 
   @Override
   public boolean supportsOpenStatementsAcrossCommit() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsOpenStatementsAcrossCommit();
   }
 
   @Override
   public boolean supportsOpenStatementsAcrossRollback() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsOpenStatementsAcrossRollback();
   }
 
   @Override
   public int getMaxBinaryLiteralLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxBinaryLiteralLength();
     }
@@ -909,7 +907,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxCharLiteralLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxCharLiteralLength();
     }
@@ -918,7 +916,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxColumnNameLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxColumnNameLength();
     }
@@ -927,7 +925,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxColumnsInGroupBy() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxColumnsInGroupBy();
     }
@@ -936,13 +934,13 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxColumnsInIndex() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getMaxColumnsInIndex();
   }
 
   @Override
   public int getMaxColumnsInOrderBy() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxColumnsInOrderBy();
     }
@@ -951,7 +949,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxColumnsInSelect() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxColumnsInSelect();
     }
@@ -960,19 +958,19 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxColumnsInTable() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getMaxColumnsInTable();
   }
 
   @Override
   public int getMaxConnections() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getMaxConnections();
   }
 
   @Override
   public int getMaxCursorNameLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxCursorNameLength();
     }
@@ -981,13 +979,13 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxIndexLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getMaxIndexLength();
   }
 
   @Override
   public int getMaxSchemaNameLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxSchemaNameLength();
     }
@@ -996,13 +994,13 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxProcedureNameLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getMaxProcedureNameLength();
   }
 
   @Override
   public int getMaxCatalogNameLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxCatalogNameLength();
     }
@@ -1011,7 +1009,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxRowSize() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxRowSize();
     }
@@ -1020,7 +1018,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean doesMaxRowSizeIncludeBlobs() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.doesMaxRowSizeIncludeBlobs();
     }
@@ -1029,7 +1027,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxStatementLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxStatementLength();
     }
@@ -1038,7 +1036,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxStatements() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxStatements();
     }
@@ -1047,7 +1045,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxTableNameLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxTableNameLength();
     }
@@ -1056,7 +1054,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxTablesInSelect() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxTablesInSelect();
     }
@@ -1065,7 +1063,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getMaxUserNameLength() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.getMaxUserNameLength();
     }
@@ -1074,13 +1072,13 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getDefaultTransactionIsolation() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getDefaultTransactionIsolation();
   }
 
   @Override
   public boolean supportsTransactions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     if (!getServerMetaSupported()) {
       return super.supportsTransactions();
     }
@@ -1089,39 +1087,39 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsTransactionIsolationLevel(int level) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsTransactionIsolationLevel(level);
   }
 
   @Override
   public boolean supportsDataDefinitionAndDataManipulationTransactions()
       throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsDataDefinitionAndDataManipulationTransactions();
   }
 
   @Override
   public boolean supportsDataManipulationTransactionsOnly() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsDataManipulationTransactionsOnly();
   }
 
   @Override
   public boolean dataDefinitionCausesTransactionCommit() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.dataDefinitionCausesTransactionCommit();
   }
 
   @Override
   public boolean dataDefinitionIgnoredInTransactions() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.dataDefinitionIgnoredInTransactions();
   }
 
   @Override
   public ResultSet getProcedures(String catalog, String schemaPattern,
                                  String procedureNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getProcedures(catalog, schemaPattern, procedureNamePattern);
   }
 
@@ -1129,7 +1127,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getProcedureColumns(String catalog, String schemaPattern,
                                        String procedureNamePattern,
                                        String columnNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getProcedureColumns(catalog, schemaPattern,
                                      procedureNamePattern, columnNamePattern);
   }
@@ -1139,7 +1137,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
                              String schemaPattern,
                              String tableNamePattern,
                              String[] types) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.getTables(catalog, schemaPattern,tableNamePattern, types);
     } catch(DrillRuntimeException e) {
@@ -1151,7 +1149,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public ResultSet getSchemas() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.getSchemas();
     } catch(DrillRuntimeException e) {
@@ -1162,7 +1160,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public ResultSet getCatalogs() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.getCatalogs();
     } catch(DrillRuntimeException e) {
@@ -1173,14 +1171,14 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public ResultSet getTableTypes() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getTableTypes();
   }
 
   @Override
   public ResultSet getColumns(String catalog, String schema, String table,
                               String columnNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.getColumns(catalog, schema, table, columnNamePattern);
     } catch(DrillRuntimeException e) {
@@ -1193,14 +1191,14 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getColumnPrivileges(String catalog, String schema,
                                        String table,
                                        String columnNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getColumnPrivileges(catalog, schema, table, columnNamePattern);
   }
 
   @Override
   public ResultSet getTablePrivileges(String catalog, String schemaPattern,
                                       String tableNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getTablePrivileges(catalog, schemaPattern, tableNamePattern);
   }
 
@@ -1208,35 +1206,35 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getBestRowIdentifier(String catalog, String schema,
                                         String table, int scope,
                                         boolean nullable) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getBestRowIdentifier(catalog, schema, table, scope, nullable);
   }
 
   @Override
   public ResultSet getVersionColumns(String catalog, String schema,
                                      String table) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getVersionColumns(catalog, schema, table);
   }
 
   @Override
   public ResultSet getPrimaryKeys(String catalog, String schema,
                                   String table) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getPrimaryKeys(catalog, schema, table);
   }
 
   @Override
   public ResultSet getImportedKeys(String catalog, String schema,
                                    String table) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getImportedKeys(catalog, schema, table);
   }
 
   @Override
   public ResultSet getExportedKeys(String catalog, String schema,
                                    String table) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getExportedKeys(catalog, schema, table);
   }
 
@@ -1245,14 +1243,14 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
       String parentCatalog, String parentSchema, String parentTable,
       String foreignCatalog, String foreignSchema,
       String foreignTable ) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getCrossReference(parentCatalog, parentSchema, parentTable,
                                    foreignCatalog, foreignSchema, foreignTable );
   }
 
   @Override
   public ResultSet getTypeInfo() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getTypeInfo();
   }
 
@@ -1260,26 +1258,26 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getIndexInfo(String catalog, String schema, String table,
                                 boolean unique,
                                 boolean approximate) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getIndexInfo(catalog, schema, table, unique, approximate);
   }
 
   @Override
   public boolean supportsResultSetType(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsResultSetType(type);
   }
 
   @Override
   public boolean supportsResultSetConcurrency(int type,
                                               int concurrency) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsResultSetConcurrency(type, concurrency);
   }
 
   @Override
   public boolean ownUpdatesAreVisible(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.ownUpdatesAreVisible(type);
     }
@@ -1296,7 +1294,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean ownDeletesAreVisible(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.ownDeletesAreVisible(type);
     }
@@ -1313,7 +1311,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean ownInsertsAreVisible(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.ownInsertsAreVisible(type);
     }
@@ -1330,7 +1328,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean othersUpdatesAreVisible(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.othersUpdatesAreVisible(type);
     }
@@ -1347,7 +1345,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean othersDeletesAreVisible(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.othersDeletesAreVisible(type);
     }
@@ -1364,7 +1362,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean othersInsertsAreVisible(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.othersInsertsAreVisible(type);
     }
@@ -1381,7 +1379,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean updatesAreDetected(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.updatesAreDetected(type);
     }
@@ -1398,7 +1396,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean deletesAreDetected(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.deletesAreDetected(type);
     }
@@ -1415,7 +1413,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean insertsAreDetected(int type) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.insertsAreDetected(type);
     }
@@ -1432,7 +1430,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsBatchUpdates() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsBatchUpdates();
   }
 
@@ -1440,7 +1438,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getUDTs(String catalog, String schemaPattern,
                            String typeNamePattern,
                            int[] types) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getUDTs(catalog, schemaPattern, typeNamePattern, types);
   }
 
@@ -1452,39 +1450,39 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public boolean supportsSavepoints() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsSavepoints();
   }
 
   @Override
   public boolean supportsNamedParameters() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsNamedParameters();
   }
 
   @Override
   public boolean supportsMultipleOpenResults() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsMultipleOpenResults();
   }
 
   @Override
   public boolean supportsGetGeneratedKeys() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsGetGeneratedKeys();
   }
 
   @Override
   public ResultSet getSuperTypes(String catalog, String schemaPattern,
                                  String typeNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getSuperTypes(catalog, schemaPattern, typeNamePattern);
   }
 
   @Override
   public ResultSet getSuperTables(String catalog, String schemaPattern,
                                   String tableNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getSuperTables(catalog, schemaPattern, tableNamePattern);
   }
 
@@ -1492,14 +1490,14 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getAttributes(String catalog, String schemaPattern,
                                  String typeNamePattern,
                                  String attributeNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getAttributes(catalog, schemaPattern, typeNamePattern,
                                attributeNamePattern);
   }
 
   @Override
   public boolean supportsResultSetHoldability(int holdability) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     try {
       return super.supportsResultSetHoldability(holdability);
     }
@@ -1519,9 +1517,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     // Can't throw any SQLException because Avatica's getResultSetHoldability()
     // is missing "throws SQLException".
     try {
-      throwIfClosed();
-    } catch (AlreadyClosedSqlException e) {
-      throw new RuntimeException(e.getMessage(), e);
+      checkOpen();
     } catch (SQLException e) {
       throw new RuntimeException(e.getMessage(), e);
     }
@@ -1530,7 +1526,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getDatabaseMajorVersion() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     Version version = getServerVersion();
     if (version == null) {
       return super.getDatabaseMajorVersion();
@@ -1540,7 +1536,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getDatabaseMinorVersion() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     Version version = getServerVersion();
     if (version == null) {
       return super.getDatabaseMinorVersion();
@@ -1550,69 +1546,69 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
 
   @Override
   public int getJDBCMajorVersion() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getJDBCMajorVersion();
   }
 
   @Override
   public int getJDBCMinorVersion() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getJDBCMinorVersion();
   }
 
   @Override
   public int getSQLStateType() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getSQLStateType();
   }
 
   @Override
   public boolean locatorsUpdateCopy() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.locatorsUpdateCopy();
   }
 
   @Override
   public boolean supportsStatementPooling() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsStatementPooling();
   }
 
   @Override
   public RowIdLifetime getRowIdLifetime() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getRowIdLifetime();
   }
 
   @Override
   public ResultSet getSchemas(String catalog,
                               String schemaPattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getSchemas(catalog, schemaPattern);
   }
 
   @Override
   public boolean supportsStoredFunctionsUsingCallSyntax() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.supportsStoredFunctionsUsingCallSyntax();
   }
 
   @Override
   public boolean autoCommitFailureClosesAllResultSets() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.autoCommitFailureClosesAllResultSets();
   }
 
   @Override
   public ResultSet getClientInfoProperties() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getClientInfoProperties();
   }
 
   @Override
   public ResultSet getFunctions(String catalog, String schemaPattern,
                                 String functionNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getFunctions(catalog, schemaPattern, functionNamePattern);
   }
 
@@ -1620,7 +1616,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getFunctionColumns(String catalog, String schemaPattern,
                                       String functionNamePattern,
                                       String columnNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getFunctionColumns(catalog, schemaPattern, functionNamePattern,
                                     columnNamePattern);
   }
@@ -1629,14 +1625,14 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getPseudoColumns(String catalog, String schemaPattern,
                                     String tableNamePattern,
                                     String columnNamePattern) throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.getPseudoColumns(catalog, schemaPattern, tableNamePattern,
                                   columnNamePattern);
   }
 
   @Override
   public boolean generatedKeyAlwaysReturned() throws SQLException {
-    throwIfClosed();
+    checkOpen();
     return super.generatedKeyAlwaysReturned();
   }
 
