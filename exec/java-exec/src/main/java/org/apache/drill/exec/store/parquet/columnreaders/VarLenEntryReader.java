@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import com.google.common.base.Preconditions;
 import java.nio.ByteBuffer;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
@@ -51,6 +52,8 @@ final class VarLenEntryReader extends VarLenAbstractPageEntryReader {
 
     final int[] valueLengths = entry.getValuesLength();
     final int readBatch = Math.min(entry.getMaxEntries(), valuesToRead);
+    Preconditions.checkState(readBatch > 0, "Read batch count [%s] should be greater than zero", readBatch);
+
     final byte[] tgtBuff = entry.getInternalDataArray();
     final byte[] srcBuff = buffer.array();
     final int srcLen = buffer.remaining();
