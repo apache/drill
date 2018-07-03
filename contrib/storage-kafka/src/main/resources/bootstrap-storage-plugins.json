@@ -2,8 +2,8 @@
   "storage":{
     kafka : {
       type:"kafka",
-      enabled: false,
-      kafkaConsumerProps: {"bootstrap.servers":"localhost:9092", "group.id" : "drill-consumer"}
+      kafkaConsumerProps: {"bootstrap.servers":"localhost:9092", "group.id" : "drill-consumer"},
+      enabled: false
     }
   }
 }

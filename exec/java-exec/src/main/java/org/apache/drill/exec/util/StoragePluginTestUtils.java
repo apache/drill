@@ -90,6 +90,7 @@ public class StoragePluginTestUtils {
         pluginConfig.getConfig(),
         newWorkspaces,
         pluginConfig.getFormats());
+    newPluginConfig.setEnabled(pluginConfig.isEnabled());
     pluginRegistry.createOrUpdate(pluginName, newPluginConfig, true);
   }
 
@@ -137,6 +138,7 @@ public class StoragePluginTestUtils {
         fileSystemConfig.getConfig(),
         fileSystemConfig.getWorkspaces(),
         newFormats);
+    newFileSystemConfig.setEnabled(fileSystemConfig.isEnabled());
 
     pluginRegistry.createOrUpdate(storagePlugin, newFileSystemConfig, true);
   }

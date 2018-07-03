@@ -100,6 +100,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public PluginConfigWrapper getStoragePluginJSON(@PathParam("name") String name) {
     try {
+      // TODO: DRILL-6412: No need to get StoragePlugin. It is enough to have plugin name and config here
       StoragePlugin plugin = storage.getPlugin(name);
       if (plugin != null) {
         return new PluginConfigWrapper(name, plugin.getConfig());

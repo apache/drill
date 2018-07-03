@@ -1364,6 +1364,11 @@
         <version>${jackson.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.honton.chas.hocon</groupId>
+        <artifactId>jackson-dataformat-hocon</artifactId>
+        <version>1.1.1</version>
+      </dependency>
+      <dependency>
         <groupId>com.mapr.db</groupId>
         <artifactId>maprdb</artifactId>
         <version>${mapr.release.version}</version>
@@ -1539,6 +1544,16 @@
             <artifactId>hadoop-common</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.typesafe</groupId>
+        <artifactId>config</artifactId>
+        <version>1.0.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
