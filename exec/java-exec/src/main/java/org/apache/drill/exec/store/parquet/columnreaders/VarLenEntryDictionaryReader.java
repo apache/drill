@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import com.google.common.base.Preconditions;
 import java.nio.ByteBuffer;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.DictionaryReaderWrapper;
@@ -50,6 +51,8 @@ final class VarLenEntryDictionaryReader extends VarLenAbstractPageEntryReader {
     final DictionaryReaderWrapper valueReader = pageInfo.dictionaryValueReader;
     final int[] valueLengths = entry.getValuesLength();
     final int readBatch = Math.min(entry.getMaxEntries(), valuesToRead);
+    Preconditions.checkState(readBatch > 0, "Read batch count [%s] should be greater than zero", readBatch);
+
     final byte[] tgtBuff = entry.getInternalDataArray();
     final int tgtLen = tgtBuff.length;
 

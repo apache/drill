@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -106,11 +107,13 @@ final class VarLenBulkPageReader {
     pageInfo.dictionaryValueReader = pageInfoInput.dictionaryValueReader;
     pageInfo.numPageValues = pageInfoInput.numPageValues;
     if (clear) {
-    buffer.clear();
-  }
+      buffer.clear();
+    }
   }
 
   final VarLenColumnBulkEntry getEntry(int valuesToRead) {
+    Preconditions.checkArgument(valuesToRead > 0, "Number of values to read [%s] should be greater than zero", valuesToRead);
+
     VarLenColumnBulkEntry entry = null;
 
     // If there is overflow data, then we need to consume it first

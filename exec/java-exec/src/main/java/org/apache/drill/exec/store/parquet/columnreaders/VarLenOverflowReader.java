@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import com.google.common.base.Preconditions;
 import java.nio.ByteBuffer;
 
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VarLenColumnBulkInputCallback;
@@ -80,6 +81,8 @@ public final class VarLenOverflowReader extends VarLenAbstractEntryReader {
     // load some overflow data for processing
     final int maxValues = Math.min(entry.getMaxEntries(), valuesToRead);
     final int numAvailableValues = overflowDataCache.load(overflowState.currValueIdx, maxValues);
+    Preconditions.checkState(numAvailableValues > 0, "Number values to read [%s] should be greater than zero", numAvailableValues);
+
     final int firstValueDataOffset = getDataBufferStartOffset() + adjustDataOffset(overflowState.currValueIdx);
     int totalDataLen = 0;
     int currValueIdx = overflowState.currValueIdx;

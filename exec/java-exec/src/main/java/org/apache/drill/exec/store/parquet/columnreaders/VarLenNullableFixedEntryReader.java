@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import com.google.common.base.Preconditions;
 import java.nio.ByteBuffer;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.PageDataInfo;
@@ -33,19 +34,20 @@ final class VarLenNullableFixedEntryReader extends VarLenAbstractPageEntryReader
     VarLenColumnBulkInputCallback containerCallback) {
 
     super(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
+    Preconditions.checkArgument(columnPrecInfo.precision >= 0, "Fixed length precision cannot be lower than zero");
   }
 
   /** {@inheritDoc} */
   @Override
   final VarLenColumnBulkEntry getEntry(int valuesToRead) {
-    assert columnPrecInfo.precision >= 0 : "Fixed length precision cannot be lower than zero";
-
     // TODO - We should not use force reload for sparse columns (values with lot of nulls)
     load(true); // load new data to process
 
     final int expectedDataLen = columnPrecInfo.precision;
     final int entrySz = 4 + columnPrecInfo.precision;
     final int readBatch = Math.min(entry.getMaxEntries(), valuesToRead);
+    Preconditions.checkState(readBatch > 0, "Read batch count [%s] should be greater than zero", readBatch);
+
     final int[] valueLengths = entry.getValuesLength();
     final byte[] tgtBuff = entry.getInternalDataArray();
     final byte[] srcBuff = buffer.array();
