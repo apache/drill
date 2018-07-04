@@ -44,7 +44,7 @@ public class KafkaScanBatchCreator implements BatchCreator<KafkaSubScan> {
     List<SchemaPath> columns = subScan.getColumns() != null ? subScan.getColumns() : GroupScan.ALL_COLUMNS;
 
     List<RecordReader> readers = new LinkedList<>();
-    for (KafkaSubScan.KafkaSubScanSpec scanSpec : subScan.getPartitionSubScanSpecList()) {
+    for (KafkaPartitionScanSpec scanSpec : subScan.getPartitionSubScanSpecList()) {
       readers.add(new KafkaRecordReader(scanSpec, columns, context, subScan.getKafkaStoragePlugin()));
     }
 
