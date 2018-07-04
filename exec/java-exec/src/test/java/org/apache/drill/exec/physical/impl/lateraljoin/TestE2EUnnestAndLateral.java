@@ -18,8 +18,10 @@
 package org.apache.drill.exec.physical.impl.lateraljoin;
 
 import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.TestBuilder;
 import org.junit.BeforeClass;
@@ -43,8 +45,10 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   public static void setupTestFiles() throws Exception {
     dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_1));
     dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_2));
-    startCluster(ClusterFixture.builder(dirTestWatcher).maxParallelization(1));
-    test("alter session set `planner.enable_unnest_lateral`=%s", true);
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .sessionOption(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+        .maxParallelization(1);
+    startCluster(builder);
   }
 
   /***********************************************************************************************
@@ -97,7 +101,6 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   /**
    * Test which disables the TopN operator from planner settings before running query using SORT and LIMIT in
    * subquery. The same query as in above test is executed and same result is expected.
-   * @throws Exception
    */
   @Test
   public void testLateral_WithSortAndLimitInSubQuery() throws Exception {

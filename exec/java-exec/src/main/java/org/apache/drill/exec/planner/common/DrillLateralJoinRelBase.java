@@ -50,15 +50,15 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
     this.excludeCorrelateColumn = excludeCorrelateCol;
   }
 
-  @Override public RelOptCost computeSelfCost(RelOptPlanner planner,
-                                              RelMetadataQuery mq) {
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     DrillCostBase.DrillCostFactory costFactory = (DrillCostBase.DrillCostFactory) planner.getCostFactory();
 
-    double rowCount = mq.getRowCount(this.getLeft());
+    double rowCount = estimateRowCount(mq);
     long fieldWidth = PrelUtil.getPlannerSettings(planner).getOptions()
-        .getOption(ExecConstants.AVERAGE_FIELD_WIDTH_KEY).num_val;
+        .getLong(ExecConstants.AVERAGE_FIELD_WIDTH_KEY);
 
-    double rowSize = (this.getLeft().getRowType().getFieldList().size()) * fieldWidth;
+    double rowSize = left.getRowType().getFieldList().size() * fieldWidth;
 
     double cpuCost = rowCount * rowSize * DrillCostBase.BASE_CPU_COST;
     double memCost = !excludeCorrelateColumn ? CORRELATE_MEM_COPY_COST : 0.0;
@@ -116,5 +116,10 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
       return getCluster().getTypeFactory().createStructType(fields, fieldNames);
     }
     return inputRowType;
+  }
+
+  @Override
+  public double estimateRowCount(RelMetadataQuery mq) {
+    return mq.getRowCount(left);
   }
 }
