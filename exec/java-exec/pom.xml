@@ -312,38 +312,23 @@
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
+      <artifactId>curator-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-framework</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-recipes</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
       <artifactId>curator-x-discovery</artifactId>
-      <version>2.7.1</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>log4j</artifactId>
-          <groupId>log4j</groupId>
-        </exclusion>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-test</artifactId>
-      <version>${curator.test.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.carrotsearch</groupId>
