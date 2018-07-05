@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.logical;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -43,6 +41,8 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -88,7 +88,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
       final Table hiveTable = hiveScan.getHiveReadEntry().getTable();
       final HiveReadEntry hiveReadEntry = hiveScan.getHiveReadEntry();
 
-      final HiveMetadataProvider hiveMetadataProvider = new HiveMetadataProvider(hiveScan.getUserName(), hiveReadEntry, hiveScan.getStoragePlugin().getHiveConf());
+      final HiveMetadataProvider hiveMetadataProvider = new HiveMetadataProvider(hiveScan.getUserName(), hiveReadEntry, hiveScan.getHiveConf());
       final List<HiveMetadataProvider.LogicalInputSplit> logicalInputSplits = hiveMetadataProvider.getInputSplits(hiveReadEntry);
 
       if (logicalInputSplits.isEmpty()) {
@@ -123,7 +123,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
    * Create mapping of Hive partition column to directory column mapping.
    */
   private Map<String, String> getPartitionColMapping(final Table hiveTable, final String partitionColumnLabel) {
-    final Map<String, String> partitionColMapping = Maps.newHashMap();
+    final Map<String, String> partitionColMapping = new HashMap<>();
     int i = 0;
     for (FieldSchema col : hiveTable.getPartitionKeys()) {
       partitionColMapping.put(col.getName(), partitionColumnLabel+i);
@@ -143,8 +143,8 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     final RelDataTypeFactory typeFactory = hiveScanRel.getCluster().getTypeFactory();
     final RelDataType varCharType = typeFactory.createSqlType(SqlTypeName.VARCHAR);
 
-    final List<String> nativeScanColNames = Lists.newArrayList();
-    final List<RelDataType> nativeScanColTypes = Lists.newArrayList();
+    final List<String> nativeScanColNames = new ArrayList<>();
+    final List<RelDataType> nativeScanColTypes = new ArrayList<>();
     for (RelDataTypeField field : hiveScanRel.getRowType().getFieldList()) {
       final String dirColName = partitionColMapping.get(field.getName());
       if (dirColName != null) { // partition column
@@ -161,8 +161,8 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     // Create the list of projected columns set in HiveScan. The order of this list may not be same as the order of
     // columns in HiveScan row type. Note: If the HiveScan.getColumn() contains a '*', we just need to add it as it is,
     // unlike above where we expanded the '*'. HiveScan and related (subscan) can handle '*'.
-    final List<SchemaPath> nativeScanCols = Lists.newArrayList();
-    for(SchemaPath colName : hiveScanRel.getColumns()) {
+    final List<SchemaPath> nativeScanCols = new ArrayList<>();
+    for (SchemaPath colName : hiveScanRel.getColumns()) {
       final String partitionCol = partitionColMapping.get(colName.getRootSegmentPath());
       if (partitionCol != null) {
         nativeScanCols.add(SchemaPath.getSimplePath(partitionCol));
@@ -177,7 +177,8 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
             hiveScan.getUserName(),
             nativeScanCols,
             hiveScan.getStoragePlugin(),
-            logicalInputSplits);
+            logicalInputSplits,
+            hiveScan.getConfProperties());
 
     return new DrillScanRel(
         hiveScanRel.getCluster(),
@@ -194,7 +195,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
   private DrillProjectRel createProjectRel(final DrillScanRel hiveScanRel,
       final Map<String, String> partitionColMapping, final DrillScanRel nativeScanRel) {
 
-    final List<RexNode> rexNodes = Lists.newArrayList();
+    final List<RexNode> rexNodes = new ArrayList<>();
     final RexBuilder rb = hiveScanRel.getCluster().getRexBuilder();
     final RelDataType hiveScanRowType = hiveScanRel.getRowType();
 

@@ -17,11 +17,14 @@
  */
 package org.apache.drill.exec.server.options;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
@@ -40,15 +43,13 @@ import org.apache.drill.exec.util.AssertionUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
- * {@link OptionManager} that holds options within {@link org.apache.drill.exec.server.DrillbitContext}.
- * Only one instance of this class exists per drillbit. Options set at the system level affect the entire system and
- * persist between restarts.
- */
-
-/**
+ *  <p> {@link OptionManager} that holds options within {@link org.apache.drill.exec.server.DrillbitContext}.
+ *  Only one instance of this class exists per drillbit. Options set at the system level affect the entire system and
+ *  persist between restarts.
+ *  </p>
+ *
  *  <p> All the system options are externalized into conf file. While adding a new system option
  *  a validator should be added and the default value for the option should be set in
  *  the conf files(example : drill-module.conf) under the namespace drill.exec.options.
@@ -173,6 +174,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR),
       new OptionDefinition(ExecConstants.HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER_VALIDATOR),
       new OptionDefinition(ExecConstants.HIVE_OPTIMIZE_MAPRDB_JSON_SCAN_WITH_NATIVE_READER_VALIDATOR),
+      new OptionDefinition(ExecConstants.HIVE_CONF_PROPERTIES_VALIDATOR),
       new OptionDefinition(ExecConstants.SLICE_TARGET_OPTION),
       new OptionDefinition(ExecConstants.AFFINITY_FACTOR),
       new OptionDefinition(ExecConstants.MAX_WIDTH_GLOBAL),
@@ -237,11 +239,13 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.FRAG_RUNNER_RPC_TIMEOUT_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, true)),
     };
 
-    final CaseInsensitiveMap<OptionDefinition> map = CaseInsensitiveMap.newHashMap();
+    CaseInsensitiveMap<OptionDefinition> map = Arrays.stream(definitions)
+      .collect(Collectors.toMap(
+        d -> d.getValidator().getOptionName(),
+        Function.identity(),
+        (o, n) -> n,
+        CaseInsensitiveMap::newHashMap));
 
-    for (final OptionDefinition definition: definitions) {
-      map.put(definition.getValidator().getOptionName(), definition);
-    }
 
     if (AssertionUtil.isAssertionsEnabled()) {
       map.put(ExecConstants.DRILLBIT_CONTROL_INJECTIONS, new OptionDefinition(ExecConstants.DRILLBIT_CONTROLS_VALIDATOR));
@@ -295,7 +299,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
    * Initializes this option manager.
    *
    * @return this option manager
-   * @throws Exception
+   * @throws Exception if unable to initialize option manager
    */
   public SystemOptionManager init() throws Exception {
     options = provider.getOrCreateStore(config);
@@ -395,16 +399,13 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
 
   @Override
   public void deleteAllLocalOptions() {
-    final Set<String> names = Sets.newHashSet();
-    for (final Map.Entry<String, PersistedOptionValue> entry : Lists.newArrayList(options.getAll())) {
-      names.add(entry.getKey());
-    }
-    for (final String name : names) {
-      options.delete(name); // should be lowercase
-    }
+    Iterable<Map.Entry<String, PersistedOptionValue>> allOptions = () -> options.getAll();
+    StreamSupport.stream(allOptions.spliterator(), false)
+      .map(Entry::getKey)
+      .forEach(name -> options.delete(name)); // should be lowercase
   }
 
-  public static CaseInsensitiveMap<OptionValue> populateDefaultValues(Map<String, OptionDefinition> definitions, DrillConfig bootConfig) {
+  private CaseInsensitiveMap<OptionValue> populateDefaultValues(Map<String, OptionDefinition> definitions, DrillConfig bootConfig) {
     // populate the options from the config
     final Map<String, OptionValue> defaults = new HashMap<>();
 

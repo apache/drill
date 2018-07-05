@@ -78,6 +78,7 @@ import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -113,7 +114,6 @@ public class SqlConverter {
   private final DrillConfig drillConfig;
   private RelOptCluster cluster;
 
-  private String sql;
   private VolcanoPlanner planner;
   private boolean useRootSchema = false;
 
@@ -187,12 +187,10 @@ public class SqlConverter {
 
   public SqlNode validate(final SqlNode parsedNode) {
     try {
-      SqlNode validatedNode = validator.validate(parsedNode);
-      return validatedNode;
+      return validator.validate(parsedNode);
     } catch (RuntimeException e) {
       UserException.Builder builder = UserException
-          .validationError(e)
-          .addContext("SQL Query", sql);
+          .validationError(e);
       if (isInnerQuery) {
         builder.message("Failure validating a view your query is dependent upon.");
       }
@@ -240,7 +238,7 @@ public class SqlConverter {
 
   private class DrillValidator extends SqlValidatorImpl {
 
-    protected DrillValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader,
+    DrillValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory, SqlConformance conformance) {
       super(opTab, catalogReader, typeFactory, conformance);
     }
@@ -382,14 +380,10 @@ public class SqlConverter {
 
     //To avoid unexpected column errors set a value of top to false
     final RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, false);
-    final RelRoot rel2 = rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
-    return rel2;
+    return rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
   }
 
   private class Expander implements RelOptTable.ViewExpander {
-
-    public Expander() {
-    }
 
     @Override
     public RelRoot expandView(RelDataType rowType, String queryString, List<String> schemaPath, List<String> viewPath) {
@@ -550,7 +544,7 @@ public class SqlConverter {
      * also preserving nullability.
      *
      * <p>Tries to expand the cast, and therefore the result may be something
-     * other than a {@link RexCall} to the CAST operator, such as a
+     * other than a {@link org.apache.calcite.rex.RexCall} to the CAST operator, such as a
      * {@link RexLiteral} if {@code matchNullability} is false.
      *
      * @param type             Type to cast to
@@ -611,7 +605,7 @@ public class SqlConverter {
     /**
      * Disallow temporary tables presence in sql statement (ex: in view definitions)
      */
-    public void disallowTemporaryTables() {
+    void disallowTemporaryTables() {
       this.allowTemporaryTables = false;
     }
 
@@ -647,13 +641,19 @@ public class SqlConverter {
         }
       }
 
-      return super.getTable(names);
+      Prepare.PreparingTable table = super.getTable(names);
+      DrillTable unwrap;
+      // add session options if found table is Drill table
+      if (table != null && (unwrap = table.unwrap(DrillTable.class)) != null) {
+        unwrap.setOptions(session.getOptions());
+      }
+      return table;
     }
 
     @Override
     public List<List<String>> getSchemaPaths() {
       if (useRootSchema) {
-        return ImmutableList.<List<String>>of(ImmutableList.<String>of());
+        return ImmutableList.of(ImmutableList.of());
       }
       return super.getSchemaPaths();
     }
@@ -662,8 +662,8 @@ public class SqlConverter {
      * check if the schema provided is a valid schema:
      * <li>schema is not indicated (only one element in the names list)<li/>
      *
-     * @param names             list of schema and table names, table name is always the last element
-     * @return throws a userexception if the schema is not valid.
+     * @param names list of schema and table names, table name is always the last element
+     * @throws UserException if the schema is not valid.
      */
     private void isValidSchema(final List<String> names) throws UserException {
       SchemaPlus defaultSchema = session.getDefaultSchema(this.rootSchema);

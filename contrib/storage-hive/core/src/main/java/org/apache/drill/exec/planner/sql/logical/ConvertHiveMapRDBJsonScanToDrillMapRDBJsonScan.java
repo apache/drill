@@ -88,7 +88,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
       HiveScan hiveScan = (HiveScan) hiveScanRel.getGroupScan();
       HiveReadEntry hiveReadEntry = hiveScan.getHiveReadEntry();
       HiveMetadataProvider hiveMetadataProvider = new HiveMetadataProvider(hiveScan.getUserName(), hiveReadEntry,
-          hiveScan.getStoragePlugin().getHiveConf());
+          hiveScan.getHiveConf());
       if (hiveMetadataProvider.getInputSplits(hiveReadEntry).isEmpty()) {
         // table is empty, use original scan
         return;
@@ -134,7 +134,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
     List<SchemaPath> hiveScanCols = hiveScanRel.getColumns().stream()
         .map(colNameSchemaPath -> replaceOverriddenSchemaPath(parameters, colNameSchemaPath))
         .collect(Collectors.toList());
-    JsonTableGroupScan nariveMapRDBScan =
+    JsonTableGroupScan nativeMapRDBScan =
         new JsonTableGroupScan(
             hiveScan.getUserName(),
             hiveScan.getStoragePlugin(),
@@ -155,7 +155,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
         hiveScanRel.getCluster(),
         hiveScanRel.getTraitSet(),
         hiveScanRel.getTable(),
-        nariveMapRDBScan,
+        nativeMapRDBScan,
         nativeScanRowType,
         hiveScanCols);
   }
