@@ -393,6 +393,27 @@ public class QueryBuilder {
 
   /**
    * Run the query that is expected to return (at least) one row
+   * with the only (or first) column returning a double value.
+   * The double value cannot be null.
+   *
+   * @return the value of the first column of the first row
+   * @throws RpcException if anything goes wrong
+   */
+
+  public double singletonDouble() throws RpcException {
+    RowSet rowSet = rowSet();
+    if (rowSet == null) {
+      throw new IllegalStateException("No rows returned");
+    }
+    RowSetReader reader = rowSet.reader();
+    reader.next();
+    double value = reader.scalar(0).getDouble();
+    rowSet.clear();
+    return value;
+  }
+
+  /**
+   * Run the query that is expected to return (at least) one row
    * with the only (or first) column returning a int value.
    * The int value cannot be null.
    *
