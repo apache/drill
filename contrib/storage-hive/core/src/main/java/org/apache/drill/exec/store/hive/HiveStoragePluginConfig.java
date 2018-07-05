@@ -19,28 +19,31 @@ package org.apache.drill.exec.store.hive;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(HiveStoragePluginConfig.NAME)
 public class HiveStoragePluginConfig extends StoragePluginConfigBase {
-  @JsonProperty
-  public Map<String, String> configProps;
 
   public static final String NAME = "hive";
 
-  @JsonIgnore
-  public Map<String, String> getHiveConfigOverride() {
-    return configProps;
-  }
+  private final Map<String, String> configProps;
 
   @JsonCreator
-  public HiveStoragePluginConfig(@JsonProperty("config") Map<String, String> props) {
-    this.configProps = props;
+  public HiveStoragePluginConfig(@JsonProperty("configProps")
+                                 // previously two names were allowed due to incorrectly written ser / der logic
+                                 // allowing to use both during deserialization for backward compatibility
+                                 @JsonAlias("config") Map<String, String> configProps) {
+    this.configProps = configProps;
+  }
+
+  @JsonProperty
+  public Map<String, String> getConfigProps() {
+    return configProps;
   }
 
   @Override

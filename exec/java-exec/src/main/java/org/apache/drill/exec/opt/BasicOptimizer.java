@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.opt;
 
-import com.google.common.collect.Lists;
-
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -28,9 +26,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.GroupingAggregate;
 import org.apache.drill.common.logical.data.Join;
-import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.logical.data.Project;
@@ -53,6 +49,7 @@ import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
+import org.apache.drill.exec.physical.config.UnnestPOP;
 import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -64,6 +61,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BasicOptimizer extends Optimizer {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicOptimizer.class);
@@ -99,8 +97,7 @@ public class BasicOptimizer extends Optimizer {
         .version(logicalProperties.version)
         .generator(logicalProperties.generator)
         .options(new JSONOptions(context.getOptions().getOptionList())).build();
-    final PhysicalPlan p = new PhysicalPlan(props, physOps);
-    return p;
+    return new PhysicalPlan(props, physOps);
   }
 
   public static class BasicOptimizationContext implements OptimizationContext {
@@ -128,30 +125,28 @@ public class BasicOptimizer extends Optimizer {
      */
     private final LogicalPlan logicalPlan;
 
-    public LogicalConverter(final LogicalPlan logicalPlan) {
+    LogicalConverter(final LogicalPlan logicalPlan) {
       this.logicalPlan = logicalPlan;
     }
 
     @Override
     public PhysicalOperator visitGroupingAggregate(GroupingAggregate groupBy, Object value) throws OptimizerException {
-      final List<Ordering> orderDefs = Lists.newArrayList();
       PhysicalOperator input = groupBy.getInput().accept(this, value);
 
       if (groupBy.getKeys().size() > 0) {
-        for(NamedExpression e : groupBy.getKeys()) {
-          orderDefs.add(new Ordering(Direction.ASCENDING, e.getExpr(), NullDirection.FIRST));
-        }
+        List<Ordering> orderDefs = groupBy.getKeys().stream()
+            .map(e -> new Ordering(Direction.ASCENDING, e.getExpr(), NullDirection.FIRST))
+            .collect(Collectors.toList());
         input = new Sort(input, orderDefs, false);
       }
 
-      final StreamingAggregate sa = new StreamingAggregate(input, groupBy.getKeys(), groupBy.getExprs(), 1.0f);
-      return sa;
+      return new StreamingAggregate(input, groupBy.getKeys(), groupBy.getExprs(), 1.0f);
     }
 
     @Override
     public PhysicalOperator visitWindow(final Window window, final Object value) throws OptimizerException {
       PhysicalOperator input = window.getInput().accept(this, value);
-      final List<Ordering> ods = Lists.newArrayList();
+      final List<Ordering> ods = new ArrayList<>();
 
       input = new Sort(input, ods, false);
 
@@ -162,11 +157,7 @@ public class BasicOptimizer extends Optimizer {
     @Override
     public PhysicalOperator visitOrder(final Order order, final Object value) throws OptimizerException {
       final PhysicalOperator input = order.getInput().accept(this, value);
-      final List<Ordering> ods = Lists.newArrayList();
-      for (Ordering o : order.getOrderings()){
-        ods.add(o);
-      }
-
+      final List<Ordering> ods = new ArrayList<>(order.getOrderings());
       return new SelectionVectorRemover(new Sort(input, ods, false));
     }
 
@@ -180,18 +171,20 @@ public class BasicOptimizer extends Optimizer {
     @Override
     public PhysicalOperator visitJoin(final Join join, final Object value) throws OptimizerException {
       PhysicalOperator leftOp = join.getLeft().accept(this, value);
-      final List<Ordering> leftOrderDefs = Lists.newArrayList();
-      for(JoinCondition jc : join.getConditions()){
-        leftOrderDefs.add(new Ordering(Direction.ASCENDING, jc.getLeft()));
-      }
+
+      List<Ordering> leftOrderDefs = join.getConditions().stream()
+          .map(jc -> new Ordering(Direction.ASCENDING, jc.getLeft()))
+          .collect(Collectors.toList());
+
       leftOp = new Sort(leftOp, leftOrderDefs, false);
       leftOp = new SelectionVectorRemover(leftOp);
 
       PhysicalOperator rightOp = join.getRight().accept(this, value);
-      final List<Ordering> rightOrderDefs = Lists.newArrayList();
-      for(JoinCondition jc : join.getConditions()){
-        rightOrderDefs.add(new Ordering(Direction.ASCENDING, jc.getRight()));
-      }
+
+      List<Ordering> rightOrderDefs = join.getConditions().stream()
+          .map(jc -> new Ordering(Direction.ASCENDING, jc.getRight()))
+          .collect(Collectors.toList());
+
       rightOp = new Sort(rightOp, rightOrderDefs, false);
       rightOp = new SelectionVectorRemover(rightOp);
 
@@ -210,7 +203,7 @@ public class BasicOptimizer extends Optimizer {
       try {
         final StoragePlugin storagePlugin = queryContext.getStorage().getPlugin(config);
         final String user = userSession.getSession().getCredentials().getUserName();
-        return storagePlugin.getPhysicalScan(user, scan.getSelection());
+        return storagePlugin.getPhysicalScan(user, scan.getSelection(), userSession.getSession().getOptions());
       } catch (IOException | ExecutionSetupException e) {
         throw new OptimizerException("Failure while attempting to retrieve storage engine.", e);
       }
@@ -241,8 +234,8 @@ public class BasicOptimizer extends Optimizer {
     }
 
     @Override
-    public PhysicalOperator visitUnnest(final Unnest unnest, final Object obj) throws OptimizerException {
-      return new org.apache.drill.exec.physical.config.UnnestPOP(null, unnest.getColumn());
+    public PhysicalOperator visitUnnest(final Unnest unnest, final Object obj) {
+      return new UnnestPOP(null, unnest.getColumn());
     }
   }
 }
