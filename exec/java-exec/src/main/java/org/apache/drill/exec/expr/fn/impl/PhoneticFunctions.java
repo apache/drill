@@ -160,7 +160,6 @@ public class PhoneticFunctions {
    * Usage:  SELECT dm_soundex( string ) FROM...
    */
 
-
   @FunctionTemplate(name = "dm_soundex", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class DaitchMokotoffFunction implements DrillSimpleFunc {
 
@@ -262,7 +261,6 @@ public class PhoneticFunctions {
     }
   }
 
-
   /**
    * Encodes a string into a Refined Soundex value. Soundex is an encoding used to relate similar names, but can also be used as a general purpose scheme to find word with similar phonemes.
    * <p>
@@ -332,9 +330,8 @@ public class PhoneticFunctions {
       out.end = outputString.getBytes().length;
       buffer.setBytes(0, outputString.getBytes());
     }
-
   }
-  
+
   /**
    * Implements the Metaphone phonetic algorithm (https://en.wikipedia.org/wiki/Metaphone),
    * and calculates a given string's Metaphone value.
