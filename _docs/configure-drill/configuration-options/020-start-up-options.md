@@ -1,6 +1,6 @@
 ---
 title: "Start-Up Options"
-date: 2018-06-20 01:48:00 UTC
+date: 2018-07-06 21:22:11 UTC
 parent: "Configuration Options"
 ---
 The start-up options for Drill reside in a [HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) configuration file format, which is a hybrid between a properties file and a JSON file. Drill start-up options consist of a group of files with a nested relationship. At the bottom of the file hierarchy are the default files that Drill provides, starting with `drill-default.conf`. 
