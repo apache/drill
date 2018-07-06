@@ -49,6 +49,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnnestRecordBatch.class);
 
   private Unnest unnest;
+  private boolean hasNewSchema = false; // set to true if a new schema was encountered and an empty batch was
+                                        // sent. The next iteration, we need to make sure the record batch sizer
+                                        // is updated before we process the actual data.
   private boolean hasRemainder = false; // set to true if there is data left over for the current row AND if we want
                                         // to keep processing it. Kill may be called by a limit in a subquery that
                                         // requires us to stop processing thecurrent row, but not stop processing
@@ -180,6 +183,12 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       return nextState;
     }
 
+    if (hasNewSchema) {
+      memoryManager.update();
+      hasNewSchema = false;
+      return doWork();
+    }
+
     if (hasRemainder) {
       return doWork();
     }
@@ -194,7 +203,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       state = BatchState.NOT_FIRST;
       try {
         stats.startSetup();
-        hasRemainder = true; // next call to next will handle the actual data.
+        hasNewSchema = true; // next call to next will handle the actual data.
         logger.debug("First batch received");
         schemaChanged(); // checks if schema has changed (redundant in this case becaause it has) AND saves the
                          // current field metadata for check in subsequent iterations
@@ -216,7 +225,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
         boolean isNewSchema = schemaChanged();
         stats.batchReceived(0, incoming.getRecordCount(), isNewSchema);
         if (isNewSchema) {
-          hasRemainder = true;     // next call to next will handle the actual data.
+          hasNewSchema = true; // next call to next will handle the actual data.
           try {
             setupNewSchema();
           } catch (SchemaChangeException ex) {
@@ -229,6 +238,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
         }
         // else
         unnest.resetGroupIndex();
+        memoryManager.update();
       }
       return doWork();
     }
@@ -265,7 +275,6 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
 
   protected IterOutcome doWork() {
     Preconditions.checkNotNull(lateral);
-    memoryManager.update();
     unnest.setOutputCount(memoryManager.getOutputRowCount());
     final int incomingRecordCount = incoming.getRecordCount();
     final int currentRecord = lateral.getRecordIndex();
