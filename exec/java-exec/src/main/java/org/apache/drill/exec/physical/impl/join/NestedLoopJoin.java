@@ -37,6 +37,9 @@ public interface NestedLoopJoin {
                                   ExpandableHyperContainer rightContainer,
                                   LinkedList<Integer> rightCounts,
                                   NestedLoopJoinBatch outgoing);
+
+  void setTargetOutputCount(int targetOutputCount);
+
   // Produce output records taking into account join type
   public int outputRecords(JoinRelType joinType);
 
