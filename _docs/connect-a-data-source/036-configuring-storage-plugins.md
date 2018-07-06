@@ -1,6 +1,6 @@
 ---
 title: "Configuring Storage Plugins"
-date: 2018-07-06 02:00:49 UTC
+date: 2018-07-06 21:03:52 UTC
 parent: "Storage Plugin Configuration"
 ---  
 
@@ -63,7 +63,7 @@ This example assumes HTTPS has not been enabled.
 
 You can create a [``bootstrap-storage-plugins.json``](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include the file in the classpath when you start Drill. Drill loads the storage plugin configuration from the bootstrap file into the [PStore]({{site.baseurl}}/docs/persistent-configuration-storage/) (persistent configuration storage) when Drill starts; ZooKeeper is the default PStore for Drill in distributed mode. You can then use the REST API, Drill Web UI, or `storage-plugins-override.conf` file to modify the storage plugins configurations.
 
-Bootstrapping a storage plugin configuration only works for the first Drillbit in the cluster that starts. Drill cannot pick up the configuration from the `bootstrap-storage-plugins.json` file during a restart; however, this can be achieved with a `storage-plugins-override.conf` file. 
+Bootstrapping a storage plugin configuration only works for the first Drillbit in the cluster that starts. Drill cannot pick up the configuration from the `bootstrap-storage-plugins.json` file during a restart; however, this can be achieved with a `storage-plugins-override.conf` file. See [Configuring Storage Plugins with the storage-plugins-override.conf File]({{site.baseurl}}/docs/configuring-storage-plugins/configuring-storage-plugins-with-the-storage-plugins-override.conf-file).  
 
 Alternatively, you can modify the entry in ZooKeeper directly, by uploading the configuration for a plugin into the `/drill` directory of the ZooKeeper installation, or by deleting the `/drill` directory (if you do not have configuration properties to preserve).
 

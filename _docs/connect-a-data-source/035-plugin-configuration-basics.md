@@ -1,13 +1,13 @@
 ---
 title: "Plugin Configuration Basics"
-date: 2018-07-06 19:20:01 UTC
+date: 2018-07-06 21:03:52 UTC
 parent: "Storage Plugin Configuration"
 ---
-You can configure storage plugins using various methods. For information about the methods that you can use to configure storage plugins, see [Configuring Storage Plugins]({{site.baseurl}}/docs/configuring-storage-plugins/).
+There are several ways you can configure storage plugins. For example, you can configure storage plugins in the Drill Web UI,  using REST API, or through configuration files. See [Configuring Storage Plugins]({{site.baseurl}}/docs/configuring-storage-plugins/) for more information.
 
 When you configure storage plugins, you use a set of storage plugin attributes, such as the storage plugin type, formats that the plugin type supports, and connection parameters.   
 
-The following sections describe the attributes that you can use in your storage plugin configurations and information about using the attributes. 
+The following sections describe the attributes that you can use in your storage plugin configurations and provide information related to the use of attributes. 
   
 
 ## Storage Plugin Attributes
