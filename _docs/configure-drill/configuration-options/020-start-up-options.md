@@ -1,6 +1,6 @@
 ---
 title: "Start-Up Options"
-date: 2018-07-06 21:03:51 UTC
+date: 2018-06-20 01:48:00 UTC
 parent: "Configuration Options"
 ---
 The start-up options for Drill reside in a [HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) configuration file format, which is a hybrid between a properties file and a JSON file. Drill start-up options consist of a group of files with a nested relationship. At the bottom of the file hierarchy are the default files that Drill provides, starting with `drill-default.conf`. 
@@ -71,7 +71,7 @@ Introduced in Drill 1.11. The list of directories into which the Sort, Hash Aggr
   Introduced in Drill 1.11. Sets the maximum number of most recent profiles to retain in memory when the `drill.exec.profiles.store.inmemory` option is enabled. Default is 1000.  
   
 * **drill.exec.storage.action\_on\_plugins\_override\_file**  
-Introduced in Drill 1.14. Determines what happens to the [`storage-plugins-override.conf`]({{site.baseurl}}/docs/configuring-storage-plugins/configuring-storage-plugins-with-the-storage-plugins-override.conf-file) file after Drill successfully updates storage plugin configurations. If you do not want Drill to apply the configurations after restarting, set the option to `"rename"` or `"remove"`.  This option accepts the following values:  
+Introduced in Drill 1.14. Determines what happens to the [`storage-plugins-override.conf`]({{site.baseurl}}/docs/configuring-storage-plugins/#configuring-storage-plugins-with-the-storage-plugins-override.conf-file) file after Drill successfully updates storage plugin configurations. If you do not want Drill to apply the configurations after restarting, set the option to `"rename"` or `"remove"`.  This option accepts the following values:  
 
        - `"none"` - (Default) The file remains in the directory after Drill uses the file.  
        - `"rename"` - The `storage-plugins-override.conf` file name is changed to `storage-plugins-override-[current_timestamp].conf` after Drill uses the file.  
