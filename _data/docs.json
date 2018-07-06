@@ -2180,6 +2180,27 @@
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
         }, 
+        "Configuring Storage Plugins": {
+            "breadcrumbs": [
+                {
+                    "title": "Storage Plugin Configuration", 
+                    "url": "/docs/storage-plugin-configuration/"
+                }, 
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Workspaces", 
+            "next_url": "/docs/workspaces/", 
+            "parent": "Storage Plugin Configuration", 
+            "previous_title": "Plugin Configuration Basics", 
+            "previous_url": "/docs/plugin-configuration-basics/", 
+            "relative_path": "_docs/connect-a-data-source/036-configuring-storage-plugins.md", 
+            "title": "Configuring Storage Plugins", 
+            "url": "/docs/configuring-storage-plugins/"
+        }, 
         "Configuring Tibco Spotfire Server with Drill": {
             "breadcrumbs": [
                 {
@@ -2457,8 +2478,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Workspaces", 
-                            "next_url": "/docs/workspaces/", 
+                            "next_title": "Configuring Storage Plugins", 
+                            "next_url": "/docs/configuring-storage-plugins/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
@@ -2478,11 +2499,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Drill Default Input Format", 
-                            "next_url": "/docs/drill-default-input-format/", 
+                            "next_title": "Workspaces", 
+                            "next_url": "/docs/workspaces/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Plugin Configuration Basics", 
                             "previous_url": "/docs/plugin-configuration-basics/", 
+                            "relative_path": "_docs/connect-a-data-source/036-configuring-storage-plugins.md", 
+                            "title": "Configuring Storage Plugins", 
+                            "url": "/docs/configuring-storage-plugins/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Storage Plugin Configuration", 
+                                    "url": "/docs/storage-plugin-configuration/"
+                                }, 
+                                {
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Drill Default Input Format", 
+                            "next_url": "/docs/drill-default-input-format/", 
+                            "parent": "Storage Plugin Configuration", 
+                            "previous_title": "Configuring Storage Plugins", 
+                            "previous_url": "/docs/configuring-storage-plugins/", 
                             "relative_path": "_docs/connect-a-data-source/050-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
@@ -8208,8 +8250,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Workspaces", 
-            "next_url": "/docs/workspaces/", 
+            "next_title": "Configuring Storage Plugins", 
+            "next_url": "/docs/configuring-storage-plugins/", 
             "parent": "Storage Plugin Configuration", 
             "previous_title": "Storage Plugin Configuration", 
             "previous_url": "/docs/storage-plugin-configuration/", 
@@ -13347,8 +13389,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Workspaces", 
-                    "next_url": "/docs/workspaces/", 
+                    "next_title": "Configuring Storage Plugins", 
+                    "next_url": "/docs/configuring-storage-plugins/", 
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Storage Plugin Configuration", 
                     "previous_url": "/docs/storage-plugin-configuration/", 
@@ -13368,11 +13410,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Drill Default Input Format", 
-                    "next_url": "/docs/drill-default-input-format/", 
+                    "next_title": "Workspaces", 
+                    "next_url": "/docs/workspaces/", 
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Plugin Configuration Basics", 
                     "previous_url": "/docs/plugin-configuration-basics/", 
+                    "relative_path": "_docs/connect-a-data-source/036-configuring-storage-plugins.md", 
+                    "title": "Configuring Storage Plugins", 
+                    "url": "/docs/configuring-storage-plugins/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Storage Plugin Configuration", 
+                            "url": "/docs/storage-plugin-configuration/"
+                        }, 
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Drill Default Input Format", 
+                    "next_url": "/docs/drill-default-input-format/", 
+                    "parent": "Storage Plugin Configuration", 
+                    "previous_title": "Configuring Storage Plugins", 
+                    "previous_url": "/docs/configuring-storage-plugins/", 
                     "relative_path": "_docs/connect-a-data-source/050-workspaces.md", 
                     "title": "Workspaces", 
                     "url": "/docs/workspaces/"
@@ -14803,8 +14866,8 @@
             "next_title": "Drill Default Input Format", 
             "next_url": "/docs/drill-default-input-format/", 
             "parent": "Storage Plugin Configuration", 
-            "previous_title": "Plugin Configuration Basics", 
-            "previous_url": "/docs/plugin-configuration-basics/", 
+            "previous_title": "Configuring Storage Plugins", 
+            "previous_url": "/docs/configuring-storage-plugins/", 
             "relative_path": "_docs/connect-a-data-source/050-workspaces.md", 
             "title": "Workspaces", 
             "url": "/docs/workspaces/"
@@ -16367,8 +16430,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Workspaces", 
-                            "next_url": "/docs/workspaces/", 
+                            "next_title": "Configuring Storage Plugins", 
+                            "next_url": "/docs/configuring-storage-plugins/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
@@ -16388,11 +16451,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Drill Default Input Format", 
-                            "next_url": "/docs/drill-default-input-format/", 
+                            "next_title": "Workspaces", 
+                            "next_url": "/docs/workspaces/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Plugin Configuration Basics", 
                             "previous_url": "/docs/plugin-configuration-basics/", 
+                            "relative_path": "_docs/connect-a-data-source/036-configuring-storage-plugins.md", 
+                            "title": "Configuring Storage Plugins", 
+                            "url": "/docs/configuring-storage-plugins/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Storage Plugin Configuration", 
+                                    "url": "/docs/storage-plugin-configuration/"
+                                }, 
+                                {
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Drill Default Input Format", 
+                            "next_url": "/docs/drill-default-input-format/", 
+                            "parent": "Storage Plugin Configuration", 
+                            "previous_title": "Configuring Storage Plugins", 
+                            "previous_url": "/docs/configuring-storage-plugins/", 
                             "relative_path": "_docs/connect-a-data-source/050-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
