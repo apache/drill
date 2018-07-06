@@ -29,8 +29,7 @@ class DECLSPEC_DRILL_CLIENT DrillUserProperties{
 
         DrillUserProperties(){};
         
-        /// @brief Update the property value associate with the property key if the value is 
-        /// empty.
+        /// @brief Sets the default property value.
         /// 
         /// @param in_propName              The property name.
         /// @param in_propValue             The property value.

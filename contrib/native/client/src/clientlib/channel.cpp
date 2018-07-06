@@ -352,30 +352,37 @@ connectionStatus_t SSLStreamChannel::init(){
     connectionStatus_t ret=CONN_SUCCESS;
 
     const DrillUserProperties* props = m_pContext->getUserProperties();
-	std::string useSystemTrustStore;
-	props->getProp(USERPROP_USESYSTEMTRUSTSTORE, useSystemTrustStore);
-	if (useSystemTrustStore != "true"){
-		std::string certFile;
-		props->getProp(USERPROP_CERTFILEPATH, certFile);
-		try{
-			((SSLChannelContext_t*)m_pContext)->getSslContext().load_verify_file(certFile);
-		}
-		catch (boost::system::system_error e){
-			DRILL_LOG(LOG_ERROR) << "Channel initialization failure. Certificate file  "
-				<< certFile
-				<< " could not be loaded."
-				<< std::endl;
-			handleError(CONN_SSLERROR, getMessage(ERR_CONN_SSLCERTFAIL, certFile.c_str(), e.what()));
-			ret = CONN_FAILURE;
-		}
-	}
+    std::string useSystemTrustStore;
+    props->getProp(USERPROP_USESYSTEMTRUSTSTORE, useSystemTrustStore);
+    if (useSystemTrustStore != "true"){
+        std::string certFile;
+        props->getProp(USERPROP_CERTFILEPATH, certFile);
+        try{
+            ((SSLChannelContext_t*)m_pContext)->getSslContext().load_verify_file(certFile);
+        }
+        catch (boost::system::system_error e){
+            DRILL_LOG(LOG_ERROR) << "Channel initialization failure. Certificate file  "
+                << certFile
+                << " could not be loaded."
+                << std::endl;
+            handleError(CONN_SSLERROR, getMessage(ERR_CONN_SSLCERTFAIL, certFile.c_str(), e.what()));
+            ret = CONN_FAILURE;
+            // Stop here to propagate the load/verify certificate error.
+            return ret;
+        }
+    }
 
+    ((SSLChannelContext_t *)m_pContext)->SetCertHostnameVerificationStatus(true);
     std::string disableHostVerification;
     props->getProp(USERPROP_DISABLE_HOSTVERIFICATION, disableHostVerification);
     if (disableHostVerification != "true") {
-        std::string hostPortStr = m_pEndpoint->getHost() + ":" + m_pEndpoint->getPort();
+        // Populate endpoint information before we retrieve host name.
+        m_pEndpoint->parseConnectString();
+        std::string hostStr  = m_pEndpoint->getHost();
         ((SSLChannelContext_t *) m_pContext)->getSslContext().set_verify_callback(
-                boost::asio::ssl::rfc2818_verification(hostPortStr.c_str()));
+                DrillSSLHostnameVerifier(
+                    ((SSLChannelContext_t *)m_pContext), 
+                    boost::asio::ssl::rfc2818_verification(hostStr.c_str())));
     }
 
     m_pSocket=new SslSocket(m_ioService, ((SSLChannelContext_t*)m_pContext)->getSslContext() );
