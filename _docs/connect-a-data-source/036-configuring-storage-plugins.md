@@ -1,6 +1,6 @@
 ---
 title: "Configuring Storage Plugins"
-date: 2018-07-06 21:21:28 UTC
+date: 2018-07-07 01:11:51 UTC
 parent: "Storage Plugin Configuration"
 ---  
 
@@ -67,7 +67,7 @@ Bootstrapping a storage plugin configuration only works for the first Drillbit i
 
 Alternatively, you can modify the entry in ZooKeeper directly, by uploading the configuration for a plugin into the `/drill` directory of the ZooKeeper installation, or by deleting the `/drill` directory (if you do not have configuration properties to preserve).
 
-**Note:** If you load an HBase storage plugin configuration using the `bootstrap-storage-plugins.json` file and HBase is not installed, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html/#config.files) and retry settings in the `config` block of the HBase plugin configuration.  
+**Note:** If you load an HBase storage plugin configuration using the `bootstrap-storage-plugins.json` file and HBase is not installed, you might experience a delay when executing the queries. Configure the HBase client timeout and retry settings in the `config` block of the HBase plugin configuration.  
 
 ## Configuring Storage Plugins with the storage-plugins-override.conf File  
 
