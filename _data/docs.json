@@ -1403,8 +1403,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using libpam4j as the PAM Authenticator", 
-                            "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
+                            "next_title": "Configuring SSL/TLS for Encryption", 
+                            "next_url": "/docs/configuring-ssl-tls-for-encryption/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring User Impersonation with Hive Authorization", 
                             "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
@@ -1424,12 +1424,33 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using jpam as the PAM Authenticator", 
-                            "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
+                            "next_title": "Using libpam4j as the PAM Authenticator", 
+                            "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Plain Security", 
                             "previous_url": "/docs/configuring-plain-security/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/081-using-libpam4j-as-the-pam-authenticator.md", 
+                            "relative_path": "_docs/configure-drill/securing-drill/081-configuring-ssl-tls-for-encryption.md", 
+                            "title": "Configuring SSL/TLS for Encryption", 
+                            "url": "/docs/configuring-ssl-tls-for-encryption/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using jpam as the PAM Authenticator", 
+                            "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Configuring SSL/TLS for Encryption", 
+                            "previous_url": "/docs/configuring-ssl-tls-for-encryption/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/082-using-libpam4j-as-the-pam-authenticator.md", 
                             "title": "Using libpam4j as the PAM Authenticator", 
                             "url": "/docs/using-libpam4j-as-the-pam-authenticator/"
                         }, 
@@ -1450,7 +1471,7 @@
                             "parent": "Securing Drill", 
                             "previous_title": "Using libpam4j as the PAM Authenticator", 
                             "previous_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/082-using-jpam-as-the-pam-authenticator.md", 
+                            "relative_path": "_docs/configure-drill/securing-drill/083-using-jpam-as-the-pam-authenticator.md", 
                             "title": "Using jpam as the PAM Authenticator", 
                             "url": "/docs/using-jpam-as-the-pam-authenticator/"
                         }, 
@@ -2150,8 +2171,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using libpam4j as the PAM Authenticator", 
-            "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
+            "next_title": "Configuring SSL/TLS for Encryption", 
+            "next_url": "/docs/configuring-ssl-tls-for-encryption/", 
             "parent": "Securing Drill", 
             "previous_title": "Configuring User Impersonation with Hive Authorization", 
             "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
@@ -2179,6 +2200,27 @@
             "relative_path": "_docs/configure-drill/060-configuring-a-shared-drillbit.md", 
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
+        }, 
+        "Configuring SSL/TLS for Encryption": {
+            "breadcrumbs": [
+                {
+                    "title": "Securing Drill", 
+                    "url": "/docs/securing-drill/"
+                }, 
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using libpam4j as the PAM Authenticator", 
+            "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
+            "parent": "Securing Drill", 
+            "previous_title": "Configuring Plain Security", 
+            "previous_url": "/docs/configuring-plain-security/", 
+            "relative_path": "_docs/configure-drill/securing-drill/081-configuring-ssl-tls-for-encryption.md", 
+            "title": "Configuring SSL/TLS for Encryption", 
+            "url": "/docs/configuring-ssl-tls-for-encryption/"
         }, 
         "Configuring Storage Plugins": {
             "breadcrumbs": [
@@ -13005,8 +13047,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using libpam4j as the PAM Authenticator", 
-                    "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
+                    "next_title": "Configuring SSL/TLS for Encryption", 
+                    "next_url": "/docs/configuring-ssl-tls-for-encryption/", 
                     "parent": "Securing Drill", 
                     "previous_title": "Configuring User Impersonation with Hive Authorization", 
                     "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
@@ -13026,12 +13068,33 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using jpam as the PAM Authenticator", 
-                    "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
+                    "next_title": "Using libpam4j as the PAM Authenticator", 
+                    "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
                     "parent": "Securing Drill", 
                     "previous_title": "Configuring Plain Security", 
                     "previous_url": "/docs/configuring-plain-security/", 
-                    "relative_path": "_docs/configure-drill/securing-drill/081-using-libpam4j-as-the-pam-authenticator.md", 
+                    "relative_path": "_docs/configure-drill/securing-drill/081-configuring-ssl-tls-for-encryption.md", 
+                    "title": "Configuring SSL/TLS for Encryption", 
+                    "url": "/docs/configuring-ssl-tls-for-encryption/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Securing Drill", 
+                            "url": "/docs/securing-drill/"
+                        }, 
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using jpam as the PAM Authenticator", 
+                    "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
+                    "parent": "Securing Drill", 
+                    "previous_title": "Configuring SSL/TLS for Encryption", 
+                    "previous_url": "/docs/configuring-ssl-tls-for-encryption/", 
+                    "relative_path": "_docs/configure-drill/securing-drill/082-using-libpam4j-as-the-pam-authenticator.md", 
                     "title": "Using libpam4j as the PAM Authenticator", 
                     "url": "/docs/using-libpam4j-as-the-pam-authenticator/"
                 }, 
@@ -13052,7 +13115,7 @@
                     "parent": "Securing Drill", 
                     "previous_title": "Using libpam4j as the PAM Authenticator", 
                     "previous_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
-                    "relative_path": "_docs/configure-drill/securing-drill/082-using-jpam-as-the-pam-authenticator.md", 
+                    "relative_path": "_docs/configure-drill/securing-drill/083-using-jpam-as-the-pam-authenticator.md", 
                     "title": "Using jpam as the PAM Authenticator", 
                     "url": "/docs/using-jpam-as-the-pam-authenticator/"
                 }, 
@@ -14674,7 +14737,7 @@
             "parent": "Securing Drill", 
             "previous_title": "Using libpam4j as the PAM Authenticator", 
             "previous_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
-            "relative_path": "_docs/configure-drill/securing-drill/082-using-jpam-as-the-pam-authenticator.md", 
+            "relative_path": "_docs/configure-drill/securing-drill/083-using-jpam-as-the-pam-authenticator.md", 
             "title": "Using jpam as the PAM Authenticator", 
             "url": "/docs/using-jpam-as-the-pam-authenticator/"
         }, 
@@ -14693,9 +14756,9 @@
             "next_title": "Using jpam as the PAM Authenticator", 
             "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
             "parent": "Securing Drill", 
-            "previous_title": "Configuring Plain Security", 
-            "previous_url": "/docs/configuring-plain-security/", 
-            "relative_path": "_docs/configure-drill/securing-drill/081-using-libpam4j-as-the-pam-authenticator.md", 
+            "previous_title": "Configuring SSL/TLS for Encryption", 
+            "previous_url": "/docs/configuring-ssl-tls-for-encryption/", 
+            "relative_path": "_docs/configure-drill/securing-drill/082-using-libpam4j-as-the-pam-authenticator.md", 
             "title": "Using libpam4j as the PAM Authenticator", 
             "url": "/docs/using-libpam4j-as-the-pam-authenticator/"
         }, 
@@ -15984,8 +16047,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using libpam4j as the PAM Authenticator", 
-                            "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
+                            "next_title": "Configuring SSL/TLS for Encryption", 
+                            "next_url": "/docs/configuring-ssl-tls-for-encryption/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring User Impersonation with Hive Authorization", 
                             "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
@@ -16005,12 +16068,33 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using jpam as the PAM Authenticator", 
-                            "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
+                            "next_title": "Using libpam4j as the PAM Authenticator", 
+                            "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Plain Security", 
                             "previous_url": "/docs/configuring-plain-security/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/081-using-libpam4j-as-the-pam-authenticator.md", 
+                            "relative_path": "_docs/configure-drill/securing-drill/081-configuring-ssl-tls-for-encryption.md", 
+                            "title": "Configuring SSL/TLS for Encryption", 
+                            "url": "/docs/configuring-ssl-tls-for-encryption/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using jpam as the PAM Authenticator", 
+                            "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Configuring SSL/TLS for Encryption", 
+                            "previous_url": "/docs/configuring-ssl-tls-for-encryption/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/082-using-libpam4j-as-the-pam-authenticator.md", 
                             "title": "Using libpam4j as the PAM Authenticator", 
                             "url": "/docs/using-libpam4j-as-the-pam-authenticator/"
                         }, 
@@ -16031,7 +16115,7 @@
                             "parent": "Securing Drill", 
                             "previous_title": "Using libpam4j as the PAM Authenticator", 
                             "previous_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/082-using-jpam-as-the-pam-authenticator.md", 
+                            "relative_path": "_docs/configure-drill/securing-drill/083-using-jpam-as-the-pam-authenticator.md", 
                             "title": "Using jpam as the PAM Authenticator", 
                             "url": "/docs/using-jpam-as-the-pam-authenticator/"
                         }, 
