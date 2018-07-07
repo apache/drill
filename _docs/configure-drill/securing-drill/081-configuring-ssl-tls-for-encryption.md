@@ -1,6 +1,6 @@
 ---
 title: "Configuring SSL/TLS for Encryption"
-date: 2018-07-06 00:54:51 UTC
+date: 2018-07-07 01:29:20 UTC
 parent: "Securing Drill"
 ---  
 
@@ -30,7 +30,7 @@ Before you can enable SSL in a Drill cluster, you must either get a certificate 
 
 If you have a custom certificate, you can import it using the method described in [this keytool document](https://docs.oracle.com/javase/8/docs/technotes/tools/unix/keytool.html). 
 
-After you generate or import a server certificate, add the path (and password) to the keystore in the SSL configuration for Drill. See the [SSL configuration options section]({{site.baseurl}}/docs/configuring-ssl-tls-for-encryption/#enabling-and-Configuring-ssl-/-tls) below for information on how to update the SSL configuration.
+After you generate or import a server certificate, add the path (and password) to the keystore in the SSL configuration for Drill. See the [SSL configuration options section]({{site.baseurl}}/docs/configuring-ssl-tls-for-encryption/#configuring-ssl/tls) below for information on how to update the SSL configuration.
 
 [Restart Drill]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/) after you modify the configuration options.  
 
