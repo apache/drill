@@ -152,6 +152,12 @@ public class TestHiveDrillNativeParquetReader extends HiveTestBase {
     // checks only group scan
     PlanTestBase.testPhysicalPlanExecutionBasedOnQuery("select * from hive.kv_native");
     PlanTestBase.testPhysicalPlanExecutionBasedOnQuery("select * from hive.kv_native_ext");
+    try {
+      alterSession(ExecConstants.HIVE_CONF_PROPERTIES, "hive.mapred.supports.subdirectories=true\nmapred.input.dir.recursive=true");
+      PlanTestBase.testPhysicalPlanExecutionBasedOnQuery("select * from hive.sub_dir_table");
+    } finally {
+      resetSessionOption(ExecConstants.HIVE_CONF_PROPERTIES);
+    }
   }
 
   @Test
@@ -241,6 +247,17 @@ public class TestHiveDrillNativeParquetReader extends HiveTestBase {
 
     // Make sure the HiveScan in plan has no native parquet reader
     testPlanMatchingPatterns(query, new String[] {"HiveScan"}, new String[]{"HiveDrillNativeParquetScan"});
+  }
+
+  @Test
+  public void testHiveConfPropertiesAtSessionLevel() throws Exception {
+    String query = "select * from hive.sub_dir_table";
+    try {
+      alterSession(ExecConstants.HIVE_CONF_PROPERTIES, "hive.mapred.supports.subdirectories=true\nmapred.input.dir.recursive=true");
+      test(query);
+    } finally {
+      resetSessionOption(ExecConstants.HIVE_CONF_PROPERTIES);
+    }
   }
 
 }

@@ -93,7 +93,14 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
 public class HiveUtilities {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
 
-  /** Partition value is received in string format. Convert it into appropriate object based on the type. */
+  /**
+   * Partition value is received in string format. Convert it into appropriate object based on the type.
+   *
+   * @param typeInfo type info
+   * @param value partition values
+   * @param defaultPartitionValue default partition value
+   * @return converted object
+   */
   public static Object convertPartitionType(TypeInfo typeInfo, String value, final String defaultPartitionValue) {
     if (typeInfo.getCategory() != Category.PRIMITIVE) {
       // In Hive only primitive types are allowed as partition column types.
@@ -147,6 +154,15 @@ public class HiveUtilities {
     return null;
   }
 
+  /**
+   * Populates vector with given value based on its type.
+   *
+   * @param vector vector instance
+   * @param managedBuffer Drill duffer
+   * @param val value
+   * @param start start position
+   * @param end end position
+   */
   public static void populateVector(final ValueVector vector, final DrillBuf managedBuffer, final Object val,
       final int start, final int end) {
     TypeProtos.MinorType type = vector.getField().getType().getMinorType();
@@ -307,6 +323,13 @@ public class HiveUtilities {
     }
   }
 
+  /**
+   * Obtains major type from given type info holder.
+   *
+   * @param typeInfo type info holder
+   * @param options session options
+   * @return appropriate major type, null otherwise. For some types may throw unsupported exception.
+   */
   public static MajorType getMajorTypeFromHiveTypeInfo(final TypeInfo typeInfo, final OptionSet options) {
     switch (typeInfo.getCategory()) {
       case PRIMITIVE: {
@@ -343,8 +366,14 @@ public class HiveUtilities {
     return null;
   }
 
-  public static TypeProtos.MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo,
-                                                                           OptionSet options) {
+  /**
+   * Obtains minor type from given primitive type info holder.
+   *
+   * @param primitiveTypeInfo primitive type info holder
+   * @param options session options
+   * @return appropriate minor type, otherwise throws unsupported type exception
+   */
+  public static TypeProtos.MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo, OptionSet options) {
     switch(primitiveTypeInfo.getPrimitiveCategory()) {
       case BINARY:
         return TypeProtos.MinorType.VARBINARY;
@@ -392,10 +421,8 @@ public class HiveUtilities {
    * @param job {@link JobConf} instance needed incase the table is StorageHandler based table.
    * @param sd {@link StorageDescriptor} instance of currently reading partition or table (for non-partitioned tables).
    * @param table Table object
-   * @throws Exception
    */
-  public static Class<? extends InputFormat<?, ?>> getInputFormatClass(final JobConf job, final StorageDescriptor sd,
-      final Table table) throws Exception {
+  public static Class<? extends InputFormat<?, ?>> getInputFormatClass(final JobConf job, final StorageDescriptor sd, final Table table) throws Exception {
     final String inputFormatName = sd.getInputFormat();
     if (Strings.isNullOrEmpty(inputFormatName)) {
       final String storageHandlerClass = table.getParameters().get(META_TABLE_STORAGE);
@@ -426,26 +453,23 @@ public class HiveUtilities {
   }
 
   /**
-   * Wrapper around {@link MetaStoreUtils#getPartitionMetadata(Partition, Table)} which also adds parameters from table
-   * to properties returned by {@link MetaStoreUtils#getPartitionMetadata(Partition, Table)}.
+   * Wrapper around {@link MetaStoreUtils#getPartitionMetadata(org.apache.hadoop.hive.metastore.api.Partition, Table)}
+   * which also adds parameters from table to properties returned by that method.
    *
    * @param partition the source of partition level parameters
    * @param table     the source of table level parameters
    * @return properties
    */
   public static Properties getPartitionMetadata(final HivePartition partition, final HiveTableWithColumnCache table) {
-    final Properties properties;
     restoreColumns(table, partition);
-    properties = MetaStoreUtils.getPartitionMetadata(partition, table);
+    Properties properties = MetaStoreUtils.getPartitionMetadata(partition, table);
 
     // SerDe expects properties from Table, but above call doesn't add Table properties.
     // Include Table properties in final list in order to not to break SerDes that depend on
     // Table properties. For example AvroSerDe gets the schema from properties (passed as second argument)
-    for (Map.Entry<String, String> entry : table.getParameters().entrySet()) {
-      if (entry.getKey() != null && entry.getKey() != null) {
-        properties.put(entry.getKey(), entry.getValue());
-      }
-    }
+    table.getParameters().entrySet().stream()
+        .filter(e -> e.getKey() != null && e.getValue() != null)
+        .forEach(e -> properties.put(e.getKey(), e.getValue()));
 
     return properties;
   }
@@ -453,8 +477,8 @@ public class HiveUtilities {
   /**
    * Sets columns from table cache to table and partition.
    *
+   * @param table the source of column lists cache
    * @param partition partition which will set column list
-   * @param table     the source of column lists cache
    */
   public static void restoreColumns(HiveTableWithColumnCache table, HivePartition partition) {
     // exactly the same column lists for partitions or table
@@ -471,6 +495,9 @@ public class HiveUtilities {
    * Wrapper around {@link MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}
    * which also sets columns from table cache to table and returns properties returned by
    * {@link MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}.
+   *
+   * @param table Hive table with cached columns
+   * @return Hive table metadata
    */
   public static Properties getTableMetadata(HiveTableWithColumnCache table) {
     restoreColumns(table, null);
@@ -478,13 +505,18 @@ public class HiveUtilities {
       table.getDbName(), table.getTableName(), table.getPartitionKeys());
   }
 
+  /**
+   * Generates unsupported types exception message with list of supported types
+   * and throws user exception.
+   *
+   * @param unsupportedType unsupported type
+   */
   public static void throwUnsupportedHiveDataTypeError(String unsupportedType) {
-    StringBuilder errMsg = new StringBuilder();
-    errMsg.append(String.format("Unsupported Hive data type %s. ", unsupportedType));
-    errMsg.append(System.getProperty("line.separator"));
-    errMsg.append("Following Hive data types are supported in Drill for querying: ");
-    errMsg.append(
-        "BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, VARCHAR and CHAR");
+    StringBuilder errMsg = new StringBuilder()
+        .append("Unsupported Hive data type ").append(unsupportedType).append(". ")
+        .append(System.lineSeparator())
+        .append("Following Hive data types are supported in Drill for querying: ")
+        .append("BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, VARCHAR and CHAR");
 
     throw UserException.unsupportedError()
         .message(errMsg.toString())
@@ -633,7 +665,7 @@ public class HiveUtilities {
   }
 
   /**
-   * Get the input format from given {@link StorageDescriptor}
+   * Get the input format from given {@link StorageDescriptor}.
    *
    * @param properties table properties
    * @param hiveReadEntry hive read entry
@@ -681,5 +713,35 @@ public class HiveUtilities {
     }
     return false;
   }
+
+  /**
+   * Creates HiveConf based on given list of configuration properties.
+   *
+   * @param properties config properties
+   * @return instance of HiveConf
+   */
+  public static HiveConf generateHiveConf(Map<String, String> properties) {
+    logger.trace("Override HiveConf with the following properties {}", properties);
+    HiveConf hiveConf = new HiveConf();
+    properties.forEach(hiveConf::set);
+    return hiveConf;
+  }
+
+  /**
+   * Creates HiveConf based on properties in given HiveConf and configuration properties.
+   *
+   * @param hiveConf hive conf
+   * @param properties config properties
+   * @return instance of HiveConf
+   */
+  public static HiveConf generateHiveConf(HiveConf hiveConf, Map<String, String> properties) {
+    Properties changedProperties = hiveConf.getChangedProperties();
+    changedProperties.putAll(properties);
+    HiveConf newHiveConf = new HiveConf();
+    changedProperties.stringPropertyNames()
+        .forEach(name -> newHiveConf.set(name, changedProperties.getProperty(name)));
+    return newHiveConf;
+  }
+
 }
 

@@ -32,6 +32,7 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.SchemalessScan;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -45,6 +46,7 @@ public abstract class DrillTable implements Table {
   private final StoragePlugin plugin;
   private final String userName;
   private GroupScan scan;
+  private SessionOptionManager options;
 
   /**
    * Creates a DrillTable instance for a @{code TableType#Table} table.
@@ -85,12 +87,16 @@ public abstract class DrillTable implements Table {
     this(storageEngineName, plugin, ImpersonationUtil.getProcessUserName(), selection);
   }
 
+  public void setOptions(SessionOptionManager options) {
+    this.options = options;
+  }
+
   public GroupScan getGroupScan() throws IOException{
     if (scan == null) {
       if (selection instanceof FileSelection && ((FileSelection) selection).isEmptyDirectory()) {
         this.scan = new SchemalessScan(userName, ((FileSelection) selection).getSelectionRoot());
       } else {
-        this.scan = plugin.getPhysicalScan(userName, new JSONOptions(selection));
+        this.scan = plugin.getPhysicalScan(userName, new JSONOptions(selection), options);
       }
     }
     return scan;
@@ -138,7 +144,8 @@ public abstract class DrillTable implements Table {
     return true;
   }
 
-  @Override public boolean isRolledUp(String column) {
+  @Override
+  public boolean isRolledUp(String column) {
     return false;
   }
 
