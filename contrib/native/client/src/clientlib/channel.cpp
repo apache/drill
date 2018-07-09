@@ -376,13 +376,8 @@ connectionStatus_t SSLStreamChannel::init(){
     std::string disableHostVerification;
     props->getProp(USERPROP_DISABLE_HOSTVERIFICATION, disableHostVerification);
     if (disableHostVerification != "true") {
-        // Populate endpoint information before we retrieve host name.
-        m_pEndpoint->parseConnectString();
-        std::string hostStr  = m_pEndpoint->getHost();
         ((SSLChannelContext_t *) m_pContext)->getSslContext().set_verify_callback(
-                DrillSSLHostnameVerifier(
-                    ((SSLChannelContext_t *)m_pContext), 
-                    boost::asio::ssl::rfc2818_verification(hostStr.c_str())));
+                DrillSSLHostnameVerifier(this));
     }
 
     m_pSocket=new SslSocket(m_ioService, ((SSLChannelContext_t*)m_pContext)->getSslContext() );
