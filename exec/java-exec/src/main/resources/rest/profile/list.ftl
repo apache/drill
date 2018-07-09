@@ -54,9 +54,12 @@
   /* Control Padding for length and filter as a pair */
   div.dataTables_length {
     float: right;
+    font-weight: normal;
   }
   div.dataTables_filter {
     float: left;
+    font-weight: normal;
+    padding-left: 0.45em;
   }
   div.dataTables_info {
     padding-right: 2em;
@@ -64,19 +67,10 @@
   }
 
   /* Add spaces between pagination links */
-  #profileList_paginate * {
-    padding-right: 0.55em;
-    float:left
+  #profileList_completed_paginate *, #profileList_running_paginate * { 
+    padding-right: 0.35em; 
+    float:left 
   }
-  /* Normal wt for search text */
-  #profileList_filter input {
-    font-weight: normal;
-    padding-left: 0.45em;
-  }
-  #profileList_length * {
-    font-weight: normal;
-  }
-
 </style>
 
 </#macro>
