@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.parquet.hadoop.util.CompatibilityUtil;
+import org.apache.parquet.hadoop.util.HadoopStreams;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -179,7 +179,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     int nBytes = 0;
     if (bytesToRead > 0) {
       try {
-        nBytes = CompatibilityUtil.getBuf(getInputStream(), directBuffer, bytesToRead);
+        nBytes = HadoopStreams.wrap(getInputStream()).read(directBuffer);
       } catch (Exception e) {
         logger.error("Error reading from stream {}. Error was : {}", this.streamId, e.getMessage());
         throw new IOException((e));
@@ -193,8 +193,8 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
           logger.trace(
               "PERF: Disk read complete. {}, StartOffset: {}, TotalByteSize: {}, BufferSize: {}, BytesRead: {}, Count: {}, "
                   + "CurPosInStream: {}, CurPosInBuffer: {}, Time: {} ms", this.streamId, this.startOffset,
-              this.totalByteSize, this.bufSize, bytesRead, this.count, this.curPosInStream, this.curPosInBuffer, ((double) timer.elapsed(TimeUnit.MICROSECONDS))
-                  / 1000);
+              this.totalByteSize, this.bufSize, bytesRead, this.count, this.curPosInStream, this.curPosInBuffer,
+              ((double) timer.elapsed(TimeUnit.MICROSECONDS)) / 1000);
         }
       }
     }

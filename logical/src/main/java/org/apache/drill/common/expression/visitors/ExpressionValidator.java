@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -234,6 +235,12 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
 
   @Override
   public Void visitConvertExpression(ConvertExpression e, ErrorCollector value)
+      throws RuntimeException {
+    return e.getInput().accept(this, value);
+  }
+
+  @Override
+  public Void visitAnyValueExpression(AnyValueExpression e, ErrorCollector value)
       throws RuntimeException {
     return e.getInput().accept(this, value);
   }

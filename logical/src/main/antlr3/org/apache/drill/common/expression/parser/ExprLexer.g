@@ -37,6 +37,7 @@ When     : 'when';
 
 Cast: 'cast';
 Convert  : 'convert_' ('from' | 'to');
+AnyValue : 'any_value' | 'ANY_VALUE';
 Nullable: 'nullable';
 Repeat: 'repeat';
 As: 'as';

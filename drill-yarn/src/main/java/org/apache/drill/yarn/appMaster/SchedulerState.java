@@ -29,7 +29,7 @@ public interface SchedulerState {
   /**
    * The number of tasks in any active (non-ended) lifecycle state.
    *
-   * @return
+   * @return The number of tasks in any active (non-ended) lifecycle state.
    */
 
   int getTaskCount();
@@ -38,7 +38,8 @@ public interface SchedulerState {
    * The number of active tasks that have been cancelled, but have not yet
    * ended.
    *
-   * @return
+   * @returnThe number of active tasks that have been cancelled, but have not yet
+   * ended.
    */
 
   int getCancelledTaskCount();
@@ -50,7 +51,9 @@ public interface SchedulerState {
    * does not contain any tasks in this state which have previously been
    * cancelled.
    *
-   * @return
+   * @return The list of tasks awaiting a container request to be sent to YARN
+   * or for which a container request has been sent to YARN, but no container
+   * allocation has yet been received.
    */
 
   List<Task> getStartingTasks();
@@ -60,7 +63,7 @@ public interface SchedulerState {
    * tasks are any task for which a container has been assigned, but has not yet
    * received a RM container completion event.
    *
-   * @return
+   * @return The list of active tasks that have not yet been cancelled.
    */
 
   List<Task> getActiveTasks();

@@ -26,6 +26,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.RunTimeScan;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
+import org.apache.drill.exec.store.image.ImageFormatConfig;
 import org.junit.Test;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -64,6 +65,12 @@ public class TestFormatPluginOptionExtractor {
           break;
         case "httpd":
           assertEquals("(type: String, logFormat: String, timestampFormat: String)", d.presentParams());
+          break;
+        case "image":
+          assertEquals(ImageFormatConfig.class, d.pluginConfigClass);
+          assertEquals(
+              "(type: String, fileSystemMetadata: boolean, descriptive: boolean, timeZone: String)", d.presentParams()
+          );
           break;
         default:
           fail("add validation for format plugin type " + d.typeName);

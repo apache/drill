@@ -90,7 +90,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
    * ExternalSortBatch to make decisions about whether to spill or not.
    *
    * @param recordCount
-   * @return
+   * @return The amount of memory MSorter needs for a given record count.
    */
   public static long memoryNeeded(final int recordCount) {
     // We need 4 bytes (SV4) for each record, power of 2 rounded.

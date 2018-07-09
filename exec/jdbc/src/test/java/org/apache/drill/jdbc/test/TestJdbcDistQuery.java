@@ -43,6 +43,8 @@ import com.google.common.collect.Lists;
 
 @Category(JdbcTest.class)
 public class TestJdbcDistQuery extends JdbcTestBase {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcDistQuery.class);
+
   // Set a timeout unless we're debugging.
   @Rule
   public TestRule TIMEOUT = TestTools.getTimeoutRule(50000);
@@ -184,47 +186,50 @@ public class TestJdbcDistQuery extends JdbcTestBase {
         + "limit 2");
   }
 
- private void testQuery(String sql) throws Exception{
+  private void testQuery(String sql) throws Exception {
+    final StringBuilder sb = new StringBuilder();
     boolean success = false;
     try (Connection c = connect()) {
       // ???? TODO:  What is this currently redundant one-time loop for?  (If
       // it's kept around to make it easy to switch to looping multiple times
       // (e.g., for debugging) then define a constant field or local variable
       // for the number of iterations.)
+      boolean first = true;
       for (int x = 0; x < 1; x++) {
         Stopwatch watch = Stopwatch.createStarted();
         Statement s = c.createStatement();
         ResultSet r = s.executeQuery(sql);
-        boolean first = true;
         ResultSetMetaData md = r.getMetaData();
         if (first) {
           for (int i = 1; i <= md.getColumnCount(); i++) {
-            System.out.print(md.getColumnName(i));
-            System.out.print('\t');
+            sb.append(md.getColumnName(i));
+            sb.append('\t');
           }
-          System.out.println();
+          sb.append('\n');
           first = false;
         }
         while (r.next()) {
           md = r.getMetaData();
 
           for (int i = 1; i <= md.getColumnCount(); i++) {
-            System.out.print(r.getObject(i));
-            System.out.print('\t');
+            sb.append(r.getObject(i));
+            sb.append('\t');
           }
-          System.out.println();
+          sb.append('\n');
         }
 
-        System.out.println(String.format("Query completed in %d millis.", watch.elapsed(TimeUnit.MILLISECONDS)));
+        sb.append(String.format("Query completed in %d millis.\n", watch.elapsed(TimeUnit.MILLISECONDS)));
       }
 
-      System.out.println("\n\n\n");
+      sb.append("\n\n\n");
       success = true;
     } finally {
       if (!success) {
         Thread.sleep(2000);
       }
     }
+
+    logger.info(sb.toString());
   }
 
   @Test
@@ -236,8 +241,6 @@ public class TestJdbcDistQuery extends JdbcTestBase {
       ResultSetMetaData md = r.getMetaData();
       List<String> columns = Lists.newArrayList();
       for (int i = 1; i <= md.getColumnCount(); i++) {
-        System.out.print(md.getColumnName(i));
-        System.out.print('\t');
         columns.add(md.getColumnName(i));
       }
       String[] expected = {"fullname", "occupation", "postal_code"};

@@ -58,4 +58,50 @@ public class TestCorrelation extends PlanTestBase {
       .run();
   }
 
+  @Test
+  public void testExistsScalarSubquery() throws Exception {
+    String query =
+        "SELECT employee_id\n" +
+        "FROM cp.`employee.json`\n" +
+        "WHERE EXISTS\n" +
+        "    (SELECT *\n" +
+        "     FROM cp.`employee.json` cs2\n" +
+        "     )\n" +
+        "limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("employee_id")
+        .baselineValues(1L)
+        .go();
+  }
+
+  @Test
+  public void testSeveralExistsCorrelateSubquery() throws Exception {
+    String query =
+        "SELECT cs1.employee_id\n" +
+        "FROM cp.`employee.json` cs1,\n" +
+        "     cp.`employee.json` cs3\n" +
+        "WHERE cs1.hire_date = cs3.hire_date\n" +
+        "  AND EXISTS\n" +
+        "    (SELECT *\n" +
+        "     FROM cp.`employee.json` cs2\n" +
+        "     WHERE " +
+        "       cs1.position_id > cs2.position_id\n" +
+        "       AND" +
+        "       cs1.epmloyee_id = cs2.epmloyee_id" +
+        "       )\n" +
+        "  AND EXISTS\n" +
+        "    (SELECT *\n" +
+        "     FROM cp.`employee.json` cr1\n" +
+        "     WHERE cs1.position_id = cr1.position_id)\n" +
+        "LIMIT 1";
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .expectsEmptyResultSet()
+      .go();
+  }
 }

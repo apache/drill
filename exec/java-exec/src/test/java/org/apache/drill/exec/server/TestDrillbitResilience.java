@@ -148,7 +148,6 @@ public class TestDrillbitResilience extends DrillTest {
       drillbit.close();
     } catch (final Exception e) {
       final String message = "Error shutting down Drillbit \"" + name + "\"";
-      System.err.println(message + '.');
       logger.warn(message, e);
     }
   }

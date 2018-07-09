@@ -81,6 +81,10 @@ convertCall returns [LogicalExpression e]
       { $e = FunctionCallFactory.createConvert($Convert.text, $String.text, $expression.e, pos($Convert));}
   ;
 
+anyValueCall returns [LogicalExpression e]
+  :  AnyValue OParen exprList? CParen {$e = FunctionCallFactory.createExpression($AnyValue.text, pos($AnyValue), $exprList.listE);  }
+  ;
+
 castCall returns [LogicalExpression e]
 	@init{
   	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
@@ -313,6 +317,7 @@ arraySegment returns [PathSegment seg]
 lookup returns [LogicalExpression e]
   :  functionCall {$e = $functionCall.e ;}
   | convertCall {$e = $convertCall.e; }
+  | anyValueCall {$e = $anyValueCall.e; }
   | castCall {$e = $castCall.e; }
   | pathSegment {$e = new SchemaPath($pathSegment.seg, pos($pathSegment.start) ); }
   | String {$e = new ValueExpressions.QuotedString($String.text, $String.text.length(), pos($String) ); }

@@ -69,7 +69,6 @@ public class TestNewAggregateFunctions extends PopUnitTestBase {
       int i = 0;
       for (VectorWrapper<?> v : batchLoader) {
         ValueVector.Accessor accessor = v.getValueVector().getAccessor();
-        System.out.println((accessor.getObject(0)));
         assertEquals(expected[i++], (accessor.getObject(0)));
       }
 

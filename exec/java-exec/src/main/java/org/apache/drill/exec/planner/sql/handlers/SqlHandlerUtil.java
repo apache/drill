@@ -237,7 +237,7 @@ public class SqlHandlerUtil {
   /**
    * Drops table from schema.
    * If drop has failed makes concurrency check: checks if table still exists.
-   * If table exists, throws {@link @UserException} since drop was unsuccessful,
+   * If table exists, throws {@link org.apache.drill.common.exceptions.UserException} since drop was unsuccessful,
    * otherwise assumes that other user had dropped the view and exists without error.
    *
    * @param drillSchema drill schema
@@ -256,7 +256,7 @@ public class SqlHandlerUtil {
   /**
    * Drops view from schema.
    * If drop has failed makes concurrency check: checks if view still exists.
-   * If view exists, throws {@link @UserException} since drop was unsuccessful,
+   * If view exists, throws {@link org.apache.drill.common.exceptions.UserException} since drop was unsuccessful,
    * otherwise assumes that other user had dropped the view and exists without error.
    *
    * @param drillSchema drill schema

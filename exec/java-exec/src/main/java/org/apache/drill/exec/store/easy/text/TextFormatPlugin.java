@@ -19,10 +19,10 @@ package org.apache.drill.exec.store.easy.text;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -60,14 +60,13 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextFormatConfig> {
   private final static String DEFAULT_NAME = "text";
 
   public TextFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
     super(name, context, fsConf, storageConfig, new TextFormatConfig(), true, false, true, true,
-        Collections.<String>emptyList(), DEFAULT_NAME);
+        Collections.emptyList(), DEFAULT_NAME);
   }
 
   public TextFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config,
@@ -78,17 +77,20 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
 
   @Override
-  public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
-      List<SchemaPath> columns, String userName) throws ExecutionSetupException {
+  public RecordReader getRecordReader(FragmentContext context,
+                                      DrillFileSystem dfs,
+                                      FileWork fileWork,
+                                      List<SchemaPath> columns,
+                                      String userName) {
     Path path = dfs.makeQualified(new Path(fileWork.getPath()));
     FileSplit split = new FileSplit(path, fileWork.getStart(), fileWork.getLength(), new String[]{""});
 
-    if (context.getOptions().getOption(ExecConstants.ENABLE_NEW_TEXT_READER_KEY).bool_val == true) {
+    if (context.getOptions().getBoolean(ExecConstants.ENABLE_NEW_TEXT_READER_KEY)) {
       TextParsingSettings settings = new TextParsingSettings();
-      settings.set((TextFormatConfig)formatConfig);
+      settings.set(formatConfig);
       return new CompliantTextRecordReader(split, dfs, settings, columns);
     } else {
-      char delim = ((TextFormatConfig)formatConfig).getFieldDelimiter();
+      char delim = formatConfig.getFieldDelimiter();
       return new DrillTextRecordReader(split, dfs.getConf(), context, delim, columns);
     }
   }
@@ -112,7 +114,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
   @Override
   public RecordWriter getRecordWriter(final FragmentContext context, final EasyWriter writer) throws IOException {
-    final Map<String, String> options = Maps.newHashMap();
+    final Map<String, String> options = new HashMap<>();
 
     options.put("location", writer.getLocation());
 
@@ -120,10 +122,10 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
     options.put("prefix", fragmentId);
 
-    options.put("separator", ((TextFormatConfig)getConfig()).getFieldDelimiterAsString());
-    options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig)writer.getStorageConfig()).connection);
+    options.put("separator", getConfig().getFieldDelimiterAsString());
+    options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig) writer.getStorageConfig()).getConnection());
 
-    options.put("extension", ((TextFormatConfig)getConfig()).getExtensions().get(0));
+    options.put("extension", getConfig().getExtensions().get(0));
 
     RecordWriter recordWriter = new DrillTextRecordWriter(context.getAllocator(), writer.getStorageStrategy());
     recordWriter.init(options);

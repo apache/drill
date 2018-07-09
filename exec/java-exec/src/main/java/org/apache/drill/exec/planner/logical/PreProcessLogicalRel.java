@@ -32,8 +32,6 @@ import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
 import org.apache.drill.exec.util.ApproximateStringMatcher;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
-import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -46,7 +44,6 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlSingleValueAggFunction;
 import org.apache.calcite.util.NlsString;
 
 /**
@@ -76,19 +73,6 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
     this.table = table;
     this.unsupportedOperatorCollector = new UnsupportedOperatorCollector();
     this.unwrappingExpressionVisitor = new UnwrappingExpressionVisitor(rexBuilder);
-  }
-
-  @Override
-  public RelNode visit(LogicalAggregate aggregate) {
-    for(AggregateCall aggregateCall : aggregate.getAggCallList()) {
-      if(aggregateCall.getAggregation() instanceof SqlSingleValueAggFunction) {
-        unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-            "Non-scalar sub-query used in an expression\n" +
-            "See Apache Drill JIRA: DRILL-1937");
-        throw new UnsupportedOperationException();
-      }
-    }
-    return visitChild(aggregate, 0, aggregate.getInput());
   }
 
   @Override
@@ -168,7 +152,7 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
       exprList.add(newExpr);
     }
 
-    if (rewrite == true) {
+    if (rewrite) {
       LogicalProject newProject = project.copy(project.getTraitSet(), project.getInput(0), exprList, project.getRowType());
       return visitChild(newProject, 0, project.getInput());
     }

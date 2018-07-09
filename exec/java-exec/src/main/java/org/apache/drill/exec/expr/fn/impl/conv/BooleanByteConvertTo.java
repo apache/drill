@@ -29,8 +29,10 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.drill.exec.physical.impl.project.OutputSizeEstimateConstants;
 
-@FunctionTemplate(name = "convert_toBOOLEAN_BYTE", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "convert_toBOOLEAN_BYTE", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+                  outputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_BOOLEAN_BYTE_LENGTH)
 public class BooleanByteConvertTo implements DrillSimpleFunc {
 
   @Param BitHolder in;

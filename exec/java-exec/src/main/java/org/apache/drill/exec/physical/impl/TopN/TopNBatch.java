@@ -52,6 +52,7 @@ import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
+import org.apache.drill.exec.record.HyperVectorWrapper;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaUtil;
 import org.apache.drill.exec.record.SimpleRecordBatch;
@@ -69,6 +70,16 @@ import com.google.common.base.Stopwatch;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+
+/**
+ * Operator Batch which implements the TopN functionality. It is more efficient than (sort + limit) since unlike sort
+ * it doesn't have to store all the input data to sort it first and then apply limit on the sorted data. Instead
+ * internally it maintains a priority queue backed by a heap with the size being same as limit value.
+ */
 public class TopNBatch extends AbstractRecordBatch<TopN> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNBatch.class);
 
@@ -84,12 +95,15 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   private boolean schemaChanged = false;
   private PriorityQueue priorityQueue;
   private TopN config;
-  SelectionVector4 sv4;
+  private SelectionVector4 sv4;
   private long countSincePurge;
   private int batchCount;
   private Copier copier;
   private boolean first = true;
   private int recordCount = 0;
+  private IterOutcome lastKnownOutcome = OK;
+  private boolean firstBatchForSchema = true;
+  private boolean hasOutputRecords = false;
 
   public TopNBatch(TopN popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -117,12 +131,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
   @Override
   public void close() {
-    if (sv4 != null) {
-      sv4.clear();
-    }
-    if (priorityQueue != null) {
-      priorityQueue.cleanup();
-    }
+    releaseResource();
     super.close();
   }
 
@@ -134,6 +143,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       case OK:
       case OK_NEW_SCHEMA:
         for (VectorWrapper<?> w : incoming) {
+          // TODO: Not sure why the special handling for AbstractContainerVector is needed since creation of child
+          // vectors is taken care correctly if the field is retrieved from incoming vector and passed to it rather than
+          // creating a new Field instance just based on name and type.
           @SuppressWarnings("resource")
           ValueVector v = c.addOrGet(w.getField());
           if (v instanceof AbstractContainerVector) {
@@ -162,8 +174,11 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         return;
       case NONE:
         state = BatchState.DONE;
-      default:
         return;
+      case EMIT:
+        throw new IllegalStateException("Unexpected EMIT outcome received in buildSchema phase");
+      default:
+        throw new IllegalStateException("Unexpected outcome received in buildSchema phase");
     }
   }
 
@@ -171,47 +186,69 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   public IterOutcome innerNext() {
     recordCount = 0;
     if (state == BatchState.DONE) {
-      return IterOutcome.NONE;
-    }
-    if (schema != null) {
-      if (getSelectionVector4().next()) {
-        recordCount = sv4.getCount();
-        return IterOutcome.OK;
-      } else {
-        recordCount = 0;
-        return IterOutcome.NONE;
-      }
+      return NONE;
     }
 
+    // Check if anything is remaining from previous record boundary
+    if (hasOutputRecords) {
+      return handleRemainingOutput();
+    }
+
+    // Reset the TopN state for next iteration
+    resetTopNState();
+
     try{
+      boolean incomingHasSv2 = false;
+      switch (incoming.getSchema().getSelectionVectorMode()) {
+        case NONE: {
+          break;
+        }
+        case TWO_BYTE: {
+          incomingHasSv2 = true;
+          break;
+        }
+        case FOUR_BYTE: {
+          throw new SchemaChangeException("TopN doesn't support incoming with SV4 mode");
+        }
+        default:
+          throw new UnsupportedOperationException("Unsupported SV mode detected in TopN incoming batch");
+      }
+
       outer: while (true) {
         Stopwatch watch = Stopwatch.createStarted();
-        IterOutcome upstream;
         if (first) {
-          upstream = IterOutcome.OK_NEW_SCHEMA;
+          lastKnownOutcome = IterOutcome.OK_NEW_SCHEMA;
+          // Create the SV4 object upfront to be used for both empty and non-empty incoming batches at EMIT boundary
+          sv4 = new SelectionVector4(context.getAllocator(), 0);
           first = false;
         } else {
-          upstream = next(incoming);
+          lastKnownOutcome = next(incoming);
         }
-        if (upstream == IterOutcome.OK && schema == null) {
-          upstream = IterOutcome.OK_NEW_SCHEMA;
+        if (lastKnownOutcome == OK && schema == null) {
+          lastKnownOutcome = IterOutcome.OK_NEW_SCHEMA;
           container.clear();
         }
         logger.debug("Took {} us to get next", watch.elapsed(TimeUnit.MICROSECONDS));
-        switch (upstream) {
+        switch (lastKnownOutcome) {
         case NONE:
           break outer;
         case NOT_YET:
           throw new UnsupportedOperationException();
         case OUT_OF_MEMORY:
         case STOP:
-          return upstream;
+          return lastKnownOutcome;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
+          // schema change handling in case when EMIT is also seen is same as without EMIT. i.e. only if union type
+          // is enabled it will be handled.
+          container.clear();
+          firstBatchForSchema = true;
           if (!incoming.getSchema().equals(schema)) {
             if (schema != null) {
               if (!unionTypeEnabled) {
-                throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
+                throw new UnsupportedOperationException(String.format("TopN currently doesn't support changing " +
+                  "schemas with union type disabled. Please try enabling union type: %s and re-execute the query",
+                  ExecConstants.ENABLE_UNION_TYPE_KEY));
               } else {
                 this.schema = SchemaUtil.mergeSchemas(this.schema, incoming.getSchema());
                 purgeAndResetPriorityQueue();
@@ -223,9 +260,14 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           }
           // fall through.
         case OK:
+        case EMIT:
           if (incoming.getRecordCount() == 0) {
             for (VectorWrapper<?> w : incoming) {
               w.clear();
+            }
+            // Release memory for incoming SV2 vector
+            if (incomingHasSv2) {
+              incoming.getSelectionVector2().clear();
             }
             break;
           }
@@ -240,10 +282,16 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           boolean success = false;
           try {
             if (priorityQueue == null) {
-              assert !schemaChanged;
               priorityQueue = createNewPriorityQueue(new ExpandableHyperContainer(batch.getContainer()), config.getLimit());
+            } else if (!priorityQueue.isInitialized()) {
+              // means priority queue is cleaned up after producing output for first record boundary. We should
+              // initialize it for next record boundary
+              priorityQueue.init(config.getLimit(), oContext.getAllocator(),
+                schema.getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
             }
             priorityQueue.add(batch);
+            // Based on static threshold of number of batches, perform purge operation to release the memory for
+            // RecordBatches which are of no use or doesn't fall under TopN category
             if (countSincePurge > config.getLimit() && batchCount > batchPurgeThreshold) {
               purge();
               countSincePurge = 0;
@@ -259,25 +307,29 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         default:
           throw new UnsupportedOperationException();
         }
+
+        // If the last seen outcome is EMIT then break the loop. We do it here since we want to process the batch
+        // with records and EMIT outcome in above case statements
+        if (lastKnownOutcome == EMIT) {
+          break;
+        }
       }
 
-      if (schema == null || priorityQueue == null) {
+      // PriorityQueue can be null here if first batch is received with OK_NEW_SCHEMA and is empty and second next()
+      // call returned NONE or EMIT.
+      // PriorityQueue can be uninitialized here if only empty batch is received between 2 EMIT outcome.
+      if (schema == null || (priorityQueue == null || !priorityQueue.isInitialized())) {
         // builder may be null at this point if the first incoming batch is empty
-        state = BatchState.DONE;
-        return IterOutcome.NONE;
+        return handleEmptyBatches(lastKnownOutcome);
       }
 
       priorityQueue.generate();
+      prepareOutputContainer(priorityQueue.getHyperBatch(), priorityQueue.getFinalSv4());
 
-      this.sv4 = priorityQueue.getFinalSv4();
-      container.clear();
-      for (VectorWrapper<?> w : priorityQueue.getHyperBatch()) {
-        container.add(w.getValueVectors());
-      }
-      container.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
-      recordCount = sv4.getCount();
-      return IterOutcome.OK_NEW_SCHEMA;
-
+      // With EMIT outcome control will come here multiple times whereas without EMIT outcome control will only come
+      // here once. In EMIT outcome case if there is schema change in any iteration then that will be handled by
+      // lastKnownOutcome.
+      return getFinalOutcome();
     } catch(SchemaChangeException | ClassTransformationException | IOException ex) {
       kill(false);
       logger.error("Failure during query", ex);
@@ -286,14 +338,27 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     }
   }
 
+  /**
+   * When PriorityQueue is built up then it stores the list of limit number of record indexes (in heapSv4) which falls
+   * under TopN category. But it also stores all the incoming RecordBatches with all records inside a HyperContainer
+   * (hyperBatch). When a certain threshold of batches are reached then this method is called which copies the limit
+   * number of records whose indexes are stored in heapSv4 out of HyperBatch to a new VectorContainer and releases
+   * all other records and their batches. Later this new VectorContainer is stored inside the HyperBatch and it's
+   * corresponding indexes are stored in the heapSv4 vector. This is done to avoid holding up lot's of Record Batches
+   * which can create OutOfMemory condition.
+   * @throws SchemaChangeException
+   */
   private void purge() throws SchemaChangeException {
     Stopwatch watch = Stopwatch.createStarted();
     VectorContainer c = priorityQueue.getHyperBatch();
+
+    // Simple VectorConatiner which stores limit number of records only. The records whose indexes are stored inside
+    // selectionVector4 below are only copied from Hyper container to this simple container.
     VectorContainer newContainer = new VectorContainer(oContext);
     @SuppressWarnings("resource")
+    // SV4 storing the limit number of indexes
     SelectionVector4 selectionVector4 = priorityQueue.getSv4();
     SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
-    SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
     if (copier == null) {
       copier = GenericSV4Copier.createCopier(batch, newContainer, null);
     } else {
@@ -308,25 +373,14 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     @SuppressWarnings("resource")
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
     try {
-      do {
-        int count = selectionVector4.getCount();
-        int copiedRecords = copier.copyRecords(0, count);
-        assert copiedRecords == count;
-        for (VectorWrapper<?> v : newContainer) {
-          ValueVector.Mutator m = v.getValueVector().getMutator();
-          m.setValueCount(count);
-        }
-        newContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-        newContainer.setRecordCount(count);
-        builder.add(newBatch);
-      } while (selectionVector4.next());
-      selectionVector4.clear();
-      c.clear();
+      // Purge all the existing batches to a new batch which only holds the selected records
+      copyToPurge(newContainer, builder);
+      // New VectorContainer that contains only limit number of records and is later passed to resetQueue to create a
+      // HyperContainer backing the priority queue out of it
       VectorContainer newQueue = new VectorContainer();
       builder.build(newQueue);
       priorityQueue.resetQueue(newQueue, builder.getSv4().createNewWrapperCurrent());
       builder.getSv4().clear();
-      selectionVector4.clear();
     } finally {
       DrillAutoCloseables.closeNoChecked(builder);
     }
@@ -414,25 +468,12 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     @SuppressWarnings("resource")
     final SelectionVector4 selectionVector4 = priorityQueue.getSv4();
     final SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
-    final SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
     copier = GenericSV4Copier.createCopier(batch, newContainer, null);
     @SuppressWarnings("resource")
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
     try {
-      do {
-        final int count = selectionVector4.getCount();
-        final int copiedRecords = copier.copyRecords(0, count);
-        assert copiedRecords == count;
-        for (VectorWrapper<?> v : newContainer) {
-          ValueVector.Mutator m = v.getValueVector().getMutator();
-          m.setValueCount(count);
-        }
-        newContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-        newContainer.setRecordCount(count);
-        builder.add(newBatch);
-      } while (selectionVector4.next());
-      selectionVector4.clear();
-      c.clear();
+      // Purge all the existing batches to a new batch which only holds the selected records
+      copyToPurge(newContainer, builder);
       final VectorContainer oldSchemaContainer = new VectorContainer(oContext);
       builder.build(oldSchemaContainer);
       oldSchemaContainer.setRecordCount(builder.getSv4().getCount());
@@ -456,6 +497,190 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   @Override
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
+  }
+
+  /**
+   * Resets TopNBatch state to process next incoming batches independent of already seen incoming batches.
+   */
+  private void resetTopNState() {
+    lastKnownOutcome = OK;
+    countSincePurge = 0;
+    batchCount = 0;
+    hasOutputRecords = false;
+    releaseResource();
+  }
+
+  /**
+   * Cleanup resources held by TopN Batch such as sv4, priority queue and outgoing container
+   */
+  private void releaseResource() {
+    if (sv4 != null) {
+      sv4.clear();
+    }
+
+    if (priorityQueue != null) {
+      priorityQueue.cleanup();
+    }
+    container.zeroVectors();
+  }
+
+  /**
+   * Returns the final IterOutcome which TopN should return for this next call. Return OK_NEW_SCHEMA with first output
+   * batch after a new schema is seen. This is indicated by firstBatchSchema flag. It is also true for very first
+   * output batch after buildSchema()phase too since in buildSchema() a dummy schema was returned downstream without
+   * correct SelectionVectorMode.
+   * In other cases when there is no schema change then either OK or EMIT is returned with output batches depending upon
+   * if EMIT is seen or not. In cases when EMIT is not seen then OK is always returned with an output batch. When all
+   * the data is returned then NONE is sent in the end.
+   *
+   * @return - IterOutcome - outcome to send downstream
+   */
+  private IterOutcome getFinalOutcome() {
+    IterOutcome outcomeToReturn;
+
+    if (firstBatchForSchema) {
+      outcomeToReturn = OK_NEW_SCHEMA;
+      firstBatchForSchema = false;
+    } else if (recordCount == 0) {
+      // get the outcome to return before calling refresh since that resets the lastKnowOutcome to OK
+      outcomeToReturn = lastKnownOutcome == EMIT ? EMIT : NONE;
+      resetTopNState();
+    } else if (lastKnownOutcome == EMIT) {
+      // in case of EMIT check if this output batch returns all the data or not. If yes then return EMIT along with this
+      // output batch else return OK. Remaining data will be sent downstream in subsequent next() call.
+      final boolean hasMoreRecords = sv4.hasNext();
+      outcomeToReturn = (hasMoreRecords) ? OK : EMIT;
+      hasOutputRecords = hasMoreRecords;
+    } else {
+      outcomeToReturn = OK;
+    }
+
+    return outcomeToReturn;
+  }
+
+  /**
+   * Copies all the selected records into the new container to purge all the incoming batches into a single batch.
+   * @param newContainer - New container holding the ValueVectors with selected records
+   * @param batchBuilder - Builder to build hyper vectors batches
+   * @throws SchemaChangeException
+   */
+  private void copyToPurge(VectorContainer newContainer, SortRecordBatchBuilder batchBuilder)
+    throws SchemaChangeException {
+    final VectorContainer c = priorityQueue.getHyperBatch();
+    final SelectionVector4 queueSv4 = priorityQueue.getSv4();
+    final SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
+
+    do {
+      // count is the limit number of records required by TopN batch
+      final int count = queueSv4.getCount();
+      // Transfers count number of records from hyperBatch to simple container
+      final int copiedRecords = copier.copyRecords(0, count);
+      assert copiedRecords == count;
+      for (VectorWrapper<?> v : newContainer) {
+        ValueVector.Mutator m = v.getValueVector().getMutator();
+        m.setValueCount(count);
+      }
+      newContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+      newContainer.setRecordCount(count);
+      // Store all the batches containing limit number of records
+      batchBuilder.add(newBatch);
+    } while (queueSv4.next());
+    // Release the memory stored for the priority queue heap to store indexes
+    queueSv4.clear();
+    // Release the memory from HyperBatch container
+    c.clear();
+  }
+
+  /**
+   * Prepares an output container with batches from Priority Queue for each record boundary. In case when this is the
+   * first batch for the known schema (indicated by true value of firstBatchForSchema) the output container is cleared
+   * and recreated with new HyperVectorWrapper objects and ValueVectors from PriorityQueue. In cases when the schema
+   * has not changed then it prepares the container keeping the VectorWrapper and SV4 references as is since that is
+   * what is needed by downstream operator.
+   */
+  private void prepareOutputContainer(VectorContainer dataContainer, SelectionVector4 dataSv4) {
+    container.zeroVectors();
+    hasOutputRecords = true;
+    // Check if this is the first output batch for the new known schema. If yes then prepare the output container
+    // with the proper vectors, otherwise re-use the previous vectors.
+    if (firstBatchForSchema) {
+      container.clear();
+      for (VectorWrapper<?> w : dataContainer) {
+        container.add(w.getValueVectors());
+      }
+      container.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
+      sv4 = dataSv4;
+    } else {
+      // Schema didn't changed so we should keep the reference of HyperVectorWrapper in outgoing container intact and
+      // populate the HyperVectorWrapper with new list of vectors. Here the assumption is order of ValueVectors is same
+      // across multiple record boundary unless a new schema is observed
+      int index = 0;
+      for (VectorWrapper<?> w : dataContainer) {
+        HyperVectorWrapper wrapper = (HyperVectorWrapper<?>) container.getValueVector(index++);
+        wrapper.updateVectorList(w.getValueVectors());
+      }
+      // Since the reference of SV4 is held by downstream operator and there is no schema change, so just copy the
+      // underlying buffer from priority queue sv4.
+      this.sv4.copy(dataSv4);
+    }
+    recordCount = sv4.getCount();
+    container.setRecordCount(recordCount);
+  }
+
+  /**
+   * Method handles returning correct outcome and setting recordCount for output container when next() is called
+   * multiple time for single record boundary. It handles cases when some output was already returned at current record
+   * boundary but Either there is more left to return OR proper outcome with empty batch is left to return.
+   * Example: For first EMIT record boundary if all the records were returned in previous call with OK_NEW_SCHEMA
+   * outcome, then this method will handle returning empty output batch with EMIT outcome in subsequent next() call.
+   * @return - Outcome to return downstream
+   */
+  private IterOutcome handleRemainingOutput() {
+    // if priority queue is not null that means the incoming batches were non-empty. And if there are more records
+    // to send downstream for this record boundary
+    if (priorityQueue != null && sv4.next()) {
+      recordCount = sv4.getCount();
+      container.setRecordCount(recordCount);
+    } else { // This means that either:
+      // 1) Priority Queue was not null and all records have been sent downstream for this record boundary
+      // 2) Or Priority Queue is null, since all the incoming batches were empty for current record boundary (or EMIT
+      // outcome). In the previous call we must have returned OK_NEW_SCHEMA along with SV4 container, so it will
+      // return EMIT outcome now
+      recordCount = 0;
+      container.setRecordCount(0);
+    }
+    return getFinalOutcome();
+  }
+
+  /**
+   * Method to handle preparing output container and returning proper outcome to downstream when either NONE or only
+   * empty batches have been seen but with EMIT outcome. In either of the case PriorityQueue is not created yet since no
+   * actual records have been received so far.
+   * @param incomingOutcome - outcome received from upstream. Either NONE or EMIT
+   * @return - outcome to return downstream. NONE when incomingOutcome is NONE. OK_NEW_SCHEMA/EMIT when incomingOutcome
+   * is EMIT and is first/non-first empty input batch respectively.
+   */
+  private IterOutcome handleEmptyBatches(IterOutcome incomingOutcome) {
+    IterOutcome outcomeToReturn = incomingOutcome;
+
+    // In case of NONE it will change state to DONE and return NONE whereas in case of
+    // EMIT it has to still continue working for future records.
+    if (incomingOutcome == NONE) { // this means we saw NONE
+      state = BatchState.DONE;
+      container.clear();
+      recordCount = 0;
+      container.setRecordCount(recordCount);
+    } else if (incomingOutcome == EMIT) {
+      // since priority queue is null that means it has not seen any batch with data
+      assert (countSincePurge == 0 && batchCount == 0);
+      final VectorContainer hyperContainer = new ExpandableHyperContainer(incoming.getContainer());
+      prepareOutputContainer(hyperContainer, sv4);
+
+      // update the outcome to return
+      outcomeToReturn = getFinalOutcome();
+    }
+
+    return outcomeToReturn;
   }
 
   public static class SimpleSV4RecordBatch extends SimpleRecordBatch {

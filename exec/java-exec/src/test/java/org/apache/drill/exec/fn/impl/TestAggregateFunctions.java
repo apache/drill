@@ -25,6 +25,9 @@ import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
@@ -37,22 +40,31 @@ import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @Category({SqlFunctionTest.class, OperatorTest.class, PlannerTest.class})
 public class TestAggregateFunctions extends BaseTestQuery {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @BeforeClass
   public static void setupFiles() {
@@ -521,6 +533,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .go();
 
   }
+
   @Test
   public void minMaxEmptyNonNullableInput() throws Exception {
     // test min and max functions on required type
@@ -565,6 +578,73 @@ public class TestAggregateFunctions extends BaseTestQuery {
           .baselineRecords(baselineRecords)
           .go();
     }
+  }
+
+  @Test
+  public void testSingleValueFunction() throws Exception {
+    List<String> tableNames = ImmutableList.of(
+        "cp.`parquet/alltypes_required.parquet`",
+        "cp.`parquet/alltypes_optional.parquet`");
+    for (String tableName : tableNames) {
+      final QueryDataBatch result =
+          testSqlWithResults(String.format("select * from %s limit 1", tableName)).get(0);
+
+      final Map<String, StringBuilder> functions = new HashMap<>();
+      functions.put("single_value", new StringBuilder());
+
+      final Map<String, Object> resultingValues = new HashMap<>();
+      final List<String> columns = new ArrayList<>();
+
+      final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+      loader.load(result.getHeader().getDef(), result.getData());
+
+      for (VectorWrapper<?> vectorWrapper : loader.getContainer()) {
+        final String fieldName = vectorWrapper.getField().getName();
+        Object object = vectorWrapper.getValueVector().getAccessor().getObject(0);
+        // VarCharVector returns Text instance, but baseline values should contain String value
+        if (object instanceof Text) {
+          object = object.toString();
+        }
+        resultingValues.put(String.format("`%s`", fieldName), object);
+        for (Map.Entry<String, StringBuilder> function : functions.entrySet()) {
+          function.getValue()
+              .append(function.getKey())
+              .append("(")
+              .append(fieldName)
+              .append(") ")
+              .append(fieldName)
+              .append(",");
+        }
+        columns.add(fieldName);
+      }
+      loader.clear();
+      result.release();
+
+      String columnsList = columns.stream()
+          .collect(Collectors.joining(", "));
+
+      final List<Map<String, Object>> baselineRecords = new ArrayList<>();
+      baselineRecords.add(resultingValues);
+
+      for (StringBuilder selectBody : functions.values()) {
+        selectBody.setLength(selectBody.length() - 1);
+
+        testBuilder()
+            .sqlQuery("select %s from (select %s from %s limit 1)",
+                selectBody.toString(), columnsList, tableName)
+            .unOrdered()
+            .baselineRecords(baselineRecords)
+            .go();
+      }
+    }
+  }
+
+  @Test
+  public void testSingleValueWithMultipleValuesInput() throws Exception {
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("FUNCTION ERROR"));
+    thrown.expectMessage(containsString("Input for single_value function has more than one row"));
+    test("select single_value(n_name) from cp.`tpch/nation.parquet`");
   }
 
   /*

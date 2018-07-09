@@ -17,16 +17,27 @@
  */
 package org.apache.drill.exec.physical.unit;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.directory.api.util.Strings;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.FlattenPOP;
+import org.apache.drill.exec.physical.config.HashAggregate;
+import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
+import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
+import org.apache.drill.exec.physical.config.Project;
+import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -42,6 +53,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -68,10 +80,358 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     long totalSize = 0;
     for (VectorAccessible batch : batches) {
       RecordBatchSizer sizer = new RecordBatchSizer(batch);
-      totalSize += sizer.netSize();
+      totalSize += sizer.getNetBatchSize();
     }
     return totalSize;
   }
+
+  @Test
+  public void testProjectMap() throws Exception {
+    // create input rows like this.
+    // "a" : 5, "b" : wideString, "c" : [{"trans_id":"t1", amount:100, trans_time:7777777, type:sports},
+    //                                   {"trans_id":"t1", amount:100, trans_time:8888888, type:groceries}]
+    StringBuilder batchString = new StringBuilder("[");
+    for (int i = 0; i < numRows; i++) {
+      batchString.append("{\"a\": 5, " + "\"b\" : " + "\"" + "abc" + "\"," +
+                         " \"c\" : { \"trans_id\":\"t1\", \"amount\":100, \"trans_time\":7777777, \"type\":\"sports\"}," +
+                         " \"d\": { \"trans_id\":\"t2\", \"amount\":1000, \"trans_time\":8888888, \"type\":\"groceries\"}");
+      batchString.append(i != numRows - 1 ? "}," : "}]");
+    }
+    List<String> inputJsonBatches = Lists.newArrayList();
+    inputJsonBatches.add(batchString.toString());
+
+    StringBuilder expectedString = new StringBuilder("[");
+    for (int i = 0; i < numRows; i++) {
+      expectedString.append("{\"aplusamount\": 105");
+      expectedString.append(i != numRows - 1 ? "}," : "}]");
+    }
+
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    expectedJsonBatches.add(expectedString.toString());
+
+    String[] baselineColumns = new String[1];
+    baselineColumns[0] = "aplusamount";
+
+    String[] expr = {"a + c.amount ", baselineColumns[0]};
+
+    Project projectConf = new Project(parseExprs(expr), null);
+    mockOpContext(projectConf, initReservation, maxAllocation);
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(projectConf)
+            .inputDataStreamJson(inputJsonBatches)
+            .baselineColumns(baselineColumns)
+            .expectedNumBatches(2)  // verify number of batches
+            .expectedBatchSize(totalSize / 2); // verify batch size.
+
+    Long[] baseLineValues = {(5l + 100l)}; // a + c.amount
+    for (int i = 0; i < numRows; i++) {
+      opTestBuilder.baselineValues(baseLineValues);
+    }
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testProjectVariableWidthFunctions() throws  Exception {
+    //size calculators
+    StringBuilder batchString = new StringBuilder("[");
+    String strValue = "abcde";
+    for (int i = 0; i < numRows; i++) {
+      batchString.append("{\"a\" : " + "\"" + strValue + "\"");
+      batchString.append(i != numRows - 1 ? "}," : "}]");
+    }
+    List<String> inputJsonBatches = Lists.newArrayList();
+    inputJsonBatches.add(batchString.toString());
+
+    // inputSize, as calculated below will be numRows * (inputRowsize),
+    // inputRowSize = metadata cols + sizeof("abcde"), numRows = 4000
+    // So, inputSize = 4000 * ( 4 + 1 + 5 ) = 40000
+    // inputSize is used as the batch memory limit for the tests.
+    // Depending on the function being evaluated, different output batch counts will be expected
+    long inputSize = getExpectedSize(inputJsonBatches);
+    String inputSizeStr = inputSize + "";
+
+    String [][] functions =
+                         {  //{ OP name, OP result, OP SQL str, Memory Limit, Num Expected Batches }
+
+                         // concat() o/p size will be 2 x input size, so at least 2 batches expected
+                         {"concat", strValue + strValue, "concat(a,a)", inputSizeStr, 2 + ""},
+                         // upper() o/p size will same as input size, so at least 1 batch is expected
+                         {"upper", strValue.toUpperCase(),"upper(a)", inputSizeStr, 1 + ""},
+                         // repeat() is assumed to produce a row-size of 50.
+                         // input row size is 10 (null vector + offset vector + abcde)
+                         // so at least 5 batches are expected
+                         {"repeat", strValue + strValue, "repeatstr(a, 2)", inputSizeStr, 5 + ""},
+                         // substr() is assumed to produce a row size which is same as input
+                         // so at least 1 batch is expected
+                         {"substr", strValue.substring(0, 4), "substr(a, 1, 4)", inputSizeStr, 1 + "" }
+                      };
+
+    for (String[] fn : functions) {
+      String outputColumnName = fn[0] + "_result";
+      String operationResult = fn[1];
+      String exprStr = fn[2];
+      long memoryLimit = Long.valueOf(fn[3]);
+      int expectedNumBatches = Integer.valueOf(fn[4]);
+
+      StringBuilder expectedString = new StringBuilder("[");
+      for (int i = 0; i < numRows; i++) {
+        expectedString.append("{\"" + outputColumnName + "\":" + operationResult);
+        expectedString.append(i != numRows - 1 ? "}," : "}]");
+      }
+
+      List<String> expectedJsonBatches = Lists.newArrayList();
+      expectedJsonBatches.add(expectedString.toString());
+
+      String[] baselineColumns = new String[1];
+      baselineColumns[0] = outputColumnName;
+
+      String[] expr = {exprStr, baselineColumns[0]};
+
+      Project projectConf = new Project(parseExprs(expr), null);
+      mockOpContext(projectConf, initReservation, maxAllocation);
+
+      fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", memoryLimit);
+
+      OperatorTestBuilder opTestBuilder = opTestBuilder()
+              .physicalOperator(projectConf)
+              .inputDataStreamJson(inputJsonBatches)
+              .baselineColumns(baselineColumns)
+              .expectedNumBatches(expectedNumBatches)  // verify number of batches
+              .expectedBatchSize(memoryLimit); // verify batch size.
+
+      String[] baseLineValues = {operationResult}; //operation(a, a)
+      for (int i = 0; i < numRows; i++) {
+        opTestBuilder.baselineValues(baseLineValues);
+      }
+      opTestBuilder.go();
+    }
+  }
+
+
+  @Test
+  public void testProjectFixedWidthTransfer() throws Exception {
+    testProjectFixedWidthImpl(true, 100);
+  }
+
+  @Test
+  public void testProjectFixedWidthNewColumn() throws Exception {
+    testProjectFixedWidthImpl(false, 100);
+  }
+
+   /**
+    * Tests BatchSizing of fixed-width transfers and new column creations in Project.
+    * Transfer: Evaluates 'select *'
+    * New Columns: Evalutes 'select C0 + 5 as C0 ... C[columnCount] + 5 as C[columnCount]
+    * @param transfer
+    * @throws Exception
+    */
+
+  public void testProjectFixedWidthImpl(boolean transfer, int columnCount) throws  Exception {
+
+    //generate a row with N columns C0..C[columnCount], value in a column is same as column id
+    StringBuilder jsonRow = new StringBuilder("{");
+    String[] baselineColumns = new String [columnCount];
+    Object[] baselineValues = new Long[columnCount];
+
+    int exprSize = (transfer ? 2 : 2 * columnCount);
+    String[] expr = new String[exprSize];
+
+    // Expr for a 'select *' as expected by parseExprs()
+    if (transfer) {
+      expr[0] = "`**`";
+      expr[1] = "`**`";
+    }
+
+    for (int i = 0; i < columnCount; i++) {
+      jsonRow.append("\"" + "C" + i + "\": " + i + ((i == columnCount - 1) ? "" : ","));
+      baselineColumns[i] = "C" + i;
+      if (!transfer) {
+        expr[i * 2] = baselineColumns[i] + " + 5";
+        expr[i * 2 + 1] = baselineColumns[i];
+      }
+      baselineValues[i] = (long)(transfer ? i : i + 5);
+    }
+    jsonRow.append("}");
+    StringBuilder batchString = new StringBuilder("[");
+    for (int i = 0; i < numRows; i++) {
+      batchString.append(jsonRow + ((i == numRows - 1) ? "" : ","));
+    }
+    batchString.append("]");
+    List<String> inputJsonBatches = Lists.newArrayList();
+    inputJsonBatches.add(batchString.toString());
+
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    expectedJsonBatches.add(batchString.toString());
+
+    Project projectConf = new Project(parseExprs(expr), null);
+    mockOpContext(projectConf, initReservation, maxAllocation);
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(projectConf)
+            .inputDataStreamJson(inputJsonBatches)
+            .baselineColumns(baselineColumns)
+            .expectedNumBatches(2)  // verify number of batches
+            .expectedBatchSize(totalSize / 2); // verify batch size.
+
+    for (int i = 0; i < numRows; i++) {
+      opTestBuilder.baselineValues(baselineValues);
+    }
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testProjectVariableWidthTransfer() throws Exception {
+    testProjectVariableWidthImpl(true, 50, "ABCDEFGHIJ");
+  }
+
+  @Test
+  public void testProjectVariableWidthNewColumn() throws Exception {
+    testProjectVariableWidthImpl(false, 50, "ABCDEFGHIJ");
+  }
+
+  @Test
+  public void testProjectZeroWidth() throws Exception {
+    testProjectVariableWidthImpl(true, 50, "");
+  }
+
+
+  public void testProjectVariableWidthImpl(boolean transfer, int columnCount, String testString) throws Exception {
+
+    StringBuilder jsonRow = new StringBuilder("{");
+    String[] baselineColumns = new String [columnCount];
+    Object[] baselineValues = new String[columnCount];
+    int exprSize = (transfer ? 2 : 2 * columnCount);
+    String[] expr = new String[exprSize];
+
+    // Expr for a 'select *' as expected by parseExprs()
+    if (transfer) {
+      expr[0] = "`**`";
+      expr[1] = "`**`";
+    }
+
+    for (int i = 0; i < columnCount; i++) {
+      jsonRow.append("\"" + "C" + i + "\": " + "\"" + testString + "\"" + ((i == columnCount - 1) ? "" : ","));
+      baselineColumns[i] = "C" + i;
+      if (!transfer) {
+        expr[i * 2] = "lower(" + baselineColumns[i] + ")";
+        expr[i * 2 + 1] = baselineColumns[i];
+      }
+      baselineValues[i] = (transfer ? testString : Strings.lowerCase(testString));
+    }
+    jsonRow.append("}");
+    StringBuilder batchString = new StringBuilder("[");
+    for (int i = 0; i < numRows; i++) {
+      batchString.append(jsonRow + ((i == numRows - 1) ? "" : ","));
+    }
+    batchString.append("]");
+    List<String> inputJsonBatches = Lists.newArrayList();
+    inputJsonBatches.add(batchString.toString());
+
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    expectedJsonBatches.add(batchString.toString());
+
+    Project projectConf = new Project(parseExprs(expr), null);
+    mockOpContext(projectConf, initReservation, maxAllocation);
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(projectConf)
+            .inputDataStreamJson(inputJsonBatches)
+            .baselineColumns(baselineColumns)
+            .expectedNumBatches(2)  // verify number of batches
+            .expectedBatchSize(totalSize / 2); // verify batch size.
+
+    for (int i = 0; i < numRows; i++) {
+      opTestBuilder.baselineValues(baselineValues);
+    }
+    opTestBuilder.go();
+  }
+
+  /**
+   * Test expression with transfer and new columns
+   * @throws Exception
+   */
+  @Test
+  public void testProjectVariableWidthMixed() throws Exception {
+    String testString = "ABCDEFGHIJ";
+    StringBuilder jsonRow = new StringBuilder("{");
+    // 50 new columns and 1 transfer
+    final int colCount = 50 + 1;
+    String[] baselineColumns = new String [colCount];
+    Object[] baselineValues = new String[colCount];
+    int exprSize = 2 * colCount;
+    String[] expr = new String[exprSize];
+
+    // columns C1 ... C50
+    for (int i = 1; i < colCount; i++) {
+      jsonRow.append("\"" + "C" + i + "\": " + "\"" + testString + "\"" + ((i == colCount - 1) ? "" : ","));
+      baselineColumns[i] = "C" + i;
+      // New columns lower(C1) as C1, ... lower(C50) as C50
+      expr[i * 2] = "lower(" + baselineColumns[i] + ")";
+      expr[i * 2 + 1] = baselineColumns[i];
+
+      baselineValues[i] = Strings.lowerCase(testString);
+    }
+
+
+    //Transfer: C1 as COL1TR
+    expr[0] = "C1";
+    expr[1] = "COL1TR";
+    baselineColumns[0] = "COL1TR";
+    baselineValues[0] = testString;
+    String expectedJsonRow = jsonRow.toString() + ", \"COL1TR\": \"" + testString + "\"}";
+    jsonRow.append("}");
+
+    StringBuilder batchString = new StringBuilder("[");
+    StringBuilder expectedString = new StringBuilder("[");
+
+    for (int i = 0; i < numRows; i++) {
+      batchString.append(jsonRow + ((i == numRows - 1) ? "" : ","));
+      expectedString.append(expectedJsonRow + ((i == numRows - 1) ? "" : ","));
+    }
+    batchString.append("]");
+    expectedString.append("]");
+
+    List<String> inputJsonBatches = Lists.newArrayList();
+    inputJsonBatches.add(batchString.toString());
+
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    expectedJsonBatches.add(expectedString.toString());
+
+    Project projectConf = new Project(parseExprs(expr), null);
+    mockOpContext(projectConf, initReservation, maxAllocation);
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(projectConf)
+            .inputDataStreamJson(inputJsonBatches)
+            .baselineColumns(baselineColumns)
+            .expectedNumBatches(2)  // verify number of batches
+            .expectedBatchSize(totalSize / 2); // verify batch size.
+
+    for (int i = 0; i < numRows; i++) {
+      opTestBuilder.baselineValues(baselineValues);
+    }
+    opTestBuilder.go();
+  }
+
+
 
   @Test
   public void testFlattenFixedWidth() throws Exception {
@@ -1132,6 +1492,1139 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     }
 
     opTestBuilder.go();
+  }
+
+  @Test
+  public void testUnionOutputBatch() throws Exception {
+    UnionAll unionAll = new UnionAll(Collections.<PhysicalOperator> emptyList());
+    mockOpContext(unionAll, initReservation, maxAllocation);
+
+    // create  batches from both sides.
+    numRows = 4000;
+
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i);
+      expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows);
+    expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to twice of total size expected.
+    // We should get 2 batches, one for the left and one for the right.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize*2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(unionAll)
+      .baselineColumns("a1", "b1", "c1")
+      .expectedNumBatches(2)  // verify number of batches
+      .expectedBatchSize(totalSize) // verify batch size
+      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i);
+    }
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testUnionMultipleOutputBatches() throws Exception {
+    UnionAll unionAll = new UnionAll(Collections.<PhysicalOperator> emptyList());
+    mockOpContext(unionAll, initReservation, maxAllocation);
+
+    // create multiple batches from both sides.
+    numRows = 8000;
+
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows*2; i++) {
+      expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to half of total size expected.
+    // We should get 4 batches, 2 for the left and 2 for the right.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(unionAll)
+      .baselineColumns("a1", "b1", "c1")
+      .expectedNumBatches(4)  // verify number of batches
+      .expectedBatchSize(totalSize) // verify batch size
+      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i);
+    }
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testUnionLowerLimit() throws Exception {
+    UnionAll unionAll = new UnionAll(Collections.<PhysicalOperator> emptyList());
+    mockOpContext(unionAll, initReservation, maxAllocation);
+
+    // create multiple batches from both sides.
+    numRows = 10;
+
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows*2; i++) {
+      expectedBatchString.append("{\"a1\": 5, " +  "\"c1\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"c1\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size very low so we get only one row per batch.
+    // We should get 22 batches for 22 rows.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", 128);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(unionAll)
+      .baselineColumns("a1","b1", "c1")
+      .expectedNumBatches(22)  // verify number of batches
+      .expectedBatchSize(totalSize) // verify batch size
+      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i);
+    }
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testHashJoinMultipleOutputBatches() throws Exception {
+    HashJoinPOP hashJoin = new HashJoinPOP(null, null,
+      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+    mockOpContext(hashJoin, initReservation, maxAllocation);
+
+    numRows = 4000 * 2;
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i);
+      expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows);
+    expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately 4 batches because of fragmentation factor of 2 accounted for in merge join.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashJoin)
+      .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
+      .expectedNumBatches(4)  // verify number of batches
+      .expectedBatchSize(totalSize / 2) // verify batch size
+      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows+1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testHashJoinSingleOutputBatch() throws Exception {
+    HashJoinPOP hashJoin = new HashJoinPOP(null, null,
+      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+    mockOpContext(hashJoin, initReservation, maxAllocation);
+
+    // create multiple batches from both sides.
+    numRows = 4096 * 2;
+
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i);
+      expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows);
+    expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to twice of total size expected.
+    // We should get 1 batch.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize*2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashJoin)
+      .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
+      .expectedNumBatches(1)  // verify number of batches
+      .expectedBatchSize(totalSize) // verify batch size
+      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testHashJoinUpperLimit() throws Exception {
+    // test the upper limit of 65535 records per batch.
+    HashJoinPOP hashJoin = new HashJoinPOP(null, null,
+      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+    mockOpContext(hashJoin, initReservation, maxAllocation);
+
+    numRows = 100000;
+
+    // create left input rows like this.
+    // "a1" : 5,  "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5,  "c1" : 1, "a2":6,  "c2": 1
+    // "a1" : 5,  "c1" : 2, "a2":6,  "c2": 2
+    // "a1" : 5,  "c1" : 3, "a2":6,  "c2": 3
+
+    // expect two batches, batch limited by 65535 records
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashJoin)
+      .baselineColumns("a1", "c1", "a2", "c2")
+      .expectedNumBatches(2)  // verify number of batches
+      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, i, 6l, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testHashJoinLowerLimit() throws Exception {
+    // test the lower limit of at least one batch
+    HashJoinPOP hashJoin = new HashJoinPOP(null, null,
+      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+    mockOpContext(hashJoin, initReservation, maxAllocation);
+
+    numRows = 10;
+
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
+
+    // set very low value of output batch size so we can do only one row per batch.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", 128);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashJoin)
+      .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
+      .expectedNumBatches(10)  // verify number of batches
+      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testRightOuterHashJoin() throws Exception {
+
+    HashJoinPOP hashJoin = new HashJoinPOP(null, null,
+      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.RIGHT);
+    mockOpContext(hashJoin, initReservation, maxAllocation);
+
+    numRows = 4000 * 2;
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i);
+      expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows);
+    expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately 4 batches because of fragmentation factor of 2 accounted for in merge join.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashJoin)
+      .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
+      .expectedNumBatches(4)  // verify number of batches
+      .expectedBatchSize(totalSize / 2) // verify batch size
+      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testLeftOuterHashJoin() throws Exception {
+
+    HashJoinPOP hashJoin = new HashJoinPOP(null, null,
+      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.LEFT);
+    mockOpContext(hashJoin, initReservation, maxAllocation);
+
+    numRows = 4000 * 2;
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i);
+      expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows);
+    expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately 4 batches because of fragmentation factor of 2 accounted for in merge join.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashJoin)
+      .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
+      .expectedNumBatches(4)  // verify number of batches
+      .expectedBatchSize(totalSize / 2) // verify batch size
+      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows+1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
+    }
+
+    opTestBuilder.go();
+
+  }
+
+  @Test
+  public void testSimpleHashAgg() {
+    HashAggregate aggConf = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("sum(b)", "b_sum"), 1.0f);
+    List<String> inputJsonBatches = Lists.newArrayList(
+       "[{\"a\": 5, \"b\" : 1 }]",
+         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
+
+    opTestBuilder()
+      .physicalOperator(aggConf)
+      .inputDataStreamJson(inputJsonBatches)
+      .baselineColumns("b_sum", "a")
+      .baselineValues(6l, 5l)
+      .baselineValues(8l, 3l)
+      .go();
+  }
+
+  @Test
+  public void testHashAggSum() throws ExecutionSetupException {
+    HashAggregate hashAgg = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("sum(b)", "b_sum"), 1.0f);
+
+    // create input rows like this.
+    // "a" : 1, "b" : 1
+    // "a" : 1, "b" : 1
+    // "a" : 1, "b" : 1
+    List<String> inputJsonBatches = Lists.newArrayList();
+    StringBuilder batchString = new StringBuilder();
+    batchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+        batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+        batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+        batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+    }
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}" );
+
+    batchString.append("]");
+    inputJsonBatches.add(batchString.toString());
+
+    // Figure out what will be approximate total output size out of hash agg for input above
+    // We will use this sizing information to set output batch size so we can produce desired
+    // number of batches that can be verified.
+
+    // output rows will be like this.
+    // "a" : 1, "b" : 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a\": " + i + ", \"b\": " + (3*i) + "},");
+    }
+    expectedBatchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}" );
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately get 2 batches and max of 4.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashAgg)
+      .inputDataStreamJson(inputJsonBatches)
+      .baselineColumns("a", "b_sum")
+      .expectedNumBatches(4)  // verify number of batches
+      .expectedBatchSize(totalSize/2); // verify batch size.
+
+
+    for (int i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues((long)i, (long)3*i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testHashAggAvg() throws ExecutionSetupException {
+    HashAggregate hashAgg = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("avg(b)", "b_avg"), 1.0f);
+
+    // create input rows like this.
+    // "a" : 1, "b" : 1
+    // "a" : 1, "b" : 1
+    // "a" : 1, "b" : 1
+    List<String> inputJsonBatches = Lists.newArrayList();
+    StringBuilder batchString = new StringBuilder();
+    batchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+      batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+      batchString.append("{\"a\": " + i + ", \"b\": " + i + "},");
+    }
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}" );
+
+    batchString.append("]");
+    inputJsonBatches.add(batchString.toString());
+
+    // Figure out what will be approximate total output size out of hash agg for input above
+    // We will use this sizing information to set output batch size so we can produce desired
+    // number of batches that can be verified.
+
+    // output rows will be like this.
+    // "a" : 1, "b" : 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a\": " + i + ", \"b\": " + (3*i) + "},");
+    }
+    expectedBatchString.append("{\"a\": " + numRows + ", \"b\": " + numRows + "}" );
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately get 2 batches and max of 4.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashAgg)
+      .inputDataStreamJson(inputJsonBatches)
+      .baselineColumns("a", "b_avg")
+      .expectedNumBatches(4)  // verify number of batches
+      .expectedBatchSize(totalSize/2); // verify batch size.
+
+    for (int i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues((long)i, (double)i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testHashAggMax() throws ExecutionSetupException {
+    HashAggregate hashAgg = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("max(b)", "b_max"), 1.0f);
+
+    // create input rows like this.
+    // "a" : 1, "b" : "a"
+    // "a" : 2, "b" : "aa"
+    // "a" : 3, "b" : "aaa"
+    List<String> inputJsonBatches = Lists.newArrayList();
+    StringBuilder batchString = new StringBuilder();
+    batchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      batchString.append("{\"a\": " + i + ", \"b\": " + "\"a\"" + "},");
+      batchString.append("{\"a\": " + i + ", \"b\": " + "\"aa\"" + "},");
+      batchString.append("{\"a\": " + i + ", \"b\": " + "\"aaa\"" + "},");
+    }
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + "\"a\"" + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + "\"aa\"" + "}," );
+    batchString.append("{\"a\": " + numRows + ", \"b\": " + "\"aaa\"" + "}" );
+
+    batchString.append("]");
+    inputJsonBatches.add(batchString.toString());
+
+    // Figure out what will be approximate total output size out of hash agg for input above
+    // We will use this sizing information to set output batch size so we can produce desired
+    // number of batches that can be verified.
+
+    // output rows will be like this.
+    // "a" : 1, "b" : "aaa"
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a\": " + i + ", \"b\": " + "\"aaa\"" + "},");
+    }
+    expectedBatchString.append("{\"a\": " + numRows + ", \"b\": " + "\"aaa\"" + "}" );
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately get 2 batches and max of 4.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+      .physicalOperator(hashAgg)
+      .inputDataStreamJson(inputJsonBatches)
+      .baselineColumns("a", "b_max")
+      .expectedNumBatches(2)  // verify number of batches
+      .expectedBatchSize(totalSize); // verify batch size.
+
+    for (int i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues((long)i, "aaa");
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testNestedLoopJoinMultipleOutputBatches() throws Exception {
+    LogicalExpression functionCallExpr = new FunctionCall("equal",
+            ImmutableList.of((LogicalExpression) new FieldReference("c1", ExpressionPosition.UNKNOWN),
+                    (LogicalExpression) new FieldReference("c2", ExpressionPosition.UNKNOWN)),
+            ExpressionPosition.UNKNOWN);
+
+    NestedLoopJoinPOP nestedLoopJoin = new NestedLoopJoinPOP(null, null, JoinRelType.INNER, functionCallExpr);
+    mockOpContext(nestedLoopJoin, initReservation, maxAllocation);
+
+    numRows = 4000 * 2;
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i);
+      expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows);
+    expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately 4 batches.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(nestedLoopJoin)
+            .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
+            .expectedNumBatches(4)  // verify number of batches
+            .expectedBatchSize(totalSize / 2) // verify batch size
+            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows+1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
+    }
+
+    opTestBuilder.go();
+
+  }
+
+  @Test
+  public void testNestedLoopJoinSingleOutputBatch() throws Exception {
+    LogicalExpression functionCallExpr = new FunctionCall("equal",
+            ImmutableList.of((LogicalExpression) new FieldReference("c1", ExpressionPosition.UNKNOWN),
+                    (LogicalExpression) new FieldReference("c2", ExpressionPosition.UNKNOWN)),
+            ExpressionPosition.UNKNOWN);
+
+    NestedLoopJoinPOP nestedLoopJoin = new NestedLoopJoinPOP(null, null, JoinRelType.INNER, functionCallExpr);
+
+    // create multiple batches from both sides.
+    numRows = 4096 * 2;
+
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i);
+      expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows);
+    expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to twice of total size expected.
+    // We should get 1 batch.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize*2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(nestedLoopJoin)
+            .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
+            .expectedNumBatches(1)  // verify number of batches
+            .expectedBatchSize(totalSize) // verify batch size
+            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testNestedLoopJoinUpperLimit() throws Exception {
+    // test the upper limit of 65535 records per batch.
+    LogicalExpression functionCallExpr = new FunctionCall("<",
+            ImmutableList.of((LogicalExpression) new FieldReference("c1", ExpressionPosition.UNKNOWN),
+                    (LogicalExpression) new FieldReference("c2", ExpressionPosition.UNKNOWN)),
+            ExpressionPosition.UNKNOWN);
+
+    NestedLoopJoinPOP nestedLoopJoin = new NestedLoopJoinPOP(null, null, JoinRelType.INNER, functionCallExpr);
+
+    numRows = 500;
+
+    // create left input rows like this.
+    // "a1" : 5,  "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5,  "c1" : 1, "a2":6,  "c2": 1
+    // "a1" : 5,  "c1" : 2, "a2":6,  "c2": 2
+    // "a1" : 5,  "c1" : 3, "a2":6,  "c2": 3
+
+    // we expect n(n+1)/2 number of records i.e. (500 * 501)/2 = 125250
+    // expect two batches, batch limited by 65535 records
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(nestedLoopJoin)
+            .baselineColumns("a1", "c1", "a2", "c2")
+            .expectedNumBatches(2)  // verify number of batches
+            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows+1; i++) {
+      for (long j = i+1; j < numRows+1; j++) {
+        opTestBuilder.baselineValues(5l, i, 6l, j);
+      }
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testNestedLoopJoinLowerLimit() throws Exception {
+    // test the lower limit of at least one batch
+    LogicalExpression functionCallExpr = new FunctionCall("equal",
+            ImmutableList.of((LogicalExpression) new FieldReference("c1", ExpressionPosition.UNKNOWN),
+                    (LogicalExpression) new FieldReference("c2", ExpressionPosition.UNKNOWN)),
+            ExpressionPosition.UNKNOWN);
+
+    NestedLoopJoinPOP nestedLoopJoin = new NestedLoopJoinPOP(null, null, JoinRelType.INNER, functionCallExpr);
+
+    numRows = 10;
+
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
+
+    // set very low value of output batch size so we can do only one row per batch.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", 128);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(nestedLoopJoin)
+            .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
+            .expectedNumBatches(10)  // verify number of batches
+            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows + 1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
+    }
+
+    opTestBuilder.go();
+  }
+
+  @Test
+  public void testLeftNestedLoopJoin() throws Exception {
+    LogicalExpression functionCallExpr = new FunctionCall("equal",
+            ImmutableList.of((LogicalExpression) new FieldReference("c1", ExpressionPosition.UNKNOWN),
+                    (LogicalExpression) new FieldReference("c2", ExpressionPosition.UNKNOWN)),
+            ExpressionPosition.UNKNOWN);
+
+    NestedLoopJoinPOP nestedLoopJoin = new NestedLoopJoinPOP(null, null, JoinRelType.LEFT, functionCallExpr);
+
+    numRows = 4000 * 2;
+    // create left input rows like this.
+    // "a1" : 5, "b1" : wideString, "c1" : <id>
+    List<String> leftJsonBatches = Lists.newArrayList();
+    StringBuilder leftBatchString = new StringBuilder();
+    leftBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i + "},");
+    }
+    leftBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows + "}");
+    leftBatchString.append("]");
+
+    leftJsonBatches.add(leftBatchString.toString());
+
+    // create right input rows like this.
+    // "a2" : 6, "b2" : wideString, "c2" : <id>
+    List<String> rightJsonBatches = Lists.newArrayList();
+    StringBuilder rightBatchString = new StringBuilder();
+    rightBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    rightBatchString.append("{\"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    rightBatchString.append("]");
+    rightJsonBatches.add(rightBatchString.toString());
+
+    // output rows will be like this.
+    // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
+    // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
+    // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
+    List<String> expectedJsonBatches = Lists.newArrayList();
+    StringBuilder expectedBatchString = new StringBuilder();
+    expectedBatchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + i);
+      expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + i + "},");
+    }
+    expectedBatchString.append("{\"a1\": 5, " + "\"b1\" : " + "\"" + wideString + "\"," + "\"c1\" : " + numRows);
+    expectedBatchString.append(", \"a2\": 6, " + "\"b2\" : " + "\"" + wideString + "\"," + "\"c2\" : " + numRows + "}");
+    expectedBatchString.append("]");
+    expectedJsonBatches.add(expectedBatchString.toString());
+
+    long totalSize = getExpectedSize(expectedJsonBatches);
+
+    // set the output batch size to 1/2 of total size expected.
+    // We will get approximately 4 batches.
+    fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(nestedLoopJoin)
+            .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
+            .expectedNumBatches(4)  // verify number of batches
+            .expectedBatchSize(totalSize / 2) // verify batch size
+            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+
+    for (long i = 0; i < numRows+1; i++) {
+      opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
+    }
+
+    opTestBuilder.go();
+
   }
 
   @Test

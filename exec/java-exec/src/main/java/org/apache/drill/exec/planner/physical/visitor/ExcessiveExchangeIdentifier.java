@@ -19,8 +19,8 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.Collections;
 import java.util.List;
-
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
+import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
@@ -28,9 +28,11 @@ import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.calcite.rel.RelNode;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
 
 public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, ExcessiveExchangeIdentifier.MajorFragmentStat, RuntimeException> {
   private final long targetSliceSize;
+  private LateralJoinPrel topMostLateralJoin = null;
 
   public ExcessiveExchangeIdentifier(long targetSliceSize) {
     this.targetSliceSize = targetSliceSize;
@@ -45,16 +47,26 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   public Prel visitExchange(ExchangePrel prel, MajorFragmentStat parent) throws RuntimeException {
     parent.add(prel);
     MajorFragmentStat newFrag = new MajorFragmentStat();
+    newFrag.setRightSideOfLateral(parent.isRightSideOfLateral());
     Prel newChild = ((Prel) prel.getInput()).accept(this, newFrag);
-
-    if (newFrag.isSingular() && parent.isSingular() &&
-        // if one of them has strict distribution or none, we can remove the exchange
-        (!newFrag.isDistributionStrict() || !parent.isDistributionStrict())
-        ) {
+    if (canRemoveExchange(parent, newFrag)) {
       return newChild;
     } else {
       return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode) newChild));
     }
+  }
+
+  private boolean canRemoveExchange(MajorFragmentStat parentFrag, MajorFragmentStat childFrag) {
+    if (childFrag.isSingular() && parentFrag.isSingular() &&
+       (!childFrag.isDistributionStrict() || !parentFrag.isDistributionStrict())) {
+      return true;
+    }
+
+    if (parentFrag.isRightSideOfLateral()) {
+      return true;
+    }
+
+    return false;
   }
 
   @Override
@@ -67,6 +79,40 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   @Override
   public Prel visitScan(ScanPrel prel, MajorFragmentStat s) throws RuntimeException {
     s.addScan(prel);
+    return prel;
+  }
+
+  @Override
+  public Prel visitLateral(LateralJoinPrel prel, MajorFragmentStat s) throws RuntimeException {
+    List<RelNode> children = Lists.newArrayList();
+    s.add(prel);
+
+    for (Prel p : prel) {
+      s.add(p);
+    }
+
+    // Traverse the left side of the Lateral join first. Left side of the
+    // Lateral shouldn't have any restrictions on Exchanges.
+    children.add(((Prel)prel.getInput(0)).accept(this, s));
+    // Save the outermost Lateral join so as to unset the flag later.
+    if (topMostLateralJoin == null) {
+      topMostLateralJoin = prel;
+    }
+
+    // Right side of the Lateral shouldn't have any Exchanges. Hence set the
+    // flag so that visitExchange removes the exchanges.
+    s.setRightSideOfLateral(true);
+    children.add(((Prel)prel.getInput(1)).accept(this, s));
+    if (topMostLateralJoin == prel) {
+      topMostLateralJoin = null;
+      s.setRightSideOfLateral(false);
+    }
+    return (Prel) prel.copy(prel.getTraitSet(), children);
+  }
+
+  @Override
+  public Prel visitUnnest(UnnestPrel prel, MajorFragmentStat s) throws RuntimeException {
+    s.addUnnest(prel);
     return prel;
   }
 
@@ -98,6 +144,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
     private double maxRows = 0d;
     private int maxWidth = Integer.MAX_VALUE;
     private boolean isMultiSubScan = false;
+    private boolean rightSideOfLateral = false;
 
     public void add(Prel prel) {
       maxRows = Math.max(prel.estimateRowCount(prel.getCluster().getMetadataQuery()), maxRows);
@@ -130,9 +177,20 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
       return w == 1;
     }
 
+    public boolean isRightSideOfLateral() {
+      return this.rightSideOfLateral;
+    }
+
+    public void addUnnest(UnnestPrel prel) {
+      add(prel);
+    }
+
+    public void setRightSideOfLateral(boolean rightSideOfLateral) {
+      this.rightSideOfLateral = rightSideOfLateral;
+    }
+
     public boolean isDistributionStrict() {
       return distributionAffinity == DistributionAffinity.HARD;
     }
   }
-
 }

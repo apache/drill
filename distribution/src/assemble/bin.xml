@@ -420,6 +420,11 @@
       <source>src/resources/drill-on-yarn-example.conf</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
-   </file>
+    </file>
+    <file>
+      <source>src/resources/storage-plugins-override-example.conf</source>
+      <outputDirectory>conf</outputDirectory>
+      <fileMode>0640</fileMode>
+    </file>
   </files>
 </assembly>

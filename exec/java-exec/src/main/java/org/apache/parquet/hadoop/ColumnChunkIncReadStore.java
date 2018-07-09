@@ -46,7 +46,7 @@ import org.apache.parquet.format.Util;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.CodecFactory.BytesDecompressor;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
-import org.apache.parquet.hadoop.util.CompatibilityUtil;
+import org.apache.parquet.hadoop.util.HadoopStreams;
 
 import io.netty.buffer.ByteBuf;
 
@@ -163,12 +163,10 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               ByteBuf buf = allocator.buffer(pageHeader.compressed_page_size);
               lastPage = buf;
               ByteBuffer buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
-              int lengthLeftToRead = pageHeader.compressed_page_size;
-              while (lengthLeftToRead > 0) {
-                lengthLeftToRead -= CompatibilityUtil.getBuf(in, buffer, lengthLeftToRead);
-              }
+              HadoopStreams.wrap(in).readFully(buffer);
+              buffer.flip();
               return new DataPageV1(
-                      decompressor.decompress(BytesInput.from(buffer, 0, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
+                      decompressor.decompress(BytesInput.from(buffer), pageHeader.getUncompressed_page_size()),
                       pageHeader.data_page_header.num_values,
                       pageHeader.uncompressed_page_size,
                       fromParquetStatistics(pageHeader.data_page_header.statistics, columnDescriptor.getType()),
@@ -182,28 +180,33 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               buf = allocator.buffer(pageHeader.compressed_page_size);
               lastPage = buf;
               buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
-              lengthLeftToRead = pageHeader.compressed_page_size;
-              while (lengthLeftToRead > 0) {
-                lengthLeftToRead -= CompatibilityUtil.getBuf(in, buffer, lengthLeftToRead);
-              }
+              HadoopStreams.wrap(in).readFully(buffer);
+              buffer.flip();
               DataPageHeaderV2 dataHeaderV2 = pageHeader.getData_page_header_v2();
               int dataSize = compressedPageSize - dataHeaderV2.getRepetition_levels_byte_length() - dataHeaderV2.getDefinition_levels_byte_length();
               BytesInput decompressedPageData =
                   decompressor.decompress(
-                      BytesInput.from(buffer, 0, pageHeader.compressed_page_size),
+                      BytesInput.from(buffer),
                       pageHeader.uncompressed_page_size);
+              ByteBuffer byteBuffer = decompressedPageData.toByteBuffer();
+              int limit = byteBuffer.limit();
+              byteBuffer.limit(dataHeaderV2.getRepetition_levels_byte_length());
+              BytesInput repetitionLevels = BytesInput.from(byteBuffer.slice());
+              byteBuffer.position(dataHeaderV2.getRepetition_levels_byte_length());
+              byteBuffer.limit(dataHeaderV2.getRepetition_levels_byte_length() + dataHeaderV2.getDefinition_levels_byte_length());
+              BytesInput definitionLevels = BytesInput.from(byteBuffer.slice());
+              byteBuffer.position(dataHeaderV2.getRepetition_levels_byte_length() + dataHeaderV2.getDefinition_levels_byte_length());
+              byteBuffer.limit(limit);
+              BytesInput data = BytesInput.from(byteBuffer.slice());
+
               return new DataPageV2(
                       dataHeaderV2.getNum_rows(),
                       dataHeaderV2.getNum_nulls(),
                       dataHeaderV2.getNum_values(),
-                      BytesInput.from(decompressedPageData.toByteBuffer(), 0, dataHeaderV2.getRepetition_levels_byte_length()),
-                      BytesInput.from(decompressedPageData.toByteBuffer(),
-                          dataHeaderV2.getRepetition_levels_byte_length(),
-                          dataHeaderV2.getDefinition_levels_byte_length()),
+                      repetitionLevels,
+                      definitionLevels,
                       parquetMetadataConverter.getEncoding(dataHeaderV2.getEncoding()),
-                      BytesInput.from(decompressedPageData.toByteBuffer(),
-                          dataHeaderV2.getRepetition_levels_byte_length() + dataHeaderV2.getDefinition_levels_byte_length(),
-                          dataSize),
+                      data,
                       uncompressedPageSize,
                       fromParquetStatistics(dataHeaderV2.getStatistics(), columnDescriptor.getType()),
                       dataHeaderV2.isIs_compressed()

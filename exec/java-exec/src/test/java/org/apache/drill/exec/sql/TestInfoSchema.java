@@ -383,9 +383,15 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   @Test
+  public void describePartialSchema() throws Exception {
+    test("use dfs");
+    test("describe schema tmp");
+  }
+
+  @Test
   public void describeSchemaOutput() throws Exception {
     final List<QueryDataBatch> result = testSqlWithResults("describe schema dfs.tmp");
-    assertTrue(result.size() == 1);
+    assertEquals(1, result.size());
     final QueryDataBatch batch = result.get(0);
     final RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
     loader.load(batch.getHeader().getDef(), batch.getData());
@@ -414,7 +420,7 @@ public class TestInfoSchema extends BaseTestQuery {
     assertEquals("file", configMap.get("type"));
 
     final FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs").getConfig();
-    final String tmpSchemaLocation = testConfig.workspaces.get("tmp").getLocation();
+    final String tmpSchemaLocation = testConfig.getWorkspaces().get("tmp").getLocation();
     assertEquals(tmpSchemaLocation, configMap.get("location"));
 
     batch.release();

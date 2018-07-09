@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
-import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionType;
+import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.VarLenBulkEntry;
 
 import io.netty.buffer.DrillBuf;
@@ -47,31 +47,25 @@ final class VarLenColumnBulkEntry implements VarLenBulkEntry {
   private boolean arrayBacked;
   /** indicator on whether the current data buffer is externally or internally owned */
   private boolean internalDataBuf;
+  /** indicates whether the entry was read from the overflow data or page data */
+  private boolean readFromPage;
 
   VarLenColumnBulkEntry(ColumnPrecisionInfo columnPrecInfo) {
     this(columnPrecInfo, VarLenBulkPageReader.BUFF_SZ);
   }
 
   VarLenColumnBulkEntry(ColumnPrecisionInfo columnPrecInfo, int buffSz) {
-    int lengthSz = -1;
-    int dataSz = -1;
 
-    if (ColumnPrecisionType.isPrecTypeFixed(columnPrecInfo.columnPrecisionType)) {
-      final int expectedDataLen = columnPrecInfo.precision;
-      final int maxNumValues = buffSz / (4 + expectedDataLen);
-      lengthSz = maxNumValues;
-      dataSz = maxNumValues * expectedDataLen + PADDING;
+    // For variable length data, we need to handle a) maximum number of entries
+    // and b) max entry length. Note that we don't optimize for fixed length
+    // columns as the reader can notice a false-positive (that is, the first
+    // values were fixed but not the rest).
+    final int largestDataLen = buffSz - UInt4Vector.VALUE_WIDTH;
+    final int maxNumValues = buffSz / UInt4Vector.VALUE_WIDTH;
+    final int lengthSz = maxNumValues;
+    final int dataSz = largestDataLen + PADDING;
 
-    } else {
-      // For variable length data, we need to handle a) maximum number of entries and b) max entry length
-      final int smallestDataLen = 1;
-      final int largestDataLen = buffSz - 4;
-      final int maxNumValues = buffSz / (4 + smallestDataLen);
-      lengthSz = maxNumValues;
-      dataSz = largestDataLen + PADDING;
-    }
-
-    this.lengths       = new int[lengthSz];
+    this.lengths = new int[lengthSz];
     this.internalArray = new byte[dataSz];
   }
 
@@ -167,6 +161,20 @@ final class VarLenColumnBulkEntry implements VarLenBulkEntry {
 
   int getMaxEntries() {
     return lengths.length;
+  }
+
+  /**
+   * @return the readFromPage
+   */
+  boolean isReadFromPage() {
+    return readFromPage;
+  }
+
+  /**
+   * @param readFromPage the readFromPage to set
+   */
+  void setReadFromPage(boolean readFromPage) {
+    this.readFromPage = readFromPage;
   }
 
 }

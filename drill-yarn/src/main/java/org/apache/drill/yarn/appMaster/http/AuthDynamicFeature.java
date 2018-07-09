@@ -44,7 +44,7 @@ import java.net.URLEncoder;
  * login page.
  * <p>
  * Shameless copy of
- * {@link org.apache.drill.exec.server.rest.auth.DynamicFeature}; the two
+ * {@link org.apache.drill.exec.server.rest.auth.AuthDynamicFeature}; the two
  * implementations should be merged at some point. The difference is only the
  * log in/log out constant references.
  */

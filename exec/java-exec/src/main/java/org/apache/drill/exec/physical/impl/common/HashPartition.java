@@ -53,6 +53,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.drill.exec.physical.impl.common.HashTable.BATCH_SIZE;
+
 /**
  * <h2>Overview</h2>
  * <p>
@@ -249,7 +251,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
       tmpBatchesList.add(currentBatch);
       partitionBatchesCount++;
 
-      long batchSize = new RecordBatchSizer(currentBatch).actualSize();
+      long batchSize = new RecordBatchSizer(currentBatch).getActualSize();
       inMemoryBatchStats.add(new HashJoinMemoryCalculator.BatchStat(currentBatch.getRecordCount(), batchSize));
 
       partitionInMemorySize += batchSize;
@@ -498,7 +500,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
       for (int recInd = 0; recInd < currentRecordCount; recInd++) {
         int hashCode = HV_vector.getAccessor().get(recInd);
         try {
-          hashTable.put(recInd, htIndex, hashCode);
+          hashTable.put(recInd, htIndex, hashCode, BATCH_SIZE);
         } catch (RetryAfterSpillException RE) {
           throw new OutOfMemoryException("HT put");
         } // Hash Join does not retry

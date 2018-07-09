@@ -21,16 +21,18 @@ import java.nio.ByteBuffer;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.PageDataInfo;
+import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VarLenColumnBulkInputCallback;
 
 /** Handles variable data types. */
-final class VarLenEntryReader extends VarLenAbstractEntryReader {
+final class VarLenEntryReader extends VarLenAbstractPageEntryReader {
 
   VarLenEntryReader(ByteBuffer buffer,
     PageDataInfo pageInfo,
     ColumnPrecisionInfo columnPrecInfo,
-    VarLenColumnBulkEntry entry) {
+    VarLenColumnBulkEntry entry,
+    VarLenColumnBulkInputCallback containerCallback) {
 
-    super(buffer, pageInfo, columnPrecInfo, entry);
+    super(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
   }
 
   /** {@inheritDoc} */
@@ -64,23 +66,23 @@ final class VarLenEntryReader extends VarLenAbstractEntryReader {
         break;
       }
 
-      final int data_len = getInt(srcBuff, srcPos);
+      final int dataLen = getInt(srcBuff, srcPos);
       srcPos += 4;
 
-      if (srcLen < (srcPos + data_len)
-       || tgtLen < (tgtPos + data_len)) {
+      if (srcLen < (srcPos + dataLen)
+       || tgtLen < (tgtPos + dataLen)) {
 
         break;
       }
 
-      valueLengths[numValues++] = data_len;
+      valueLengths[numValues++] = dataLen;
 
-      if (data_len > 0) {
-        vlCopy(srcBuff, srcPos, tgtBuff, tgtPos, data_len);
+      if (dataLen > 0) {
+        vlCopy(srcBuff, srcPos, tgtBuff, tgtPos, dataLen);
 
         // Update the counters
-        srcPos += data_len;
-        tgtPos += data_len;
+        srcPos += dataLen;
+        tgtPos += dataLen;
       }
     }
 
@@ -117,6 +119,12 @@ final class VarLenEntryReader extends VarLenAbstractEntryReader {
     if (remainingPageData() < (4 + dataLen)) {
       final String message = String.format("Invalid Parquet page metadata; cannot process advertised page count..");
       throw new DrillRuntimeException(message);
+    }
+
+    // Is there enough memory to handle this large value?
+    if (batchMemoryConstraintsReached(0, 4, dataLen)) {
+      entry.set(0, 0, 0, 0); // no data to be consumed
+      return entry;
     }
 
     // Register the length

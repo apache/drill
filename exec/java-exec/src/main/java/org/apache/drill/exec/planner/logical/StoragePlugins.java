@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
@@ -35,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginConfig>>{
+public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginConfig>> {
 
   private Map<String, StoragePluginConfig> storage;
 
@@ -93,6 +94,47 @@ public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginC
       return false;
     }
     return storage.equals(((StoragePlugins) obj).getStorage());
+  }
+
+  /**
+   * Put one plugin into current storage plugins map
+   *
+   * @param name storage plugin name
+   * @param config storage plugin config
+   */
+  public void put(String name, StoragePluginConfig config) {
+    storage.put(name, config);
+  }
+
+  /**
+   * Put other storage plugins into current storage plugins map
+   *
+   * @param plugins storage plugins
+   */
+  public void putAll(StoragePlugins plugins) {
+    Optional.ofNullable(plugins)
+        .ifPresent(p -> storage.putAll(p.getStorage()));
+  }
+
+  /**
+   * Put one plugin into current storage plugins map, if it was absent
+   *
+   * @param name storage plugin name
+   * @param config storage plugin config
+   * @return the previous storage plugin config, null if it was absent or it had null value
+   */
+  public StoragePluginConfig putIfAbsent(String name,  StoragePluginConfig config) {
+    return storage.putIfAbsent(name, config);
+  }
+
+  /**
+   * Return storage plugin config for certain plugin name
+   *
+   * @param pluginName storage plugin name
+   * @return storage plugin config
+   */
+  public StoragePluginConfig getConfig(String pluginName) {
+    return storage.get(pluginName);
   }
 
 }

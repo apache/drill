@@ -29,6 +29,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.parquet.column.ColumnDescriptor;
@@ -56,8 +57,8 @@ public class ParquetColumnMetadata {
   }
 
   public void resolveDrillType(Map<String, SchemaElement> schemaElements, OptionManager options) {
-    se = schemaElements.get(column.getPath()[0]);
-    type = ParquetToDrillTypeConverter.toMajorType(column.getType(), se.getType_length(),
+    se = schemaElements.get(ParquetReaderUtility.getFullColumnPath(column));
+    type = ParquetToDrillTypeConverter.toMajorType(column.getType(), column.getTypeLength(),
         getDataMode(column), se, options);
     field = MaterializedField.create(toFieldName(column.getPath()).getLastSegment().getNameSegment().getPath(), type);
     length = getDataTypeLength();
@@ -106,7 +107,7 @@ public class ParquetColumnMetadata {
    *
    * @return the length if fixed width, else <tt>UNDEFINED_LENGTH</tt> (-1)
    */
-  private int getDataTypeLength() {
+  public int getDataTypeLength() {
     if (! isFixedLength()) {
       return UNDEFINED_LENGTH;
     } else if (isRepeated()) {
@@ -126,29 +127,33 @@ public class ParquetColumnMetadata {
     return column.getMaxRepetitionLevel() > 0;
   }
 
+  public MaterializedField getField() {
+    return field;
+  }
+
   ValueVector buildVector(OutputMutator output) throws SchemaChangeException {
     Class<? extends ValueVector> vectorClass = TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
     vector = output.addField(field, vectorClass);
     return vector;
   }
 
-  ColumnReader<?> makeFixedWidthReader(ParquetRecordReader reader, int recordsPerBatch) throws Exception {
+  ColumnReader<?> makeFixedWidthReader(ParquetRecordReader reader) throws Exception {
     return ColumnReaderFactory.createFixedColumnReader(reader, true,
-        column, columnChunkMetaData, recordsPerBatch, vector, se);
+        column, columnChunkMetaData, vector, se);
   }
 
   @SuppressWarnings("resource")
-  FixedWidthRepeatedReader makeRepeatedFixedWidthReader(ParquetRecordReader reader, int recordsPerBatch) throws Exception {
+  FixedWidthRepeatedReader makeRepeatedFixedWidthReader(ParquetRecordReader reader) throws Exception {
     final RepeatedValueVector repeatedVector = RepeatedValueVector.class.cast(vector);
     ColumnReader<?> dataReader = ColumnReaderFactory.createFixedColumnReader(reader, true,
-        column, columnChunkMetaData, recordsPerBatch,
+        column, columnChunkMetaData,
         repeatedVector.getDataVector(), se);
     return new FixedWidthRepeatedReader(reader, dataReader,
-        getTypeLengthInBits(column.getType()), UNDEFINED_LENGTH, column, columnChunkMetaData, false, repeatedVector, se);
+        getTypeLengthInBits(column.getType()), column, columnChunkMetaData, false, repeatedVector, se);
   }
 
   VarLengthValuesColumn<?> makeVariableWidthReader(ParquetRecordReader reader) throws ExecutionSetupException {
-    return ColumnReaderFactory.getReader(reader, UNDEFINED_LENGTH, column, columnChunkMetaData, false, vector, se);
+    return ColumnReaderFactory.getReader(reader, column, columnChunkMetaData, false, vector, se);
   }
 
 }

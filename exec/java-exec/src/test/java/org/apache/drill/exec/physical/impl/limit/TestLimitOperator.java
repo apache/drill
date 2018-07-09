@@ -20,11 +20,34 @@ package org.apache.drill.exec.physical.impl.limit;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
+import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
 
 public class TestLimitOperator extends PhysicalOpUnitTestBase {
+
+  @Rule
+  public BaseDirTestWatcher baseDirTestWatcher = new BaseDirTestWatcher();
+
+  // DRILL-6474
+  @Test
+  public void testLimitIntegrationTest() throws Exception {
+    final ClusterFixtureBuilder builder = new ClusterFixtureBuilder(baseDirTestWatcher);
+
+    try (ClusterFixture clusterFixture = builder.build();
+         ClientFixture clientFixture = clusterFixture.clientFixture()) {
+      clientFixture.testBuilder()
+        .sqlQuery("select name_s10 from `mock`.`employees_100000` order by name_s10 offset 100")
+        .expectsNumRecords(99900)
+        .build()
+        .run();
+    }
+  }
 
   @Test
   public void testLimitMoreRecords() {

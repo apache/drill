@@ -17,9 +17,22 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.TableFunctionScan;
+import org.apache.calcite.rel.logical.LogicalCorrelate;
+import org.apache.calcite.rel.logical.LogicalExchange;
+import org.apache.calcite.rel.logical.LogicalIntersect;
+import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.calcite.rel.logical.LogicalMinus;
+import org.apache.calcite.rel.logical.LogicalSort;
+import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.calcite.rel.RelNode;
@@ -35,9 +48,11 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.planner.logical.DrillLimitRel;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -220,7 +235,13 @@ public class JoinUtils {
       if (currentrel instanceof DrillAggregateRel) {
         agg = (DrillAggregateRel)currentrel;
       } else if (currentrel instanceof RelSubset) {
-        currentrel = ((RelSubset)currentrel).getBest() ;
+        currentrel = ((RelSubset) currentrel).getBest() ;
+      } else if (currentrel instanceof DrillLimitRel) {
+        // TODO: Improve this check when DRILL-5691 is fixed.
+        // The problem is that RelMdMaxRowCount currently cannot be used
+        // due to CALCITE-1048.
+        Integer fetchValue = ((RexLiteral) ((DrillLimitRel) currentrel).getFetch()).getValueAs(Integer.class);
+        return fetchValue != null && fetchValue <= 1;
       } else if (currentrel.getInputs().size() == 1) {
         // If the rel is not an aggregate or RelSubset, but is a single-input rel (could be Project,
         // Filter, Sort etc.), check its input
@@ -233,6 +254,17 @@ public class JoinUtils {
     if (agg != null) {
       if (agg.getGroupSet().isEmpty()) {
         return true;
+      }
+      // Checks that expression in group by is a single and it is literal.
+      // When Calcite rewrites EXISTS sub-queries using SubQueryRemoveRule rules,
+      // it creates project with TRUE literal in expressions list and aggregate on top of it
+      // with empty call list and literal from project expression in group set.
+      if (agg.getAggCallList().isEmpty() && agg.getGroupSet().cardinality() == 1) {
+        ProjectExpressionsCollector expressionsCollector = new ProjectExpressionsCollector();
+        agg.accept(expressionsCollector);
+        List<RexNode> projectedExpressions = expressionsCollector.getProjectedExpressions();
+        return projectedExpressions.size() == 1
+            && RexUtil.isLiteral(projectedExpressions.get(agg.getGroupSet().nth(0)), true);
       }
     }
     return false;
@@ -267,4 +299,75 @@ public class JoinUtils {
     return isScalarSubquery(left) || isScalarSubquery(right);
   }
 
+  /**
+   * Collects expressions list from the input project.
+   * For the case when input rel node has single input, its input is taken.
+   */
+  private static class ProjectExpressionsCollector extends RelShuttleImpl {
+    private final List<RexNode> expressions = new ArrayList<>();
+
+    @Override
+    public RelNode visit(RelNode other) {
+      // RelShuttleImpl doesn't have visit methods for Project and RelSubset.
+      if (other instanceof RelSubset) {
+        return visit((RelSubset) other);
+      } else if (other instanceof Project) {
+        return visit((Project) other);
+      }
+      return super.visit(other);
+    }
+
+    @Override
+    public RelNode visit(TableFunctionScan scan) {
+      return scan;
+    }
+
+    @Override
+    public RelNode visit(LogicalJoin join) {
+      return join;
+    }
+
+    @Override
+    public RelNode visit(LogicalCorrelate correlate) {
+      return correlate;
+    }
+
+    @Override
+    public RelNode visit(LogicalUnion union) {
+      return union;
+    }
+
+    @Override
+    public RelNode visit(LogicalIntersect intersect) {
+      return intersect;
+    }
+
+    @Override
+    public RelNode visit(LogicalMinus minus) {
+      return minus;
+    }
+
+    @Override
+    public RelNode visit(LogicalSort sort) {
+      return sort;
+    }
+
+    @Override
+    public RelNode visit(LogicalExchange exchange) {
+      return exchange;
+    }
+
+    private RelNode visit(Project project) {
+      expressions.addAll(project.getProjects());
+      return project;
+    }
+
+    private RelNode visit(RelSubset subset) {
+      return Util.first(subset.getBest(), subset.getOriginal()).accept(this);
+    }
+
+    public List<RexNode> getProjectedExpressions() {
+      return expressions;
+    }
+  }
 }

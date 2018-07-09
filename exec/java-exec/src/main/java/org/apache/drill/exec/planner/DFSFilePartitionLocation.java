@@ -51,7 +51,7 @@ public class DFSFilePartitionLocation extends SimplePartitionLocation {
   /**
    * Returns the value for a give partition key
    * @param index - Index of the partition key whose value is to be returned
-   * @return
+   * @return The value for a partition.
    */
   @Override
   public String getPartitionValue(int index) {
@@ -61,7 +61,7 @@ public class DFSFilePartitionLocation extends SimplePartitionLocation {
 
   /**
    * Return the full location of this partition
-   * @return
+   * @return The partition location.
    */
   @Override
   public String getEntirePartitionLocation() {

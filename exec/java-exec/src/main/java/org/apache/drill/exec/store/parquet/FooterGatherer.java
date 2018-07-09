@@ -42,6 +42,7 @@ import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import com.google.common.base.Preconditions;
 
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+import static org.apache.parquet.format.converter.ParquetMetadataConverter.NO_FILTER;
 
 public class FooterGatherer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FooterGatherer.class);
@@ -160,7 +161,8 @@ public class FooterGatherer {
         footerBytes = ArrayUtils.subarray(footerBytes, start, start + size);
       }
 
-      ParquetMetadata metadata = ParquetFormatPlugin.parquetMetadataConverter.readParquetMetadata(new ByteArrayInputStream(footerBytes));
+      final ByteArrayInputStream from = new ByteArrayInputStream(footerBytes);
+      ParquetMetadata metadata = ParquetFormatPlugin.parquetMetadataConverter.readParquetMetadata(from, NO_FILTER);
       Footer footer = new Footer(status.getPath(), metadata);
       return footer;
     }

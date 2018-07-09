@@ -41,7 +41,6 @@ public interface RequestHandler<S extends ServerConnection<S>> {
    * @param pBody      message
    * @param dBody      data, maybe null
    * @param sender     used to {@link ResponseSender#send send} the response
-   * @return response to the request
    * @throws RpcException
    */
   void handle(S connection, int rpcType, ByteBuf pBody, ByteBuf dBody, ResponseSender sender)

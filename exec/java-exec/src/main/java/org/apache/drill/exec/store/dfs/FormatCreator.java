@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.UserException;
@@ -30,8 +31,6 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.util.ConstructorChecker;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.hadoop.conf.Configuration;
-
-import com.google.common.collect.Maps;
 
 /**
  * Responsible for instantiating format plugins
@@ -51,7 +50,7 @@ public class FormatCreator {
    * @return a map of type to constructor that taks the config
    */
   private static Map<Class<?>, Constructor<?>> initConfigConstructors(Collection<Class<? extends FormatPlugin>> pluginClasses) {
-    Map<Class<?>, Constructor<?>> constructors = Maps.newHashMap();
+    Map<Class<?>, Constructor<?>> constructors = new HashMap<>();
     for (Class<? extends FormatPlugin> pluginClass: pluginClasses) {
       for (Constructor<?> c : pluginClass.getConstructors()) {
         try {
@@ -91,8 +90,8 @@ public class FormatCreator {
     this.pluginClasses = classpathScan.getImplementations(FormatPlugin.class);
     this.configConstructors = initConfigConstructors(pluginClasses);
 
-    Map<String, FormatPlugin> plugins = Maps.newHashMap();
-    if (storageConfig.formats == null || storageConfig.formats.isEmpty()) {
+    Map<String, FormatPlugin> plugins = new HashMap<>();
+    if (storageConfig.getFormats() == null || storageConfig.getFormats().isEmpty()) {
       for (Class<? extends FormatPlugin> pluginClass: pluginClasses) {
         for (Constructor<?> c : pluginClass.getConstructors()) {
           try {
@@ -107,7 +106,7 @@ public class FormatCreator {
         }
       }
     } else {
-      for (Map.Entry<String, FormatPluginConfig> e : storageConfig.formats.entrySet()) {
+      for (Map.Entry<String, FormatPluginConfig> e : storageConfig.getFormats().entrySet()) {
         Constructor<?> c = configConstructors.get(e.getValue().getClass());
         if (c == null) {
           logger.warn("Unable to find constructor for storage config named '{}' of type '{}'.", e.getKey(), e.getValue().getClass().getName());

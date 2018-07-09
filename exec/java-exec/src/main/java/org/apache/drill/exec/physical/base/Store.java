@@ -61,14 +61,14 @@ public interface Store extends HasAffinity {
    * maxWidth value of 1 will be returned. In the case that there is no limit for parallelization, this method should
    * return Integer.MAX_VALUE.
    *
-   * @return
+   * @return The maximum allowable width for the Store operation.
    */
   @JsonIgnore
   public abstract int getMaxWidth();
 
   /**
    * Get the child of this store operator as this will be needed for parallelization materialization purposes.
-   * @return
+   * @return The child of this store operator.
    */
   public abstract PhysicalOperator getChild();
 }

@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.drill.common.CatastrophicFailure;
 import org.apache.drill.common.DeferredException;
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.exceptions.UserException;
@@ -43,11 +42,14 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.server.FailureUtils;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 import org.apache.hadoop.security.UserGroupInformation;
+
+import static org.apache.drill.exec.server.FailureUtils.EXIT_CODE_HEAP_OOM;
 
 /**
  * <h2>Overview</h2>
@@ -300,11 +302,11 @@ public class FragmentExecutor implements Runnable {
       });
 
     } catch (OutOfMemoryError | OutOfMemoryException e) {
-      if (!(e instanceof OutOfMemoryError) || "Direct buffer memory".equals(e.getMessage())) {
+      if (FailureUtils.isDirectMemoryOOM(e)) {
         fail(UserException.memoryError(e).build(logger));
       } else {
-        // we have a heap out of memory error. The JVM in unstable, exit.
-        CatastrophicFailure.exit(e, "Unable to handle out of memory condition in FragmentExecutor.", -2);
+        // we have a heap out of memory error. The JVM is unstable, exit.
+        FailureUtils.unrecoverableFailure(e, "Unable to handle out of memory condition in FragmentExecutor.", EXIT_CODE_HEAP_OOM);
       }
     } catch (InterruptedException e) {
       // Swallow interrupted exceptions since we intentionally interrupt the root when cancelling a query

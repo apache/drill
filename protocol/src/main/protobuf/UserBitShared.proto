@@ -31,7 +31,6 @@ message UserCredentials {
 message QueryId {
   optional sfixed64 part1 = 1;
   optional sfixed64 part2 = 2;
-  optional string text = 3;
 }
 
 message DrillPBError{
@@ -233,6 +232,7 @@ message QueryProfile {
   optional int64 queueWaitEnd = 19;
   optional double total_cost = 20;
   optional string queue_name = 21 [default = "-"];
+  optional string queryId = 22;
 }
 
 message MajorFragmentProfile {
@@ -332,6 +332,7 @@ enum CoreOperatorType {
   LATERAL_JOIN = 41;
   UNNEST = 42;
   HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;
+  JDBC_SCAN = 44;
 }
 
 /* Registry that contains list of jars, each jar contains its name and list of function signatures.

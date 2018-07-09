@@ -70,7 +70,6 @@ public class MaprDBTestsSuite {
           // Sleep to allow table data to be flushed to tables.
           // Without this, the row count stats to return 0,
           // causing the planner to reject optimized plans.
-          System.out.println("Sleeping for 5 seconds to allow table flushes");
           Thread.sleep(5000);
 
           conf = HBaseTestsSuite.getConf();

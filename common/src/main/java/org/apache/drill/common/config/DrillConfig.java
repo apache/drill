@@ -261,7 +261,7 @@ public class DrillConfig extends NestedConfig {
     final String className = getString(location);
     if (className == null) {
       throw new DrillConfigurationException(String.format(
-          "No class defined at location '%s'. Expected a definition of the class []",
+          "No class defined at location '%s'. Expected a definition of the class [%s]",
           location, clazz.getCanonicalName()));
     }
 

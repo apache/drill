@@ -25,7 +25,7 @@ import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
-import org.apache.drill.exec.planner.physical.CorrelatePrel;
+import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 
 /**
  * Debug-time class that prints a PRel tree to the console for
@@ -234,7 +234,7 @@ public class PrelVisualizerVisitor
   }
 
   @Override
-  public Void visitCorrelate(CorrelatePrel prel, VisualizationState value) throws Exception {
+  public Void visitLateral(LateralJoinPrel prel, VisualizationState value) throws Exception {
     visitPrel(prel, value);
     return null;
   }

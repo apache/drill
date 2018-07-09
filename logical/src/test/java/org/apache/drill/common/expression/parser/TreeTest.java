@@ -88,17 +88,10 @@ public class TreeTest extends DrillTest {
     ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
     CommonTokenStream tokens = new CommonTokenStream(lexer);
 
-//    tokens.fill();
-//    for(Token t : (List<Token>) tokens.getTokens()){
-//      System.out.println(t + "" + t.getType());
-//    }
-//    tokens.rewind();
-
     ExprParser parser = new ExprParser(tokens);
     parse_return ret = parser.parse();
 
     return ret.e;
-
   }
 
   private String serializeExpression(LogicalExpression expr){
@@ -122,10 +115,5 @@ public class TreeTest extends DrillTest {
     String newStringExpr = serializeExpression(e);
     logger.debug(newStringExpr);
     LogicalExpression e2 = parseExpression(newStringExpr);
-    //Assert.assertEquals(e, e2);
-
   }
-
-
-
 }

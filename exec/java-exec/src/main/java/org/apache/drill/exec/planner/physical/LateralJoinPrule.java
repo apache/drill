@@ -22,22 +22,22 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
-import org.apache.drill.exec.planner.logical.DrillCorrelateRel;
+import org.apache.drill.exec.planner.logical.DrillLateralJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 
-public class CorrelatePrule extends Prule {
-  public static final RelOptRule INSTANCE = new CorrelatePrule("Prel.CorrelatePrule",
-      RelOptHelper.any(DrillCorrelateRel.class));
+public class LateralJoinPrule extends Prule {
+  public static final RelOptRule INSTANCE = new LateralJoinPrule("Prel.LateralJoinPrule",
+      RelOptHelper.any(DrillLateralJoinRel.class));
 
-  private CorrelatePrule(String name, RelOptRuleOperand operand) {
+  private LateralJoinPrule(String name, RelOptRuleOperand operand) {
     super(operand, name);
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillCorrelateRel correlate = call.rel(0);
-    final RelNode left = correlate.getLeft();
-    final RelNode right = correlate.getRight();
+    final DrillLateralJoinRel lateralJoinRel = call.rel(0);
+    final RelNode left = lateralJoinRel.getLeft();
+    final RelNode right = lateralJoinRel.getRight();
     RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelTraitSet traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL);
 
@@ -46,11 +46,10 @@ public class CorrelatePrule extends Prule {
     final RelNode convertedLeft = convert(left, traitsLeft);
     final RelNode convertedRight = convert(right, traitsRight);
 
-    final CorrelatePrel correlatePrel = new CorrelatePrel(correlate.getCluster(),
+    final LateralJoinPrel lateralJoinPrel = new LateralJoinPrel(lateralJoinRel.getCluster(),
                                   corrTraits,
-                                  convertedLeft, convertedRight, correlate.getCorrelationId(),
-                                  correlate.getRequiredColumns(),correlate.getJoinType());
-    call.transformTo(correlatePrel);
+                                  convertedLeft, convertedRight, lateralJoinRel.excludeCorrelateColumn, lateralJoinRel.getCorrelationId(),
+                                  lateralJoinRel.getRequiredColumns(),lateralJoinRel.getJoinType());
+    call.transformTo(lateralJoinPrel);
   }
-
 }

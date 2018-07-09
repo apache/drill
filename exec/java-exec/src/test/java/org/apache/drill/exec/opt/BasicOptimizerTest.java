@@ -32,8 +32,6 @@ public class BasicOptimizerTest extends ExecTest {
         DrillConfig c = DrillConfig.create();
         LogicalPlanPersistence lpp = PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c);
         LogicalPlan plan = LogicalPlan.parse(lpp, DrillFileUtils.getResourceAsString("/scan_screen_logical.json"));
-        String unparse = plan.unparse(lpp);
-//        System.out.println(unparse);
-        //System.out.println( new BasicOptimizer(DrillConfig.create()).convert(plan).unparse(c.getMapper().writer()));
+        plan.unparse(lpp);
     }
 }

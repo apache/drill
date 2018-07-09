@@ -577,14 +577,12 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     // empty offsets for the missing rows.
 
     actual = fixture.wrap(rsLoader.harvest());
-//    System.out.println(actual.schema().toString());
     expected = fixture.rowSetBuilder(actual.schema())
         .addRow(40, mapValue(intArray(410, 420), strArray("d4.1", "d4.2"), strArray()))
         .addRow(50, mapValue(intArray(510), strArray("d5.1"), strArray()))
         .addRow(60, mapValue(intArray(610, 620), strArray("d6.1", "d6.2"), strArray("e6.1", "e6.2")))
         .addRow(70, mapValue(intArray(710), strArray(), strArray("e7.1", "e7.2")))
         .build();
-//    expected.print();
 
     new RowSetComparison(expected).verifyAndClearAll(actual);
 

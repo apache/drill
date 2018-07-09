@@ -27,19 +27,20 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 public interface LateralContract {
 
   /**
-   * Get reference to left side incoming of LateralJoinRecordBatch
-   * @return
+   * Get reference to left side incoming of {@link org.apache.drill.exec.physical.impl.join.LateralJoinBatch}.
+   * @return The incoming {@link org.apache.drill.exec.record.RecordBatch}
    */
   RecordBatch getIncoming();
 
   /**
-   * Get current record index in incoming to be processed
-   * @return
+   * Get current record index in incoming to be processed.
+   * @return The current record index in incoming to be processed.
    */
   int getRecordIndex();
 
   /**
-   * Get the current outcome of left incoming batch
+   * Get the current outcome of left incoming batch.
+   * @return The current outcome of left incoming batch.
    */
   IterOutcome getLeftOutcome();
 }

@@ -167,12 +167,6 @@ public class DrillSeparatePlanningTest extends ClusterTest {
     client.alterSession("planner.slice_target", 1);
     try {
       QueryPlanFragments planFragments = client.planQuery(QueryType.SQL, query, true);
-
-      // Uncomment for debugging.
-
-//      for (PlanFragment fragment : planFragments.getFragmentsList()) {
-//        System.out.println(fragment.getFragmentJson());
-//      }
       return planFragments;
     }
     finally {

@@ -17,51 +17,49 @@
  */
 package org.apache.drill.exec.record;
 
-import org.apache.drill.exec.ops.MetricDef;
+import java.util.Set;
 
 public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinBatchMemoryManager.class);
 
-  private int leftRowWidth;
-
-  private int rightRowWidth;
-
-  private RecordBatch leftIncoming;
-
-  private RecordBatch rightIncoming;
+  private int rowWidth[];
+  private RecordBatch recordBatch[];
+  private Set<String> columnsToExclude;
 
   private static final int numInputs = 2;
-
   public static final int LEFT_INDEX = 0;
-
   public static final int RIGHT_INDEX = 1;
 
-  public JoinBatchMemoryManager(int outputBatchSize, RecordBatch leftBatch, RecordBatch rightBatch) {
+  public JoinBatchMemoryManager(int outputBatchSize, RecordBatch leftBatch,
+                                RecordBatch rightBatch, Set<String> excludedColumns) {
     super(numInputs, outputBatchSize);
-    this.leftIncoming = leftBatch;
-    this.rightIncoming = rightBatch;
+    recordBatch = new RecordBatch[numInputs];
+    recordBatch[LEFT_INDEX] = leftBatch;
+    recordBatch[RIGHT_INDEX] = rightBatch;
+    rowWidth = new int[numInputs];
+    this.columnsToExclude = excludedColumns;
   }
 
-  @Override
-  public int update(int inputIndex, int outputPosition) {
-    switch (inputIndex) {
-      case LEFT_INDEX:
-        setRecordBatchSizer(inputIndex, new RecordBatchSizer(leftIncoming));
-        leftRowWidth = getRecordBatchSizer(inputIndex).getRowAllocSize();
-        break;
-      case RIGHT_INDEX:
-        setRecordBatchSizer(inputIndex, new RecordBatchSizer(rightIncoming));
-        rightRowWidth = getRecordBatchSizer(inputIndex).getRowAllocSize();
-      default:
-        break;
+  private int updateInternal(int inputIndex, int outputPosition,  boolean useAggregate) {
+    updateIncomingStats(inputIndex);
+    rowWidth[inputIndex] = useAggregate ? (int) getAvgInputRowWidth(inputIndex) : getRecordBatchSizer(inputIndex).getRowAllocWidth();
+
+    // Reduce the width of excluded columns from actual rowWidth
+    for (String columnName : columnsToExclude) {
+      final RecordBatchSizer.ColumnSize currentColSizer = getColumnSize(inputIndex, columnName);
+      if (currentColSizer == null) {
+        continue;
+      }
+      rowWidth[inputIndex] -= currentColSizer.getAllocSizePerEntry();
     }
 
-    updateIncomingStats(inputIndex);
-    final int newOutgoingRowWidth = leftRowWidth + rightRowWidth;
+    // Get final net outgoing row width after reducing the excluded columns width
+    int newOutgoingRowWidth = rowWidth[LEFT_INDEX] + rowWidth[RIGHT_INDEX];
 
-    // If outgoing row width is 0, just return. This is possible for empty batches or
+    // If outgoing row width is 0 or there is no change in outgoing row width, just return.
+    // This is possible for empty batches or
     // when first set of batches come with OK_NEW_SCHEMA and no data.
-    if (newOutgoingRowWidth == 0) {
+    if (newOutgoingRowWidth == 0 || newOutgoingRowWidth == getOutgoingRowWidth()) {
       return getOutputRowCount();
     }
 
@@ -87,33 +85,24 @@ public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
   }
 
   @Override
-  public RecordBatchSizer.ColumnSize getColumnSize(String name) {
-    RecordBatchSizer leftSizer = getRecordBatchSizer(LEFT_INDEX);
-    RecordBatchSizer rightSizer = getRecordBatchSizer(RIGHT_INDEX);
-
-    if (leftSizer != null && leftSizer.getColumn(name) != null) {
-      return leftSizer.getColumn(name);
-    }
-    return rightSizer == null ? null : rightSizer.getColumn(name);
+  public int update(int inputIndex, int outputPosition, boolean useAggregate) {
+    setRecordBatchSizer(inputIndex, new RecordBatchSizer(recordBatch[inputIndex]));
+    return updateInternal(inputIndex, outputPosition, useAggregate);
   }
 
-  public enum Metric implements MetricDef {
-    LEFT_INPUT_BATCH_COUNT,
-    LEFT_AVG_INPUT_BATCH_BYTES,
-    LEFT_AVG_INPUT_ROW_BYTES,
-    LEFT_INPUT_RECORD_COUNT,
-    RIGHT_INPUT_BATCH_COUNT,
-    RIGHT_AVG_INPUT_BATCH_BYTES,
-    RIGHT_AVG_INPUT_ROW_BYTES,
-    RIGHT_INPUT_RECORD_COUNT,
-    OUTPUT_BATCH_COUNT,
-    AVG_OUTPUT_BATCH_BYTES,
-    AVG_OUTPUT_ROW_BYTES,
-    OUTPUT_RECORD_COUNT;
+  @Override
+  public int update(int inputIndex, int outputPosition) {
+    return update(inputIndex, outputPosition, false);
+  }
 
-    @Override
-    public int metricId() {
-      return ordinal();
-    }
+  @Override
+  public int update(RecordBatch batch, int inputIndex, int outputPosition, boolean useAggregate) {
+    setRecordBatchSizer(inputIndex, new RecordBatchSizer(batch));
+    return updateInternal(inputIndex, outputPosition, useAggregate);
+  }
+
+  @Override
+  public int update(RecordBatch batch, int inputIndex, int outputPosition) {
+    return update(batch, inputIndex, outputPosition, false);
   }
 }

@@ -29,7 +29,7 @@ public interface SchedulerStateActions {
   /**
    * Returns the name of the scheduler associated with this task action group.
    *
-   * @return
+   * @return The name of the scheduler associated with this task action group.
    */
 
   String getName();
@@ -37,7 +37,7 @@ public interface SchedulerStateActions {
   /**
    * Returns the scheduler associated with this task group.
    *
-   * @return
+   * @return The scheduler associated with this task group.
    */
 
   Scheduler getScheduler();
@@ -80,7 +80,7 @@ public interface SchedulerStateActions {
    * differentiates the start state (when no tasks are active) from the end
    * state. The AM will not shut down until all task groups are done.
    *
-   * @return
+   * @return True if this task group is done. False otherwise.
    */
 
   boolean isDone();

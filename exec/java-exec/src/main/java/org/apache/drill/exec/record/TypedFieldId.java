@@ -283,4 +283,36 @@ public class TypedFieldId {
         + ", remainder=" + remainder + "]";
   }
 
+  /**
+   * Generates the full path to a field from the typefield ids
+   *
+   * @param typeFieldId
+   * @param recordBatch
+   * @return
+   */
+  public static String getPath(TypedFieldId typeFieldId, RecordBatch recordBatch) {
+    StringBuilder name = new StringBuilder();
+    final String SEPARATOR = ".";
+    final int[] fieldIds = typeFieldId.getFieldIds();
+    VectorWrapper<?> topLevel = recordBatch.getValueAccessorById(null, fieldIds[0]);
+    name.append(topLevel.getField().getName());
+    // getChildWrapper(int[] fieldIds) is used to walk down the list of fieldIds.
+    // getChildWrapper() has a quirk where if the fieldIds array is of length == 1
+    // then it would just return 'this'.
+    // For example, if you had a field 'a.b' with field ids {1, 2} and you had the
+    // VectorWrapper for 'a', say 'aVW'. Then calling aVW.getChildWrapper({2}) returns
+    // aVW and not the vectorWrapper for 'b'.
+    // The code works around this quirk by always querying 2 levels deep.
+    // i.e. childVectorWrapper = parentVectorWrapper.gerChildWrapper({parentFieldId, childFieldId})
+    int[] lookupLevel = new int[2];
+    for (int i = 0; i < fieldIds.length - 1; i++) {
+      lookupLevel[0] = fieldIds[i];
+      // this is the level for which the actual lookup is done
+      lookupLevel[1] = fieldIds[i + 1];
+      topLevel = topLevel.getChildWrapper(lookupLevel);
+      name.append(SEPARATOR + topLevel.getField().getName());
+    }
+    return name.toString();
+  }
+
 }

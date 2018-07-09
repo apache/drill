@@ -37,7 +37,11 @@ import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortImpl.SortResults;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.HyperVectorWrapper;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
@@ -97,8 +101,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
    * destination container, indexed by an SV4.
    *
    * @param batchGroups the complete set of in-memory batches
-   * @param batch the record batch (operator) for the sort operator
-   * @param destContainer the vector container for the sort operator
+   * @param outputBatchSize output batch size for in-memory merge
    * @return the sv4 for this operator
    */
 
@@ -222,7 +225,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
         builder = null;
       }
     } catch (RuntimeException e) {
-      ex = (ex == null) ? e : ex;
+      ex = e;
     }
     try {
       if (mSorter != null) {
@@ -248,6 +251,28 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
 
   @Override
   public SelectionVector4 getSv4() { return sv4; }
+
+  @Override
+  public void updateOutputContainer(VectorContainer container, SelectionVector4 sv4,
+                                    RecordBatch.IterOutcome outcome, BatchSchema schema) {
+
+    final VectorContainer inputDataContainer = getContainer();
+    // First output batch of current schema, populate container with ValueVectors
+    if (container.getNumberOfColumns() == 0) {
+      for (VectorWrapper<?> w : inputDataContainer) {
+        container.add(w.getValueVectors());
+      }
+      container.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
+    } else {
+      int index = 0;
+      for (VectorWrapper<?> w : inputDataContainer) {
+        HyperVectorWrapper wrapper = (HyperVectorWrapper<?>) container.getValueVector(index++);
+        wrapper.updateVectorList(w.getValueVectors());
+      }
+    }
+    sv4.copy(getSv4());
+    container.setRecordCount(getRecordCount());
+  }
 
   @Override
   public SelectionVector2 getSv2() { return null; }

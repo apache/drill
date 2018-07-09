@@ -72,20 +72,20 @@ public class TestSortImpl extends DrillTest {
   @Rule
   public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
+  private static VectorContainer dest;
+
   /**
    * Create the sort implementation to be used by test.
    *
    * @param fixture operator fixture
    * @param sortOrder sort order as specified by {@link Ordering}
    * @param nullOrder null order as specified by {@link Ordering}
-   * @param outputBatch where the sort should write its output
    * @return the sort initialized sort implementation, ready to
    * do work
    */
 
   public static SortImpl makeSortImpl(OperatorFixture fixture,
-                               String sortOrder, String nullOrder,
-                               VectorContainer outputBatch) {
+                               String sortOrder, String nullOrder) {
     FieldReference expr = FieldReference.getWithQuotedRef("key");
     Ordering ordering = new Ordering(sortOrder, expr, nullOrder);
     Sort popConfig = new Sort(null, Lists.newArrayList(ordering), false);
@@ -104,7 +104,8 @@ public class TestSortImpl extends DrillTest {
     SpillSet spillSet = new SpillSet(opContext.getFragmentContext().getConfig(), handle, popConfig);
     PriorityQueueCopierWrapper copierHolder = new PriorityQueueCopierWrapper(opContext);
     SpilledRuns spilledRuns = new SpilledRuns(opContext, spillSet, copierHolder);
-    return new SortImpl(opContext, sortConfig, spilledRuns, outputBatch);
+    dest = new VectorContainer(opContext.getAllocator());
+    return new SortImpl(opContext, sortConfig, spilledRuns, dest);
   }
 
   /**
@@ -140,8 +141,7 @@ public class TestSortImpl extends DrillTest {
     }
 
     public void run() {
-      VectorContainer dest = new VectorContainer();
-      SortImpl sort = makeSortImpl(fixture, sortOrder, nullOrder, dest);
+      SortImpl sort = makeSortImpl(fixture, sortOrder, nullOrder);
 
       // Simulates a NEW_SCHEMA event
 
@@ -420,8 +420,7 @@ public class TestSortImpl extends DrillTest {
 
   public void runLargeSortTest(OperatorFixture fixture, DataGenerator dataGen,
                                DataValidator validator) {
-    VectorContainer dest = new VectorContainer();
-    SortImpl sort = makeSortImpl(fixture, Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED, dest);
+    SortImpl sort = makeSortImpl(fixture, Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED);
 
     int batchCount = 0;
     RowSet input;
@@ -501,7 +500,7 @@ public class TestSortImpl extends DrillTest {
    * number of "dirty" blocks. This will often catch error due to
    * failure to initialize value vector memory.
    *
-   * @param fixture the operator fixture that provides an allocator
+   * @param allocator - used for allocating Drillbuf
    */
 
   @SuppressWarnings("unused")
@@ -546,8 +545,7 @@ public class TestSortImpl extends DrillTest {
     }
     writer.done();
 
-    VectorContainer dest = new VectorContainer();
-    SortImpl sort = makeSortImpl(fixture, Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED, dest);
+    SortImpl sort = makeSortImpl(fixture, Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED);
     sort.setSchema(rowSet.container().getSchema());
     sort.addBatch(rowSet.vectorAccessible());
     SortResults results = sort.startMerge();

@@ -22,6 +22,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -231,6 +232,12 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   @Override
   public Boolean visitConvertExpression(ConvertExpression e,
       IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
+    return e.getInput().accept(this, value);
+  }
+
+  @Override
+  public Boolean visitAnyValueExpression(AnyValueExpression e,
+                                        IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
     return e.getInput().accept(this, value);
   }
 
