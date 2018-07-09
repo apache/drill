@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.parquet;
 import com.google.common.collect.Sets;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -51,6 +50,7 @@ import org.joda.time.DateTimeZone;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -140,13 +140,85 @@ public class ParquetReaderUtility {
     return out;
   }
 
+  /**
+   * Map full schema paths in format `a`.`b`.`c` to respective SchemaElement objects.
+   *
+   * @param footer Parquet file metadata
+   * @return       schema full path to SchemaElement map
+   */
   public static Map<String, SchemaElement> getColNameToSchemaElementMapping(ParquetMetadata footer) {
-    HashMap<String, SchemaElement> schemaElements = new HashMap<>();
+    Map<String, SchemaElement> schemaElements = new HashMap<>();
     FileMetaData fileMetaData = new ParquetMetadataConverter().toParquetMetadata(ParquetFileWriter.CURRENT_VERSION, footer);
-    for (SchemaElement se : fileMetaData.getSchema()) {
-      schemaElements.put(se.getName(), se);
+
+    Iterator iter = fileMetaData.getSchema().iterator();
+
+    // skip first default 'root' element
+    if (iter.hasNext()) {
+      iter.next();
+    }
+    while (iter.hasNext()) {
+      addSchemaElementMapping(iter, new StringBuilder(), schemaElements);
     }
     return schemaElements;
+  }
+
+  /**
+   * Populate full path to SchemaElement map by recursively traversing schema elements referenced by the given iterator
+   *
+   * @param iter file schema values iterator
+   * @param path parent schema element path
+   * @param schemaElements schema elements map to insert next iterator element into
+   */
+  private static void addSchemaElementMapping(Iterator iter, StringBuilder path,
+      Map<String, SchemaElement> schemaElements) {
+    SchemaElement se = (SchemaElement)iter.next();
+    path.append('`').append(se.getName().toLowerCase()).append('`');
+    schemaElements.put(path.toString(), se);
+
+    int remainingChildren = se.getNum_children();
+
+    while (remainingChildren > 0 && iter.hasNext()) {
+      addSchemaElementMapping(iter, new StringBuilder(path).append('.'), schemaElements);
+      remainingChildren--;
+    }
+    return;
+  }
+
+  /**
+   * generate full path of the column in format `a`.`b`.`c`
+   *
+   * @param column ColumnDescriptor object
+   * @return       full path in format `a`.`b`.`c`
+   */
+  public static String getFullColumnPath(ColumnDescriptor column) {
+    StringBuilder sb = new StringBuilder();
+    String[] path = column.getPath();
+    for (int i = 0; i < path.length; i++) {
+      sb.append("`").append(path[i].toLowerCase()).append("`").append(".");
+    }
+
+    // remove trailing dot
+    if (sb.length() > 0) {
+      sb.deleteCharAt(sb.length() - 1);
+    }
+
+    return sb.toString();
+  }
+
+  /**
+   * Map full column paths to all ColumnDescriptors in file schema
+   *
+   * @param footer Parquet file metadata
+   * @return       column full path to ColumnDescriptor object map
+   */
+  public static Map<String, ColumnDescriptor> getColNameToColumnDescriptorMapping(ParquetMetadata footer) {
+    Map<String, ColumnDescriptor> colDescMap = new HashMap<>();
+    List<ColumnDescriptor> columns = footer.getFileMetaData().getSchema().getColumns();
+
+    for (ColumnDescriptor column : columns) {
+      colDescMap.put(getFullColumnPath(column), column);
+    }
+    return colDescMap;
   }
 
   public static int autoCorrectCorruptedDate(int corruptedDate) {
@@ -361,7 +433,6 @@ public class ParquetReaderUtility {
     }
   }
 
-
   /**
    * Detect corrupt date values by looking at the min/max values in the metadata.
    *
@@ -401,9 +472,9 @@ public class ParquetReaderUtility {
         // creating a NameSegment makes sure we are using the standard code for comparing names,
         // currently it is all case-insensitive
         if (Utilities.isStarQuery(columns)
-            || new PathSegment.NameSegment(column.getPath()[0]).equals(schemaPath.getRootSegment())) {
+            || getFullColumnPath(column).equalsIgnoreCase(schemaPath.getUnIndexed().toString())) {
           int colIndex = -1;
-          ConvertedType convertedType = schemaElements.get(column.getPath()[0]).getConverted_type();
+          ConvertedType convertedType = schemaElements.get(getFullColumnPath(column)).getConverted_type();
           if (convertedType != null && convertedType.equals(ConvertedType.DATE)) {
             List<ColumnChunkMetaData> colChunkList = footer.getBlocks().get(rowGroupIndex).getColumns();
             for (int j = 0; j < colChunkList.size(); j++) {
