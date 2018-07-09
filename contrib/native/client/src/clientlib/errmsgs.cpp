@@ -58,7 +58,7 @@ static Drill::ErrorMessages errorMessages[]={
         " Please check connection parameters or contact administrator. [Warn: This"
         " could be due to a bad configuration or a security attack is in progress.]"},
     {ERR_CONN_SSL_GENERAL, ERR_CATEGORY_CONN, 0, "Encountered an exception during SSL handshake. [Details: %s]"},
-    {ERR_CONN_SSL_CN, ERR_CATEGORY_CONN, 0, "SSL certificate host name verification failure." },
+    {ERR_CONN_SSL_CN, ERR_CATEGORY_CONN, 0, "SSL certificate host name verification failure. [Details: %s]" },
     {ERR_CONN_SSL_CERTVERIFY, ERR_CATEGORY_CONN, 0, "SSL certificate verification failed. [Details: %s]"},
     {ERR_QRY_OUTOFMEM, ERR_CATEGORY_QRY, 0, "Out of memory."},
     {ERR_QRY_COMMERR, ERR_CATEGORY_QRY, 0, "Communication error. %s"},
