@@ -99,7 +99,7 @@ public class ZKClusterCoordinatorDriver implements AMRegistrar {
    * Specify connect string in the form: host:/zkRoot/clusterId
    *
    * @param connect
-   * @return
+   * @return This {@link ZKClusterCoordinatorDriver}.
    * @throws ZKConfigException
    */
   public ZKClusterCoordinatorDriver setConnect(String connect)
@@ -161,7 +161,7 @@ public class ZKClusterCoordinatorDriver implements AMRegistrar {
    * Builds and starts the ZooKeeper cluster coordinator, translating any errors
    * that occur. After this call, the listener will start receiving messages.
    *
-   * @return
+   * @return This {@link ZKClusterCoordinatorDriver}.
    * @throws ZKRuntimeException
    *           if ZK startup fails
    */
@@ -201,7 +201,8 @@ public class ZKClusterCoordinatorDriver implements AMRegistrar {
    * Returns the set of Drillbits registered at the time of the {@link #build()}
    * call. Should be empty for a cluster managed by YARN.
    *
-   * @return
+   * @return The set of Drillbits registered at the time of the {@link #build()}
+   * call.
    */
 
   public List<DrillbitEndpoint> getInitialEndpoints() {
@@ -213,7 +214,7 @@ public class ZKClusterCoordinatorDriver implements AMRegistrar {
    * advertise the HTTP port, so it does not appear in the generated string.
    *
    * @param bit
-   * @return
+   * @return A string representation of a Drillbit.
    */
 
   public static String asString(DrillbitEndpoint bit) {
@@ -266,7 +267,7 @@ public class ZKClusterCoordinatorDriver implements AMRegistrar {
    * notification, and we received the disconnect notification log enough ago
    * that we assume that a timeout has occurred.
    *
-   * @return
+   * @return True if we think zookeeper has failed. False otherwise.
    */
 
   public boolean hasFailed() {

@@ -140,7 +140,6 @@ public class TestTpchLimit0 extends BaseTestQuery {
   }
 
   @Test
-  @Ignore
   public void tpch21() throws Exception{
     testLimitZero("queries/tpch/21.sql");
   }

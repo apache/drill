@@ -27,6 +27,7 @@ import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.store.kafka.cluster.EmbeddedKafkaCluster;
 import org.apache.drill.exec.store.kafka.decoders.MessageReaderFactoryTest;
+import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.security.JaasUtils;
 
@@ -46,7 +47,8 @@ import kafka.utils.ZkUtils;
 
 @Category({KafkaStorageTest.class, SlowTest.class})
 @RunWith(Suite.class)
-@SuiteClasses({ KafkaQueriesTest.class, MessageIteratorTest.class, MessageReaderFactoryTest.class })
+@SuiteClasses({ KafkaQueriesTest.class, MessageIteratorTest.class, MessageReaderFactoryTest.class,
+    KafkaFilterPushdownTest.class })
 public class TestKafkaSuit {
   private static final Logger logger = LoggerFactory.getLogger(LoggerFactory.class);
   private static final String LOGIN_CONF_RESOURCE_PATHNAME = "login.conf";
@@ -104,6 +106,20 @@ public class TestKafkaSuit {
         }
       }
     }
+  }
+
+  public static void createTopicHelper(final String topicName, final int partitions) {
+
+    Properties topicProps = new Properties();
+    topicProps.put(TopicConfig.MESSAGE_TIMESTAMP_TYPE_CONFIG, "CreateTime");
+    ZkUtils zkUtils = new ZkUtils(zkClient,
+        new ZkConnection(embeddedKafkaCluster.getZkServer().getConnectionString()), false);
+    AdminUtils.createTopic(zkUtils, topicName, partitions, 1,
+        topicProps, RackAwareMode.Disabled$.MODULE$);
+
+    org.apache.kafka.common.requests.MetadataResponse.TopicMetadata fetchTopicMetadataFromZk =
+        AdminUtils.fetchTopicMetadataFromZk(topicName, zkUtils);
+    logger.info("Topic Metadata: " + fetchTopicMetadataFromZk);
   }
 
 }

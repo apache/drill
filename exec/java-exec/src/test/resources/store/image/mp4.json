@@ -1,0 +1,56 @@
+{
+  "Format" : "MP4",
+  "Orientaion" : "Unknown (0)",
+  "DPIWidth" : "72",
+  "DPIHeight" : "72",
+  "PixelWidth" : "560",
+  "PixelHeight" : "320",
+  "BitsPerPixel" : "24",
+  "ColorMode" : "RGB",
+  "HasAlpha" : "false",
+  "Duration" : "00:00:05",
+  "VideoCodec" : "JVT/AVC Coding",
+  "FrameRate" : "30",
+  "AudioCodec" : "Sat Mar 20 21:29:11 UTC 2010",
+  "AudioSampleSize" : "16",
+  "AudioSampleRate" : "48000",
+  "FileType" : {
+    "DetectedFileTypeName" : "MP4",
+    "DetectedFileTypeLongName" : "MPEG-4 Part 14",
+    "DetectedMIMEType" : "video/mp4",
+    "ExpectedFileNameExtension" : "mp4"
+  },
+  "MP4" : {
+    "MajorBrand" : "MP4 v2 [ISO 14496-14]",
+    "MinorVersion" : "0",
+    "CompatibleBrands" : "[MP4 v2 [ISO 14496-14], MP4  Base Media v1 [IS0 14496-12:2003], MP4 Base w/ AVC ext [ISO 14496-12:2005]]",
+    "CreationTime" : "Sat Mar 20 21:29:11 UTC 2010",
+    "ModificationTime" : "Sat Mar 20 21:29:12 UTC 2010",
+    "Duration" : "00:00:05",
+    "MediaTimeScale" : "90000",
+    "TransformationMatrix" : "65536 0 0 0 65536 0 0 0 1073741824",
+    "PreferredRate" : "1",
+    "PreferredVolume" : "1",
+    "NextTrackID" : "3"
+  },
+  "MP4Video" : {
+    "Vendor" : "Sat Mar 20 21:29:11 UTC 2010",
+    "TemporalQuality" : "Sat Mar 20 21:29:12 UTC 2010",
+    "Width" : "560 pixels",
+    "Opcolor" : "0 0 0",
+    "GraphicsMode" : "Copy",
+    "Height" : "320 pixels",
+    "CompressionType" : "JVT/AVC Coding",
+    "Depth" : "Unknown (24)",
+    "HorizontalResolution" : "72",
+    "VerticalResolution" : "72",
+    "FrameRate" : "30"
+  },
+  "MP4Sound" : {
+    "Format" : "Sat Mar 20 21:29:11 UTC 2010",
+    "NumberOfChannels" : "1",
+    "SampleRate" : "48000",
+    "Balance" : "0",
+    "SampleSize" : "16"
+  }
+}

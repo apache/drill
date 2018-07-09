@@ -56,11 +56,11 @@ public class Utilities {
   }
 
   /**
-   * Create QueryContextInformation with given <i>defaultSchemaName</i>. Rest of the members of the
+   * Create {@link org.apache.drill.exec.proto.BitControl.QueryContextInformation} with given <i>defaultSchemaName</i>. Rest of the members of the
    * QueryContextInformation is derived from the current state of the process.
    *
    * @param defaultSchemaName
-   * @return
+   * @return A {@link org.apache.drill.exec.proto.BitControl.QueryContextInformation} with given <i>defaultSchemaName</i>.
    */
   public static QueryContextInformation createQueryContextInfo(final String defaultSchemaName, final String sessionId) {
     final long queryStartTime = System.currentTimeMillis();
@@ -75,7 +75,7 @@ public class Utilities {
 
   /**
    * Read the manifest file and get the Drill version number
-   * @return
+   * @return The Drill version.
    */
   public static String getDrillVersion() {
       String v = Utilities.class.getPackage().getImplementationVersion();
@@ -85,7 +85,7 @@ public class Utilities {
   /**
    * Return true if list of schema path has star column.
    * @param projected
-   * @return
+   * @return True if the list of {@link org.apache.drill.common.expression.SchemaPath}s has star column.
    */
   public static boolean isStarQuery(Collection<SchemaPath> projected) {
     return Iterables.tryFind(Preconditions.checkNotNull(projected, COL_NULL_ERROR), new Predicate<SchemaPath>() {

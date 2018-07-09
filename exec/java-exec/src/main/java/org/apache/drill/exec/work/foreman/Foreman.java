@@ -23,7 +23,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import org.apache.drill.common.CatastrophicFailure;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -55,6 +54,7 @@ import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.FailureUtils;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -69,6 +69,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+
+import static org.apache.drill.exec.server.FailureUtils.EXIT_CODE_HEAP_OOM;
 
 /**
  * Foreman manages all the fragments (local and remote) for a single query where this
@@ -273,25 +275,23 @@ public class Foreman implements Runnable {
         throw new IllegalStateException();
       }
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
-    } catch (final OutOfMemoryException e) {
-      queryStateProcessor.moveToState(QueryState.FAILED, UserException.memoryError(e).build(logger));
     } catch (final ForemanException e) {
       queryStateProcessor.moveToState(QueryState.FAILED, e);
-    } catch (AssertionError | Exception ex) {
-      queryStateProcessor.moveToState(QueryState.FAILED,
-          new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
-    } catch (final OutOfMemoryError e) {
-      if ("Direct buffer memory".equals(e.getMessage())) {
-        queryStateProcessor.moveToState(QueryState.FAILED, UserException.resourceError(e).message("One or more nodes ran out of memory while executing the query.").build(logger));
+    } catch (final OutOfMemoryError | OutOfMemoryException e) {
+      if (FailureUtils.isDirectMemoryOOM(e)) {
+        queryStateProcessor.moveToState(QueryState.FAILED, UserException.memoryError(e).build(logger));
       } else {
         /*
          * FragmentExecutors use a DrillbitStatusListener to watch out for the death of their query's Foreman. So, if we
          * die here, they should get notified about that, and cancel themselves; we don't have to attempt to notify
          * them, which might not work under these conditions.
          */
-        CatastrophicFailure.exit(e, "Unable to handle out of memory condition in Foreman.", -1);
+        FailureUtils.unrecoverableFailure(e, "Unable to handle out of memory condition in Foreman.", EXIT_CODE_HEAP_OOM);
       }
 
+    } catch (AssertionError | Exception ex) {
+      queryStateProcessor.moveToState(QueryState.FAILED,
+          new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
     } finally {
       // restore the thread's original name
       currentThread.setName(originalName);

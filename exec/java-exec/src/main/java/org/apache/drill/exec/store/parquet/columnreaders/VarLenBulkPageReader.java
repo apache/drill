@@ -25,7 +25,8 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionType;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.PageDataInfo;
-import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VLColumnBulkInputCallback;
+import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VarLenColumnBulkInputCallback;
+import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchSizerManager.FieldOverflowStateContainer;
 
 /** Provides bulk reads when accessing Parquet's page payload for variable length columns */
 final class VarLenBulkPageReader {
@@ -47,7 +48,9 @@ final class VarLenBulkPageReader {
   /** Bulk entry */
   private final VarLenColumnBulkEntry entry;
   /** A callback to allow bulk readers interact with their container */
-  private final VLColumnBulkInputCallback containerCallback;
+  private final VarLenColumnBulkInputCallback containerCallback;
+  /** A reference to column's overflow data (could be null) */
+  private FieldOverflowStateContainer fieldOverflowStateContainer;
 
   // Various BulkEntry readers
   final VarLenAbstractEntryReader fixedReader;
@@ -57,49 +60,70 @@ final class VarLenBulkPageReader {
   final VarLenAbstractEntryReader dictionaryReader;
   final VarLenAbstractEntryReader nullableDictionaryReader;
 
+  // Overflow reader
+  private VarLenOverflowReader overflowReader;
+
   VarLenBulkPageReader(
     PageDataInfo pageInfoInput,
     ColumnPrecisionInfo columnPrecInfoInput,
-    VLColumnBulkInputCallback containerCallbackInput) {
+    VarLenColumnBulkInputCallback containerCallbackInput,
+    FieldOverflowStateContainer fieldOverflowStateContainer) {
 
     // Set the buffer to the native byte order
     this.buffer.order(ByteOrder.nativeOrder());
 
     if (pageInfoInput != null) {
-      this.pageInfo.pageData = pageInfoInput.pageData;
-      this.pageInfo.pageDataOff = pageInfoInput.pageDataOff;
-      this.pageInfo.pageDataLen = pageInfoInput.pageDataLen;
-      this.pageInfo.numPageFieldsRead = pageInfoInput.numPageFieldsRead;
-      this.pageInfo.definitionLevels = pageInfoInput.definitionLevels;
-      this.pageInfo.dictionaryValueReader = pageInfoInput.dictionaryValueReader;
+      set(pageInfoInput, false);
     }
 
     this.columnPrecInfo = columnPrecInfoInput;
     this.entry = new VarLenColumnBulkEntry(this.columnPrecInfo);
     this.containerCallback = containerCallbackInput;
+    this.fieldOverflowStateContainer = fieldOverflowStateContainer;
 
     // Initialize the Variable Length Entry Readers
-    fixedReader = new VarLenFixedEntryReader(buffer, pageInfo, columnPrecInfo, entry);
-    nullableFixedReader = new VarLenNullableFixedEntryReader(buffer, pageInfo, columnPrecInfo, entry);
-    variableLengthReader = new VarLenEntryReader(buffer, pageInfo, columnPrecInfo, entry);
-    nullableVLReader = new VarLenNullableEntryReader(buffer, pageInfo, columnPrecInfo, entry);
-    dictionaryReader = new VarLenEntryDictionaryReader(buffer, pageInfo, columnPrecInfo, entry);
-    nullableDictionaryReader = new VarLenNullableDictionaryReader(buffer, pageInfo, columnPrecInfo, entry);
+    fixedReader = new VarLenFixedEntryReader(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
+    nullableFixedReader = new VarLenNullableFixedEntryReader(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
+    variableLengthReader = new VarLenEntryReader(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
+    nullableVLReader = new VarLenNullableEntryReader(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
+    dictionaryReader = new VarLenEntryDictionaryReader(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
+    nullableDictionaryReader = new VarLenNullableDictionaryReader(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
+
+    // Overflow reader is initialized only when a previous batch produced overflow data for this column
+    if (this.fieldOverflowStateContainer == null) {
+      overflowReader = null;
+    } else {
+      overflowReader = new VarLenOverflowReader(buffer, entry, containerCallback, fieldOverflowStateContainer);
+    }
   }
 
-  final void set(PageDataInfo pageInfoInput) {
+  final void set(PageDataInfo pageInfoInput, boolean clear) {
     pageInfo.pageData = pageInfoInput.pageData;
     pageInfo.pageDataOff = pageInfoInput.pageDataOff;
     pageInfo.pageDataLen = pageInfoInput.pageDataLen;
     pageInfo.numPageFieldsRead = pageInfoInput.numPageFieldsRead;
     pageInfo.definitionLevels = pageInfoInput.definitionLevels;
     pageInfo.dictionaryValueReader = pageInfoInput.dictionaryValueReader;
-
+    pageInfo.numPageValues = pageInfoInput.numPageValues;
+    if (clear) {
     buffer.clear();
+  }
   }
 
   final VarLenColumnBulkEntry getEntry(int valuesToRead) {
     VarLenColumnBulkEntry entry = null;
+
+    // If there is overflow data, then we need to consume it first
+    if (overflowDataAvailable()) {
+      entry = overflowReader.getEntry(valuesToRead);
+      entry.setReadFromPage(false); // entry was read from the overflow data
+
+      return entry;
+    }
+
+    // It seems there is no overflow data anymore; if we previously were reading from it, then it
+    // needs to get de-initialized before reading new page data.
+    deinitOverflowDataIfNeeded();
 
     if (ColumnPrecisionType.isPrecTypeFixed(columnPrecInfo.columnPrecisionType)) {
       if ((entry = getFixedEntry(valuesToRead)) == null) {
@@ -121,14 +145,15 @@ final class VarLenBulkPageReader {
         }
 
         columnPrecInfo.columnPrecisionType = ColumnPrecisionType.DT_PRECISION_IS_VARIABLE;
-        entry = getVLEntry(valuesToRead);
+        entry = getVarLenEntry(valuesToRead);
       }
 
     } else {
-      entry = getVLEntry(valuesToRead);
+      entry = getVarLenEntry(valuesToRead);
     }
 
     if (entry != null) {
+      entry.setReadFromPage(true); // entry was read from a Parquet page
       pageInfo.numPageFieldsRead += entry.getNumValues();
     }
     return entry;
@@ -142,10 +167,9 @@ final class VarLenBulkPageReader {
     }
   }
 
-  private final VarLenColumnBulkEntry getVLEntry(int valuesToRead) {
-    if (pageInfo.dictionaryValueReader == null
-     || !pageInfo.dictionaryValueReader.isDefined()) {
-
+  private final VarLenColumnBulkEntry getVarLenEntry(int valuesToRead) {
+    // Let start with non-dictionary encoding as it is predominant
+    if (!pageInfo.dictionaryValueReader.isDefined()) {
       if (pageInfo.definitionLevels.hasDefinitionLevels()) {
         return nullableVLReader.getEntry(valuesToRead);
       } else {
@@ -157,6 +181,21 @@ final class VarLenBulkPageReader {
       } else {
         return dictionaryReader.getEntry(valuesToRead);
       }
+    }
+  }
+
+  private boolean overflowDataAvailable() {
+    if (overflowReader == null) {
+      return false;
+    }
+    return overflowReader.getRemainingOverflowData() > 0;
+  }
+
+  private void deinitOverflowDataIfNeeded() {
+    if (overflowReader != null) {
+      containerCallback.deinitOverflowData();
+      overflowReader = null;
+      fieldOverflowStateContainer = null;
     }
   }
 

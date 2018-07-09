@@ -54,8 +54,8 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   }
 
   /**
-   * A function can have multiple names, it returns the function name used in the query
-   * @return
+   * A function can have multiple names, it returns the function name used in the query.
+   * @return The function name used in the query.
    */
   public String getName() {
     return nameUsed;
@@ -64,7 +64,7 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   /**
    * constant input expected for i'th argument?
    * @param i
-   * @return
+   * @return True if a constant input is expected for the i'th argument. False otherwise.
    */
   public abstract boolean argConstantOnly(int i);
 

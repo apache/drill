@@ -44,13 +44,14 @@
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
     <dep.guava.version>18.0</dep.guava.version>
     <forkCount>2</forkCount>
-    <parquet.version>1.8.1-drill-r0</parquet.version>
-    <calcite.version>1.16.0-drill-r3</calcite.version>
+    <parquet.version>1.10.0</parquet.version>
+    <calcite.version>1.16.0-drill-r6</calcite.version>
     <avatica.version>1.11.0</avatica.version>
     <janino.version>2.7.6</janino.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
     <jackson.version>2.9.5</jackson.version>
     <jackson.databind.version>2.9.5</jackson.databind.version>
+    <zookeeper.version>3.4.12</zookeeper.version>
     <mapr.release.version>5.2.1-mapr</mapr.release.version>
     <ojai.version>1.1</ojai.version>
     <kerby.version>1.0.0-RC2</kerby.version>
@@ -59,7 +60,13 @@
     <commons.io.version>2.4</commons.io.version>
     <junit.version>4.11</junit.version>
     <hamcrest.core.version>1.3</hamcrest.core.version>
-
+    <maven.embedder.version>3.5.3</maven.embedder.version>
+    <curator.version>2.7.1</curator.version>
+    <parquet.hadoop.version>1.8.1</parquet.hadoop.version>
+    <wiremock.standalone.version>2.5.1</wiremock.standalone.version>
+    <jmockit.version>1.39</jmockit.version>
+    <logback.version>1.0.13</logback.version>
+    <mockito.version>2.18.3</mockito.version>
     <!--
       Currently Hive storage plugin only supports Apache Hive 2.3.2 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated.
@@ -160,18 +167,6 @@
     </repository>
 
     <repository>
-      <id>dremio-releases</id>
-      <name>Dremio Drill Third Party Artifacts</name>
-      <url>http://repo.dremio.com/release/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-
-    <repository>
       <id>mapr-drill-thirdparty</id>
       <name>MapR Drill Third Party Artifacts</name>
       <url>http://repository.mapr.com/nexus/content/repositories/drill/</url>
@@ -202,6 +197,117 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <sourcepath>${basedir}</sourcepath>
+          <sourceFileExcludes>
+            <!-- Don't include codegen -->
+            <exclude>**/src/main/codegen/**/*.java</exclude>
+            <!-- Don't include target -->
+            <exclude>**/target/**/*.java</exclude>
+          </sourceFileExcludes>
+          <additionalDependencies>
+            <!-- These dependencies are required for javadoc in order to properly resolve class references in some javadocs. -->
+            <dependency>
+              <groupId>org.apache.hbase</groupId>
+              <artifactId>hbase-server</artifactId>
+              <version>${hbase.version}</version>
+              <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.avro</groupId>
+              <artifactId>avro</artifactId>
+              <version>${avro.version}</version>
+              <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.kerby</groupId>
+              <artifactId>kerb-core</artifactId>
+              <version>${kerby.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.kerby</groupId>
+              <artifactId>kerb-client</artifactId>
+              <version>${kerby.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.kerby</groupId>
+              <artifactId>kerb-simplekdc</artifactId>
+              <version>${kerby.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.maven</groupId>
+              <artifactId>maven-embedder</artifactId>
+              <version>${maven.embedder.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.curator</groupId>
+              <artifactId>curator-test</artifactId>
+              <version>${curator.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.hadoop</groupId>
+              <artifactId>hadoop-hdfs</artifactId>
+              <version>${hadoop.version}</version>
+              <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.drill.exec</groupId>
+              <artifactId>drill-java-exec</artifactId>
+              <version>${project.version}</version>
+              <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.drill</groupId>
+              <artifactId>drill-common</artifactId>
+              <version>${project.version}</version>
+              <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+              <groupId>com.github.tomakehurst</groupId>
+              <artifactId>wiremock-standalone</artifactId>
+              <version>${wiremock.standalone.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.kerby</groupId>
+              <artifactId>kerb-client</artifactId>
+              <version>${kerby.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.parquet</groupId>
+              <artifactId>parquet-hadoop</artifactId>
+              <version>${parquet.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.jmockit</groupId>
+              <artifactId>jmockit</artifactId>
+              <version>${jmockit.version}</version>
+            </dependency>
+            <additionalDependency>
+              <groupId>org.hamcrest</groupId>
+              <artifactId>hamcrest-core</artifactId>
+              <version>${hamcrest.core.version}</version>
+            </additionalDependency>
+            <dependency>
+              <groupId>org.mockito</groupId>
+              <artifactId>mockito-core</artifactId>
+              <version>${mockito.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>ch.qos.logback</groupId>
+              <artifactId>logback-classic</artifactId>
+              <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>ch.qos.logback</groupId>
+              <artifactId>logback-core</artifactId>
+              <version>${logback.version}</version>
+            </dependency>
+          </additionalDependencies>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
@@ -449,103 +555,114 @@
           </gitDescribe>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>com.mycila</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-        <version>3.0</version>
-        <configuration>
-          <aggregate>true</aggregate>
-          <header>${maven.multiModuleProjectDirectory}/header</header>
-          <excludes>
-            <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
-            <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
-            <exclude>**/resources/parquet/**/*</exclude>
-            <exclude>**/*.g</exclude>
-            <exclude>**/*.woff2</exclude>
-            <exclude>**/*.ks</exclude>
-            <exclude>**/*.pcap</exclude>
-            <exclude>**/*.props</exclude>
-            <exclude>**/*.conf</exclude>
-            <exclude>**/*.log</exclude>
-            <exclude>**/*.css</exclude>
-            <exclude>**/*.js</exclude>
-            <exclude>**/*.md</exclude>
-            <exclude>**/*.eps</exclude>
-            <exclude>**/*.json</exclude>
-            <exclude>**/*.seq</exclude>
-            <exclude>**/*.parquet</exclude>
-            <exclude>**/*.sql</exclude>
-            <exclude>**/git.properties</exclude>
-            <exclude>**/*.csv</exclude>
-            <exclude>**/*.csvh</exclude>
-            <exclude>**/*.csvh-test</exclude>
-            <exclude>**/*.tsv</exclude>
-            <exclude>**/*.txt</exclude>
-            <exclude>**/*.ssv</exclude>
-            <exclude>**/drill-*.conf</exclude>
-            <exclude>**/.buildpath</exclude>
-            <exclude>**/*.proto</exclude>
-            <exclude>**/*.fmpp</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>**/*.iml</exclude>
-            <exclude>**/.idea/**</exclude>
-            <exclude>**/*.tdd</exclude>
-            <exclude>**/*.project</exclude>
-            <exclude>**/TAGS</exclude>
-            <exclude>**/*.checkstyle</exclude>
-            <exclude>**/.classpath</exclude>
-            <exclude>**/.settings/**</exclude>
-            <exclude>.*/**</exclude>
-            <exclude>**/*.patch</exclude>
-            <exclude>**/*.pb.cc</exclude>
-            <exclude>**/*.pb.h</exclude>
-            <exclude>**/*.linux</exclude>
-            <exclude>**/client/*build*/**</exclude>
-            <exclude>**/client/tags</exclude>
-            <exclude>**/cmake_install.cmake</exclude>
-            <exclude>**/ssl/*.csr</exclude>
-            <exclude>**/ssl/*.pem</exclude>
-            <exclude>**/ssl/*.p12</exclude>
-            <exclude>**/*.tbl</exclude>
-            <exclude>**/*.httpd</exclude>
-            <exclude>**/*.autotools</exclude>
-            <exclude>**/*.cproject</exclude>
-            <exclude>**/*.drill</exclude>
-            <exclude>**/*.plist</exclude>
-            <exclude>**/LICENSE</exclude>
-            <exclude>**/NOTICE</exclude>
-            <exclude>KEYS</exclude>
-            <exclude>header</exclude>
-            <!-- TODO DRILL-4336: try to avoid the need to add this -->
-            <exclude>dependency-reduced-pom.xml</exclude>
-          </excludes>
-          <mapping>
-            <java>SLASHSTAR_STYLE</java>
-            <cpp>SLASHSTAR_STYLE</cpp>
-            <hpp>SLASHSTAR_STYLE</hpp>
-            <in>SLASHSTAR_STYLE</in>
-            <ipp>SLASHSTAR_STYLE</ipp>
-            <sasl>SLASHSTAR_STYLE</sasl>
-            <ssl>SLASHSTAR_STYLE</ssl>
-            <txt>SLASHSTAR_STYLE</txt>
-            <macos>SLASHSTAR_STYLE</macos>
-            <linux>SLASHSTAR_STYLE</linux>
-            <boost>SLASHSTAR_STYLE</boost>
-            <cmake>SCRIPT_STYLE</cmake>
-          </mapping>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
     <pluginManagement>
-
       <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.1.0</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>test-jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>3.0</version>
+          <configuration>
+            <aggregate>true</aggregate>
+            <header>${maven.multiModuleProjectDirectory}/header</header>
+            <excludes>
+              <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
+              <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
+              <exclude>**/resources/parquet/**/*</exclude>
+              <exclude>**/*.g</exclude>
+              <exclude>**/*.woff2</exclude>
+              <exclude>**/*.ks</exclude>
+              <exclude>**/*.pcap</exclude>
+              <exclude>**/*.props</exclude>
+              <exclude>**/*.conf</exclude>
+              <exclude>**/*.log</exclude>
+              <exclude>**/*.css</exclude>
+              <exclude>**/*.js</exclude>
+              <exclude>**/*.md</exclude>
+              <exclude>**/*.eps</exclude>
+              <exclude>**/*.json</exclude>
+              <exclude>**/*.seq</exclude>
+              <exclude>**/*.parquet</exclude>
+              <exclude>**/*.sql</exclude>
+              <exclude>**/git.properties</exclude>
+              <exclude>**/*.csv</exclude>
+              <exclude>**/*.csvh</exclude>
+              <exclude>**/*.csvh-test</exclude>
+              <exclude>**/*.tsv</exclude>
+              <exclude>**/*.txt</exclude>
+              <exclude>**/*.ssv</exclude>
+              <exclude>**/drill-*.conf</exclude>
+              <exclude>**/.buildpath</exclude>
+              <exclude>**/*.proto</exclude>
+              <exclude>**/*.fmpp</exclude>
+              <exclude>**/target/**</exclude>
+              <exclude>**/*.iml</exclude>
+              <exclude>**/.idea/**</exclude>
+              <exclude>**/*.tdd</exclude>
+              <exclude>**/*.project</exclude>
+              <exclude>**/TAGS</exclude>
+              <exclude>**/*.checkstyle</exclude>
+              <exclude>**/.classpath</exclude>
+              <exclude>**/.settings/**</exclude>
+              <exclude>.*/**</exclude>
+              <exclude>**/*.patch</exclude>
+              <exclude>**/*.pb.cc</exclude>
+              <exclude>**/*.pb.h</exclude>
+              <exclude>**/*.linux</exclude>
+              <exclude>**/client/*build*/**</exclude>
+              <exclude>**/client/tags</exclude>
+              <exclude>**/cmake_install.cmake</exclude>
+              <exclude>**/ssl/*.csr</exclude>
+              <exclude>**/ssl/*.pem</exclude>
+              <exclude>**/ssl/*.p12</exclude>
+              <exclude>**/*.tbl</exclude>
+              <exclude>**/*.httpd</exclude>
+              <exclude>**/*.autotools</exclude>
+              <exclude>**/*.cproject</exclude>
+              <exclude>**/*.drill</exclude>
+              <exclude>**/*.plist</exclude>
+              <exclude>**/LICENSE</exclude>
+              <exclude>**/NOTICE</exclude>
+              <exclude>KEYS</exclude>
+              <exclude>header</exclude>
+              <!-- TODO DRILL-4336: try to avoid the need to add this -->
+              <exclude>dependency-reduced-pom.xml</exclude>
+            </excludes>
+            <mapping>
+              <java>SLASHSTAR_STYLE</java>
+              <cpp>SLASHSTAR_STYLE</cpp>
+              <hpp>SLASHSTAR_STYLE</hpp>
+              <in>SLASHSTAR_STYLE</in>
+              <ipp>SLASHSTAR_STYLE</ipp>
+              <sasl>SLASHSTAR_STYLE</sasl>
+              <ssl>SLASHSTAR_STYLE</ssl>
+              <txt>SLASHSTAR_STYLE</txt>
+              <macos>SLASHSTAR_STYLE</macos>
+              <linux>SLASHSTAR_STYLE</linux>
+              <boost>SLASHSTAR_STYLE</boost>
+              <cmake>SCRIPT_STYLE</cmake>
+            </mapping>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
@@ -1248,6 +1365,11 @@
         <version>${jackson.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.honton.chas.hocon</groupId>
+        <artifactId>jackson-dataformat-hocon</artifactId>
+        <version>1.1.1</version>
+      </dependency>
+      <dependency>
         <groupId>com.mapr.db</groupId>
         <artifactId>maprdb</artifactId>
         <version>${mapr.release.version}</version>
@@ -1391,6 +1513,111 @@
           <exclusion>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.parquet</groupId>
+        <artifactId>parquet-format</artifactId>
+        <version>2.5.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.parquet</groupId>
+        <artifactId>parquet-common</artifactId>
+        <version>${parquet.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.typesafe</groupId>
+        <artifactId>config</artifactId>
+        <version>1.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>${zookeeper.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-client</artifactId>
+        <version>${curator.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-framework</artifactId>
+        <version>${curator.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-recipes</artifactId>
+        <version>${curator.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-x-discovery</artifactId>
+        <version>${curator.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>slf4j-log4j12</artifactId>
+            <groupId>org.slf4j</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j</artifactId>
+            <groupId>log4j</groupId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-test</artifactId>
+        <version>${curator.version}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1912,6 +2139,14 @@
           	<artifactId>parquet-hadoop</artifactId>
           	<version>${parquet.version}</version>
           	<exclusions>
+              <exclusion>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+              </exclusion>
           		<exclusion>
           			<groupId>org.xerial.snappy</groupId>
           			<artifactId>snappy-java</artifactId>
@@ -2190,6 +2425,7 @@
         <hive.version>2.1.1-mapr-1710</hive.version>
         <hbase.version>1.1.1-mapr-1602-m7-5.2.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1707</hadoop.version>
+        <zookeeper.version>3.4.5-mapr-1710</zookeeper.version>
       </properties>
       <dependencyManagement>
         <dependencies>

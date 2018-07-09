@@ -148,6 +148,8 @@ public final class AnnotationDescriptor {
           return enumValue;
         } else if (c.equals(boolean.class)) {
           return Boolean.valueOf(value);
+        } else if (c.equals(int.class)) {
+          return Integer.valueOf(value);
         }
         throw new UnsupportedOperationException(c.toString());
       }

@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.test.BaseTestQuery;
@@ -292,8 +291,6 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     final Stopwatch watch = Stopwatch.createStarted();
     testWithListener(type, planText, resultListener);
     resultListener.getResults();
-    // batchLoader.clear();
-    System.out.println(String.format("Took %d ms to run query", watch.elapsed(TimeUnit.MILLISECONDS)));
   }
 
   //use this method to submit physical plan
@@ -641,12 +638,10 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
       while ((rowCount = rr.next()) > 0) {
         totalRowCount += rowCount;
       }
-      System.out.println(String.format("Time completed: %s. ", watch.elapsed(TimeUnit.MILLISECONDS)));
       rr.close();
     }
 
     allocator.close();
-    System.out.println(String.format("Total row count %s", totalRowCount));
   }
 
   // specific tests should call this method, but it is not marked as a test itself intentionally
@@ -681,8 +676,6 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     }
     testWithListener(queryType, planText, resultListener);
     resultListener.getResults();
-    final long D = System.nanoTime();
-    System.out.println(String.format("Took %f s to run query", (float)(D-C) / 1E9));
   }
 
   @Test

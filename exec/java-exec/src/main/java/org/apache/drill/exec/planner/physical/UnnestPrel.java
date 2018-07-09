@@ -75,4 +75,7 @@ public class UnnestPrel extends DrillUnnestRelBase implements Prel {
     return true;
   }
 
+  public Class<?> getParentClass() {
+    return LateralJoinPrel.class;
+  }
 }

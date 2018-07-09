@@ -20,6 +20,7 @@ package org.apache.drill.exec.expr.holders;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.vector.complex.ListVector;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 public final class RepeatedListHolder implements ValueHolder{
 
@@ -36,4 +37,5 @@ public final class RepeatedListHolder implements ValueHolder{
     /** The Vector holding the actual values. **/
     public ListVector vector;
 
+    public FieldReader reader;
 }

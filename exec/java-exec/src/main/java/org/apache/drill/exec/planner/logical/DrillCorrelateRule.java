@@ -33,7 +33,7 @@ public class DrillCorrelateRule extends RelOptRule {
   private DrillCorrelateRule() {
     super(RelOptHelper.any(LogicalCorrelate.class, Convention.NONE),
         DrillRelFactories.LOGICAL_BUILDER,
-        "DrillCorrelateRule");
+        "DrillLateralJoinRule");
   }
 
   @Override
@@ -45,9 +45,9 @@ public class DrillCorrelateRule extends RelOptRule {
     final RelNode convertedRight = convert(right, right.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
 
     final RelTraitSet traits = correlate.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
-    DrillCorrelateRel correlateRel = new DrillCorrelateRel(correlate.getCluster(),
-        traits, convertedLeft, convertedRight, correlate.getCorrelationId(),
+    DrillLateralJoinRel lateralJoinRel = new DrillLateralJoinRel(correlate.getCluster(),
+        traits, convertedLeft, convertedRight, false, correlate.getCorrelationId(),
         correlate.getRequiredColumns(), correlate.getJoinType());
-    call.transformTo(correlateRel);
+    call.transformTo(lateralJoinRel);
   }
 }

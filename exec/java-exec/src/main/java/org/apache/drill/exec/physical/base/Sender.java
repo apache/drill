@@ -38,7 +38,7 @@ public interface Sender extends FragmentRoot {
 
   /**
    * Get the receiver major fragment id that is opposite this sender.
-   * @return
+   * @return The receiver major fragment id that is opposite this sender.
    */
   @JsonProperty("receiver-major-fragment")
   public int getOppositeMajorFragmentId();

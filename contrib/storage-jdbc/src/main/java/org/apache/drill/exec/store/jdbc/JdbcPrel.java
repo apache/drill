@@ -44,7 +44,6 @@ import org.apache.drill.exec.store.jdbc.JdbcStoragePlugin.DrillJdbcConvention;
  * Represents a JDBC Plan once the children nodes have been rewritten into SQL.
  */
 public class JdbcPrel extends AbstractRelNode implements Prel {
-
   private final String sql;
   private final double rows;
   private final DrillJdbcConvention convention;
@@ -64,6 +63,18 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
         jdbcImplementor.visitChild(0, input.accept(new SubsetRemover()));
     sql = result.asStatement().toSqlString(dialect).getSql();
     rowType = input.getRowType();
+  }
+
+  //Substitute newline. Also stripping away single line comments. Expecting hints to be nested in '/* <hint> */'
+  private String stripToOneLineSql(String sql) {
+    StringBuilder strippedSqlTextBldr = new StringBuilder(sql.length());
+    String sqlToken[] = sql.split("\\n");
+    for (String sqlTextLine : sqlToken) {
+      if (!sqlTextLine.trim().startsWith("--")) { //Skip comments
+        strippedSqlTextBldr.append(sqlTextLine).append(' ');
+      }
+    }
+    return strippedSqlTextBldr.toString();
   }
 
   private class SubsetRemover extends RelShuttleImpl {
@@ -87,7 +98,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
-    return super.explainTerms(pw).item("sql", sql);
+    return super.explainTerms(pw).item("sql", stripToOneLineSql(sql));
   }
 
   @Override

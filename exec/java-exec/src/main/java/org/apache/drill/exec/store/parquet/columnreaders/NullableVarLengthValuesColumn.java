@@ -33,10 +33,10 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
   int nullsRead;
   boolean currentValNull = false;
 
-  NullableVarLengthValuesColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+  NullableVarLengthValuesColumn(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                                 ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
                                 SchemaElement schemaElement) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
   @Override

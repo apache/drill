@@ -41,7 +41,7 @@ import org.joda.time.Period;
  * require another level of reader abstraction to access each value
  * in the structure.
  * <p>
- * {@see ScalarWriter}
+ * See {@link ScalarWriter}
  */
 
 public interface ScalarReader extends ColumnReader {

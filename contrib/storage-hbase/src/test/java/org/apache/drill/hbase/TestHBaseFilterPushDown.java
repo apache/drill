@@ -45,6 +45,24 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   }
 
   @Test
+  public void testFilterPushDownRowKeyNotEqual() throws Exception {
+    setColumnWidths(new int[] {8, 38, 38});
+    final String sql = "SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "WHERE\n"
+        + "  row_key <> 'b4'";
+
+    runHBaseSQLVerifyCount(sql, 7);
+
+    final String[] expectedPlan = {".*startRow=, stopRow=, filter=RowFilter \\(NOT_EQUAL, b4\\).*"};
+    final String[] excludedPlan ={};
+    final String sqlHBase = canonizeHBaseSQL(sql);
+    PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
+  }
+
+  @Test
   public void testFilterPushDownRowKeyEqualWithItem() throws Exception {
     setColumnWidths(new int[] {20, 30});
     final String sql = "SELECT\n"
@@ -780,5 +798,21 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
     runHBaseSQLVerifyCount(sql, 2);
   }
 
+  @Test
+  public void testConvertFromPushDownWithView() throws Exception {
+    test("create view dfs.tmp.pd_view as\n" +
+       "select convert_from(byte_substr(row_key, 1, 8), 'date_epoch_be') as d\n" +
+       "from hbase.`TestTableCompositeDate`");
+
+    String query = "select d from dfs.tmp.pd_view where d > date '2015-06-13' and d < DATE '2015-06-18'";
+    String[] expectedPlan = {
+        "startRow=\\\\x00\\\\x00\\\\x01M\\\\xEF\\]\\\\xA0\\\\x00, " +
+        "stopRow=\\\\x00\\\\x00\\\\x01N\\\\x03\\\\xF7\\\\x10\\\\x00, " +
+        "filter=null"};
+    String[] excludedPlan ={"Filter\\("};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    runHBaseSQLVerifyCount(query, 12);
+  }
 }
 

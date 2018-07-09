@@ -31,6 +31,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
@@ -45,20 +46,20 @@ public abstract class TableFormatPlugin implements FormatPlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger(TableFormatPlugin.class);
 
-  private final FileSystemConfig storageConfig;
+  private final StoragePluginConfig storageConfig;
   private final TableFormatPluginConfig config;
   private final Configuration fsConf;
   private final DrillbitContext context;
   private final String name;
 
-  private volatile FileSystemPlugin storagePlugin;
+  private volatile AbstractStoragePlugin storagePlugin;
   private final MapRFileSystem maprfs;
 
   protected TableFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
       StoragePluginConfig storageConfig, TableFormatPluginConfig formatConfig) {
     this.context = context;
     this.config = formatConfig;
-    this.storageConfig = (FileSystemConfig) storageConfig;
+    this.storageConfig = storageConfig;
     this.fsConf = fsConf;
     this.name = name == null ? "maprdb" : name;
     try {
@@ -119,10 +120,10 @@ public abstract class TableFormatPlugin implements FormatPlugin {
     return name;
   }
 
-  public synchronized FileSystemPlugin getStoragePlugin() {
+  public synchronized AbstractStoragePlugin getStoragePlugin() {
     if (this.storagePlugin == null) {
       try {
-        this.storagePlugin = (FileSystemPlugin) (context.getStorage().getPlugin(storageConfig));
+        this.storagePlugin = (AbstractStoragePlugin) context.getStorage().getPlugin(storageConfig);
       } catch (ExecutionSetupException e) {
         throw new RuntimeException(e);
       }

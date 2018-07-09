@@ -44,11 +44,11 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
   /** Bulk read operation state that needs to be maintained across batch calls */
   protected final BulkReaderState bulkReaderState = new BulkReaderState();
 
-  VarLengthValuesColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+  VarLengthValuesColumn(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                         ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
                         SchemaElement schemaElement) throws ExecutionSetupException {
 
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     variableWidthVector = (VariableWidthVector) valueVec;
 
     if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {

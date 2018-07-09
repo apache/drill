@@ -50,7 +50,6 @@ public class BaseJsonTest extends BaseTestQuery {
 
 
   protected List<QueryDataBatch> runHBaseSQLlWithResults(String sql) throws Exception {
-    System.out.println("Running query:\n" + sql);
     return testSqlWithResults(sql);
   }
 
@@ -65,5 +64,4 @@ public class BaseJsonTest extends BaseTestQuery {
       Assert.assertEquals(expectedRowCount, rowCount);
     }
   }
-
 }

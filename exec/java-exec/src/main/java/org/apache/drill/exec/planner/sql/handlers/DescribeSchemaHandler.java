@@ -32,10 +32,12 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FileSystemSchemaFactory;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import java.util.List;
 import java.util.Map;
@@ -68,33 +70,38 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
 
 
   @Override
-  public PhysicalPlan getPlan(SqlNode sqlNode) {
-    SqlIdentifier schema = ((SqlDescribeSchema) sqlNode).getSchema();
-    SchemaPlus drillSchema = SchemaUtilites.findSchema(config.getConverter().getDefaultSchema(), schema.names);
+  public PhysicalPlan getPlan(SqlNode sqlNode) throws ForemanSetupException {
+    SqlIdentifier schema = unwrap(sqlNode, SqlDescribeSchema.class).getSchema();
+    SchemaPlus schemaPlus = SchemaUtilites.findSchema(config.getConverter().getDefaultSchema(), schema.names);
 
-    if (drillSchema != null) {
-      StoragePlugin storagePlugin;
-      try {
-        storagePlugin = context.getStorage().getPlugin(schema.names.get(0));
-      } catch (ExecutionSetupException e) {
-        throw new DrillRuntimeException("Failure while retrieving storage plugin", e);
-      }
-      String properties;
-      try {
-        final Map configMap = mapper.convertValue(storagePlugin.getConfig(), Map.class);
-        if (storagePlugin instanceof FileSystemPlugin) {
-          transformWorkspaces(schema.names, configMap);
-        }
-        properties = mapper.writeValueAsString(configMap);
-      } catch (JsonProcessingException e) {
-        throw new DrillRuntimeException("Error while trying to convert storage config to json string", e);
-      }
-      return DirectPlan.createDirectPlan(context, new DescribeSchemaResult(Joiner.on(".").join(schema.names), properties));
+    if (schemaPlus == null) {
+      throw UserException.validationError()
+        .message("Invalid schema name [%s]", Joiner.on(".").join(schema.names))
+        .build(logger);
     }
 
-    throw UserException.validationError()
-          .message(String.format("Invalid schema name [%s]", Joiner.on(".").join(schema.names)))
-          .build(logger);
+    StoragePlugin storagePlugin;
+    try {
+      AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schemaPlus);
+      storagePlugin = context.getStorage().getPlugin(drillSchema.getSchemaPath().get(0));
+      if (storagePlugin == null) {
+        throw new DrillRuntimeException(String.format("Unable to find storage plugin with the following name [%s].",
+          drillSchema.getSchemaPath().get(0)));
+      }
+    } catch (ExecutionSetupException e) {
+      throw new DrillRuntimeException("Failure while retrieving storage plugin", e);
+    }
+
+    try {
+      Map configMap = mapper.convertValue(storagePlugin.getConfig(), Map.class);
+      if (storagePlugin instanceof FileSystemPlugin) {
+        transformWorkspaces(schema.names, configMap);
+      }
+      String properties = mapper.writeValueAsString(configMap);
+      return DirectPlan.createDirectPlan(context, new DescribeSchemaResult(Joiner.on(".").join(schema.names), properties));
+    } catch (JsonProcessingException e) {
+      throw new DrillRuntimeException("Error while trying to convert storage config to json string", e);
+    }
   }
 
   /**

@@ -43,14 +43,14 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
 
   private final KafkaStoragePlugin kafkaStoragePlugin;
   private final List<SchemaPath> columns;
-  private final List<KafkaSubScanSpec> partitionSubScanSpecList;
+  private final List<KafkaPartitionScanSpec> partitionSubScanSpecList;
 
   @JsonCreator
   public KafkaSubScan(@JacksonInject StoragePluginRegistry registry,
                       @JsonProperty("userName") String userName,
                       @JsonProperty("kafkaStoragePluginConfig") KafkaStoragePluginConfig kafkaStoragePluginConfig,
                       @JsonProperty("columns") List<SchemaPath> columns,
-                      @JsonProperty("partitionSubScanSpecList") LinkedList<KafkaSubScanSpec> partitionSubScanSpecList)
+                      @JsonProperty("partitionSubScanSpecList") LinkedList<KafkaPartitionScanSpec> partitionSubScanSpecList)
       throws ExecutionSetupException {
     this(userName,
         (KafkaStoragePlugin) registry.getPlugin(kafkaStoragePluginConfig),
@@ -61,7 +61,7 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
   public KafkaSubScan(String userName,
                       KafkaStoragePlugin kafkaStoragePlugin,
                       List<SchemaPath> columns,
-                      List<KafkaSubScanSpec> partitionSubScanSpecList) {
+                      List<KafkaPartitionScanSpec> partitionSubScanSpecList) {
     super(userName);
     this.kafkaStoragePlugin = kafkaStoragePlugin;
     this.columns = columns;
@@ -95,7 +95,7 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
   }
 
   @JsonProperty
-  public List<KafkaSubScanSpec> getPartitionSubScanSpecList() {
+  public List<KafkaPartitionScanSpec> getPartitionSubScanSpecList() {
     return partitionSubScanSpecList;
   }
 
@@ -108,68 +108,4 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
   public int getOperatorType() {
     return CoreOperatorType.KAFKA_SUB_SCAN_VALUE;
   }
-
-  public static class KafkaSubScanSpec {
-    protected String topicName;
-    protected int partitionId;
-    protected long startOffset;
-    protected long endOffset;
-
-    @JsonCreator
-    public KafkaSubScanSpec(@JsonProperty("topicName") String topicName, @JsonProperty("partitionId") int partitionId,
-        @JsonProperty("startOffset") long startOffset, @JsonProperty("endOffset") long endOffset) {
-      this.topicName = topicName;
-      this.partitionId = partitionId;
-      this.startOffset = startOffset;
-      this.endOffset = endOffset;
-    }
-
-    KafkaSubScanSpec() {
-
-    }
-
-    public String getTopicName() {
-      return topicName;
-    }
-
-    public int getPartitionId() {
-      return partitionId;
-    }
-
-    public long getStartOffset() {
-      return startOffset;
-    }
-
-    public long getEndOffset() {
-      return endOffset;
-    }
-
-    public KafkaSubScanSpec setTopicName(String topicName) {
-      this.topicName = topicName;
-      return this;
-    }
-
-    public KafkaSubScanSpec setPartitionId(int partitionId) {
-      this.partitionId = partitionId;
-      return this;
-    }
-
-    public KafkaSubScanSpec setStartOffset(long startOffset) {
-      this.startOffset = startOffset;
-      return this;
-    }
-
-    public KafkaSubScanSpec setEndOffset(long endOffset) {
-      this.endOffset = endOffset;
-      return this;
-    }
-
-    @Override
-    public String toString() {
-      return "KafkaSubScanSpec [topicName=" + topicName + ", partitionId=" + partitionId + ", startOffset="
-          + startOffset + ", endOffset=" + endOffset + "]";
-    }
-
-  }
-
 }

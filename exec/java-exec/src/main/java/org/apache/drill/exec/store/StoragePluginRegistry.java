@@ -27,85 +27,84 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.sys.PersistentStore;
 
 public interface StoragePluginRegistry extends Iterable<Map.Entry<String, StoragePlugin>>, AutoCloseable {
-  final String SYS_PLUGIN = "sys";
-  final String INFORMATION_SCHEMA_PLUGIN = "INFORMATION_SCHEMA";
-  final String STORAGE_PLUGIN_REGISTRY_IMPL = "drill.exec.storage.registry";
-  final String PSTORE_NAME = "sys.storage_plugins";
+  String SYS_PLUGIN = "sys";
+  String INFORMATION_SCHEMA_PLUGIN = "INFORMATION_SCHEMA";
+  String STORAGE_PLUGIN_REGISTRY_IMPL = "drill.exec.storage.registry";
+  String ACTION_ON_STORAGE_PLUGINS_OVERRIDE_FILE = "drill.exec.storage.action_on_plugins_override_file";
+  String PSTORE_NAME = "sys.storage_plugins";
 
   /**
    * Initialize the storage plugin registry. Must be called before the registry is used.
    *
-   * @throws DrillbitStartupException
+   * @throws DrillbitStartupException if drillbit startup fails
    */
   void init() throws DrillbitStartupException;
 
   /**
    * Delete a plugin by name
-   * @param name
-   *          The name of the storage plugin to delete.
+   *
+   * @param name The name of the storage plugin to delete.
    */
   void deletePlugin(String name);
 
   /**
    * Create a plugin by name and configuration. If the plugin already exists, update the plugin
-   * @param name
-   *          The name of the plugin
-   * @param config
-   *          The plugin configuration
-   * @param persist
-   *          Whether to persist the plugin for later use or treat it as ephemeral.
+   *
+   * @param name The name of the plugin
+   * @param config The plugin configuration
+   * @param persist Whether to persist the plugin for later use or treat it as ephemeral.
    * @return The StoragePlugin instance.
-   * @throws ExecutionSetupException
+   * @throws ExecutionSetupException if plugin cannot be created
    */
   StoragePlugin createOrUpdate(String name, StoragePluginConfig config, boolean persist) throws ExecutionSetupException;
 
   /**
    * Get a plugin by name. Create it based on the PStore saved definition if it doesn't exist.
-   * @param name
-   *          The name of the plugin
+   *
+   * @param name The name of the plugin
    * @return The StoragePlugin instance.
-   * @throws ExecutionSetupException
+   * @throws ExecutionSetupException if plugin cannot be obtained
    */
   StoragePlugin getPlugin(String name) throws ExecutionSetupException;
 
   /**
    * Get a plugin by configuration. If it doesn't exist, create it.
-   * @param config
-   *          The configuration for the plugin.
+   *
+   * @param config The configuration for the plugin.
    * @return The StoragePlugin instance.
-   * @throws ExecutionSetupException
+   * @throws ExecutionSetupException if plugin cannot be obtained
    */
   StoragePlugin getPlugin(StoragePluginConfig config) throws ExecutionSetupException;
 
   /**
    * Add a plugin to the registry using the provided name.
    *
-   * @param name
-   * @param plugin
+   * @param name The name of the plugin
+   * @param plugin The StoragePlugin instance
    */
-  void addPlugin(String name, StoragePlugin plugin);
+  void addEnabledPlugin(String name, StoragePlugin plugin);
 
   /**
    * Get the Format plugin for the FileSystemPlugin associated with the provided storage config and format config.
    *
-   * @param storageConfig
-   *          The storage config for the associated FileSystemPlugin
-   * @param formatConfig
-   *          The format config for the associated FormatPlugin
-   * @return A FormatPlugin
-   * @throws ExecutionSetupException
+   * @param storageConfig The storage config for the associated FileSystemPlugin
+   * @param formatConfig The format config for the associated FormatPlugin
+   * @return A FormatPlugin instance
+   * @throws ExecutionSetupException if plugin cannot be obtained
    */
   FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig)
       throws ExecutionSetupException;
 
   /**
    * Get the PStore for this StoragePluginRegistry. (Used in the management layer.)
+   *
    * @return PStore for StoragePlugin configuration objects.
    */
   PersistentStore<StoragePluginConfig> getStore();
 
   /**
    * Get the Schema factory associated with this storage plugin registry.
+   *
    * @return A SchemaFactory that can register the schemas associated with this plugin registry.
    */
   SchemaFactory getSchemaFactory();

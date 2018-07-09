@@ -17,11 +17,17 @@
  */
 package org.apache.drill.exec.physical.impl.lateraljoin;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
@@ -30,10 +36,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.Ignore;
 
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class TestLateralPlans extends BaseTestQuery {
+  private static final String regularTestFile_1 = "cust_order_10_1.json";
+  private static final String regularTestFile_2 = "cust_order_10_2.json";
 
   @BeforeClass
   public static void enableUnnestLateral() throws Exception {
+    dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_1));
+    dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_2));
     test("alter session set `planner.enable_unnest_lateral`=true");
   }
 
@@ -47,6 +61,10 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testLateralSql() throws Exception {
     String Sql = "select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t," +
         " unnest(t.orders) t2(ord) limit 1";
+
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"},
+      new String[]{});
+
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
@@ -57,9 +75,16 @@ public class TestLateralPlans extends BaseTestQuery {
 
   @Test
   public void testExplainLateralSql() throws Exception {
-    String Sql = "explain plan without implementation for select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t," +
+    String explainSql = "explain plan without implementation for select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t," +
         " unnest(t.orders) t2(ord) limit 1";
-    test(Sql);
+
+    String Sql = "select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t," +
+      " unnest(t.orders) t2(ord) limit 1";
+
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"},
+      new String[]{});
+
+    test(explainSql);
   }
 
   @Test
@@ -68,8 +93,11 @@ public class TestLateralPlans extends BaseTestQuery {
     String query = "select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t,"
         + " unnest(t.orders) t2(ord) where t.c_name='customer1' AND t2.ord.o_shop='Meno Park 1st' ";
 
-    PlanTestBase.testPlanMatchingPatterns(query, new String[]{"Correlate(.*[\n\r])+.*Filter(.*[\n\r])+.*Scan(.*[\n\r])+.*Filter"},
+    PlanTestBase.testPlanMatchingPatterns(query, new String[]{"LateralJoin(.*[\n\r])+.*Filter(.*[\n\r])+.*Scan(.*[\n\r])+.*Filter"},
         new String[]{});
+
+    PlanTestBase.testPlanMatchingPatterns(query, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"},
+      new String[]{});
 
     testBuilder()
         .unOrdered()
@@ -83,6 +111,10 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testLateralSqlPlainCol() throws Exception {
     String Sql = "select t.c_name, t2.phone as c_phone from cp.`lateraljoin/nested-customer.json` t,"
         + " unnest(t.c_phone) t2(phone) limit 1";
+
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`c_phone\\`\\]"},
+      new String[]{});
+
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
@@ -94,6 +126,9 @@ public class TestLateralPlans extends BaseTestQuery {
   @Test
   public void testLateralSqlStar() throws Exception {
     String Sql = "select * from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) Orders(ord) limit 0";
+
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{},
+      new String[]{"column excluded from output: =\\[\\`orders\\`\\]"});
 
     testBuilder()
         .unOrdered()
@@ -107,6 +142,9 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testLateralSqlStar2() throws Exception {
     String Sql = "select c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord) limit 0";
 
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{},
+      new String[]{"column excluded from output: =\\[\\`orders\\`\\]"});
+
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
@@ -119,6 +157,9 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testLateralSqlStar3() throws Exception {
     String Sql = "select Orders.*, c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord) limit 0";
 
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{},
+      new String[]{"column excluded from output: =\\[\\`orders\\`\\]"});
+
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
@@ -130,6 +171,8 @@ public class TestLateralPlans extends BaseTestQuery {
   @Test
   public void testLateralSqlStar4() throws Exception {
     String Sql = "select Orders.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord) limit 0";
+
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{});
 
     testBuilder()
         .unOrdered()
@@ -147,11 +190,14 @@ public class TestLateralPlans extends BaseTestQuery {
         " (select c_name, flatten(orders) from cp" +
         ".`lateraljoin/nested-customer.parquet` ) as t2(name, orders) on t.c_name = t2.name";
 
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{});
+
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
         .sqlBaselineQuery(baselineQuery)
         .go();
+
   }
 
   @Test
@@ -162,6 +208,8 @@ public class TestLateralPlans extends BaseTestQuery {
     String baselineQuery = "select t.c_name, t2.orders, t3.orders from cp.`lateraljoin/nested-customer.parquet` t inner join" +
         " (select c_name, flatten(orders) from cp.`lateraljoin/nested-customer.parquet` ) as t2 (name, orders) on t.c_name = t2.name " +
         " inner join (select c_name, flatten(orders) from cp.`lateraljoin/nested-customer.parquet` ) as t3(name, orders) on t.c_name = t3.name";
+
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{});
 
     testBuilder()
         .unOrdered()
@@ -179,6 +227,9 @@ public class TestLateralPlans extends BaseTestQuery {
     String baselineQuery = "select t.c_name, t3.orders.items as items0, t3.items as items1 from cp.`lateraljoin/nested-customer.parquet` t " +
         " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
         "t3(name, orders, items) on t.c_name = t3.name ";
+
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{"column excluded from output: =\\[\\`items\\`\\]"});
+
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
@@ -195,6 +246,9 @@ public class TestLateralPlans extends BaseTestQuery {
     String baselineQuery = "select t.c_name, t3.orders.items as items0, t3.items as items1 from cp.`lateraljoin/nested-customer.parquet` t " +
         " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
         "t3(name, orders, items) on t.c_name = t3.name where t.c_id > 1";
+
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]"}, new String[]{"column excluded from output: =\\[\\`items\\`\\]"});
+
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
@@ -235,11 +289,14 @@ public class TestLateralPlans extends BaseTestQuery {
         " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
         "t3(name, orders, items) on t.c_name = t3.name where t.c_id > 1 group by t.c_id";
 
+    PlanTestBase.testPlanMatchingPatterns(Sql, new String[]{"column excluded from output: =\\[\\`orders\\`\\]", "column excluded from output: =\\[\\`items\\`\\]"}, new String[]{});
+
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
         .sqlBaselineQuery(baselineQuery)
         .go();
+
   }
 
   @Test
@@ -255,7 +312,7 @@ public class TestLateralPlans extends BaseTestQuery {
           .sql(Sql)
           .run();
     } catch (UserRemoteException ex) {
-      assert(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
+      assertTrue(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
     }
   }
 
@@ -272,7 +329,207 @@ public class TestLateralPlans extends BaseTestQuery {
           .sql(Sql)
           .run();
     } catch (UserRemoteException ex) {
-      assert(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
+      assertTrue(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
+    }
+  }
+
+  /***********************************************************************************************
+   Following test cases are introduced to make sure no exchanges are present on right side of
+   Lateral join.
+   **********************************************************************************************/
+
+  @Test
+  public void testNoExchangeWithAggWithoutGrpBy() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord)) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithStreamAggWithGrpBy() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord) group by t2.ord.o_orderkey) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
+            .setOptionDefault(PlannerSettings.HASHAGG.getOptionName(), false)
+            .setOptionDefault(PlannerSettings.STREAMAGG.getOptionName(), true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithHashAggWithGrpBy() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord) group by t2.ord.o_orderkey) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
+            .setOptionDefault(PlannerSettings.HASHAGG.getOptionName(), true)
+            .setOptionDefault(PlannerSettings.STREAMAGG.getOptionName(), false);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithOrderByWithoutLimit() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithOrderByLimit() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+
+  @Test
+  public void testNoExchangeWithLateralsDownStreamJoin() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t, dfs.`lateraljoin/multipleFiles` t2, " +
+            " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1" +
+            " where t.c_name = t2.c_name";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithLateralsDownStreamUnion() throws Exception {
+    String Sql = "select t.c_name from dfs.`lateraljoin/multipleFiles` t union all " +
+            " select t.c_name from dfs.`lateraljoin/multipleFiles` t, " +
+                    " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithLateralsDownStreamAgg() throws Exception {
+    String Sql = "select sum(d1.totalprice) from dfs.`lateraljoin/multipleFiles` t, " +
+            " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1 group by t.c_custkey";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
+            .setOptionDefault(PlannerSettings.HASHAGG.getOptionName(), false)
+            .setOptionDefault(PlannerSettings.STREAMAGG.getOptionName(), true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  private String getRightChildOfLateral(String explain) throws Exception {
+    Matcher matcher = Pattern.compile("LateralJoin.*Unnest", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
+    assertTrue (matcher.find());
+    String CorrelateUnnest = matcher.group(0);
+    return CorrelateUnnest.substring(CorrelateUnnest.lastIndexOf("Scan"));
+  }
+
+
+  //The following test is for testing the explain plan contains relation between lateral and corresponding unnest.
+  @Test
+  public void testLateralAndUnnestExplainPlan() throws Exception {
+    String Sql = "select c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord)";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String srcOp = explain.substring(explain.indexOf("srcOp"));
+      assertTrue(srcOp != null && srcOp.length() > 0);
+      String correlateFragmentPattern = srcOp.substring(srcOp.indexOf("=")+1, srcOp.indexOf("]"));
+      assertTrue(correlateFragmentPattern != null && correlateFragmentPattern.length() > 0);
+      Matcher matcher = Pattern.compile(correlateFragmentPattern + ".*LateralJoin", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
+      assertTrue(matcher.find());
+    }
+  }
+
+  @Test
+  public void testUnnestTopN() throws Exception {
+    String query =
+        "select customer.c_custkey," +
+                "customer.c_name," +
+                "t.o.o_orderkey," +
+                "t.o.o_totalprice\n" +
+        "from dfs.`lateraljoin/multipleFiles` customer," +
+              "unnest(customer.c_orders) t(o)\n" +
+        "order by customer.c_custkey," +
+                  "t.o.o_orderkey," +
+                  "t.o.o_totalprice\n" +
+        "limit 50";
+
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String plan = client.queryBuilder()
+          .sql(query)
+          .explainText();
+
+      assertThat("Query plan doesn't contain TopN operator",
+          plan, containsString("TopN(limit=[50])"));
+      assertThat("Query plan shouldn't contain Sort operator",
+          plan, not(containsString("Sort")));
     }
   }
 }

@@ -36,6 +36,7 @@ import org.junit.experimental.categories.Category;
 
 @Category(JdbcTest.class)
 public class TestJdbcQuery extends JdbcTestQueryBase {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 
   // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment race
   // conditions are fixed (not just DRILL-2245 fixes).
@@ -247,10 +248,6 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
           assertEquals(ts1, result);
           assertEquals(date1, result1);
 
-          System.out.println("Date: " + date.toString() + " time: " + time.toString() + " timestamp: " + ts.toString() +
-                             "\ninterval year: " + intervalYear + " intervalDay: " + intervalDay +
-                             " date_interval_add: " + ts1.toString() + "date_int_add: " + date1.toString());
-
           // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
           // race conditions are fixed (not just DRILL-2245 fixes).
           // nextUntilEnd(resultSet);
@@ -277,7 +274,7 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
           assertEquals( Types.TIMESTAMP, resultSet.getMetaData().getColumnType(1) );
           assertEquals( Types.DATE, resultSet.getMetaData().getColumnType(2) );
 
-          System.out.println(JdbcTestBase.toString(resultSet));
+          logger.debug(JdbcTestBase.toString(resultSet));
           resultSet.close();
           statement.close();
           return null;

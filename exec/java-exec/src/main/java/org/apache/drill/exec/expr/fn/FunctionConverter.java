@@ -181,7 +181,9 @@ public class FunctionConverter {
 
       switch (template.scope()) {
         case POINT_AGGREGATE:
-          return new DrillAggFuncHolder(functionAttributes, initializer);
+          return outputField.isComplexWriter() ?
+              new DrillComplexWriterAggFuncHolder(functionAttributes, initializer) :
+              new DrillAggFuncHolder(functionAttributes, initializer);
         case SIMPLE:
           return outputField.isComplexWriter() ?
               new DrillComplexWriterFuncHolder(functionAttributes, initializer) :

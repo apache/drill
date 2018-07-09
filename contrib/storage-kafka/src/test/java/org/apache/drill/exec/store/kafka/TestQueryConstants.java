@@ -29,12 +29,24 @@ public interface TestQueryConstants {
   int MAX_CLIENT_CONNECTIONS = 100;
 
   String JSON_TOPIC = "drill-json-topic";
+  String JSON_PUSHDOWN_TOPIC = "drill-pushdown-topic";
   String AVRO_TOPIC = "drill-avro-topic";
   String INVALID_TOPIC = "invalid-topic";
+
+  String KAFKA_MSG_TIMESTAMP_FIELD = "kafkaMsgTimestamp";
+  String KAFKA_PARTITION_ID_FIELD = "kafkaPartitionId";
+  String KAFKA_MSG_OFFSET_FIELD = "kafkaMsgOffset";
 
   // Queries
   String MSG_COUNT_QUERY = "select count(*) from kafka.`%s`";
   String MSG_SELECT_QUERY = "select * from kafka.`%s`";
   String MIN_OFFSET_QUERY = "select MIN(kafkaMsgOffset) as minOffset from kafka.`%s`";
   String MAX_OFFSET_QUERY = "select MAX(kafkaMsgOffset) as maxOffset from kafka.`%s`";
+
+  String QUERY_TEMPLATE_BASIC = "select * from kafka.`%s` where %s";
+  String QUERY_TEMPLATE_AND = "select * from kafka.`%s` where %s AND %s";
+  String QUERY_TEMPLATE_OR = "select * from kafka.`%s` where %s OR %s";
+  String QUERY_TEMPLATE_AND_OR_PATTERN_1 = "select * from kafka.`%s` where %s AND (%s OR %s)";
+  String QUERY_TEMPLATE_AND_OR_PATTERN_2 = "select * from kafka.`%s` where %s OR (%s AND %s)";
+  String QUERY_TEMPLATE_AND_OR_PATTERN_3 = "select * from kafka.`%s` where (%s OR %s) AND (%s OR %s)";
 }

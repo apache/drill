@@ -150,8 +150,6 @@ public final class SchemaUserBitShared
                     output.writeSFixed64(1, message.getPart1(), false);
                 if(message.hasPart2())
                     output.writeSFixed64(2, message.getPart2(), false);
-                if(message.hasText())
-                    output.writeString(3, message.getText(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryId message)
             {
@@ -197,9 +195,6 @@ public final class SchemaUserBitShared
                         case 2:
                             builder.setPart2(input.readSFixed64());
                             break;
-                        case 3:
-                            builder.setText(input.readString());
-                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -242,7 +237,6 @@ public final class SchemaUserBitShared
             {
                 case 1: return "part1";
                 case 2: return "part2";
-                case 3: return "text";
                 default: return null;
             }
         }
@@ -256,7 +250,6 @@ public final class SchemaUserBitShared
         {
             fieldMap.put("part1", 1);
             fieldMap.put("part2", 2);
-            fieldMap.put("text", 3);
         }
     }
 
@@ -1819,6 +1812,8 @@ public final class SchemaUserBitShared
                     output.writeDouble(20, message.getTotalCost(), false);
                 if(message.hasQueueName())
                     output.writeString(21, message.getQueueName(), false);
+                if(message.hasQueryId())
+                    output.writeString(22, message.getQueryId(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryProfile message)
             {
@@ -1924,6 +1919,9 @@ public final class SchemaUserBitShared
                         case 21:
                             builder.setQueueName(input.readString());
                             break;
+                        case 22:
+                            builder.setQueryId(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1985,6 +1983,7 @@ public final class SchemaUserBitShared
                 case 19: return "queueWaitEnd";
                 case 20: return "totalCost";
                 case 21: return "queueName";
+                case 22: return "queryId";
                 default: return null;
             }
         }
@@ -2017,6 +2016,7 @@ public final class SchemaUserBitShared
             fieldMap.put("queueWaitEnd", 19);
             fieldMap.put("totalCost", 20);
             fieldMap.put("queueName", 21);
+            fieldMap.put("queryId", 22);
         }
     }
 

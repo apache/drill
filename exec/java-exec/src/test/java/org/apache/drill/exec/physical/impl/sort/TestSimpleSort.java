@@ -84,8 +84,6 @@ public class TestSimpleSort extends ExecTest {
       }
     }
 
-    System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
-
     if(context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
@@ -129,8 +127,6 @@ public class TestSimpleSort extends ExecTest {
         assertTrue(previousLong >= a2.get(i));
       }
     }
-
-    System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
 
     if(context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();

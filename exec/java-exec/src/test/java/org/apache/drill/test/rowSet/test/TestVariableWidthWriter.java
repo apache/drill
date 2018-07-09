@@ -373,7 +373,6 @@ public class TestVariableWidthWriter extends SubOperatorTest {
 
         @Override
         public boolean canExpand(ScalarWriter writer, int delta) {
-//          System.out.println("Delta: " + delta);
           totalAlloc += delta;
           return totalAlloc < 1024 * 1024;
         }

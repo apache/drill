@@ -81,7 +81,6 @@ public class TestHashJoin extends PopUnitTestBase {
     }
     exec.close();
     assertEquals(expectedRows, totalRecordCount);
-    System.out.println("Total Record Count: " + totalRecordCount);
     if (context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
@@ -168,7 +167,6 @@ public class TestHashJoin extends PopUnitTestBase {
         b.release();
       }
 
-      System.out.println("Total records: " + count);
       assertEquals(25, count);
     }
   }
@@ -238,7 +236,6 @@ public class TestHashJoin extends PopUnitTestBase {
         b.release();
       }
 
-      System.out.println("Total records: " + count);
       assertEquals(272, count);
     }
   }

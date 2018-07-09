@@ -21,13 +21,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
@@ -40,7 +41,7 @@ import com.google.common.collect.Multimaps;
 class StoragePluginMap implements Iterable<Entry<String, StoragePlugin>>, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginMap.class);
 
-  private final ConcurrentMap<String, StoragePlugin> nameMap = Maps.newConcurrentMap();
+  private final ConcurrentMap<String, StoragePlugin> nameMap = new ConcurrentHashMap<>();
 
   @SuppressWarnings("unchecked")
   private final Multimap<StoragePluginConfig, StoragePlugin> configMap =
@@ -111,7 +112,12 @@ class StoragePluginMap implements Iterable<Entry<String, StoragePlugin>>, AutoCl
     return nameMap.entrySet().iterator();
   }
 
-  public Iterable<String> names() {
+  /**
+   * Returns set of plugin names of this {@link StoragePluginMap}
+   *
+   * @return plugin names
+   */
+  public Set<String> getNames() {
     return nameMap.keySet();
   }
 

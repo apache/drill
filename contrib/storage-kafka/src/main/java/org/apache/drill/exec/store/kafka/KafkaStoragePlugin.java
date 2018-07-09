@@ -71,7 +71,7 @@ public class KafkaStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    return ImmutableSet.of();
+    return ImmutableSet.of(KafkaPushDownFilterIntoScan.INSTANCE);
   }
 
   @Override

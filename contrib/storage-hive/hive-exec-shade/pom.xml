@@ -31,6 +31,20 @@
   <packaging>jar</packaging>
   <name>contrib/hive-storage-plugin/hive-exec-shaded</name>
 
+  <properties>
+    <hive.parquet.version>1.8.3</hive.parquet.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.parquet</groupId>
+        <artifactId>parquet-hadoop-bundle</artifactId>
+        <version>${hive.parquet.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.hive</groupId>
@@ -68,11 +82,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!--Once newer hive-exec version leverages parquet-column 1.9.0, this dependency can be deleted -->
-    <dependency>
-      <groupId>org.apache.parquet</groupId>
-      <artifactId>parquet-column</artifactId>
-    </dependency>
   </dependencies>
 
   <build>
@@ -83,7 +92,7 @@
           <artifactSet>
             <includes>
               <include>org.apache.hive:hive-exec</include>
-              <include>org.apache.parquet:parquet-column</include>
+              <include>org.apache.parquet:parquet-hadoop-bundle</include>
               <include>commons-codec:commons-codec</include>
               <include>com.fasterxml.jackson.core:jackson-databind</include>
               <include>com.fasterxml.jackson.core:jackson-annotations</include>
@@ -116,6 +125,10 @@
             <relocation>
               <pattern>org.apache.parquet.</pattern>
               <shadedPattern>hive.org.apache.parquet.</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>shaded.parquet.</pattern>
+              <shadedPattern>hive.shaded.parquet.</shadedPattern>
             </relocation>
             <relocation>
               <pattern>org.apache.avro.</pattern>

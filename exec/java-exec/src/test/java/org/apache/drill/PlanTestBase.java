@@ -39,6 +39,7 @@ import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.QueryTestUtil;
 
 public class PlanTestBase extends BaseTestQuery {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanTestBase.class);
 
   protected static final String OPTIQ_FORMAT = "text";
   protected static final String JSON_FORMAT = "json";
@@ -225,7 +226,6 @@ public class PlanTestBase extends BaseTestQuery {
   public static void testRelLogicalJoinOrder(String sql, String... expectedSubstrs) throws Exception {
     final String planStr = getDrillRelPlanInString(sql, SqlExplainLevel.EXPPLAN_ATTRIBUTES, Depth.LOGICAL);
     final String prefixJoinOrder = getLogicalPrefixJoinOrderFromPlan(planStr);
-    System.out.println(" prefix Join order = \n" + prefixJoinOrder);
     for (final String substr : expectedSubstrs) {
       assertTrue(String.format("Expected string %s is not in the prefixJoinOrder %s!", substr, prefixJoinOrder),
           prefixJoinOrder.contains(substr));
@@ -241,7 +241,6 @@ public class PlanTestBase extends BaseTestQuery {
   public static void testRelPhysicalJoinOrder(String sql, String... expectedSubstrs) throws Exception {
     final String planStr = getDrillRelPlanInString(sql, SqlExplainLevel.EXPPLAN_ATTRIBUTES, Depth.PHYSICAL);
     final String prefixJoinOrder = getPhysicalPrefixJoinOrderFromPlan(planStr);
-    System.out.println(" prefix Join order = \n" + prefixJoinOrder);
     for (final String substr : expectedSubstrs) {
       assertTrue(String.format("Expected string %s is not in the prefixJoinOrder %s!", substr, prefixJoinOrder),
           prefixJoinOrder.contains(substr));
@@ -370,7 +369,6 @@ public class PlanTestBase extends BaseTestQuery {
     final List<QueryDataBatch> results = testSqlWithResults(sql);
     final RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
     final StringBuilder builder = new StringBuilder();
-    final boolean silent = config != null && config.getBoolean(QueryTestUtil.TEST_QUERY_PRINTING_SILENT);
 
     for (final QueryDataBatch b : results) {
       if (!b.hasData()) {
@@ -388,17 +386,14 @@ public class PlanTestBase extends BaseTestQuery {
         throw new Exception("Looks like you did not provide an explain plan query, please add EXPLAIN PLAN FOR to the beginning of your query.");
       }
 
-      if (!silent) {
-        System.out.println(vw.getValueVector().getField().getName());
-      }
+      logger.debug(vw.getValueVector().getField().getName());
       final ValueVector vv = vw.getValueVector();
       for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
         final Object o = vv.getAccessor().getObject(i);
         builder.append(o);
-        if (!silent) {
-          System.out.println(o);
-        }
+        logger.debug(o.toString());
       }
+
       loader.clear();
       b.release();
     }

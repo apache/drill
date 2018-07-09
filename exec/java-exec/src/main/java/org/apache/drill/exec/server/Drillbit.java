@@ -360,6 +360,11 @@ public class Drillbit implements AutoCloseable {
 
     @Override
     public void run() {
+      if (FailureUtils.hadUnrecoverableFailure()) {
+        // We cannot close drill cleanly in this case.
+        return;
+      }
+
       logger.info("Received shutdown request.");
       try {
         /*
@@ -453,5 +458,4 @@ public class Drillbit implements AutoCloseable {
     // return as-is
     return s;
   }
-
 }

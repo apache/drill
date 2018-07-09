@@ -46,11 +46,11 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * <dt>Visitor</dt>
  * <dd>The visitor abstraction (classic Gang-of-Four pattern) allows adding
  * functionality without complicating the structure classes. Allows the same
- * abstraction to be used for the testing {@link RowSet} abstractions and
+ * abstraction to be used for the testing <b>RowSet</b> abstractions and
  * the scan operator "loader" classes.</dd>
  * <dt>Metadata</dt>
  * <dd>Metadata is simply data about data. Here, data about tuples and columns.
- * The column metadata mostly expands on that available in {@link MaterializedField},
+ * The column metadata mostly expands on that available in {@link org.apache.drill.exec.record.MaterializedField},
  * but also adds allocation hints.
  * </dl>
  * <p>
@@ -60,7 +60,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * metadata and visitor behavior to allow much easier processing that is
  * possible with the raw container structure.
  * <p>
- * A key value of this abstraction is the extended {@link TupleSchema}
+ * A key value of this abstraction is the extended {@link org.apache.drill.exec.record.metadata.TupleSchema}
  * associated with the structure.  Unlike a
  * {@link VectorContainer}, this abstraction keeps the schema in sync
  * with vectors as columns are added.
@@ -72,7 +72,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * <p>
  * Tuples provide access to columns by both index and name. Both the schema and
  * model classes follow this convention. Compared with the VectorContainer and
- * {@link AbstractMapVector} classes, the vector index is a first-class concept:
+ * {@link org.apache.drill.exec.vector.complex.AbstractMapVector} classes, the vector index is a first-class concept:
  * the column model and schema are guaranteed to reside at the same index relative
  * to the enclosing tuple. In addition, name access is efficient using a hash
  * index.

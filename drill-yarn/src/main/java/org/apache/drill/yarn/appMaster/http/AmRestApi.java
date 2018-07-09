@@ -134,9 +134,6 @@ public class AmRestApi extends PageTree
    * set in the Drill-on-YARN configuration file. The purpose is simply to prevent
    * accidental cluster shutdown when experimenting with the REST API; this is
    * not meant to be a security mechanism.
-   *
-   * @param key
-   * @return
    */
 
   @Path("/stop")

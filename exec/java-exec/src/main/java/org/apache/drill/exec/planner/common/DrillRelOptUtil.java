@@ -18,9 +18,12 @@
 package org.apache.drill.exec.planner.common;
 
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -29,6 +32,7 @@ import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
@@ -281,5 +285,71 @@ public abstract class DrillRelOptUtil {
       return true;
     }
     return false;
+  }
+
+  /**
+   * InputRefVisitor is a utility class used to collect all the RexInputRef nodes in a
+   * RexNode.
+   *
+   */
+  public static class InputRefVisitor extends RexVisitorImpl<Void> {
+    private final List<RexInputRef> inputRefList;
+
+    public InputRefVisitor() {
+      super(true);
+      inputRefList = new ArrayList<>();
+    }
+
+    public Void visitInputRef(RexInputRef ref) {
+      inputRefList.add(ref);
+      return null;
+    }
+
+    public Void visitCall(RexCall call) {
+      for (RexNode operand : call.operands) {
+        operand.accept(this);
+      }
+      return null;
+    }
+
+    public List<RexInputRef> getInputRefs() {
+      return inputRefList;
+    }
+  }
+
+
+  /**
+   * RexFieldsTransformer is a utility class used to convert column refs in a RexNode
+   * based on inputRefMap (input to output ref map).
+   *
+   * This transformer can be used to find and replace the existing inputRef in a RexNode with a new inputRef.
+   */
+  public static class RexFieldsTransformer {
+    private final RexBuilder rexBuilder;
+    private final Map<Integer, Integer> inputRefMap;
+
+    public RexFieldsTransformer(
+      RexBuilder rexBuilder,
+      Map<Integer, Integer> inputRefMap) {
+      this.rexBuilder = rexBuilder;
+      this.inputRefMap = inputRefMap;
+    }
+
+    public RexNode go(RexNode rex) {
+      if (rex instanceof RexCall) {
+        ImmutableList.Builder<RexNode> builder = ImmutableList.builder();
+        final RexCall call = (RexCall) rex;
+        for (RexNode operand : call.operands) {
+          builder.add(go(operand));
+        }
+        return call.clone(call.getType(), builder.build());
+      } else if (rex instanceof RexInputRef) {
+        RexInputRef var = (RexInputRef) rex;
+        int index = var.getIndex();
+        return rexBuilder.makeInputRef(var.getType(), inputRefMap.get(index));
+      } else {
+        return rex;
+      }
+    }
   }
 }

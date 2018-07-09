@@ -50,8 +50,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import static org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient.createPartitionWithSpecColumns;
 
@@ -64,6 +62,7 @@ public class HiveScan extends AbstractGroupScan {
   private final HiveStoragePlugin hiveStoragePlugin;
   private final HiveReadEntry hiveReadEntry;
   private final HiveMetadataProvider metadataProvider;
+  private final Map<String, String> confProperties;
 
   private List<List<LogicalInputSplit>> mappings;
   private List<LogicalInputSplit> inputSplits;
@@ -75,22 +74,24 @@ public class HiveScan extends AbstractGroupScan {
                   @JsonProperty("hiveReadEntry") final HiveReadEntry hiveReadEntry,
                   @JsonProperty("hiveStoragePluginConfig") final HiveStoragePluginConfig hiveStoragePluginConfig,
                   @JsonProperty("columns") final List<SchemaPath> columns,
+                  @JsonProperty("confProperties") final Map<String, String> confProperties,
                   @JacksonInject final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName,
         hiveReadEntry,
         (HiveStoragePlugin) pluginRegistry.getPlugin(hiveStoragePluginConfig),
         columns,
-        null);
+        null, confProperties);
   }
 
   public HiveScan(final String userName, final HiveReadEntry hiveReadEntry, final HiveStoragePlugin hiveStoragePlugin,
-      final List<SchemaPath> columns, final HiveMetadataProvider metadataProvider) throws ExecutionSetupException {
+                  final List<SchemaPath> columns, final HiveMetadataProvider metadataProvider, final Map<String, String> confProperties) throws ExecutionSetupException {
     super(userName);
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
     this.hiveStoragePlugin = hiveStoragePlugin;
+    this.confProperties = confProperties;
     if (metadataProvider == null) {
-      this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry, hiveStoragePlugin.getHiveConf());
+      this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry, getHiveConf());
     } else {
       this.metadataProvider = metadataProvider;
     }
@@ -102,10 +103,11 @@ public class HiveScan extends AbstractGroupScan {
     this.hiveReadEntry = that.hiveReadEntry;
     this.hiveStoragePlugin = that.hiveStoragePlugin;
     this.metadataProvider = that.metadataProvider;
+    this.confProperties = that.confProperties;
   }
 
   public HiveScan clone(final HiveReadEntry hiveReadEntry) throws ExecutionSetupException {
-    return new HiveScan(getUserName(), hiveReadEntry, hiveStoragePlugin, columns, metadataProvider);
+    return new HiveScan(getUserName(), hiveReadEntry, hiveStoragePlugin, columns, metadataProvider, confProperties);
   }
 
   @JsonProperty
@@ -123,29 +125,37 @@ public class HiveScan extends AbstractGroupScan {
     return columns;
   }
 
+  @JsonProperty
+  public Map<String, String> getConfProperties() {
+    return confProperties;
+  }
+
   @JsonIgnore
   public HiveStoragePlugin getStoragePlugin() {
     return hiveStoragePlugin;
   }
 
-  protected HiveMetadataProvider getMetadataProvider() {
-    return metadataProvider;
+  @JsonIgnore
+  public HiveConf getHiveConf() {
+    return HiveUtilities.generateHiveConf(hiveStoragePlugin.getHiveConf(), confProperties);
   }
 
-  private List<LogicalInputSplit> getInputSplits() {
-    if (inputSplits == null) {
-      inputSplits = metadataProvider.getInputSplits(hiveReadEntry);
-    }
-
-    return inputSplits;
+  @JsonIgnore
+  public boolean isNativeReader() {
+    return false;
   }
 
+  @Override
+  public boolean supportsPartitionFilterPushdown() {
+    List<FieldSchema> partitionKeys = hiveReadEntry.getTable().getPartitionKeys();
+    return !(partitionKeys == null || partitionKeys.size() == 0);
+  }
 
   @Override
   public void applyAssignments(final List<CoordinationProtos.DrillbitEndpoint> endpoints) {
     mappings = new ArrayList<>();
     for (int i = 0; i < endpoints.size(); i++) {
-      mappings.add(new ArrayList<LogicalInputSplit>());
+      mappings.add(new ArrayList<>());
     }
     final int count = endpoints.size();
     final List<LogicalInputSplit> inputSplits = getInputSplits();
@@ -158,9 +168,9 @@ public class HiveScan extends AbstractGroupScan {
   public SubScan getSpecificScan(final int minorFragmentId) throws ExecutionSetupException {
     try {
       final List<LogicalInputSplit> splits = mappings.get(minorFragmentId);
-      List<HivePartitionWrapper> parts = Lists.newArrayList();
-      final List<List<String>> encodedInputSplits = Lists.newArrayList();
-      final List<String> splitTypes = Lists.newArrayList();
+      List<HivePartitionWrapper> parts = new ArrayList<>();
+      final List<List<String>> encodedInputSplits = new ArrayList<>();
+      final List<String> splitTypes = new ArrayList<>();
       for (final LogicalInputSplit split : splits) {
         final Partition splitPartition = split.getPartition();
         if (splitPartition != null) {
@@ -176,7 +186,7 @@ public class HiveScan extends AbstractGroupScan {
       }
 
       final HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.getTableWrapper(), parts);
-      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, hiveStoragePlugin);
+      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, hiveStoragePlugin, confProperties);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
@@ -192,7 +202,7 @@ public class HiveScan extends AbstractGroupScan {
     final Map<String, DrillbitEndpoint> endpointMap = new HashMap<>();
     for (final DrillbitEndpoint endpoint : hiveStoragePlugin.getContext().getBits()) {
       endpointMap.put(endpoint.getAddress(), endpoint);
-      logger.debug("endpoing address: {}", endpoint.getAddress());
+      logger.debug("Endpoint address: {}", endpoint.getAddress());
     }
     final Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
     try {
@@ -204,7 +214,7 @@ public class HiveScan extends AbstractGroupScan {
       for (final LogicalInputSplit split : inputSplits) {
         final float affinity = ((float) Math.max(1, split.getLength())) / totalSize;
         for (final String loc : split.getLocations()) {
-          logger.debug("split location: {}", loc);
+          logger.debug("Split location: {}", loc);
           final DrillbitEndpoint endpoint = endpointMap.get(loc);
           if (endpoint != null) {
             if (affinityMap.containsKey(endpoint)) {
@@ -218,13 +228,8 @@ public class HiveScan extends AbstractGroupScan {
     } catch (final IOException e) {
       throw new DrillRuntimeException(e);
     }
-    for (final DrillbitEndpoint ep : affinityMap.keySet()) {
-      Preconditions.checkNotNull(ep);
-    }
-    for (final EndpointAffinity a : affinityMap.values()) {
-      Preconditions.checkNotNull(a.getEndpoint());
-    }
-    return Lists.newArrayList(affinityMap.values());
+
+    return new ArrayList<>(affinityMap.values());
   }
 
   @Override
@@ -243,21 +248,8 @@ public class HiveScan extends AbstractGroupScan {
     }
   }
 
-  protected int getSerDeOverheadFactor() {
-    final int projectedColumnCount;
-    if (Utilities.isStarQuery(columns)) {
-      Table hiveTable = hiveReadEntry.getTable();
-      projectedColumnCount = hiveTable.getSd().getColsSize() + hiveTable.getPartitionKeysSize();
-    } else {
-      // In cost estimation, # of project columns should be >= 1, even for skipAll query.
-      projectedColumnCount = Math.max(columns.size(), 1);
-    }
-
-    return projectedColumnCount * HIVE_SERDE_SCAN_OVERHEAD_FACTOR_PER_COLUMN;
-  }
-
   @Override
-  public PhysicalOperator getNewWithChildren(final List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(final List<PhysicalOperator> children) {
     return new HiveScan(this);
   }
 
@@ -275,6 +267,7 @@ public class HiveScan extends AbstractGroupScan {
         + ", numPartitions=" + numPartitions
         + ", partitions= " + partitions
         + ", inputDirectories=" + metadataProvider.getInputDirectories(hiveReadEntry)
+        + ", confProperties=" + confProperties
         + "]";
   }
 
@@ -290,22 +283,24 @@ public class HiveScan extends AbstractGroupScan {
     return true;
   }
 
-  // Return true if the current table is partitioned false otherwise
-  public boolean supportsPartitionFilterPushdown() {
-    final List<FieldSchema> partitionKeys = hiveReadEntry.getTable().getPartitionKeys();
-    if (partitionKeys == null || partitionKeys.size() == 0) {
-      return false;
+  private List<LogicalInputSplit> getInputSplits() {
+    if (inputSplits == null) {
+      inputSplits = metadataProvider.getInputSplits(hiveReadEntry);
     }
-    return true;
+
+    return inputSplits;
   }
 
-  @JsonIgnore
-  public HiveConf getHiveConf() {
-    return hiveStoragePlugin.getHiveConf();
-  }
+  private int getSerDeOverheadFactor() {
+    final int projectedColumnCount;
+    if (Utilities.isStarQuery(columns)) {
+      Table hiveTable = hiveReadEntry.getTable();
+      projectedColumnCount = hiveTable.getSd().getColsSize() + hiveTable.getPartitionKeysSize();
+    } else {
+      // In cost estimation, # of project columns should be >= 1, even for skipAll query.
+      projectedColumnCount = Math.max(columns.size(), 1);
+    }
 
-  @JsonIgnore
-  public boolean isNativeReader() {
-    return false;
+    return projectedColumnCount * HIVE_SERDE_SCAN_OVERHEAD_FACTOR_PER_COLUMN;
   }
 }

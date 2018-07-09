@@ -80,7 +80,7 @@
 
 # Location to place Drill logs. Set to $DRILL_HOME/log by default.
 
-#export DRILL_LOG_DIR=${DRILL_LOG_DIR:-$DRILL_HOME/conf}
+#export DRILL_LOG_DIR=${DRILL_LOG_DIR:-$DRILL_HOME/log}
 
 # Location to place the Drillbit pid file when running as a daemon using
 # drillbit.sh start.

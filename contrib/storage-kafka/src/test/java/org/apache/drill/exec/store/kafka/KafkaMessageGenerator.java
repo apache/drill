@@ -35,6 +35,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,6 +121,39 @@ public class KafkaMessageGenerator {
         logger.info("Publishing message : {}", message);
         Future<RecordMetadata> future = producer.send(message);
         logger.info("Committed offset of the message : {}", future.get().offset());
+      }
+    } catch (Throwable th) {
+      logger.error(th.getMessage(), th);
+      throw new DrillRuntimeException(th.getMessage(), th);
+    } finally {
+      if (producer != null) {
+        producer.close();
+      }
+    }
+  }
+
+  public void populateJsonMsgWithTimestamps(String topic, int numMsg) {
+    KafkaProducer<String, String> producer = null;
+    Random rand = new Random();
+    try {
+      producer = new KafkaProducer<String, String>(producerProperties);
+      int halfCount = numMsg / 2;
+
+      for(PartitionInfo tpInfo : producer.partitionsFor(topic)) {
+        for (int i = 1; i <= numMsg; ++i) {
+          JsonObject object = new JsonObject();
+          object.addProperty("stringKey", UUID.randomUUID().toString());
+          object.addProperty("intKey", numMsg - i);
+          object.addProperty("boolKey", i % 2 == 0);
+
+          long timestamp = i < halfCount ? (halfCount - i) : i;
+          ProducerRecord<String, String> message =
+              new ProducerRecord<String, String>(tpInfo.topic(), tpInfo.partition(), timestamp, "key"+i, object.toString());
+          logger.info("Publishing message : {}", message);
+          Future<RecordMetadata> future = producer.send(message);
+          logger.info("Committed offset of the message : {}", future.get().offset());
+        }
+
       }
     } catch (Throwable th) {
       logger.error(th.getMessage(), th);

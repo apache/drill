@@ -209,7 +209,7 @@ public class TextParsingSettings {
 
   /**
    * Configures how to handle unescaped quotes inside quoted values. If set to {@code true}, the parser will parse the quote normally as part of the value.
-   * If set the {@code false}, a {@link TextParsingException} will be thrown. Defaults to {@code true}.
+   * If set the {@code false}, a {@link com.univocity.parsers.common.TextParsingException} will be thrown. Defaults to {@code true}.
    * @param parseUnescapedQuotes indicates whether or not the CSV parser should accept unescaped quotes inside quoted values.
    */
   public void setParseUnescapedQuotes(boolean parseUnescapedQuotes) {

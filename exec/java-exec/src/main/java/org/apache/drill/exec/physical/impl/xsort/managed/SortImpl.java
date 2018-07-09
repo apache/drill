@@ -20,8 +20,11 @@ package org.apache.drill.exec.physical.impl.xsort.managed;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.physical.impl.xsort.MSortTemplate;
 import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.InputBatch;
@@ -37,6 +40,9 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.exec.vector.ValueVector;
+
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 
 /**
  * Implementation of the external sort which is wrapped into the Drill
@@ -73,6 +79,8 @@ public class SortImpl {
     int getRecordCount();
     SelectionVector2 getSv2();
     SelectionVector4 getSv4();
+    void updateOutputContainer(VectorContainer container, SelectionVector4 sv4,
+                               IterOutcome outcome, BatchSchema schema);
   }
 
   public static class EmptyResults implements SortResults {
@@ -105,6 +113,26 @@ public class SortImpl {
 
     @Override
     public VectorContainer getContainer() { return dest; }
+
+    @Override
+    public void updateOutputContainer(VectorContainer container, SelectionVector4 sv4,
+                                      IterOutcome outcome, BatchSchema schema) {
+
+      // First output batch of current schema, populate container with ValueVectors
+      if (container.getNumberOfColumns() == 0) {
+        for (MaterializedField field : schema) {
+          final ValueVector vv = TypeHelper.getNewVector(field, container.getAllocator());
+          vv.clear();
+          final ValueVector[] hyperVector = { vv };
+          container.add(hyperVector, true);
+        }
+        container.buildSchema(SelectionVectorMode.FOUR_BYTE);
+      } // since it's an empty batch no need to do anything in else
+
+      sv4.clear();
+      container.zeroVectors();
+      container.setRecordCount(0);
+    }
   }
 
   /**
@@ -169,6 +197,16 @@ public class SortImpl {
 
     @Override
     public VectorContainer getContainer() { return outputContainer; }
+
+    @Override
+    public void updateOutputContainer(VectorContainer container, SelectionVector4 sv4,
+                                      IterOutcome outcome, BatchSchema schema) {
+      if (outcome == EMIT) {
+        throw new UnsupportedOperationException("SingleBatchResults for sort with SV2 is currently not supported with" +
+          " EMIT outcome");
+      }
+      // Not used in Sort so don't need to do anything for now
+    }
   }
 
   private final SortConfig config;
@@ -260,14 +298,14 @@ public class SortImpl {
     // during the transfer, we immediately follow the transfer with an SV2
     // allocation that will fail if we are over the allocation limit.
 
-    if (isSpillNeeded(sizer.actualSize())) {
+    if (isSpillNeeded(sizer.getActualSize())) {
       spillFromMemory();
     }
 
     // Sanity check. We should now be below the buffer memory maximum.
 
     long startMem = allocator.getAllocatedMemory();
-    bufferedBatches.add(incoming, sizer.netSize());
+    bufferedBatches.add(incoming, sizer.getNetBatchSize());
 
     // Compute batch size, including allocation of an sv2.
 
@@ -276,7 +314,7 @@ public class SortImpl {
 
     // Update the minimum buffer space metric.
 
-    metrics.updateInputMetrics(sizer.rowCount(), sizer.actualSize());
+    metrics.updateInputMetrics(sizer.rowCount(), sizer.getActualSize());
     metrics.updateMemory(memManager.freeMemory(endMem));
     metrics.updatePeakBatches(bufferedBatches.size());
 
@@ -284,8 +322,8 @@ public class SortImpl {
     // the effective count as given by the selection vector
     // (which may exclude some records due to filtering.)
 
-    validateBatchSize(sizer.actualSize(), batchSize);
-    if (memManager.updateEstimates((int) batchSize, sizer.netRowWidth(), sizer.rowCount())) {
+    validateBatchSize(sizer.getActualSize(), batchSize);
+    if (memManager.updateEstimates((int) batchSize, sizer.getNetRowWidth(), sizer.rowCount())) {
 
       // If estimates changed, discard the helper based on the old estimates.
 

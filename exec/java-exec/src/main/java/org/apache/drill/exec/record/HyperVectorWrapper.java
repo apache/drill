@@ -26,6 +26,8 @@ import org.apache.drill.exec.vector.complex.FieldIdUtil;
 
 import com.google.common.base.Preconditions;
 
+import java.lang.reflect.Array;
+
 
 public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<T>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HyperVectorWrapper.class);
@@ -138,7 +140,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
 
   @SuppressWarnings("unchecked")
   public void addVectors(ValueVector[] vv) {
-    vectors = (T[]) ArrayUtils.add(vectors, vv);
+    vectors = (T[]) ArrayUtils.addAll(vectors, vv);
   }
 
   /**
@@ -156,5 +158,23 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     for (int i = 0; i < vectors.length; ++i) {
       vectors[i].makeTransferPair(destionationVectors[i]).transfer();
     }
+  }
+
+  /**
+   * Method to replace existing list of vectors with the newly provided ValueVectors list in this HyperVectorWrapper
+   * @param vv - New list of ValueVectors to be stored
+   */
+  @SuppressWarnings("unchecked")
+  public void updateVectorList(ValueVector[] vv) {
+    Preconditions.checkArgument(vv.length > 0);
+    Preconditions.checkArgument(getField().getType().equals(vv[0].getField().getType()));
+    // vectors.length will always be > 0 since in constructor that is enforced
+    Preconditions.checkArgument(vv[0].getClass().equals(vectors[0].getClass()));
+    clear();
+
+    final Class<?> clazz = vv[0].getClass();
+    final ValueVector[] c = (ValueVector[]) Array.newInstance(clazz, vv.length);
+    System.arraycopy(vv, 0, c, 0, vv.length);
+    vectors = (T[])c;
   }
 }

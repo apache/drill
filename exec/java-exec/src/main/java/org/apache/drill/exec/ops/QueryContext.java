@@ -163,10 +163,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   /**
-   *  Create and return a SchemaTree with given <i>schemaConfig</i> but some schemas (from storage plugins)
+   *  Create and return a {@link org.apache.calcite.schema.SchemaPlus} with given <i>schemaConfig</i> but some schemas (from storage plugins)
    *  could be initialized later.
    * @param schemaConfig
-   * @return
+   * @return A {@link org.apache.calcite.schema.SchemaPlus} with given <i>schemaConfig</i>.
    */
   public SchemaPlus getRootSchema(SchemaConfig schemaConfig) {
     return schemaTreeProvider.createRootSchema(schemaConfig);
@@ -174,7 +174,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   /**
    *  Create and return a fully initialized SchemaTree with given <i>schemaConfig</i>.
    * @param schemaConfig
-   * @return
+   * @return A fully initialized SchemaTree with given <i>schemaConfig</i>.
    */
 
   public SchemaPlus getFullRootSchema(SchemaConfig schemaConfig) {
@@ -182,7 +182,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
   /**
    * Get the user name of the user who issued the query that is managed by this QueryContext.
-   * @return
+   * @return The user name of the user who issued the query that is managed by this QueryContext.
    */
   @Override
   public String getQueryUserName() {

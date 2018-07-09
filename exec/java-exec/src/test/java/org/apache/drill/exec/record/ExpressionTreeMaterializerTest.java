@@ -114,9 +114,6 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
     assertTrue(newIfExpr.elseExpression instanceof IfExpression);
     assertEquals(bigIntType, ifCondition.expression.getMajorType());
     assertEquals(true, ((ValueExpressions.BooleanExpression) ((IfExpression)(newIfExpr.elseExpression)).ifCondition.condition).value);
-    if (ec.hasErrors()) {
-      System.out.println(ec.toErrorString());
-    }
     assertFalse(ec.hasErrors());
   }
 
@@ -188,6 +185,5 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
     LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(functionCallExpr, batch, ec, registry);
     assertTrue(newExpr instanceof TypedNullConstant);
     assertEquals(1, ec.getErrorCount());
-    System.out.println(ec.toErrorString());
   }
 }

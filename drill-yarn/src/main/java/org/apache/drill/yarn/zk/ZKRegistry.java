@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -134,7 +135,7 @@ public class ZKRegistry
     /**
      * ZK tracking state.
      *
-     * @see {@link State}
+     * See {@link org.apache.drill.yarn.zk.ZKRegistry.DrillbitTracker.State}
      */
 
     protected State state;
@@ -168,8 +169,6 @@ public class ZKRegistry
      * that the task has come online. Tell the task to update its state to
      * record that the task is, in fact, registered in ZK. This indicates a
      * normal, healthy task.
-     *
-     * @param tracker
      */
 
     private void becomeRegistered() {
@@ -178,8 +177,6 @@ public class ZKRegistry
 
     /**
      * Mark that a YARN-managed Drillbit has dropped out of ZK.
-     *
-     * @param registryHandler
      */
 
     public void becomeUnregistered() {
@@ -492,7 +489,7 @@ public class ZKRegistry
    * cases where tasks hang in this state. This is a potential work-around.
    *
    * @param task
-   * @return
+   * @return True if the given task is regestered. False otherwise.
    */
 
   public synchronized boolean isRegistered(Task task) {
@@ -573,9 +570,9 @@ public class ZKRegistry
    * Get the current registry for testing. Why for testing? Because this is
    * unsynchronized. In production code, the map may change out from under you.
    *
-   * @return
+   * @return The current registry.
    */
-
+  @VisibleForTesting
   protected Map<String, DrillbitTracker> getRegistryForTesting() {
     return registry;
   }

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -97,6 +98,12 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
   @Override
   public LogicalExpression visitConvertExpression(ConvertExpression cast, Void value) throws RuntimeException {
     throw new UnsupportedOperationException("ConvertExpression is not expected here. "
+        + "It should have been converted to FunctionHolderExpression in materialization");
+  }
+
+  @Override
+  public LogicalExpression visitAnyValueExpression(AnyValueExpression cast, Void value) throws RuntimeException {
+    throw new UnsupportedOperationException("AnyValueExpression is not expected here. "
         + "It should have been converted to FunctionHolderExpression in materialization");
   }
 

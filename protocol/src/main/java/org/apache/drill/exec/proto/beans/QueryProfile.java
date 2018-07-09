@@ -73,6 +73,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
     private long queueWaitEnd;
     private double totalCost;
     private String queueName = DEFAULT_QUEUE_NAME;
+    private String queryId;
 
     public QueryProfile()
     {
@@ -354,6 +355,19 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         return this;
     }
 
+    // queryId
+
+    public String getQueryId()
+    {
+        return queryId;
+    }
+
+    public QueryProfile setQueryId(String queryId)
+    {
+        this.queryId = queryId;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -476,6 +490,9 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
                 case 21:
                     message.queueName = input.readString();
                     break;
+                case 22:
+                    message.queryId = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -556,6 +573,9 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
 
         if(message.queueName != null && message.queueName != DEFAULT_QUEUE_NAME)
             output.writeString(21, message.queueName, false);
+
+        if(message.queryId != null)
+            output.writeString(22, message.queryId, false);
     }
 
     public String getFieldName(int number)
@@ -583,6 +603,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
             case 19: return "queueWaitEnd";
             case 20: return "totalCost";
             case 21: return "queueName";
+            case 22: return "queryId";
             default: return null;
         }
     }
@@ -617,6 +638,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         __fieldMap.put("queueWaitEnd", 19);
         __fieldMap.put("totalCost", 20);
         __fieldMap.put("queueName", 21);
+        __fieldMap.put("queryId", 22);
     }
     
 }

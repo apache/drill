@@ -21,6 +21,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -29,15 +30,19 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.ColumnDescriptor;
-import org.apache.parquet.format.converter.ParquetMetadataConverter;
+import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 
@@ -49,6 +54,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.drill.exec.store.parquet.metadata.Metadata.PARQUET_STRINGS_SIGNED_MIN_MAX_ENABLED;
+import static org.apache.parquet.format.converter.ParquetMetadataConverter.NO_FILTER;
 
 public abstract class AbstractParquetScanBatchCreator {
 
@@ -103,7 +111,8 @@ public abstract class AbstractParquetScanBatchCreator {
           ParquetReaderUtility.detectCorruptDates(footer, rowGroupScan.getColumns(), autoCorrectCorruptDates);
         logger.debug("Contains corrupt dates: {}", containsCorruptDates);
 
-        if (!context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER) && !isComplex(footer)) {
+        if (!context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER) && !isComplex(footer, rowGroupScan.getColumns())) {
+          logger.debug("Query qualifies for new Parquet reader");
           readers.add(new ParquetRecordReader(context,
               rowGroup.getPath(),
               rowGroup.getRowGroupIndex(),
@@ -114,6 +123,7 @@ public abstract class AbstractParquetScanBatchCreator {
               rowGroupScan.getColumns(),
               containsCorruptDates));
         } else {
+          logger.debug("Query doesn't qualify for new reader, using old one");
           readers.add(new DrillParquetReader(context,
               footer,
               rowGroup,
@@ -146,27 +156,35 @@ public abstract class AbstractParquetScanBatchCreator {
   protected abstract AbstractDrillFileSystemManager getDrillFileSystemCreator(OperatorContext operatorContext, OptionManager optionManager);
 
   private ParquetMetadata readFooter(Configuration conf, String path) throws IOException {
-    Configuration newConf = new Configuration(conf);
+    conf = new Configuration(conf);
     conf.setBoolean(ENABLE_BYTES_READ_COUNTER, false);
     conf.setBoolean(ENABLE_BYTES_TOTAL_COUNTER, false);
     conf.setBoolean(ENABLE_TIME_READ_COUNTER, false);
-    return ParquetFileReader.readFooter(newConf, new Path(path), ParquetMetadataConverter.NO_FILTER);
+    conf.setBoolean(PARQUET_STRINGS_SIGNED_MIN_MAX_ENABLED, true);
+    ParquetReadOptions options = ParquetReadOptions.builder().withMetadataFilter(NO_FILTER).build();
+    try (ParquetFileReader reader = ParquetFileReader.open(HadoopInputFile.fromPath(new Path(path), conf), options)) {
+      return reader.getFooter();
+    }
   }
 
-  private boolean isComplex(ParquetMetadata footer) {
+  private boolean isComplex(ParquetMetadata footer, List<SchemaPath> columns) {
     MessageType schema = footer.getFileMetaData().getSchema();
 
-    for (Type type : schema.getFields()) {
-      if (!type.isPrimitive()) {
-        return true;
+    if (Utilities.isStarQuery(columns)) {
+      for (Type type : schema.getFields()) {
+        if (!type.isPrimitive()) {
+          return true;
+        }
       }
-    }
-    for (ColumnDescriptor col : schema.getColumns()) {
-      if (col.getMaxRepetitionLevel() > 0) {
-        return true;
+      for (ColumnDescriptor col : schema.getColumns()) {
+        if (col.getMaxRepetitionLevel() > 0) {
+          return true;
+        }
       }
+      return false;
+    } else {
+      return containsComplexColumn(footer, columns);
     }
-    return false;
   }
 
   /**
@@ -183,4 +201,42 @@ public abstract class AbstractParquetScanBatchCreator {
     protected abstract DrillFileSystem get(Configuration config, String path) throws ExecutionSetupException;
   }
 
+  /**
+   * Check whether any of queried columns is nested or repetitive.
+   *
+   * @param footer  Parquet file schema
+   * @param columns list of query SchemaPath objects
+   */
+  public static boolean containsComplexColumn(ParquetMetadata footer, List<SchemaPath> columns) {
+
+    Map<String, ColumnDescriptor> colDescMap = ParquetReaderUtility.getColNameToColumnDescriptorMapping(footer);
+    Map<String, SchemaElement> schemaElements = ParquetReaderUtility.getColNameToSchemaElementMapping(footer);
+
+    for (SchemaPath schemaPath : columns) {
+      // non-nested column check: full path must be equal to root segment path
+      if (!schemaPath.getUnIndexed().toString().replaceAll("`", "")
+          .equalsIgnoreCase(schemaPath.getRootSegment().getPath())) {
+        logger.debug("Forcing 'old' reader due to nested column: {}", schemaPath.getUnIndexed().toString());
+        return true;
+      }
+
+      // following column descriptor lookup failure may mean two cases, depending on subsequent SchemaElement lookup:
+      // 1. success: queried column is complex => use old reader
+      // 2. failure: queried column is not in schema => use new reader
+      ColumnDescriptor column = colDescMap.get(schemaPath.getUnIndexed().toString().toLowerCase());
+
+      if (column == null) {
+        SchemaElement se = schemaElements.get(schemaPath.getUnIndexed().toString().toLowerCase());
+        if (se != null) {
+          return true;
+        }
+      } else {
+        if (column.getMaxRepetitionLevel() > 0) {
+          logger.debug("Forcing 'old' reader due to repetitive column: {}", schemaPath.getUnIndexed().toString());
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 }

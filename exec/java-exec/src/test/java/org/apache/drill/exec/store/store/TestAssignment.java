@@ -78,7 +78,6 @@ public class TestAssignment {
     }
 
     ListMultimap<Integer, CompleteFileWork> mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks);
-    System.out.println(mappings.keySet().size());
 
     // Verify that all fragments have chunks assigned.
     for (int i = 0; i < width; i++) {
@@ -118,7 +117,6 @@ public class TestAssignment {
     }
 
     ListMultimap<Integer, CompleteFileWork> mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks);
-    System.out.println(mappings.keySet().size());
     for (int i = 0; i < width; i++) {
       Assert.assertTrue("no mapping for entry " + i, mappings.get(i) != null && mappings.get(i).size() > 0);
     }

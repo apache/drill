@@ -39,6 +39,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.vector.complex.writer.*;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.*;
 import javax.inject.Inject;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.expr.holders.*;
@@ -121,6 +123,101 @@ public class Decimal${aggrtype.className}Functions {
       value.obj = java.math.BigDecimal.ZERO;
       outputScale = new IntHolder();
       outputScale.value = Integer.MIN_VALUE;
+      nonNullCount.value = 0;
+    }
+  }
+  <#elseif aggrtype.funcName.contains("any_value") && type.inputType?starts_with("Repeated")>
+  @FunctionTemplate(name = "${aggrtype.funcName}",
+                    scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
+                    returnType = FunctionTemplate.ReturnType.DECIMAL_AGGREGATE)
+  public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc {
+    @Param ${type.inputType}Holder in;
+    @Output ComplexWriter writer;
+    @Workspace BigIntHolder nonNullCount;
+
+    public void setup() {
+      nonNullCount = new BigIntHolder();
+    }
+
+    @Override
+    public void add() {
+      if (nonNullCount.value == 0) {
+        org.apache.drill.exec.expr.fn.impl.MappifyUtility.createList(in.reader, writer, "any_value");
+      }
+      nonNullCount.value = 1;
+    }
+
+    @Override
+    public void output() {
+    }
+
+    @Override
+    public void reset() {
+      nonNullCount.value = 0;
+    }
+  }
+  <#elseif aggrtype.funcName.contains("any_value")>
+  @FunctionTemplate(name = "${aggrtype.funcName}",
+                    scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
+                    returnType = FunctionTemplate.ReturnType.DECIMAL_AGGREGATE)
+  public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc {
+    @Param ${type.inputType}Holder in;
+    @Inject DrillBuf buffer;
+    @Workspace ObjectHolder value;
+    @Workspace IntHolder scale;
+    @Workspace IntHolder precision;
+    @Output ${type.outputType}Holder out;
+    @Workspace BigIntHolder nonNullCount;
+
+    public void setup() {
+      value = new ObjectHolder();
+      value.obj = java.math.BigDecimal.ZERO;
+      nonNullCount = new BigIntHolder();
+    }
+
+    @Override
+    public void add() {
+      <#if type.inputType?starts_with("Nullable")>
+      sout: {
+        if (in.isSet == 0) {
+        // processing nullable input and the value is null, so don't do anything...
+        break sout;
+      }
+      </#if>
+      if (nonNullCount.value == 0) {
+        value.obj=org.apache.drill.exec.util.DecimalUtility
+            .getBigDecimalFromDrillBuf(in.buffer,in.start,in.end-in.start,in.scale);
+        scale.value = in.scale;
+        precision.value = in.precision;
+      }
+      nonNullCount.value = 1;
+      <#if type.inputType?starts_with("Nullable")>
+      } // end of sout block
+      </#if>
+    }
+
+    @Override
+    public void output() {
+      if (nonNullCount.value > 0) {
+        out.isSet = 1;
+        byte[] bytes = ((java.math.BigDecimal)value.obj).unscaledValue().toByteArray();
+        int len = bytes.length;
+        out.start  = 0;
+        out.buffer = buffer.reallocIfNeeded(len);
+        out.buffer.setBytes(0, bytes);
+        out.end = len;
+        out.scale = scale.value;
+        out.precision = precision.value;
+    } else {
+        out.isSet = 0;
+      }
+    }
+
+    @Override
+    public void reset() {
+      scale.value = 0;
+      precision.value = 0;
+      value.obj = null;
       nonNullCount.value = 0;
     }
   }

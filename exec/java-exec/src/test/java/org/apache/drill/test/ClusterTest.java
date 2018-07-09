@@ -144,7 +144,6 @@ public class ClusterTest extends DrillTest {
         }
         rowSet.clear();
       }
-      System.out.println(results.recordCount());
     } catch (Exception e) {
       throw new IllegalStateException(e);
     } finally {

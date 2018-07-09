@@ -90,6 +90,16 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
         break sout;
       }
     </#if>
+    <#if aggrtype.className == "AnyValue">
+      if (nonNullCount.value == 0) {
+        nonNullCount.value = 1;
+        int inputLength = in.end - in.start;
+        org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = (org.apache.drill.exec.expr.fn.impl.DrillByteArray) value.obj;
+        byte[] tempArray = new byte[inputLength];
+        in.buffer.getBytes(in.start, tempArray, 0, inputLength);
+        tmp.setBytes(tempArray);
+      }
+    <#else>
     nonNullCount.value = 1;
     org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = (org.apache.drill.exec.expr.fn.impl.DrillByteArray) value.obj;
     int cmp = 0;
@@ -121,6 +131,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
         tmp.setBytes(tempArray);
       }
     }
+    </#if>
     <#if type.inputType?starts_with("Nullable")>
     } // end of sout block
 	  </#if>

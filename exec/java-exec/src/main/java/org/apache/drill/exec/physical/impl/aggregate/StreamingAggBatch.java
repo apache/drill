@@ -18,7 +18,9 @@
 package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -35,6 +37,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -50,21 +53,26 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
+import org.apache.drill.exec.vector.UntypedNullHolder;
+import org.apache.drill.exec.vector.UntypedNullVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JVar;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggBatch.class);
 
   private StreamingAggregator aggregator;
   private final RecordBatch incoming;
+  private List<BaseWriter.ComplexWriter> complexWriters;
   private boolean done = false;
   private boolean first = true;
   private int recordCount = 0;
@@ -107,6 +115,11 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   }
 
   @Override
+  public VectorContainer getOutgoingContainer() {
+    return this.container;
+  }
+
+  @Override
   public void buildSchema() throws SchemaChangeException {
     IterOutcome outcome = next(incoming);
     switch (outcome) {
@@ -130,6 +143,10 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
     for (final VectorWrapper<?> w : container) {
       w.getValueVector().allocateNew();
+    }
+
+    if (complexWriters != null) {
+      container.buildSchema(SelectionVectorMode.NONE);
     }
   }
 
@@ -177,7 +194,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         throw new IllegalStateException(String.format("unknown outcome %s", outcome));
       }
     }
-
     AggOutcome out = aggregator.doWork();
     recordCount = aggregator.getOutputCount();
     logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
@@ -191,6 +207,11 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       // fall through
     case RETURN_OUTCOME:
       IterOutcome outcome = aggregator.getOutcome();
+      // In case of complex writer expression, vectors would be added to batch run-time.
+      // We have to re-build the schema.
+      if (complexWriters != null) {
+        container.buildSchema(SelectionVectorMode.NONE);
+      }
       if (outcome == IterOutcome.NONE && first) {
         first = false;
         done = true;
@@ -213,6 +234,14 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
   }
 
+  private void allocateComplexWriters() {
+    // Allocate the complex writers before processing the incoming batch
+    if (complexWriters != null) {
+      for (final BaseWriter.ComplexWriter writer : complexWriters) {
+        writer.allocate();
+      }
+    }
+  }
 
   /**
    * Method is invoked when we have a straight aggregate (no group by expression) and our input is empty.
@@ -272,9 +301,15 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
   }
 
+  public void addComplexWriter(final BaseWriter.ComplexWriter writer) {
+    complexWriters.add(writer);
+  }
+
   private StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException{
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+    //cg.getCodeGenerator().saveCodeForDebugging(true);
     container.clear();
 
     LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().size()];
@@ -307,12 +342,29 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         continue;
       }
 
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
-                                                                      expr.getMajorType());
-      @SuppressWarnings("resource")
-      ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
-      TypedFieldId id = container.add(vector);
-      valueExprs[i] = new ValueVectorWriteExpression(id, expr, true);
+      /* Populate the complex writers for complex exprs */
+      if (expr instanceof DrillFuncHolderExpr &&
+          ((DrillFuncHolderExpr) expr).getHolder().isComplexWriterFuncHolder()) {
+        // Need to process ComplexWriter function evaluation.
+        // Lazy initialization of the list of complex writers, if not done yet.
+        if (complexWriters == null) {
+          complexWriters = Lists.newArrayList();
+        } else {
+          complexWriters.clear();
+        }
+        // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
+        ((DrillFuncHolderExpr) expr).getFieldReference(ne.getRef());
+        MaterializedField field = MaterializedField.create(ne.getRef().getAsNamePart().getName(), UntypedNullHolder.TYPE);
+        container.add(new UntypedNullVector(field, container.getAllocator()));
+        valueExprs[i] = expr;
+      } else {
+        final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+            expr.getMajorType());
+        @SuppressWarnings("resource")
+        ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+        TypedFieldId id = container.add(vector);
+        valueExprs[i] = new ValueVectorWriteExpression(id, expr, true);
+      }
     }
 
     if (collector.hasErrors()) {
@@ -331,6 +383,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     container.buildSchema(SelectionVectorMode.NONE);
     StreamingAggregator agg = context.getImplementationClass(cg);
     agg.setup(oContext, incoming, this);
+    allocateComplexWriters();
     return agg;
   }
 

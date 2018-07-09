@@ -39,8 +39,6 @@ public class TestBuildSidePartitioningImpl {
 
     calc.initialize(true,
       false,
-      buildValueSizes,
-      probeValueSizes,
       keySizes,
       200,
       2,
@@ -52,7 +50,7 @@ public class TestBuildSidePartitioningImpl {
       5,
       maxBatchNumRecords,
       maxBatchNumRecords,
-      10,
+      16000,
       .75);
 
     final HashJoinMemoryCalculator.PartitionStatSet partitionStatSet =
@@ -84,8 +82,6 @@ public class TestBuildSidePartitioningImpl {
 
     calc.initialize(false,
       true,
-      buildValueSizes,
-      probeValueSizes,
       keySizes,
       350,
       2,
@@ -97,7 +93,7 @@ public class TestBuildSidePartitioningImpl {
       5,
       maxBatchNumRecords,
       maxBatchNumRecords,
-      10,
+      16000,
       .75);
 
     final HashJoinMemoryCalculator.PartitionStatSet partitionStatSet =
@@ -130,8 +126,6 @@ public class TestBuildSidePartitioningImpl {
     calc.initialize(
       true,
       false,
-      buildValueSizes,
-      probeValueSizes,
       keySizes,
       200,
       4,
@@ -143,7 +137,7 @@ public class TestBuildSidePartitioningImpl {
       5,
       maxBatchNumRecords,
       maxBatchNumRecords,
-      10,
+      16000,
       .75);
 
     final HashJoinMemoryCalculator.PartitionStatSet partitionStatSet =
@@ -178,8 +172,6 @@ public class TestBuildSidePartitioningImpl {
     calc.initialize(
       true,
       false,
-      buildValueSizes,
-      probeValueSizes,
       keySizes,
       180,
       2,
@@ -191,7 +183,7 @@ public class TestBuildSidePartitioningImpl {
       5,
       maxBatchNumRecords,
       maxBatchNumRecords,
-      10,
+      16000,
       .75);
 
     final PartitionStatImpl partition1 = new PartitionStatImpl();
@@ -229,8 +221,6 @@ public class TestBuildSidePartitioningImpl {
     calc.initialize(
       true,
       false,
-      buildValueSizes,
-      probeValueSizes,
       keySizes,
       210,
       2,
@@ -242,7 +232,7 @@ public class TestBuildSidePartitioningImpl {
       5,
       maxBatchNumRecords,
       maxBatchNumRecords,
-      10,
+      16000,
       .75);
 
     final PartitionStatImpl partition1 = new PartitionStatImpl();

@@ -172,6 +172,10 @@
           <groupId>commons-validator</groupId>
           <artifactId>commons-validator</artifactId>
         </exclusion>
+        <exclusion>
+          <artifactId>metadata-extractor</artifactId>
+          <groupId>com.drewnoakes</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -562,7 +566,7 @@
                           This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                         </message>
-                        <maxsize>33000000</maxsize>
+                        <maxsize>34000000</maxsize>
                         <minsize>15000000</minsize>
                         <files>
                           <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -632,6 +636,7 @@
                     <exclude>org.objenesis:objenesis</exclude>
                     <exclude>org.eclipse.jetty:*</exclude>
                     <exclude>org.apache.hadoop:*</exclude>
+                    <exclude>org.jboss.netty:netty</exclude>
                     <exclude>javax.xml.bind:jaxb-api</exclude>
                     <exclude>javax.xml.stream:stax-api</exclude>
                     <exclude>javax.activation:activation</exclude>
