@@ -41,13 +41,14 @@ class UserProperties;
 
             //parse the connection string and set up the host and port to connect to
             connectionStatus_t getDrillbitEndpoint();
-            void parseConnectString();
+            
             const std::string& getProtocol() const {return m_protocol;}
             const std::string& getHost() const {return m_host;}
             const std::string& getPort() const {return m_port;}
             DrillClientError* getError(){ return m_pError;};
 
         private:
+            void parseConnectString();
             bool isDirectConnection();
             bool isZookeeperConnection();
             connectionStatus_t getDrillbitEndpointFromZk();
@@ -171,6 +172,8 @@ class UserProperties;
 
             ConnectionEndpoint* getEndpoint(){return m_pEndpoint;}
 
+            ChannelContext_t* getChannelContext(){ return m_pContext; }
+
         protected:
             connectionStatus_t handleError(connectionStatus_t status, std::string msg);
 
@@ -276,11 +279,8 @@ class UserProperties;
         public:
             /// @brief The constructor.
             /// 
-            /// @param in_pctx                  The SSL Channel Context.
-            /// @param in_verifier              The wrapped verifier.
-            DrillSSLHostnameVerifier(SSLChannelContext_t* in_pctx, boost::asio::ssl::rfc2818_verification in_verifier) : 
-                m_verifier(in_verifier),
-                m_pctx(in_pctx){
+            /// @param in_channel                  The Channel.
+            DrillSSLHostnameVerifier(Channel* in_channel) : m_channel(in_channel){
                 DRILL_LOG(LOG_INFO)
                     << "DrillSSLHostnameVerifier::DrillSSLHostnameVerifier: +++++ Enter +++++" 
                     << std::endl;
@@ -295,23 +295,30 @@ class UserProperties;
                 boost::asio::ssl::verify_context& in_ctx){
                 DRILL_LOG(LOG_INFO) << "DrillSSLHostnameVerifier::operator(): +++++ Enter +++++" << std::endl;
 
-                bool verified = m_verifier(in_preverified, in_ctx);
+                // Gets the channel context.
+                SSLChannelContext_t* context = (SSLChannelContext_t*)(m_channel->getChannelContext());
+
+                // Retrieve the host before we perform Host name verification.
+                // This is because host with ZK mode is selected after the connect() function is called.
+                boost::asio::ssl::rfc2818_verification verifier(m_channel->getEndpoint()->getHost().c_str());
+
+                // Perform verification.
+                bool verified = verifier(in_preverified, in_ctx);
 
                 DRILL_LOG(LOG_DEBUG) 
                     << "DrillSSLHostnameVerifier::operator(): Verification Result: " 
                     << verified 
                     << std::endl;
 
-                m_pctx->SetCertHostnameVerificationStatus(verified);
-                return verified;
+                // Sets the result back to the context.
+                context->SetCertHostnameVerificationStatus(verified);
+                return verified && in_preverified;
             }
 
         private:
-            // The inner verifier.
-            boost::asio::ssl::rfc2818_verification m_verifier;
 
-            // The SSL channel context.
-            SSLChannelContext_t* m_pctx;
+            // The SSL channel.
+            Channel* m_channel;
     };
 
 } // namespace Drill
