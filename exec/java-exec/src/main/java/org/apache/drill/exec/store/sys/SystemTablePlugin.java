@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.sys;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -34,7 +35,6 @@ import org.apache.drill.exec.store.pojo.PojoDataType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 /**
  * A "storage" plugin for system tables.
@@ -77,7 +77,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
 
     public SystemSchema() {
       super(ImmutableList.of(), SYS_SCHEMA_NAME);
-      Set<String> names = Sets.newHashSet();
+      Set<String> names = new HashSet<>();
       for (SystemTable t : SystemTable.values()) {
         names.add(t.getTableName());
       }

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -24,8 +25,6 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
-
-import com.google.common.collect.Iterators;
 
 public class HoldingContainerExpression implements LogicalExpression{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HoldingContainerExpression.class);
@@ -38,7 +37,7 @@ public class HoldingContainerExpression implements LogicalExpression{
 
   @Override
   public Iterator<LogicalExpression> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   @Override

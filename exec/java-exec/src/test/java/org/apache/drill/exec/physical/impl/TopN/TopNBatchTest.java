@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.physical.impl.TopN;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.TestBuilder;
@@ -66,12 +68,12 @@ public class TopNBatchTest extends PopUnitTestBase {
 
     FieldReference expr = FieldReference.getWithQuotedRef("colA");
     Order.Ordering ordering = new Order.Ordering(Order.Ordering.ORDER_DESC, expr, Order.Ordering.NULLS_FIRST);
-    List<Order.Ordering> orderings = Lists.newArrayList(ordering);
+    List<Order.Ordering> orderings = Collections.singletonList(ordering);
 
     MaterializedField colA = MaterializedField.create("colA", Types.required(TypeProtos.MinorType.INT));
     MaterializedField colB = MaterializedField.create("colB", Types.required(TypeProtos.MinorType.INT));
 
-    List<MaterializedField> cols = Lists.newArrayList(colA, colB);
+    List<MaterializedField> cols = Arrays.asList(colA, colB);
     BatchSchema batchSchema = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, cols);
     RowSet expectedRowSet;
 
@@ -108,7 +110,7 @@ public class TopNBatchTest extends PopUnitTestBase {
           batchSchema.getSelectionVectorMode());
       }
 
-      List<RecordBatchData> testBatches = Lists.newArrayList();
+      List<RecordBatchData> testBatches = new ArrayList<>();
 
       try {
         final Random random = new Random();

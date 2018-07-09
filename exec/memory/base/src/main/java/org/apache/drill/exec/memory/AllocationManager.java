@@ -23,6 +23,7 @@ import io.netty.buffer.PooledByteBufAllocatorL;
 import io.netty.buffer.UnsafeDirectLittleEndian;
 
 import java.util.IdentityHashMap;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -77,7 +78,7 @@ public class AllocationManager {
   private volatile long amDestructionTime = 0;
 
   AllocationManager(BaseAllocator accountingAllocator, int size) {
-    Preconditions.checkNotNull(accountingAllocator);
+    Objects.requireNonNull(accountingAllocator);
     accountingAllocator.assertOpen();
 
     this.root = accountingAllocator.root;
@@ -230,7 +231,7 @@ public class AllocationManager {
      * @return Whether transfer fit within target ledgers limits.
      */
     public boolean transferBalance(final BufferLedger target) {
-      Preconditions.checkNotNull(target);
+      Objects.requireNonNull(target);
       Preconditions.checkArgument(allocator.root == target.allocator.root,
           "You can only transfer between two allocators that share the same root.");
       allocator.assertOpen();

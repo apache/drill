@@ -19,19 +19,17 @@ package org.apache.drill.exec.testing.store;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
 
 public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
-  private final ConcurrentMap<String, V> store = Maps.newConcurrentMap();
+  private final ConcurrentMap<String, V> store = new ConcurrentHashMap<>();
 
   @Override
-  public void delete(final String key) {
+  public void delete(String key) {
     store.remove(key);
   }
 
@@ -41,23 +39,23 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   }
 
   @Override
-  public boolean contains(final String key) {
+  public boolean contains(String key) {
     return store.containsKey(key);
   }
 
   @Override
-  public V get(final String key) {
+  public V get(String key) {
     return store.get(key);
   }
 
   @Override
-  public void put(final String key, final V value) {
+  public void put(String key, V value) {
     store.put(key, value);
   }
 
   @Override
-  public boolean putIfAbsent(final String key, final V value) {
-    final V old = store.putIfAbsent(key, value);
+  public boolean putIfAbsent(String key, V value) {
+    V old = store.putIfAbsent(key, value);
     if (old == null) {
       return true;
     }
@@ -65,8 +63,11 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   }
 
   @Override
-  public Iterator<Map.Entry<String, V>> getRange(final int skip, final int take) {
-    return Iterables.limit(Iterables.skip(store.entrySet(), skip), take).iterator();
+  public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
+    return store.entrySet().stream()
+        .skip(skip)
+        .limit(take)
+        .iterator();
   }
 
   @Override

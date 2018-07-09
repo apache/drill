@@ -17,20 +17,17 @@
  */
 package org.apache.drill.exec.rpc.security;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Sets;
-
-import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AuthStringUtil {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AuthStringUtil.class);
 
   // ignores case
-  public static boolean listContains(final List<String> list, final String toCompare) {
-    for (final String string : list) {
+  public static boolean listContains(List<String> list, String toCompare) {
+    for (String string : list) {
       if (string.equalsIgnoreCase(toCompare)) {
         return true;
       }
@@ -39,18 +36,13 @@ public class AuthStringUtil {
   }
 
   // converts list if strings to set of uppercase strings
-  public static Set<String> asSet(final List<String> list) {
+  public static Set<String> asSet(List<String> list) {
     if (list == null) {
-      return Sets.newHashSet();
+      return new HashSet<>();
     }
-    return Sets.newHashSet(Iterators.transform(list.iterator(),
-        new Function<String, String>() {
-          @Nullable
-          @Override
-          public String apply(@Nullable String input) {
-            return input == null ? null : input.toUpperCase();
-          }
-        }));
+    return list.stream()
+        .map(input -> input == null ? null : input.toUpperCase())
+        .collect(Collectors.toSet());
   }
 
   // prevent instantiation

@@ -46,7 +46,7 @@ public class SimpleCastFunctions {
     public void eval() {
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
+      String input = new String(buf, java.nio.charset.StandardCharsets.UTF_8);
       out.value = org.apache.drill.exec.expr.BooleanType.get(input).getNumericValue();
     }
   }

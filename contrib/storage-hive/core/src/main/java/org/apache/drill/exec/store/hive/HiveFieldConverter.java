@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive;
 
 import java.math.RoundingMode;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.drill.exec.vector.NullableBigIntVector;
@@ -53,15 +54,13 @@ import org.apache.hadoop.io.Text;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.google.common.collect.Maps;
-
 import static org.apache.drill.exec.store.hive.HiveUtilities.throwUnsupportedHiveDataTypeError;
 
 public abstract class HiveFieldConverter {
 
   public abstract void setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex);
 
-  private static Map<PrimitiveCategory, Class< ? extends HiveFieldConverter>> primMap = Maps.newHashMap();
+  private static Map<PrimitiveCategory, Class< ? extends HiveFieldConverter>> primMap = new HashMap<>();
 
   // TODO (DRILL-2470)
   // Byte and short (tinyint and smallint in SQL types) are currently read as integers

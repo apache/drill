@@ -22,9 +22,11 @@ import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -40,9 +42,7 @@ import org.apache.drill.exec.compile.sig.SignatureHolder;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.WorkspaceReference;
 import org.apache.drill.exec.record.TypedFieldId;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JCatchBlock;
 import com.sun.codemodel.JClass;
@@ -72,10 +72,10 @@ public class ClassGenerator<T>{
 
   private final SignatureHolder sig;
   private final EvaluationVisitor evaluationVisitor;
-  private final Map<ValueVectorSetup, JVar> vvDeclaration = Maps.newHashMap();
-  private final Map<String, ClassGenerator<T>> innerClasses = Maps.newHashMap();
-  private final List<TypedFieldId> workspaceTypes = Lists.newArrayList();
-  private final Map<WorkspaceReference, JVar> workspaceVectors = Maps.newHashMap();
+  private final Map<ValueVectorSetup, JVar> vvDeclaration = new HashMap<>();
+  private final Map<String, ClassGenerator<T>> innerClasses = new HashMap<>();
+  private final List<TypedFieldId> workspaceTypes = new ArrayList<>();
+  private final Map<WorkspaceReference, JVar> workspaceVectors = new HashMap<>();
   private final CodeGenerator<T> codeGenerator;
 
   public final JDefinedClass clazz;
@@ -138,7 +138,7 @@ public class ClassGenerator<T>{
 
     blocks = (LinkedList<SizedJBlock>[]) new LinkedList[sig.size()];
     for (int i =0; i < sig.size(); i++) {
-      blocks[i] = Lists.newLinkedList();
+      blocks[i] = new LinkedList<>();
     }
     rotateBlock();
 
@@ -164,7 +164,7 @@ public class ClassGenerator<T>{
 
   public ClassGenerator<T> getInnerGenerator(String name) {
     ClassGenerator<T> inner = innerClasses.get(name);
-    Preconditions.checkNotNull(inner);
+    Objects.requireNonNull(inner);
     return inner;
   }
 
@@ -189,7 +189,7 @@ public class ClassGenerator<T>{
 
   public JBlock getBlock(String methodName) {
     JBlock blk = this.blocks[sig.get(methodName)].getLast().getBlock();
-    Preconditions.checkNotNull(blk, "Requested method name of %s was not available for signature %s.",  methodName, this.sig);
+    Objects.requireNonNull(blk, String.format("Requested method name of %s was not available for signature %s.",  methodName, this.sig));
     return blk;
   }
 
@@ -809,7 +809,7 @@ public class ClassGenerator<T>{
     }
 
     public JFieldRef getIsSet() {
-      Preconditions.checkNotNull(isSet, "You cannot access the isSet variable when operating on a non-nullable output value.");
+      Objects.requireNonNull(isSet, "You cannot access the isSet variable when operating on a non-nullable output value.");
       return isSet;
     }
 

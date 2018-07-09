@@ -120,15 +120,15 @@ public class FindLimit0Visitor extends RelShuttleImpl {
    * @return drill logical rel tree
    */
   public static DrillRel getDirectScanRelIfFullySchemaed(RelNode rel) {
-    final List<RelDataTypeField> fieldList = rel.getRowType().getFieldList();
-    final List<TypeProtos.MajorType> columnTypes = new ArrayList<>();
+    List<RelDataTypeField> fieldList = rel.getRowType().getFieldList();
+    List<TypeProtos.MajorType> columnTypes = new ArrayList<>();
 
-    for (final RelDataTypeField field : fieldList) {
-      final SqlTypeName sqlTypeName = field.getType().getSqlTypeName();
+    for (RelDataTypeField field : fieldList) {
+      SqlTypeName sqlTypeName = field.getType().getSqlTypeName();
       if (!TYPES.contains(sqlTypeName)) {
         return null;
       } else {
-        final TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder()
+        TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder()
             .setMode(field.getType().isNullable() ? TypeProtos.DataMode.OPTIONAL : TypeProtos.DataMode.REQUIRED)
             .setMinorType(TypeInferenceUtils.getDrillTypeFromCalciteType(sqlTypeName));
 
@@ -142,8 +142,8 @@ public class FindLimit0Visitor extends RelShuttleImpl {
         columnTypes.add(builder.build());
       }
     }
-    final RelTraitSet traits = rel.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
-    final RelDataTypeReader reader = new RelDataTypeReader(rel.getRowType().getFieldNames(), columnTypes);
+    RelTraitSet traits = rel.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
+    RelDataTypeReader reader = new RelDataTypeReader(rel.getRowType().getFieldNames(), columnTypes);
     return new DrillDirectScanRel(rel.getCluster(), traits,
         new DirectGroupScan(reader, ScanStats.ZERO_RECORD_TABLE), rel.getRowType());
   }
@@ -154,7 +154,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
    * @param rel rel node tree
    * @return true if the root portion of the tree contains LIMIT(0)
    */
-  public static boolean containsLimit0(final RelNode rel) {
+  public static boolean containsLimit0(RelNode rel) {
     FindLimit0Visitor visitor = new FindLimit0Visitor();
     rel.accept(visitor);
 

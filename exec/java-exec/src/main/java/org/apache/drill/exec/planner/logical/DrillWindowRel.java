@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -36,6 +35,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DrillWindowRel extends DrillWindowRelBase implements DrillRel {
@@ -93,7 +93,7 @@ public class DrillWindowRel extends DrillWindowRelBase implements DrillRel {
   }
 
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
-    List<LogicalExpression> args = Lists.newArrayList();
+    List<LogicalExpression> args = new ArrayList<>();
     for (Integer i : call.getArgList()) {
       args.add(new FieldReference(fn.get(i)));
     }

@@ -19,6 +19,7 @@ package org.apache.drill.exec.compile;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
@@ -41,13 +42,12 @@ public class LogWriter extends Writer {
    * @param logger the logger this Writer should write to
    * @param level the debug level to write to the logger with
    */
-  public LogWriter(final Logger logger, final Level level) {
-    Preconditions.checkNotNull(logger);
+  public LogWriter(Logger logger, Level level) {
     Preconditions.checkArgument((level == Level.DEBUG) || (level == Level.ERROR) ||
         (level == Level.INFO) || (level == Level.TRACE) || (level == Level.WARN),
         "level must be a logging level");
 
-    this.logger = logger;
+    this.logger = Objects.requireNonNull(logger);
     this.level = level.toInt();
     stringBuilder = new StringBuilder(80);
     isClosed = false;

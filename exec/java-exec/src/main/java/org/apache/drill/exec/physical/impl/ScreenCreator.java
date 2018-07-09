@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -44,7 +45,7 @@ public class ScreenCreator implements RootCreator<Screen> {
   @Override
   public RootExec getRoot(ExecutorFragmentContext context, Screen config, List<RecordBatch> children)
       throws ExecutionSetupException {
-    Preconditions.checkNotNull(children);
+    Objects.requireNonNull(children);
     Preconditions.checkArgument(children.size() == 1);
     return new ScreenRoot(context, children.iterator().next(), config);
   }

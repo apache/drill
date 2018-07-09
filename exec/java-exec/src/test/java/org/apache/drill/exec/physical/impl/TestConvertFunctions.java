@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -51,7 +52,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import io.netty.buffer.DrillBuf;
@@ -510,7 +510,7 @@ public class TestConvertFunctions extends BaseTestQuery {
   @Test
   public void testBigIntVarCharReturnTripConvertLogical() throws Exception {
     final String logicalPlan = Resources.toString(
-        Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), Charsets.UTF_8);
+        Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), StandardCharsets.UTF_8);
     final List<QueryDataBatch> results =  testLogicalWithResults(logicalPlan);
     int count = 0;
     final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
@@ -650,7 +650,7 @@ public class TestConvertFunctions extends BaseTestQuery {
     expression = expression.replace("\\", "\\\\\\\\"); // "\\\\\\\\" => Java => "\\\\" => JsonParser => "\\" => AntlrParser "\"
 
     if (textFileContent == null) {
-      textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), Charsets.UTF_8);
+      textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), StandardCharsets.UTF_8);
     }
     String planString = textFileContent.replace("__CONVERT_EXPRESSION__", expression);
 

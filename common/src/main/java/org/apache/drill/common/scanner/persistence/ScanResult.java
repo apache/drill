@@ -17,7 +17,6 @@
  */
 package org.apache.drill.common.scanner.persistence;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -31,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -63,11 +63,11 @@ public final class ScanResult {
       @JsonProperty("scannedAnnotations") Collection<String> scannedAnnotations,
       @JsonProperty("annotatedClasses") Collection<AnnotatedClassDescriptor> annotatedClasses,
       @JsonProperty("implementations") Collection<ParentClassDescriptor> implementations) {
-    this.scannedPackages = unmodifiableList(new ArrayList<>(checkNotNull(scannedPackages)));
-    this.scannedClasses = unmodifiableSet(new HashSet<>(checkNotNull(scannedClasses)));
-    this.scannedAnnotations = unmodifiableSet(new HashSet<>(checkNotNull(scannedAnnotations)));
-    this.annotatedClasses = unmodifiableList(new ArrayList<>(checkNotNull(annotatedClasses)));
-    this.implementations = unmodifiableList(new ArrayList<>(checkNotNull(implementations)));
+    this.scannedPackages = unmodifiableList(new ArrayList<>(Objects.requireNonNull(scannedPackages)));
+    this.scannedClasses = unmodifiableSet(new HashSet<>(Objects.requireNonNull(scannedClasses)));
+    this.scannedAnnotations = unmodifiableSet(new HashSet<>(Objects.requireNonNull(scannedAnnotations)));
+    this.annotatedClasses = unmodifiableList(new ArrayList<>(Objects.requireNonNull(annotatedClasses)));
+    this.implementations = unmodifiableList(new ArrayList<>(Objects.requireNonNull(implementations)));
     this.parentClassByName = new HashMap<>();
     for (ParentClassDescriptor parentClassDescriptor : implementations) {
       this.parentClassByName.put(parentClassDescriptor.getName(), parentClassDescriptor);

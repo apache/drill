@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.store.parquet.metadata;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -96,7 +96,7 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
 
   @Override
   public int compareTo(MetadataVersion o) {
-    Preconditions.checkNotNull(o);
+    Objects.requireNonNull(o);
     return ComparisonChain.start()
         .compare(this.major, o.major)
         .compare(this.minor, o.minor)

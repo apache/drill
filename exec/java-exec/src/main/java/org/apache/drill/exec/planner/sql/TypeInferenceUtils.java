@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.sql;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
@@ -53,6 +52,8 @@ import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -413,28 +414,28 @@ public class TypeInferenceUtils {
       // Else for the case when input may be implicitly casted to FLOAT8, the type of result is DOUBLE.
       // When none of these conditions is satisfied, error is thrown.
       // This order of checks is caused by the order of types in ResolverTypePrecedence.precedenceMap
-      final RelDataType operandType = opBinding.getOperandType(0);
-      final TypeProtos.MinorType inputMinorType = getDrillTypeFromCalciteType(operandType);
-      if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.BIGINT))
+      RelDataType operandType = opBinding.getOperandType(0);
+      TypeProtos.MinorType inputMinorType = getDrillTypeFromCalciteType(operandType);
+      if (TypeCastRules.getLeastRestrictiveType(Arrays.asList(inputMinorType, TypeProtos.MinorType.BIGINT))
           == TypeProtos.MinorType.BIGINT) {
         return createCalciteTypeWithNullability(
             factory,
             SqlTypeName.BIGINT,
             isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT4))
+      } else if (TypeCastRules.getLeastRestrictiveType(Arrays.asList(inputMinorType, TypeProtos.MinorType.FLOAT4))
           == TypeProtos.MinorType.FLOAT4) {
         return createCalciteTypeWithNullability(
             factory,
             SqlTypeName.DOUBLE,
             isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.VARDECIMAL))
+      } else if (TypeCastRules.getLeastRestrictiveType(Arrays.asList(inputMinorType, TypeProtos.MinorType.VARDECIMAL))
           == TypeProtos.MinorType.VARDECIMAL) {
         RelDataType sqlType = factory.createSqlType(SqlTypeName.DECIMAL,
           DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
           Math.min(operandType.getScale(),
             DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()));
         return factory.createTypeWithNullability(sqlType, isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT8))
+      } else if (TypeCastRules.getLeastRestrictiveType(Arrays.asList(inputMinorType, TypeProtos.MinorType.FLOAT8))
           == TypeProtos.MinorType.FLOAT8) {
         return createCalciteTypeWithNullability(
             factory,
@@ -759,20 +760,20 @@ public class TypeInferenceUtils {
       // This order of checks is caused by the order of types in ResolverTypePrecedence.precedenceMap
       final RelDataType operandType = opBinding.getOperandType(0);
       final TypeProtos.MinorType inputMinorType = getDrillTypeFromCalciteType(operandType);
-      if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT4))
+      if (TypeCastRules.getLeastRestrictiveType(Arrays.asList(inputMinorType, TypeProtos.MinorType.FLOAT4))
           == TypeProtos.MinorType.FLOAT4) {
         return createCalciteTypeWithNullability(
             factory,
             SqlTypeName.DOUBLE,
             isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.VARDECIMAL))
+      } else if (TypeCastRules.getLeastRestrictiveType(Arrays.asList(inputMinorType, TypeProtos.MinorType.VARDECIMAL))
           == TypeProtos.MinorType.VARDECIMAL) {
         RelDataType sqlType = factory.createSqlType(SqlTypeName.DECIMAL,
             DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
             Math.min(Math.max(6, operandType.getScale()),
                 DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()));
         return factory.createTypeWithNullability(sqlType, isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT8))
+      } else if (TypeCastRules.getLeastRestrictiveType(Arrays.asList(inputMinorType, TypeProtos.MinorType.FLOAT8))
           == TypeProtos.MinorType.FLOAT8) {
         return createCalciteTypeWithNullability(
             factory,
@@ -892,12 +893,12 @@ public class TypeInferenceUtils {
    * @param  opBinding    the given SqlOperatorBinding
    * @return FunctionCall the converted FunctionCall
    */
-  public static FunctionCall convertSqlOperatorBindingToFunctionCall(final SqlOperatorBinding opBinding) {
-    final List<LogicalExpression> args = Lists.newArrayList();
+  public static FunctionCall convertSqlOperatorBindingToFunctionCall(SqlOperatorBinding opBinding) {
+    List<LogicalExpression> args = new ArrayList<>();
 
     for (int i = 0; i < opBinding.getOperandCount(); ++i) {
-      final RelDataType type = opBinding.getOperandType(i);
-      final TypeProtos.MinorType minorType = getDrillTypeFromCalciteType(type);
+      RelDataType type = opBinding.getOperandType(i);
+      TypeProtos.MinorType minorType = getDrillTypeFromCalciteType(type);
       TypeProtos.DataMode dataMode =
           type.isNullable() ? TypeProtos.DataMode.OPTIONAL : TypeProtos.DataMode.REQUIRED;
 
@@ -915,7 +916,7 @@ public class TypeInferenceUtils {
       args.add(new MajorTypeInLogicalExpression(builder.build()));
     }
 
-    final String drillFuncName = FunctionCallFactory.replaceOpWithFuncName(opBinding.getOperator().getName());
+    String drillFuncName = FunctionCallFactory.replaceOpWithFuncName(opBinding.getOperator().getName());
     return new FunctionCall(
         drillFuncName,
         args,

@@ -23,7 +23,6 @@ import org.apache.drill.exec.planner.physical.WriterPrel;
 
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -34,6 +33,7 @@ import org.apache.drill.exec.vector.complex.impl.UnionReader;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -77,7 +77,7 @@ public class EventBasedRecordWriter {
   }
 
   private void initFieldWriters() throws IOException {
-    fieldConverters = Lists.newArrayList();
+    fieldConverters = new ArrayList<>();
     try {
       int fieldId = 0;
       for (VectorWrapper w : batch) {

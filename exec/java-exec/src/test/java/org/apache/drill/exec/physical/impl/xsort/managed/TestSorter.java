@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.xsort.managed;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 
@@ -51,7 +52,6 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
 import org.junit.experimental.categories.Category;
 
 /**
@@ -79,7 +79,7 @@ public class TestSorter extends DrillTest {
   public static Sort makeSortConfig(String key, String sortOrder, String nullOrder) {
     FieldReference expr = FieldReference.getWithQuotedRef(key);
     Ordering ordering = new Ordering(sortOrder, expr, nullOrder);
-    return new Sort(null, Lists.newArrayList(ordering), false);
+    return new Sort(null, Collections.singletonList(ordering), false);
   }
 
   public void runSorterTest(SingleRowSet rowSet, SingleRowSet expected) throws Exception {

@@ -68,7 +68,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 @RunWith(Parameterized.class)
@@ -123,7 +122,7 @@ public class TestParquetWriter extends BaseTestQuery {
       }
       allTypeSelectsAndCasts.add(String.format("cast(`%s_col` AS %S) `%s_col`", allTypes.get(s), s, allTypes.get(s)));
     }
-    allTypesSelection = Joiner.on(",").join(allTypeSelectsAndCasts);
+    allTypesSelection = String.join(",", allTypeSelectsAndCasts);
   }
 
   private final String allTypesTable = "cp.`parquet/alltypes.json`";

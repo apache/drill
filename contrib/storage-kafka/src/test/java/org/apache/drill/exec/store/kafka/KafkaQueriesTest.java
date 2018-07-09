@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.kafka;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,7 +31,6 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
 import org.junit.experimental.categories.Category;
 
 @Category({KafkaStorageTest.class, SlowTest.class})
@@ -78,7 +78,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
     KafkaConsumer<byte[], byte[]> kafkaConsumer = new KafkaConsumer<>(storagePluginConfig.getKafkaConsumerProps(),
         new ByteArrayDeserializer(), new ByteArrayDeserializer());
 
-    Map<TopicPartition, Long> offsetsMap = Maps.newHashMap();
+    Map<TopicPartition, Long> offsetsMap = new HashMap<>();
     kafkaConsumer.subscribe(Collections.singletonList(TestQueryConstants.JSON_TOPIC));
     // based on KafkaConsumer JavaDoc, seekToBeginning/seekToEnd functions
     // evaluates lazily, seeking to the

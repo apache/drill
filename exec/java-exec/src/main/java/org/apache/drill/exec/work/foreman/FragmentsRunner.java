@@ -20,7 +20,6 @@ package org.apache.drill.exec.work.foreman;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -47,6 +46,7 @@ import org.apache.drill.exec.work.fragment.FragmentStatusReporter;
 import org.apache.drill.exec.work.fragment.RootFragmentManager;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -256,7 +256,7 @@ public class FragmentsRunner {
         fragmentSubmitFailures.submissionExceptions;
 
     if (submissionExceptions.size() > 0) {
-      Set<DrillbitEndpoint> endpoints = Sets.newHashSet();
+      Set<DrillbitEndpoint> endpoints = new HashSet<>();
       StringBuilder sb = new StringBuilder();
       boolean first = true;
 

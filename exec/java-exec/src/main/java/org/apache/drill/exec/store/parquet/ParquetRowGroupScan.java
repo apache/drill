@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.parquet;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -57,7 +58,7 @@ public class ParquetRowGroupScan extends AbstractParquetRowGroupScan {
                              @JsonProperty("selectionRoot") String selectionRoot,
                              @JsonProperty("filter") LogicalExpression filter) throws ExecutionSetupException {
     this(userName,
-        (ParquetFormatPlugin) registry.getFormatPlugin(Preconditions.checkNotNull(storageConfig), Preconditions.checkNotNull(formatConfig)),
+        (ParquetFormatPlugin) registry.getFormatPlugin(Objects.requireNonNull(storageConfig), Objects.requireNonNull(formatConfig)),
         rowGroupReadEntries,
         columns,
         selectionRoot,
@@ -71,7 +72,7 @@ public class ParquetRowGroupScan extends AbstractParquetRowGroupScan {
                              String selectionRoot,
                              LogicalExpression filter) {
     super(userName, rowGroupReadEntries, columns, filter);
-    this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Could not find format config for the given configuration");
+    this.formatPlugin = Objects.requireNonNull(formatPlugin, "Could not find format config for the given configuration");
     this.formatConfig = formatPlugin.getConfig();
     this.selectionRoot = selectionRoot;
   }

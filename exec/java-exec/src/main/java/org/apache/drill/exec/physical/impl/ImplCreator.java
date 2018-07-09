@@ -19,8 +19,10 @@ package org.apache.drill.exec.physical.impl;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -37,9 +39,7 @@ import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 
 /**
  * Create RecordBatch tree (PhysicalOperator implementations) for a given PhysicalOperator tree.
@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
 public class ImplCreator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImplCreator.class);
 
-  private final LinkedList<CloseableRecordBatch> operators = Lists.newLinkedList();
+  private final LinkedList<CloseableRecordBatch> operators = new LinkedList<>();
 
   private ImplCreator() {}
 
@@ -67,8 +67,8 @@ public class ImplCreator {
    * @throws ExecutionSetupException
    */
   public static RootExec getExec(ExecutorFragmentContext context, FragmentRoot root) throws ExecutionSetupException {
-    Preconditions.checkNotNull(root);
-    Preconditions.checkNotNull(context);
+    Objects.requireNonNull(root);
+    Objects.requireNonNull(context);
 
     // Enable iterator (operator) validation if assertions are enabled (debug mode)
     // or if in production mode and the ENABLE_ITERATOR_VALIDATION option is set
@@ -80,11 +80,11 @@ public class ImplCreator {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
 
-    final ImplCreator creator = new ImplCreator();
+    ImplCreator creator = new ImplCreator();
     Stopwatch watch = Stopwatch.createStarted();
 
     try {
-      final RootExec rootExec = creator.getRootExec(root, context);
+      RootExec rootExec = creator.getRootExec(root, context);
       // skip over this for SimpleRootExec (testing)
       if (rootExec instanceof BaseRootExec) {
         ((BaseRootExec) rootExec).setOperators(creator.getOperators());
@@ -106,20 +106,16 @@ public class ImplCreator {
 
   /** Create RootExec and its children (RecordBatches) for given FragmentRoot */
 
-  private RootExec getRootExec(final FragmentRoot root, final ExecutorFragmentContext context) throws ExecutionSetupException {
-    final List<RecordBatch> childRecordBatches = getChildren(root, context);
+  private RootExec getRootExec(FragmentRoot root, ExecutorFragmentContext context) throws ExecutionSetupException {
+    List<RecordBatch> childRecordBatches = getChildren(root, context);
 
     if (context.isImpersonationEnabled()) {
-      final UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(root.getUserName(), context.getQueryUserName());
+      UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(root.getUserName(), context.getQueryUserName());
       try {
-        return proxyUgi.doAs(new PrivilegedExceptionAction<RootExec>() {
-          @Override
-          public RootExec run() throws Exception {
-            return ((RootCreator<PhysicalOperator>) getOpCreator(root, context)).getRoot(context, root, childRecordBatches);
-          }
-        });
+        return proxyUgi.doAs(
+            (PrivilegedExceptionAction<RootExec>) () -> ((RootCreator<PhysicalOperator>) getOpCreator(root, context)).getRoot(context, root, childRecordBatches));
       } catch (InterruptedException | IOException e) {
-        final String errMsg = String.format("Failed to create RootExec for operator with id '%d'", root.getOperatorId());
+        String errMsg = String.format("Failed to create RootExec for operator with id '%d'", root.getOperatorId());
         logger.error(errMsg, e);
         throw new ExecutionSetupException(errMsg, e);
       }
@@ -131,32 +127,29 @@ public class ImplCreator {
 
   /** Create a RecordBatch and its children for given PhysicalOperator */
   @VisibleForTesting
-  public RecordBatch getRecordBatch(final PhysicalOperator op, final ExecutorFragmentContext context) throws ExecutionSetupException {
-    Preconditions.checkNotNull(op);
+  public RecordBatch getRecordBatch(PhysicalOperator op, ExecutorFragmentContext context) throws ExecutionSetupException {
+    Objects.requireNonNull(op);
 
-    final List<RecordBatch> childRecordBatches = getChildren(op, context);
+    List<RecordBatch> childRecordBatches = getChildren(op, context);
 
     if (context.isImpersonationEnabled()) {
-      final UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(op.getUserName(), context.getQueryUserName());
+      UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(op.getUserName(), context.getQueryUserName());
       try {
-        return proxyUgi.doAs(new PrivilegedExceptionAction<RecordBatch>() {
-          @Override
-          public RecordBatch run() throws Exception {
-            @SuppressWarnings("unchecked")
-            final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(
-                context, op, childRecordBatches);
-            operators.addFirst(batch);
-            return batch;
-          }
+        return proxyUgi.doAs((PrivilegedExceptionAction<RecordBatch>) () -> {
+          @SuppressWarnings("unchecked")
+          CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(
+              context, op, childRecordBatches);
+          operators.addFirst(batch);
+          return batch;
         });
       } catch (InterruptedException | IOException e) {
-        final String errMsg = String.format("Failed to create RecordBatch for operator with id '%d'", op.getOperatorId());
+        String errMsg = String.format("Failed to create RecordBatch for operator with id '%d'", op.getOperatorId());
         logger.error(errMsg, e);
         throw new ExecutionSetupException(errMsg, e);
       }
     } else {
       @SuppressWarnings("unchecked")
-      final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(context,
+      CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(context,
           op, childRecordBatches);
       operators.addFirst(batch);
       return batch;
@@ -164,8 +157,8 @@ public class ImplCreator {
   }
 
   /** Helper method to get OperatorCreator (RootCreator or BatchCreator) for given PhysicalOperator (root or non-root) */
-  private Object getOpCreator(PhysicalOperator op, final ExecutorFragmentContext context) throws ExecutionSetupException {
-    final Class<? extends PhysicalOperator> opClass = op.getClass();
+  private Object getOpCreator(PhysicalOperator op, ExecutorFragmentContext context) throws ExecutionSetupException {
+    Class<? extends PhysicalOperator> opClass = op.getClass();
     Object opCreator = context.getOperatorCreatorRegistry().getOperatorCreator(opClass);
     if (opCreator == null) {
       throw new UnsupportedOperationException(
@@ -176,8 +169,8 @@ public class ImplCreator {
   }
 
   /** Helper method to traverse the children of given PhysicalOperator and create RecordBatches for children recursively */
-  private List<RecordBatch> getChildren(final PhysicalOperator op, final ExecutorFragmentContext context) throws ExecutionSetupException {
-    List<RecordBatch> children = Lists.newArrayList();
+  private List<RecordBatch> getChildren(PhysicalOperator op, ExecutorFragmentContext context) throws ExecutionSetupException {
+    List<RecordBatch> children = new ArrayList<>();
     for (PhysicalOperator child : op) {
       children.add(getRecordBatch(child, context));
     }

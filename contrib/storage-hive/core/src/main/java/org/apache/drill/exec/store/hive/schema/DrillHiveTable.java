@@ -38,8 +38,6 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCollation;
 import org.apache.calcite.sql.type.SqlTypeName;
 
-import com.google.common.collect.Lists;
-
 public class DrillHiveTable extends DrillTable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHiveTable.class);
 
@@ -52,8 +50,8 @@ public class DrillHiveTable extends DrillTable{
 
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    List<RelDataType> typeList = Lists.newArrayList();
-    List<String> fieldNameList = Lists.newArrayList();
+    List<RelDataType> typeList = new ArrayList<>();
+    List<String> fieldNameList = new ArrayList<>();
 
     List<FieldSchema> hiveFields = hiveTable.getColumnListsCache().getColumns(0);
     for(FieldSchema hiveField : hiveFields) {
@@ -161,7 +159,7 @@ public class DrillHiveTable extends DrillTable{
         StructTypeInfo structTypeInfo = (StructTypeInfo)typeInfo;
         ArrayList<String> fieldNames = structTypeInfo.getAllStructFieldNames();
         ArrayList<TypeInfo> fieldHiveTypeInfoList = structTypeInfo.getAllStructFieldTypeInfos();
-        List<RelDataType> fieldRelDataTypeList = Lists.newArrayList();
+        List<RelDataType> fieldRelDataTypeList = new ArrayList<>();
         for(TypeInfo fieldHiveType : fieldHiveTypeInfoList) {
           fieldRelDataTypeList.add(getRelDataTypeFromHiveType(typeFactory, fieldHiveType));
         }

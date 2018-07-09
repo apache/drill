@@ -18,12 +18,11 @@
 package org.apache.drill.exec.rpc.user;
 
 import java.lang.management.ManagementFactory;
+import java.util.Objects;
 
 import org.apache.drill.common.Version;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
-
-import com.google.common.base.Preconditions;
 
 /**
  * Utility class for User RPC
@@ -62,7 +61,7 @@ public final class UserRpcUtils {
    */
   public static RpcEndpointInfos getRpcEndpointInfos(String name) {
     RpcEndpointInfos infos = RpcEndpointInfos.newBuilder(INFOS_TEMPLATE)
-        .setName(Preconditions.checkNotNull(name))
+        .setName(Objects.requireNonNull(name))
         .build();
 
     return infos;

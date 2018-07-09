@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.categories.OperatorTest;
@@ -57,7 +58,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import io.netty.buffer.DrillBuf;
 
@@ -88,7 +88,7 @@ public class TestSortImpl extends DrillTest {
                                String sortOrder, String nullOrder) {
     FieldReference expr = FieldReference.getWithQuotedRef("key");
     Ordering ordering = new Ordering(sortOrder, expr, nullOrder);
-    Sort popConfig = new Sort(null, Lists.newArrayList(ordering), false);
+    Sort popConfig = new Sort(null, Collections.singletonList(ordering), false);
     OperatorContext opContext = fixture.newOperatorContext(popConfig);
     QueryId queryId = QueryId.newBuilder()
         .setPart1(1234)

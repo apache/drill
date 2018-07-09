@@ -17,15 +17,14 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import com.google.common.collect.Maps;
 
 public class PlanningSet implements Iterable<Wrapper> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningSet.class);
 
-  private final Map<Fragment, Wrapper> fragmentMap = Maps.newHashMap();
+  private final Map<Fragment, Wrapper> fragmentMap = new HashMap<>();
   private int majorFragmentIdIndex = 0;
 
   private Wrapper rootWrapper = null;

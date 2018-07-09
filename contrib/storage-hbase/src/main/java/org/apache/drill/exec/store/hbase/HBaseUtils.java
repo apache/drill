@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -32,8 +33,6 @@ import org.apache.hadoop.hbase.filter.ParseFilter;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
 import org.apache.hadoop.hbase.protobuf.generated.FilterProtos;
 import org.apache.hadoop.hbase.util.Bytes;
-
-import com.google.common.collect.Lists;
 
 public class HBaseUtils {
   static final ParseFilter FILTER_PARSEER = new ParseFilter();
@@ -87,7 +86,7 @@ public class HBaseUtils {
       return currentFilter;
     }
 
-    List<Filter> allFilters = Lists.newArrayList();
+    List<Filter> allFilters = new ArrayList<>();
     if (currentFilter instanceof FilterList && ((FilterList)currentFilter).getOperator() == FilterList.Operator.MUST_PASS_ALL) {
       allFilters.addAll(((FilterList)currentFilter).getFilters());
     } else {
@@ -104,7 +103,7 @@ public class HBaseUtils {
       return currentFilter;
     }
 
-    List<Filter> allFilters = Lists.newArrayList();
+    List<Filter> allFilters = new ArrayList<>();
     if (currentFilter instanceof FilterList && ((FilterList)currentFilter).getOperator() == FilterList.Operator.MUST_PASS_ONE) {
       allFilters.addAll(((FilterList)currentFilter).getFilters());
     } else {

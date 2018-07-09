@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.udf.dynamic.JarBuilder;
 import org.apache.drill.exec.util.JarUtil;
@@ -33,6 +32,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -74,7 +74,7 @@ public class FunctionInitializerTest {
     FunctionInitializer functionInitializer = new FunctionInitializer(CLASS_NAME, classLoader);
     List<String> actualImports = functionInitializer.getImports();
 
-    List<String> expectedImports = Lists.newArrayList(
+    List<String> expectedImports = Arrays.asList(
         "import io.netty.buffer.DrillBuf;",
         "import org.apache.drill.exec.expr.DrillSimpleFunc;",
         "import org.apache.drill.exec.expr.annotations.FunctionTemplate;",

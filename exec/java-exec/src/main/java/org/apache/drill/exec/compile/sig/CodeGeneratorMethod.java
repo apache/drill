@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
 import com.thoughtworks.paranamer.AnnotationParanamer;
 import com.thoughtworks.paranamer.Paranamer;
 
@@ -77,7 +76,7 @@ public class CodeGeneratorMethod implements Iterable<CodeGeneratorArgument> {
 
   @Override
   public Iterator<CodeGeneratorArgument> iterator() {
-    return Iterators.forArray(arguments);
+    return Arrays.asList(arguments).iterator();
   }
 
   @Override

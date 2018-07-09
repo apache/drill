@@ -19,13 +19,11 @@ package org.apache.drill.exec.coord.zk;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 
-import javax.annotation.Nullable;
-
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
@@ -51,12 +49,12 @@ public class ZookeeperClient implements AutoCloseable {
   private final PathChildrenCache cache;
   private final CreateMode mode;
 
-  public ZookeeperClient(final CuratorFramework curator, final String root, final CreateMode mode) {
-    this.curator = Preconditions.checkNotNull(curator, "curator is required");
+  public ZookeeperClient(CuratorFramework curator, String root, CreateMode mode) {
+    this.curator = Objects.requireNonNull(curator, "curator is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(root), "root path is required");
     Preconditions.checkArgument(root.charAt(0) == '/', "root path must be absolute");
     this.root = root;
-    this.mode = Preconditions.checkNotNull(mode, "mode is required");
+    this.mode = Objects.requireNonNull(mode, "mode is required");
     this.cache = new PathChildrenCache(curator, root, true);
   }
 
@@ -90,7 +88,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @param path path to check
    * @return true if path exists, false otherwise
    */
-  public boolean hasPath(final String path) {
+  public boolean hasPath(String path) {
     return hasPath(path, false, null);
   }
 
@@ -103,7 +101,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @param consistent whether the check should be consistent
    * @return true if path exists, false otherwise
    */
-  public boolean hasPath(final String path, final boolean consistent) {
+  public boolean hasPath(String path, boolean consistent) {
     return hasPath(path, consistent, null);
   }
 
@@ -121,10 +119,10 @@ public class ZookeeperClient implements AutoCloseable {
    * @param version version holder
    * @return true if path exists, false otherwise
    */
-  public boolean hasPath(final String path, final boolean consistent, final DataChangeVersion version) {
-    Preconditions.checkNotNull(path, "path is required");
+  public boolean hasPath(String path, boolean consistent, DataChangeVersion version) {
+    Objects.requireNonNull(path, "path is required");
 
-    final String target = PathUtils.join(root, path);
+    String target = PathUtils.join(root, path);
     try {
       if (consistent) {
         Stat stat = curator.checkExists().forPath(target);
@@ -135,7 +133,7 @@ public class ZookeeperClient implements AutoCloseable {
       } else {
         return getCache().getCurrentData(target) != null;
       }
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throw new DrillRuntimeException("error while checking path on zookeeper", e);
     }
   }
@@ -147,7 +145,7 @@ public class ZookeeperClient implements AutoCloseable {
    *
    * @param path  target path
    */
-  public byte[] get(final String path) {
+  public byte[] get(String path) {
     return get(path, false);
   }
 
@@ -160,7 +158,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @param path  target path
    * @param consistent consistency flag
    */
-  public byte[] get(final String path, final boolean consistent) {
+  public byte[] get(String path, boolean consistent) {
     return get(path, consistent, null);
   }
 
@@ -174,7 +172,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @param path  target path
    * @param version version holder
    */
-  public byte[] get(final String path, final DataChangeVersion version) {
+  public byte[] get(String path, DataChangeVersion version) {
     return get(path, true, version);
   }
 
@@ -192,24 +190,24 @@ public class ZookeeperClient implements AutoCloseable {
    * @param consistent consistency check
    * @param version version holder
    */
-  public byte[] get(final String path, final boolean consistent, final DataChangeVersion version) {
-    Preconditions.checkNotNull(path, "path is required");
+  public byte[] get(String path, boolean consistent, DataChangeVersion version) {
+    Objects.requireNonNull(path, "path is required");
 
-    final String target = PathUtils.join(root, path);
+    String target = PathUtils.join(root, path);
     if (consistent) {
       try {
         if (version != null) {
           Stat stat = new Stat();
-          final byte[] bytes = curator.getData().storingStatIn(stat).forPath(target);
+          byte[] bytes = curator.getData().storingStatIn(stat).forPath(target);
           version.setVersion(stat.getVersion());
           return bytes;
         }
         return curator.getData().forPath(target);
-      } catch (final Exception ex) {
+      } catch (Exception ex) {
         throw new DrillRuntimeException(String.format("error retrieving value for [%s]", path), ex);
       }
     } else {
-      final ChildData data = getCache().getCurrentData(target);
+      ChildData data = getCache().getCurrentData(target);
       if (data != null) {
         return data.getData();
       }
@@ -222,14 +220,14 @@ public class ZookeeperClient implements AutoCloseable {
    *
    * @param path  target path
    */
-  public void create(final String path) {
-    Preconditions.checkNotNull(path, "path is required");
+  public void create(String path) {
+    Objects.requireNonNull(path, "path is required");
 
-    final String target = PathUtils.join(root, path);
+    String target = PathUtils.join(root, path);
     try {
       curator.create().withMode(mode).forPath(target);
       getCache().rebuildNode(target);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throw new DrillRuntimeException("unable to put ", e);
     }
   }
@@ -242,7 +240,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @param path  target path
    * @param data  data to store
    */
-  public void put(final String path, final byte[] data) {
+  public void put(String path, byte[] data) {
     put(path, data, null);
   }
 
@@ -262,11 +260,11 @@ public class ZookeeperClient implements AutoCloseable {
    * @param data  data to store
    * @param version version holder
    */
-  public void put(final String path, final byte[] data, DataChangeVersion version) {
-    Preconditions.checkNotNull(path, "path is required");
-    Preconditions.checkNotNull(data, "data is required");
+  public void put(String path, byte[] data, DataChangeVersion version) {
+    Objects.requireNonNull(path, "path is required");
+    Objects.requireNonNull(data, "data is required");
 
-    final String target = PathUtils.join(root, path);
+    String target = PathUtils.join(root, path);
     try {
       // we make a consistent read to ensure this call won't fail upon consecutive calls on the same path
       // before cache is updated
@@ -286,7 +284,7 @@ public class ZookeeperClient implements AutoCloseable {
         if (version != null) {
           try {
             curator.setData().withVersion(version.getVersion()).forPath(target, data);
-          } catch (final KeeperException.BadVersionException e) {
+          } catch (KeeperException.BadVersionException e) {
             throw new VersionMismatchException("Unable to put data. Version mismatch is detected.", version.getVersion(), e);
           }
         } else {
@@ -294,9 +292,9 @@ public class ZookeeperClient implements AutoCloseable {
         }
       }
       getCache().rebuildNode(target);
-    } catch (final VersionMismatchException e) {
+    } catch (VersionMismatchException e) {
       throw e;
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throw new DrillRuntimeException("unable to put ", e);
     }
   }
@@ -308,11 +306,11 @@ public class ZookeeperClient implements AutoCloseable {
    * @param data  data to store
    * @return null if path was created, else data stored for the given path
    */
-  public byte[] putIfAbsent(final String path, final byte[] data) {
-    Preconditions.checkNotNull(path, "path is required");
-    Preconditions.checkNotNull(data, "data is required");
+  public byte[] putIfAbsent(String path, byte[] data) {
+    Objects.requireNonNull(path, "path is required");
+    Objects.requireNonNull(data, "data is required");
 
-    final String target = PathUtils.join(root, path);
+    String target = PathUtils.join(root, path);
     try {
       try {
         curator.create().withMode(mode).forPath(target, data);
@@ -322,7 +320,7 @@ public class ZookeeperClient implements AutoCloseable {
         // do nothing
       }
       return curator.getData().forPath(target);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throw new DrillRuntimeException("unable to put ", e);
     }
   }
@@ -332,14 +330,14 @@ public class ZookeeperClient implements AutoCloseable {
    *
    * @param path  target path to delete
    */
-  public void delete(final String path) {
-    Preconditions.checkNotNull(path, "path is required");
+  public void delete(String path) {
+    Objects.requireNonNull(path, "path is required");
 
-    final String target = PathUtils.join(root, path);
+    String target = PathUtils.join(root, path);
     try {
       curator.delete().forPath(target);
       getCache().rebuildNode(target);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throw new DrillRuntimeException(String.format("unable to delete node at %s", target), e);
     }
   }
@@ -348,16 +346,15 @@ public class ZookeeperClient implements AutoCloseable {
    * Returns an iterator of (key, value) pairs residing under {@link #getRoot() root} path.
    */
   public Iterator<Map.Entry<String, byte[]>> entries() {
-    final String prefix = PathUtils.join(root, "/");
-    return Iterables.transform(getCache().getCurrentData(), new Function<ChildData, Map.Entry<String, byte[]>>() {
-      @Nullable
-      @Override
-      public Map.Entry<String, byte[]> apply(final ChildData data) {
-        // normalize key name removing the root prefix. resultant key must be a relative path, not beginning with a '/'.
-        final String key = data.getPath().replace(prefix, "");
-        return new ImmutableEntry<>(key, data.getData());
-      }
-    }).iterator();
+    String prefix = PathUtils.join(root, "/");
+    return getCache().getCurrentData().stream()
+        .map(
+            (Function<ChildData, Map.Entry<String, byte[]>>) data -> {
+              // normalize key name removing the root prefix. resultant key must be a relative path, not beginning with a '/'.
+              String key = data.getPath().replace(prefix, "");
+              return new ImmutableEntry<>(key, data.getData());
+            })
+        .iterator();
   }
 
   @Override

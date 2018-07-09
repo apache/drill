@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.test.ClientFixture;
@@ -42,8 +43,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import com.google.common.collect.Lists;
 
 /**
  * Class to test different planning use cases (separate from query execution)
@@ -144,7 +143,7 @@ public class DrillSeparatePlanningTest extends ClusterTest {
 
     assertNotNull(planFragments);
     assertNotNull(planFragments.getError());
-    assertTrue(planFragments.getFragmentsCount()==0);
+    assertEquals(0, planFragments.getFragmentsCount());
   }
 
   @Test(timeout=60_000)
@@ -191,7 +190,7 @@ public class DrillSeparatePlanningTest extends ClusterTest {
       assertEquals(assignedNode.getAddress(), host);
       assertEquals(assignedNode.getUserPort(), port);
 
-      List<PlanFragment> fragmentList = Lists.newArrayList();
+      List<PlanFragment> fragmentList = new ArrayList<>();
       fragmentList.add(fragment);
       QuerySummary summary = fragmentClient.queryBuilder().plan(fragmentList).run();
       totalRows += summary.recordCount();

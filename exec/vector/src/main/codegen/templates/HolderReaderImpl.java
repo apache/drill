@@ -222,7 +222,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
   @Override
   public Object readObject() {
 <#if holderMode == "Repeated" >
-    List<Object> valList = Lists.newArrayList();
+    List<Object> valList = new ArrayList<>();
     for (int i = repeatedHolder.start; i < repeatedHolder.end; i++) {
       valList.add(repeatedHolder.vector.getAccessor().getObject(i));
     }

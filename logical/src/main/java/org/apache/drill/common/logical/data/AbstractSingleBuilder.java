@@ -17,7 +17,7 @@
  */
 package org.apache.drill.common.logical.data;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 public abstract class AbstractSingleBuilder<T extends SingleInputOperator, X extends AbstractSingleBuilder<T, X>> extends AbstractBuilder<T> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSingleBuilder.class);
@@ -26,7 +26,7 @@ public abstract class AbstractSingleBuilder<T extends SingleInputOperator, X ext
 
   @Override
   public final T build(){
-    Preconditions.checkNotNull(input);
+    Objects.requireNonNull(input);
     T out = internalBuild();
     out.setInput(input);
     return out;

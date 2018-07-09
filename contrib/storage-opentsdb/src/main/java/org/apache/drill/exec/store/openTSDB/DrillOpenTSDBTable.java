@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.openTSDB;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -29,6 +28,7 @@ import org.apache.drill.exec.store.openTSDB.dto.ColumnDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.drill.exec.store.openTSDB.client.OpenTSDBTypes.DOUBLE;
@@ -49,8 +49,8 @@ public class DrillOpenTSDBTable extends DynamicDrillTable {
 
   @Override
   public RelDataType getRowType(final RelDataTypeFactory typeFactory) {
-    List<String> names = Lists.newArrayList();
-    List<RelDataType> types = Lists.newArrayList();
+    List<String> names = new ArrayList<>();
+    List<RelDataType> types = new ArrayList<>();
     convertToRelDataType(typeFactory, names, types);
     return typeFactory.createStructType(types, names);
   }

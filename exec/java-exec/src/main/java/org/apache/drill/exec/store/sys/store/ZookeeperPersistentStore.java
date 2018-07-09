@@ -20,12 +20,10 @@ package org.apache.drill.exec.store.sys.store;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
-import javax.annotation.Nullable;
-
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -49,7 +47,7 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> implemen
   private final ZookeeperClient client;
 
   public ZookeeperPersistentStore(final CuratorFramework framework, final PersistentStoreConfig<V> config) throws StoreException {
-    this.config = Preconditions.checkNotNull(config);
+    this.config = Objects.requireNonNull(config);
     this.client = new ZookeeperClient(framework, PathUtils.join("/", config.getName()), CreateMode.PERSISTENT);
   }
 
@@ -129,26 +127,27 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> implemen
   }
 
   @Override
-  public Iterator<Map.Entry<String, V>> getRange(final int skip, final int take) {
-    final Iterator<Map.Entry<String, byte[]>> entries = client.entries();
-    Iterators.advance(entries, skip);
-    return Iterators.transform(Iterators.limit(entries, take), new Function<Map.Entry<String, byte[]>, Map.Entry<String, V>>() {
-      @Nullable
-      @Override
-      public Map.Entry<String, V> apply(@Nullable Map.Entry<String, byte[]> input) {
-        try {
-          final V value = config.getSerializer().deserialize(input.getValue());
-          return new ImmutableEntry<>(input.getKey(), value);
-        } catch (final IOException e) {
-          throw new DrillRuntimeException(String.format("unable to deserialize value at key %s", input.getKey()), e);
-        }
-      }
-    });
+  public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
+    Iterable<Map.Entry<String, byte[]>> entries = client::entries;
+    Function<Map.Entry<String, byte[]>, Map.Entry<String, V>> valueDeserializerFunc =
+        input -> {
+          try {
+            V value = config.getSerializer().deserialize(input.getValue());
+            return new ImmutableEntry<>(input.getKey(), value);
+          } catch (IOException e) {
+            throw new DrillRuntimeException(String.format("Unable to deserialize value at key %s", input.getKey()), e);
+          }
+        };
+    return StreamSupport.stream(entries.spliterator(), false)
+        .skip(skip)
+        .limit(take)
+        .map(valueDeserializerFunc)
+        .iterator();
   }
 
   @Override
   public void close() {
-    try{
+    try {
       client.close();
     } catch(final Exception e) {
       logger.warn("Failure while closing out %s.", getClass().getSimpleName(), e);

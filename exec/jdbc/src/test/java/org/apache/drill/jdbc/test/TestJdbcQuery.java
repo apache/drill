@@ -21,9 +21,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.function.Function;
 
 import org.apache.drill.categories.JdbcTest;
 import org.apache.drill.jdbc.JdbcTestBase;
@@ -31,7 +35,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Function;
 import org.junit.experimental.categories.Category;
 
 @Category(JdbcTest.class)
@@ -221,68 +224,68 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
 
   @Test
   public void testDateTimeAccessors() throws Exception{
-    withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
-      public Void apply(Connection connection) {
-        try {
-          final Statement statement = connection.createStatement();
+    withNoDefaultSchema().withConnection(
+        (Function<Connection, Void>) connection -> {
+          try {
+            final Statement statement = connection.createStatement();
 
-          // show tables on view
-          final ResultSet resultSet = statement.executeQuery(
-              "select date '2008-2-23', time '12:23:34', timestamp '2008-2-23 12:23:34.456', " +
-              "interval '1' year, interval '2' day, " +
-              "date_add(date '2008-2-23', interval '1 10:20:30' day to second), " +
-              "date_add(date '2010-2-23', 1) " +
-              "from cp.`employee.json` limit 1");
+            // show tables on view
+            final ResultSet resultSet = statement.executeQuery(
+                "select date '2008-2-23', time '12:23:34', timestamp '2008-2-23 12:23:34.456', " +
+                "interval '1' year, interval '2' day, " +
+                "date_add(date '2008-2-23', interval '1 10:20:30' day to second), " +
+                "date_add(date '2010-2-23', 1) " +
+                "from cp.`employee.json` limit 1");
 
-          resultSet.next();
-          final java.sql.Date date = resultSet.getDate(1);
-          final java.sql.Time time = resultSet.getTime(2);
-          final java.sql.Timestamp ts = resultSet.getTimestamp(3);
-          final String intervalYear = resultSet.getString(4);
-          final String intervalDay  = resultSet.getString(5);
-          final java.sql.Timestamp ts1 = resultSet.getTimestamp(6);
-          final java.sql.Date date1 = resultSet.getDate(7);
+            resultSet.next();
+            final Date date = resultSet.getDate(1);
+            final Time time = resultSet.getTime(2);
+            final Timestamp ts = resultSet.getTimestamp(3);
+            final String intervalYear = resultSet.getString(4);
+            final String intervalDay  = resultSet.getString(5);
+            final Timestamp ts1 = resultSet.getTimestamp(6);
+            final Date date1 = resultSet.getDate(7);
 
-          final java.sql.Timestamp result = java.sql.Timestamp.valueOf("2008-2-24 10:20:30");
-          final java.sql.Date result1 = java.sql.Date.valueOf("2010-2-24");
-          assertEquals(ts1, result);
-          assertEquals(date1, result1);
+            final Timestamp result = Timestamp.valueOf("2008-2-24 10:20:30");
+            final Date result1 = Date.valueOf("2010-2-24");
+            assertEquals(ts1, result);
+            assertEquals(date1, result1);
 
-          // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
-          // race conditions are fixed (not just DRILL-2245 fixes).
-          // nextUntilEnd(resultSet);
-          statement.close();
-          return null;
-        } catch (Exception e) {
-          throw new RuntimeException(e);
+            // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
+            // race conditions are fixed (not just DRILL-2245 fixes).
+            // nextUntilEnd(resultSet);
+            statement.close();
+            return null;
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
         }
-      }
-    });
+    );
   }
 
   @Test
   public void testVerifyMetadata() throws Exception{
-     withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
-      public Void apply(Connection connection) {
-        try {
-          final Statement statement = connection.createStatement();
+    withNoDefaultSchema().withConnection(
+        (Function<Connection, Void>) connection -> {
+          try {
+            final Statement statement = connection.createStatement();
 
-          // show files
-          final ResultSet resultSet = statement.executeQuery(
-              "select timestamp '2008-2-23 12:23:23', date '2001-01-01' from cp.`employee.json` limit 1");
+            // show files
+            final ResultSet resultSet = statement.executeQuery(
+                "select timestamp '2008-2-23 12:23:23', date '2001-01-01' from cp.`employee.json` limit 1");
 
-          assertEquals( Types.TIMESTAMP, resultSet.getMetaData().getColumnType(1) );
-          assertEquals( Types.DATE, resultSet.getMetaData().getColumnType(2) );
+            assertEquals( Types.TIMESTAMP, resultSet.getMetaData().getColumnType(1) );
+            assertEquals( Types.DATE, resultSet.getMetaData().getColumnType(2) );
 
-          logger.debug(JdbcTestBase.toString(resultSet));
-          resultSet.close();
-          statement.close();
-          return null;
-        } catch (Exception e) {
-          throw new RuntimeException(e);
+            logger.debug(JdbcTestBase.toString(resultSet));
+            resultSet.close();
+            statement.close();
+            return null;
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
         }
-      }
-    });
+    );
   }
 
   @Test

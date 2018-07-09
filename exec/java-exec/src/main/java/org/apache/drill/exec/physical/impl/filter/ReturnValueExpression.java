@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.filter;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -24,8 +25,6 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
-
-import com.google.common.collect.Iterators;
 
 public class ReturnValueExpression implements LogicalExpression{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReturnValueExpression.class);
@@ -63,7 +62,7 @@ public class ReturnValueExpression implements LogicalExpression{
 
   @Override
   public Iterator<LogicalExpression> iterator() {
-    return Iterators.singletonIterator(child);
+    return Collections.singleton(child).iterator();
   }
 
   public boolean isReturnTrueOnOne() {

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
@@ -30,8 +31,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
-
-import com.google.common.collect.Lists;
 
 /**
  * Sql parse tree node to represent statement:
@@ -63,7 +62,7 @@ public class SqlShowSchemas extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    List<SqlNode> opList = Lists.newArrayList();
+    List<SqlNode> opList = new ArrayList<>();
     opList.add(likePattern);
     opList.add(whereClause);
     return opList;

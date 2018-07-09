@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -30,6 +31,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -57,7 +59,6 @@ import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 
@@ -136,7 +137,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   private final ClusterFixtureBuilder builder;
 
   ClusterFixture(ClusterFixtureBuilder builder) {
-    this.builder = Preconditions.checkNotNull(builder);
+    this.builder = Objects.requireNonNull(builder);
 
     setClientProps();
     configureZk();
@@ -615,7 +616,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       throw new IOException(
           String.format("Unable to find resource %s.", resource));
     }
-    return Resources.toString(url, Charsets.UTF_8);
+    return Resources.toString(url, StandardCharsets.UTF_8);
   }
 
   /**

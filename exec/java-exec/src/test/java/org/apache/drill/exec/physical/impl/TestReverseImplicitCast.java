@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 
@@ -34,7 +35,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestReverseImplicitCast extends PopUnitTestBase {
@@ -51,7 +51,7 @@ public class TestReverseImplicitCast extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/functions/cast/two_way_implicit_cast.json"), Charsets.UTF_8));
+          Files.toString(DrillFileUtils.getResourceAsFile("/functions/cast/two_way_implicit_cast.json"), StandardCharsets.UTF_8));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 

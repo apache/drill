@@ -18,12 +18,13 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Functions;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -55,7 +56,6 @@ import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {
 
@@ -145,8 +145,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     }
 
     List<RecordReader> readers = new LinkedList<>();
-    List<Map<String, String>> implicitColumns = Lists.newArrayList();
-    Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
+    List<Map<String, String>> implicitColumns = new ArrayList<>();
+    Map<String, String> mapWithMaxColumns = new LinkedHashMap<>();
     boolean supportsFileImplicitColumns = scan.getSelectionRoot() != null;
     for (FileWork work : scan.getWorkUnits()){
       RecordReader recordReader = getRecordReader(context, dfs, work, scan.getColumns(), scan.getUserName());
@@ -160,7 +160,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       }
 
     // all readers should have the same number of implicit columns, add missing ones with value null
-    Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
+    Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, input -> null);
     for (Map<String, String> map : implicitColumns) {
       map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
       }

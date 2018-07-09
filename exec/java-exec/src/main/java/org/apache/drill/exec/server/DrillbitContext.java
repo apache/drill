@@ -47,10 +47,9 @@ import org.apache.drill.exec.work.foreman.rm.ResourceManagerBuilder;
 
 import java.util.Collection;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DrillbitContext implements AutoCloseable {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
@@ -98,11 +97,11 @@ public class DrillbitContext implements AutoCloseable {
       PersistentStoreProvider profileStoreProvider) {
     classpathScan = context.getClasspathScan();
     this.workBus = workBus;
-    this.controller = checkNotNull(controller);
-    this.context = checkNotNull(context);
+    this.controller = Objects.requireNonNull(controller);
+    this.context = Objects.requireNonNull(context);
     this.coord = coord;
-    this.connectionsPool = checkNotNull(connectionsPool);
-    this.endpoint = checkNotNull(endpoint);
+    this.connectionsPool = Objects.requireNonNull(connectionsPool);
+    this.endpoint = Objects.requireNonNull(endpoint);
     this.provider = provider;
     DrillConfig config = context.getConfig();
     lpPersistence = new LogicalPlanPersistence(config, classpathScan);

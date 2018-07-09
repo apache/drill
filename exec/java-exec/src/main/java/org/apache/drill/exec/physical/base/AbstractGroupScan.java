@@ -17,12 +17,11 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -132,7 +131,7 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   public List<SchemaPath> getPartitionColumns() {
-    return Lists.newArrayList();
+    return new ArrayList<>();
   }
 
   /**

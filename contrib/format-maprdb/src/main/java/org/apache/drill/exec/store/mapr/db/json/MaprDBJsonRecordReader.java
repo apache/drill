@@ -23,10 +23,13 @@ import static org.ojai.DocumentConstants.ID_FIELD;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Collections;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -42,7 +45,6 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig;
 import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
-import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderUtils;
@@ -55,9 +57,7 @@ import org.ojai.FieldSegment;
 import org.ojai.Value;
 import org.ojai.store.QueryCondition;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
 import com.mapr.db.MapRDB;
 import com.mapr.db.Table;
 import com.mapr.db.Table.TableOption;
@@ -103,7 +103,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       List<SchemaPath> projectedColumns, FragmentContext context) {
     buffer = context.getManagedBuffer();
     projectedFields = null;
-    tableName = Preconditions.checkNotNull(subScanSpec, "MapRDB reader needs a sub-scan spec").getTableName();
+    tableName = Objects.requireNonNull(subScanSpec, "MapRDB reader needs a sub-scan spec").getTableName();
     documentReaderIterators = null;
     includeId = false;
     idOnly    = false;
@@ -126,7 +126,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
-    Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    Set<SchemaPath> transformed = new LinkedHashSet<>();
     if (disablePushdown) {
       transformed.add(SchemaPath.STAR_COLUMN);
       includeId = true;
@@ -146,7 +146,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       return transformed;
     }
 
-    Set<FieldPath> projectedFieldsSet = Sets.newTreeSet();
+    Set<FieldPath> projectedFieldsSet = new TreeSet<>();
     for (SchemaPath column : columns) {
       if (column.getRootSegment().getPath().equalsIgnoreCase(ID_KEY)) {
         includeId = true;
@@ -161,7 +161,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     }
 
     if (projectedFieldsSet.size() > 0) {
-      projectedFields = projectedFieldsSet.toArray(new FieldPath[projectedFieldsSet.size()]);
+      projectedFields = projectedFieldsSet.toArray(new FieldPath[0]);
     }
 
     if (disableCountOptimization) {

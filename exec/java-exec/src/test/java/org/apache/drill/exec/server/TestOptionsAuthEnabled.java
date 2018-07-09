@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.server;
 
-import com.google.common.base.Joiner;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillProperties;
@@ -166,7 +165,7 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
       client.alterSystem(ExecConstants.ADMIN_USERS_KEY, crummyTestAdminUsersList);
       String[] sanitizedAdminUsers = {"alice", "bob bob", "charlie", "dave"};
       // also test the CSV sanitizer
-      assertEquals(Joiner.on(",").join(sanitizedAdminUsers), DrillStringUtils.sanitizeCSV(crummyTestAdminUsersList));
+      assertEquals(String.join(",", sanitizedAdminUsers), DrillStringUtils.sanitizeCSV(crummyTestAdminUsersList));
       String systemAdminUsersList1 = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
       String systemAdminUserGroupsList1 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
       for (String user : sanitizedAdminUsers) {

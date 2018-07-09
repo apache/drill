@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.user;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.ops.QueryContext;
@@ -39,8 +40,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceAllocator;
-
-import com.google.common.collect.Lists;
 
 /**
  * Helper class to return PlanFragments based on the query plan
@@ -115,7 +114,7 @@ public class PlanSplitter {
     final Fragment rootFragment = rootOperator.accept(MakeFragmentsVisitor.INSTANCE, null);
     final SimpleParallelizer parallelizer = new SplittingParallelizer(queryContext);
 
-    List<PlanFragment> fragments = Lists.newArrayList();
+    List<PlanFragment> fragments = new ArrayList<>();
 
     if ( req.getSplitPlan() ) {
       final List<QueryWorkUnit> queryWorkUnits = parallelizer.getSplitFragments(

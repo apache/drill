@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.logical.partition;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Deque;
 import java.util.List;
@@ -40,8 +41,6 @@ import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlRowOperator;
 import org.apache.calcite.util.Util;
 
-import com.google.common.collect.Lists;
-
 
 public class FindPartitionConditions extends RexVisitorImpl<Void> {
   /** Whether an expression is a directory filter, and if so, whether
@@ -62,7 +61,7 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
    */
   public class OpState {
     private SqlOperator sqlOperator;
-    private List<RexNode> children = Lists.newArrayList();
+    private List<RexNode> children = new ArrayList<>();
     public OpState(SqlOperator op) {
       sqlOperator = op;
     }
@@ -88,8 +87,8 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
   // ones that are referenced by the Filter, so keep track of such referenced dirN columns.
   private final BitSet referencedDirs;
 
-  private final List<PushDirFilter> pushStatusStack =  Lists.newArrayList();
-  private final Deque<OpState> opStack = new ArrayDeque<OpState>();
+  private final List<PushDirFilter> pushStatusStack = new ArrayList<>();
+  private final Deque<OpState> opStack = new ArrayDeque<>();
 
   /* While traversing the filter tree, some RexCalls need special handling where
    * a partial expression cannot be built bottom up and the whole expression needs

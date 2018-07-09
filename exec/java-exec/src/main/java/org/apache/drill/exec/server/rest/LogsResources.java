@@ -19,8 +19,6 @@ package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.work.WorkManager;
@@ -44,12 +42,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
 
@@ -82,7 +81,7 @@ public class LogsResources {
   @Path("/logs.json")
   @Produces(MediaType.APPLICATION_JSON)
   public Set<Log> getLogsJSON() {
-    Set<Log> logs = Sets.newTreeSet();
+    Set<Log> logs = new TreeSet<>();
     File[] files = getLogFolder().listFiles(file_filter);
 
     for (File file : files) {
@@ -138,16 +137,11 @@ public class LogsResources {
   }
 
   private File getLogFolder() {
-    return new File(Preconditions.checkNotNull(System.getenv("DRILL_LOG_DIR"), "DRILL_LOG_DIR variable is not set"));
+    return new File(Objects.requireNonNull(System.getenv("DRILL_LOG_DIR"), "DRILL_LOG_DIR variable is not set"));
   }
 
   private File getFileByName(File folder, final String name) {
-    File[] files = folder.listFiles(new FilenameFilter() {
-      @Override
-      public boolean accept(File dir, String fileName) {
-        return fileName.equals(name);
-      }
-    });
+    File[] files = folder.listFiles((dir, fileName) -> fileName.equals(name));
     if (files.length == 0) {
       throw new DrillRuntimeException (name + " doesn't exist");
     }

@@ -56,6 +56,7 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_T
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_TYPE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.VIEWS_COL_VIEW_DEFINITION;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.rel.type.RelDataType;
@@ -67,7 +68,6 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.server.options.OptionManager;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 /**
  * Base class for tables in INFORMATION_SCHEMA.  Defines the table (fields and types).
@@ -100,8 +100,8 @@ public abstract class InfoSchemaTable<S> {
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
 
     // Convert the array of Drill types to an array of Optiq types
-    List<RelDataType> relTypes = Lists.newArrayList();
-    List<String> fieldNames = Lists.newArrayList();
+    List<RelDataType> relTypes = new ArrayList<>();
+    List<String> fieldNames = new ArrayList<>();
     for (Field field : fields) {
       relTypes.add(getRelDataType(typeFactory, field.type));
       fieldNames.add(field.name);

@@ -19,9 +19,9 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 
 import org.apache.calcite.rel.type.RelDataType;
@@ -128,28 +128,28 @@ public class HashToRandomExchangePrel extends ExchangePrel {
     boolean isMuxEnabled = options.getOption(PlannerSettings.MUX_EXCHANGE.getOptionName()).bool_val;
     Prel newPrel = child;
 
-    final List<String> childFields = child.getRowType().getFieldNames();
+    List<String> childFields = child.getRowType().getFieldNames();
 
     List <RexNode> removeUpdatedExpr = null;
 
     if (isMuxEnabled) {
       // Insert Project Operator with new column that will be a hash for HashToRandomExchange fields
-      final List<DistributionField> distFields = getFields();
-      final List<String> outputFieldNames = Lists.newArrayList(childFields);
-      final RexBuilder rexBuilder = getCluster().getRexBuilder();
-      final List<RelDataTypeField> childRowTypeFields = child.getRowType().getFieldList();
+      List<DistributionField> distFields = getFields();
+      List<String> outputFieldNames = new ArrayList<>(childFields);
+      RexBuilder rexBuilder = getCluster().getRexBuilder();
+      List<RelDataTypeField> childRowTypeFields = child.getRowType().getFieldList();
 
-      final HashPrelUtil.HashExpressionCreatorHelper<RexNode> hashHelper =
-                                    new HashPrelUtil.RexNodeBasedHashExpressionCreatorHelper(rexBuilder);
+      HashPrelUtil.HashExpressionCreatorHelper<RexNode> hashHelper =
+          new HashPrelUtil.RexNodeBasedHashExpressionCreatorHelper(rexBuilder);
 
-      final List<RexNode> distFieldRefs = Lists.newArrayListWithExpectedSize(distFields.size());
+      List<RexNode> distFieldRefs = new ArrayList<>(distFields.size());
       for (DistributionField distField : distFields) {
-        final int fieldId = distField.getFieldId();
+        int fieldId = distField.getFieldId();
         distFieldRefs.add(rexBuilder.makeInputRef(childRowTypeFields.get(fieldId).getType(), fieldId));
       }
 
-      final List <RexNode> updatedExpr = Lists.newArrayListWithExpectedSize(childRowTypeFields.size());
-      removeUpdatedExpr = Lists.newArrayListWithExpectedSize(childRowTypeFields.size());
+      List <RexNode> updatedExpr = new ArrayList<>(childRowTypeFields.size());
+      removeUpdatedExpr = new ArrayList<>(childRowTypeFields.size());
       for (RelDataTypeField field : childRowTypeFields) {
         RexNode rex = rexBuilder.makeInputRef(field.getType(), field.getIndex());
         updatedExpr.add(rex);
@@ -157,7 +157,7 @@ public class HashToRandomExchangePrel extends ExchangePrel {
       }
 
       outputFieldNames.add(HashPrelUtil.HASH_EXPR_NAME);
-      final RexNode distSeed = rexBuilder.makeBigintLiteral(BigDecimal.valueOf(HashPrelUtil.DIST_SEED)); // distribution seed
+      RexNode distSeed = rexBuilder.makeBigintLiteral(BigDecimal.valueOf(HashPrelUtil.DIST_SEED)); // distribution seed
       updatedExpr.add(HashPrelUtil.createHashBasedPartitionExpression(distFieldRefs, distSeed, hashHelper));
 
       RelDataType rowType = RexUtil.createStructType(getCluster().getTypeFactory(),

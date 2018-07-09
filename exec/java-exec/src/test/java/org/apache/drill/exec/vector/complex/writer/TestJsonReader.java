@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -52,7 +53,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestJsonReader extends BaseTestQuery {
@@ -157,7 +157,7 @@ public class TestJsonReader extends BaseTestQuery {
     logger.debug("===================");
     logger.debug("source data in json");
     logger.debug("===================");
-    logger.debug(Files.toString(DrillFileUtils.getResourceAsFile(filename), Charsets.UTF_8));
+    logger.debug(Files.toString(DrillFileUtils.getResourceAsFile(filename), StandardCharsets.UTF_8));
 
     int i = 0;
     for (String query : queries) {
@@ -322,7 +322,7 @@ public class TestJsonReader extends BaseTestQuery {
   // ensure that the project is filtering out the correct data in the scan alone
   @Test
   public void testProjectPushdown() throws Exception {
-    String[] queries = {Files.toString(DrillFileUtils.getResourceAsFile("/store/json/project_pushdown_json_physical_plan.json"), Charsets.UTF_8)};
+    String[] queries = {Files.toString(DrillFileUtils.getResourceAsFile("/store/json/project_pushdown_json_physical_plan.json"), StandardCharsets.UTF_8)};
     long[] rowCounts = {3};
     String filename = "/store/json/schema_change_int_to_string.json";
     test("alter system set `store.json.all_text_mode` = false");

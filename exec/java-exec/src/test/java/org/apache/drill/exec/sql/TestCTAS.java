@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.sql;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
@@ -30,6 +29,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
@@ -210,7 +210,7 @@ public class TestCTAS extends BaseTestQuery {
     final String tablePath = "dfs.tmp.`%s/%s_%s`";
 
     // key - new table suffix, value - data query
-    final Map<String, String> variations = Maps.newHashMap();
+    final Map<String, String> variations = new HashMap<>();
     variations.put("required", "select * from cp.`parquet/alltypes_required.parquet`");
     variations.put("optional", "select * from cp.`parquet/alltypes_optional.parquet`");
     variations.put("nulls_only", "select * from cp.`parquet/alltypes_optional.parquet` where %s is null");

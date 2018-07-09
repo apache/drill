@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.schedule;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +28,6 @@ import com.carrotsearch.hppc.ObjectFloatHashMap;
 import com.carrotsearch.hppc.cursors.ObjectFloatCursor;
 import com.carrotsearch.hppc.cursors.ObjectLongCursor;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 
 public class AffinityCreator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AffinityCreator.class);
@@ -40,7 +40,7 @@ public class AffinityCreator {
       totalBytes += entry.getTotalBytes();
     }
 
-    ObjectFloatHashMap<DrillbitEndpoint> affinities = new ObjectFloatHashMap<DrillbitEndpoint>();
+    ObjectFloatHashMap<DrillbitEndpoint> affinities = new ObjectFloatHashMap<>();
     for (CompleteWork entry : work) {
       for (ObjectLongCursor<DrillbitEndpoint> cursor : entry.getByteMap()) {
         long bytes = cursor.value;
@@ -49,7 +49,7 @@ public class AffinityCreator {
       }
     }
 
-    List<EndpointAffinity> affinityList = Lists.newLinkedList();
+    List<EndpointAffinity> affinityList = new LinkedList<>();
     for (ObjectFloatCursor<DrillbitEndpoint> d : affinities) {
       logger.debug("Endpoint {} has affinity {}", d.key.getAddress(), d.value);
       affinityList.add(new EndpointAffinity(d.key, d.value));

@@ -22,7 +22,9 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadLocalRandom;
@@ -43,10 +45,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Queues;
 
 /**
  * This implementation of RawBatchBuffer starts writing incoming batches to disk once the buffer size reaches a threshold.
@@ -92,7 +91,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
 
   private class SpoolingBufferQueue implements BufferQueue<RawFragmentBatchWrapper> {
 
-    private final LinkedBlockingDeque<RawFragmentBatchWrapper> buffer = Queues.newLinkedBlockingDeque();
+    private final LinkedBlockingDeque<RawFragmentBatchWrapper> buffer = new LinkedBlockingDeque<>();
 
     @Override
     public void addOomBatch(RawFragmentBatch batch) {
@@ -281,7 +280,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     public Spooler(String name) {
       setDaemon(true);
       setName(name);
-      spoolingQueue = Queues.newLinkedBlockingDeque();
+      spoolingQueue = new LinkedBlockingDeque<>();
     }
 
     public void run() {
@@ -340,8 +339,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     private long check;
 
     public RawFragmentBatchWrapper(RawFragmentBatch batch, boolean available) {
-      Preconditions.checkNotNull(batch);
-      this.batch = batch;
+      this.batch = Objects.requireNonNull(batch);
       this.available = available;
       this.latch = new CountDownLatch(available ? 0 : 1);
       if (available) {
@@ -469,7 +467,9 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     int majorFragmentId = handle.getMajorFragmentId();
     int minorFragmentId = handle.getMinorFragmentId();
 
-    String fileName = Joiner.on(Path.SEPARATOR).join(getDir(), qid, majorFragmentId, minorFragmentId, oppositeId, bufferIndex);
+    String fileName = String.join(Path.SEPARATOR,
+        Arrays.asList(getDir(), qid, String.valueOf(majorFragmentId),
+            String.valueOf(minorFragmentId), String.valueOf(oppositeId), String.valueOf(bufferIndex)));
 
     return new Path(fileName);
   }

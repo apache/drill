@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -36,7 +38,6 @@ import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.util.Pointer;
 
@@ -85,7 +86,7 @@ public class SqlCreateTable extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    List<SqlNode> ops = Lists.newArrayList();
+    List<SqlNode> ops = new ArrayList<>();
     ops.add(tblName);
     ops.add(fieldList);
     ops.add(partitionColumns);
@@ -147,19 +148,15 @@ public class SqlCreateTable extends DrillSqlCall {
   }
 
   public List<String> getFieldNames() {
-    List<String> columnNames = Lists.newArrayList();
-    for(SqlNode node : fieldList.getList()) {
-      columnNames.add(node.toString());
-    }
-    return columnNames;
+    return fieldList.getList().stream()
+        .map(SqlNode::toString)
+        .collect(Collectors.toList());
   }
 
   public List<String> getPartitionColumns() {
-    List<String> columnNames = Lists.newArrayList();
-    for(SqlNode node : partitionColumns.getList()) {
-      columnNames.add(node.toString());
-    }
-    return columnNames;
+    return partitionColumns.getList().stream()
+        .map(SqlNode::toString)
+        .collect(Collectors.toList());
   }
 
   public SqlNode getQuery() { return query; }

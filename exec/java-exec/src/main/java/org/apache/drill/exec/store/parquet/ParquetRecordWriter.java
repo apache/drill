@@ -22,6 +22,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,8 +74,6 @@ import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Type.Repetition;
-
-import com.google.common.collect.Lists;
 
 public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordWriter.class);
@@ -130,7 +129,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     this.extraMetaData.put(DRILL_VERSION_PROPERTY, DrillVersionInfo.getVersion());
     this.extraMetaData.put(WRITER_VERSION_PROPERTY, String.valueOf(ParquetWriter.WRITER_VERSION));
     this.storageStrategy = writer.getStorageStrategy() == null ? StorageStrategy.DEFAULT : writer.getStorageStrategy();
-    this.cleanUpLocations = Lists.newArrayList();
+    this.cleanUpLocations = new ArrayList<>();
   }
 
   @Override
@@ -218,7 +217,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   private void newSchema() throws IOException {
-    List<Type> types = Lists.newArrayList();
+    List<Type> types = new ArrayList<>();
     for (MaterializedField field : batchSchema) {
       if (field.getName().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
         continue;
@@ -286,7 +285,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     DataMode dataMode = field.getType().getMode();
     switch(minorType) {
       case MAP:
-        List<Type> types = Lists.newArrayList();
+        List<Type> types = new ArrayList<>();
         for (MaterializedField childField : field.getChildren()) {
           types.add(getType(childField));
         }
@@ -362,7 +361,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   public class MapParquetConverter extends FieldConverter {
-    List<FieldConverter> converters = Lists.newArrayList();
+    List<FieldConverter> converters = new ArrayList<>();
 
     public MapParquetConverter(int fieldId, String fieldName, FieldReader reader) {
       super(fieldId, fieldName, reader);
@@ -391,7 +390,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   public class RepeatedMapParquetConverter extends FieldConverter {
-    List<FieldConverter> converters = Lists.newArrayList();
+    List<FieldConverter> converters = new ArrayList<>();
 
     public RepeatedMapParquetConverter(int fieldId, String fieldName, FieldReader reader) {
       super(fieldId, fieldName, reader);
@@ -460,7 +459,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   @Override
   public void abort() throws IOException {
-    List<String> errors = Lists.newArrayList();
+    List<String> errors = new ArrayList<>();
     for (Path location : cleanUpLocations) {
       try {
         if (fs.exists(location)) {

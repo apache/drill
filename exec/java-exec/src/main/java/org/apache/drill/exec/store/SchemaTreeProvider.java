@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.schema.SchemaPlus;
@@ -32,8 +33,6 @@ import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
-import com.google.common.collect.Lists;
-
 /**
  * Class which creates new schema trees. It keeps track of newly created schema trees and closes them safely as
  * part of {@link #close()}.
@@ -47,7 +46,7 @@ public class SchemaTreeProvider implements AutoCloseable {
 
   public SchemaTreeProvider(final DrillbitContext dContext) {
     this.dContext = dContext;
-    schemaTreesToClose = Lists.newArrayList();
+    schemaTreesToClose = new ArrayList<>();
     isImpersonationEnabled = dContext.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
@@ -153,8 +152,8 @@ public class SchemaTreeProvider implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    List<AutoCloseable> toClose = Lists.newArrayList();
-    for(SchemaPlus tree : schemaTreesToClose) {
+    List<AutoCloseable> toClose = new ArrayList<>();
+    for (SchemaPlus tree : schemaTreesToClose) {
       addSchemasToCloseList(tree, toClose);
     }
 

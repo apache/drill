@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.sql.parser;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
@@ -34,6 +33,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SqlCreateView extends DrillSqlCall {
@@ -69,7 +69,7 @@ public class SqlCreateView extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    List<SqlNode> ops = Lists.newArrayList();
+    List<SqlNode> ops = new ArrayList<>();
     ops.add(viewName);
     ops.add(fieldList);
     ops.add(query);
@@ -126,7 +126,7 @@ public class SqlCreateView extends DrillSqlCall {
   }
 
   public List<String> getFieldNames() {
-    List<String> fieldNames = Lists.newArrayList();
+    List<String> fieldNames = new ArrayList<>();
     for (SqlNode node : fieldList.getList()) {
       fieldNames.add(node.toString());
     }

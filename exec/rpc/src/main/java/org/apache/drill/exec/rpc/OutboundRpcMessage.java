@@ -19,12 +19,12 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
-import com.google.common.collect.Lists;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 
@@ -46,7 +46,7 @@ public class OutboundRpcMessage extends RpcMessage {
     this.pBody = pBody;
 
     // Netty doesn't traditionally release the reference on an unreadable buffer.  However, we need to so that if we send a empty or unwritable buffer, we still release.  otherwise we get weird memory leaks when sending empty vectors.
-    List<ByteBuf> bufs = Lists.newArrayList();
+    List<ByteBuf> bufs = new ArrayList<>();
     for (ByteBuf d : dBodies) {
       if (d.readableBytes() == 0) {
         d.release();

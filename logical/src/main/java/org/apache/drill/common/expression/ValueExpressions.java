@@ -29,8 +29,6 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 
-import com.google.common.collect.Iterators;
-
 public class ValueExpressions {
 
   public static LogicalExpression getBigInt(long l){
@@ -140,7 +138,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
   }
 
@@ -201,7 +199,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -233,7 +231,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -276,7 +274,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
   }
 
@@ -318,7 +316,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -349,7 +347,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -449,7 +447,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -485,7 +483,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -522,7 +520,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -559,7 +557,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -595,7 +593,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -631,7 +629,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
@@ -674,7 +672,7 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }

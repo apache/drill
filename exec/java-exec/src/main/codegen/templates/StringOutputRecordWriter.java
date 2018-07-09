@@ -26,7 +26,6 @@ import java.lang.UnsupportedOperationException;
 
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -38,6 +37,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +61,7 @@ public abstract class StringOutputRecordWriter extends AbstractRecordWriter {
   @Override
   public void updateSchema(VectorAccessible batch) throws IOException {
     BatchSchema schema = batch.getSchema();
-    List<String> columnNames = Lists.newArrayList();
+    List<String> columnNames = new ArrayList<>();
     for (int i=0; i < schema.getFieldCount(); i++) {
       columnNames.add(schema.getColumn(i).getName());
     }

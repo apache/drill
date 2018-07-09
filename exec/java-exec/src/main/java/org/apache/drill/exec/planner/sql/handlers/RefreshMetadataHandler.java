@@ -68,16 +68,16 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
 
       if (schema == null) {
         return direct(false, "Storage plugin or workspace does not exist [%s]",
-            SchemaUtilites.SCHEMA_PATH_JOINER.join(refreshTable.getSchemaPath()));
+            SchemaUtilites.SCHEMA_PATH_JOINER.apply(refreshTable.getSchemaPath()));
       }
 
-      final String tableName = refreshTable.getName();
+      String tableName = refreshTable.getName();
 
       if (tableName.contains("*") || tableName.contains("?")) {
         return direct(false, "Glob path %s not supported for metadata refresh", tableName);
       }
 
-      final Table table = schema.getTable(tableName);
+      Table table = schema.getTable(tableName);
 
       if (table == null) {
         return direct(false, "Table %s does not exist.", tableName);
@@ -88,9 +88,9 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
       }
 
 
-      final DrillTable drillTable = (DrillTable) table;
+      DrillTable drillTable = (DrillTable) table;
 
-      final Object selection = drillTable.getSelection();
+      Object selection = drillTable.getSelection();
 
       if (selection instanceof FileSelection && ((FileSelection) selection).isEmptyDirectory()) {
         return direct(false, "Table %s is empty and doesn't contain any parquet files.", tableName);

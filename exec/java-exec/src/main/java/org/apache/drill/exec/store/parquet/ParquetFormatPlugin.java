@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +67,6 @@ import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 public class ParquetFormatPlugin implements FormatPlugin{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
@@ -74,10 +75,10 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
   private static final String DEFAULT_NAME = "parquet";
 
-  private static final List<Pattern> PATTERNS = Lists.newArrayList(
+  private static final List<Pattern> PATTERNS = Arrays.asList(
       Pattern.compile(".*\\.parquet$"),
       Pattern.compile(".*/" + ParquetFileWriter.PARQUET_METADATA_FILE));
-  private static final List<MagicString> MAGIC_STRINGS = Lists.newArrayList(new MagicString(0, ParquetFileWriter.MAGIC));
+  private static final List<MagicString> MAGIC_STRINGS = Collections.singletonList(new MagicString(0, ParquetFileWriter.MAGIC));
 
   private final DrillbitContext context;
   private final Configuration fsConf;

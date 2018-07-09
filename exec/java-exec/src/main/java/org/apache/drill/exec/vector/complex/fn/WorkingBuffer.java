@@ -20,11 +20,10 @@ package org.apache.drill.exec.vector.complex.fn;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-
-import com.google.common.base.Charsets;
 
 class WorkingBuffer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkingBuffer.class);
@@ -40,7 +39,7 @@ class WorkingBuffer {
   }
 
   public void prepareVarCharHolder(String value, VarCharHolder h) throws IOException {
-    byte[] b = value.getBytes(Charsets.UTF_8);
+    byte[] b = value.getBytes(StandardCharsets.UTF_8);
     ensure(b.length);
     workBuf.setBytes(0, b);
     h.start = 0;
@@ -49,7 +48,7 @@ class WorkingBuffer {
   }
 
   public int prepareVarCharHolder(String value) throws IOException {
-    byte[] b = value.getBytes(Charsets.UTF_8);
+    byte[] b = value.getBytes(StandardCharsets.UTF_8);
     ensure(b.length);
     workBuf.setBytes(0, b);
     return b.length;

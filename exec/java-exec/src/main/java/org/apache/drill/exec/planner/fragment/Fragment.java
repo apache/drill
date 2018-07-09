@@ -18,20 +18,19 @@
 package org.apache.drill.exec.planner.fragment;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
-import com.google.common.collect.Lists;
-
 public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Fragment.class);
 
   private PhysicalOperator root;
   private ExchangeFragmentPair sendingExchange;
-  private final List<ExchangeFragmentPair> receivingExchangePairs = Lists.newLinkedList();
+  private final List<ExchangeFragmentPair> receivingExchangePairs = new LinkedList<>();
 
   /**
    * Set the given operator as root operator of this fragment. If root operator is already set,

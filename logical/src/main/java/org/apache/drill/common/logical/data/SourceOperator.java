@@ -17,10 +17,8 @@
  */
 package org.apache.drill.common.logical.data;
 
+import java.util.Collections;
 import java.util.Iterator;
-
-import com.google.common.collect.Iterators;
-
 
 /**
  * An operator that produces data without any parents.  (zero input operator)
@@ -29,7 +27,7 @@ public abstract class SourceOperator extends LogicalOperatorBase{
 
   @Override
   public Iterator<LogicalOperator> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
   }
 
 }

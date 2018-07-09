@@ -20,8 +20,12 @@ package org.apache.drill.exec.store.mongo;
 import static org.junit.Assert.assertEquals;
 
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,9 +38,6 @@ import org.apache.drill.exec.store.mongo.common.ChunkInfo;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.mongodb.ServerAddress;
 import org.junit.experimental.categories.Category;
 
@@ -67,89 +68,89 @@ public class TestMongoChunkAssignment {
 
   @Before
   public void setUp() throws UnknownHostException {
-    chunksMapping = Maps.newHashMap();
-    chunksInverseMapping = Maps.newLinkedHashMap();
+    chunksMapping = new HashMap<>();
+    chunksInverseMapping = new LinkedHashMap<>();
 
     // entry1
-    Set<ServerAddress> hosts_A = Sets.newHashSet();
+    Set<ServerAddress> hosts_A = new HashSet<>();
     hosts_A.add(new ServerAddress(HOST_A));
     chunksMapping.put(dbName + "." + collectionName + "-01", hosts_A);
     chunksMapping.put(dbName + "." + collectionName + "-05", hosts_A);
 
-    ChunkInfo chunk1Info = new ChunkInfo(Arrays.asList(HOST_A), dbName + "."
+    ChunkInfo chunk1Info = new ChunkInfo(Collections.singletonList(HOST_A), dbName + "."
         + collectionName + "-01");
-    chunk1Info.setMinFilters(Collections.<String, Object> emptyMap());
-    Map<String, Object> chunk1MaxFilters = Maps.newHashMap();
-    chunk1MaxFilters.put("name", Integer.valueOf(5));
+    chunk1Info.setMinFilters(Collections.emptyMap());
+    Map<String, Object> chunk1MaxFilters = new HashMap<>();
+    chunk1MaxFilters.put("name", 5);
     chunk1Info.setMaxFilters(chunk1MaxFilters);
 
-    ChunkInfo chunk5Info = new ChunkInfo(Arrays.asList(HOST_A), dbName + "."
+    ChunkInfo chunk5Info = new ChunkInfo(Collections.singletonList(HOST_A), dbName + "."
         + collectionName + "-05");
-    Map<String, Object> chunk5MinFilters = Maps.newHashMap();
-    chunk5MinFilters.put("name", Integer.valueOf(25));
+    Map<String, Object> chunk5MinFilters = new HashMap<>();
+    chunk5MinFilters.put("name", 25);
     chunk5Info.setMinFilters(chunk5MinFilters);
-    Map<String, Object> chunk5MaxFilters = Maps.newHashMap();
-    chunk5MaxFilters.put("name", Integer.valueOf(30));
+    Map<String, Object> chunk5MaxFilters = new HashMap<>();
+    chunk5MaxFilters.put("name", 30);
     chunk5Info.setMaxFilters(chunk5MaxFilters);
     List<ChunkInfo> chunkList = Arrays.asList(chunk1Info, chunk5Info);
     chunksInverseMapping.put(HOST_A, chunkList);
 
     // entry2
-    Set<ServerAddress> hosts_B = Sets.newHashSet();
+    Set<ServerAddress> hosts_B = new HashSet<>();
     hosts_A.add(new ServerAddress(HOST_B));
     chunksMapping.put(dbName + "." + collectionName + "-02", hosts_B);
 
-    ChunkInfo chunk2Info = new ChunkInfo(Arrays.asList(HOST_B), dbName + "."
+    ChunkInfo chunk2Info = new ChunkInfo(Collections.singletonList(HOST_B), dbName + "."
         + collectionName + "-02");
-    Map<String, Object> chunk2MinFilters = Maps.newHashMap();
-    chunk2MinFilters.put("name", Integer.valueOf(5));
+    Map<String, Object> chunk2MinFilters = new HashMap<>();
+    chunk2MinFilters.put("name", 5);
     chunk2Info.setMinFilters(chunk2MinFilters);
-    Map<String, Object> chunk2MaxFilters = Maps.newHashMap();
-    chunk2MaxFilters.put("name", Integer.valueOf(15));
+    Map<String, Object> chunk2MaxFilters = new HashMap<>();
+    chunk2MaxFilters.put("name", 15);
     chunk2Info.setMaxFilters(chunk2MaxFilters);
-    chunkList = Arrays.asList(chunk2Info);
+    chunkList = Collections.singletonList(chunk2Info);
     chunksInverseMapping.put(HOST_B, chunkList);
 
     // enty3
-    Set<ServerAddress> hosts_C = Sets.newHashSet();
+    Set<ServerAddress> hosts_C = new HashSet<>();
     hosts_A.add(new ServerAddress(HOST_C));
     chunksMapping.put(dbName + "." + collectionName + "-03", hosts_C);
     chunksMapping.put(dbName + "." + collectionName + "-06", hosts_C);
 
-    ChunkInfo chunk3Info = new ChunkInfo(Arrays.asList(HOST_C), dbName + "."
+    ChunkInfo chunk3Info = new ChunkInfo(Collections.singletonList(HOST_C), dbName + "."
         + collectionName + "-03");
-    Map<String, Object> chunk3MinFilters = Maps.newHashMap();
-    chunk5MinFilters.put("name", Integer.valueOf(15));
+    Map<String, Object> chunk3MinFilters = new HashMap<>();
+    chunk5MinFilters.put("name", 15);
     chunk3Info.setMinFilters(chunk3MinFilters);
-    Map<String, Object> chunk3MaxFilters = Maps.newHashMap();
-    chunk3MaxFilters.put("name", Integer.valueOf(20));
+    Map<String, Object> chunk3MaxFilters = new HashMap<>();
+    chunk3MaxFilters.put("name", 20);
     chunk3Info.setMaxFilters(chunk3MaxFilters);
 
-    ChunkInfo chunk6Info = new ChunkInfo(Arrays.asList(HOST_C), dbName + "."
+    ChunkInfo chunk6Info = new ChunkInfo(Collections.singletonList(HOST_C), dbName + "."
         + collectionName + "-06");
-    Map<String, Object> chunk6MinFilters = Maps.newHashMap();
-    chunk5MinFilters.put("name", Integer.valueOf(25));
+    Map<String, Object> chunk6MinFilters = new HashMap<>();
+    chunk5MinFilters.put("name", 25);
     chunk6Info.setMinFilters(chunk6MinFilters);
-    Map<String, Object> chunk6MaxFilters = Maps.newHashMap();
-    chunk5MaxFilters.put("name", Integer.valueOf(30));
+    Map<String, Object> chunk6MaxFilters = new HashMap<>();
+    chunk5MaxFilters.put("name", 30);
     chunk6Info.setMaxFilters(chunk6MaxFilters);
     chunkList = Arrays.asList(chunk3Info, chunk6Info);
     chunksInverseMapping.put(HOST_C, chunkList);
 
     // entry4
-    Set<ServerAddress> hosts_D = Sets.newHashSet();
+    Set<ServerAddress> hosts_D = new HashSet<>();
     hosts_A.add(new ServerAddress(HOST_D));
     chunksMapping.put(dbName + "." + collectionName + "-04", hosts_D);
 
-    ChunkInfo chunk4Info = new ChunkInfo(Arrays.asList(HOST_D), dbName + "."
+    ChunkInfo chunk4Info = new ChunkInfo(Collections.singletonList(HOST_D), dbName + "."
         + collectionName + "-04");
-    Map<String, Object> chunk4MinFilters = Maps.newHashMap();
-    chunk4MinFilters.put("name", Integer.valueOf(20));
+    Map<String, Object> chunk4MinFilters = new HashMap<>();
+    chunk4MinFilters.put("name", 20);
     chunk4Info.setMinFilters(chunk4MinFilters);
-    Map<String, Object> chunk4MaxFilters = Maps.newHashMap();
-    chunk4MaxFilters.put("name", Integer.valueOf(25));
+    Map<String, Object> chunk4MaxFilters = new HashMap<>();
+    chunk4MaxFilters.put("name", 25);
     chunk4Info.setMaxFilters(chunk4MaxFilters);
-    chunkList = Arrays.asList(chunk4Info);
+    chunkList = Collections.singletonList(chunk4Info);
     chunksInverseMapping.put(HOST_D, chunkList);
 
     mongoGroupScan = new MongoGroupScan();
@@ -162,7 +163,7 @@ public class TestMongoChunkAssignment {
   @Test
   public void testMongoGroupScanAssignmentMix() throws UnknownHostException,
       ExecutionSetupException {
-    final List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    final List<DrillbitEndpoint> endpoints = new ArrayList<>();
     final DrillbitEndpoint DB_A = DrillbitEndpoint.newBuilder()
         .setAddress(HOST_A).setControlPort(1234).build();
     endpoints.add(DB_A);
@@ -199,7 +200,7 @@ public class TestMongoChunkAssignment {
   @Test
   public void testMongoGroupScanAssignmentAllAffinity()
       throws UnknownHostException, ExecutionSetupException {
-    final List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    final List<DrillbitEndpoint> endpoints = new ArrayList<>();
     final DrillbitEndpoint DB_A = DrillbitEndpoint.newBuilder()
         .setAddress(HOST_A).setControlPort(1234).build();
     endpoints.add(DB_A);
@@ -232,7 +233,7 @@ public class TestMongoChunkAssignment {
   @Test
   public void testMongoGroupScanAssignmentNoAffinity()
       throws UnknownHostException, ExecutionSetupException {
-    final List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    final List<DrillbitEndpoint> endpoints = new ArrayList<>();
     final DrillbitEndpoint DB_M = DrillbitEndpoint.newBuilder()
         .setAddress(HOST_M).setControlPort(1234).build();
     endpoints.add(DB_M);
@@ -263,7 +264,7 @@ public class TestMongoChunkAssignment {
   @Test
   public void testMongoGroupScanAssignmentWhenOnlyOneDrillBit()
       throws UnknownHostException, ExecutionSetupException {
-    final List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    final List<DrillbitEndpoint> endpoints = new ArrayList<>();
     final DrillbitEndpoint DB_A = DrillbitEndpoint.newBuilder()
         .setAddress(HOST_A).setControlPort(1234).build();
     endpoints.add(DB_A);

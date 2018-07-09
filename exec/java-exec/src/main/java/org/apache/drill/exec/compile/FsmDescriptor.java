@@ -20,6 +20,7 @@ package org.apache.drill.exec.compile;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,17 +62,17 @@ public class FsmDescriptor {
    * @param fsmRegex the regular expression, defined using the characters from the tokenMap
    * @param lastTransition the name of the final transition/state
    */
-  public FsmDescriptor(final Map<String, Character> tokenMap,
-      final String fsmRegex, final String lastTransition) {
-    Preconditions.checkNotNull(tokenMap);
-    Preconditions.checkNotNull(fsmRegex);
-    Preconditions.checkNotNull(lastTransition);
+  public FsmDescriptor(Map<String, Character> tokenMap,
+      String fsmRegex, String lastTransition) {
+    Objects.requireNonNull(tokenMap);
+    Objects.requireNonNull(fsmRegex);
+    Objects.requireNonNull(lastTransition);
     Preconditions.checkArgument(tokenMap.containsKey(lastTransition));
 
     // make sure the characters in the tokenMap are unique
-    final HashSet<Character> charSet = new HashSet<>();
-    for(Map.Entry<String, Character> me : tokenMap.entrySet()) {
-      final Character character = me.getValue();
+    HashSet<Character> charSet = new HashSet<>();
+    for (Map.Entry<String, Character> me : tokenMap.entrySet()) {
+      Character character = me.getValue();
       if (charSet.contains(character)) {
         throw new IllegalArgumentException("Duplicate tokenMap char: '" + character + "'");
       }
@@ -80,7 +81,7 @@ public class FsmDescriptor {
 
     this.tokenMap = Collections.unmodifiableMap(tokenMap);
     this.fsmPattern = Pattern.compile(fsmRegex);
-    this.lastTransition = this.tokenMap.get(lastTransition).charValue();
+    this.lastTransition = this.tokenMap.get(lastTransition);
   }
 
   /**
@@ -100,7 +101,7 @@ public class FsmDescriptor {
    *   states as defined by the tokenMap used at construction time.
    * @throws IllegalStateException if the set of transitions is not allowed
    */
-  void validateTransitions(final CharSequence transitions) {
+  void validateTransitions(CharSequence transitions) {
     final long length = transitions.length();
     if (length == 0) {
       return; // assume we haven't started yet
@@ -119,11 +120,11 @@ public class FsmDescriptor {
    * @param token the transition or state to look up
    * @return the character used to represent that transition or state
    */
-  char getChar(final String token) {
-    Preconditions.checkNotNull(token);
-    final Character character = tokenMap.get(token);
-    Preconditions.checkNotNull(character);
-    return character.charValue();
+  char getChar(String token) {
+    Objects.requireNonNull(token);
+    Character character = tokenMap.get(token);
+    Objects.requireNonNull(character);
+    return character;
   }
 
   /**
@@ -132,7 +133,7 @@ public class FsmDescriptor {
    * @param transitionChar the character to look up
    * @return true if the character represents the final transition or state
    */
-  boolean isLastTransition(final char transitionChar) {
+  boolean isLastTransition(char transitionChar) {
     return transitionChar == lastTransition;
   }
 }

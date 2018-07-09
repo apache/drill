@@ -18,11 +18,11 @@
 package org.apache.drill.common.scanner;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 
@@ -91,7 +91,7 @@ public class RunTimeScan {
     return ClassPathScanner.scan(
         markedPath,
         packagePrefixes,
-        Lists.<String>newArrayList(),
+        new ArrayList<>(),
         PRESCANNED.getScannedAnnotations(),
         ClassPathScanner.emptyResult());
   }

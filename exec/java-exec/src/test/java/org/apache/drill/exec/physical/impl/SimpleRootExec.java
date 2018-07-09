@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -32,8 +33,6 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
-
-import com.google.common.collect.Lists;
 
 @Deprecated
 public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
@@ -117,7 +116,7 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
 
   @Override
   public Iterator<ValueVector> iterator() {
-    final List<ValueVector> vv = Lists.newArrayList();
+    final List<ValueVector> vv = new ArrayList<>();
     for (final VectorWrapper<?> vw : incoming) {
       vv.add(vw.getValueVector());
     }

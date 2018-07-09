@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.sql.SqlNode;
@@ -24,8 +25,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.parser.SqlParserUtil;
 import org.apache.calcite.util.Util;
-
-import com.google.common.collect.Lists;
 
 /**
  * Helper methods or constants used in parsing a SQL query.
@@ -41,7 +40,7 @@ public class DrillParserUtil {
       return left != null ? left : right;
     }
 
-    List<Object> listCondition = Lists.newArrayList();
+    List<Object> listCondition = new ArrayList<>();
     listCondition.add(left);
     listCondition.add(new SqlParserUtil.ToTreeListItem(op, SqlParserPos.ZERO));
     listCondition.add(right);

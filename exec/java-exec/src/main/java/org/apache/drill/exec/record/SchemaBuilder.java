@@ -17,20 +17,19 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
-import com.google.common.collect.Lists;
-
 /**
  * A reusable builder that supports the creation of BatchSchemas. Can have a supporting expected object. If the expected Schema object is defined, the
  * builder will always check that this schema is a equal or more materialized version of the current schema.
  */
 public class SchemaBuilder {
-  private List<MaterializedField> fields = Lists.newArrayList();
+  private List<MaterializedField> fields = new ArrayList<>();
 
   private BatchSchema.SelectionVectorMode selectionVectorMode = SelectionVectorMode.NONE;
 
@@ -121,7 +120,7 @@ public class SchemaBuilder {
    * @throws SchemaChangeException
    */
   public BatchSchema build() {
-    List<MaterializedField> fieldList = Lists.newArrayList(fields);
+    List<MaterializedField> fieldList = new ArrayList<>(fields);
     return new BatchSchema(this.selectionVectorMode, fieldList);
   }
 

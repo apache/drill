@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.logical;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -46,6 +45,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -191,7 +191,7 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
     private final List<String> fieldNames;
     private final List<RelDataTypeField> fields;
 
-    private final Set<SchemaPath> newFields = Sets.newLinkedHashSet();
+    private final Set<SchemaPath> newFields = new LinkedHashSet<>();
     private final Map<String, DesiredField> desiredFields = new LinkedHashMap<>();
 
     ProjectFieldsVisitor(RelDataType rowType) {

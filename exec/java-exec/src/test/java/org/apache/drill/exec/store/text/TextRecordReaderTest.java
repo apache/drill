@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.text;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillFileUtils;
@@ -31,7 +32,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TextRecordReaderTest extends PopUnitTestBase {
@@ -47,7 +47,7 @@ public class TextRecordReaderTest extends PopUnitTestBase {
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(
-                      DrillFileUtils.getResourceAsFile("/store/text/test.json"), Charsets.UTF_8)
+                      DrillFileUtils.getResourceAsFile("/store/text/test.json"), StandardCharsets.UTF_8)
                       .replace("#{DATA_FILE}", DrillFileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString()));
       int count = 0;
       RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());

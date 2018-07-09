@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.mapr.db.binary;
 
-import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -26,6 +25,8 @@ import org.apache.drill.exec.store.hbase.CompareFunctionsProcessor;
 import org.apache.hadoop.hbase.util.Order;
 import org.apache.hadoop.hbase.util.PositionedByteRange;
 import org.apache.hadoop.hbase.util.SimplePositionedMutableByteRange;
+
+import java.nio.charset.StandardCharsets;
 
 class MaprDBCompareFunctionsProcessor extends CompareFunctionsProcessor {
 
@@ -46,7 +47,7 @@ class MaprDBCompareFunctionsProcessor extends CompareFunctionsProcessor {
       case "UTF8_OB":
       case "UTF8_OBD":
         if (valueArg instanceof ValueExpressions.QuotedString) {
-          int stringLen = ((ValueExpressions.QuotedString) valueArg).value.getBytes(Charsets.UTF_8).length;
+          int stringLen = ((ValueExpressions.QuotedString) valueArg).value.getBytes(StandardCharsets.UTF_8).length;
           ByteBuf bb = newByteBuf(stringLen + 2, true);
           PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, stringLen + 2);
           if (encodingType.endsWith("_OBD")) {

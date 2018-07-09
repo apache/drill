@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.unnest;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos;
@@ -43,7 +42,9 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
 
@@ -154,7 +155,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     // With PartitionLimitBatch occurring between Lateral and Unnest subquery, kill won't be triggered by it hence no
     // special handling is needed in that case.
     //
-    Preconditions.checkNotNull(lateral);
+    Objects.requireNonNull(lateral);
     // Do not call kill on incoming. Lateral Join has the responsibility for killing incoming
     Preconditions.checkState(context.getExecutorState().isFailed() ||
       lateral.getLeftOutcome() == IterOutcome.STOP, "Kill received by unnest with unexpected state. " +
@@ -168,7 +169,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   @Override
   public IterOutcome innerNext() {
 
-    Preconditions.checkNotNull(lateral);
+    Objects.requireNonNull(lateral);
 
     // Short circuit if record batch has already sent all data and is done
     if (state == BatchState.DONE) {
@@ -270,9 +271,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   }
 
   protected IterOutcome doWork() {
-    Preconditions.checkNotNull(lateral);
+    Objects.requireNonNull(lateral);
     unnest.setOutputCount(memoryManager.getOutputRowCount());
-    final int incomingRecordCount = incoming.getRecordCount();
+    int incomingRecordCount = incoming.getRecordCount();
 
     int remainingRecordCount = unnest.getUnnestField().getAccessor().getInnerValueCount() - remainderIndex;
 
@@ -280,10 +281,10 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     rowIdVector.allocateNew(Math.min(remainingRecordCount, memoryManager.getOutputRowCount()));
 
     //Expected output count is the num of values in the unnest column array
-    final int childCount = incomingRecordCount == 0 ? 0 : remainingRecordCount;
+    int childCount = incomingRecordCount == 0 ? 0 : remainingRecordCount;
 
     // Unnest the data
-    final int outputRecords = childCount == 0 ? 0 : unnest.unnestRecords(childCount);
+    int outputRecords = childCount == 0 ? 0 : unnest.unnestRecords(childCount);
 
     logger.debug("{} values out of {} were processed.", outputRecords, childCount);
     // Keep track of any spill over into another batch. Happens only if you artificially set the output batch
@@ -353,9 +354,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   }
 
   private TransferPair resetUnnestTransferPair() throws SchemaChangeException {
-    final List<TransferPair> transfers = Lists.newArrayList();
-    final FieldReference fieldReference = new FieldReference(popConfig.getColumn());
-    final TransferPair transferPair = getUnnestFieldTransferPair(fieldReference);
+    List<TransferPair> transfers = new ArrayList<>();
+    FieldReference fieldReference = new FieldReference(popConfig.getColumn());
+    TransferPair transferPair = getUnnestFieldTransferPair(fieldReference);
     transfers.add(transferPair);
     logger.debug("Added transfer for unnest expression.");
     unnest.close();
@@ -366,7 +367,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
 
   @Override
   protected boolean setupNewSchema() throws SchemaChangeException {
-    Preconditions.checkNotNull(lateral);
+    Objects.requireNonNull(lateral);
     container.clear();
     recordCount = 0;
     final MaterializedField rowIdField = MaterializedField.create(rowIdColumnName, Types.required(TypeProtos
@@ -375,7 +376,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     container.add(rowIdVector);
     unnest = new UnnestImpl();
     unnest.setRowIdVector(rowIdVector);
-    final TransferPair tp = resetUnnestTransferPair();
+    TransferPair tp = resetUnnestTransferPair();
     container.add(TypeHelper.getNewVector(tp.getTo().getField(), oContext.getAllocator()));
     container.buildSchema(SelectionVectorMode.NONE);
     return true;
@@ -390,9 +391,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
    */
   private boolean schemaChanged() throws SchemaChangeException {
     unnestTypedFieldId = checkAndGetUnnestFieldId();
-    final MaterializedField thisField = incoming.getSchema().getColumn(unnestTypedFieldId.getFieldIds()[0]);
-    final MaterializedField prevField = unnestFieldMetadata;
-    Preconditions.checkNotNull(thisField);
+    MaterializedField thisField = incoming.getSchema().getColumn(unnestTypedFieldId.getFieldIds()[0]);
+    MaterializedField prevField = unnestFieldMetadata;
+    Objects.requireNonNull(thisField);
 
     // isEquivalent may return false if the order of the fields has changed. This usually does not
     // happen but if it does we end up throwing a spurious schema change exeption

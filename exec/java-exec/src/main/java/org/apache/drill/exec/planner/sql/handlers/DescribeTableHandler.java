@@ -76,7 +76,7 @@ public class DescribeTableHandler extends DefaultSqlHandler {
 
       if (schema == null) {
         SchemaUtilites.throwSchemaNotFoundException(defaultSchema,
-            SchemaUtilites.SCHEMA_PATH_JOINER.join(schemaPathGivenInCmd));
+            SchemaUtilites.SCHEMA_PATH_JOINER.apply(schemaPathGivenInCmd));
       }
 
       if (SchemaUtilites.isRootSchema(schema)) {

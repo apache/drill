@@ -19,8 +19,7 @@ package org.apache.drill.exec.memory;
 
 import java.lang.reflect.Field;
 import java.util.Formatter;
-
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 import io.netty.buffer.AbstractByteBuf;
 import io.netty.buffer.DrillBuf;
@@ -61,7 +60,7 @@ public class BoundsChecking {
   }
 
   private static void checkIndex(DrillBuf buf, int index, int fieldLength) {
-    Preconditions.checkNotNull(buf);
+    Objects.requireNonNull(buf);
     if (checkAccessible && buf.refCnt() == 0) {
       Formatter formatter = new Formatter().format("%s, refCnt: 0", buf);
       if (BaseAllocator.DEBUG) {

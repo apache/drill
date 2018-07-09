@@ -32,13 +32,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -422,13 +420,11 @@ public class JdbcTestBase extends ExecTest {
       final String[] plan0 = {null};
       Connection connection = null;
       Statement statement = null;
-      final Hook.Closeable x = Hook.LOGICAL_PLAN.add(new Function<String, Void>() {
-        @Override
-        public Void apply(String o) {
-          plan0[0] = o;
-          return null;
-        }
-      });
+      final Hook.Closeable x = Hook.LOGICAL_PLAN.add(
+          (Function<String, Void>) planString -> {
+            plan0[0] = planString;
+            return null;
+          });
       try {
         connection = adapter.createConnection();
         statement = connection.prepareStatement(sql);
@@ -457,12 +453,10 @@ public class JdbcTestBase extends ExecTest {
     }
 
     public <T extends LogicalOperator> T planContains(final Class<T> operatorClazz) {
-      return (T) Iterables.find(logicalPlan().getSortedOperators(), new Predicate<LogicalOperator>() {
-        @Override
-        public boolean apply(LogicalOperator input) {
-          return input.getClass().equals(operatorClazz);
-        }
-      });
+      return (T) logicalPlan().getSortedOperators().stream()
+          .filter(input -> input.getClass().equals(operatorClazz))
+          .findFirst()
+          .get();
     }
   }
 

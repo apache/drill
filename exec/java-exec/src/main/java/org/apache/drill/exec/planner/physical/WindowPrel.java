@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.collect.Lists;
-
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
@@ -80,9 +78,9 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
     checkState(groups.size() == 1, "Only one window is expected in WindowPrel");
 
     Group window = groups.get(0);
-    List<NamedExpression> withins = Lists.newArrayList();
-    List<NamedExpression> aggs = Lists.newArrayList();
-    List<Order.Ordering> orderings = Lists.newArrayList();
+    List<NamedExpression> withins = new ArrayList<>();
+    List<NamedExpression> aggs = new ArrayList<>();
+    List<Order.Ordering> orderings = new ArrayList<>();
 
     for (int group : BitSets.toIter(window.keys)) {
       FieldReference fr = new FieldReference(childFields.get(group), ExpressionPosition.UNKNOWN);
@@ -115,7 +113,7 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
     DrillParseContext context = new DrillParseContext(PrelUtil.getSettings(getCluster()));
 
-    List<LogicalExpression> args = Lists.newArrayList();
+    List<LogicalExpression> args = new ArrayList<>();
     for (Integer i : call.getArgList()) {
       final int indexInConstants = i - fn.size();
       if (i < fn.size()) {

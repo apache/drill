@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.ischema;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_ROOT_SCHEMA_NAME;
@@ -26,7 +26,6 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
-
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FieldReference;
@@ -40,6 +39,7 @@ import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.FieldExprNode;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.FunctionExprNode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -100,8 +100,8 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
       }
 
       case "booleanand": {
-        List<ExprNode> args = Lists.newArrayList();
-        for(LogicalExpression arg : call.args) {
+        List<ExprNode> args = new ArrayList<>();
+        for (LogicalExpression arg : call.args) {
           ExprNode exprNode = arg.accept(this, value);
           if (exprNode != null && exprNode instanceof FunctionExprNode) {
             args.add(exprNode);
@@ -115,8 +115,8 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
       }
 
       case "booleanor": {
-        List<ExprNode> args = Lists.newArrayList();
-        for(LogicalExpression arg : call.args) {
+        List<ExprNode> args = new ArrayList<>();
+        for (LogicalExpression arg : call.args) {
           ExprNode exprNode = arg.accept(this, value);
           if (exprNode != null && exprNode instanceof FunctionExprNode) {
             args.add(exprNode);

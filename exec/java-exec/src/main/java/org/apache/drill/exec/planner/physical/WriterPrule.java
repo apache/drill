@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.physical;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -34,6 +33,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class WriterPrule extends Prule{
@@ -67,7 +67,7 @@ public class WriterPrule extends Prule{
   }
 
   private RelCollation getCollation(List<Integer> keys){
-    List<RelFieldCollation> fields = Lists.newArrayList();
+    List<RelFieldCollation> fields = new ArrayList<>();
     for (int key : keys) {
       fields.add(new RelFieldCollation(key));
     }
@@ -75,7 +75,7 @@ public class WriterPrule extends Prule{
   }
 
   private DrillDistributionTrait getDistribution(List<Integer> keys) {
-    List<DistributionField> fields = Lists.newArrayList();
+    List<DistributionField> fields = new ArrayList<>();
     for (int key : keys) {
       fields.add(new DistributionField(key));
     }

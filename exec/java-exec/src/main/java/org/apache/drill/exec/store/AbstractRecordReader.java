@@ -20,6 +20,7 @@ package org.apache.drill.exec.store;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.expression.PathSegment;
@@ -28,8 +29,6 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.ValueVector;
-
-import com.google.common.base.Preconditions;
 
 public abstract class AbstractRecordReader implements RecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractRecordReader.class);
@@ -57,7 +56,7 @@ public abstract class AbstractRecordReader implements RecordReader {
    *                  2) NULL : is NOT allowed. It requires the planner's rule, or GroupScan or ScanBatchCreator to handle NULL.
    */
   protected final void setColumns(Collection<SchemaPath> projected) {
-    Preconditions.checkNotNull(projected, Utilities.COL_NULL_ERROR);
+    Objects.requireNonNull(projected, Utilities.COL_NULL_ERROR);
     isSkipQuery = projected.isEmpty();
     Collection<SchemaPath> columnsToRead = projected;
 

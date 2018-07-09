@@ -19,13 +19,12 @@ package org.apache.drill.exec.vector;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Objects;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
-
-import com.google.common.base.Preconditions;
 
 import io.netty.buffer.DrillBuf;
 
@@ -45,8 +44,8 @@ public abstract class BaseValueVector implements ValueVector {
   protected final MaterializedField field;
 
   protected BaseValueVector(MaterializedField field, BufferAllocator allocator) {
-    this.field = Preconditions.checkNotNull(field, "field cannot be null");
-    this.allocator = Preconditions.checkNotNull(allocator, "allocator cannot be null");
+    this.field = Objects.requireNonNull(field, "field cannot be null");
+    this.allocator = Objects.requireNonNull(allocator, "allocator cannot be null");
   }
 
   @Override

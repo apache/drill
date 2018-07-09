@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.complex;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,8 +50,6 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.complex.impl.NullReader;
 import org.apache.drill.exec.vector.complex.impl.RepeatedMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-
-import com.google.common.collect.Maps;
 
 public class RepeatedMapVector extends AbstractMapVector
     implements RepeatedValueVector {
@@ -478,15 +477,15 @@ public class RepeatedMapVector extends AbstractMapVector
   public class RepeatedMapAccessor implements RepeatedAccessor {
     @Override
     public Object getObject(int index) {
-      final List<Object> list = new JsonStringArrayList<>();
-      final int end = offsets.getAccessor().get(index+1);
+      List<Object> list = new JsonStringArrayList<>();
+      int end = offsets.getAccessor().get(index+1);
       String fieldName;
       for (int i =  offsets.getAccessor().get(index); i < end; i++) {
-        final Map<String, Object> vv = Maps.newLinkedHashMap();
-        for (final MaterializedField field : getField().getChildren()) {
+        Map<String, Object> vv = new LinkedHashMap<>();
+        for (MaterializedField field : getField().getChildren()) {
           if (!field.equals(BaseRepeatedValueVector.OFFSETS_FIELD)) {
             fieldName = field.getName();
-            final Object value = getChild(fieldName).getAccessor().getObject(i);
+            Object value = getChild(fieldName).getAccessor().getObject(i);
             if (value != null) {
               vv.put(fieldName, value);
             }

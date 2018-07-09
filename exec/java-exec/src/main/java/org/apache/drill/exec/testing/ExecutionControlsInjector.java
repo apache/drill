@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.testing;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 
 /**
@@ -39,7 +39,7 @@ public class ExecutionControlsInjector implements ControlsInjector {
    *
    * @param clazz the owning class
    */
-  protected ExecutionControlsInjector(final Class<?> clazz) {
+  protected ExecutionControlsInjector(Class<?> clazz) {
     this.clazz = clazz;
   }
 
@@ -49,28 +49,28 @@ public class ExecutionControlsInjector implements ControlsInjector {
   }
 
   @Override
-  public void injectUnchecked(final ExecutionControls executionControls, final String desc) {
-    Preconditions.checkNotNull(executionControls);
-    final ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
+  public void injectUnchecked(ExecutionControls executionControls, String desc) {
+    Objects.requireNonNull(executionControls);
+    ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
     if (exceptionInjection != null) {
       exceptionInjection.throwUnchecked();
     }
   }
 
   @Override
-  public <T extends Throwable> void injectChecked(final ExecutionControls executionControls, final String desc,
-                                                  final Class<T> exceptionClass) throws T {
-    Preconditions.checkNotNull(executionControls);
-    final ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
+  public <T extends Throwable> void injectChecked(ExecutionControls executionControls, String desc,
+                                                  Class<T> exceptionClass) throws T {
+    Objects.requireNonNull(executionControls);
+    ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
     if (exceptionInjection != null) {
       exceptionInjection.throwChecked(exceptionClass);
     }
   }
 
   @Override
-  public void injectPause(final ExecutionControls executionControls, final String desc, final Logger logger) {
-    Preconditions.checkNotNull(executionControls);
-    final PauseInjection pauseInjection =
+  public void injectPause(ExecutionControls executionControls, String desc, Logger logger) {
+    Objects.requireNonNull(executionControls);
+    PauseInjection pauseInjection =
       executionControls.lookupPauseInjection(this, desc);
 
     if (pauseInjection != null) {
@@ -86,10 +86,10 @@ public class ExecutionControlsInjector implements ControlsInjector {
   }
 
   @Override
-  public void injectInterruptiblePause(final ExecutionControls executionControls, final String desc,
-      final Logger logger) throws InterruptedException {
-    Preconditions.checkNotNull(executionControls);
-    final PauseInjection pauseInjection = executionControls.lookupPauseInjection(this, desc);
+  public void injectInterruptiblePause(ExecutionControls executionControls, String desc,
+      Logger logger) throws InterruptedException {
+    Objects.requireNonNull(executionControls);
+    PauseInjection pauseInjection = executionControls.lookupPauseInjection(this, desc);
 
     if (pauseInjection != null) {
       logger.debug("Interruptible pausing at {}", desc);
@@ -104,8 +104,8 @@ public class ExecutionControlsInjector implements ControlsInjector {
   }
 
   @Override
-  public CountDownLatchInjection getLatch(final ExecutionControls executionControls, final String desc) {
-    Preconditions.checkNotNull(executionControls);
+  public CountDownLatchInjection getLatch(ExecutionControls executionControls, String desc) {
+    Objects.requireNonNull(executionControls);
     return executionControls.lookupCountDownLatchInjection(this, desc);
   }
 }

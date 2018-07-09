@@ -24,6 +24,7 @@ import java.net.URI;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.ops.OperatorStats;
@@ -62,7 +63,6 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.Progressable;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 
 /**
  * DrillFileSystem is the wrapper around the actual FileSystem implementation.
@@ -77,7 +77,7 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   public static final String UNDERSCORE_PREFIX = "_";
   public static final String DOT_PREFIX = ".";
 
-  private final ConcurrentMap<DrillFSDataInputStream, DebugStackTrace> openedFiles = Maps.newConcurrentMap();
+  private final ConcurrentMap<DrillFSDataInputStream, DebugStackTrace> openedFiles = new ConcurrentHashMap<>();
 
   private final FileSystem underlyingFs;
   private final OperatorStats operatorStats;

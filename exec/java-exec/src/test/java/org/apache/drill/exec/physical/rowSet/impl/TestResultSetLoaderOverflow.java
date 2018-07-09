@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.apache.drill.common.exceptions.UserException;
@@ -40,8 +41,6 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
-
-import com.google.common.base.Charsets;
 
 /**
  * Exercise the vector overflow functionality for the result set loader.
@@ -275,7 +274,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     rsLoader.startBatch();
     byte value[] = new byte[473];
     Arrays.fill(value, (byte) 'X');
-    String strValue = new String(value, Charsets.UTF_8);
+    String strValue = new String(value, StandardCharsets.UTF_8);
     int count = 0;
     int rowSize = 0;
     int totalSize = 0;
@@ -382,7 +381,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
     byte value[] = new byte[512];
     Arrays.fill(value, (byte) 'X');
-    String strValue = new String(value, Charsets.UTF_8);
+    String strValue = new String(value, StandardCharsets.UTF_8);
 
     int aCount = 3;
     int bCount = 11;

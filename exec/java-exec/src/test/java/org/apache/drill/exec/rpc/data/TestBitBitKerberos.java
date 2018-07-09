@@ -17,9 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
 import io.netty.buffer.ByteBuf;
@@ -71,7 +69,11 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -99,7 +101,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
 
     newConfig = new DrillConfig(
         config.withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("kerberos")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("kerberos")))
         .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
             ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
@@ -133,7 +135,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
   }
 
   private static WritableBatch getRandomBatch(BufferAllocator allocator, int records) {
-    List<ValueVector> vectors = Lists.newArrayList();
+    List<ValueVector> vectors = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       @SuppressWarnings("resource")
       Float8Vector v = (Float8Vector) TypeHelper.getNewVector(
@@ -188,7 +190,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
 
     newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("kerberos")))
+          ConfigValueFactory.fromIterable(Collections.singletonList("kerberos")))
         .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
           ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
@@ -242,7 +244,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
     final WorkEventBus workBus = mock(WorkEventBus.class);
     newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
       .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("kerberos")))
+        ConfigValueFactory.fromIterable(Collections.singletonList("kerberos")))
       .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
@@ -297,7 +299,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
 
     newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
       .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("kerberos")))
+        ConfigValueFactory.fromIterable(Collections.singletonList("kerberos")))
         .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
           ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
@@ -353,7 +355,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
     try{
       newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
+          ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
           .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
             ConfigValueFactory.fromAnyRef(true))
           .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
@@ -401,7 +403,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
         .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
             ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
+            ConfigValueFactory.fromIterable(Arrays.asList("plain", "kerberos")))
         .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
             ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
@@ -444,7 +446,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
           .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
               ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
           .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-              ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
+              ConfigValueFactory.fromIterable(Arrays.asList("plain", "kerberos")))
           .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
               ConfigValueFactory.fromAnyRef(true))
           .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
@@ -476,7 +478,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
 
     public MockFragmentManager(final FragmentContextImpl fragmentContext)
     {
-      this.fragmentContext = Preconditions.checkNotNull(fragmentContext);
+      this.fragmentContext = Objects.requireNonNull(fragmentContext);
     }
 
     @Override

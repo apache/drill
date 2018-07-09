@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.udf.dynamic;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -52,6 +51,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -826,7 +826,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     assertEquals("Remote registry version should match", 2, version.getVersion());
 
     List<Jar> actualJars = registry.getJarList();
-    List<String> expectedJars = Lists.newArrayList(jar1, jar2);
+    List<String> expectedJars = Arrays.asList(jar1, jar2);
 
     assertEquals("Only one jar should be registered", 2, actualJars.size());
     for (Jar jar : actualJars) {

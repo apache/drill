@@ -19,6 +19,7 @@ package org.apache.drill.exec.compile.sig;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -51,8 +52,6 @@ import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
-import com.google.common.collect.Lists;
-
 public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, IdentityHashMap<LogicalExpression, Object>, RuntimeException>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConstantExpressionIdentifier.class);
 
@@ -82,7 +81,7 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   }
 
   private boolean checkChildren(LogicalExpression e, IdentityHashMap<LogicalExpression, Object> value, boolean transmitsConstant){
-    List<LogicalExpression> constants = Lists.newLinkedList();
+    List<LogicalExpression> constants = new LinkedList<>();
     boolean constant = true;
 
     for(LogicalExpression child : e){

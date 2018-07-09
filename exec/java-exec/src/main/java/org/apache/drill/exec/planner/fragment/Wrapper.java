@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -31,7 +33,6 @@ import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 /**
  * A wrapping class that allows us to add additional information to each fragment node for planning purposes.
@@ -48,11 +49,11 @@ public class Wrapper {
   private long maxAllocation = 0;
 
   // List of fragments this particular fragment depends on for determining its parallelization and endpoint assignments.
-  private final List<Wrapper> fragmentDependencies = Lists.newArrayList();
+  private final List<Wrapper> fragmentDependencies = new ArrayList<>();
 
   // a list of assigned endpoints. Technically, there could repeated endpoints in this list if we'd like to assign the
   // same fragment multiple times to the same endpoint.
-  private final List<DrillbitEndpoint> endpoints = Lists.newLinkedList();
+  private final List<DrillbitEndpoint> endpoints = new LinkedList<>();
 
   public Wrapper(Fragment node, int majorFragmentId) {
     this.majorFragmentId = majorFragmentId;

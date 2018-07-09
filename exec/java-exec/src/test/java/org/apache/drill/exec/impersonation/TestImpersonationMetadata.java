@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Maps;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
@@ -36,6 +34,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.core.StringContains.containsString;
@@ -73,7 +72,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     fs.delete(tmpPath, true);
     FileSystem.mkdirs(fs, tmpPath, new FsPermission((short)0777));
 
-    Map<String, WorkspaceConfig> workspaces = Maps.newHashMap();
+    Map<String, WorkspaceConfig> workspaces = new HashMap<>();
 
     // Create /drillTestGrp0_700 directory with permissions 700 (owned by user running the tests)
     createAndAddWorkspace("drillTestGrp0_700", "/drillTestGrp0_700", (short)0700, processUser, group0, workspaces);
@@ -319,7 +318,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     try {
       updateClient(user);
 
-      test("USE " + Joiner.on(".").join(MINIDFS_STORAGE_PLUGIN_NAME, tableWS));
+      test("USE %s.%s", MINIDFS_STORAGE_PLUGIN_NAME, tableWS);
 
       test("CREATE TABLE " + tableName + " AS SELECT " +
           "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;");
@@ -353,7 +352,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     try {
       updateClient(user2);
 
-      test("USE " + Joiner.on(".").join(MINIDFS_STORAGE_PLUGIN_NAME, tableWS));
+      test("USE %s.%s", MINIDFS_STORAGE_PLUGIN_NAME, tableWS);
 
       test("CREATE TABLE " + tableName + " AS SELECT " +
           "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;");
@@ -372,7 +371,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     final String tableWS = "drillTestGrp1_700";
 
     updateClient(user1);
-    test("USE " + Joiner.on(".").join(MINIDFS_STORAGE_PLUGIN_NAME, tableWS));
+    test("USE %s.%s", MINIDFS_STORAGE_PLUGIN_NAME, tableWS);
 
     test("CREATE TABLE " + tableName + " partition by (n_regionkey) AS SELECT * " +
               "FROM cp.`tpch/nation.parquet`;");

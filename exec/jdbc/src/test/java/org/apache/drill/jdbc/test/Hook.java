@@ -19,8 +19,7 @@ package org.apache.drill.jdbc.test;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import com.google.common.base.Function;
+import java.util.function.Function;
 
 public enum Hook {
   /** Called with the logical plan. */
@@ -31,11 +30,7 @@ public enum Hook {
 
   public Closeable add(final Function handler) {
     handlers.add(handler);
-    return new Closeable() {
-      public void close() {
-        remove(handler);
-      }
-    };
+    return () -> remove(handler);
   }
 
   /** Removes a handler from this Hook. */

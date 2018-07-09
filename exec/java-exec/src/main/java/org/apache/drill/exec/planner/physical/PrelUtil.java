@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -36,6 +35,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -43,7 +43,7 @@ import java.util.List;
 public class PrelUtil {
 
   public static List<Ordering> getOrdering(RelCollation collation, RelDataType rowType) {
-    List<Ordering> orderExpr = Lists.newArrayList();
+    List<Ordering> orderExpr = new ArrayList<>();
 
     final List<String> childFields = rowType.getFieldNames();
 

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +30,6 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
-
-import com.google.common.collect.Lists;
 
 
 public class PhysicalPlanCreator {
@@ -45,7 +44,7 @@ public class PhysicalPlanCreator {
   public PhysicalPlanCreator(QueryContext context, Map<Prel, OpId> opIdMap) {
     this.context = context;
     this.opIdMap = opIdMap;
-    popList = Lists.newArrayList();
+    popList = new ArrayList<>();
   }
 
   public QueryContext getContext() {

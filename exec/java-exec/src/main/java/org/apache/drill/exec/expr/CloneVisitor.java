@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -48,6 +47,7 @@ import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,7 +56,7 @@ import java.util.List;
 public class CloneVisitor extends AbstractExprVisitor<LogicalExpression,Void,RuntimeException> {
   @Override
   public LogicalExpression visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
-    List<LogicalExpression> args = Lists.newArrayList();
+    List<LogicalExpression> args = new ArrayList<>();
     for (LogicalExpression arg : call.args) {
       args.add(arg.accept(this, null));
     }
@@ -67,7 +67,7 @@ public class CloneVisitor extends AbstractExprVisitor<LogicalExpression,Void,Run
   @Override
   public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression holder, Void value) throws RuntimeException {
     if (holder instanceof DrillFuncHolderExpr) {
-      List<LogicalExpression> args = Lists.newArrayList();
+      List<LogicalExpression> args = new ArrayList<>();
       for (LogicalExpression arg : holder.args) {
         args.add(arg.accept(this, null));
       }

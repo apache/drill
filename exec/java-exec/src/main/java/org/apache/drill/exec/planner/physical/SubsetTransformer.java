@@ -26,6 +26,7 @@ import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.volcano.RelSubset;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public abstract class SubsetTransformer<T extends RelNode, E extends Exception> {
@@ -55,7 +56,7 @@ public abstract class SubsetTransformer<T extends RelNode, E extends Exception> 
 
     boolean transform = false;
     Set<RelNode> transformedRels = Sets.newIdentityHashSet();
-    Set<RelTraitSet> traitSets = Sets.newHashSet();
+    Set<RelTraitSet> traitSets = new HashSet<>();
 
     //1, get all the target traitsets from candidateSet's rel list,
     for (RelNode rel : ((RelSubset)candidateSet).getRelList()) {

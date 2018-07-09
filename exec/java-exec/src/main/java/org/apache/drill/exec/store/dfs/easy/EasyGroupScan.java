@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -51,7 +53,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 
 @JsonTypeName("fs-scan")
 public class EasyGroupScan extends AbstractFileGroupScan {
@@ -97,8 +98,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       String selectionRoot
       ) throws IOException{
     super(userName);
-    this.selection = Preconditions.checkNotNull(selection);
-    this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
+    this.selection = Objects.requireNonNull(selection);
+    this.formatPlugin = Objects.requireNonNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
     initFromSelection(selection, formatPlugin);
@@ -200,7 +201,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   }
 
   private void createMappings(List<EndpointAffinity> affinities) {
-    List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    List<DrillbitEndpoint> endpoints = new ArrayList<>();
     for (EndpointAffinity e : affinities) {
       endpoints.add(e.getEndpoint());
     }
@@ -227,7 +228,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   }
 
   private List<FileWorkImpl> convert(List<CompleteFileWork> list) {
-    List<FileWorkImpl> newList = Lists.newArrayList();
+    List<FileWorkImpl> newList = new ArrayList<>();
     for (CompleteFileWork f : list) {
       newList.add(f.getAsFileWork());
     }

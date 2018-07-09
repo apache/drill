@@ -41,8 +41,7 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedExceptionAction;
 import java.util.EnumMap;
 import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Objects;
 
 /**
  * Handles SASL exchange, on the server-side.
@@ -132,11 +131,11 @@ public class ServerAuthenticationHandler<S extends ServerConnection<S>, T extend
 
     SaslResponseContext(SaslMessage saslResponse, S connection, ResponseSender sender,
                         RequestHandler<S> requestHandler, T saslResponseType) {
-      this.saslResponse = checkNotNull(saslResponse);
-      this.connection = checkNotNull(connection);
-      this.sender = checkNotNull(sender);
-      this.requestHandler = checkNotNull(requestHandler);
-      this.saslResponseType = checkNotNull(saslResponseType);
+      this.saslResponse = Objects.requireNonNull(saslResponse);
+      this.connection = Objects.requireNonNull(connection);
+      this.sender = Objects.requireNonNull(sender);
+      this.requestHandler = Objects.requireNonNull(requestHandler);
+      this.saslResponseType = Objects.requireNonNull(saslResponseType);
     }
   }
 

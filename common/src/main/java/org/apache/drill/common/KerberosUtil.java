@@ -19,8 +19,8 @@ package org.apache.drill.common;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 public final class KerberosUtil {
@@ -43,9 +43,9 @@ public final class KerberosUtil {
    * @return principal of format primary/instance@REALM
    */
   public static String getPrincipalFromParts(final String primary, final String instance, final String realm) {
-    return checkNotNull(primary) + "/" +
-        checkNotNull(instance) + "@" +
-        checkNotNull(realm);
+    return Objects.requireNonNull(primary) + "/" +
+        Objects.requireNonNull(instance) + "@" +
+        Objects.requireNonNull(realm);
   }
 
   /**
@@ -57,9 +57,9 @@ public final class KerberosUtil {
   public static String[] splitPrincipalIntoParts(final String principal) {
     final String[] components = principal.split("[/@]");
     checkState(components.length == 3);
-    checkNotNull(components[0]);
-    checkNotNull(components[1]);
-    checkNotNull(components[2]);
+    Objects.requireNonNull(components[0]);
+    Objects.requireNonNull(components[1]);
+    Objects.requireNonNull(components[2]);
     return components;
   }
 

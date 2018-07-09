@@ -18,7 +18,9 @@
 package org.apache.drill.exec.physical.impl.orderedpartitioner;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +74,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
@@ -144,7 +145,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // Clearly, this code is not used!
     this.mmap = cache.getMultiMap(MULTI_CACHE_CONFIG);
     this.tableMap = cache.getMap(SINGLE_CACHE_CONFIG);
-    Preconditions.checkNotNull(tableMap);
+    Objects.requireNonNull(tableMap);
 
     this.mapKey = String.format("%s_%d", context.getHandle().getQueryId(), context.getHandle().getMajorFragmentId());
     this.minorFragmentSampleCount = cache.getCounter(mapKey);
@@ -210,7 +211,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       // the expressions from the Orderings to populate each column. There is one column for each Ordering in
       // popConfig.orderings.
 
-      List<ValueVector> localAllocationVectors = Lists.newArrayList();
+      List<ValueVector> localAllocationVectors = new ArrayList<>();
       SampleCopier copier = getCopier(sv4, sortedSamples, containerToCache, popConfig.getOrderings(), localAllocationVectors);
       int allocationSize = 50;
       while (true) {
@@ -351,7 +352,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       }
       containerBuilder.build(allSamplesContainer);
 
-      List<Ordering> orderDefs = Lists.newArrayList();
+      List<Ordering> orderDefs = new ArrayList<>();
       int i = 0;
       for (Ordering od : popConfig.getOrderings()) {
         SchemaPath sp = SchemaPath.getSimplePath("f" + i++);
@@ -368,7 +369,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       // Copy every Nth record from the samples into a candidate partition table, where N = totalSampledRecords/partitions
       // Attempt to push this to the distributed map. Only the first candidate to get pushed will be used.
       SampleCopier copier = null;
-      List<ValueVector> localAllocationVectors = Lists.newArrayList();
+      List<ValueVector> localAllocationVectors = new ArrayList<>();
       copier = getCopier(newSv4, allSamplesContainer, candidatePartitionTable, orderDefs, localAllocationVectors);
       int allocationSize = 50;
       while (true) {
@@ -587,10 +588,10 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
    */
   protected void setupNewSchema(VectorAccessible batch) throws SchemaChangeException {
     container.clear();
-    final ErrorCollector collector = new ErrorCollectorImpl();
-    final List<TransferPair> transfers = Lists.newArrayList();
+    ErrorCollector collector = new ErrorCollectorImpl();
+    List<TransferPair> transfers = new ArrayList<>();
 
-    final ClassGenerator<OrderedPartitionProjector> cg = CodeGenerator.getRoot(
+    ClassGenerator<OrderedPartitionProjector> cg = CodeGenerator.getRoot(
         OrderedPartitionProjector.TEMPLATE_DEFINITION, context.getOptions());
     // Note: disabled for now. This may require some debugging:
     // no tests are available for this operator.
@@ -608,7 +609,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     int count = 0;
     for (Ordering od : popConfig.getOrderings()) {
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
+      LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
       if (collector.hasErrors()) {
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       }

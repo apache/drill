@@ -18,11 +18,12 @@
 package org.apache.drill.common.map;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A special type of {@link Map} with {@link String}s as keys, and the case of a key is ignored for operations involving
@@ -41,7 +42,7 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
    * @return key case-insensitive concurrent map
    */
   public static <VALUE> CaseInsensitiveMap<VALUE> newConcurrentMap() {
-    return new CaseInsensitiveMap<>(Maps.<String, VALUE>newConcurrentMap());
+    return new CaseInsensitiveMap<>(new ConcurrentHashMap<>());
   }
 
   /**
@@ -51,7 +52,7 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
    * @return key case-insensitive hash map
    */
   public static <VALUE> CaseInsensitiveMap<VALUE> newHashMap() {
-    return new CaseInsensitiveMap<>(Maps.<String, VALUE>newHashMap());
+    return new CaseInsensitiveMap<>(new HashMap<>());
   }
 
   /**
@@ -63,7 +64,7 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
    * @return key case-insensitive hash map
    */
   public static <VALUE> CaseInsensitiveMap<VALUE> newHashMapWithExpectedSize(final int expectedSize) {
-    return new CaseInsensitiveMap<>(Maps.<String, VALUE>newHashMapWithExpectedSize(expectedSize));
+    return new CaseInsensitiveMap<>(new HashMap<>(expectedSize));
   }
 
   /**

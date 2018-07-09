@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -34,7 +35,6 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestWriter extends BaseTestQuery {
@@ -48,7 +48,7 @@ public class TestWriter extends BaseTestQuery {
   public void simpleCsv() throws Exception {
     File testDir = dirTestWatcher.makeRootSubDir(Paths.get("csvtest"));
 
-    String plan = Files.toString(DrillFileUtils.getResourceAsFile("/writer/simple_csv_writer.json"), Charsets.UTF_8);
+    String plan = Files.toString(DrillFileUtils.getResourceAsFile("/writer/simple_csv_writer.json"), StandardCharsets.UTF_8);
     plan = plan
       .replace(ROOT_DIR_REPLACEMENT, dirTestWatcher.getRootDir().getAbsolutePath())
       .replace(TMP_DIR_REPLACEMENT, dirTestWatcher.getTmpDir().getAbsolutePath())

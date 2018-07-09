@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.drill.PlanTestBase;
@@ -40,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -818,7 +818,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   @Ignore // Statistics for DECIMAL is not available (see PARQUET-1322).
   @Test // DRILL-4139
   public void testDecimalPartitionPruning() throws Exception {
-    List<String> ctasQueries = Lists.newArrayList();
+    List<String> ctasQueries = new ArrayList<>();
     // decimal stores as fixed_len_byte_array
     ctasQueries.add("create table %s partition by (manager_id) as " +
       "select * from cp.`parquet/fixedlenDecimal.parquet`");

@@ -20,12 +20,12 @@ package org.apache.drill.exec.store;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Contains list of parameters that will be used to store path / files on file system. */
@@ -195,7 +195,7 @@ public class StorageStrategy {
    * @throws IOException in case of troubles accessing file system
    */
   private List<Path> getNonExistentLocations(FileSystem fs, Path path) throws IOException {
-    List<Path> locations = Lists.newArrayList();
+    List<Path> locations = new ArrayList<>();
     Path starting = path;
     while (starting != null && !fs.exists(starting)) {
       locations.add(starting);

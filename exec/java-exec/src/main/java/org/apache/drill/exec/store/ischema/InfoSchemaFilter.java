@@ -22,6 +22,7 @@ import static org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode.Type;
 
@@ -29,7 +30,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Joiner;
 
 @JsonTypeName("info-schema-filter")
 public class InfoSchemaFilter {
@@ -77,12 +77,9 @@ public class InfoSchemaFilter {
 
     @Override
     public String toString() {
-      StringBuilder builder = new StringBuilder();
-      builder.append(function);
-      builder.append("(");
-      builder.append(Joiner.on(",").join(args));
-      builder.append(")");
-      return builder.toString();
+      return function + args.stream()
+          .map(ExprNode::toString)
+          .collect(Collectors.joining(",", "(", ")"));
     }
   }
 

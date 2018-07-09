@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -52,6 +51,7 @@ import org.joda.time.DateTimeZone;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -320,7 +320,7 @@ public class ParquetReaderUtility {
    * @return set of the lists with column names
    */
   private static Set<List<String>> getBinaryColumnsNames(ParquetTableMetadataBase parquetTableMetadata) {
-    Set<List<String>> names = Sets.newHashSet();
+    Set<List<String>> names = new HashSet<>();
     if (parquetTableMetadata instanceof ParquetTableMetadata_v2) {
       for (ColumnTypeMetadata_v2 columnTypeMetadata :
         ((ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {

@@ -31,10 +31,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.base.AbstractJoinPop;
 import org.apache.drill.exec.work.filter.RuntimeFilterDef;
 
+
+import java.util.ArrayList;
 
 @JsonTypeName("hash-join")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -74,7 +75,7 @@ public class HashJoinPOP extends AbstractJoinPop {
 
   public HashJoinPOP flipIfRight() {
       if (joinType == JoinRelType.RIGHT) {
-            List<JoinCondition> flippedConditions = Lists.newArrayList();
+            List<JoinCondition> flippedConditions = new ArrayList<>();
             for (JoinCondition c : conditions) {
                 flippedConditions.add(c.flip());
             }

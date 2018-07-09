@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.logical.data;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,7 +26,6 @@ import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
 
 @JsonTypeName("transform")
 public class Transform extends SingleInputOperator {
@@ -49,7 +49,7 @@ public class Transform extends SingleInputOperator {
 
   @Override
   public Iterator<LogicalOperator> iterator() {
-    return Iterators.singletonIterator(getInput());
+    return Collections.singleton(getInput()).iterator();
   }
 
 }

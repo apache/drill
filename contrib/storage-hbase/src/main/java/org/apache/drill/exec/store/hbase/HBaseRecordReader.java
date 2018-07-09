@@ -21,9 +21,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -51,9 +54,7 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
 
 public class HBaseRecordReader extends AbstractRecordReader implements DrillHBaseConstants {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRecordReader.class);
@@ -86,7 +87,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   public HBaseRecordReader(Connection connection, HBaseSubScan.HBaseSubScanSpec subScanSpec, List<SchemaPath> projectedColumns) {
     this.connection = connection;
     hbaseTableName = TableName.valueOf(
-        Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName());
+        Objects.requireNonNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName());
     hbaseScan = new Scan(subScanSpec.getStartRow(), subScanSpec.getStopRow());
     hbaseScanColumnsOnly = new Scan();
     hbaseScan
@@ -109,8 +110,8 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
    */
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
-    Set<SchemaPath> transformed = Sets.newLinkedHashSet();
-    completeFamilies = Sets.newHashSet();
+    Set<SchemaPath> transformed = new LinkedHashSet<>();
+    completeFamilies = new HashSet<>();
 
     rowKeyOnly = true;
     if (!isStarQuery()) {

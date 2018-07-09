@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.store.hbase;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -80,7 +79,7 @@ public final class HBaseConnectionManager
   }
 
   public Connection getConnection(HBaseConnectionKey key) {
-    checkNotNull(key);
+    Objects.requireNonNull(key);
     try {
       Connection conn = connectionCache.get(key);
       if (!isValid(conn)) {
@@ -102,7 +101,7 @@ public final class HBaseConnectionManager
   }
 
   public void closeConnection(HBaseConnectionKey key) {
-    checkNotNull(key);
+    Objects.requireNonNull(key);
     connectionCache.invalidate(key);
   }
 

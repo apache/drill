@@ -17,26 +17,27 @@
  */
 package org.apache.drill.exec.coord.zk;
 
-import com.google.common.base.Preconditions;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.coord.store.TransientStoreFactory;
 
+import java.util.Objects;
+
 public class ZkTransientStoreFactory implements TransientStoreFactory {
 
   private final CuratorFramework curator;
 
-  public ZkTransientStoreFactory(final CuratorFramework curator) {
-    this.curator = Preconditions.checkNotNull(curator, "curator is required");
+  public ZkTransientStoreFactory(CuratorFramework curator) {
+    this.curator = Objects.requireNonNull(curator, "curator is required");
   }
 
   @Override
   public <V> ZkEphemeralStore<V> getOrCreateStore(TransientStoreConfig<V> config) {
-    final ZkEphemeralStore<V> store = new ZkEphemeralStore<>(config, curator);
+    ZkEphemeralStore<V> store = new ZkEphemeralStore<>(config, curator);
     try {
       store.start();
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throw new DrillRuntimeException("unable to start zookeeper transient store", e);
     }
     return store;

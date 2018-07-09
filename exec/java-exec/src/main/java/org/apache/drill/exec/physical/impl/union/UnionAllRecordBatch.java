@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.union;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -55,7 +54,9 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Stack;
@@ -65,8 +66,8 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
   private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private UnionAller unionall;
-  private final List<TransferPair> transfers = Lists.newArrayList();
-  private List<ValueVector> allocationVectors = Lists.newArrayList();
+  private final List<TransferPair> transfers = new ArrayList<>();
+  private List<ValueVector> allocationVectors = new ArrayList<>();
   private int recordCount = 0;
   private UnionInputIterator unionInputIterator;
 
@@ -282,7 +283,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
           builder.setMinorType(leftField.getType().getMinorType());
           builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
         } else {
-          List<TypeProtos.MinorType> types = Lists.newLinkedList();
+          List<TypeProtos.MinorType> types = new LinkedList<>();
           types.add(leftField.getType().getMinorType());
           types.add(rightField.getType().getMinorType());
           TypeProtos.MinorType outputMinorType = TypeCastRules.getLeastRestrictiveType(types);
@@ -295,7 +296,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
         }
 
         // The output data mode should be as flexible as the more flexible one from the two input tables
-        List<TypeProtos.DataMode> dataModes = Lists.newLinkedList();
+        List<TypeProtos.DataMode> dataModes = new LinkedList<>();
         dataModes.add(leftField.getType().getMode());
         dataModes.add(rightField.getType().getMode());
         builder.setMode(TypeCastRules.getLeastRestrictiveDataMode(dataModes));

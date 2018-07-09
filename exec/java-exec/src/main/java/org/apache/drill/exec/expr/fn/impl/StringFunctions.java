@@ -1401,8 +1401,8 @@ public class StringFunctions{
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer)), String.class);
       org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter list = writer.rootAsList();
       list.startList();
-      for(int i = 0; i < tokens.length; i++ ) {
-        final byte[] strBytes = ((String)tokens[i]).getBytes(com.google.common.base.Charsets.UTF_8);
+      for (Object token : tokens) {
+        final byte[] strBytes = ((String) token).getBytes(java.nio.charset.StandardCharsets.UTF_8);
         buffer = buffer.reallocIfNeeded(strBytes.length);
         buffer.setBytes(0, strBytes);
         list.varChar().writeVarChar(0, strBytes.length, buffer);
@@ -1719,7 +1719,7 @@ public class StringFunctions{
       for (int i = in.start; i < in.end; i++, index++) {
         bytea[index] = in.buffer.getByte(i);
       }
-      final byte[] outBytea = new String(bytea, inCharset).getBytes(com.google.common.base.Charsets.UTF_8);
+      final byte[] outBytea = new String(bytea, inCharset).getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer = buffer.reallocIfNeeded(outBytea.length);
       out.buffer.setBytes(0, outBytea);
       out.start = 0;

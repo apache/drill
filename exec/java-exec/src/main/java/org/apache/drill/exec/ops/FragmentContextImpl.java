@@ -18,10 +18,14 @@
 package org.apache.drill.exec.ops;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
@@ -61,10 +65,7 @@ import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
@@ -99,8 +100,9 @@ import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 public class FragmentContextImpl extends BaseFragmentContext implements ExecutorFragmentContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContextImpl.class);
 
-  private final Map<DrillbitEndpoint, AccountingDataTunnel> tunnels = Maps.newHashMap();
-  private final List<OperatorContextImpl> contexts = Lists.newLinkedList();
+  private final Map<DrillbitEndpoint, AccountingDataTunnel> tunnels = new HashMap<>();
+
+  private final List<OperatorContextImpl> contexts = new LinkedList<>();
 
   private final DrillbitContext context;
   private final UserClientConnection connection; // is null if this context is for non-root fragment
@@ -196,7 +198,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
           "frag:" + QueryIdHelper.getFragmentId(fragment.getHandle()),
           fragment.getMemInitial(),
           fragment.getMemMax());
-      Preconditions.checkNotNull(allocator, "Unable to acuqire allocator");
+      Objects.requireNonNull(allocator, "Unable to acuqire allocator");
     } catch (final OutOfMemoryException e) {
       throw UserException.memoryError(e)
         .addContext("Fragment", getHandle().getMajorFragmentId() + ":" + getHandle().getMinorFragmentId())
@@ -207,7 +209,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
 
     stats = new FragmentStats(allocator, fragment.getAssignment());
     bufferManager = new BufferManagerImpl(this.allocator);
-    constantValueHolderCache = Maps.newHashMap();
+    constantValueHolderCache = new HashMap<>();
   }
 
   /**
@@ -497,7 +499,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   @Override
   public ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
     if (!constantValueHolderCache.containsKey(value)) {
-      constantValueHolderCache.put(value, Maps.<MinorType, ValueHolder>newHashMap());
+      constantValueHolderCache.put(value, new HashMap<>());
     }
 
     Map<MinorType, ValueHolder> holdersByType = constantValueHolderCache.get(value);

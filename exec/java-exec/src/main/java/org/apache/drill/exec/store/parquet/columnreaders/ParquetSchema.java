@@ -41,8 +41,6 @@ import org.apache.parquet.hadoop.metadata.BlockMetaData;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 
-import com.google.common.collect.Lists;
-
 /**
  * Mapping from the schema of the Parquet file to that of the record reader
  * to the schema that Drill and the Parquet reader uses.
@@ -206,7 +204,7 @@ public final class ParquetSchema {
    */
 
   public void createNonExistentColumns(OutputMutator output, List<NullableIntVector> nullFilledVectors) throws SchemaChangeException {
-    List<SchemaPath> projectedColumns = Lists.newArrayList(selectedCols);
+    List<SchemaPath> projectedColumns = new ArrayList<>(selectedCols);
     for (int i = 0; i < columnsFound.length; i++) {
       SchemaPath col = projectedColumns.get(i);
       assert col != null;

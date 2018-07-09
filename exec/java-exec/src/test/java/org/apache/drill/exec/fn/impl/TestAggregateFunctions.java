@@ -18,8 +18,6 @@
 package org.apache.drill.exec.fn.impl;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.Types;
@@ -541,11 +539,11 @@ public class TestAggregateFunctions extends BaseTestQuery {
     final QueryDataBatch result = testSqlWithResults("select * from cp.`parquet/alltypes_required.parquet` limit 0")
         .get(0);
 
-    final Map<String, StringBuilder> functions = Maps.newHashMap();
+    final Map<String, StringBuilder> functions = new HashMap<>();
     functions.put("min", new StringBuilder());
     functions.put("max", new StringBuilder());
 
-    final Map<String, Object> resultingValues = Maps.newHashMap();
+    final Map<String, Object> resultingValues = new HashMap<>();
     for (UserBitShared.SerializedField field : result.getHeader().getDef().getFieldList()) {
       final String fieldName = field.getNamePart().getName();
       // Only COUNT aggregate function supported for Boolean type
@@ -566,7 +564,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
     result.release();
 
     final String query = "select %s from cp.`parquet/alltypes_required.parquet` where 1 = 0";
-    final List<Map<String, Object>> baselineRecords = Lists.newArrayList();
+    final List<Map<String, Object>> baselineRecords = new ArrayList<>();
     baselineRecords.add(resultingValues);
 
     for (StringBuilder selectBody : functions.values()) {
@@ -799,7 +797,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   @Test
   public void testCountStarRequired() throws Exception {
     final String query = "select count(*) as col from cp.`tpch/region.parquet`";
-    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.BIGINT)
         .setMode(TypeProtos.DataMode.REQUIRED)
@@ -859,7 +857,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   @Category(UnlikelyTest.class)
   public void testCountComplexObjects() throws Exception {
     final String query = "select count(t.%s) %s from cp.`complex/json/complex.json` t";
-    Map<String, String> objectsMap = Maps.newHashMap();
+    Map<String, String> objectsMap = new HashMap<>();
     objectsMap.put("COUNT_BIG_INT_REPEATED", "sia");
     objectsMap.put("COUNT_FLOAT_REPEATED", "sfa");
     objectsMap.put("COUNT_MAP_REPEATED", "soa");

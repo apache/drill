@@ -21,7 +21,6 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 
 /**
@@ -145,7 +144,7 @@ public final class Version implements Comparable<Version> {
 
   @Override
   public int compareTo(Version o) {
-    Preconditions.checkNotNull(o);
+    Objects.requireNonNull(o);
     return ComparisonChain.start()
         .compare(this.major, o.major)
         .compare(this.minor, o.minor)

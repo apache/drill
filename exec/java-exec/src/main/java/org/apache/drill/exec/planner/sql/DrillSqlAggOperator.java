@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -26,6 +25,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -62,7 +62,7 @@ public class DrillSqlAggOperator extends SqlAggFunction {
 
   public static class DrillSqlAggOperatorBuilder {
     private String name = null;
-    private final List<DrillFuncHolder> functions = Lists.newArrayList();
+    private final List<DrillFuncHolder> functions = new ArrayList<>();
     private int argCountMin = Integer.MAX_VALUE;
     private int argCountMax = Integer.MIN_VALUE;
 

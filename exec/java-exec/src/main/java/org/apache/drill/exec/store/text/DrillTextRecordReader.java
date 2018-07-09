@@ -18,13 +18,9 @@
 package org.apache.drill.exec.store.text;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.annotation.Nullable;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -49,19 +45,22 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class DrillTextRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordReader.class);
 
   private static final String COL_NAME = "columns";
 
+  private static final SchemaPath COLUMNS = SchemaPath.getSimplePath(COL_NAME);
+
   private org.apache.hadoop.mapred.RecordReader<LongWritable, Text> reader;
-  private final List<ValueVector> vectors = Lists.newArrayList();
+  private final List<ValueVector> vectors = new ArrayList<>();
+
   private byte delimiter;
   private FieldReference ref = new FieldReference(COL_NAME);
   private RepeatedVarCharVector vector;
-  private List<Integer> columnIds = Lists.newArrayList();
+  private List<Integer> columnIds = new ArrayList<>();
+
   private LongWritable key;
   private Text value;
   private int numCols = 0;
@@ -113,13 +112,9 @@ public class DrillTextRecordReader extends AbstractRecordReader {
 
   @Override
   public boolean isStarQuery() {
-    return super.isStarQuery() || Iterables.tryFind(getColumns(), new Predicate<SchemaPath>() {
-      private final SchemaPath COLUMNS = SchemaPath.getSimplePath("columns");
-      @Override
-      public boolean apply(@Nullable SchemaPath path) {
-        return path.equals(COLUMNS);
-      }
-    }).isPresent();
+    return super.isStarQuery()
+        || getColumns().stream()
+            .anyMatch(path -> path.equals(COLUMNS));
   }
 
   @Override

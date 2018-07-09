@@ -19,7 +19,6 @@ package org.apache.drill.exec.record;
 
 import static org.junit.Assert.fail;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -41,6 +40,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Category(VectorTest.class)
@@ -144,7 +144,7 @@ public class TestVectorContainer extends DrillTest {
     final MaterializedField colB = MaterializedField.create("colB", Types.required(TypeProtos.MinorType.VARCHAR));
     final MaterializedField colC = MaterializedField.create("colC", Types.repeated(TypeProtos.MinorType.FLOAT4));
     final MaterializedField colD = MaterializedField.create("colD", Types.repeated(TypeProtos.MinorType.VARCHAR));
-    final List<MaterializedField> cols = Lists.newArrayList(colA, colB, colC, colD);
+    final List<MaterializedField> cols = Arrays.asList(colA, colB, colC, colD);
     final BatchSchema batchSchema = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, cols);
 
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {

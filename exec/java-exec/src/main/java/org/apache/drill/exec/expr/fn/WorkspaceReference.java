@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import com.google.common.base.Preconditions;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
+
+import java.util.Objects;
 
 public class WorkspaceReference {
 
@@ -29,10 +30,8 @@ public class WorkspaceReference {
   private MajorType majorType;
 
   public WorkspaceReference(Class<?> type, String name, boolean inject) {
-    Preconditions.checkNotNull(type);
-    Preconditions.checkNotNull(name);
-    this.type = type;
-    this.name = name;
+    this.type = Objects.requireNonNull(type);
+    this.name = Objects.requireNonNull(name);
     this.inject = inject;
   }
 

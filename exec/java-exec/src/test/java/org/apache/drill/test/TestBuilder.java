@@ -50,7 +50,6 @@ import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.joda.time.DateTimeZone;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
 public class TestBuilder {
@@ -534,8 +533,7 @@ public class TestBuilder {
         aliasedExpectedColumns[i] = "cast(" + aliasedExpectedColumns[i] + " as " +
             Types.getNameOfMinorType(majorType.getMinorType()) + precision +  " ) " + baselineColumns[i];
       }
-      String query = "select " + Joiner.on(", ").join(aliasedExpectedColumns) + " from cp.`" + baselineFilePath + "`";
-      return query;
+      return String.format("select %s from cp.`%s`", String.join(", ", aliasedExpectedColumns), baselineFilePath);
     }
 
     @Override
@@ -599,7 +597,7 @@ public class TestBuilder {
 
     @Override
     String getValidationQuery() {
-      return "select " + Joiner.on(", ").join(baselineColumns) + " from cp.`" + baselineFilePath + "`";
+      return String.format("select %s from cp.`%s`", String.join(", ", baselineColumns), baselineFilePath);
     }
 
     @Override

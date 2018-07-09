@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,8 +38,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.Pair;
-
-import com.google.common.collect.Lists;
 
 /**
  *
@@ -86,7 +85,7 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
   }
 
   private RelNode rename(RelNode input, List<RelDataTypeField> inputFields, List<String> outputFieldNames) {
-    List<RexNode> exprs = Lists.newArrayList();
+    List<RexNode> exprs = new ArrayList<>();
 
     for (RelDataTypeField field : inputFields) {
       RexNode expr = input.getCluster().getRexBuilder().makeInputRef(field.getType(), field.getIndex());

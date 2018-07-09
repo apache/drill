@@ -114,7 +114,6 @@ import org.slf4j.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 
 public class DefaultSqlHandler extends AbstractSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSqlHandler.class);
@@ -639,7 +638,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   public static List<PhysicalOperator> getPops(PhysicalOperator root) {
-    List<PhysicalOperator> ops = Lists.newArrayList();
+    List<PhysicalOperator> ops = new ArrayList<>();
     PopCollector c = new PopCollector();
     root.accept(c, ops);
     return ops;
@@ -717,7 +716,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     RelDataType t = rel.getRowType();
 
     RexBuilder b = rel.getCluster().getRexBuilder();
-    List<RexNode> projections = Lists.newArrayList();
+    List<RexNode> projections = new ArrayList<>();
     int projectCount = t.getFieldList().size();
 
     for (int i =0; i < projectCount; i++) {

@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.physical.impl.agg;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
 import org.apache.drill.exec.util.JsonStringArrayList;
@@ -32,6 +31,7 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 
 @Category(OperatorTest.class)
@@ -43,7 +43,7 @@ public class TestAggWithAnyValue {
     @Test
     public void testStreamAggWithGroupBy() {
       StreamingAggregate aggConf = new StreamingAggregate(null, parseExprs("age.`max`", "age"), parseExprs("any_value(a)", "any_a"), 2.0f);
-      List<String> inputJsonBatches = Lists.newArrayList(
+      List<String> inputJsonBatches = Arrays.asList(
           "[{ \"age\": {\"min\":20, \"max\":60}, \"city\": \"San Bruno\", \"de\": \"987654321987654321987654321.10987654321\"," +
               " \"a\": [{\"b\":50, \"c\":30},{\"b\":70, \"c\":40}], \"m\": [{\"n\": [10, 11, 12]}], \"f\": [{\"g\": {\"h\": [{\"k\": 70}, {\"k\": 80}]}}]," +
               "\"p\": {\"q\": [21, 22, 23]}" + "}, " +

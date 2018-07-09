@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -46,8 +47,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableRangeMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
@@ -57,7 +56,7 @@ public class BlockMapBuilder {
   static final MetricRegistry metrics = DrillMetrics.getRegistry();
   static final String BLOCK_MAP_BUILDER_TIMER = MetricRegistry.name(BlockMapBuilder.class, "blockMapBuilderTimer");
 
-  private final Map<Path,ImmutableRangeMap<Long,BlockLocation>> blockMapMap = Maps.newConcurrentMap();
+  private final Map<Path,ImmutableRangeMap<Long,BlockLocation>> blockMapMap = new ConcurrentHashMap<>();
   private final FileSystem fs;
   private final ImmutableMap<String,DrillbitEndpoint> endPointMap;
   private final CompressionCodecFactory codecFactory;
@@ -79,8 +78,8 @@ public class BlockMapBuilder {
       readers.add(new BlockMapReader(status, blockify));
     }
     List<List<CompleteFileWork>> work = TimedCallable.run("Get block maps", logger, readers, 16);
-    List<CompleteFileWork> singleList = Lists.newArrayList();
-    for(List<CompleteFileWork> innerWorkList : work){
+    List<CompleteFileWork> singleList = new ArrayList<>();
+    for (List<CompleteFileWork> innerWorkList : work){
       singleList.addAll(innerWorkList);
     }
 
@@ -281,7 +280,7 @@ public class BlockMapBuilder {
    */
   private static ImmutableMap<String, DrillbitEndpoint> buildEndpointMap(Collection<DrillbitEndpoint> endpoints) {
     Stopwatch watch = Stopwatch.createStarted();
-    HashMap<String, DrillbitEndpoint> endpointMap = Maps.newHashMap();
+    HashMap<String, DrillbitEndpoint> endpointMap = new HashMap<>();
     for (DrillbitEndpoint d : endpoints) {
       String hostName = d.getAddress();
       endpointMap.put(hostName, d);

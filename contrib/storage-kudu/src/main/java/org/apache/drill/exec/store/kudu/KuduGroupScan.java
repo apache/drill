@@ -18,13 +18,13 @@
 package org.apache.drill.exec.store.kudu;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
@@ -62,7 +62,8 @@ public class KuduGroupScan extends AbstractGroupScan {
   private KuduScanSpec kuduScanSpec;
 
   private boolean filterPushedDown = false;
-  private List<KuduWork> kuduWorkList = Lists.newArrayList();
+  private List<KuduWork> kuduWorkList = new ArrayList<>();
+
   private ListMultimap<Integer,KuduWork> assignments;
   private List<EndpointAffinity> affinities;
 
@@ -88,7 +89,7 @@ public class KuduGroupScan extends AbstractGroupScan {
   private void init() {
     String tableName = kuduScanSpec.getTableName();
     Collection<DrillbitEndpoint> endpoints = kuduStoragePlugin.getContext().getBits();
-    Map<String,DrillbitEndpoint> endpointMap = Maps.newHashMap();
+    Map<String,DrillbitEndpoint> endpointMap = new HashMap<>();
     for (DrillbitEndpoint endpoint : endpoints) {
       endpointMap.put(endpoint.getAddress(), endpoint);
     }
@@ -195,7 +196,7 @@ public class KuduGroupScan extends AbstractGroupScan {
   public KuduSubScan getSpecificScan(int minorFragmentId) {
     List<KuduWork> workList = assignments.get(minorFragmentId);
 
-    List<KuduSubScanSpec> scanSpecList = Lists.newArrayList();
+    List<KuduSubScanSpec> scanSpecList = new ArrayList<>();
 
     for (KuduWork work : workList) {
       scanSpecList.add(new KuduSubScanSpec(getTableName(), work.getPartitionKeyStart(), work.getPartitionKeyEnd()));

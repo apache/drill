@@ -17,21 +17,21 @@
  */
 package org.apache.drill.common.expression;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.expression.visitors.ExpressionValidationError;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 
 public class ErrorCollectorImpl implements ErrorCollector {
     List<ExpressionValidationError> errors;
 
     public ErrorCollectorImpl() {
-        errors = Lists.newArrayList();
+        errors = new ArrayList<>();
     }
 
     private String addExpr(ExpressionPosition expr, String message) {
@@ -103,7 +103,9 @@ public class ErrorCollectorImpl implements ErrorCollector {
 
     @Override
     public String toErrorString() {
-        return "\n" + Joiner.on("\n").join(errors);
+        return errors.stream()
+            .map(ExpressionValidationError::toString)
+            .collect(Collectors.joining("\n", "\n", ""));
     }
 
     @Override

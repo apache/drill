@@ -25,7 +25,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Preconditions;
+
+import java.util.Objects;
 
 @JsonTypeName("values")
 public class Values extends SourceOperator {
@@ -36,7 +37,7 @@ public class Values extends SourceOperator {
     public Values(@JsonProperty("content") JSONOptions content){
         super();
         this.content = content;
-        Preconditions.checkNotNull(content, "content attribute is required for source operator 'constant'.");
+        Objects.requireNonNull(content, "content attribute is required for source operator 'constant'.");
     }
 
     public JSONOptions getContent() {

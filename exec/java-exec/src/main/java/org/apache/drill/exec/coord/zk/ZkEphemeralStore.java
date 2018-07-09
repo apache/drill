@@ -20,12 +20,10 @@ package org.apache.drill.exec.coord.zk;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
-
-import javax.annotation.Nullable;
+import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.drill.common.collections.ImmutableEntry;
@@ -42,7 +40,7 @@ public class ZkEphemeralStore<V> extends BaseTransientStore<V> {
   protected final PathChildrenCacheListener dispatcher = new EventDispatcher<>(this);
   private final ZookeeperClient client;
 
-  public ZkEphemeralStore(final TransientStoreConfig<V> config, final CuratorFramework curator) {
+  public ZkEphemeralStore(TransientStoreConfig<V> config, CuratorFramework curator) {
     super(config);
     this.client = new ZookeeperClient(curator, PathUtils.join("/", config.getName()), CreateMode.EPHEMERAL);
   }
@@ -57,52 +55,52 @@ public class ZkEphemeralStore<V> extends BaseTransientStore<V> {
   }
 
   @Override
-  public V get(final String key) {
-    final byte[] bytes = getClient().get(key);
+  public V get(String key) {
+    byte[] bytes = getClient().get(key);
     if (bytes == null) {
       return null;
     }
     try {
       return config.getSerializer().deserialize(bytes);
-    } catch (final IOException e) {
-      throw new DrillRuntimeException(String.format("unable to deserialize value at %s", key), e);
+    } catch (IOException e) {
+      throw new DrillRuntimeException(String.format("Unable to deserialize value at %s", key), e);
     }
   }
 
   @Override
-  public V put(final String key, final V value) {
-    final InstanceSerializer<V> serializer = config.getSerializer();
+  public V put(String key, V value) {
+    InstanceSerializer<V> serializer = config.getSerializer();
     try {
-      final byte[] old = getClient().get(key);
-      final byte[] bytes = serializer.serialize(value);
+      byte[] old = getClient().get(key);
+      byte[] bytes = serializer.serialize(value);
       getClient().put(key, bytes);
       if (old == null) {
         return null;
       }
       return serializer.deserialize(old);
-    } catch (final IOException e) {
-      throw new DrillRuntimeException(String.format("unable to de/serialize value of type %s", value.getClass()), e);
+    } catch (IOException e) {
+      throw new DrillRuntimeException(String.format("Unable to de/serialize value of type %s", value.getClass()), e);
     }
   }
 
   @Override
-  public V putIfAbsent(final String key, final V value) {
+  public V putIfAbsent(String key, V value) {
     try {
-      final InstanceSerializer<V> serializer = config.getSerializer();
-      final byte[] bytes = serializer.serialize(value);
-      final byte[] data = getClient().putIfAbsent(key, bytes);
+      InstanceSerializer<V> serializer = config.getSerializer();
+      byte[] bytes = serializer.serialize(value);
+      byte[] data = getClient().putIfAbsent(key, bytes);
       if (data == null) {
         return null;
       }
       return serializer.deserialize(data);
-    } catch (final IOException e) {
-      throw new DrillRuntimeException(String.format("unable to serialize value of type %s", value.getClass()), e);
+    } catch (IOException e) {
+      throw new DrillRuntimeException(String.format("Unable to serialize value of type %s", value.getClass()), e);
     }
   }
 
   @Override
-  public V remove(final String key) {
-    final V existing = get(key);
+  public V remove(String key) {
+    V existing = get(key);
     if (existing != null) {
       getClient().delete(key);
     }
@@ -111,18 +109,18 @@ public class ZkEphemeralStore<V> extends BaseTransientStore<V> {
 
   @Override
   public Iterator<Map.Entry<String, V>> entries() {
-    return Iterators.transform(getClient().entries(), new Function<Map.Entry<String, byte[]>, Map.Entry<String, V>>() {
-      @Nullable
-      @Override
-      public Map.Entry<String, V> apply(@Nullable Map.Entry<String, byte[]> input) {
-        try {
-          final V value = config.getSerializer().deserialize(input.getValue());
-          return new ImmutableEntry<>(input.getKey(), value);
-        } catch (final IOException e) {
-          throw new DrillRuntimeException(String.format("unable to deserialize value at key %s", input.getKey()), e);
-        }
+    Iterable<Map.Entry<String, byte[]>> iterable = () -> getClient().entries();
+    Function<Map.Entry<String, byte[]>, Map.Entry<String, V>> valueDeserializeFunction = entry -> {
+      try {
+        V value = config.getSerializer().deserialize(entry.getValue());
+        return new ImmutableEntry<>(entry.getKey(), value);
+      } catch (IOException e) {
+        throw new DrillRuntimeException(String.format("Unable to deserialize value at key %s", entry.getKey()), e);
       }
-    });
+    };
+    return StreamSupport.stream(iterable.spliterator(), false)
+        .map(valueDeserializeFunction)
+        .iterator();
   }
 
   @Override

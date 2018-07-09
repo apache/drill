@@ -40,8 +40,6 @@ import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
 /**
  * Verify that simple scalar (non-repeated) column readers
  * and writers work as expected. The focus is on the generated
@@ -229,7 +227,7 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertFalse(arrayReader.next());
 
     assertEquals("[0, 20, 30]", arrayReader.getAsString());
-    assertEquals(Lists.newArrayList(0, 20, 30), arrayReader.getObject());
+    assertEquals(Arrays.asList(0, 20, 30), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
@@ -435,7 +433,7 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertFalse(arrayReader.next());
 
     assertEquals("[0, 20, 30]", arrayReader.getAsString());
-    assertEquals(Lists.newArrayList(0L, 20L, 30L), arrayReader.getObject());
+    assertEquals(Arrays.asList(0L, 20L, 30L), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
@@ -556,7 +554,7 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertFalse(arrayReader.next());
 
     assertEquals("[0.0, 20.5, 30.0]", arrayReader.getAsString());
-    assertEquals(Lists.newArrayList(0.0D, 20.5D, 30D), arrayReader.getObject());
+    assertEquals(Arrays.asList(0.0D, 20.5D, 30D), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
@@ -720,7 +718,7 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertFalse(arrayReader.next());
 
     assertEquals("[\"fred\", \"\", \"wilma\"]", arrayReader.getAsString());
-    assertEquals(Lists.newArrayList("fred", "", "wilma"), arrayReader.getObject());
+    assertEquals(Arrays.asList("fred", "", "wilma"), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();

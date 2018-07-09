@@ -21,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Maps;
 
 public class PStoreTestUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PStoreTestUtil.class);
@@ -35,7 +35,7 @@ public class PStoreTestUtil {
     PersistentStore<String> store = provider.getOrCreateStore(PersistentStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
     String[] keys = {"first", "second"};
     String[] values = {"value1", "value2"};
-    Map<String, String> expectedMap = Maps.newHashMap();
+    Map<String, String> expectedMap = new HashMap<>();
 
     for(int i =0; i < keys.length; i++){
       expectedMap.put(keys[i], values[i]);

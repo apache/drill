@@ -17,7 +17,6 @@
  */
 package org.apache.drill.test.rowSet;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.MetadataRetrieval;
 import org.apache.drill.exec.physical.rowSet.model.single.BaseWriterBuilder;
@@ -35,6 +34,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSetWriterImpl.WriterIndexImpl;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -123,7 +123,7 @@ public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowS
 
   @Override
   public SingleRowSet toIndirect() {
-    return new IndirectRowSet(this, Sets.<Integer>newHashSet());
+    return new IndirectRowSet(this, new HashSet<>());
   }
 
   @Override

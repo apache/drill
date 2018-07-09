@@ -19,6 +19,7 @@ package org.apache.drill.exec.compile.bytecode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.objectweb.asm.Opcodes;
@@ -26,7 +27,6 @@ import org.objectweb.asm.Type;
 
 import com.carrotsearch.hppc.ObjectIntHashMap;
 import com.carrotsearch.hppc.cursors.ObjectIntCursor;
-import com.google.common.collect.Lists;
 
 class ValueHolderIden {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderIden.class);
@@ -42,7 +42,7 @@ class ValueHolderIden {
     Field[] fields = c.getFields();
 
     // Find the non-static member variables
-    List<Field> fldList = Lists.newArrayList();
+    List<Field> fldList = new ArrayList<>();
     for (Field f : fields) {
       if (!Modifier.isStatic(f.getModifiers())) {
         fldList.add(f);

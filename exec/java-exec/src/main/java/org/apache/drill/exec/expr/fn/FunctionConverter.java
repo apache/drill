@@ -19,8 +19,10 @@ package org.apache.drill.exec.expr.fn;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -38,9 +40,6 @@ import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 
 /**
  * Converts FunctionCalls to Java Expressions.
@@ -66,8 +65,8 @@ public class FunctionConverter {
     }
 
     // start by getting field information.
-    List<ValueReference> params = Lists.newArrayList();
-    List<WorkspaceReference> workspaceFields = Lists.newArrayList();
+    List<ValueReference> params = new ArrayList<>();
+    List<WorkspaceReference> workspaceFields = new ArrayList<>();
 
     ValueReference outputField = null;
 
@@ -139,13 +138,14 @@ public class FunctionConverter {
         // workspace work.
         boolean isInject = inject != null;
         if (isInject && UdfUtilities.INJECTABLE_GETTER_METHODS.get(fieldClass) == null) {
+          String classes = UdfUtilities.INJECTABLE_GETTER_METHODS.keySet().stream()
+              .map(Class::toString)
+              .collect(Collectors.joining(","));
           return failure(
               String.format(
                   "A %s cannot be injected into a %s,"
                   + " available injectable classes are: %s.",
-                  fieldClass, DrillFunc.class.getSimpleName(),
-                  Joiner.on(",").join(UdfUtilities.INJECTABLE_GETTER_METHODS.keySet())
-              ), func, field);
+                  fieldClass, DrillFunc.class.getSimpleName(), classes), func, field);
         }
         WorkspaceReference wsReference = new WorkspaceReference(fieldClass, field.getName(), isInject);
 

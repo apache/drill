@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -34,7 +35,6 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.fs.Path;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 public class ColumnExplorer {
@@ -56,8 +56,8 @@ public class ColumnExplorer {
     this.partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
     this.columns = columns;
     this.isStarQuery = columns != null && Utilities.isStarQuery(columns);
-    this.selectedPartitionColumns = Lists.newArrayList();
-    this.tableColumns = Lists.newArrayList();
+    this.selectedPartitionColumns = new ArrayList<>();
+    this.tableColumns = new ArrayList<>();
     this.allImplicitColumns = initImplicitFileColumns(optionManager);
     this.selectedImplicitColumns = CaseInsensitiveMap.newHashMap();
 
@@ -86,7 +86,7 @@ public class ColumnExplorer {
    * @return list with implicit column names.
    */
   public static List<String> getImplicitColumnsNames(SchemaConfig schemaConfig) {
-    List<String> implicitColumns = Lists.newArrayList();
+    List<String> implicitColumns = new ArrayList<>();
     for (ImplicitFileColumns e : ImplicitFileColumns.values()) {
       OptionValue optionValue;
       if ((optionValue = schemaConfig.getOption(e.name)) != null) {
@@ -146,7 +146,7 @@ public class ColumnExplorer {
     }
 
     String partitionColumnLabel = schemaConfig.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
-    List<String> partitions = Lists.newArrayList();
+    List<String> partitions = new ArrayList<>();
 
     // generates partition column names: dir0, dir1 etc.
     for (int i = 0; i < partitionsCount; i++) {

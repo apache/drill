@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.sql.SqlCall;
@@ -33,7 +34,6 @@ import org.apache.drill.exec.planner.sql.handlers.RefreshMetadataHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 /**
  * Sql parse tree node to represent statement:
@@ -61,7 +61,7 @@ public class SqlRefreshMetadata extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    List<SqlNode> ops = Lists.newArrayList();
+    List<SqlNode> ops = new ArrayList<>();
     ops.add(tblName);
     return ops;
   }

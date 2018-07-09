@@ -17,9 +17,12 @@
  */
 package org.apache.drill.exec.ops;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
@@ -50,10 +53,6 @@ import org.apache.drill.exec.store.SchemaTreeProvider;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.Utilities;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import io.netty.buffer.DrillBuf;
 
@@ -111,7 +110,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     bufferManager = new BufferManagerImpl(this.allocator);
     viewExpansionContext = new ViewExpansionContext(this);
     schemaTreeProvider = new SchemaTreeProvider(drillbitContext);
-    constantValueHolderCache = Maps.newHashMap();
+    constantValueHolderCache = new HashMap<>();
   }
 
   @Override
@@ -291,7 +290,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   @Override
   public ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
     if (!constantValueHolderCache.containsKey(value)) {
-      constantValueHolderCache.put(value, Maps.<MinorType, ValueHolder>newHashMap());
+      constantValueHolderCache.put(value, new HashMap<>());
     }
 
     Map<MinorType, ValueHolder> holdersByType = constantValueHolderCache.get(value);
@@ -307,7 +306,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   public void close() throws Exception {
     try {
       if (!closed) {
-        List<AutoCloseable> toClose = Lists.newArrayList();
+        List<AutoCloseable> toClose = new ArrayList<>();
 
         // TODO(DRILL-1942) the new allocator has this capability built-in, so we can remove bufferManager and
         // allocator from the toClose list.

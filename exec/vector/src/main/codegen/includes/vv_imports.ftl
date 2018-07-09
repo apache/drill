@@ -20,7 +20,6 @@
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ObjectArrays;
@@ -55,6 +54,7 @@ import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.List;

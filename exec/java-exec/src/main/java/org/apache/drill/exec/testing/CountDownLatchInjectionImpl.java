@@ -24,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 
+import java.util.Objects;
+
 /**
  * See {@link org.apache.drill.exec.testing.CountDownLatchInjection} Degenerates to
  * {@link org.apache.drill.exec.testing.PauseInjection#pause}, if initialized to zero count. In any case, this injection
@@ -59,7 +61,8 @@ public class CountDownLatchInjectionImpl extends Injection implements CountDownL
 
   @Override
   public void await() throws InterruptedException {
-    Preconditions.checkNotNull(latch, "Latch not initialized in %s at %s.", siteClass.getSimpleName(), desc);
+    Objects.requireNonNull(latch,
+        String.format("Latch not initialized in %s at %s.", siteClass.getSimpleName(), desc));
     try {
       latch.await();
     } catch (final InterruptedException e) {
@@ -70,13 +73,15 @@ public class CountDownLatchInjectionImpl extends Injection implements CountDownL
 
   @Override
   public void awaitUninterruptibly() {
-    Preconditions.checkNotNull(latch, "Latch not initialized in %s at %s.", siteClass.getSimpleName(), desc);
+    Objects.requireNonNull(latch,
+        String.format("Latch not initialized in %s at %s.", siteClass.getSimpleName(), desc));
     latch.awaitUninterruptibly();
   }
 
   @Override
   public void countDown() {
-    Preconditions.checkNotNull(latch, "Latch not initialized in %s at %s.", siteClass.getSimpleName(), desc);
+    Objects.requireNonNull(latch,
+        String.format("Latch not initialized in %s at %s.", siteClass.getSimpleName(), desc));
     Preconditions.checkArgument(latch.getCount() > 0, "Counting down on latch more than intended.");
     latch.countDown();
   }

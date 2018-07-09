@@ -22,9 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -592,8 +590,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   }
 
   private void setupHashTable() throws SchemaChangeException {
-    final List<Comparator> comparators = Lists.newArrayListWithExpectedSize(conditions.size());
-    conditions.forEach(cond->comparators.add(JoinUtils.checkAndReturnSupportedJoinComparator(cond)));
+    List<Comparator> comparators = conditions.stream()
+        .map(JoinUtils::checkAndReturnSupportedJoinComparator)
+        .collect(Collectors.toList());
 
     // Setup the hash table configuration object
     List<NamedExpression> leftExpr = new ArrayList<>(conditions.size());
@@ -608,13 +607,13 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       leftExpr = null;
     } else {
       if (probeBatch.getSchema().getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
-        final String errorMsg = new StringBuilder().append("Hash join does not support probe batch with selection vectors. ").append("Probe batch has selection mode = ").append
+        String errorMsg = new StringBuilder().append("Hash join does not support probe batch with selection vectors. ").append("Probe batch has selection mode = ").append
           (probeBatch.getSchema().getSelectionVectorMode()).toString();
         throw new SchemaChangeException(errorMsg);
       }
     }
 
-    final HashTableConfig htConfig = new HashTableConfig((int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
+    HashTableConfig htConfig = new HashTableConfig((int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
       true, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators);
 
     // Create the chained hash table
@@ -1076,7 +1075,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     conditions = popConfig.getConditions();
     this.popConfig = popConfig;
     rightExpr = new ArrayList<>(conditions.size());
-    buildJoinColumns = Sets.newHashSet();
+    buildJoinColumns = new HashSet<>();
     List<SchemaPath> rightConditionPaths = new ArrayList<>();
     for (int i = 0; i < conditions.size(); i++) {
       final SchemaPath rightPath = (SchemaPath) conditions.get(i).getRight();

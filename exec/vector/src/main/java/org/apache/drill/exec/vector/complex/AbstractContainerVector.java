@@ -18,8 +18,9 @@
 package org.apache.drill.exec.vector.complex;
 
 import java.util.Collection;
-
-import javax.annotation.Nullable;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -29,11 +30,6 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
-
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 /**
  * Base class for composite vectors.
@@ -48,7 +44,7 @@ public abstract class AbstractContainerVector implements ValueVector {
   protected final CallBack callBack;
 
   protected AbstractContainerVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
-    this.field = Preconditions.checkNotNull(field);
+    this.field = Objects.requireNonNull(field);
     this.allocator = allocator;
     this.callBack = callBack;
   }
@@ -84,13 +80,9 @@ public abstract class AbstractContainerVector implements ValueVector {
    * Returns a sequence of field names in the order that they show up in the schema.
    */
   protected Collection<String> getChildFieldNames() {
-    return Sets.newLinkedHashSet(Iterables.transform(field.getChildren(), new Function<MaterializedField, String>() {
-      @Nullable
-      @Override
-      public String apply(MaterializedField field) {
-        return Preconditions.checkNotNull(field).getName();
-      }
-    }));
+    return field.getChildren().stream()
+        .map(field -> Objects.requireNonNull(field).getName())
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   /**

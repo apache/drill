@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -41,6 +40,7 @@ import org.junit.experimental.categories.Category;
 import javax.security.auth.Subject;
 import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
+import java.util.Arrays;
 import java.util.Properties;
 
 import static junit.framework.TestCase.assertTrue;
@@ -70,7 +70,7 @@ public class TestUserBitKerberos extends BaseTestQuery {
       .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
         ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
       .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))));
+        ConfigValueFactory.fromIterable(Arrays.asList("plain", "kerberos"))));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");

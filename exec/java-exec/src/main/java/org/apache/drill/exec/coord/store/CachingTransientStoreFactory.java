@@ -17,46 +17,43 @@
  */
 package org.apache.drill.exec.coord.store;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.AutoCloseables;
 
 public class CachingTransientStoreFactory implements TransientStoreFactory {
   private final TransientStoreFactory delegate;
-  private final Map<TransientStoreConfig, TransientStore> cache = Maps.newHashMap();
+  private final Map<TransientStoreConfig, TransientStore> cache = new HashMap<>();
 
-  public CachingTransientStoreFactory(final TransientStoreFactory delegate) {
-    this.delegate = Preconditions.checkNotNull(delegate, "delegate factory is required");
+  public CachingTransientStoreFactory(TransientStoreFactory delegate) {
+    this.delegate = Objects.requireNonNull(delegate, "delegate factory is required");
   }
 
   @Override
-  public <V> TransientStore<V> getOrCreateStore(final TransientStoreConfig<V> config) {
-    final TransientStore<V> store = cache.get(Preconditions.checkNotNull(config, "config is required"));
+  public <V> TransientStore<V> getOrCreateStore(TransientStoreConfig<V> config) {
+    TransientStore<V> store = cache.get(Objects.requireNonNull(config, "config is required"));
     if (store != null) {
       return store;
     }
 
-    final TransientStore<V> newStore = delegate.getOrCreateStore(config);
+    TransientStore<V> newStore = delegate.getOrCreateStore(config);
     cache.put(config, newStore);
     return newStore;
   }
 
   @Override
   public void close() throws Exception {
-    final List<AutoCloseable> closeables = Lists.newArrayList();
-    for(final AutoCloseable store : cache.values()){
-      closeables.add(store);
-    }
+    List<AutoCloseable> closeables = new ArrayList<>(cache.values());
     closeables.add(delegate);
     cache.clear();
     AutoCloseables.close(closeables);
   }
 
-  public static TransientStoreFactory of(final TransientStoreFactory delegate) {
+  public static TransientStoreFactory of(TransientStoreFactory delegate) {
     return new CachingTransientStoreFactory(delegate);
   }
 }

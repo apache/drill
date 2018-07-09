@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.categories.SlowTest;
@@ -32,7 +33,6 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
@@ -84,7 +84,7 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
   @Test
   public void testMergingReceiver() throws Exception {
     String plan = Files.toString(DrillFileUtils.getResourceAsFile("/largefiles/merging_receiver_large_data.json"),
-        Charsets.UTF_8).replace("#{TEST_FILE}", escapeJsonString(dataFile.getPath()));
+      StandardCharsets.UTF_8).replace("#{TEST_FILE}", escapeJsonString(dataFile.getPath()));
     List<QueryDataBatch> results = testPhysicalWithResults(plan);
 
     int recordsInOutput = 0;

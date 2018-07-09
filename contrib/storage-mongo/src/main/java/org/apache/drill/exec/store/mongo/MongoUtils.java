@@ -18,12 +18,11 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.bson.Document;
 
 public class MongoUtils {
@@ -50,12 +49,12 @@ public class MongoUtils {
 
   public static Map<String, List<Document>> mergeFilters(
       Map<String, Object> minFilters, Map<String, Object> maxFilters) {
-    Map<String, List<Document>> filters = Maps.newHashMap();
+    Map<String, List<Document>> filters = new HashMap<>();
 
     for (Entry<String, Object> entry : minFilters.entrySet()) {
       List<Document> list = filters.get(entry.getKey());
       if (list == null) {
-        list = Lists.newArrayList();
+        list = new ArrayList<>();
         filters.put(entry.getKey(), list);
       }
       list.add(new Document(entry.getKey(), new Document("$gte",
@@ -65,7 +64,7 @@ public class MongoUtils {
     for (Entry<String, Object> entry : maxFilters.entrySet()) {
       List<Document> list = filters.get(entry.getKey());
       if (list == null) {
-        list = Lists.newArrayList();
+        list = new ArrayList<>();
         filters.put(entry.getKey(), list);
       }
       list.add(new Document(entry.getKey(), new Document("$lt", entry

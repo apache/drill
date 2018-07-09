@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.store.sys.store.provider;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.sys.PersistentStore;
@@ -31,7 +31,7 @@ import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 public class CachingPersistentStoreProvider extends BasePersistentStoreProvider {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CachingPersistentStoreProvider.class);
 
-  private final ConcurrentMap<PersistentStoreConfig<?>, PersistentStore<?>> storeCache = Maps.newConcurrentMap();
+  private final ConcurrentMap<PersistentStoreConfig<?>, PersistentStore<?>> storeCache = new ConcurrentHashMap<>();
   private final PersistentStoreProvider provider;
 
   public CachingPersistentStoreProvider(PersistentStoreProvider provider) {
@@ -65,10 +65,7 @@ public class CachingPersistentStoreProvider extends BasePersistentStoreProvider 
 
   @Override
   public void close() throws Exception {
-    final List<AutoCloseable> closeables = Lists.newArrayList();
-    for (final AutoCloseable store : storeCache.values()) {
-      closeables.add(store);
-    }
+    List<AutoCloseable> closeables = new ArrayList<>(storeCache.values());
     closeables.add(provider);
     storeCache.clear();
     AutoCloseables.close(closeables);

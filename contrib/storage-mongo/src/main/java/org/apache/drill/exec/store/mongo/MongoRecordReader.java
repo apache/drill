@@ -18,12 +18,16 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -43,10 +47,7 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
@@ -81,7 +82,7 @@ public class MongoRecordReader extends AbstractRecordReader {
 
     fields = new Document();
     // exclude _id field, if not mentioned by user.
-    fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
+    fields.put(DrillMongoConstants.ID, 0);
     setColumns(projectedColumns);
     fragmentContext = context;
     this.plugin = plugin;
@@ -100,12 +101,12 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> projectedColumns) {
-    Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    Set<SchemaPath> transformed = new LinkedHashSet<>();
     if (!isStarQuery()) {
       for (SchemaPath column : projectedColumns) {
         String fieldName = column.getRootSegment().getPath();
         transformed.add(column);
-        this.fields.put(fieldName, Integer.valueOf(1));
+        this.fields.put(fieldName, 1);
       }
     } else {
       // Tale all the fields including the _id
@@ -138,10 +139,9 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   private void init(MongoSubScan.MongoSubScanSpec subScanSpec) {
     List<String> hosts = subScanSpec.getHosts();
-    List<ServerAddress> addresses = Lists.newArrayList();
-    for (String host : hosts) {
-      addresses.add(new ServerAddress(host));
-    }
+    List<ServerAddress> addresses = hosts.stream()
+        .map(ServerAddress::new)
+        .collect(Collectors.toList());
     MongoClient client = plugin.getClient(addresses);
     MongoDatabase db = client.getDatabase(subScanSpec.getDbName());
     this.unionEnabled = fragmentContext.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
@@ -154,12 +154,12 @@ public class MongoRecordReader extends AbstractRecordReader {
     // Default is BsonReader and all text mode will not be honored in
     // BsonRecordReader
     if (isBsonRecordReader) {
-      this.bsonReader = new BsonRecordReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()),
+      this.bsonReader = new BsonRecordReader(fragmentContext.getManagedBuffer(), new ArrayList<>(getColumns()),
           readNumbersAsDouble);
       logger.debug("Initialized BsonRecordReader. ");
     } else {
       this.jsonReader = new JsonReader.Builder(fragmentContext.getManagedBuffer())
-          .schemaPathColumns(Lists.newArrayList(getColumns()))
+          .schemaPathColumns(new ArrayList<>(getColumns()))
           .allTextMode(enableAllTextMode)
           .readNumbersAsDouble(readNumbersAsDouble)
           .enableNanInf(enableNanInf)
@@ -190,7 +190,7 @@ public class MongoRecordReader extends AbstractRecordReader {
           bsonReader.write(writer, new BsonDocumentReader(bsonDocument));
         } else {
           String doc = cursor.next().toJson();
-          jsonReader.setSource(doc.getBytes(Charsets.UTF_8));
+          jsonReader.setSource(doc.getBytes(StandardCharsets.UTF_8));
           jsonReader.write(writer);
         }
         docCount++;

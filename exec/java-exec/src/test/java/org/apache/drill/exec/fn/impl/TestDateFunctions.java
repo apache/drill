@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import mockit.integration.junit4.JMockit;
 import org.apache.drill.categories.SqlFunctionTest;
@@ -38,6 +37,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -54,7 +55,7 @@ public class TestDateFunctions extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-        Files.toString(DrillFileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8)
+        Files.toString(DrillFileUtils.getResourceAsFile(physicalPlan), StandardCharsets.UTF_8)
           .replace("#{TEST_FILE}", resourceFile));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());

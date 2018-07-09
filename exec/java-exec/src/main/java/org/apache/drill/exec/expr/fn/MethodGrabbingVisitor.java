@@ -18,6 +18,7 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.janino.Java;
@@ -25,14 +26,13 @@ import org.codehaus.janino.Java.ClassDeclaration;
 import org.codehaus.janino.Java.MethodDeclarator;
 import org.codehaus.janino.util.Traverser;
 
-import com.google.common.collect.Maps;
-
 
 public class MethodGrabbingVisitor{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MethodGrabbingVisitor.class);
 
   private Class<?> c;
-  private Map<String, String> methods = Maps.newHashMap();
+  private Map<String, String> methods = new HashMap<>();
+
   private ClassFinder classFinder = new ClassFinder();
   private boolean captureMethods = false;
 

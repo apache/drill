@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.config;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
@@ -30,7 +31,6 @@ import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Lists;
 
 @JsonTypeName("OrderedPartitionSender")
 public class OrderedPartitionSender extends AbstractSender {
@@ -56,7 +56,7 @@ public class OrderedPartitionSender extends AbstractSender {
                                 @JsonProperty("completionFactor") float completionFactor) {
     super(oppositeMajorFragmentId, child, endpoints);
     if (orderings == null) {
-      this.orderings = Lists.newArrayList();
+      this.orderings = new ArrayList<>();
     } else {
       this.orderings = orderings;
     }

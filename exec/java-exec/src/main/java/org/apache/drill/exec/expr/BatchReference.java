@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 
 /**
  * Holder class that contains batch naming, batch  and record index. Batch index is used when batch is hyper container.
@@ -48,12 +48,9 @@ public final class BatchReference {
   }
 
   public BatchReference(String batchName, String batchIndex, String recordIndex) {
-    Preconditions.checkNotNull(batchName, "Batch name should not be null.");
-    Preconditions.checkNotNull(batchIndex, "Batch index should not be null.");
-    Preconditions.checkNotNull(recordIndex, "Record index should not be null.");
-    this.batchName = batchName;
-    this.batchIndex = batchIndex;
-    this.recordIndex = recordIndex;
+    this.batchName = Objects.requireNonNull(batchName, "Batch name should not be null.");
+    this.batchIndex = Objects.requireNonNull(batchIndex, "Batch index should not be null.");
+    this.recordIndex = Objects.requireNonNull(recordIndex, "Record index should not be null.");
   }
 
   public String getBatchName() {

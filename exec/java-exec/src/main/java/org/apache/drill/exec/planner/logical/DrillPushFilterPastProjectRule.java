@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptUtil;
@@ -65,8 +64,8 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
     // then we could not pushed down. Otherwise, it's qualified to be pushed down.
     final List<RexNode> predList = RelOptUtil.conjunctions(filterRel.getCondition());
 
-    final List<RexNode> qualifiedPredList = Lists.newArrayList();
-    final List<RexNode> unqualifiedPredList = Lists.newArrayList();
+    final List<RexNode> qualifiedPredList = new ArrayList<>();
+    final List<RexNode> unqualifiedPredList = new ArrayList<>();
 
 
     for (final RexNode pred : predList) {

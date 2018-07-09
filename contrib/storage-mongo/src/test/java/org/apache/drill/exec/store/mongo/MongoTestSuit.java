@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.bson.Document;
@@ -123,7 +122,7 @@ public class MongoTestSuit implements MongoTestConstants {
       // create mongos
       IMongosConfig mongosConfig = createIMongosConfig();
       mongosTestFactory = new MongosSystemForTestFactory(mongosConfig,
-          replicaSets, Lists.newArrayList(), EMPLOYEE_DB, EMPINFO_COLLECTION,
+          replicaSets, new ArrayList<>(), EMPLOYEE_DB, EMPINFO_COLLECTION,
           "employee_id");
       try {
         mongosTestFactory.start();

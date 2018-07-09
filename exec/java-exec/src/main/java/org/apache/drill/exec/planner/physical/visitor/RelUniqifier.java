@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.calcite.rel.RelNode;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class RelUniqifier extends BasePrelVisitor<Prel, Set<Prel>, RuntimeException>{
@@ -38,7 +38,7 @@ public class RelUniqifier extends BasePrelVisitor<Prel, Set<Prel>, RuntimeExcept
 
   @Override
   public Prel visitPrel(Prel prel, Set<Prel> data) throws RuntimeException {
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     boolean childrenChanged = false;
     for (Prel child : prel) {
       Prel newChild = visitPrel(child, data);

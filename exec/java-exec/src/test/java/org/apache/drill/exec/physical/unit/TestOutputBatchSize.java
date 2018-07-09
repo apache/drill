@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.unit;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.directory.api.util.Strings;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -97,7 +96,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
                          " \"d\": { \"trans_id\":\"t2\", \"amount\":1000, \"trans_time\":8888888, \"type\":\"groceries\"}");
       batchString.append(i != numRows - 1 ? "}," : "}]");
     }
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     inputJsonBatches.add(batchString.toString());
 
     StringBuilder expectedString = new StringBuilder("[");
@@ -106,7 +105,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       expectedString.append(i != numRows - 1 ? "}," : "}]");
     }
 
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     expectedJsonBatches.add(expectedString.toString());
 
     String[] baselineColumns = new String[1];
@@ -144,7 +143,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       batchString.append("{\"a\" : " + "\"" + strValue + "\"");
       batchString.append(i != numRows - 1 ? "}," : "}]");
     }
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     inputJsonBatches.add(batchString.toString());
 
     // inputSize, as calculated below will be numRows * (inputRowsize),
@@ -184,7 +183,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
         expectedString.append(i != numRows - 1 ? "}," : "}]");
       }
 
-      List<String> expectedJsonBatches = Lists.newArrayList();
+      List<String> expectedJsonBatches = new ArrayList<>();
       expectedJsonBatches.add(expectedString.toString());
 
       String[] baselineColumns = new String[1];
@@ -262,10 +261,10 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       batchString.append(jsonRow + ((i == numRows - 1) ? "" : ","));
     }
     batchString.append("]");
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     inputJsonBatches.add(batchString.toString());
 
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     expectedJsonBatches.add(batchString.toString());
 
     Project projectConf = new Project(parseExprs(expr), null);
@@ -334,10 +333,10 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       batchString.append(jsonRow + ((i == numRows - 1) ? "" : ","));
     }
     batchString.append("]");
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     inputJsonBatches.add(batchString.toString());
 
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     expectedJsonBatches.add(batchString.toString());
 
     Project projectConf = new Project(parseExprs(expr), null);
@@ -405,10 +404,10 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     batchString.append("]");
     expectedString.append("]");
 
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     inputJsonBatches.add(batchString.toString());
 
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     expectedJsonBatches.add(expectedString.toString());
 
     Project projectConf = new Project(parseExprs(expr), null);
@@ -440,7 +439,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create input rows like this.
     // "a" : 5, "b" : wideString, "c" : [6,7,8,9]
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
     batchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -459,7 +458,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a" : 5, "b" : wideString, "c" : 7
     // "a" : 5, "b" : wideString, "c" : 8
     // "a" : 5, "b" : wideString, "c" : 9
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -505,7 +504,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create input rows like this.
     // "a" : 5, "b" : wideString, "c" : ["parrot", "hummingbird", "owl", "woodpecker", "peacock"]
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
     batchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -525,7 +524,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a" : 5, "b" : wideString, "c" : owl
     // "a" : 5, "b" : wideString, "c" : woodpecker
     // "a" : 5, "b" : wideString, "c" : peacock
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -574,7 +573,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create input rows like this.
     // "a" : 5, "b" : wideString, "c" : [[1,2,3,4], [5,6,7,8]]
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
     batchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -592,7 +591,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // output rows will be like this.
     // "a" : 5, "b" : wideString, "c" : [1,2,3,4]
     // "a" : 5, "b" : wideString, "c" : [5,6,7,8]
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -630,7 +629,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   public void testFlattenVariableWidthList() throws Exception {
     PhysicalOperator flatten = new FlattenPOP(null, SchemaPath.getSimplePath("c"));
     mockOpContext(flatten, initReservation, maxAllocation);
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
 
     // create input rows like this.
@@ -653,7 +652,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // output rows will be like this.
     // "a" : 5, "b" : wideString, "c" : ["parrot", "hummingbird", "owl", "woodpecker"]
     // "a" : 5, "b" : wideString, "c" : ["hawk", "nightingale", "swallow", "peacock"]
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
 
     expectedBatchString.append("[");
@@ -709,7 +708,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // create input rows like this.
     // "a" : 5, "b" : wideString, "c" : [{"trans_id":"t1", amount:100, trans_time:7777777, type:sports}, {"trans_id":"t1", amount:100, trans_time:8888888, type:groceries}]
 
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
 
     batchString.append("[");
@@ -734,7 +733,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // output rows will be like this.
     // "a" : 5, "b" : wideString, "c" : {"trans_id":"t1", amount:100, trans_time:7777777, type:sports}
     // "a" : 5, "b" : wideString, "c" : {"trans_id":"t1", amount:100, trans_time:8888888, type:groceries}
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
 
     expectedBatchString.append("[");
@@ -798,7 +797,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     //         [{"trans_id":"t1", amount:100, trans_time:7777777, type:sports}, {"trans_id":"t1", amount:100, trans_time:8888888, type:groceries}],
     //         [{"trans_id":"t1", amount:100, trans_time:7777777, type:sports}, {"trans_id":"t1", amount:100, trans_time:8888888, type:groceries}] ]
 
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
 
     batchString.append("[");
@@ -831,7 +830,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // output rows will be like this.
     // "a" : 5, "b" : wideString, "c" : [{"trans_id":"t1", amount:100, trans_time:7777777, type:sports}, {"trans_id":"t1", amount:100, trans_time:8888888, type:groceries}]
     // "a" : 5, "b" : wideString, "c" : [{"trans_id":"t1", amount:100, trans_time:7777777, type:sports}, {"trans_id":"t1", amount:100, trans_time:8888888, type:groceries}]
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
 
     expectedBatchString.append("[");
@@ -912,7 +911,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "c" : [ {innerMap: {"trans_id":"t1", amount:100, trans_time:7777777, type:sports}, "trans_id":"t1", amount:100, trans_time:8888888, type:groceries},
     //         {innerMap: {"trans_id":"t1", amount:100, trans_time:7777777, type:sports}, "trans_id":"t1", amount:100, trans_time:8888888, type:groceries} ]
 
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
 
     StringBuilder innerMap = new StringBuilder();
@@ -939,7 +938,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // output rows will be like this.
     // "a" : 5, "b" : wideString, "c" : {innerMap: {"trans_id":"t1", amount:100, trans_time:7777777, type:sports}, "trans_id":"t1", amount:100, trans_time:8888888, type:groceries}
     // "a" : 5, "b" : wideString, "c" : {innerMap: {"trans_id":"t1", amount:100, trans_time:7777777, type:sports}, "trans_id":"t1", amount:100, trans_time:8888888, type:groceries}
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
 
     expectedBatchString.append("[");
@@ -1007,7 +1006,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // test the upper limit of 65535 records per batch.
     PhysicalOperator flatten = new FlattenPOP(null, SchemaPath.getSimplePath("c"));
     mockOpContext(flatten, initReservation, maxAllocation);
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
 
     StringBuilder flattenElement = new StringBuilder();
@@ -1035,7 +1034,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // Figure out what will be approximate total output size out of flatten for input above
     // We will use this sizing information to set output batch size so we can produce desired
     // number of batches that can be verified.
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
 
     expectedBatchString.append("[");
@@ -1087,7 +1086,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     PhysicalOperator flatten = new FlattenPOP(null, SchemaPath.getSimplePath("c"));
     mockOpContext(flatten, initReservation, maxAllocation);
 
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
     StringBuilder flattenElement = new StringBuilder();
 
@@ -1156,7 +1155,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   public void testFlattenEmptyList() throws Exception {
     final PhysicalOperator flatten = new FlattenPOP(null, SchemaPath.getSimplePath("b"));
 
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
 
     StringBuilder flattenElement = new StringBuilder();
@@ -1188,7 +1187,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create input rows like this.
     // "a" : <id1>, "b" : wideString, "c" : [ 10 wideStrings ]
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
     int arrayLength = 10;
     StringBuilder test = new StringBuilder();
@@ -1216,7 +1215,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // Figure out what will be approximate total output size out of flatten for input above
     // We will use this sizing information to set output batch size so we can produce desired
     // number of batches that can be verified.
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int k = 0; k < (numRows) * 11; k++) {
@@ -1252,12 +1251,12 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   @Test
   public void testMergeJoinMultipleOutputBatches() throws Exception {
     MergeJoinPOP mergeJoin = new MergeJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+      Collections.singletonList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
     mockOpContext(mergeJoin, initReservation, maxAllocation);
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1270,7 +1269,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1284,7 +1283,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
     // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
     // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1307,7 +1306,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(4)  // verify number of batches
       .expectedBatchSize(totalSize / 2) // verify batch size
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -1319,7 +1318,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   @Test
   public void testMergeJoinSingleOutputBatch() throws Exception {
     MergeJoinPOP mergeJoin = new MergeJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+      Collections.singletonList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
     mockOpContext(mergeJoin, initReservation, maxAllocation);
 
     // create multiple batches from both sides.
@@ -1327,7 +1326,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1340,7 +1339,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1354,7 +1353,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
     // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
     // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1377,7 +1376,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(1)  // verify number of batches
       .expectedBatchSize(totalSize) // verify batch size
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -1390,14 +1389,14 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   public void testMergeJoinUpperLimit() throws Exception {
     // test the upper limit of 65535 records per batch.
     MergeJoinPOP mergeJoin = new MergeJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.LEFT);
+      Arrays.asList(joinCond("c1", "EQUALS", "c2")), JoinRelType.LEFT);
     mockOpContext(mergeJoin, initReservation, maxAllocation);
 
     numRows = 100000;
 
     // create left input rows like this.
     // "a1" : 5,  "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1410,7 +1409,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1430,7 +1429,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .physicalOperator(mergeJoin)
       .baselineColumns("a1", "c1", "a2", "c2")
       .expectedNumBatches(2)  // verify number of batches
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, i, 6l, i);
@@ -1443,14 +1442,14 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   public void testMergeJoinLowerLimit() throws Exception {
     // test the lower limit of at least one batch
     MergeJoinPOP mergeJoin = new MergeJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.RIGHT);
+      Collections.singletonList(joinCond("c1", "EQUALS", "c2")), JoinRelType.RIGHT);
     mockOpContext(mergeJoin, initReservation, maxAllocation);
 
     numRows = 10;
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1463,7 +1462,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1485,7 +1484,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .physicalOperator(mergeJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(10)  // verify number of batches
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -1504,7 +1503,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1517,7 +1516,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1531,7 +1530,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1
     // "a1" : 5, "b1" : wideString, "c1" : 2
     // "a1" : 5, "b1" : wideString, "c1" : 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1554,7 +1553,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .baselineColumns("a1", "b1", "c1")
       .expectedNumBatches(2)  // verify number of batches
       .expectedBatchSize(totalSize) // verify batch size
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i);
@@ -1577,7 +1576,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1590,7 +1589,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1604,7 +1603,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1
     // "a1" : 5, "b1" : wideString, "c1" : 2
     // "a1" : 5, "b1" : wideString, "c1" : 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows*2; i++) {
@@ -1625,7 +1624,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .baselineColumns("a1", "b1", "c1")
       .expectedNumBatches(4)  // verify number of batches
       .expectedBatchSize(totalSize) // verify batch size
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i);
@@ -1648,7 +1647,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
 
     leftBatchString.append("[");
@@ -1662,7 +1661,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1676,7 +1675,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1
     // "a1" : 5, "b1" : wideString, "c1" : 2
     // "a1" : 5, "b1" : wideString, "c1" : 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows*2; i++) {
@@ -1697,7 +1696,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .baselineColumns("a1","b1", "c1")
       .expectedNumBatches(22)  // verify number of batches
       .expectedBatchSize(totalSize) // verify batch size
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i);
@@ -1713,13 +1712,13 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   @Test
   public void testHashJoinMultipleOutputBatches() throws Exception {
     HashJoinPOP hashJoin = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+      Collections.singletonList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
     mockOpContext(hashJoin, initReservation, maxAllocation);
 
     numRows = 4000 * 2;
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1732,7 +1731,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1746,7 +1745,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
     // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
     // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1769,7 +1768,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(4)  // verify number of batches
       .expectedBatchSize(totalSize / 2) // verify batch size
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows+1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -1781,7 +1780,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   @Test
   public void testHashJoinSingleOutputBatch() throws Exception {
     HashJoinPOP hashJoin = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+      Collections.singletonList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
     mockOpContext(hashJoin, initReservation, maxAllocation);
 
     // create multiple batches from both sides.
@@ -1789,7 +1788,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1802,7 +1801,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1816,7 +1815,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
     // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
     // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1839,7 +1838,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(1)  // verify number of batches
       .expectedBatchSize(totalSize) // verify batch size
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -1852,14 +1851,14 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   public void testHashJoinUpperLimit() throws Exception {
     // test the upper limit of 65535 records per batch.
     HashJoinPOP hashJoin = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+      Collections.singletonList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
     mockOpContext(hashJoin, initReservation, maxAllocation);
 
     numRows = 100000;
 
     // create left input rows like this.
     // "a1" : 5,  "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1872,7 +1871,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1892,7 +1891,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .physicalOperator(hashJoin)
       .baselineColumns("a1", "c1", "a2", "c2")
       .expectedNumBatches(2)  // verify number of batches
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, i, 6l, i);
@@ -1905,14 +1904,14 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   public void testHashJoinLowerLimit() throws Exception {
     // test the lower limit of at least one batch
     HashJoinPOP hashJoin = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
+      Collections.singletonList(joinCond("c1", "EQUALS", "c2")), JoinRelType.INNER);
     mockOpContext(hashJoin, initReservation, maxAllocation);
 
     numRows = 10;
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1925,7 +1924,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1947,7 +1946,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .physicalOperator(hashJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(10)  // verify number of batches
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -1960,13 +1959,13 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   public void testRightOuterHashJoin() throws Exception {
 
     HashJoinPOP hashJoin = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.RIGHT);
+      Collections.singletonList(joinCond("c1", "EQUALS", "c2")), JoinRelType.RIGHT);
     mockOpContext(hashJoin, initReservation, maxAllocation);
 
     numRows = 4000 * 2;
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1979,7 +1978,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -1993,7 +1992,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
     // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
     // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2016,7 +2015,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(4)  // verify number of batches
       .expectedBatchSize(totalSize / 2) // verify batch size
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -2029,13 +2028,13 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   public void testLeftOuterHashJoin() throws Exception {
 
     HashJoinPOP hashJoin = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("c1", "EQUALS", "c2")), JoinRelType.LEFT);
+      Collections.singletonList(joinCond("c1", "EQUALS", "c2")), JoinRelType.LEFT);
     mockOpContext(hashJoin, initReservation, maxAllocation);
 
     numRows = 4000 * 2;
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2048,7 +2047,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2062,7 +2061,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
     // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
     // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2085,7 +2084,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(4)  // verify number of batches
       .expectedBatchSize(totalSize / 2) // verify batch size
-      .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+      .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows+1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -2098,7 +2097,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
   @Test
   public void testSimpleHashAgg() {
     HashAggregate aggConf = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("sum(b)", "b_sum"), 1.0f);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
        "[{\"a\": 5, \"b\" : 1 }]",
          "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
 
@@ -2119,7 +2118,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a" : 1, "b" : 1
     // "a" : 1, "b" : 1
     // "a" : 1, "b" : 1
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
     batchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2140,7 +2139,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // output rows will be like this.
     // "a" : 1, "b" : 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
 
@@ -2180,7 +2179,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a" : 1, "b" : 1
     // "a" : 1, "b" : 1
     // "a" : 1, "b" : 1
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
     batchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2201,7 +2200,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // output rows will be like this.
     // "a" : 1, "b" : 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
 
@@ -2240,7 +2239,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a" : 1, "b" : "a"
     // "a" : 2, "b" : "aa"
     // "a" : 3, "b" : "aaa"
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
     batchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2261,7 +2260,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // output rows will be like this.
     // "a" : 1, "b" : "aaa"
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
 
@@ -2305,7 +2304,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     numRows = 4000 * 2;
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2318,7 +2317,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2332,7 +2331,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
     // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
     // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2355,7 +2354,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
             .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
             .expectedNumBatches(4)  // verify number of batches
             .expectedBatchSize(totalSize / 2) // verify batch size
-            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+            .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows+1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -2379,7 +2378,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2392,7 +2391,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2406,7 +2405,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
     // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
     // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2429,7 +2428,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
             .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
             .expectedNumBatches(1)  // verify number of batches
             .expectedBatchSize(totalSize) // verify batch size
-            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+            .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -2452,7 +2451,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create left input rows like this.
     // "a1" : 5,  "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2465,7 +2464,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2486,7 +2485,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
             .physicalOperator(nestedLoopJoin)
             .baselineColumns("a1", "c1", "a2", "c2")
             .expectedNumBatches(2)  // verify number of batches
-            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+            .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows+1; i++) {
       for (long j = i+1; j < numRows+1; j++) {
@@ -2511,7 +2510,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2524,7 +2523,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2546,7 +2545,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
             .physicalOperator(nestedLoopJoin)
             .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
             .expectedNumBatches(10)  // verify number of batches
-            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+            .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows + 1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -2567,7 +2566,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     numRows = 4000 * 2;
     // create left input rows like this.
     // "a1" : 5, "b1" : wideString, "c1" : <id>
-    List<String> leftJsonBatches = Lists.newArrayList();
+    List<String> leftJsonBatches = new ArrayList<>();
     StringBuilder leftBatchString = new StringBuilder();
     leftBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2580,7 +2579,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // create right input rows like this.
     // "a2" : 6, "b2" : wideString, "c2" : <id>
-    List<String> rightJsonBatches = Lists.newArrayList();
+    List<String> rightJsonBatches = new ArrayList<>();
     StringBuilder rightBatchString = new StringBuilder();
     rightBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2594,7 +2593,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5, "b1" : wideString, "c1" : 1, "a2":6, "b2" : wideString, "c2": 1
     // "a1" : 5, "b1" : wideString, "c1" : 2, "a2":6, "b2" : wideString, "c2": 2
     // "a1" : 5, "b1" : wideString, "c1" : 3, "a2":6, "b2" : wideString, "c2": 3
-    List<String> expectedJsonBatches = Lists.newArrayList();
+    List<String> expectedJsonBatches = new ArrayList<>();
     StringBuilder expectedBatchString = new StringBuilder();
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
@@ -2617,7 +2616,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
             .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
             .expectedNumBatches(4)  // verify number of batches
             .expectedBatchSize(totalSize / 2) // verify batch size
-            .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches));
+            .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches));
 
     for (long i = 0; i < numRows+1; i++) {
       opTestBuilder.baselineValues(5l, wideString, i, 6l, wideString, i);
@@ -2629,7 +2628,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
   @Test
   public void testSizerRepeatedList() throws Exception {
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
 
     StringBuilder newString = new StringBuilder();
@@ -2772,7 +2771,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
   @Test
   public void testSizerRepeatedRepeatedList() throws Exception {
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
 
     StringBuilder newString = new StringBuilder();

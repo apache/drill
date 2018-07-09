@@ -19,10 +19,11 @@ package org.apache.drill.exec.server.rest;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -49,7 +50,6 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
 
 import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
 
@@ -63,27 +63,17 @@ public class StorageResources {
   @Inject ObjectMapper mapper;
   @Inject SecurityContext sc;
 
-  private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR = new Comparator<PluginConfigWrapper>() {
-    @Override
-    public int compare(PluginConfigWrapper o1, PluginConfigWrapper o2) {
-      return o1.getName().compareTo(o2.getName());
-    }
-  };
+  private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR = Comparator.comparing(PluginConfigWrapper::getName);
 
   @GET
   @Path("/storage.json")
   @Produces(MediaType.APPLICATION_JSON)
   public List<PluginConfigWrapper> getStoragePluginsJSON() {
-
-    List<PluginConfigWrapper> list = Lists.newArrayList();
-    for (Map.Entry<String, StoragePluginConfig> entry : Lists.newArrayList(storage.getStore().getAll())) {
-      PluginConfigWrapper plugin = new PluginConfigWrapper(entry.getKey(), entry.getValue());
-      list.add(plugin);
-    }
-
-    Collections.sort(list, PLUGIN_COMPARATOR);
-
-    return list;
+    Iterable<Map.Entry<String, StoragePluginConfig>> stores = () -> storage.getStore().getAll();
+    return StreamSupport.stream(stores.spliterator(), false)
+        .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
+        .sorted(PLUGIN_COMPARATOR)
+        .collect(Collectors.toList());
   }
 
   @GET

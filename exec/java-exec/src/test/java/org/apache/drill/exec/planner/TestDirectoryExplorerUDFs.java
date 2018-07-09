@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +41,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
@@ -99,7 +99,7 @@ public class TestDirectoryExplorerUDFs extends PlanTestBase {
     String query = "select * from dfs.`%s/*/*.csv` where dir0 = %s('dfs.root','%s')";
     for (ConstantFoldingTestConfig config : tests) {
       // make all of the other folders unexpected patterns, except for the one expected in this case
-      List<String> excludedPatterns = Lists.newArrayList();
+      List<String> excludedPatterns = new ArrayList<>();
       excludedPatterns.addAll(allFiles);
       excludedPatterns.remove(config.expectedFolderName);
       // The list is easier to construct programmatically, but the API below takes an array to make it easier

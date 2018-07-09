@@ -19,9 +19,11 @@ package org.apache.drill.exec.vector.complex;
 
 import io.netty.buffer.DrillBuf;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.drill.common.collections.MapWithOrdinal;
@@ -32,9 +34,6 @@ import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 /**
  * Base class for MapVectors. Currently used by RepeatedMapVector and MapVector
@@ -52,15 +51,15 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       if (child.getName().equals(BaseRepeatedValueVector.OFFSETS_FIELD.getName())) {
         continue;
       }
-      final String fieldName = child.getName();
-      final ValueVector v = BasicTypeHelper.getNewVector(child, allocator, callBack);
+      String fieldName = child.getName();
+      ValueVector v = BasicTypeHelper.getNewVector(child, allocator, callBack);
       putVector(fieldName, v);
     }
   }
 
   @Override
   public void close() {
-    for (final ValueVector valueVector : vectors.values()) {
+    for (ValueVector valueVector : vectors.values()) {
       valueVector.close();
     }
     vectors.clear();
@@ -76,7 +75,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
      */
     boolean success = false;
     try {
-      for (final ValueVector v : vectors.values()) {
+      for (ValueVector v : vectors.values()) {
         if (! v.allocateNewSafe()) {
           return false;
         }
@@ -121,7 +120,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   @SuppressWarnings("unchecked")
   @Override
   public <T extends ValueVector> T addOrGet(String name, TypeProtos.MajorType type, Class<T> clazz) {
-    final ValueVector existing = getChild(name);
+    ValueVector existing = getChild(name);
     boolean create = false;
     if (existing == null) {
       create = true;
@@ -135,14 +134,14 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       create = true;
     }
     if (create) {
-      final T vector = (T) BasicTypeHelper.getNewVector(name, allocator, type, callBack);
+      T vector = (T) BasicTypeHelper.getNewVector(name, allocator, type, callBack);
       putChild(name, vector);
       if (callBack != null) {
         callBack.doWork();
       }
       return vector;
     }
-    final String message = "Drill does not support schema change yet. Existing[%s] and desired[%s] vector types mismatch";
+    String message = "Drill does not support schema change yet. Existing[%s] and desired[%s] vector types mismatch";
     throw new IllegalStateException(String.format(message, existing.getClass().getSimpleName(), clazz.getSimpleName()));
   }
 
@@ -168,7 +167,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    */
   @Override
   public <T extends ValueVector> T getChild(String name, Class<T> clazz) {
-    final ValueVector v = vectors.get(name.toLowerCase());
+    ValueVector v = vectors.get(name.toLowerCase());
     if (v == null) {
       return null;
     }
@@ -191,9 +190,9 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    * @param vector  vector to be inserted
    */
   protected void putVector(String name, ValueVector vector) {
-    final ValueVector old = vectors.put(
-        Preconditions.checkNotNull(name, "field name cannot be null").toLowerCase(),
-        Preconditions.checkNotNull(vector, "vector cannot be null")
+    ValueVector old = vectors.put(
+        Objects.requireNonNull(name, "field name cannot be null").toLowerCase(),
+        Objects.requireNonNull(vector, "vector cannot be null")
     );
     if (old != null && old != vector) {
       logger.debug("Field [{}] mutated from [{}] to [{}]", name, old.getClass().getSimpleName(),
@@ -225,8 +224,8 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    * Returns a list of scalar child vectors recursing the entire vector hierarchy.
    */
   public List<ValueVector> getPrimitiveVectors() {
-    final List<ValueVector> primitiveVectors = Lists.newArrayList();
-    for (final ValueVector v : vectors.values()) {
+    List<ValueVector> primitiveVectors = new ArrayList<>();
+    for (ValueVector v : vectors.values()) {
       if (v instanceof AbstractMapVector) {
         AbstractMapVector mapVector = (AbstractMapVector) v;
         primitiveVectors.addAll(mapVector.getPrimitiveVectors());
@@ -242,20 +241,20 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    */
   @Override
   public VectorWithOrdinal getChildVectorWithOrdinal(String name) {
-    final int ordinal = vectors.getOrdinal(name.toLowerCase());
+    int ordinal = vectors.getOrdinal(name.toLowerCase());
     if (ordinal < 0) {
       return null;
     }
-    final ValueVector vector = vectors.getByOrdinal(ordinal);
+    ValueVector vector = vectors.getByOrdinal(ordinal);
     return new VectorWithOrdinal(vector, ordinal);
   }
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    final List<DrillBuf> buffers = Lists.newArrayList();
+    List<DrillBuf> buffers = new ArrayList<>();
 
-    for (final ValueVector vector : vectors.values()) {
-      for (final DrillBuf buf : vector.getBuffers(false)) {
+    for (ValueVector vector : vectors.values()) {
+      for (DrillBuf buf : vector.getBuffers(false)) {
         buffers.add(buf);
         if (clear) {
           buf.retain(1);
@@ -266,15 +265,15 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       }
     }
 
-    return buffers.toArray(new DrillBuf[buffers.size()]);
+    return buffers.toArray(new DrillBuf[0]);
   }
 
   @Override
   public int getBufferSize() {
     int actualBufSize = 0;
 
-    for (final ValueVector v : vectors.values()) {
-      for (final DrillBuf buf : v.getBuffers(false)) {
+    for (ValueVector v : vectors.values()) {
+      for (DrillBuf buf : v.getBuffers(false)) {
         actualBufSize += buf.writerIndex();
       }
     }
@@ -285,7 +284,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   public int getAllocatedSize() {
     int size = 0;
 
-    for (final ValueVector v : vectors.values()) {
+    for (ValueVector v : vectors.values()) {
       size += v.getAllocatedSize();
     }
     return size;
@@ -293,7 +292,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {
-    for (final ValueVector v : vectors.values()) {
+    for (ValueVector v : vectors.values()) {
       v.collectLedgers(ledgers);
     }
   }
@@ -306,7 +305,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
     int count = 0;
 
-    for (final ValueVector v : vectors.values()) {
+    for (ValueVector v : vectors.values()) {
       count += v.getPayloadByteCount(valueCount);
     }
     return count;

@@ -24,6 +24,7 @@ import static org.apache.drill.exec.store.kafka.MetaDataField.KAFKA_TIMESTAMP;
 import static org.apache.drill.exec.store.kafka.MetaDataField.KAFKA_TOPIC;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
@@ -37,7 +38,6 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -70,13 +70,13 @@ public class JsonMessageReader implements MessageReader {
   public void readMessage(ConsumerRecord<?, ?> record) {
     try {
       byte[] recordArray = (byte[]) record.value();
-      JsonObject jsonObj = (new JsonParser()).parse(new String(recordArray, Charsets.UTF_8)).getAsJsonObject();
+      JsonObject jsonObj = (new JsonParser()).parse(new String(recordArray, StandardCharsets.UTF_8)).getAsJsonObject();
       jsonObj.addProperty(KAFKA_TOPIC.getFieldName(), record.topic());
       jsonObj.addProperty(KAFKA_PARTITION_ID.getFieldName(), record.partition());
       jsonObj.addProperty(KAFKA_OFFSET.getFieldName(), record.offset());
       jsonObj.addProperty(KAFKA_TIMESTAMP.getFieldName(), record.timestamp());
       jsonObj.addProperty(KAFKA_MSG_KEY.getFieldName(), record.key() != null ? record.key().toString() : null);
-      jsonReader.setSource(jsonObj.toString().getBytes(Charsets.UTF_8));
+      jsonReader.setSource(jsonObj.toString().getBytes(StandardCharsets.UTF_8));
       jsonReader.write(writer);
     } catch (IOException e) {
       throw UserException.dataReadError(e).message(e.getMessage())

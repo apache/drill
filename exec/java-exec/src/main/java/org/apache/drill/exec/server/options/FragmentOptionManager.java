@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.server.options;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -33,7 +33,7 @@ public class FragmentOptionManager extends InMemoryOptionManager {
   }
 
   private static Map<String, OptionValue> getMapFromOptionList(final OptionList options) {
-    final Map<String, OptionValue> tmp = Maps.newHashMap();
+    final Map<String, OptionValue> tmp = new HashMap<>();
     for (final OptionValue value : options) {
       tmp.put(value.name, value);
     }

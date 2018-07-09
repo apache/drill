@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -75,8 +76,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-
-import com.google.common.collect.Lists;
 
 /**
  * PartitionerSenderRootExec test to cover mostly part that deals with multithreaded
@@ -213,7 +212,7 @@ public class TestPartitionSender extends PlanTestBase {
         drillbitContext.getBits(), rootFragment, USER_SESSION, queryContextInfo);
     qwu.applyPlan(planReader);
 
-    final List<MinorFragmentEndpoint> mfEndPoints = PhysicalOperatorUtil.getIndexOrderedEndpoints(Lists.newArrayList(drillbitContext.getBits()));
+    final List<MinorFragmentEndpoint> mfEndPoints = PhysicalOperatorUtil.getIndexOrderedEndpoints(new ArrayList<>(drillbitContext.getBits()));
 
     for(PlanFragment planFragment : qwu.getFragments()) {
       if (!planFragment.getFragmentJson().contains("hash-partition-sender")) {

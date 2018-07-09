@@ -17,11 +17,13 @@
  */
 package org.apache.drill.common.expression;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -29,9 +31,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class IfExpression extends LogicalExpressionBase {
   static final Logger logger = LoggerFactory.getLogger(IfExpression.class);
@@ -91,9 +90,9 @@ public class IfExpression extends LogicalExpressionBase {
       return this;
     }
 
-    public IfExpression build(){
-      Preconditions.checkNotNull(pos);
-      Preconditions.checkNotNull(conditions);
+    public IfExpression build() {
+      Objects.requireNonNull(pos);
+      Objects.requireNonNull(conditions);
       return new IfExpression(pos, conditions, elseExpression, outputType);
     }
 
@@ -108,13 +107,9 @@ public class IfExpression extends LogicalExpressionBase {
     MajorType elseType = elseExpression.getMajorType();
     MajorType ifType = ifCondition.expression.getMajorType();
     if (elseType.getMinorType() == MinorType.UNION) {
-      Set<MinorType> subtypes = Sets.newHashSet();
-      for (MinorType subtype : elseType.getSubTypeList()) {
-        subtypes.add(subtype);
-      }
-      for (MinorType subtype : ifType.getSubTypeList()) {
-        subtypes.add(subtype);
-      }
+      Set<MinorType> subtypes = new HashSet<>();
+      subtypes.addAll(elseType.getSubTypeList());
+      subtypes.addAll(ifType.getSubTypeList());
       MajorType.Builder builder = MajorType.newBuilder().setMinorType(MinorType.UNION).setMode(DataMode.OPTIONAL);
       for (MinorType subtype : subtypes) {
         builder.addSubType(subtype);
@@ -134,7 +129,7 @@ public class IfExpression extends LogicalExpressionBase {
 
   @Override
   public Iterator<LogicalExpression> iterator() {
-    List<LogicalExpression> children = Lists.newLinkedList();
+    List<LogicalExpression> children = new LinkedList<>();
 
     children.add(ifCondition.condition);
     children.add(ifCondition.expression);

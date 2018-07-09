@@ -25,6 +25,7 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
@@ -64,7 +65,6 @@ import org.apache.drill.exec.server.options.OptionSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.exec.util.JarUtil;
 import org.apache.hadoop.fs.FileSystem;
@@ -83,7 +83,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   private final Path localUdfDir;
   private boolean deleteTmpDir = false;
   private File tmpDir;
-  private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
+  private List<PluggableFunctionRegistry> pluggableFuncRegistries = new ArrayList<>();
   private OptionSet optionManager;
   private final boolean useDynamicUdfs;
 
@@ -351,7 +351,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
         if (isRegistrySyncNeeded(remoteFunctionRegistry.getRegistryVersion(), localRegistryVersion))  {
           DataChangeVersion remoteVersion = new DataChangeVersion();
           List<String> missingJars = getMissingJars(this.remoteFunctionRegistry, localFunctionRegistry, remoteVersion);
-          List<JarScan> jars = Lists.newArrayList();
+          List<JarScan> jars = new ArrayList<>();
           if (!missingJars.isEmpty()) {
             logger.info("Starting dynamic UDFs lazy-init process.\n" +
                 "The following jars are going to be downloaded and registered locally: " + missingJars);
@@ -459,7 +459,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
                                       DataChangeVersion version) {
     List<Jar> remoteJars = remoteFunctionRegistry.getRegistry(version).getJarList();
     List<String> localJars = localFunctionRegistry.getAllJarNames();
-    List<String> missingJars = Lists.newArrayList();
+    List<String> missingJars = new ArrayList<>();
     for (Jar jar : remoteJars) {
       if (!localJars.contains(jar.getName())) {
         missingJars.add(jar.getName());

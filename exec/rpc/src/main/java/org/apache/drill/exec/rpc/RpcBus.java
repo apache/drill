@@ -31,6 +31,7 @@ import java.io.Closeable;
 import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -113,7 +114,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       assert !Arrays.asList(dataBodies).contains(null);
       assert rpcConfig.checkSend(rpcType, protobufBody.getClass(), clazz);
 
-      Preconditions.checkNotNull(protobufBody);
+      Objects.requireNonNull(protobufBody);
       ChannelListenerWithCoordinationId futureListener = connection.createNewRpcListener(listener, clazz);
       OutboundRpcMessage m = new OutboundRpcMessage(RpcMode.REQUEST, rpcType, futureListener.getCoordinationId(), protobufBody, dataBodies);
       ChannelFuture channelFuture = connection.getChannel().writeAndFlush(m);
@@ -246,7 +247,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
     public InboundHandler(C connection) {
       super();
-      Preconditions.checkNotNull(connection);
+      Objects.requireNonNull(connection);
       this.connection = connection;
     }
 

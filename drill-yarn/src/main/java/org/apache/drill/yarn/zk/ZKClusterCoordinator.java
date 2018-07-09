@@ -18,7 +18,6 @@
 package org.apache.drill.yarn.zk;
 
 import static com.google.common.base.Throwables.propagate;
-import static com.google.common.collect.Collections2.transform;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -27,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,8 +55,6 @@ import org.apache.drill.exec.coord.zk.ZkEphemeralStore;
 import org.apache.drill.exec.coord.zk.ZkTransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
-
-import com.google.common.base.Function;
 
 /**
  * Manages cluster coordination utilizing zookeeper.
@@ -231,15 +229,10 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
   private synchronized void updateEndpoints() {
     try {
-      Collection<DrillbitEndpoint> newDrillbitSet = transform(
-          discovery.queryForInstances(serviceName),
-          new Function<ServiceInstance<DrillbitEndpoint>, DrillbitEndpoint>() {
-            @Override
-            public DrillbitEndpoint apply(
-                ServiceInstance<DrillbitEndpoint> input) {
-              return input.getPayload();
-            }
-          });
+      Collection<DrillbitEndpoint> newDrillbitSet =
+          discovery.queryForInstances(serviceName).stream()
+              .map(ServiceInstance::getPayload)
+              .collect(Collectors.toSet());
 
       // set of newly dead bits : original bits - new set of active bits.
       Set<DrillbitEndpoint> unregisteredBits = new HashSet<>(endpoints);

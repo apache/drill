@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.fn.interp;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import mockit.integration.junit4.JMockit;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.SqlTest;
@@ -29,6 +27,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.List;
 
 @RunWith(JMockit.class)
@@ -38,7 +37,7 @@ public class TestConstantFolding extends PlanTestBase {
   public static class SmallFileCreator {
 
     private final File folder;
-    private static final List<String> values = Lists.newArrayList("1","2","3");
+    private static final List<String> values = Arrays.asList("1", "2", "3");
     private static final String jsonRecord =  "{\"col1\" : 1,\"col2\" : 2, \"col3\" : 3}";
     private String record;
 
@@ -54,14 +53,18 @@ public class TestConstantFolding extends PlanTestBase {
 
     public void createFiles(int smallFileLines, int bigFileLines, String extension, String delimiter) throws Exception{
       if (record == null) {
-        if (extension.equals("csv") || extension.equals("tsv")) {
-          record = Joiner.on(delimiter).join(values);
-        } else if (extension.equals("json") ){
-          record = jsonRecord;
-        } else {
-          throw new UnsupportedOperationException(
+        switch (extension) {
+          case "csv":
+          case "tsv":
+            record = String.join(delimiter, values);
+            break;
+          case "json":
+            record = jsonRecord;
+            break;
+          default:
+            throw new UnsupportedOperationException(
               String.format("Extension %s not supported by %s",
-                  extension, SmallFileCreator.class.getSimpleName()));
+                extension, SmallFileCreator.class.getSimpleName()));
         }
       }
       PrintWriter out;

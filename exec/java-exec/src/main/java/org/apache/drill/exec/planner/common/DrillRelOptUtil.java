@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
@@ -93,7 +92,7 @@ public abstract class DrillRelOptUtil {
         }
 
         // Check if Drill implicit casting can resolve the incompatibility
-        List<TypeProtos.MinorType> types = Lists.newArrayListWithCapacity(2);
+        List<TypeProtos.MinorType> types = new ArrayList<>(2);
         types.add(Types.getMinorTypeFromName(type1.getSqlTypeName().getName()));
         types.add(Types.getMinorTypeFromName(type2.getSqlTypeName().getName()));
         return TypeCastRules.getLeastRestrictiveType(types) != null;

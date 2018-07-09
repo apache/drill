@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
@@ -55,7 +56,6 @@ import org.apache.drill.exec.store.pojo.PojoRecordReader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.util.FileSystemUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -266,16 +266,16 @@ public abstract class InfoSchemaRecordGenerator<S> {
    * @param  schema  the given schema
    */
   public void visitTables(String schemaPath, SchemaPlus schema) {
-    final AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
-    final List<String> tableNames = Lists.newArrayList(schema.getTableNames());
-    for(Pair<String, ? extends Table> tableNameToTable : drillSchema.getTablesByNames(tableNames)) {
-      final String tableName = tableNameToTable.getKey();
-      final Table table = tableNameToTable.getValue();
-      final TableType tableType = table.getJdbcTableType();
+    AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
+    List<String> tableNames = new ArrayList<>(schema.getTableNames());
+    for (Pair<String, ? extends Table> tableNameToTable : drillSchema.getTablesByNames(tableNames)) {
+      String tableName = tableNameToTable.getKey();
+      Table table = tableNameToTable.getValue();
+      TableType tableType = table.getJdbcTableType();
       // Visit the table, and if requested ...
-      if(shouldVisitTable(schemaPath, tableName, tableType) && visitTable(schemaPath, tableName, table)) {
+      if (shouldVisitTable(schemaPath, tableName, tableType) && visitTable(schemaPath, tableName, table)) {
         // ... do for each of the table's fields.
-        final RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl(DRILL_REL_DATATYPE_SYSTEM));
+        RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl(DRILL_REL_DATATYPE_SYSTEM));
         for (RelDataTypeField field: tableRow.getFieldList()) {
           if (shouldVisitColumn(schemaPath, tableName, field.getName())) {
             visitField(schemaPath, tableName, field);
@@ -305,7 +305,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
   }
 
   public static class Schemata extends InfoSchemaRecordGenerator<Records.Schema> {
-    List<Records.Schema> records = Lists.newArrayList();
+    List<Records.Schema> records = new ArrayList<>();
 
     public Schemata(OptionManager optionManager) {
       super(optionManager);
@@ -326,7 +326,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
   }
 
   public static class Tables extends InfoSchemaRecordGenerator<Records.Table> {
-    List<Records.Table> records = Lists.newArrayList();
+    List<Records.Table> records = new ArrayList<>();
 
     public Tables(OptionManager optionManager) {
       super(optionManager);
@@ -363,7 +363,8 @@ public abstract class InfoSchemaRecordGenerator<S> {
 
     @Override
     public boolean visitTable(String schemaName, String tableName, Table table) {
-      Preconditions.checkNotNull(table, "Error. Table %s.%s provided is null.", schemaName, tableName);
+      Objects.requireNonNull(table,
+          String.format("Error. Table %s.%s provided is null.", schemaName, tableName));
 
       // skip over unknown table types
       if (table.getJdbcTableType() != null) {
@@ -376,7 +377,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
   }
 
   public static class Views extends InfoSchemaRecordGenerator<Records.View> {
-    List<Records.View> records = Lists.newArrayList();
+    List<Records.View> records = new ArrayList<>();
 
     public Views(OptionManager optionManager) {
       super(optionManager);
@@ -398,7 +399,8 @@ public abstract class InfoSchemaRecordGenerator<S> {
   }
 
   public static class Columns extends InfoSchemaRecordGenerator<Records.Column> {
-    List<Records.Column> records = Lists.newArrayList();
+    List<Records.Column> records = new ArrayList<>();
+
     public Columns(OptionManager optionManager) {
       super(optionManager);
     }

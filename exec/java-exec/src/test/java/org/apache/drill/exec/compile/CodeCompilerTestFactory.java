@@ -17,17 +17,17 @@
  */
 package org.apache.drill.exec.compile;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 
+import java.util.Objects;
+
 public class CodeCompilerTestFactory {
   public static CodeCompiler getTestCompiler(DrillConfig c) throws Exception {
-    DrillConfig config = checkNotNull(c);
+    DrillConfig config = Objects.requireNonNull(c);
     LogicalPlanPersistence persistence = new LogicalPlanPersistence(config, ClassPathScanner.fromPrescan(config));
     LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(config);
     SystemOptionManager systemOptionManager = new SystemOptionManager(persistence, provider, config);

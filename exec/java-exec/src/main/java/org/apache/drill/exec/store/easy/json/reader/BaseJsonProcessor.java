@@ -21,6 +21,7 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 import org.apache.drill.exec.store.easy.json.JsonProcessor;
 
@@ -29,7 +30,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TreeTraversingParser;
-import com.google.common.base.Preconditions;
 
 import org.apache.drill.common.exceptions.UserException;
 
@@ -72,7 +72,7 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
 
   public BaseJsonProcessor(DrillBuf workBuf, boolean enableNanInf) {
     this.enableNanInf = enableNanInf;
-    workBuf = Preconditions.checkNotNull(workBuf);
+    this.workBuf = Objects.requireNonNull(workBuf);
   }
 
   @Override

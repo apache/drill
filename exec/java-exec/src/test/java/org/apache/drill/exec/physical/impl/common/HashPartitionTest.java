@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.common;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.FieldReference;
@@ -54,6 +53,8 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class HashPartitionTest {
@@ -258,7 +259,7 @@ public class HashPartitionTest {
         // Create build batch
         MaterializedField buildColA = MaterializedField.create("buildColA", Types.required(TypeProtos.MinorType.INT));
         MaterializedField buildColB = MaterializedField.create("buildColB", Types.required(TypeProtos.MinorType.VARCHAR));
-        List<MaterializedField> buildCols = Lists.newArrayList(buildColA, buildColB);
+        List<MaterializedField> buildCols = Arrays.asList(buildColA, buildColB);
         final BatchSchema buildSchema = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, buildCols);
         final RecordBatch buildBatch = testCase.createBuildBatch(buildSchema, allocator);
         testCase.createResultBuildBatch(buildSchema, allocator);
@@ -266,7 +267,7 @@ public class HashPartitionTest {
         // Create probe batch
         MaterializedField probeColA = MaterializedField.create("probeColA", Types.required(TypeProtos.MinorType.FLOAT4));
         MaterializedField probeColB = MaterializedField.create("probeColB", Types.required(TypeProtos.MinorType.VARCHAR));
-        List<MaterializedField> probeCols = Lists.newArrayList(probeColA, probeColB);
+        List<MaterializedField> probeCols = Arrays.asList(probeColA, probeColB);
         final BatchSchema probeSchema = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, probeCols);
         final RecordBatch probeBatch = testCase.createProbeBatch(probeSchema, allocator);
 
@@ -274,10 +275,10 @@ public class HashPartitionTest {
         final LogicalExpression probeColExpression = SchemaPath.getSimplePath(probeColB.getName());
 
         final JoinCondition condition = new JoinCondition(DrillJoinRel.EQUALITY_CONDITION, probeColExpression, buildColExpression);
-        final List<Comparator> comparators = Lists.newArrayList(JoinUtils.checkAndReturnSupportedJoinComparator(condition));
+        final List<Comparator> comparators = Collections.singletonList(JoinUtils.checkAndReturnSupportedJoinComparator(condition));
 
-        final List<NamedExpression> buildExpressions = Lists.newArrayList(new NamedExpression(buildColExpression, new FieldReference("build_side_0")));
-        final List<NamedExpression> probeExpressions = Lists.newArrayList(new NamedExpression(probeColExpression, new FieldReference("probe_side_0")));
+        final List<NamedExpression> buildExpressions = Collections.singletonList(new NamedExpression(buildColExpression, new FieldReference("build_side_0")));
+        final List<NamedExpression> probeExpressions = Collections.singletonList(new NamedExpression(probeColExpression, new FieldReference("probe_side_0")));
 
         final int hashTableSize = (int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE);
         final HashTableConfig htConfig = new HashTableConfig(hashTableSize, HashTable.DEFAULT_LOAD_FACTOR, buildExpressions, probeExpressions, comparators);

@@ -19,16 +19,16 @@ package org.apache.drill.exec.compile.sig;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SignatureHolder.class);
@@ -42,7 +42,7 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
   public static final CodeGeneratorMethod DRILL_INIT = new CodeGeneratorMethod(DRILL_INIT_METHOD, void.class);
 
   public static SignatureHolder getHolder(Class<?> signature) {
-    List<SignatureHolder> innerClasses = Lists.newArrayList();
+    List<SignatureHolder> innerClasses = new ArrayList<>();
     for (Class<?> inner : signature.getClasses()) {
 
       // Do not generate classes for nested enums.
@@ -62,9 +62,9 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
   private SignatureHolder(Class<?> signature, SignatureHolder[] childHolders) {
     this.childHolders = childHolders;
     this.signature = signature;
-    Map<String, Integer> newMap = Maps.newHashMap();
+    Map<String, Integer> newMap = new HashMap<>();
 
-    List<CodeGeneratorMethod> methodHolders = Lists.newArrayList();
+    List<CodeGeneratorMethod> methodHolders = new ArrayList<>();
     Method[] reflectMethods = signature.getDeclaredMethods();
 
     for (Method m : reflectMethods) {
@@ -109,7 +109,7 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
 
   @Override
   public Iterator<CodeGeneratorMethod> iterator() {
-    return Iterators.forArray(methods);
+    return Arrays.asList(methods).iterator();
   }
 
   public int size() {

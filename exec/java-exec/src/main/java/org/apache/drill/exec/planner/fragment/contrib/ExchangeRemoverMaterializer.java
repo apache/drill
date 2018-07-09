@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.fragment.contrib;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -30,8 +31,6 @@ import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.fragment.Materializer;
 import org.apache.drill.exec.planner.fragment.Materializer.IndexedFragmentNode;
-
-import com.google.common.collect.Lists;
 
 /**
  * Materializer visitor to remove exchange(s)
@@ -85,8 +84,8 @@ public class ExchangeRemoverMaterializer extends AbstractPhysicalVisitor<Physica
   @Override
   public PhysicalOperator visitOp(PhysicalOperator op, IndexedFragmentNode iNode) throws ExecutionSetupException {
     iNode.addAllocation(op);
-    List<PhysicalOperator> children = Lists.newArrayList();
-    for(PhysicalOperator child : op){
+    List<PhysicalOperator> children = new ArrayList<>();
+    for (PhysicalOperator child : op){
       children.add(child.accept(this, iNode));
     }
     PhysicalOperator newOp = op.getNewWithChildren(children);

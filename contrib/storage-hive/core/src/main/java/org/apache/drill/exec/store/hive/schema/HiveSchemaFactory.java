@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive.schema;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -46,7 +47,6 @@ import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.thrift.TException;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 
 public class HiveSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaFactory.class);
@@ -183,8 +183,8 @@ public class HiveSchemaFactory implements SchemaFactory {
     public Set<String> getSubSchemaNames() {
       try {
         List<String> dbs = mClient.getDatabases(schemaConfig.getIgnoreAuthErrors());
-        return Sets.newHashSet(dbs);
-      } catch (final TException e) {
+        return new HashSet<>(dbs);
+      } catch (TException e) {
         logger.warn("Failure while getting Hive database list.", e);
       }
       return super.getSubSchemaNames();

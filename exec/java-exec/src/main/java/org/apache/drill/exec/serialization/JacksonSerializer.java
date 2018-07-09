@@ -18,11 +18,11 @@
 package org.apache.drill.exec.serialization;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Objects;
 
 public class JacksonSerializer<T> implements InstanceSerializer<T> {
   private final ObjectReader reader;
@@ -47,13 +47,13 @@ public class JacksonSerializer<T> implements InstanceSerializer<T> {
   public boolean equals(Object obj) {
     if (obj instanceof JacksonSerializer && obj.getClass().equals(getClass())) {
       final JacksonSerializer<T> other = (JacksonSerializer<T>)obj;
-      return Objects.equal(reader, other.reader) && Objects.equal(writer, other.writer);
+      return Objects.equals(reader, other.reader) && Objects.equals(writer, other.writer);
     }
     return false;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(reader, writer);
+    return Objects.hash(reader, writer);
   }
 }

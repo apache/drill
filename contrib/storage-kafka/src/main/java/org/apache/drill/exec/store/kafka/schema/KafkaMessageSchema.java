@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka.schema;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,13 +36,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 public class KafkaMessageSchema extends AbstractSchema {
 
   private static final Logger logger = LoggerFactory.getLogger(KafkaMessageSchema.class);
   private final KafkaStoragePlugin plugin;
-  private final Map<String, DrillTable> drillTables = Maps.newHashMap();
+  private final Map<String, DrillTable> drillTables = new HashMap<>();
   private Set<String> tableNames;
 
   public KafkaMessageSchema(final KafkaStoragePlugin plugin, final String name) {

@@ -22,7 +22,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -44,6 +43,7 @@ import org.apache.thrift.TException;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -258,7 +258,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       final HiveMetaStoreClient mClient, final List<String> tableNames, final String schemaName,
       final int bulkSize) {
     final int totalTables = tableNames.size();
-    final List<org.apache.hadoop.hive.metastore.api.Table> tables = Lists.newArrayList();
+    final List<org.apache.hadoop.hive.metastore.api.Table> tables = new ArrayList<>();
 
     // In each round, Drill asks for a sub-list of all the requested tables
     for (int fromIndex = 0; fromIndex < totalTables; fromIndex += bulkSize) {
@@ -316,7 +316,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       partitions = mClient.listPartitions(dbName, tableName, (short) -1);
     }
 
-    List<HiveTableWrapper.HivePartitionWrapper> hivePartitionWrappers = Lists.newArrayList();
+    List<HiveTableWrapper.HivePartitionWrapper> hivePartitionWrappers = new ArrayList<>();
     HiveTableWithColumnCache hiveTable = new HiveTableWithColumnCache(table, new ColumnListsCache(table));
     for (Partition partition : partitions) {
       hivePartitionWrappers.add(createPartitionWithSpecColumns(hiveTable, partition));

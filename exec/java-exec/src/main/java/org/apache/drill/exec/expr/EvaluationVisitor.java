@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -69,8 +70,6 @@ import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JConditional;
@@ -127,7 +126,7 @@ public class EvaluationVisitor {
     }
   }
 
-  Map<ExpressionHolder,HoldingContainer> previousExpressions = Maps.newHashMap();
+  Map<ExpressionHolder,HoldingContainer> previousExpressions = new HashMap<>();
 
   Stack<Map<ExpressionHolder,HoldingContainer>> mapStack = new Stack<>();
 
@@ -706,7 +705,7 @@ public class EvaluationVisitor {
         throws RuntimeException {
       String convertFunctionName = e.getConvertFunction() + e.getEncodingType();
 
-      List<LogicalExpression> newArgs = Lists.newArrayList();
+      List<LogicalExpression> newArgs = new ArrayList<>();
       newArgs.add(e.getInput()); // input_expr
 
       FunctionCall fc = new FunctionCall(convertFunctionName, newArgs, e.getPosition());
@@ -717,7 +716,7 @@ public class EvaluationVisitor {
     public HoldingContainer visitAnyValueExpression(AnyValueExpression e, ClassGenerator<?> value)
         throws RuntimeException {
 
-      List<LogicalExpression> newArgs = Lists.newArrayList();
+      List<LogicalExpression> newArgs = new ArrayList<>();
       newArgs.add(e.getInput()); // input_expr
 
       FunctionCall fc = new FunctionCall(AnyValueExpression.ANY_VALUE, newArgs, e.getPosition());

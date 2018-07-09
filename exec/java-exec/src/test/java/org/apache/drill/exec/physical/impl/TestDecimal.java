@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,7 +38,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
@@ -58,7 +58,7 @@ public class TestDecimal extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/cast_simple_decimal.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/cast_simple_decimal.json"), StandardCharsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
 
@@ -103,7 +103,7 @@ public class TestDecimal extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/cast_float_decimal.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/cast_float_decimal.json"), StandardCharsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
 
@@ -148,7 +148,7 @@ public class TestDecimal extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/simple_decimal_arithmetic.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/simple_decimal_arithmetic.json"), StandardCharsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
 
@@ -199,7 +199,7 @@ public class TestDecimal extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/test_decimal_complex.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/test_decimal_complex.json"), StandardCharsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_complex_decimal.json")
             );
 
@@ -242,7 +242,7 @@ public class TestDecimal extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/test_decimal_sort_complex.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/test_decimal_sort_complex.json"), StandardCharsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_sort_complex_decimal.json")
             );
 
@@ -291,7 +291,7 @@ public class TestDecimal extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/decimal/simple_decimal_math.json"), Charsets.UTF_8)
+          Files.toString(DrillFileUtils.getResourceAsFile("/decimal/simple_decimal_math.json"), StandardCharsets.UTF_8)
               .replace("#{TEST_FILE}", "/input_simple_decimal.json")
       );
 

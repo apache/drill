@@ -19,9 +19,9 @@ package org.apache.drill.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ public class MultiConnectionCachingFactory implements CachingConnectionFactory {
   private static final Logger logger = LoggerFactory.getLogger(MultiConnectionCachingFactory.class);
 
   private final ConnectionFactory delegate;
-  private final Map<ConnectionInfo, Connection> cache = Maps.newHashMap();
+  private final Map<ConnectionInfo, Connection> cache = new HashMap<>();
 
   public MultiConnectionCachingFactory(ConnectionFactory delegate) {
     this.delegate = delegate;

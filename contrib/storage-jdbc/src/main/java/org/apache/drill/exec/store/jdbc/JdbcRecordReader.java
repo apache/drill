@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.jdbc;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -57,7 +58,6 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -383,7 +383,7 @@ class JdbcRecordReader extends AbstractRecordReader {
     void copy(int index) throws SQLException {
       String val = resultSet.getString(columnIndex);
       if (val != null) {
-        byte[] record = val.getBytes(Charsets.UTF_8);
+        byte[] record = val.getBytes(StandardCharsets.UTF_8);
         mutator.setSafe(index, record, 0, record.length);
       }
     }

@@ -55,9 +55,6 @@ import org.apache.drill.jdbc.SchemaChangeListener;
 import org.apache.drill.jdbc.SqlTimeoutException;
 import org.slf4j.Logger;
 
-import com.google.common.collect.Queues;
-
-
 class DrillCursor implements Cursor {
 
   ////////////////////////////////////////
@@ -99,7 +96,7 @@ class DrillCursor implements Cursor {
     private final CountDownLatch firstMessageReceived = new CountDownLatch(1);
 
     final LinkedBlockingDeque<QueryDataBatch> batchQueue =
-        Queues.newLinkedBlockingDeque();
+        new LinkedBlockingDeque<>();
 
     private final DrillCursor parent;
     Stopwatch elapsedTimer = null;

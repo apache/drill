@@ -65,7 +65,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Maps;
 
 @JsonTypeName("hbase-scan")
 public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConstants {
@@ -216,7 +215,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     /*
      * initialize (endpoint index => HBaseSubScanSpec list) map
      */
-    endpointFragmentMapping = Maps.newHashMapWithExpectedSize(numSlots);
+    endpointFragmentMapping = new HashMap<>(numSlots);
 
     /*
      * another map with endpoint (hostname => corresponding index list) in 'incomingEndpoints' list

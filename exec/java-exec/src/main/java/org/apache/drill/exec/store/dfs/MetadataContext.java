@@ -17,9 +17,8 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import java.util.HashMap;
 import java.util.Map;
-
-import com.google.common.collect.Maps;
 
 /**
  * A metadata context that holds state across multiple invocations of
@@ -32,7 +31,7 @@ public class MetadataContext {
    *  Note: the #directories is typically a small percentage of the #files, so the memory footprint
    *  is expected to be relatively small.
    */
-  private Map<String, Boolean> dirModifCheckMap = Maps.newHashMap();
+  private Map<String, Boolean> dirModifCheckMap = new HashMap<>();
 
   private PruneStatus pruneStatus = PruneStatus.NOT_STARTED;
 

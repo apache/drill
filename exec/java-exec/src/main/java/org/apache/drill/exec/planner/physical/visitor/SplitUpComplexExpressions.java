@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.calcite.rel.RelNode;
@@ -40,7 +41,6 @@ import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, RelConversionException> {
 
@@ -57,7 +57,7 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
 
   @Override
   public Prel visitPrel(Prel prel, Object value) throws RelConversionException {
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     for(Prel child : prel){
       child = child.accept(this, null);
       children.add(child);
@@ -71,7 +71,7 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
 
     // Apply the rule to the child
     RelNode originalInput = ((Prel)project.getInput(0)).accept(this, null);
-    project = (ProjectPrel) project.copy(project.getTraitSet(), Lists.newArrayList(originalInput));
+    project = (ProjectPrel) project.copy(project.getTraitSet(), Collections.singletonList(originalInput));
 
     List<RexNode> exprList = new ArrayList<>();
 

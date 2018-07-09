@@ -18,10 +18,10 @@
 package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -171,8 +171,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     wasKilled = false;
 
     final int numGrpByExprs = popConfig.getGroupByExprs().size();
-    comparators = Lists.newArrayListWithExpectedSize(numGrpByExprs);
-    for (int i=0; i<numGrpByExprs; i++) {
+    comparators = new ArrayList<>(numGrpByExprs);
+    for (int i = 0; i < numGrpByExprs; i++) {
       // nulls are equal in group by case
       comparators.add(Comparator.IS_NOT_DISTINCT_FROM);
     }

@@ -37,7 +37,6 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 /**
  * Rewrites an expression tree, replacing OR and AND operators with more than 2 operands with a chained operators
@@ -92,7 +91,7 @@ import com.google.common.collect.Lists;
   }
 
   private List<RexNode> visitChildren(RexCall call) {
-    List<RexNode> children = Lists.newArrayList();
+    List<RexNode> children = new ArrayList<>();
     for (RexNode child : call.getOperands()) {
       children.add(child.accept(this));
     }

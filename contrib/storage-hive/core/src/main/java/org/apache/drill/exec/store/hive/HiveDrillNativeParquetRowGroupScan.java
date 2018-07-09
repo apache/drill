@@ -39,6 +39,7 @@ import org.apache.hadoop.mapred.JobConf;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonTypeName("hive-drill-native-parquet-row-group-scan")
 public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupScan {
@@ -74,7 +75,7 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
                                             Map<String, String> confProperties,
                                             LogicalExpression filter) {
     super(userName, rowGroupReadEntries, columns, filter);
-    this.hiveStoragePlugin = Preconditions.checkNotNull(hiveStoragePlugin, "Could not find format config for the given configuration");
+    this.hiveStoragePlugin = Objects.requireNonNull(hiveStoragePlugin, "Could not find format config for the given configuration");
     this.hiveStoragePluginConfig = hiveStoragePlugin.getConfig();
     this.hivePartitionHolder = hivePartitionHolder;
     this.confProperties = confProperties;

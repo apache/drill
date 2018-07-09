@@ -17,8 +17,11 @@
  */
 package org.apache.drill.common.logical.data;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -29,9 +32,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
 @JsonTypeName("join")
 public class Join extends LogicalOperatorBase {
@@ -98,7 +98,7 @@ public class Join extends LogicalOperatorBase {
 
   @Override
   public Iterator<LogicalOperator> iterator() {
-    return Iterators.forArray(getLeft(), getRight());
+    return Arrays.asList(getLeft(), getRight()).iterator();
   }
 
   public static Builder builder() {
@@ -109,7 +109,7 @@ public class Join extends LogicalOperatorBase {
     private LogicalOperator left;
     private LogicalOperator right;
     private JoinRelType type;
-    private List<JoinCondition> conditions = Lists.newArrayList();
+    private List<JoinCondition> conditions = new ArrayList<>();
 
     public Builder type(JoinRelType type) {
       this.type = type;
@@ -132,9 +132,9 @@ public class Join extends LogicalOperatorBase {
 
     @Override
     public Join build() {
-      Preconditions.checkNotNull(left);
-      Preconditions.checkNotNull(right);
-      Preconditions.checkNotNull(type);
+      Objects.requireNonNull(left);
+      Objects.requireNonNull(right);
+      Objects.requireNonNull(type);
       return new Join(left, right, conditions, type);
     }
 

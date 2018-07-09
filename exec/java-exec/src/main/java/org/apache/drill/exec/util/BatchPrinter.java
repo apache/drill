@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -26,14 +27,12 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.collect.Lists;
-
 /**
  * This is a tool for printing the content of record batches to screen. Used for debugging.
  */
 public class BatchPrinter {
   public static void printHyperBatch(VectorAccessible batch, SelectionVector4 sv4) {
-    List<String> columns = Lists.newArrayList();
+    List<String> columns = new ArrayList<>();
     for (VectorWrapper<?> vw : batch) {
       columns.add(vw.getValueVectors()[0].getField().getName());
     }
@@ -65,8 +64,8 @@ public class BatchPrinter {
   }
 
   public static void printBatch(VectorAccessible batch) {
-    List<String> columns = Lists.newArrayList();
-    List<ValueVector> vectors = Lists.newArrayList();
+    List<String> columns = new ArrayList<>();
+    List<ValueVector> vectors = new ArrayList<>();
     for (VectorWrapper<?> vw : batch) {
       columns.add(vw.getValueVector().getField().getName());
       vectors.add(vw.getValueVector());
@@ -99,8 +98,8 @@ public class BatchPrinter {
   }
 
   public static void printBatch(VectorAccessible batch, SelectionVector2 sv2) {
-    List<String> columns = Lists.newArrayList();
-    List<ValueVector> vectors = Lists.newArrayList();
+    List<String> columns = new ArrayList<>();
+    List<ValueVector> vectors = new ArrayList<>();
     for (VectorWrapper<?> vw : batch) {
       columns.add(vw.getValueVector().getField().getName());
       vectors.add(vw.getValueVector());

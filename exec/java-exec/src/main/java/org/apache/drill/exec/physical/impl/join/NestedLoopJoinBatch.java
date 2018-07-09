@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -54,7 +55,6 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.JoinBatchMemoryManager;
 import org.apache.drill.exec.record.RecordBatchSizer;
-import com.google.common.base.Preconditions;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JVar;
@@ -127,8 +127,8 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
 
   protected NestedLoopJoinBatch(NestedLoopJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
     super(popConfig, context, left, right);
-    Preconditions.checkNotNull(left);
-    Preconditions.checkNotNull(right);
+    Objects.requireNonNull(left);
+    Objects.requireNonNull(right);
 
     // get the output batch size from config.
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);

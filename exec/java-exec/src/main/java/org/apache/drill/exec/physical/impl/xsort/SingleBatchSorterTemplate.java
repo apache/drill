@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
 public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, IndexedSortable{
@@ -39,8 +39,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
 
   @Override
   public void setup(FragmentContext context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException{
-    Preconditions.checkNotNull(vector2);
-    this.vector2 = vector2;
+    this.vector2 = Objects.requireNonNull(vector2);
     try {
       doSetup(context, incoming, null);
     } catch (IllegalStateException e) {

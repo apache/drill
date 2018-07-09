@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
@@ -27,7 +28,6 @@ import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.calcite.rel.RelNode;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 
 public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, ExcessiveExchangeIdentifier.MajorFragmentStat, RuntimeException> {
@@ -84,7 +84,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
   @Override
   public Prel visitLateral(LateralJoinPrel prel, MajorFragmentStat s) throws RuntimeException {
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     s.add(prel);
 
     for (Prel p : prel) {
@@ -118,7 +118,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
   @Override
   public Prel visitPrel(Prel prel, MajorFragmentStat s) throws RuntimeException {
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     s.add(prel);
 
     // Add all children to MajorFragmentStat, before we visit each child.

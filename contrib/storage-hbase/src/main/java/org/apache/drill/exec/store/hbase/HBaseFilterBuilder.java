@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.store.hbase;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
@@ -33,9 +35,6 @@ import org.apache.hadoop.hbase.filter.NullComparator;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
-
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 
 public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void, RuntimeException> implements DrillHBaseConstants {
 
@@ -88,7 +87,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
   public HBaseScanSpec visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
     HBaseScanSpec nodeScanSpec = null;
     String functionName = call.getName();
-    ImmutableList<LogicalExpression> args = call.args;
+    List<LogicalExpression> args = call.args;
 
     if (CompareFunctionsProcessor.isCompareFunction(functionName)) {
       /*
@@ -289,7 +288,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
             startRow = stopRow = fieldValue;
             compareOp = null;
           } else {
-            startRow = prefix.getBytes(Charsets.UTF_8);
+            startRow = prefix.getBytes(StandardCharsets.UTF_8);
             stopRow = startRow.clone();
             boolean isMaxVal = true;
             for (int i = stopRow.length - 1; i >= 0; --i) {

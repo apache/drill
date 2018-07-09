@@ -18,6 +18,7 @@
 package org.apache.drill.hbase;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.test.BaseTestQuery;
@@ -33,7 +34,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class BaseHBaseTest extends BaseTestQuery {
@@ -71,7 +71,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   }
 
   protected String getPlanText(String planFile, String tableName) throws IOException {
-    return Files.toString(DrillFileUtils.getResourceAsFile(planFile), Charsets.UTF_8)
+    return Files.toString(DrillFileUtils.getResourceAsFile(planFile), StandardCharsets.UTF_8)
         .replaceFirst("\"hbase\\.zookeeper\\.property\\.clientPort\".*:.*\\d+", "\"hbase.zookeeper.property.clientPort\" : " + HBaseTestsSuite.getZookeeperPort())
         .replace("[TABLE_NAME]", tableName);
   }

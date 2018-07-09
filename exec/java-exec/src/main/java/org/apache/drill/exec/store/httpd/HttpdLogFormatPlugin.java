@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.httpd;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -55,8 +57,7 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+
 import java.util.Map;
 import org.apache.drill.exec.store.RecordReader;
 import org.slf4j.Logger;
@@ -72,7 +73,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
       final StoragePluginConfig storageConfig, final HttpdLogFormatConfig formatConfig) {
 
     super(name, context, fsConf, storageConfig, formatConfig, true, false, true, true,
-        Lists.newArrayList(PLUGIN_EXTENSION), PLUGIN_EXTENSION);
+        Collections.singletonList(PLUGIN_EXTENSION), PLUGIN_EXTENSION);
   }
 
   /**
@@ -152,30 +153,30 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
      * @return Map with Drill field names as a key and Parser Field names as a value
      */
     private Map<String, String> makeParserFields() {
-      final Map<String, String> fieldMapping = Maps.newHashMap();
-      for (final SchemaPath sp : getColumns()) {
-        final String drillField = sp.getRootSegment().getPath();
-        final String parserField = HttpdParser.parserFormattedFieldName(drillField);
+      Map<String, String> fieldMapping = new HashMap<>();
+      for (SchemaPath sp : getColumns()) {
+        String drillField = sp.getRootSegment().getPath();
+        String parserField = HttpdParser.parserFormattedFieldName(drillField);
         fieldMapping.put(drillField, parserField);
       }
       return fieldMapping;
     }
 
     @Override
-    public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
+    public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
       try {
         /**
          * Extract the list of field names for the parser to use if it is NOT a star query. If it is a star query just
          * pass through an empty map, because the parser is going to have to build all possibilities.
          */
-        final Map<String, String> fieldMapping = !isStarQuery() ? makeParserFields() : null;
+        Map<String, String> fieldMapping = !isStarQuery() ? makeParserFields() : null;
         writer = new VectorContainerWriter(output);
         parser = new HttpdParser(writer.rootAsMap(), context.getManagedBuffer(),
             HttpdLogFormatPlugin.this.getConfig().getLogFormat(),
             HttpdLogFormatPlugin.this.getConfig().getTimestampFormat(),
             fieldMapping);
 
-        final Path path = fs.makeQualified(new Path(work.getPath()));
+        Path path = fs.makeQualified(new Path(work.getPath()));
         FileSplit split = new FileSplit(path, work.getStart(), work.getLength(), new String[]{""});
         TextInputFormat inputFormat = new TextInputFormat();
         JobConf job = new JobConf(fs.getConf());

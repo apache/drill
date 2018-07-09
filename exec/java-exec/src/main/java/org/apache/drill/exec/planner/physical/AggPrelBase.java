@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.util.BitSets;
 import org.apache.calcite.util.ImmutableBitSet;
@@ -41,6 +40,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -50,9 +50,9 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
   public enum OperatorPhase {PHASE_1of1, PHASE_1of2, PHASE_2of2}
 
   protected OperatorPhase operPhase = OperatorPhase.PHASE_1of1; // default phase
-  protected List<NamedExpression> keys = Lists.newArrayList();
-  protected List<NamedExpression> aggExprs = Lists.newArrayList();
-  protected List<AggregateCall> phase2AggCallList = Lists.newArrayList();
+  protected List<NamedExpression> keys = new ArrayList<>();
+  protected List<NamedExpression> aggExprs = new ArrayList<>();
+  protected List<AggregateCall> phase2AggCallList = new ArrayList<>();
 
   /**
    * Specialized aggregate function for SUMing the COUNTs.  Since return type of
@@ -161,7 +161,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
   }
 
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
-    List<LogicalExpression> args = Lists.newArrayList();
+    List<LogicalExpression> args = new ArrayList<>();
     for (Integer i : call.getArgList()) {
       args.add(FieldReference.getWithQuotedRef(fn.get(i)));
     }
@@ -190,18 +190,18 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
 
   @Override
   public Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
-    List<Integer> groupingCols = Lists.newArrayList();
+    List<Integer> groupingCols = new ArrayList<>();
     groupingCols.add(0);
     for (int groupingCol : groupSet.asList()) {
       groupingCols.add(groupingCol + 1);
     }
 
     ImmutableBitSet groupingSet = ImmutableBitSet.of(groupingCols);
-    List<ImmutableBitSet> groupingSets = Lists.newArrayList();
+    List<ImmutableBitSet> groupingSets = new ArrayList<>();
     groupingSets.add(groupingSet);
-    List<AggregateCall> aggregateCalls = Lists.newArrayList();
+    List<AggregateCall> aggregateCalls = new ArrayList<>();
     for (AggregateCall aggCall : aggCalls) {
-      List<Integer> arglist = Lists.newArrayList();
+      List<Integer> arglist = new ArrayList<>();
       for (int arg : aggCall.getArgList()) {
         arglist.add(arg + 1);
       }

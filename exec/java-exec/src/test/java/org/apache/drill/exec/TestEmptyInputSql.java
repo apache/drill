@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
@@ -31,6 +30,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Category(UnlikelyTest.class)
@@ -96,7 +96,7 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryQualifiedStarColEmptyJson() throws Exception {
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
 
     testBuilder()
         .sqlQuery("select foo.* from cp.`%s` as foo", SINGLE_EMPTY_JSON)
@@ -225,8 +225,8 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testEmptyDirectoryAndFieldInQuery() throws Exception {
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
-    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.INT) // field "key" is absent in schemaless table
         .setMode(TypeProtos.DataMode.OPTIONAL)
         .build();

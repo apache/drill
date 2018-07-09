@@ -31,9 +31,10 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
+
+import java.nio.charset.StandardCharsets;
 
 @Category(PlannerTest.class)
 public class TestParsePhysicalPlan extends ExecTest {
@@ -49,7 +50,7 @@ public class TestParsePhysicalPlan extends ExecTest {
     PhysicalPlanReader reader = new PhysicalPlanReader(c, scanResult, lpp, CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), null);
     ObjectReader r = lpp.getMapper().reader(PhysicalPlan.class);
     ObjectWriter writer = lpp.getMapper().writer();
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/physical_test1.json"), Charsets.UTF_8));
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/physical_test1.json"), StandardCharsets.UTF_8));
     plan.unparse(writer);
   }
 }

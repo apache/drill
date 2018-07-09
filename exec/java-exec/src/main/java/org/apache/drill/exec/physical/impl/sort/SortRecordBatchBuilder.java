@@ -38,7 +38,6 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Lists;
 
 public class SortRecordBatchBuilder implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
@@ -221,7 +220,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   }
 
   public List<VectorContainer> getHeldRecordBatches() {
-    ArrayList<VectorContainer> containerList = Lists.newArrayList();
+    ArrayList<VectorContainer> containerList = new ArrayList<>();
     for (BatchSchema bs : batches.keySet()) {
       for (RecordBatchData bd : batches.get(bs)) {
         VectorContainer c = bd.getContainer();

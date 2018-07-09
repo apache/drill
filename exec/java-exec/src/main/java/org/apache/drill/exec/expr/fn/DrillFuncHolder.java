@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JExpr;
@@ -50,6 +49,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
@@ -236,7 +236,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
     }
 
-    Preconditions.checkNotNull(body);
+    Objects.requireNonNull(body);
     sub.directStatement(body);
 
     // reassign workspace variables back to global space.

@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.server.options.DrillConfigIterator;
@@ -29,9 +29,6 @@ import org.apache.drill.exec.server.options.OptionValue.AccessibleScopes;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.store.pojo.NonNullable;
-
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
 public class OptionIterator implements Iterator<Object> {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OptionIterator.class);
@@ -44,33 +41,31 @@ public class OptionIterator implements Iterator<Object> {
     // options. These are technically available for anyone to change, but users are discouraged from doing so unless they absolutely know what they are doing. The general purpose
     // for internal options is to enable support to easily debug.
     SYS_SESS_INTERNAL
-  };
+  }
 
   private final OptionManager fragmentOptions;
   private final Iterator<OptionValue> mergedOptions;
 
   public OptionIterator(FragmentContext context, Mode mode){
-    final DrillConfigIterator configOptions = new DrillConfigIterator(context.getConfig());
+    DrillConfigIterator configOptions = new DrillConfigIterator(context.getConfig());
     fragmentOptions = context.getOptions();
-    final Iterator<OptionValue> optionList;
+    Stream<OptionValue> options;
     switch(mode){
-    case BOOT:
-      optionList = configOptions.iterator();
-      break;
-    case SYS_SESS_PUBLIC:
-      optionList = fragmentOptions.getPublicOptionList().iterator();
-      break;
-    case SYS_SESS_INTERNAL:
-      optionList = fragmentOptions.getInternalOptionList().iterator();
-      break;
-    default:
-      optionList = Iterators.concat(configOptions.iterator(), fragmentOptions.iterator());
+      case BOOT:
+        options = StreamSupport.stream(configOptions.spliterator(), false);
+        break;
+      case SYS_SESS_PUBLIC:
+        options = fragmentOptions.getPublicOptionList().stream();
+        break;
+      case SYS_SESS_INTERNAL:
+        options = fragmentOptions.getInternalOptionList().stream();
+        break;
+      default:
+        options = Stream.concat(StreamSupport.stream(configOptions.spliterator(), false),
+            StreamSupport.stream(fragmentOptions.spliterator(), false));
     }
-
-    List<OptionValue> values = Lists.newArrayList(optionList);
-    Collections.sort(values);
-    mergedOptions = values.iterator();
-
+    mergedOptions = options.sorted()
+      .iterator();
   }
 
   @Override

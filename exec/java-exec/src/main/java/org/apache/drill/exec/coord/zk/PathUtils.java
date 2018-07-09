@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.coord.zk;
 
-import com.google.common.base.Preconditions;
 import org.apache.parquet.Strings;
 
 import java.net.URL;
+import java.util.Objects;
 
 /**
  * A convenience class used to expedite zookeeper paths manipulations.
@@ -33,10 +33,10 @@ public final class PathUtils {
    * @param parts  path segments to combine
    * @see #normalize(String)
    */
-  public static final String join(final String... parts) {
+  public static String join(String... parts) {
     final StringBuilder sb = new StringBuilder();
-    for (final String part:parts) {
-      Preconditions.checkNotNull(part, "parts cannot contain null");
+    for (String part : parts) {
+      Objects.requireNonNull(part, "parts cannot contain null");
       if (!Strings.isNullOrEmpty(part)) {
         sb.append(part).append("/");
       }
@@ -44,7 +44,7 @@ public final class PathUtils {
     if (sb.length() > 0) {
       sb.deleteCharAt(sb.length() - 1);
     }
-    final String path = sb.toString();
+    String path = sb.toString();
     return normalize(path);
   }
 
@@ -53,15 +53,15 @@ public final class PathUtils {
    *
    * @return  normalized path
    */
-  public static final String normalize(final String path) {
-    if (Strings.isNullOrEmpty(Preconditions.checkNotNull(path))) {
+  public static String normalize(String path) {
+    if (Strings.isNullOrEmpty(Objects.requireNonNull(path))) {
       return path;
     }
 
-    final StringBuilder builder = new StringBuilder();
+    StringBuilder builder = new StringBuilder();
     char last = path.charAt(0);
     builder.append(last);
-    for (int i=1; i<path.length(); i++) {
+    for (int i = 1; i < path.length(); i++) {
       char cur = path.charAt(i);
       if (last == '/' && cur == last) {
         continue;

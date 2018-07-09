@@ -19,6 +19,8 @@ package org.apache.drill.exec.compile;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -26,19 +28,11 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Sets;
-
 /* package */
 class DrillJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillJavaFileManager.class);
 
-  public static final Predicate<Kind> NO_SOURCES_KIND = new Predicate<Kind>() {
-    @Override
-    public boolean apply(Kind input) {
-      return input != Kind.SOURCE;
-    }
-  };
+  public static final Predicate<Kind> NO_SOURCES_KIND = input -> input != Kind.SOURCE;
 
   private final ClassLoader classLoader;
 
@@ -54,13 +48,18 @@ class DrillJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
 
   @Override
   public Iterable<JavaFileObject> list(Location location, String packageName, Set<Kind> kinds, boolean recurse) throws IOException {
-    return super.list(location, packageName, Sets.filter(kinds, NO_SOURCES_KIND), recurse);
+    return super.list(location,
+        packageName,
+        kinds.stream()
+            .filter(NO_SOURCES_KIND)
+            .collect(Collectors.toSet()),
+        recurse);
   }
 
   @Override
   public JavaFileObject getJavaFileForOutput(Location location, String className, Kind kind, FileObject sibling) throws IOException {
     logger.trace("Creating JavaFileForOutput@(location:{}, className:{}, kinds:{})", location, className, kind);
-    if (sibling != null && sibling instanceof DrillJavaFileObject) {
+    if (sibling instanceof DrillJavaFileObject) {
       return ((DrillJavaFileObject)sibling).addOutputJavaFile(className);
     }
     throw new IOException("The source file passed to getJavaFileForOutput() is not a DrillJavaFileObject: " + sibling);

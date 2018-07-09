@@ -17,9 +17,8 @@
  */
 package org.apache.drill.exec.schema;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class DiffSchema {
     List<Field> addedFields;
@@ -27,8 +26,8 @@ public class DiffSchema {
     boolean changed = false;
 
     public DiffSchema() {
-        this.addedFields = Lists.newArrayList();
-        this.removedFields = Lists.newArrayList();
+      this.addedFields = new ArrayList<>();
+      this.removedFields = new ArrayList<>();
     }
 
     public void recordNewField(Field field) {

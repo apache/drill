@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.common.config.DrillConfig;
@@ -40,7 +41,6 @@ import org.apache.drill.exec.server.rest.WebServer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CaseFormat;
-import com.google.common.collect.Maps;
 
 /**
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
@@ -314,7 +314,7 @@ public class ProfileWrapper {
    * @return map with properties names and string values
    */
   public Map<String, String> getOptions() {
-    final Map<String, String> map = Maps.newTreeMap();
+    Map<String, String> map = new TreeMap<>();
     for (OptionValue option : options) {
       map.put(option.getName(), String.valueOf(option.getValue()));
     }

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.base;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +29,6 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 public abstract class AbstractExchange extends AbstractSingle implements Exchange {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractExchange.class);
@@ -84,9 +84,9 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
    * @return List of EndpointAffinity objects for each Drillbit endpoint given <i>fragmentEndpoints</i>.
    */
   protected static List<EndpointAffinity> getDefaultAffinityMap(List<DrillbitEndpoint> fragmentEndpoints) {
-    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = Maps.newHashMap();
-    final double affinityPerOccurrence = 1.0d / fragmentEndpoints.size();
-    for(DrillbitEndpoint sender : fragmentEndpoints) {
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
+    double affinityPerOccurrence = 1.0d / fragmentEndpoints.size();
+    for (DrillbitEndpoint sender : fragmentEndpoints) {
       if (affinityMap.containsKey(sender)) {
         affinityMap.get(sender).addAffinity(affinityPerOccurrence);
       } else {

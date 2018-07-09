@@ -20,6 +20,7 @@ package org.apache.drill.exec.server.rest;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeSet;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -33,7 +34,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
@@ -86,7 +86,7 @@ public class DrillRoot {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getDrillbitStatus() {
     Collection<DrillbitInfo> drillbits = getClusterInfoJSON().getDrillbits();
-    Map<String, String> drillStatusMap = new HashMap<String, String>();
+    Map<String, String> drillStatusMap = new HashMap<>();
     for (DrillbitInfo drillbit : drillbits) {
       drillStatusMap.put(drillbit.getAddress() + "-" + drillbit.getHttpPort(), drillbit.getState());
     }
@@ -98,9 +98,9 @@ public class DrillRoot {
   @Path("/gracePeriod")
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, Integer> getGracePeriod() {
-    final DrillConfig config = work.getContext().getConfig();
-    final int gracePeriod = config.getInt(ExecConstants.GRACE_PERIOD);
-    Map<String, Integer> gracePeriodMap = new HashMap<String, Integer>();
+    DrillConfig config = work.getContext().getConfig();
+    int gracePeriod = config.getInt(ExecConstants.GRACE_PERIOD);
+    Map<String, Integer> gracePeriodMap = new HashMap<>();
     gracePeriodMap.put("gracePeriod", gracePeriod);
     return gracePeriodMap;
   }
@@ -111,9 +111,9 @@ public class DrillRoot {
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, Integer> getPortNum() {
 
-    final DrillConfig config = work.getContext().getConfig();
-    final int port = config.getInt(ExecConstants.HTTP_PORT);
-    Map<String, Integer> portMap = new HashMap<String, Integer>();
+    DrillConfig config = work.getContext().getConfig();
+    int port = config.getInt(ExecConstants.HTTP_PORT);
+    Map<String, Integer> portMap = new HashMap<>();
     portMap.put("port", port);
     return portMap;
   }
@@ -164,25 +164,25 @@ public class DrillRoot {
   @Path("/cluster.json")
   @Produces(MediaType.APPLICATION_JSON)
   public ClusterInfo getClusterInfoJSON() {
-    final Collection<DrillbitInfo> drillbits = Sets.newTreeSet();
-    final Collection<String> mismatchedVersions = Sets.newTreeSet();
+    Collection<DrillbitInfo> drillbits = new TreeSet<>();
+    Collection<String> mismatchedVersions = new TreeSet<>();
 
-    final DrillbitContext dbContext = work.getContext();
-    final DrillbitEndpoint currentDrillbit = dbContext.getEndpoint();
-    final String currentVersion = currentDrillbit.getVersion();
+    DrillbitContext dbContext = work.getContext();
+    DrillbitEndpoint currentDrillbit = dbContext.getEndpoint();
+    String currentVersion = currentDrillbit.getVersion();
 
-    final DrillConfig config = dbContext.getConfig();
-    final boolean userEncryptionEnabled =
+    DrillConfig config = dbContext.getConfig();
+    boolean userEncryptionEnabled =
             config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED) ||
                     config .getBoolean(ExecConstants.USER_SSL_ENABLED);
-    final boolean bitEncryptionEnabled = config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED);
+    boolean bitEncryptionEnabled = config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED);
 
     OptionManager optionManager = work.getContext().getOptionManager();
-    final boolean isUserLoggedIn = AuthDynamicFeature.isUserLoggedIn(sc);
-    final boolean shouldShowAdminInfo = isUserLoggedIn && ((DrillUserPrincipal)sc.getUserPrincipal()).isAdminUser();
+    boolean isUserLoggedIn = AuthDynamicFeature.isUserLoggedIn(sc);
+    boolean shouldShowAdminInfo = isUserLoggedIn && ((DrillUserPrincipal)sc.getUserPrincipal()).isAdminUser();
 
     for (DrillbitEndpoint endpoint : work.getContext().getAvailableBits()) {
-      final DrillbitInfo drillbit = new DrillbitInfo(endpoint,
+      DrillbitInfo drillbit = new DrillbitInfo(endpoint,
               isDrillbitsTheSame(currentDrillbit, endpoint),
               currentVersion.equals(endpoint.getVersion()));
       if (!drillbit.isVersionMatch()) {
@@ -194,8 +194,8 @@ public class DrillRoot {
     // If the user is logged in and is admin user then show the admin user info
     // For all other cases the user info need-not or should-not be displayed
     if (shouldShowAdminInfo) {
-      final String processUser = ImpersonationUtil.getProcessUserName();
-      final String processUserGroups = Joiner.on(", ").join(ImpersonationUtil.getProcessUserGroupNames());
+      String processUser = ImpersonationUtil.getProcessUserName();
+      String processUserGroups = String.join(", ", ImpersonationUtil.getProcessUserGroupNames());
       String adminUsers = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
       String adminUserGroups = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
 

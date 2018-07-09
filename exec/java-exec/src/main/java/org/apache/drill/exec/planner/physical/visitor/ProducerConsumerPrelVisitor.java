@@ -17,14 +17,13 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProducerConsumerPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.calcite.rel.RelNode;
-
-import com.google.common.collect.Lists;
 
 
 public class ProducerConsumerPrelVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{
@@ -42,8 +41,8 @@ public class ProducerConsumerPrelVisitor extends BasePrelVisitor<Prel, Void, Run
 
   @Override
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
-    List<RelNode> children = Lists.newArrayList();
-    for(Prel child : prel){
+    List<RelNode> children = new ArrayList<>();
+    for (Prel child : prel) {
       children.add(child.accept(this, null));
     }
     return (Prel) prel.copy(prel.getTraitSet(), children);

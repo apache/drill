@@ -17,8 +17,6 @@
  */
 package org.apache.drill;
 
-import com.google.common.collect.Lists;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SqlTest;
@@ -39,6 +37,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Category({SqlTest.class, OperatorTest.class})
@@ -551,8 +550,8 @@ public class TestUnionAll extends BaseTestQuery {
   public void testUnionAllBothEmptyJson() throws Exception {
     final String rootEmpty = "/project/pushdown/empty.json";
 
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
-    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.INT)
         .setMode(TypeProtos.DataMode.OPTIONAL)
         .build();
@@ -608,8 +607,8 @@ public class TestUnionAll extends BaseTestQuery {
   public void testUnionAllBothEmptyDataBatch() throws Exception {
     String rootSimple = "/store/json/booleanData.json";
 
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
-    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.BIT) // field "key" is boolean type
         .setMode(TypeProtos.DataMode.OPTIONAL)
         .build();

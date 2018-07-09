@@ -18,7 +18,6 @@
 package org.apache.drill.exec.rpc.data;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
@@ -51,6 +50,7 @@ import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -95,7 +95,7 @@ public class TestBitRpc extends ExecTest {
   }
 
   private static WritableBatch getRandomBatch(BufferAllocator allocator, int records) {
-    List<ValueVector> vectors = Lists.newArrayList();
+    List<ValueVector> vectors = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       Float8Vector v = (Float8Vector) TypeHelper.getNewVector(
           MaterializedField.create("a", Types.required(MinorType.FLOAT8)),

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
@@ -41,6 +40,7 @@ import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -102,8 +102,8 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
   }
 
   public static LogicalExpression toDrill(AggregateCall call, List<String> fn, DrillImplementor implementor) {
-    List<LogicalExpression> args = Lists.newArrayList();
-    for(Integer i : call.getArgList()) {
+    List<LogicalExpression> args = new ArrayList<>();
+    for (Integer i : call.getArgList()) {
       args.add(new FieldReference(fn.get(i)));
     }
 

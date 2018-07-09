@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.vector.complex.fn;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
@@ -33,8 +33,8 @@ public class JsonReaderUtils {
                                     boolean allTextMode,
                                     List<BaseWriter.ListWriter> emptyArrayWriters) {
 
-    List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
-    List<PathSegment> fieldPathList = Lists.newArrayList();
+    List<BaseWriter.MapWriter> writerList = new ArrayList<>();
+    List<PathSegment> fieldPathList = new ArrayList<>();
     BitSet emptyStatus = new BitSet(columns.size());
     int i = 0;
 

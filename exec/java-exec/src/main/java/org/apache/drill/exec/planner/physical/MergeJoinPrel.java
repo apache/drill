@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.rel.core.Join;
@@ -38,8 +39,6 @@ import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexNode;
-
-import com.google.common.collect.Lists;
 
 public class MergeJoinPrel  extends JoinPrel {
 
@@ -92,7 +91,7 @@ public class MergeJoinPrel  extends JoinPrel {
 
     JoinRelType jtype = this.getJoinType();
 
-    List<JoinCondition> conditions = Lists.newArrayList();
+    List<JoinCondition> conditions = new ArrayList<>();
 
     buildJoinConditions(conditions, leftFields, rightFields, leftKeys, rightKeys);
 

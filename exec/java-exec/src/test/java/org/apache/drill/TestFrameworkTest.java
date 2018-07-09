@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -39,8 +40,6 @@ import org.apache.drill.test.TestBuilder;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
 // TODO - update framework to remove any dependency on the Drill engine for reading baseline result sets
 // currently using it with the assumption that the csv and json readers are well tested, and handling diverse
 // types in the test framework would require doing some redundant work to enable casting outside of Drill or
@@ -53,7 +52,7 @@ public class TestFrameworkTest extends BaseTestQuery {
   public void testSchemaTestBuilderSetInvalidBaselineValues() throws Exception {
     final String query = "SELECT ltrim('drill') as col FROM (VALUES(1)) limit 0";
 
-    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
             .setMinorType(TypeProtos.MinorType.VARCHAR)
             .setMode(TypeProtos.DataMode.REQUIRED)
@@ -72,7 +71,7 @@ public class TestFrameworkTest extends BaseTestQuery {
   public void testSchemaTestBuilderSetInvalidBaselineRecords() throws Exception {
     final String query = "SELECT ltrim('drill') as col FROM (VALUES(1)) limit 0";
 
-    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.VARCHAR)
         .setMode(TypeProtos.DataMode.REQUIRED)
@@ -82,7 +81,7 @@ public class TestFrameworkTest extends BaseTestQuery {
     testBuilder()
         .sqlQuery(query)
         .schemaBaseLine(expectedSchema)
-        .baselineRecords(Collections.<Map<String, Object>>emptyList())
+        .baselineRecords(Collections.emptyList())
         .build()
         .run();
   }
@@ -91,7 +90,7 @@ public class TestFrameworkTest extends BaseTestQuery {
   public void testSchemaTestBuilderSetInvalidBaselineColumns() throws Exception {
     final String query = "SELECT ltrim('drill') as col FROM (VALUES(1)) limit 0";
 
-    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
             .setMinorType(TypeProtos.MinorType.VARCHAR)
             .setMode(TypeProtos.DataMode.REQUIRED)

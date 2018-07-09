@@ -17,13 +17,13 @@
  */
 package org.apache.drill.common.util;
 
-import com.google.common.base.Joiner;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class DrillStringUtils {
 
@@ -209,21 +209,10 @@ public class DrillStringUtils {
    * @return The sanitized CSV string
    */
   public static String sanitizeCSV(String csv) {
-    // tokenize
-    String[] tokens = csv.split(",");
-    ArrayList<String> sanitizedTokens = new ArrayList<String>(tokens.length);
-    // check for empties
-    for (String s : tokens) {
-      String trimmedToken = s.trim();
-      if (trimmedToken.length() != 0) {
-        sanitizedTokens.add(trimmedToken);
-      }
-    }
-    String result = "";
-    if (sanitizedTokens.size() != 0) {
-      result = Joiner.on(",").join(sanitizedTokens);
-    }
-    return result;
+    return Arrays.stream(csv.split(","))
+        .map(String::trim)
+        .filter(string -> string.length() > 0)
+        .collect(Collectors.joining(","));
   }
 
 }

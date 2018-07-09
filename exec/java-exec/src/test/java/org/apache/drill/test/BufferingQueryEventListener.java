@@ -18,6 +18,7 @@
 package org.apache.drill.test;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -25,8 +26,6 @@ import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
-
-import com.google.common.collect.Queues;
 
 /**
  * Drill query event listener that buffers rows into a producer-consumer
@@ -72,7 +71,7 @@ public class BufferingQueryEventListener implements UserResultsListener
     }
   }
 
-  private BlockingQueue<QueryEvent> queue = Queues.newLinkedBlockingQueue();
+  private BlockingQueue<QueryEvent> queue = new LinkedBlockingQueue<>();
 
   @Override
   public void queryIdArrived(QueryId queryId) {

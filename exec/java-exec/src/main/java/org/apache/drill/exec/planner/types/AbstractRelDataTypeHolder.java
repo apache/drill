@@ -18,11 +18,12 @@
 package org.apache.drill.exec.planner.types;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Base class-holder for the list of {@link RelDataTypeField}s.
@@ -32,7 +33,7 @@ public abstract class AbstractRelDataTypeHolder {
   protected RelDataTypeFactory typeFactory;
 
   public AbstractRelDataTypeHolder(List<RelDataTypeField> fields) {
-    this.fields = Lists.newArrayList(fields);
+    this.fields = new ArrayList<>(fields);
   }
 
   /**
@@ -58,12 +59,9 @@ public abstract class AbstractRelDataTypeHolder {
    * Returns list with names of RelDataTypeField fields.
    */
   public List<String> getFieldNames() {
-    List<String> fieldNames = Lists.newArrayList();
-    for(RelDataTypeField f : fields) {
-      fieldNames.add(f.getName());
-    }
-
-    return fieldNames;
+    return fields.stream()
+        .map(RelDataTypeField::getName)
+        .collect(Collectors.toList());
   }
 
   public void setRelDataTypeFactory(RelDataTypeFactory typeFactory) {

@@ -18,19 +18,17 @@
 package org.apache.drill.exec.store.sys;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map.Entry;
-
-import javax.annotation.Nullable;
+import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.serialization.InstanceSerializer;
 import org.apache.drill.exec.store.pojo.NonNullable;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
 
 /**
  * System table listing completed profiles as JSON documents
@@ -61,7 +59,7 @@ public class ProfileJsonIterator extends ProfileIterator {
 
     } catch (Exception e) {
       logger.debug(e.getMessage(), e);
-      return Iterators.singletonIterator(ProfileJson.getDefault());
+      return Collections.singleton(ProfileJson.getDefault()).iterator();
     }
   }
 
@@ -69,30 +67,30 @@ public class ProfileJsonIterator extends ProfileIterator {
    * Iterating persistentStore as a iterator of {@link org.apache.drill.exec.store.sys.ProfileJsonIterator.ProfileJson}.
    */
   private Iterator<ProfileJson> transformJson(Iterator<Entry<String, UserBitShared.QueryProfile>> all) {
-    return Iterators.transform(all, new Function<Entry<String, UserBitShared.QueryProfile>, ProfileJson>() {
-      @Nullable
-      @Override
-      public ProfileJson apply(@Nullable Entry<String, UserBitShared.QueryProfile> input) {
-        if (input == null || input.getValue() == null) {
-          return ProfileJson.getDefault();
-        }
-
-        //Constructing ProfileInfo
-        final String queryID = input.getKey();
-        String profileJson;
-        try {
-          profileJson = new String(profileSerializer.serialize(input.getValue()));
-        } catch (IOException e) {
-          logger.debug("Failed to serialize profile for: " + queryID, e);
-          profileJson = "{ 'message' : 'error (unable to serialize profile: "+ queryID +")' }";
-        }
-
-        return new ProfileJson(
-            queryID,
-            profileJson
-         );
+    Iterable<Entry<String, UserBitShared.QueryProfile>> iterable = () -> all;
+    Function<Entry<String, QueryProfile>, ProfileJson> profileJsonCreator = input -> {
+      if (input == null || input.getValue() == null) {
+        return ProfileJson.getDefault();
       }
-    });
+
+      //Constructing ProfileInfo
+      String queryID = input.getKey();
+      String profileJson;
+      try {
+        profileJson = new String(profileSerializer.serialize(input.getValue()));
+      } catch (IOException e) {
+        logger.debug("Failed to serialize profile for: " + queryID, e);
+        profileJson = "{ 'message' : 'error (unable to serialize profile: " + queryID + ")' }";
+      }
+
+      return new ProfileJson(
+          queryID,
+          profileJson
+      );
+    };
+    return StreamSupport.stream(iterable.spliterator(), false)
+        .map(profileJsonCreator)
+        .iterator();
   }
 
   @Override

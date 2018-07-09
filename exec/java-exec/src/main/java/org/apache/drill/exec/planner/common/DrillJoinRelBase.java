@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -40,25 +41,22 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 
-import com.google.common.collect.Lists;
-
 /**
  * Base class for logical and physical Joins implemented in Drill.
  */
 public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
-  protected List<Integer> leftKeys = Lists.newArrayList();
-  protected List<Integer> rightKeys = Lists.newArrayList();
-
+  protected List<Integer> leftKeys = new ArrayList<>();
+  protected List<Integer> rightKeys = new ArrayList<>();
   /**
    * The join key positions for which null values will not match.
    */
-  protected List<Boolean> filterNulls = Lists.newArrayList();
+  protected List<Boolean> filterNulls = new ArrayList<>();
   private final double joinRowFactor;
 
   public DrillJoinRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) {
     super(cluster, traits, left, right, condition,
-        CorrelationId.setOf(Collections.<String> emptySet()), joinType);
+        CorrelationId.setOf(Collections.emptySet()), joinType);
     this.joinRowFactor = PrelUtil.getPlannerSettings(cluster.getPlanner()).getRowCountEstimateFactor();
   }
 

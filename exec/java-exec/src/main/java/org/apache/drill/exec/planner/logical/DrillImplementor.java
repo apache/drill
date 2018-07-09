@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.calcite.rel.RelNode;
@@ -26,9 +27,6 @@ import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.logical.PlanProperties.PlanType;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
-import org.apache.calcite.rel.RelNode;
-
-import com.google.common.collect.Sets;
 
 /**
  * Context for converting a tree of {@link DrillRel} nodes into a Drill logical plan.
@@ -37,8 +35,8 @@ public class DrillImplementor {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillImplementor.class);
 
-  private Set<DrillTable> tables = Sets.newHashSet();
-  private Set<String> storageEngineNames = Sets.newHashSet();
+  private Set<DrillTable> tables = new HashSet<>();
+  private Set<String> storageEngineNames = new HashSet<>();
   private LogicalPlanBuilder planBuilder = new LogicalPlanBuilder();
   private LogicalPlan plan;
   private final DrillParseContext context;

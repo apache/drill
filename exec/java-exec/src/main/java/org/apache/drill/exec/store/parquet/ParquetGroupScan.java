@@ -21,8 +21,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -56,7 +58,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 
 @JsonTypeName("parquet-scan")
 public class ParquetGroupScan extends AbstractParquetGroupScan {
@@ -82,10 +83,10 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
                           @JsonProperty("cacheFileRoot") String cacheFileRoot,
                           @JsonProperty("filter") LogicalExpression filter) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName), columns, entries, filter);
-    Preconditions.checkNotNull(storageConfig);
-    Preconditions.checkNotNull(formatConfig);
+    Objects.requireNonNull(storageConfig);
+    Objects.requireNonNull(formatConfig);
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
-    Preconditions.checkNotNull(formatPlugin);
+    Objects.requireNonNull(formatPlugin);
     this.fs = ImpersonationUtil.createFileSystem(getUserName(), formatPlugin.getFsConf());
     this.formatConfig = formatPlugin.getConfig();
     this.selectionRoot = selectionRoot;
@@ -382,7 +383,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     List<FileStatus> fileStatuses = selection.getStatuses(fs);
 
     if (fileSet == null) {
-      fileSet = Sets.newHashSet();
+      fileSet = new HashSet<>();
     }
 
     final Path first = fileStatuses.get(0).getPath();

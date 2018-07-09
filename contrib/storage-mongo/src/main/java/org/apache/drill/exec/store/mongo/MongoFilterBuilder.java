@@ -30,8 +30,6 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-
 public class MongoFilterBuilder extends
     AbstractExprVisitor<MongoScanSpec, Void, RuntimeException> implements
     DrillMongoConstants {
@@ -121,7 +119,7 @@ public class MongoFilterBuilder extends
       throws RuntimeException {
     MongoScanSpec nodeScanSpec = null;
     String functionName = call.getName();
-    ImmutableList<LogicalExpression> args = call.args;
+    List<LogicalExpression> args = call.args;
 
     if (MongoCompareFunctionProcessor.isCompareFunction(functionName)) {
       MongoCompareFunctionProcessor processor = MongoCompareFunctionProcessor

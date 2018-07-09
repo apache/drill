@@ -17,18 +17,17 @@
  */
 package org.apache.drill.exec.record.selection;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 
-import com.google.common.collect.Lists;
-
 public class SelectionVector4Builder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4Builder.class);
 
-  private List<BatchSchema> schemas = Lists.newArrayList();
+  private List<BatchSchema> schemas = new ArrayList<>();
 
   public void add(RecordBatch batch, boolean newSchema) throws SchemaChangeException {
     if (!schemas.isEmpty() && newSchema) {

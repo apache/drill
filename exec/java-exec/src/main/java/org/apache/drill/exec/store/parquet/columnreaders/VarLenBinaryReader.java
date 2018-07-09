@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -280,7 +279,7 @@ public class VarLenBinaryReader {
   }
 
   private void readRecordsParallel(long recordsReadInCurrentPass){
-    ArrayList<Future<Integer>> futures = Lists.newArrayList();
+    ArrayList<Future<Integer>> futures = new ArrayList<>();
     for (VarLengthColumn<?> columnReader : columns) {
       Future<Integer> f = columnReader.readRecordsAsync(columnReader.pageReader.valuesReadyToRead);
       if (f != null) {

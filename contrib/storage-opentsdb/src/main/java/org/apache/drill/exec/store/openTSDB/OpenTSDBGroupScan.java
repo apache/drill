@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.madhukaraphatak.sizeof.SizeEstimator;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -38,6 +37,7 @@ import org.apache.drill.exec.store.openTSDB.client.services.ServiceImpl;
 import org.apache.drill.exec.store.openTSDB.dto.MetricDTO;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,7 +94,7 @@ public class OpenTSDBGroupScan extends AbstractGroupScan {
 
   @Override
   public OpenTSDBSubScan getSpecificScan(int minorFragmentId) {
-    List<OpenTSDBSubScanSpec> scanSpecList = Lists.newArrayList();
+    List<OpenTSDBSubScanSpec> scanSpecList = new ArrayList<>();
     scanSpecList.add(new OpenTSDBSubScanSpec(getTableName()));
     return new OpenTSDBSubScan(storagePlugin, storagePluginConfig, scanSpecList, this.columns);
   }

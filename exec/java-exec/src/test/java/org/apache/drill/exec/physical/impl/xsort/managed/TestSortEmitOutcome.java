@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order;
@@ -37,6 +36,8 @@ import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.Collections;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
@@ -58,7 +59,7 @@ public class TestSortEmitOutcome extends BaseTestOpBatchEmitOutcome {
     String columnToSort = inputSchema.column(0).getName();
     FieldReference expr = FieldReference.getWithQuotedRef(columnToSort);
     Order.Ordering ordering = new Order.Ordering(Order.Ordering.ORDER_ASC, expr, Order.Ordering.NULLS_FIRST);
-    sortPopConfig = new ExternalSort(null, Lists.newArrayList(ordering), false);
+    sortPopConfig = new ExternalSort(null, Collections.singletonList(ordering), false);
   }
 
   @After

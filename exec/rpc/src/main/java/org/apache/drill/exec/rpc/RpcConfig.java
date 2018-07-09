@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.rpc;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 
@@ -37,12 +38,11 @@ public class RpcConfig {
 
   private RpcConfig(String name, Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap,
       Map<Integer, RpcMessageType<?, ?, ?>> receiveMap, int timeout, Executor executor) {
-    Preconditions.checkNotNull(executor, "Executor must be defined.");
+    this.executor = Objects.requireNonNull(executor, "Executor must be defined.");
     this.name = name;
     this.timeout = timeout;
     this.sendMap = ImmutableMap.copyOf(sendMap);
     this.receiveMap = ImmutableMap.copyOf(receiveMap);
-    this.executor = executor;
   }
 
   public String getName() {
@@ -162,8 +162,8 @@ public class RpcConfig {
     private String name;
     private int timeout = -1;
     private Executor executor;
-    private Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap = Maps.newHashMap();
-    private Map<Integer, RpcMessageType<?, ?, ?>> receiveMap = Maps.newHashMap();
+    private Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap = new HashMap<>();
+    private Map<Integer, RpcMessageType<?, ?, ?>> receiveMap = new HashMap<>();
 
     private RpcConfigBuilder() {
     }

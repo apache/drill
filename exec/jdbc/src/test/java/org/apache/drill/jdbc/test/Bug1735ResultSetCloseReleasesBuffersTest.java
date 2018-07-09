@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.function.Function;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.categories.JdbcTest;
@@ -28,7 +29,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Function;
 import org.junit.experimental.categories.Category;
 
 @Category(JdbcTest.class)
@@ -69,23 +69,19 @@ public class Bug1735ResultSetCloseReleasesBuffersTest extends JdbcTestQueryBase 
   public void test() throws Exception {
     withNoDefaultSchema()
     .withConnection(
-        new Function<Connection, Void>() {
-          public Void apply( Connection connection ) {
-            try {
-              Statement statement = connection.createStatement();
-              ResultSet resultSet = statement.executeQuery( "USE dfs.tmp" );
-              // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
-              // race conditions are fixed (not just DRILL-2245 fixes).
-              // resultSet.close( resultSet );
-              statement.close();
-              // connection.close() is in withConnection(...)
-              return null;
-            } catch ( SQLException e ) {
-              throw new RuntimeException( e );
-            }
+        (Function<Connection, Void>) connection -> {
+          try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery( "USE dfs.tmp" );
+            // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
+            // race conditions are fixed (not just DRILL-2245 fixes).
+            // resultSet.close( resultSet );
+            statement.close();
+            // connection.close() is in withConnection(...)
+            return null;
+          } catch ( SQLException e ) {
+            throw new RuntimeException( e );
           }
-        });
+      });
   }
-
-
 }

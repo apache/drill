@@ -18,6 +18,8 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,8 +45,6 @@ import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * This visitor will walk a logical plan and record in a map the list of field references associated to each scan. These
@@ -54,7 +54,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanFieldDeterminer.class);
 
   private FieldReferenceFinder finder = new FieldReferenceFinder();
-  private Map<Scan, FieldList> scanFields = Maps.newHashMap();
+  private Map<Scan, FieldList> scanFields = new HashMap<>();
 
 
   public static Map<Scan, FieldList> getFieldLists(LogicalPlan plan){
@@ -69,8 +69,8 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
   }
 
   public static class FieldList {
-    private Set<SchemaPath> projected = Sets.newHashSet();
-    private Set<SchemaPath> referenced = Sets.newHashSet();
+    private Set<SchemaPath> projected = new HashSet<>();
+    private Set<SchemaPath> referenced = new HashSet<>();
 
     public void addProjected(SchemaPath path) {
       projected.add(path);
@@ -200,14 +200,14 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
 
     @Override
     public Set<SchemaPath> visitSchemaPath(SchemaPath path, Void value) {
-      Set<SchemaPath> set = Sets.newHashSet();
+      Set<SchemaPath> set = new HashSet<>();
       set.add(path);
       return set;
     }
 
     @Override
     public Set<SchemaPath> visitUnknown(LogicalExpression e, Void value) {
-      Set<SchemaPath> paths = Sets.newHashSet();
+      Set<SchemaPath> paths = new HashSet<>();
       for (LogicalExpression ex : e) {
         paths.addAll(ex.accept(this, null));
       }

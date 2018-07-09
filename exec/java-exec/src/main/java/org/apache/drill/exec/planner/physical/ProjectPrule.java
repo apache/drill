@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public class ProjectPrule extends Prule {
   public static final RelOptRule INSTANCE = new ProjectPrule();
@@ -95,7 +95,7 @@ public class ProjectPrule extends Prule {
   }
 
   private DrillDistributionTrait convertDist(DrillDistributionTrait srcDist, Map<Integer, Integer> inToOut) {
-    List<DistributionField> newFields = Lists.newArrayList();
+    List<DistributionField> newFields = new ArrayList<>();
 
     for (DistributionField field : srcDist.getFields()) {
       if (inToOut.containsKey(field.getFieldId())) {
@@ -117,7 +117,7 @@ public class ProjectPrule extends Prule {
   }
 
   private RelCollation convertRelCollation(RelCollation src, Map<Integer, Integer> inToOut) {
-    List<RelFieldCollation> newFields = Lists.newArrayList();
+    List<RelFieldCollation> newFields = new ArrayList<>();
 
     for ( RelFieldCollation field : src.getFieldCollations()) {
       if (inToOut.containsKey(field.getFieldIndex())) {

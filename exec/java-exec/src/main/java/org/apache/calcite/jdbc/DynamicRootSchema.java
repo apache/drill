@@ -32,8 +32,8 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.SubSchemaWrapper;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This class is to allow us loading schemas from storage plugins later when {@link #getSubSchema(String, boolean)}
@@ -99,10 +99,9 @@ public class DynamicRootSchema extends DynamicSchema {
           firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
         }
         // Load second level schemas for this storage plugin
-        List<SchemaPlus> secondLevelSchemas = new ArrayList<>();
-        for (String secondLevelSchemaName : firstLevelSchema.getSubSchemaNames()) {
-          secondLevelSchemas.add(firstLevelSchema.getSubSchema(secondLevelSchemaName));
-        }
+        List<SchemaPlus> secondLevelSchemas = firstLevelSchema.getSubSchemaNames().stream()
+            .map(firstLevelSchema::getSubSchema)
+            .collect(Collectors.toList());
 
         for (SchemaPlus schema : secondLevelSchemas) {
           org.apache.drill.exec.store.AbstractSchema drillSchema;

@@ -42,11 +42,12 @@ import org.apache.drill.exec.vector.IntVector;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
+
+import java.nio.charset.StandardCharsets;
 
 @Ignore
 @Category(OperatorTest.class)
@@ -59,7 +60,7 @@ public class TestSimpleSort extends ExecTest {
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/sort/one_key_sort.json"), Charsets.UTF_8));
+    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/sort/one_key_sort.json"), StandardCharsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
@@ -96,7 +97,7 @@ public class TestSimpleSort extends ExecTest {
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/sort/two_key_sort.json"), Charsets.UTF_8));
+    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/sort/two_key_sort.json"), StandardCharsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));

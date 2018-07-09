@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.google.common.base.Functions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -149,7 +148,7 @@ public abstract class AbstractParquetScanBatchCreator {
     }
 
     // all readers should have the same number of implicit columns, add missing ones with value null
-    Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
+    Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, input -> null);
     for (Map<String, String> map : implicitColumns) {
       map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
     }

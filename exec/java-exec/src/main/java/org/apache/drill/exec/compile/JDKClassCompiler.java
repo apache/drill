@@ -18,6 +18,7 @@
 package org.apache.drill.exec.compile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -30,9 +31,6 @@ import javax.tools.ToolProvider;
 
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.codehaus.commons.compiler.CompileException;
-
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 
 class JDKClassCompiler extends AbstractClassCompiler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JDKClassCompiler.class);
@@ -54,8 +52,8 @@ class JDKClassCompiler extends AbstractClassCompiler {
     super(debug);
     this.compiler = compiler;
     this.listener = new DrillDiagnosticListener();
-    this.fileManager = new DrillJavaFileManager(compiler.getStandardFileManager(listener, null, Charsets.UTF_8), classLoader);
-    this.compilerOptions = Lists.newArrayList(this.debug ? "-g:source,lines,vars" : "-g:none");
+    this.fileManager = new DrillJavaFileManager(compiler.getStandardFileManager(listener, null, StandardCharsets.UTF_8), classLoader);
+    this.compilerOptions = Collections.singletonList(this.debug ? "-g:source,lines,vars" : "-g:none");
   }
 
   @Override

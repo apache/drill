@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
@@ -34,7 +35,6 @@ import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 
 public class BasicFormatMatcher extends FormatMatcher {
@@ -57,12 +57,12 @@ public class BasicFormatMatcher extends FormatMatcher {
   }
 
   public BasicFormatMatcher(FormatPlugin plugin, Configuration fsConf, List<String> extensions, boolean compressible) {
-    List<Pattern> patterns = Lists.newArrayList();
+    List<Pattern> patterns = new ArrayList<>();
     for (String extension : extensions) {
       patterns.add(Pattern.compile(".*\\." + extension));
     }
     this.patterns = patterns;
-    this.matcher = new MagicStringMatcher(new ArrayList<MagicString>());
+    this.matcher = new MagicStringMatcher(new ArrayList<>());
     this.plugin = plugin;
     this.compressible = compressible;
     this.codecFactory = new CompressionCodecFactory(fsConf);
@@ -127,10 +127,9 @@ public class BasicFormatMatcher extends FormatMatcher {
     private List<RangeMagics> ranges;
 
     public MagicStringMatcher(List<MagicString> magicStrings) {
-      ranges = Lists.newArrayList();
-      for(MagicString ms : magicStrings) {
-        ranges.add(new RangeMagics(ms));
-      }
+      ranges = magicStrings.stream()
+          .map(RangeMagics::new)
+          .collect(Collectors.toList());
     }
 
     public boolean matches(DrillFileSystem fs, FileStatus status) throws IOException{

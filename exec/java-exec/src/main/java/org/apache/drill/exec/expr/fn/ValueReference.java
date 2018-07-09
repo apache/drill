@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import com.google.common.base.Preconditions;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+
+import java.util.Objects;
 
 public class ValueReference {
   private final MajorType type;
@@ -30,10 +31,8 @@ public class ValueReference {
   private boolean isComplexWriter = false;
 
   public ValueReference(MajorType type, String name) {
-    Preconditions.checkNotNull(type);
-    Preconditions.checkNotNull(name);
-    this.type = type;
-    this.name = name;
+    this.type = Objects.requireNonNull(type);
+    this.name = Objects.requireNonNull(name);
   }
 
   public void setConstant(boolean isConstant) {

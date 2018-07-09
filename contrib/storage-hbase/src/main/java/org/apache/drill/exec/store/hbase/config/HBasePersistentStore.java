@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.stream.StreamSupport;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
@@ -37,8 +38,6 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
-
-import com.google.common.collect.Iterators;
 
 public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePersistentStore.class);
@@ -138,9 +137,11 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public Iterator<Entry<String, V>> getRange(int skip, int take) {
-    final Iterator<Entry<String, V>> iter = new Iter(take);
-    Iterators.advance(iter, skip);
-    return Iterators.limit(iter, take);
+    Iterable<Entry<String, V>> entries = () -> new Iter(take);
+    return StreamSupport.stream(entries.spliterator(), false)
+        .skip(skip)
+        .limit(take)
+        .iterator();
   }
 
   private byte[] row(String key) {

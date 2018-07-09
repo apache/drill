@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
@@ -29,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -59,11 +59,11 @@ public class TestImplicitFileColumns extends BaseTestQuery {
   public static void setup() throws Exception {
     File files = dirTestWatcher.makeRootSubDir(FILES);
     mainFile = new File(files, MAIN_FILE);
-    Files.write(MAIN, mainFile, Charsets.UTF_8);
+    Files.write(MAIN, mainFile, StandardCharsets.UTF_8);
     File nestedFolder = new File(files, NESTED);
     nestedFolder.mkdirs();
     nestedFile = new File(nestedFolder, NESTED_FILE);
-    Files.write(NESTED, nestedFile, Charsets.UTF_8);
+    Files.write(NESTED, nestedFile, StandardCharsets.UTF_8);
 
     dirTestWatcher.copyResourceToRoot(JSON_TBL);
     dirTestWatcher.copyResourceToRoot(PARQUET_TBL);

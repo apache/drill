@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.planner.logical.DrillUnionRel;
@@ -28,7 +29,6 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.util.trace.CalciteTrace;
 
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 
 public class UnionDistinctPrule extends Prule {
@@ -48,9 +48,9 @@ public class UnionDistinctPrule extends Prule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillUnionRel union = call.rel(0);
-    final List<RelNode> inputs = union.getInputs();
-    List<RelNode> convertedInputList = Lists.newArrayList();
+    DrillUnionRel union = call.rel(0);
+    List<RelNode> inputs = union.getInputs();
+    List<RelNode> convertedInputList = new ArrayList<>();
     RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
 
     try {

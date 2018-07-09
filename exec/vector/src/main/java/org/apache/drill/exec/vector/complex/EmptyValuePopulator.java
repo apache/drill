@@ -20,6 +20,8 @@ package org.apache.drill.exec.vector.complex;
 import com.google.common.base.Preconditions;
 import org.apache.drill.exec.vector.UInt4Vector;
 
+import java.util.Objects;
+
 /**
  * A helper class that is used to track and populate empty values in repeated value vectors.
  */
@@ -27,7 +29,7 @@ public class EmptyValuePopulator {
   private final UInt4Vector offsets;
 
   public EmptyValuePopulator(UInt4Vector offsets) {
-    this.offsets = Preconditions.checkNotNull(offsets, "offsets cannot be null");
+    this.offsets = Objects.requireNonNull(offsets, "offsets cannot be null");
   }
 
   /**

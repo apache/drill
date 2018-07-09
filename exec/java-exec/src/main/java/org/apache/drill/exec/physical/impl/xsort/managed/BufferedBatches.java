@@ -34,8 +34,6 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 
-import com.google.common.collect.Lists;
-
 /**
  * Represents the set of in-memory batches accumulated by
  * the external sort.
@@ -49,7 +47,7 @@ public class BufferedBatches {
    * or an in-memory merge.
    */
 
-  private LinkedList<BatchGroup.InputBatch> bufferedBatches = Lists.newLinkedList();
+  private LinkedList<BatchGroup.InputBatch> bufferedBatches = new LinkedList<>();
 
   private final SorterWrapper sorterWrapper;
 

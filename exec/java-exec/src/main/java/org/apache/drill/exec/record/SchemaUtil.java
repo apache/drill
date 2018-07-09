@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,9 +37,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * Utility class for dealing with changing schemas
@@ -49,14 +50,14 @@ public class SchemaUtil {
    * @return
    */
   public static BatchSchema mergeSchemas(BatchSchema... schemas) {
-    Map<SchemaPath,Set<MinorType>> typeSetMap = Maps.newLinkedHashMap();
+    Map<SchemaPath,Set<MinorType>> typeSetMap = new LinkedHashMap<>();
 
     for (BatchSchema s : schemas) {
       for (MaterializedField field : s) {
         SchemaPath path = SchemaPath.getSimplePath(field.getName());
         Set<MinorType> currentTypes = typeSetMap.get(path);
         if (currentTypes == null) {
-          currentTypes = Sets.newHashSet();
+          currentTypes = new HashSet<>();
           typeSetMap.put(path, currentTypes);
         }
         MinorType newType = field.getType().getMinorType();
@@ -71,7 +72,7 @@ public class SchemaUtil {
       }
     }
 
-    List<MaterializedField> fields = Lists.newArrayList();
+    List<MaterializedField> fields = new ArrayList<>();
 
     for (SchemaPath path : typeSetMap.keySet()) {
       Set<MinorType> types = typeSetMap.get(path);
@@ -138,7 +139,7 @@ public class SchemaUtil {
   public static VectorContainer coerceContainer(VectorAccessible in, BatchSchema toSchema, BufferAllocator allocator) {
     int recordCount = in.getRecordCount();
     boolean isHyper = false;
-    Map<String, Object> vectorMap = Maps.newHashMap();
+    Map<String, Object> vectorMap = new HashMap<>();
     for (VectorWrapper<?> w : in) {
       if (w.isHyper()) {
         isHyper = true;

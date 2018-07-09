@@ -17,12 +17,12 @@
  */
 package org.apache.drill.test;
 
-import com.google.common.base.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.Description;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -310,14 +310,14 @@ public class BaseDirTestWatcher extends DirTestWatcher {
    */
   public void replaceMetaDataContents(File metaDataFile, File replacePath, String customStringReplacement) {
     try {
-      String metadataFileContents = FileUtils.readFileToString(metaDataFile, Charsets.UTF_8);
+      String metadataFileContents = FileUtils.readFileToString(metaDataFile, StandardCharsets.UTF_8);
 
       if (customStringReplacement != null) {
         metadataFileContents = metadataFileContents.replace("CUSTOM_STRING_REPLACEMENT", customStringReplacement);
       }
 
       metadataFileContents = metadataFileContents.replace("REPLACED_IN_TEST", replacePath.getCanonicalPath());
-      FileUtils.write(metaDataFile, metadataFileContents, Charsets.UTF_8);
+      FileUtils.write(metaDataFile, metadataFileContents, StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException("This should not happen", e);
     }

@@ -19,17 +19,15 @@ package org.apache.drill.common.collections;
 
 import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import io.netty.util.collection.IntObjectHashMap;
-import io.netty.util.collection.IntObjectMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +52,7 @@ import org.slf4j.LoggerFactory;
 public class MapWithOrdinal<K, V> implements Map<K, V> {
   private final static Logger logger = LoggerFactory.getLogger(MapWithOrdinal.class);
 
-  private final Map<K, Entry<Integer, V>> primary = Maps.newLinkedHashMap();
+  private final Map<K, Entry<Integer, V>> primary = new LinkedHashMap<>();
   private final IntObjectHashMap<V> secondary = new IntObjectHashMap<>();
 
   private final Map<K, V> delegate = new Map<K, V>() {
@@ -129,22 +127,17 @@ public class MapWithOrdinal<K, V> implements Map<K, V> {
 
     @Override
     public Collection<V> values() {
-      return Lists.newArrayList(Iterables.transform(secondary.entries(), new Function<IntObjectMap.Entry<V>, V>() {
-        @Override
-        public V apply(IntObjectMap.Entry<V> entry) {
-          return Preconditions.checkNotNull(entry).value();
-        }
-      }));
+      return StreamSupport.stream(secondary.entries().spliterator(), false)
+          .map(entry -> Objects.requireNonNull(entry).value())
+          .collect(Collectors.toList());
     }
 
     @Override
     public Set<Entry<K, V>> entrySet() {
-      return Sets.newHashSet(Iterables.transform(primary.entrySet(), new Function<Entry<K, Entry<Integer, V>>, Entry<K, V>>() {
-        @Override
-        public Entry<K, V> apply(Entry<K, Entry<Integer, V>> entry) {
-          return new AbstractMap.SimpleImmutableEntry<>(entry.getKey(), entry.getValue().getValue());
-        }
-      }));
+      return primary.entrySet().stream()
+          .map((Function<Entry<K, Entry<Integer, V>>, Entry<K, V>>) entry ->
+              new AbstractMap.SimpleImmutableEntry<>(entry.getKey(), entry.getValue().getValue()))
+          .collect(Collectors.toSet());
     }
   };
 

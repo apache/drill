@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,7 +25,6 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public class FunctionCall extends LogicalExpressionBase implements Iterable<LogicalExpression> {
   private final String name;
@@ -36,7 +36,7 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
     this.name = name;
 
     if (args == null) {
-      args = Lists.newArrayList();
+      args = new ArrayList<>();
     }
 
     if (!(args instanceof ImmutableList)) {

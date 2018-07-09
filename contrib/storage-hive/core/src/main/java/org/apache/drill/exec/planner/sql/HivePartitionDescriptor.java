@@ -167,7 +167,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
     HiveReadEntry origReadEntry = hiveScan.getHiveReadEntry();
     List<HiveTableWrapper.HivePartitionWrapper> oldPartitions = origReadEntry.partitions;
-    List<HiveTableWrapper.HivePartitionWrapper> newPartitions = Lists.newLinkedList();
+    List<HiveTableWrapper.HivePartitionWrapper> newPartitions = new LinkedList<>();
 
     for (HiveTableWrapper.HivePartitionWrapper part: oldPartitions) {
       String partitionLocation = part.getPartition().getSd().getLocation();

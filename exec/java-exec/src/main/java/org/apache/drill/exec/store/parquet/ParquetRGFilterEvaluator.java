@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -38,6 +37,7 @@ import org.apache.drill.exec.store.parquet.stat.ParquetFooterStatCollector;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -124,14 +124,14 @@ public class ParquetRGFilterEvaluator {
   public static class FieldReferenceFinder extends AbstractExprVisitor<Set<SchemaPath>, Void, RuntimeException> {
     @Override
     public Set<SchemaPath> visitSchemaPath(SchemaPath path, Void value) {
-      Set<SchemaPath> set = Sets.newHashSet();
+      Set<SchemaPath> set = new HashSet<>();
       set.add(path);
       return set;
     }
 
     @Override
     public Set<SchemaPath> visitUnknown(LogicalExpression e, Void value) {
-      Set<SchemaPath> paths = Sets.newHashSet();
+      Set<SchemaPath> paths = new HashSet<>();
       for (LogicalExpression ex : e) {
         paths.addAll(ex.accept(this, null));
       }

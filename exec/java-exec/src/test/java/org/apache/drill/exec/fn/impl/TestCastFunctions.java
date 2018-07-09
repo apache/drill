@@ -19,6 +19,8 @@ package org.apache.drill.exec.fn.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,9 +34,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import mockit.integration.junit4.JMockit;
 
@@ -100,7 +99,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test
   public void testCastFloatToInt() throws Exception {
-    Map<Float, Integer> values = Maps.newHashMap();
+    Map<Float, Integer> values = new HashMap<>();
 
     values.put(0F, 0);
     values.put(0.4F, 0);
@@ -136,7 +135,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test
   public void testCastIntToFloatAndDouble() throws Exception {
-    List<Integer> values = Lists.newArrayList();
+    List<Integer> values = new ArrayList<>();
 
     values.add(0);
     values.add(1);
@@ -167,7 +166,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test
   public void testCastFloatToBigInt() throws Exception {
-    Map<Float, Long> values = Maps.newHashMap();
+    Map<Float, Long> values = new HashMap<>();
 
     values.put(0F, 0L);
     values.put(0.4F, 0L);
@@ -203,7 +202,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test
   public void testCastBigIntToFloatAndDouble() throws Exception {
-    List<Long> values = Lists.newArrayList();
+    List<Long> values = new ArrayList<>();
 
     values.add(0L);
     values.add(1L);
@@ -236,7 +235,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test
   public void testCastDoubleToInt() throws Exception {
-    Map<Double, Integer> values = Maps.newHashMap();
+    Map<Double, Integer> values = new HashMap<>();
 
     values.put(0D, 0);
     values.put(0.4, 0);
@@ -272,7 +271,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test
   public void testCastDoubleToBigInt() throws Exception {
-    Map<Double, Long> values = Maps.newHashMap();
+    Map<Double, Long> values = new HashMap<>();
 
     values.put(0D, 0L);
     values.put(0.4, 0L);
@@ -308,7 +307,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test
   public void testCastIntAndBigInt() throws Exception {
-    List<Integer> values = Lists.newArrayList();
+    List<Integer> values = new ArrayList<>();
 
     values.add(0);
     values.add(1);
@@ -338,7 +337,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test
   public void testCastFloatAndDouble() throws Exception {
-    List<Double> values = Lists.newArrayList();
+    List<Double> values = new ArrayList<>();
 
     values.add(0d);
     values.add(0.4);
@@ -525,11 +524,11 @@ public class TestCastFunctions extends BaseTestQuery {
                       "cast(-255.0 as float) as float_col\n" +
               "from (values(1)))");
 
-      final List<String> columnNames = Lists.newArrayList();
+      final List<String> columnNames = new ArrayList<>();
       columnNames.add("float_col");
       columnNames.add("double_col");
 
-      final List<String> castTypes = Lists.newArrayList();
+      final List<String> castTypes = new ArrayList<>();
       castTypes.add("int");
       castTypes.add("bigInt");
 
@@ -561,7 +560,7 @@ public class TestCastFunctions extends BaseTestQuery {
                       "cast(cast(manager_id as double) * (-1) as decimal(18, 0)) as decimal18_col\n" +
               "from cp.`parquet/fixedlenDecimal.parquet` limit 1)");
 
-      final List<String> columnNames = Lists.newArrayList();
+      final List<String> columnNames = new ArrayList<>();
       columnNames.add("decimal9_col");
       columnNames.add("decimal18_col");
 

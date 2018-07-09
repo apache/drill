@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.expression.SchemaPath;
@@ -40,9 +41,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
-
 /**
  * Holds record batch loaded from record batch message.
  */
@@ -58,7 +56,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
    * Constructs a loader using the given allocator for vector buffer allocation.
    */
   public RecordBatchLoader(BufferAllocator allocator) {
-    this.allocator = Preconditions.checkNotNull(allocator);
+    this.allocator = Objects.requireNonNull(allocator);
   }
 
   public BufferAllocator allocator() { return allocator; }

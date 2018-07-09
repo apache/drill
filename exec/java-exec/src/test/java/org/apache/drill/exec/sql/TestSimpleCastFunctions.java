@@ -17,17 +17,16 @@
  */
 package org.apache.drill.exec.sql;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
@@ -35,32 +34,12 @@ import static org.junit.Assert.assertThat;
 @Category(SqlTest.class)
 public class TestSimpleCastFunctions extends BaseTestQuery {
 
-  private static final List<Function<String, String>> inputFunctions = Lists.newArrayList();
+  private static final List<Function<String, String>> inputFunctions = new ArrayList<>();
 
   static {
-    inputFunctions.add(new Function<String, String>() {
-      @Nullable
-      @Override
-      public String apply(String input) {
-        return input.toLowerCase();
-      }
-    });
-
-    inputFunctions.add(new Function<String, String>() {
-      @Nullable
-      @Override
-      public String apply(String input) {
-        return input.toUpperCase();
-      }
-    });
-
-    inputFunctions.add(new Function<String, String>() {
-      @Nullable
-      @Override
-      public String apply(String input) {
-        return "   " + input + "   ";
-      }
-    });
+    inputFunctions.add(String::toLowerCase);
+    inputFunctions.add(String::toUpperCase);
+    inputFunctions.add(input -> "   " + input + "   ");
   }
 
   @Test

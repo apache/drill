@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
@@ -30,7 +31,6 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Admin;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 
 public class HBaseSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSchemaFactory.class);
@@ -88,9 +88,9 @@ public class HBaseSchemaFactory implements SchemaFactory {
     public Set<String> getTableNames() {
       try(Admin admin = plugin.getConnection().getAdmin()) {
         HTableDescriptor[] tables = admin.listTables();
-        Set<String> tableNames = Sets.newHashSet();
+        Set<String> tableNames = new HashSet<>();
         for (HTableDescriptor table : tables) {
-          tableNames.add(new String(table.getTableName().getNameAsString()));
+          tableNames.add(table.getTableName().getNameAsString());
         }
         return tableNames;
       } catch (Exception e) {

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.avro;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -37,14 +38,12 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatSelection;
-import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 /**
  * Format plugin for Avro data files.
@@ -59,7 +58,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
   }
 
   public AvroFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, AvroFormatConfig formatPluginConfig) {
-    super(name, context, fsConf, config, formatPluginConfig, true, false, true, false, Lists.newArrayList("avro"), "avro");
+    super(name, context, fsConf, config, formatPluginConfig, true, false, true, false, Collections.singletonList("avro"), "avro");
     this.matcher = new AvroFormatMatcher(this);
   }
 
@@ -97,7 +96,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
   private static class AvroFormatMatcher extends BasicFormatMatcher {
 
     public AvroFormatMatcher(AvroFormatPlugin plugin) {
-      super(plugin, ImmutableList.of(Pattern.compile(".*\\.avro$")), ImmutableList.<MagicString>of());
+      super(plugin, ImmutableList.of(Pattern.compile(".*\\.avro$")), ImmutableList.of());
     }
 
     @Override

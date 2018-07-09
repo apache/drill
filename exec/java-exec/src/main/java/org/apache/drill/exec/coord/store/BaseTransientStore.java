@@ -20,23 +20,18 @@ package org.apache.drill.exec.coord.store;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.StreamSupport;
 
 public abstract class BaseTransientStore<V> implements TransientStore<V> {
-  private final Set<TransientStoreListener> listeners = Collections.newSetFromMap(
-      Maps.<TransientStoreListener, Boolean>newConcurrentMap());
+  private final Set<TransientStoreListener> listeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
   protected final TransientStoreConfig<V> config;
 
-  protected BaseTransientStore(final TransientStoreConfig<V> config) {
-    this.config = Preconditions.checkNotNull(config, "config cannot be null");
+  protected BaseTransientStore(TransientStoreConfig<V> config) {
+    this.config = Objects.requireNonNull(config, "config cannot be null");
   }
 
   public TransientStoreConfig<V> getConfig() {
@@ -45,24 +40,18 @@ public abstract class BaseTransientStore<V> implements TransientStore<V> {
 
   @Override
   public Iterator<String> keys() {
-    return Iterators.transform(entries(), new Function<Map.Entry<String, V>, String>() {
-      @Nullable
-      @Override
-      public String apply(@Nullable Map.Entry<String, V> input) {
-        return input.getKey();
-      }
-    });
+    Iterable<Map.Entry<String, V>> iterable = this::entries;
+    return StreamSupport.stream(iterable.spliterator(), false)
+        .map(Map.Entry::getKey)
+        .iterator();
   }
 
   @Override
   public Iterator<V> values() {
-    return Iterators.transform(entries(), new Function<Map.Entry<String, V>, V>() {
-      @Nullable
-      @Override
-      public V apply(final Map.Entry<String, V> entry) {
-        return entry.getValue();
-      }
-    });
+    Iterable<Map.Entry<String, V>> iterable = this::entries;
+    return StreamSupport.stream(iterable.spliterator(), false)
+      .map(Map.Entry::getValue)
+      .iterator();
   }
 
   protected void fireListeners(final TransientStoreEvent event) {
@@ -72,12 +61,12 @@ public abstract class BaseTransientStore<V> implements TransientStore<V> {
   }
 
   @Override
-  public void addListener(final TransientStoreListener listener) {
-    listeners.add(Preconditions.checkNotNull(listener, "listener cannot be null"));
+  public void addListener(TransientStoreListener listener) {
+    listeners.add(Objects.requireNonNull(listener, "listener cannot be null"));
   }
 
   @Override
-  public void removeListener(final TransientStoreListener listener) {
-    listeners.remove(Preconditions.checkNotNull(listener, "listener cannot be null"));
+  public void removeListener(TransientStoreListener listener) {
+    listeners.remove(Objects.requireNonNull(listener, "listener cannot be null"));
   }
 }

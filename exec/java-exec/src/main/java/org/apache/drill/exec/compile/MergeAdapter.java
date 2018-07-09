@@ -19,6 +19,7 @@ package org.apache.drill.exec.compile;
 
 import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -38,8 +39,6 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import com.google.common.collect.Sets;
-
 /**
  * Serves two purposes. Renames all inner classes references to the outer class to the new name. Also adds all the
  * methods and fields of the class to merge to the class that is being visited.
@@ -49,7 +48,7 @@ class MergeAdapter extends ClassVisitor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeAdapter.class);
   private final ClassNode classToMerge;
   private final ClassSet set;
-  private final Set<String> mergingNames = Sets.newHashSet();
+  private final Set<String> mergingNames = new HashSet<>();
   private final boolean hasInit;
   private String name;
 
@@ -285,7 +284,7 @@ class MergeAdapter extends ClassVisitor {
   }
 
   private static class RemapClasses extends Remapper {
-    final Set<String> innerClasses = Sets.newHashSet();
+    final Set<String> innerClasses = new HashSet<>();
     ClassSet top;
     ClassSet current;
 

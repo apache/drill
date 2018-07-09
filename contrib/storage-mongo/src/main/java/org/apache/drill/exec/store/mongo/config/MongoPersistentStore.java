@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
-import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.mongo.DrillMongoConstants;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
@@ -150,7 +150,7 @@ public class MongoPersistentStore<V> extends BasePersistentStore<V> {
     private MongoCursor<Document> cursor;
 
     public MongoIterator(final MongoCursor<Document> cursor) {
-      this.cursor = Preconditions.checkNotNull(cursor);
+      this.cursor = Objects.requireNonNull(cursor);
     }
 
     @Override

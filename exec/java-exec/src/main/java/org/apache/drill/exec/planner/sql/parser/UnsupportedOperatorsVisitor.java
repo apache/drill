@@ -42,15 +42,14 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class UnsupportedOperatorsVisitor extends SqlShuttle {
   private QueryContext context;
-  private static List<String> disabledType = Lists.newArrayList();
-  private static List<String> disabledOperators = Lists.newArrayList();
-  private static List<String> dirExplorers = Lists.newArrayList();
+  private static List<String> disabledType = new ArrayList<>();
+  private static List<String> disabledOperators = new ArrayList<>();
+  private static List<String> dirExplorers = new ArrayList<>();
 
   static {
     disabledType.add(SqlTypeName.TINYINT.name());

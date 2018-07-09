@@ -19,7 +19,6 @@ package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Maps;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -36,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -116,7 +116,7 @@ public class QueryWrapper {
     }
 
     if (webUserConnection.results.isEmpty()) {
-      webUserConnection.results.add(Maps.<String, String>newHashMap());
+      webUserConnection.results.add(new HashMap<>());
     }
 
     // Return the QueryResult.

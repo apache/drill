@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr.fn;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -129,15 +128,15 @@ public class FunctionGenerationHelper {
    * @return
    */
   private static LogicalExpression getTypeComparisonFunction(LogicalExpression comparisonFunction, HoldingContainer... args) {
-    List<LogicalExpression> argExpressions = Lists.newArrayList();
-    List<MajorType> argTypes = Lists.newArrayList();
-    for(HoldingContainer c : args) {
+    List<LogicalExpression> argExpressions = new ArrayList<>();
+    List<MajorType> argTypes = new ArrayList<>();
+    for (HoldingContainer c : args) {
       argTypes.add(c.getMajorType());
       argExpressions.add(new HoldingContainerExpression(c));
     }
     FunctionCall call = new FunctionCall("compareType", argExpressions, ExpressionPosition.UNKNOWN);
 
-    List<LogicalExpression> newArgs = Lists.newArrayList();
+    List<LogicalExpression> newArgs = new ArrayList<>();
     newArgs.add(call);
     newArgs.add(new IntExpression(0, ExpressionPosition.UNKNOWN));
     FunctionCall notEqual = new FunctionCall("not_equal", newArgs, ExpressionPosition.UNKNOWN);

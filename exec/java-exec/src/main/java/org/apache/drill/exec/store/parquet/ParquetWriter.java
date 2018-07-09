@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -34,7 +35,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
 
 @JsonTypeName("parquet-writer")
 public class ParquetWriter extends AbstractWriter {
@@ -67,7 +67,7 @@ public class ParquetWriter extends AbstractWriter {
 
     super(child);
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, new ParquetFormatConfig());
-    Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
+    Objects.requireNonNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.location = location;
     this.partitionColumns = partitionColumns;
     setStorageStrategy(storageStrategy);

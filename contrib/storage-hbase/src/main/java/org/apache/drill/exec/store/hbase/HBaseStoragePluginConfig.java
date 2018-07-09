@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.hbase;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.drill.common.logical.StoragePluginConfigBase;
@@ -30,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 @JsonTypeName(HBaseStoragePluginConfig.NAME)
 public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements DrillHBaseConstants {
@@ -50,7 +50,7 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements
   public HBaseStoragePluginConfig(@JsonProperty("config") Map<String, String> props, @JsonProperty("size.calculator.enabled") Boolean sizeCalculatorEnabled) {
     this.config = props;
     if (config == null) {
-      config = Maps.newHashMap();
+      config = new HashMap<>();
     }
     logger.debug("Initializing HBase StoragePlugin configuration with zookeeper quorum '{}', port '{}'.",
         config.get(HConstants.ZOOKEEPER_QUORUM), config.get(HBASE_ZOOKEEPER_PORT));

@@ -19,7 +19,6 @@ package org.apache.drill.exec.server.rest;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.server.rest.QueryWrapper.QueryResult;
@@ -36,6 +35,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -100,9 +100,9 @@ public class QueryResources {
 
     public TabularResult(QueryResult result) {
       queryId = result.getQueryId();
-      final List<List<String>> rows = Lists.newArrayList();
+      List<List<String>> rows = new ArrayList<>();
       for (Map<String, String> rowMap:result.rows) {
-        final List<String> row = Lists.newArrayList();
+        List<String> row = new ArrayList<>();
         for (String col:result.columns) {
           row.add(rowMap.get(col));
         }

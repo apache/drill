@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -31,6 +30,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.security.sasl.SaslException;
+import java.util.Collections;
 import java.util.Properties;
 
 import static junit.framework.TestCase.assertTrue;
@@ -50,7 +50,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
             ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
             ConfigValueFactory.fromAnyRef(false)));
 
@@ -146,7 +146,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
             ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
             ConfigValueFactory.fromAnyRef(false)));
 
@@ -177,7 +177,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
             ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
             ConfigValueFactory.fromAnyRef(false)));
 
@@ -205,7 +205,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
             ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
             ConfigValueFactory.fromAnyRef(true)));
 
@@ -235,7 +235,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
             ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
             ConfigValueFactory.fromAnyRef(false)));
 
@@ -264,7 +264,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
             ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
             ConfigValueFactory.fromAnyRef(true)));
 
