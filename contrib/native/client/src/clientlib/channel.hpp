@@ -23,11 +23,10 @@
 #include "streamSocket.hpp"
 #include "errmsgs.hpp"
 
-namespace
-{
-// The error message to indicate certificate verification failure.
-#define DRILL_BOOST_SSL_CERT_VERIFY_FAILED  "handshake: certificate verify failed\0"
-}
+#if defined(IS_SSL_ENABLED)
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#endif
 
 namespace Drill {
 
@@ -90,7 +89,8 @@ class UserProperties;
 
         SSLChannelContext(DrillUserProperties *props,
                           boost::asio::ssl::context::method tlsVersion,
-                          boost::asio::ssl::verify_mode verifyMode) :
+                          boost::asio::ssl::verify_mode verifyMode,
+                          const long customSSLCtxOptions = 0) :
                     ChannelContext(props),
                     m_SSLContext(tlsVersion),
                     m_certHostnameVerificationStatus(true) 
@@ -101,6 +101,7 @@ class UserProperties;
                         | boost::asio::ssl::context::no_sslv2
                         | boost::asio::ssl::context::no_sslv3
                         | boost::asio::ssl::context::single_dh_use
+                        | customSSLCtxOptions
                         );
                 m_SSLContext.set_verify_mode(verifyMode);
             };
@@ -179,11 +180,11 @@ class UserProperties;
 
             /// @brief Handle protocol handshake exceptions.
             /// 
-            /// @param in_errmsg                The error message.
+            /// @param in_err                   The error.
             /// 
             /// @return the connectionStatus.
-            virtual connectionStatus_t HandleProtocolHandshakeException(const char* in_errmsg){
-                return handleError(CONN_HANDSHAKE_FAILED, in_errmsg);
+            virtual connectionStatus_t HandleProtocolHandshakeException(const boost::system::system_error& in_err){
+                return handleError(CONN_HANDSHAKE_FAILED, in_err.what());
             }
 
             boost::asio::io_service& m_ioService;
@@ -206,7 +207,7 @@ class UserProperties;
                 try{
                     m_pSocket->protocolHandshake(useSystemConfig);
                 } catch (boost::system::system_error e) {
-                    status = HandleProtocolHandshakeException(e.what());
+                    status = HandleProtocolHandshakeException(e);
                 }
                 return status;
             }
@@ -236,28 +237,32 @@ class UserProperties;
             }
             connectionStatus_t init();
         protected:
+#if defined(IS_SSL_ENABLED)
             /// @brief Handle protocol handshake exceptions for SSL specific failures.
             /// 
-            /// @param in_errmsg                The error message.
+            /// @param in_err               The error.
             /// 
             /// @return the connectionStatus.
-            connectionStatus_t HandleProtocolHandshakeException(const char* errmsg) {
+            connectionStatus_t HandleProtocolHandshakeException(const boost::system::system_error& in_err) {
+                const boost::system::error_code& errcode = in_err.code();
                 if (!(((SSLChannelContext_t *)m_pContext)->GetCertificateHostnameVerificationStatus())){
                     return handleError(
                         CONN_HANDSHAKE_FAILED,
-                        getMessage(ERR_CONN_SSL_CN));
+                        getMessage(ERR_CONN_SSL_CN, in_err.what()));
                 }
-                else if (0 == strcmp(errmsg, DRILL_BOOST_SSL_CERT_VERIFY_FAILED)){
+                else if (boost::asio::error::get_ssl_category() == errcode.category() && 
+                    SSL_R_CERTIFICATE_VERIFY_FAILED == ERR_GET_REASON(errcode.value())){
                     return handleError(
                         CONN_HANDSHAKE_FAILED,
-                        getMessage(ERR_CONN_SSL_CERTVERIFY, errmsg));
+                        getMessage(ERR_CONN_SSL_CERTVERIFY, in_err.what()));
                 }
                 else{
                     return handleError(
                         CONN_HANDSHAKE_FAILED,
-                        getMessage(ERR_CONN_SSL_GENERAL, errmsg));
+                        getMessage(ERR_CONN_SSL_GENERAL, in_err.what()));
                 }
             }
+#endif
     };
 
     class ChannelFactory{
@@ -312,7 +317,7 @@ class UserProperties;
 
                 // Sets the result back to the context.
                 context->SetCertHostnameVerificationStatus(verified);
-                return verified && in_preverified;
+                return verified;
             }
 
         private:
