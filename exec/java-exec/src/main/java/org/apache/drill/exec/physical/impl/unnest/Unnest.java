@@ -64,4 +64,6 @@ public interface Unnest {
    * time a new batch comes in.
    */
   void resetGroupIndex();
+
+  void close();
 }
