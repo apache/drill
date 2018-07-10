@@ -140,7 +140,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                     // When we see an EMIT we let the  agg record batch know that it should either
                     // send out an EMIT or an OK_NEW_SCHEMA, followed by an EMIT. To do that we simply return
                     // RETURN_AND_RESET with the outcome so the record batch can take care of it.
-                    return setOkAndReturn(EMIT);
+                    return setOkAndReturnEmit();
                   } else {
                     break outer;
                   }
@@ -156,7 +156,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               } // switch (outcome)
             } // while empty batches are seen
           } else {
-            return setOkAndReturn(EMIT);
+            return setOkAndReturnEmit();
           }
         }
       }
@@ -176,14 +176,14 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
         // loop through existing records, adding as necessary.
         if(!processRemainingRecordsInBatch()) {
           // output batch is full. Return.
-          return setOkAndReturn(OK);
+          return setOkAndReturn();
         }
         // if the current batch came with an EMIT, we're done
         if(outerOutcome == EMIT) {
           // output the last record
           outputToBatch(previousIndex);
           resetIndex();
-          return setOkAndReturn(EMIT);
+          return setOkAndReturnEmit();
         }
 
         /**
@@ -213,14 +213,14 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                 done = true;
                 lastOutcome = out;
                 if (firstBatchForDataSet && addedRecordCount == 0) {
-                  return setOkAndReturn(out);
+                  return setOkAndReturn();
                 } else if (addedRecordCount > 0) {
                   outputToBatchPrev(previous, previousIndex, outputCount); // No need to check the return value
                   // (output container full or not) as we are not going to insert any more records.
                   if (EXTRA_DEBUG) {
                     logger.debug("Received no more batches, returning.");
                   }
-                  return setOkAndReturn(out);
+                  return setOkAndReturn();
                 } else {
                   // not first batch and record Count == 0
                   outcome = out;
@@ -233,8 +233,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                   if (addedRecordCount > 0) {
                     outputToBatchPrev(previous, previousIndex, outputCount);
                   }
-                  resetIndex();
-                  return setOkAndReturn(out);
                 } else {
                   resetIndex();
                   if (previousIndex != -1 && isSamePrev(previousIndex, previous, currentIndex)) {
@@ -247,11 +245,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                     if (EXTRA_DEBUG) {
                       logger.debug("Continuing outside");
                     }
-                    processRemainingRecordsInBatch();
-                    // currentIndex has been reset to int_max so use previous index.
-                    outputToBatch(previousIndex);
-                    resetIndex();
-                    return setOkAndReturn(out);
                   } else { // not the same
                     if (EXTRA_DEBUG) {
                       logger.debug("This is not the same as the previous, add record and continue outside.");
@@ -261,16 +254,17 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                         if (EXTRA_DEBUG) {
                           logger.debug("Output container is full. flushing it.");
                         }
-                        return setOkAndReturn(out);
+                        return setOkAndReturnEmit();
                       }
                     }
+                    // important to set the previous index to -1 since we start a new group
                     previousIndex = -1;
-                    processRemainingRecordsInBatch();
-                    outputToBatch(previousIndex); // currentIndex has been reset to int_max so use previous index.
-                    resetIndex();
-                    return setOkAndReturn(out);
                   }
+                  processRemainingRecordsInBatch();
+                  outputToBatch(previousIndex); // currentIndex has been reset to int_max so use previous index.
                 }
+                resetIndex();
+                return setOkAndReturnEmit();
 
               case NOT_YET:
                 this.outcome = out;
@@ -289,7 +283,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                     logger.debug("Wrote out end of previous batch, returning.");
                   }
                   newSchema = true;
-                  return setOkAndReturn(out);
+                  return setOkAndReturn();
                 }
                 cleanup();
                 return AggOutcome.UPDATE_AGGREGATOR;
@@ -319,7 +313,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                           logger.debug("Output container is full. flushing it.");
                         }
                         previousIndex = -1;
-                        return setOkAndReturn(out);
+                        return setOkAndReturn();
                       }
                     }
                     previousIndex = -1;
@@ -415,22 +409,15 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
   /**
    * Set the outcome to OK (or OK_NEW_SCHEMA) and return the AggOutcome parameter
-   * @param outcome
+   *
    * @return outcome
    */
-  private final AggOutcome setOkAndReturn( IterOutcome outcome) {
+  private final AggOutcome setOkAndReturn() {
     IterOutcome outcomeToReturn;
-    if (outcome == EMIT) {
-      firstBatchForDataSet = true;
-      previousIndex = -1;
-    } else {
-      firstBatchForDataSet = false;
-    }
+    firstBatchForDataSet = false;
     if (firstBatchForSchema) {
       outcomeToReturn = OK_NEW_SCHEMA;
       firstBatchForSchema = false;
-    } else if (outcome == EMIT) {
-      outcomeToReturn = EMIT;
     } else {
       outcomeToReturn = OK;
     }
@@ -439,7 +426,30 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     for (VectorWrapper<?> v : outgoing) {
       v.getValueVector().getMutator().setValueCount(outputCount);
     }
-    return (outcome == EMIT) ? AggOutcome.RETURN_AND_RESET : AggOutcome.RETURN_OUTCOME;
+    return AggOutcome.RETURN_OUTCOME;
+  }
+
+  /**
+   * setOkAndReturn (as above) if the iter outcome was EMIT
+   *
+   * @return outcome
+   */
+  private final AggOutcome setOkAndReturnEmit() {
+    IterOutcome outcomeToReturn;
+    firstBatchForDataSet = true;
+    previousIndex = -1;
+    if (firstBatchForSchema) {
+      outcomeToReturn = OK_NEW_SCHEMA;
+      firstBatchForSchema = false;
+    } else {
+      outcomeToReturn = EMIT;
+    }
+    this.outcome = outcomeToReturn;
+
+    for (VectorWrapper<?> v : outgoing) {
+      v.getValueVector().getMutator().setValueCount(outputCount);
+    }
+    return AggOutcome.RETURN_AND_RESET;
   }
 
   // Returns output container status after insertion of the given record. Caller must check the return value if it

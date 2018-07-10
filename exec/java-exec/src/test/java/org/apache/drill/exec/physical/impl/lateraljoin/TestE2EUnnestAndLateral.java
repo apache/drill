@@ -358,6 +358,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       + "dfs.`lateraljoin/multipleFiles/` customer) t1, LATERAL (SELECT CAST(MAX(t.ord.o_totalprice)"
       + " AS int) AS maxprice FROM UNNEST(t1.c_orders) t(ord) GROUP BY t.ord.o_orderstatus) t2";
 
+    try {
     testBuilder()
       .optionSettingQueriesForTestQuery("alter session set `%s` = false",
         PlannerSettings.STREAMAGG.getOptionName())
@@ -371,6 +372,9 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       .baselineValues(235695)
       .baselineValues(177819)
       .build().run();
+    } finally {
+      test("alter session set `" + PlannerSettings.STREAMAGG.getOptionName() + "` = true");
+    }
   }
 
   @Test
@@ -378,6 +382,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     String sql = "SELECT key, t3.dsls FROM cp.`lateraljoin/with_nulls.json` t LEFT OUTER "
     + "JOIN LATERAL (SELECT DISTINCT t2.sls AS dsls FROM UNNEST(t.sales) t2(sls)) t3 ON TRUE";
 
+    try {
     testBuilder()
       .optionSettingQueriesForTestQuery("alter session set `%s` = false",
         PlannerSettings.STREAMAGG.getOptionName())
@@ -393,6 +398,9 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       .baselineValues("dd",111L)
       .baselineValues("dd",222L)
       .build().run();
+    } finally {
+      test("alter session set `" + PlannerSettings.STREAMAGG.getOptionName() + "` = true");
+    }
   }
 
   @Test
@@ -402,8 +410,6 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         + " AS int) AS maxprice FROM UNNEST(t1.c_orders) t(ord) GROUP BY t.ord.o_orderstatus) t2";
 
     testBuilder()
-        .optionSettingQueriesForTestQuery("alter session set `%s` = true",
-            PlannerSettings.STREAMAGG.getOptionName())
         .sqlQuery(sql)
         .unOrdered()
         .baselineColumns("maxprice")
@@ -422,8 +428,6 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         + "JOIN LATERAL (SELECT DISTINCT t2.sls AS dsls FROM UNNEST(t.sales) t2(sls)) t3 ON TRUE";
 
     testBuilder()
-        .optionSettingQueriesForTestQuery("alter session set `%s` = true",
-            PlannerSettings.STREAMAGG.getOptionName())
         .sqlQuery(sql)
         .unOrdered()
         .baselineColumns("key","dsls")
@@ -437,4 +441,20 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         .baselineValues("dd",222L)
         .build().run();
   }
+
+  @Test
+  public void testMultipleBatchesLateral_WithStreamingAggNoGroup() throws Exception {
+    String sql = "SELECT t2.maxprice FROM (SELECT customer.c_orders AS c_orders FROM "
+        + "dfs.`lateraljoin/multipleFiles/` customer) t1, LATERAL (SELECT CAST(MAX(t.ord.o_totalprice)"
+        + " AS int) AS maxprice FROM UNNEST(t1.c_orders) t(ord) ) t2";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("maxprice")
+        .baselineValues(367190)
+        .baselineValues(306996)
+        .build().run();
+  }
+
 }

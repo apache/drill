@@ -234,8 +234,9 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           }
           break;
         case EMIT:
-          if (firstBatchForDataSet && popConfig.getKeys().size() == 0) {
-            // if we have a straight aggregate and empty input batch, we need to handle it in a different way
+          // if we get an EMIT with an empty batch as the first (and therefore only) batch
+          // we have to do the special handling
+          if (firstBatchForDataSet && popConfig.getKeys().size() == 0 && incoming.getRecordCount() == 0) {
             constructSpecialBatch();
             // set state to indicate the fact that we have sent a special batch and input is empty
             specialBatchSent = true;
@@ -254,7 +255,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     } else {
       if ( lastKnownOutcome != NONE && firstBatchForDataSet && !aggregator.isDone()) {
         lastKnownOutcome = incoming.next();
-        if (!first && firstBatchForDataSet) {
+        if (!first ) {
           //Setup needs to be called again. During setup, generated code saves a reference to the vectors
           // pointed to by the incoming batch so that the dereferencing of the vector wrappers to get to
           // the vectors  does not have to be done at each call to eval. However, after an EMIT is seen,
@@ -297,7 +298,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           constructSpecialBatch();
           // set state to indicate the fact that we have sent a special batch and input is empty
           specialBatchSent = true;
-          firstBatchForDataSet = true; // reset on the next iteration
           // If outcome is NONE then we send the special batch in the first iteration and the NONE
           // outcome in the next iteration. If outcome is EMIT, we can send the special
           // batch and the EMIT outcome at the same time.
@@ -433,6 +433,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException{
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
     //  cg.getCodeGenerator().saveCodeForDebugging(true);
     container.clear();
 
@@ -623,23 +624,18 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private IterOutcome getFinalOutcome() {
     IterOutcome outcomeToReturn;
 
-    if(firstBatchForDataSet) {
+    if (firstBatchForDataSet) {
       firstBatchForDataSet = false;
     }
     if (firstBatchForSchema) {
       outcomeToReturn = OK_NEW_SCHEMA;
       firstBatchForSchema = false;
-    } else if (recordCount == 0) {
-      // get the outcome to return before calling refresh since that resets the lastKnowOutcome to OK
-      outcomeToReturn = lastKnownOutcome == EMIT ? EMIT : NONE;
-      if (outcomeToReturn == EMIT) {
-        firstBatchForDataSet = true;
-      }
     } else if (lastKnownOutcome == EMIT) {
       firstBatchForDataSet = true;
       outcomeToReturn = EMIT;
     } else {
-      outcomeToReturn = OK;
+      // get the outcome to return before calling refresh since that resets the lastKnowOutcome to OK
+      outcomeToReturn = (recordCount == 0) ? NONE : OK;
     }
     return outcomeToReturn;
   }
