@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.LateralContract;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.slf4j.Logger;
@@ -51,6 +52,7 @@ public class UnnestImpl implements Unnest {
   private SelectionVectorMode svMode;
   private RepeatedValueVector fieldToUnnest;
   private RepeatedValueVector.RepeatedAccessor accessor;
+  private RecordBatch outgoing;
 
   /**
    * The output batch limit starts at OUTPUT_ROW_COUNT, but may be decreased
@@ -97,8 +99,16 @@ public class UnnestImpl implements Unnest {
 
     logger.debug("Unnest: currentRecord: {}, innerValueCount: {}, record count: {}, output limit: {}", innerValueCount,
         recordCount, outputLimit);
+    final SchemaChangeCallBack callBack = new SchemaChangeCallBack();
     for (TransferPair t : transfers) {
       t.splitAndTransfer(innerValueIndex, count);
+
+      // Get the corresponding ValueVector in output container and transfer the data
+      final ValueVector vectorWithData = t.getTo();
+      final ValueVector outputVector = outgoing.getContainer().addOrGet(vectorWithData.getField(), callBack);
+      Preconditions.checkState(!callBack.getSchemaChangedAndReset(), "Outgoing container doesn't have " +
+        "expected ValueVector of type %s, present in TransferPair of unnest field", vectorWithData.getClass());
+      vectorWithData.makeTransferPair(outputVector).transfer();
     }
     innerValueIndex += count;
     return count;
@@ -110,6 +120,7 @@ public class UnnestImpl implements Unnest {
       List<TransferPair> transfers, LateralContract lateral) throws SchemaChangeException {
 
     this.svMode = incoming.getSchema().getSelectionVectorMode();
+    this.outgoing = outgoing;
     if (svMode == NONE) {
       this.transfers = ImmutableList.copyOf(transfers);
       this.lateral = lateral;
@@ -123,4 +134,13 @@ public class UnnestImpl implements Unnest {
     this.innerValueIndex = 0;
   }
 
+  @Override
+  public void close() {
+    if (transfers != null) {
+      for (TransferPair tp : transfers) {
+        tp.getTo().close();
+      }
+      transfers = null;
+    }
+  }
 }

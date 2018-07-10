@@ -370,6 +370,37 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     }
   }
 
+  /**
+   * This test is different than {@link TestE2EUnnestAndLateral#testSchemaChangeOnNonUnnestColumn()} because with
+   * multilevel when the first Lateral see's a schema change it creates a new batch with new vector references. Hence
+   * the second lateral will receive a new incoming with new vector references with OK_NEW_SCHEMA outcome. Now even
+   * though there is schema change for non-unnest column the second Unnest has to again setup it's transfer pairs since
+   * vector reference for unnest field has changed for second Unnest.
+   * Whereas in other test since there is only 1 Lateral followed by Scan, the incoming for lateral which has
+   * schema change will be handled by Scan in such a way that it only updates vector of affected column. Hence in this
+   * case vector corresponding to unnest field will not be affected and it will work fine.
+   * @throws Exception
+   */
+  @Test
+  public void testSchemaChangeOnNonUnnestColumn_InMultilevelCase() throws Exception {
+
+    try {
+      dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", schemaChangeFile_1));
+      String sql = "SELECT customer.c_custkey, customer.c_name, customer.c_nationkey, orders.orderkey, " +
+        "orders.totalprice, olineitems.l_partkey, olineitems.l_linenumber, olineitems.l_quantity " +
+        "FROM dfs.`lateraljoin/multipleFiles` customer, " +
+        "LATERAL (SELECT t1.o.o_orderkey as orderkey, t1.o.o_totalprice as totalprice, t1.o.o_lineitems as lineitems " +
+        "FROM UNNEST(customer.c_orders) t1(o)) orders, " +
+        "LATERAL (SELECT t2.l.l_partkey as l_partkey, t2.l.l_linenumber as l_linenumber, t2.l.l_quantity as l_quantity " +
+        "FROM UNNEST(orders.lineitems) t2(l)) olineitems";
+      test(sql);
+    } catch (Exception ex) {
+      fail();
+    } finally {
+      dirTestWatcher.removeFileFromRoot(Paths.get("lateraljoin", "multipleFiles", schemaChangeFile_1));
+    }
+  }
+
   @Test
   public void testSchemaChangeOnUnnestColumn() throws Exception {
     try {
@@ -378,6 +409,26 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       String sql = "SELECT customer.c_name, customer.c_address, orders.o_orderkey, orders.o_totalprice " +
         "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
         "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord)) orders";
+      test(sql);
+    } catch (Exception ex) {
+      fail();
+    } finally {
+      dirTestWatcher.removeFileFromRoot(Paths.get("lateraljoin", "multipleFiles", schemaChangeFile_2));
+    }
+  }
+
+  @Test
+  public void testSchemaChangeOnUnnestColumn_InMultilevelCase() throws Exception {
+    try {
+      dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", schemaChangeFile_2));
+
+      String sql = "SELECT customer.c_custkey, customer.c_name, customer.c_nationkey, orders.orderkey, " +
+        "orders.totalprice, orders.spriority, olineitems.l_partkey, olineitems.l_linenumber, olineitems.l_quantity " +
+        "FROM dfs.`lateraljoin/multipleFiles` customer, " +
+        "LATERAL (SELECT t1.o.o_orderkey as orderkey, t1.o.o_totalprice as totalprice, t1.o.o_lineitems as lineitems," +
+        " t1.o.o_shippriority as spriority FROM UNNEST(customer.c_orders) t1(o)) orders, " +
+        "LATERAL (SELECT t2.l.l_partkey as l_partkey, t2.l.l_linenumber as l_linenumber, t2.l.l_quantity as l_quantity " +
+        "FROM UNNEST(orders.lineitems) t2(l)) olineitems";
       test(sql);
     } catch (Exception ex) {
       fail();
