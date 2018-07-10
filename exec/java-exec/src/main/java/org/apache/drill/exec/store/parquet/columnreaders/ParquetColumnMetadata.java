@@ -29,6 +29,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.parquet.column.ColumnDescriptor;
@@ -56,8 +57,8 @@ public class ParquetColumnMetadata {
   }
 
   public void resolveDrillType(Map<String, SchemaElement> schemaElements, OptionManager options) {
-    se = schemaElements.get(column.getPath()[0]);
-    type = ParquetToDrillTypeConverter.toMajorType(column.getType(), se.getType_length(),
+    se = schemaElements.get(ParquetReaderUtility.getFullColumnPath(column));
+    type = ParquetToDrillTypeConverter.toMajorType(column.getType(), column.getTypeLength(),
         getDataMode(column), se, options);
     field = MaterializedField.create(toFieldName(column.getPath()).getLastSegment().getNameSegment().getPath(), type);
     length = getDataTypeLength();

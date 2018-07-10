@@ -25,22 +25,21 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.ParquetReadOptions;
-import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
-import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.Type;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -107,7 +106,10 @@ public abstract class AbstractParquetScanBatchCreator {
           ParquetReaderUtility.detectCorruptDates(footer, rowGroupScan.getColumns(), autoCorrectCorruptDates);
         logger.debug("Contains corrupt dates: {}", containsCorruptDates);
 
-        if (!context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER) && !isComplex(footer)) {
+        if (!context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER)
+            && !ParquetReaderUtility.containsComplexColumn(footer, rowGroupScan.getColumns())) {
+          logger.debug("Query {} qualifies for new Parquet reader",
+              QueryIdHelper.getQueryId(oContext.getFragmentContext().getHandle().getQueryId()));
           readers.add(new ParquetRecordReader(context,
               rowGroup.getPath(),
               rowGroup.getRowGroupIndex(),
@@ -118,6 +120,8 @@ public abstract class AbstractParquetScanBatchCreator {
               rowGroupScan.getColumns(),
               containsCorruptDates));
         } else {
+          logger.debug("Query {} doesn't qualify for new reader, using old one",
+              QueryIdHelper.getQueryId(oContext.getFragmentContext().getHandle().getQueryId()));
           readers.add(new DrillParquetReader(context,
               footer,
               rowGroup,
@@ -161,22 +165,6 @@ public abstract class AbstractParquetScanBatchCreator {
     }
   }
 
-  private boolean isComplex(ParquetMetadata footer) {
-    MessageType schema = footer.getFileMetaData().getSchema();
-
-    for (Type type : schema.getFields()) {
-      if (!type.isPrimitive()) {
-        return true;
-      }
-    }
-    for (ColumnDescriptor col : schema.getColumns()) {
-      if (col.getMaxRepetitionLevel() > 0) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /**
    * Helper class responsible for creating and managing DrillFileSystem.
    */
@@ -190,5 +178,4 @@ public abstract class AbstractParquetScanBatchCreator {
 
     protected abstract DrillFileSystem get(Configuration config, String path) throws ExecutionSetupException;
   }
-
 }

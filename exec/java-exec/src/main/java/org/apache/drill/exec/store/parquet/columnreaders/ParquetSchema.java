@@ -130,7 +130,7 @@ public final class ParquetSchema {
     for (ColumnDescriptor column : footer.getFileMetaData().getSchema().getColumns()) {
       ParquetColumnMetadata columnMetadata = new ParquetColumnMetadata(column);
       columnMetadata.resolveDrillType(schemaElements, options);
-      if (! fieldSelected(columnMetadata.field)) {
+      if (! columnSelected(column)) {
         continue;
       }
       selectedColumnMetadata.add(columnMetadata);
@@ -174,23 +174,22 @@ public final class ParquetSchema {
   }
 
   /**
-   * Determine if a Parquet field is selected for the query. It is selected
+   * Determine if a Parquet column is selected for the query. It is selected
    * either if this is a star query (we want all columns), or the column
    * appears in the select list.
    *
-   * @param field the Parquet column expressed as as Drill field.
+   * @param column the Parquet column expressed as column descriptor
    * @return true if the column is to be included in the scan, false
    * if not
    */
-
-  private boolean fieldSelected(MaterializedField field) {
+  private boolean columnSelected(ColumnDescriptor column) {
     if (isStarQuery()) {
       return true;
     }
 
     int i = 0;
     for (SchemaPath expr : selectedCols) {
-      if (field.getName().equalsIgnoreCase(expr.getRootSegmentPath())) {
+      if (ParquetReaderUtility.getFullColumnPath(column).equalsIgnoreCase(expr.getUnIndexed().toString())) {
         columnsFound[i] = true;
         return true;
       }

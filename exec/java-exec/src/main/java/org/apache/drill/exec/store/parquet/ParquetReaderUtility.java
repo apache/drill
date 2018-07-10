@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.parquet;
 import com.google.common.collect.Sets;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -41,8 +40,10 @@ import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.ColumnPath;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
+import org.apache.parquet.schema.Type;
 import org.joda.time.Chronology;
 import org.joda.time.DateTimeConstants;
 import org.apache.parquet.example.data.simple.NanoTime;
@@ -51,6 +52,7 @@ import org.joda.time.DateTimeZone;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -140,13 +142,88 @@ public class ParquetReaderUtility {
     return out;
   }
 
+  /**
+   * Map full schema paths in format `a`.`b`.`c` to respective SchemaElement objects.
+   *
+   * @param footer Parquet file metadata
+   * @return       schema full path to SchemaElement map
+   */
   public static Map<String, SchemaElement> getColNameToSchemaElementMapping(ParquetMetadata footer) {
-    HashMap<String, SchemaElement> schemaElements = new HashMap<>();
+    Map<String, SchemaElement> schemaElements = new HashMap<>();
     FileMetaData fileMetaData = new ParquetMetadataConverter().toParquetMetadata(ParquetFileWriter.CURRENT_VERSION, footer);
-    for (SchemaElement se : fileMetaData.getSchema()) {
-      schemaElements.put(se.getName(), se);
+
+    Iterator<SchemaElement> iter = fileMetaData.getSchema().iterator();
+
+    // First element in collection is default `root` element. We skip it to maintain key in `a` format instead of `root`.`a`,
+    // and thus to avoid the need to cut it out again when comparing with SchemaPath string representation
+    if (iter.hasNext()) {
+      iter.next();
+    }
+    while (iter.hasNext()) {
+      addSchemaElementMapping(iter, new StringBuilder(), schemaElements);
     }
     return schemaElements;
+  }
+
+  /**
+   * Populate full path to SchemaElement map by recursively traversing schema elements referenced by the given iterator
+   *
+   * @param iter file schema values iterator
+   * @param path parent schema element path
+   * @param schemaElements schema elements map to insert next iterator element into
+   */
+  private static void addSchemaElementMapping(Iterator<SchemaElement> iter, StringBuilder path,
+      Map<String, SchemaElement> schemaElements) {
+    SchemaElement schemaElement = iter.next();
+    path.append('`').append(schemaElement.getName().toLowerCase()).append('`');
+    schemaElements.put(path.toString(), schemaElement);
+
+    // for each element that has children we need to maintain remaining children count
+    // to exit current recursion level when no more children is left
+    int remainingChildren = schemaElement.getNum_children();
+
+    while (remainingChildren > 0 && iter.hasNext()) {
+      addSchemaElementMapping(iter, new StringBuilder(path).append('.'), schemaElements);
+      remainingChildren--;
+    }
+    return;
+  }
+
+  /**
+   * generate full path of the column in format `a`.`b`.`c`
+   *
+   * @param column ColumnDescriptor object
+   * @return       full path in format `a`.`b`.`c`
+   */
+  public static String getFullColumnPath(ColumnDescriptor column) {
+    StringBuilder sb = new StringBuilder();
+    String[] path = column.getPath();
+    for (int i = 0; i < path.length; i++) {
+      sb.append("`").append(path[i].toLowerCase()).append("`").append(".");
+    }
+
+    // remove trailing dot
+    if (sb.length() > 0) {
+      sb.deleteCharAt(sb.length() - 1);
+    }
+
+    return sb.toString();
+  }
+
+  /**
+   * Map full column paths to all ColumnDescriptors in file schema
+   *
+   * @param footer Parquet file metadata
+   * @return       column full path to ColumnDescriptor object map
+   */
+  public static Map<String, ColumnDescriptor> getColNameToColumnDescriptorMapping(ParquetMetadata footer) {
+    Map<String, ColumnDescriptor> colDescMap = new HashMap<>();
+    List<ColumnDescriptor> columns = footer.getFileMetaData().getSchema().getColumns();
+
+    for (ColumnDescriptor column : columns) {
+      colDescMap.put(getFullColumnPath(column), column);
+    }
+    return colDescMap;
   }
 
   public static int autoCorrectCorruptedDate(int corruptedDate) {
@@ -361,7 +438,6 @@ public class ParquetReaderUtility {
     }
   }
 
-
   /**
    * Detect corrupt date values by looking at the min/max values in the metadata.
    *
@@ -401,9 +477,9 @@ public class ParquetReaderUtility {
         // creating a NameSegment makes sure we are using the standard code for comparing names,
         // currently it is all case-insensitive
         if (Utilities.isStarQuery(columns)
-            || new PathSegment.NameSegment(column.getPath()[0]).equals(schemaPath.getRootSegment())) {
+            || getFullColumnPath(column).equalsIgnoreCase(schemaPath.getUnIndexed().toString())) {
           int colIndex = -1;
-          ConvertedType convertedType = schemaElements.get(column.getPath()[0]).getConverted_type();
+          ConvertedType convertedType = schemaElements.get(getFullColumnPath(column)).getConverted_type();
           if (convertedType != null && convertedType.equals(ConvertedType.DATE)) {
             List<ColumnChunkMetaData> colChunkList = footer.getBlocks().get(rowGroupIndex).getColumns();
             for (int j = 0; j < colChunkList.size(); j++) {
@@ -525,4 +601,57 @@ public class ParquetReaderUtility {
     }
   }
 
+  /**
+   * Check whether any of columns in the given list is either nested or repetitive.
+   *
+   * @param footer  Parquet file schema
+   * @param columns list of query SchemaPath objects
+   */
+  public static boolean containsComplexColumn(ParquetMetadata footer, List<SchemaPath> columns) {
+
+    MessageType schema = footer.getFileMetaData().getSchema();
+
+    if (Utilities.isStarQuery(columns)) {
+      for (Type type : schema.getFields()) {
+        if (!type.isPrimitive()) {
+          return true;
+        }
+      }
+      for (ColumnDescriptor col : schema.getColumns()) {
+        if (col.getMaxRepetitionLevel() > 0) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      Map<String, ColumnDescriptor> colDescMap = ParquetReaderUtility.getColNameToColumnDescriptorMapping(footer);
+      Map<String, SchemaElement> schemaElements = ParquetReaderUtility.getColNameToSchemaElementMapping(footer);
+
+      for (SchemaPath schemaPath : columns) {
+        // Schema path which is non-leaf is complex column
+        if (!schemaPath.isLeaf()) {
+          logger.trace("rowGroupScan contains complex column: {}", schemaPath.getUnIndexed().toString());
+          return true;
+        }
+
+        // following column descriptor lookup failure may mean two cases, depending on subsequent SchemaElement lookup:
+        // 1. success: queried column is complex, i.e. GroupType
+        // 2. failure: queried column is not in schema and thus is non-complex
+        ColumnDescriptor column = colDescMap.get(schemaPath.getUnIndexed().toString().toLowerCase());
+
+        if (column == null) {
+          SchemaElement schemaElement = schemaElements.get(schemaPath.getUnIndexed().toString().toLowerCase());
+          if (schemaElement != null) {
+            return true;
+          }
+        } else {
+          if (column.getMaxRepetitionLevel() > 0) {
+            logger.trace("rowGroupScan contains repetitive column: {}", schemaPath.getUnIndexed().toString());
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
 }
