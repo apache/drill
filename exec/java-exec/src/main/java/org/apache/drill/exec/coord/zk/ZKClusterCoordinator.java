@@ -31,11 +31,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.api.ACLProvider;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.RetryNTimes;
@@ -78,11 +81,18 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   private ConcurrentHashMap<MultiKey, DrillbitEndpoint> endpointsMap = new ConcurrentHashMap<MultiKey,DrillbitEndpoint>();
   private static final Pattern ZK_COMPLEX_STRING = Pattern.compile("(^.*?)/(.*)/([^/]*)$");
 
-  public ZKClusterCoordinator(DrillConfig config) throws IOException{
-    this(config, null);
+  public ZKClusterCoordinator(DrillConfig config, String connect)
+          throws IOException, DrillbitStartupException {
+    this(config, connect, null);
   }
 
-  public ZKClusterCoordinator(DrillConfig config, String connect) throws IOException {
+  public ZKClusterCoordinator(DrillConfig config, BootStrapContext context)
+          throws IOException, DrillbitStartupException {
+    this(config, null, context);
+  }
+
+  public ZKClusterCoordinator(DrillConfig config, String connect, BootStrapContext context)
+          throws IOException, DrillbitStartupException {
     connect = connect == null || connect.isEmpty() ? config.getString(ExecConstants.ZK_CONNECTION) : connect;
     String clusterId = config.getString(ExecConstants.SERVICE_NAME);
     String zkRoot = config.getString(ExecConstants.ZK_ROOT);
@@ -99,6 +109,10 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     logger.debug("Connect {}, zkRoot {}, clusterId: " + clusterId, connect, zkRoot);
 
     this.serviceName = clusterId;
+    String drillClusterPath = "/" + zkRoot + "/" +  clusterId;
+
+    ACLProvider aclProvider = ZKACLProviderFactory.getACLProvider(config, drillClusterPath, context);
+
     RetryPolicy rp = new RetryNTimes(config.getInt(ExecConstants.ZK_RETRY_TIMES),
       config.getInt(ExecConstants.ZK_RETRY_DELAY));
     curator = CuratorFrameworkFactory.builder()
@@ -106,6 +120,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
       .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
       .retryPolicy(rp)
       .connectString(connect)
+      .aclProvider(aclProvider)
       .build();
     curator.getConnectionStateListenable().addListener(new InitialConnectionListener());
     curator.start();
