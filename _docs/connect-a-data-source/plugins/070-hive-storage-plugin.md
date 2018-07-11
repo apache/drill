@@ -1,6 +1,6 @@
 ---
 title: "Hive Storage Plugin"
-date: 2018-07-11 21:26:23 UTC
+date: 2018-07-11 21:37:17 UTC
 parent: "Connect a Data Source"
 ---
 Prior to Drill 1.13, Drill supported Hive 1.0. Drill 1.13 and later includes version 2.3.2 of the Hive client, which adds support for queries on transactional (ACID) and non-transactional Hive bucketed ORC tables. The updated Hive libraries are backward compatible with earlier versions of the Hive server and metastore.   
@@ -22,7 +22,7 @@ You could query the Hive external table named `my_tbl`, and Drill would return r
 
 ### Guidelines for Using the `store.hive.conf.properties` Option  
 
-When you set Hive properties at the session level, use the following guidelines:  
+When you set Hive properties at the session level, follow these guidelines:  
 
 - Do not set property values in quotes. Setting property values in quotes could result in incorrect parsing.  
 - Separate the property name and value with an equality sign (=).  
