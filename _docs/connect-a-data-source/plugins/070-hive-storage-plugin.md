@@ -1,19 +1,36 @@
 ---
 title: "Hive Storage Plugin"
-date: 2018-04-16 23:02:13 UTC
+date: 2018-07-11 21:26:23 UTC
 parent: "Connect a Data Source"
 ---
 Prior to Drill 1.13, Drill supported Hive 1.0. Drill 1.13 and later includes version 2.3.2 of the Hive client, which adds support for queries on transactional (ACID) and non-transactional Hive bucketed ORC tables. The updated Hive libraries are backward compatible with earlier versions of the Hive server and metastore.   
 
 To access Hive tables using custom SerDes or InputFormat/OutputFormat, all nodes running Drillbits must have the SerDes or InputFormat/OutputFormat `JAR` files in the 
-`<drill_installation_directory>/jars/3rdparty` folder.
+`<drill_installation_directory>/jars/3rdparty` folder.  
 
-You can run Hive queries in the following ways by configuring the Hive storage plugin as described in this document:
+## Setting Hive Properties  
 
-* [Connect Drill to the Hive remote metastore]({{site.baseurl}}/docs/hive-storage-plugin/#connect-drill-to-the-hive-remote-metastore)  
-* [Connect to the Hive embedded metastore]({{site.baseurl}}/docs/hive-storage-plugin/#connect-to-the-hive-embedded-metastore)  
+Prior to Drill 1.14, you could only set [Hive configuration properties](https://cwiki.apache.org/confluence/display/Hive/Configuration+Properties) at the system level in `hive-site.xml` or in the hive storage plugin configuration in the Drill Web UI. Starting in Drill 1.14, Drill supports the `store.hive.conf.properties` option, which enables you to specify Hive properties at the session level using the [SET command]({{site.baseurl}}/docs/set/), as shown:
 
-You update the Hive storage plugin by selecting the **Storage tab** on the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console). From the list of disabled storage plugins in the Drill Web Console, click **Update** next to `hive`.  The default Hive storage plugin configuration appears as follows:
+       alter session set `store.hive.conf.properties` = 'hive.mapred.supports.subdirectories=true\nmapred.input.dir.recursive=true';  
+
+**Note:** The `hive.mapred.supports.subdirectories` and `mapred.input.dir.recursive` properties enable Drill to query Hive external tables that have nested folders with data. For example, given the following directory structure:  
+
+       /data/my_tbl/sub_dir/data.txt  
+
+You could query the Hive external table named `my_tbl`, and Drill would return results that included the data from the `data.txt` file.  
+
+### Guidelines for Using the `store.hive.conf.properties` Option  
+
+When you set Hive properties at the session level, use the following guidelines:  
+
+- Do not set property values in quotes. Setting property values in quotes could result in incorrect parsing.  
+- Separate the property name and value with an equality sign (=).  
+- Use `\n` as the string delimiter between properties.   
+
+## Making Hive a Consumable Data Source for Drill  
+
+You must connect Drill to the Hive metastore before you can run queries on a Hive data source. When you configure Hive as a consumable data source for Drill, you update the Hive storage plugin by selecting the **Storage tab** in the [Drill Web UI]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console). From the list of disabled storage plugins in the Drill Web UI, click **Update** next to `hive`. The default Hive storage plugin configuration appears as follows:
 
         {
           "type": "hive",
@@ -25,9 +42,16 @@ You update the Hive storage plugin by selecting the **Storage tab** on the [Dril
             "fs.default.name": "file:///",
             "hive.metastore.sasl.enabled": "false"
           }
-        }
+        }  
 
-## Connect Drill to the Hive Remote Metastore
+Update this storage plugin configuration for Hive in your environment.   
+
+The following sections provide information for connecting Drill to a remote or embedded Hive metastore:  
+
+* [Connect Drill to the Hive remote metastore]({{site.baseurl}}/docs/hive-storage-plugin/#connect-drill-to-a-remote-hive-metastore)  
+* [Connect to the Hive embedded metastore]({{site.baseurl}}/docs/hive-storage-plugin/#connect-to-the-hive-embedded-metastore)  
+
+## Connect Drill to a Remote Hive Metastore
 
 The Hive metastore runs as a separate service outside
 of Hive. Drill can query the Hive metastore through Thrift. The
