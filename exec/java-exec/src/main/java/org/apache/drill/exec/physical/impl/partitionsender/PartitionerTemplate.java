@@ -377,7 +377,7 @@ public abstract class PartitionerTemplate implements Partitioner {
     public void initializeBatch() {
       for (VectorWrapper<?> v : incoming) {
         // create new vector by cloning the incoming vector's type
-        ValueVector outgoingVector = TypeHelper.getNewVector(v.getField().clone(), allocator);
+        ValueVector outgoingVector = TypeHelper.getNewVector(v.getField().cloneEmpty(), allocator);
         outgoingVector.setInitialCapacity(outgoingRecordBatchSize);
         vectorContainer.add(outgoingVector);
       }
