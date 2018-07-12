@@ -113,7 +113,7 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "/ cast('-1.789' as DECIMAL(4, 3)) as s2,\n" +
             "cast('15.02' as DECIMAL(4, 2)) / cast('15.02' as DECIMAL(4, 2)) as s3,\n" +
             "cast('12.93123456789' as DECIMAL(13, 11)) / cast('1' as DECIMAL(1, 0)) as s4,\n" +
-            "cast('0' as DECIMAL(0, 0)) / cast('15.02' as DECIMAL(4, 2)) as s5";
+            "cast('0' as DECIMAL(1, 0)) / cast('15.02' as DECIMAL(4, 2)) as s5";
     testBuilder()
         .sqlQuery(query)
         .ordered()
@@ -297,8 +297,8 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "<> cast('1.9999999999999999999999999999234567891' as DECIMAL(38, 37)) as s2,\n" +
             // the same value but different scale and precision
             "cast('1234567.89' as DECIMAL(9, 2)) = cast('1234567.890' as DECIMAL(10, 3)) as s3,\n" +
-            "cast('0' as DECIMAL(4, 2)) = cast('0' as DECIMAL(0, 0)) as s4,\n" +
-            "cast('0' as DECIMAL(4, 2)) <> cast('0' as DECIMAL(0, 0)) as s5,\n" +
+            "cast('0' as DECIMAL(4, 2)) = cast('0' as DECIMAL(1, 0)) as s4,\n" +
+            "cast('0' as DECIMAL(4, 2)) <> cast('0' as DECIMAL(1, 0)) as s5,\n" +
             "cast('12.93123456789' as DECIMAL(13, 11)) = cast('12.93123456788' as DECIMAL(13, 11)) as s6";
     testBuilder()
         .sqlQuery(query)
@@ -318,7 +318,7 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "< cast('1.9999999999999999999999999999234567892' as DECIMAL(38, 37)) as s2,\n" +
             // the same value but different scale and precision
             "cast('1234567.89' as DECIMAL(9, 2)) < cast('1234567.890' as DECIMAL(10, 3)) as s3,\n" +
-            "cast('0' as DECIMAL(4, 2)) < cast('0' as DECIMAL(0, 0)) as s4,\n" +
+            "cast('0' as DECIMAL(4, 2)) < cast('0' as DECIMAL(1, 0)) as s4,\n" +
             "cast('12.93123456789' as DECIMAL(13, 11)) < cast('12.93123456788' as DECIMAL(13, 11)) as s5";
     testBuilder()
         .sqlQuery(query)
@@ -338,7 +338,7 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "<= cast('1.9999999999999999999999999999234567892' as DECIMAL(38, 37)) as s2,\n" +
             // the same value but different scale and precision
             "cast('1234567.89' as DECIMAL(9, 2)) <= cast('1234567.890' as DECIMAL(10, 3)) as s3,\n" +
-            "cast('0' as DECIMAL(4, 2)) <= cast('0' as DECIMAL(0, 0)) as s4,\n" +
+            "cast('0' as DECIMAL(4, 2)) <= cast('0' as DECIMAL(1, 0)) as s4,\n" +
             "cast('12.93123456789' as DECIMAL(13, 11)) <= cast('12.93123456788' as DECIMAL(13, 11)) as s5";
     testBuilder()
         .sqlQuery(query)
@@ -358,7 +358,7 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "> cast('1.9999999999999999999999999999234567892' as DECIMAL(38, 37)) as s2,\n" +
             // the same value but different scale and precision
             "cast('1234567.89' as DECIMAL(9, 2)) > cast('1234567.890' as DECIMAL(10, 3)) as s3,\n" +
-            "cast('0' as DECIMAL(4, 2)) > cast('0' as DECIMAL(0, 0)) as s4,\n" +
+            "cast('0' as DECIMAL(4, 2)) > cast('0' as DECIMAL(1, 0)) as s4,\n" +
             "cast('12.93123456789' as DECIMAL(13, 11)) > cast('12.93123456788' as DECIMAL(13, 11)) as s5";
     testBuilder()
         .sqlQuery(query)
@@ -378,7 +378,7 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             ">= cast('1.9999999999999999999999999999234567892' as DECIMAL(38, 37)) as s2,\n" +
             // the same value but different scale and precision
             "cast('1234567.89' as DECIMAL(9, 2)) >= cast('1234567.890' as DECIMAL(10, 3)) as s3,\n" +
-            "cast('0' as DECIMAL(4, 2)) >= cast('0' as DECIMAL(0, 0)) as s4,\n" +
+            "cast('0' as DECIMAL(4, 2)) >= cast('0' as DECIMAL(1, 0)) as s4,\n" +
             "cast('12.93123456789' as DECIMAL(13, 11)) >= cast('12.93123456788' as DECIMAL(13, 11)) as s5";
     testBuilder()
         .sqlQuery(query)
@@ -398,8 +398,8 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "cast('1.9999999999999999999999999999234567892' as DECIMAL(38, 37))) as s2,\n" +
             // the same value but different scale and precision
             "compare_to_nulls_high(cast('1234567.89' as DECIMAL(9, 2)), cast('1234567.890' as DECIMAL(10, 3))) as s3,\n" +
-            "compare_to_nulls_high(cast('0' as DECIMAL(4, 2)), cast('0' as DECIMAL(0, 0))) as s4,\n" +
-            "compare_to_nulls_high(cast('0' as DECIMAL(4, 2)), cast(null as DECIMAL(0, 0))) as s5,\n" +
+            "compare_to_nulls_high(cast('0' as DECIMAL(4, 2)), cast('0' as DECIMAL(1, 0))) as s4,\n" +
+            "compare_to_nulls_high(cast('0' as DECIMAL(4, 2)), cast(null as DECIMAL(1, 0))) as s5,\n" +
             "compare_to_nulls_high(cast('12.93123456789' as DECIMAL(13, 11)), " +
             "cast('12.93123456788' as DECIMAL(13, 11))) as s6";
     testBuilder()
@@ -420,8 +420,8 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "cast('1.9999999999999999999999999999234567892' as DECIMAL(38, 37))) as s2,\n" +
             // the same value but different scale and precision
             "compare_to_nulls_low(cast('1234567.89' as DECIMAL(9, 2)), cast('1234567.890' as DECIMAL(10, 3))) as s3,\n" +
-            "compare_to_nulls_low(cast('0' as DECIMAL(4, 2)), cast('0' as DECIMAL(0, 0))) as s4,\n" +
-            "compare_to_nulls_low(cast('0' as DECIMAL(4, 2)), cast(null as DECIMAL(0, 0))) as s5,\n" +
+            "compare_to_nulls_low(cast('0' as DECIMAL(4, 2)), cast('0' as DECIMAL(1, 0))) as s4,\n" +
+            "compare_to_nulls_low(cast('0' as DECIMAL(4, 2)), cast(null as DECIMAL(1, 0))) as s5,\n" +
             "compare_to_nulls_low(cast('12.93123456789' as DECIMAL(13, 11)), " +
             "cast('12.93123456788' as DECIMAL(13, 11))) as s6";
     testBuilder()
@@ -571,8 +571,7 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "cast(i3 as DECIMAL(8, 7)) as s3,\n" +
             "cast(i4 as DECIMAL(6, 6)) as s4,\n" +
             "cast(i5 as DECIMAL(7, 0)) as s5,\n" +
-            "cast(i6 as DECIMAL(7, 46)) as s6,\n" +
-            "cast(i7 as DECIMAL(17, 0)) as s7\n" +
+            "cast(i6 as DECIMAL(38, 38)) as s6\n" +
         "from (" +
             "select\n" +
                 "cast(0 as float) as i1,\n" +
@@ -580,17 +579,15 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
                 "cast(-1.5022222 as float) as i3,\n" +
                 "cast(-0.987654 as float) as i4,\n" +
                 "cast(9999999 as float) as i5,\n" +
-                "cast('%s' as float) as i6,\n" +
-                "cast('%s' as float) as i7)";
+                "cast('%s' as float) as i6)";
 
     testBuilder()
-        .sqlQuery(query, Float.MIN_VALUE, Float.MAX_VALUE)
-        .ordered()
-        .baselineColumns("s1", "s2", "s3", "s4", "s5", "s6", "s7")
+        .sqlQuery(query, Float.MIN_VALUE)
+        .unOrdered()
+        .baselineColumns("s1", "s2", "s3", "s4", "s5", "s6")
         .baselineValues(BigDecimal.valueOf(0), new BigDecimal("1.234567"),
             new BigDecimal("-1.5022222"), new BigDecimal("-0.987654"), BigDecimal.valueOf(9999999),
-            new BigDecimal(String.format("%s", Float.MIN_VALUE)),
-            new BigDecimal("340282350000000000000000000000000000000")) // Float.MAX_VALUE in non-scientific format
+            new BigDecimal(Float.MIN_VALUE).setScale(38, RoundingMode.HALF_UP))
         .go();
   }
 
@@ -603,8 +600,7 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "cast(i3 as float) as s3,\n" +
             "cast(i4 as float) as s4,\n" +
             "cast(i5 as float) as s5,\n" +
-            "cast(i6 as float) as s6,\n" +
-            "cast(i7 as float) as s7\n" +
+            "cast(i6 as float) as s6\n" +
         "from (" +
             "select\n" +
                 "cast('999999999999999999999999999.92345678912' as DECIMAL(38, 11)) as i1,\n" +
@@ -612,17 +608,16 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
                 "cast('-1234567891234567891234567891234567.89' as DECIMAL(36, 2)) as i3,\n" +
                 "cast('0' as DECIMAL(36, 3)) as i4,\n" +
                 "cast('15.02' as DECIMAL(4, 2)) as i5,\n" +
-                "cast('%s' as DECIMAL(2, 46)) as i6,\n" +
-                "cast('%s' as DECIMAL(8, 0)) as i7)";
+                "cast('%s' as DECIMAL(38, 38)) as i6)";
 
     testBuilder()
-        .sqlQuery(query, Float.MIN_VALUE, Float.MAX_VALUE)
-        .ordered()
-        .baselineColumns("s1", "s2", "s3", "s4", "s5", "s6", "s7")
+        .sqlQuery(query, Float.MIN_VALUE)
+        .unOrdered()
+        .baselineColumns("s1", "s2", "s3", "s4", "s5", "s6")
         .baselineValues(new BigDecimal("999999999999999999999999999.92345678912").floatValue(),
             new BigDecimal("0.32345678912345678912345678912345678912").floatValue(),
             new BigDecimal("-1234567891234567891234567891234567.89").floatValue(),
-            0f, 15.02f, Float.MIN_VALUE, Float.MAX_VALUE)
+            0f, 15.02f, 0.0f)
         .go();
   }
 
@@ -635,8 +630,7 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "cast(i3 as DECIMAL(8, 7)) as s3,\n" +
             "cast(i4 as DECIMAL(6, 6)) as s4,\n" +
             "cast(i5 as DECIMAL(7, 0)) as s5,\n" +
-            "cast(i6 as DECIMAL(17, 325)) as s6,\n" +
-            "cast(i7 as DECIMAL(17, 0)) as s7\n" +
+            "cast(i6 as DECIMAL(38, 38)) as s6\n" +
         "from (" +
             "select\n" +
                 "cast(0 as double) as i1,\n" +
@@ -644,17 +638,15 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
                 "cast(-1.5022222 as double) as i3,\n" +
                 "cast(-0.987654 as double) as i4,\n" +
                 "cast(9999999 as double) as i5,\n" +
-                "cast('%e' as double) as i6,\n" +
-                "cast('%f' as double) as i7)";
+                "cast('%e' as double) as i6)";
 
     testBuilder()
-        .sqlQuery(query, Double.MIN_VALUE, Double.MAX_VALUE)
-        .ordered()
-        .baselineColumns("s1", "s2", "s3", "s4", "s5", "s6", "s7")
+        .sqlQuery(query, Double.MIN_VALUE)
+        .unOrdered()
+        .baselineColumns("s1", "s2", "s3", "s4", "s5", "s6")
         .baselineValues(BigDecimal.valueOf(0), new BigDecimal("1.234567"),
             new BigDecimal("-1.5022222"), new BigDecimal("-0.987654"), BigDecimal.valueOf(9999999),
-            new BigDecimal(String.valueOf(Double.MIN_VALUE)),
-            new BigDecimal(String.format("%1.0f", Double.MAX_VALUE))) // non-scientific format
+            new BigDecimal(String.valueOf(Double.MIN_VALUE)).setScale(38, RoundingMode.HALF_UP))
         .go();
   }
 
@@ -667,8 +659,7 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "cast(i3 as double) as s3,\n" +
             "cast(i4 as double) as s4,\n" +
             "cast(i5 as double) as s5,\n" +
-            "cast(i6 as double) as s6,\n" +
-            "cast(i7 as double) as s7\n" +
+            "cast(i6 as double) as s6\n" +
         "from (" +
             "select\n" +
                 "cast('999999999999999999999999999.92345678912' as DECIMAL(38, 11)) as i1,\n" +
@@ -676,17 +667,16 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
                 "cast('-1234567891234567891234567891234567.89' as DECIMAL(36, 2)) as i3,\n" +
                 "cast('0' as DECIMAL(36, 3)) as i4,\n" +
                 "cast('15.02' as DECIMAL(4, 2)) as i5,\n" +
-                "cast('%e' as DECIMAL(17, 325)) as i6,\n" +
-                "cast('%f' as DECIMAL(17, 0)) as i7)";
+                "cast('%e' as DECIMAL(38, 38)) as i6)";
 
     testBuilder()
-        .sqlQuery(query, Double.MIN_VALUE, Double.MAX_VALUE)
-        .ordered()
-        .baselineColumns("s1", "s2", "s3", "s4", "s5", "s6", "s7")
+        .sqlQuery(query, Double.MIN_VALUE)
+        .unOrdered()
+        .baselineColumns("s1", "s2", "s3", "s4", "s5", "s6")
         .baselineValues(new BigDecimal("999999999999999999999999999.92345678912").doubleValue(),
             new BigDecimal("0.32345678912345678912345678912345678912").doubleValue(),
             new BigDecimal("-1234567891234567891234567891234567.89").doubleValue(),
-            0d, 15.02, Double.MIN_VALUE, Double.MAX_VALUE)
+            0d, 15.02, 0.)
         .go();
   }
 
@@ -738,6 +728,34 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
         .baselineColumns("s1", "s2", "s3", "s4", "s5")
         .baselineValues("999999999999999999999999999.9", "0.3",
             "-1234567891234567891234567891234567.9", "0", "15")
+        .go();
+  }
+
+  @Test
+  public void testDecimalNegate() throws Exception {
+    String query =
+        "select\n" +
+            "negative(i1) as s1,\n" +
+            "-i2 as s2,\n" +
+            "negative(i3) as s3,\n" +
+            "-i4 as s4,\n" +
+            "negative(i5) as s5\n" +
+            "from (" +
+            "select\n" +
+            "cast('999999999999999999999999999.92345678912' as DECIMAL(38, 11)) as i1,\n" +
+            "cast('0.32345678912345678912345678912345678912' as DECIMAL(38, 38)) as i2,\n" +
+            "cast('-1234567891234567891234567891234567.89' as DECIMAL(36, 2)) as i3,\n" +
+            "cast('0' as DECIMAL(36, 3)) as i4,\n" +
+            "cast('15.02' as DECIMAL(4, 2)) as i5)";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("s1", "s2", "s3", "s4", "s5")
+        .baselineValues(new BigDecimal("-999999999999999999999999999.92345678912"),
+            new BigDecimal("-0.32345678912345678912345678912345678912"),
+            new BigDecimal("1234567891234567891234567891234567.89"),
+            new BigDecimal("0.000"),
+            new BigDecimal("-15.02"))
         .go();
   }
 }

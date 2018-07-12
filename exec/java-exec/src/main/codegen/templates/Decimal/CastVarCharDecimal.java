@@ -93,12 +93,12 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
     byte[] buf = new byte[in.end - in.start];
     in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
     String s = new String(buf, com.google.common.base.Charsets.UTF_8);
-    java.math.BigDecimal bd =
-        new java.math.BigDecimal(s,
-            new java.math.MathContext(
-                precision.value,
-                java.math.RoundingMode.HALF_UP))
-        .setScale(scale.value, java.math.RoundingMode.HALF_UP);
+    java.math.BigDecimal bd = new java.math.BigDecimal(s);
+
+    org.apache.drill.exec.util.DecimalUtility.checkValueOverflow(bd, precision.value, scale.value);
+
+    bd = bd.setScale(scale.value, java.math.RoundingMode.HALF_UP);
+
     byte[] bytes = bd.unscaledValue().toByteArray();
     int len = bytes.length;
     out.buffer = buffer.reallocIfNeeded(len);

@@ -26,7 +26,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("WeakerAccess")
 public class DecimalUtility {
@@ -36,6 +39,8 @@ public class DecimalUtility {
   public final static int MAX_DIGITS_BIGINT = 19;
   public final static int DIGITS_BASE = 1000000000;
   public final static int INTEGER_SIZE = Integer.SIZE / 8;
+
+  private static final Logger logger = LoggerFactory.getLogger(DecimalUtility.class);
 
   /**
    * Given the number of actual digits this function returns the
@@ -415,6 +420,24 @@ public class DecimalUtility {
         return MAX_DIGITS_BIGINT;
       default:
         return defaultPrecision;
+    }
+  }
+
+  /**
+   * Checks that the specified value may be fit into the value with specified
+   * {@code desiredPrecision} precision and {@code desiredScale} scale.
+   * Otherwise, the exception is thrown.
+   *
+   * @param value            BigDecimal value to check
+   * @param desiredPrecision precision for the resulting value
+   * @param desiredScale     scale for the resulting value
+   */
+  public static void checkValueOverflow(BigDecimal value, int desiredPrecision, int desiredScale) {
+    if (value.precision() - value.scale() > desiredPrecision - desiredScale) {
+      throw UserException.validationError()
+          .message("Value %s overflows specified precision %s with scale %s.",
+              value, desiredPrecision, desiredScale)
+          .build(logger);
     }
   }
 }

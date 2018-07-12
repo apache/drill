@@ -18,18 +18,19 @@
 package org.apache.drill.exec.fn.impl;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import com.google.common.collect.Lists;
@@ -37,9 +38,14 @@ import com.google.common.collect.Maps;
 
 import mockit.integration.junit4.JMockit;
 
+import static org.hamcrest.CoreMatchers.containsString;
+
 @RunWith(JMockit.class)
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestCastFunctions extends BaseTestQuery {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testVarbinaryToDate() throws Exception {
@@ -380,22 +386,14 @@ public class TestCastFunctions extends BaseTestQuery {
           .baselineValues(new BigDecimal(1), new BigDecimal(1), new BigDecimal(1), new BigDecimal(1))
           .baselineValues(new BigDecimal(-1), new BigDecimal(-1), new BigDecimal(-1), new BigDecimal(-1))
 
-          .baselineValues(new BigDecimal(Integer.MAX_VALUE)
-                              .round(new MathContext(9, RoundingMode.HALF_UP))
-                              .setScale(0, RoundingMode.HALF_UP),
+          .baselineValues(new BigDecimal(Integer.MAX_VALUE),
                           new BigDecimal(Integer.MAX_VALUE),
-                          new BigDecimal(Long.MAX_VALUE)
-                              .round(new MathContext(9, RoundingMode.HALF_UP))
-                              .setScale(0, RoundingMode.HALF_UP),
+                          new BigDecimal(Long.MAX_VALUE),
                           new BigDecimal(Long.MAX_VALUE))
 
-          .baselineValues(new BigDecimal(Integer.MIN_VALUE)
-                              .round(new MathContext(9, RoundingMode.HALF_UP))
-                              .setScale(0, RoundingMode.HALF_UP),
+          .baselineValues(new BigDecimal(Integer.MIN_VALUE),
                           new BigDecimal(Integer.MIN_VALUE),
-                          new BigDecimal(Long.MIN_VALUE)
-                              .round(new MathContext(9, RoundingMode.HALF_UP))
-                              .setScale(0, RoundingMode.HALF_UP),
+                          new BigDecimal(Long.MIN_VALUE),
                           new BigDecimal(Long.MIN_VALUE))
 
           .baselineValues(new BigDecimal(123456789),
@@ -421,21 +419,13 @@ public class TestCastFunctions extends BaseTestQuery {
         .baselineValues(0, 0, 0L, 0L)
         .baselineValues(1, 1, 1L, 1L)
         .baselineValues(-1, -1, -1L, -1L)
-        .baselineValues(new BigDecimal(Integer.MAX_VALUE)
-                          .round(new MathContext(9, RoundingMode.HALF_UP))
-                          .setScale(0, RoundingMode.HALF_UP).intValue(),
+        .baselineValues(Integer.MAX_VALUE,
                         (int) Long.MAX_VALUE,
-                        new BigDecimal(Integer.MAX_VALUE)
-                          .round(new MathContext(9, RoundingMode.HALF_UP))
-                          .setScale(0, RoundingMode.HALF_UP).longValue(),
+                        (long) Integer.MAX_VALUE,
                         Long.MAX_VALUE)
-        .baselineValues(new BigDecimal(Integer.MIN_VALUE)
-                          .round(new MathContext(9, RoundingMode.HALF_UP))
-                          .setScale(0, RoundingMode.HALF_UP).intValue(),
+        .baselineValues(Integer.MIN_VALUE,
                         (int) Long.MIN_VALUE,
-                        new BigDecimal(Integer.MIN_VALUE)
-                          .round(new MathContext(9, RoundingMode.HALF_UP))
-                          .setScale(0, RoundingMode.HALF_UP).longValue(),
+                        (long) Integer.MIN_VALUE,
                         Long.MIN_VALUE)
         .baselineValues(123456789, 123456789, 123456789L, 123456789L)
         .go();
@@ -603,5 +593,75 @@ public class TestCastFunctions extends BaseTestQuery {
         .baselineColumns("c1")
         .baselineValues(new BigDecimal("100.00"))
         .go();
+  }
+
+  @Test
+  public void testCastDecimalZeroPrecision() throws Exception {
+    String query = "select cast('123.0' as decimal(0, 5))";
+
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("VALIDATION ERROR: Expected precision greater than 0, but was 0"));
+
+    test(query);
+  }
+
+  @Test
+  public void testCastDecimalGreaterScaleThanPrecision() throws Exception {
+    String query = "select cast('123.0' as decimal(3, 5))";
+
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("VALIDATION ERROR: Expected scale less than or equal to precision, but was scale 5 and precision 3"));
+
+    test(query);
+  }
+
+  @Test
+  public void testCastIntDecimalOverflow() throws Exception {
+    String query = "select cast(i1 as DECIMAL(4, 0)) as s1 from (select cast(123456 as int) as i1)";
+
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456 overflows specified precision 4 with scale 0"));
+
+    test(query);
+  }
+
+  @Test
+  public void testCastBigIntDecimalOverflow() throws Exception {
+    String query = "select cast(i1 as DECIMAL(4, 0)) as s1 from (select cast(123456 as bigint) as i1)";
+
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456 overflows specified precision 4 with scale 0"));
+
+    test(query);
+  }
+
+  @Test
+  public void testCastFloatDecimalOverflow() throws Exception {
+    String query = "select cast(i1 as DECIMAL(4, 0)) as s1 from (select cast(123456.123 as float) as i1)";
+
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456.123 overflows specified precision 4 with scale 0"));
+
+    test(query);
+  }
+
+  @Test
+  public void testCastDoubleDecimalOverflow() throws Exception {
+    String query = "select cast(i1 as DECIMAL(4, 0)) as s1 from (select cast(123456.123 as double) as i1)";
+
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456.123 overflows specified precision 4 with scale 0"));
+
+    test(query);
+  }
+
+  @Test
+  public void testCastVarCharDecimalOverflow() throws Exception {
+    String query = "select cast(i1 as DECIMAL(4, 0)) as s1 from (select cast(123456.123 as varchar) as i1)";
+
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456.123 overflows specified precision 4 with scale 0"));
+
+    test(query);
   }
 }
