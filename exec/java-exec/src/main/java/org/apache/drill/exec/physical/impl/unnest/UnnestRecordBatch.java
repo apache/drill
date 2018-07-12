@@ -222,10 +222,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       container.zeroVectors();
       // Check if schema has changed
       if (lateral.getRecordIndex() == 0) {
-        boolean isNewSchema = schemaChanged();
-        stats.batchReceived(0, incoming.getRecordCount(), isNewSchema);
-        if (isNewSchema) {
-          hasNewSchema = true; // next call to next will handle the actual data.
+        hasNewSchema = schemaChanged();
+        stats.batchReceived(0, incoming.getRecordCount(), hasNewSchema);
+        if (hasNewSchema) {
           try {
             setupNewSchema();
           } catch (SchemaChangeException ex) {
