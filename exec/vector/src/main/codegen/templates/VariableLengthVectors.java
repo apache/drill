@@ -19,7 +19,7 @@ import java.lang.Override;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Set;
-
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.vector.BaseDataValueVector;
@@ -641,6 +641,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
         if (callback != null) {
           callback.onNewBulkEntry(entry);
         }
+
+        DrillRuntimeException.checkInterrupted(); // Ensures fast handling of query cancellation
       }
 
       // Flush any data not yet copied to this VL container
