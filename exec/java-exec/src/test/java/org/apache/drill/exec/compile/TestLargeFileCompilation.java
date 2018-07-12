@@ -51,7 +51,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   private static final int NUM_PROJECT_COLUMNS = 2500;
 
-  private static final int NUM_PROJECT_TEST_COLUMNS = 10000;
+  private static final int NUM_PROJECT_TEST_COLUMNS = 5000;
 
   private static final int NUM_ORDERBY_COLUMNS = 500;
 
