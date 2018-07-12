@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -111,7 +112,7 @@ public class VarLenBinaryReader {
 
       // Read the column data
       int readColumns = columnReader.readRecordsInBulk(batchNumRecords);
-      assert readColumns <= batchNumRecords : "Reader cannot return more values than requested..";
+      Preconditions.checkState(readColumns <= batchNumRecords, "Reader cannot return more values than requested..");
 
       if (!overflowCondition) {
         if (prevReadColumns >= 0 && prevReadColumns != readColumns) {
@@ -181,7 +182,7 @@ public class VarLenBinaryReader {
     // Register batch overflow data with the record batch sizer manager (if any)
     if (builder != null) {
       Map<String, FieldOverflowStateContainer> overflowContainerMap = parentReader.batchSizerMgr.getFieldOverflowMap();
-      Map<String, FieldOverflowDefinition> overflowDefMap           = builder.build().getRecordOverflowDefinition().getFieldOverflowDefs();
+      Map<String, FieldOverflowDefinition> overflowDefMap = builder.build().getRecordOverflowDefinition().getFieldOverflowDefs();
 
       for (Map.Entry<String, FieldOverflowDefinition> entry : overflowDefMap.entrySet()) {
         FieldOverflowStateContainer overflowStateContainer = new FieldOverflowStateContainer(entry.getValue(), null);

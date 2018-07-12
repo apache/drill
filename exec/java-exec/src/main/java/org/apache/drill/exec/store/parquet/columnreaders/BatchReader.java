@@ -40,9 +40,9 @@ public abstract class BatchReader {
     ColumnReader<?> firstColumnStatus = readState.getFirstColumnReader();
     int currBatchNumRecords = readState.batchSizerMgr().getCurrentRecordsPerBatch();
     long recordsToRead = Math.min(currBatchNumRecords, readState.getRemainingValuesToRead());
-    int readCount = readRecords(firstColumnStatus, recordsToRead);
-
+    int readCount = recordsToRead > 0 ? readRecords(firstColumnStatus, recordsToRead) : 0;
     readState.fillNullVectors(readCount);
+
     return readCount;
   }
 
