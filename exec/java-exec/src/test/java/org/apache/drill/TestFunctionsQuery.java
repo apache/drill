@@ -953,7 +953,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
             .sqlQuery(query)
             .unOrdered()
             .baselineColumns("col1")
-            .baselineValues(-1.1)
+            .baselineValues(new BigDecimal("-1.1"))
             .go();
   }
 }

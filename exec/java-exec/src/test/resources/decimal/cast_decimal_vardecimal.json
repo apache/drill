@@ -21,8 +21,8 @@
       "exprs" : [
         { "ref" : "DEC28", "expr": "(cast(B as vardecimal(38, 20)))" },
         { "ref" : "DEC38", "expr": "(cast(A as vardecimal(28, 16)))" },
-        { "ref" : "DEC18", "expr": "(cast(B as vardecimal(18, 9)))" },
-        { "ref" : "DEC9", "expr": "(cast(A as vardecimal(9, 0)))" }
+        { "ref" : "DEC18", "expr": "(cast(B as vardecimal(19, 0)))" },
+        { "ref" : "DEC9", "expr": "(cast(A as vardecimal(10, 0)))" }
       ],
 
       "child" : 4
@@ -32,8 +32,8 @@
       "exprs" : [
         {"ref": "DEC28_COL", "expr" : "cast(DEC28 as decimal38sparse(38, 20))"},
         {"ref": "DEC38_COL", "expr" : "cast(DEC38 as decimal28sparse(28, 16))"},
-        {"ref": "DEC18_COL", "expr" : "cast(DEC18 as decimal18(18, 0))"},
-        {"ref": "DEC9_COL", "expr" : "cast(DEC9 as decimal9(9, 0))"}
+        {"ref": "DEC18_COL", "expr" : "cast(DEC18 as decimal18(19, 0))"},
+        {"ref": "DEC9_COL", "expr" : "cast(DEC9 as decimal9(10, 0))"}
       ],
 
       "child" : 3

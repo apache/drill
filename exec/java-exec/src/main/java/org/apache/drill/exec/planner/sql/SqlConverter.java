@@ -86,6 +86,7 @@ import static org.apache.calcite.util.Static.RESOURCE;
 
 import com.google.common.base.Joiner;
 import org.apache.drill.exec.store.ColumnExplorer;
+import org.apache.drill.exec.util.DecimalUtility;
 
 /**
  * Class responsible for managing parsing, validation and toRel conversion for sql statements.
@@ -562,10 +563,22 @@ public class SqlConverter {
       // that differs from the value from specified RelDataType, cast cannot be removed
       // TODO: remove this code when CALCITE-1468 is fixed
       if (type.getSqlTypeName() == SqlTypeName.DECIMAL && exp instanceof RexLiteral) {
+        if (type.getPrecision() < 1) {
+          throw UserException.validationError()
+              .message("Expected precision greater than 0, but was %s.", type.getPrecision())
+              .build(logger);
+        }
+        if (type.getScale() > type.getPrecision()) {
+          throw UserException.validationError()
+              .message("Expected scale less than or equal to precision, " +
+                  "but was scale %s and precision %s.", type.getScale(), type.getPrecision())
+              .build(logger);
+        }
         RexLiteral literal = (RexLiteral) exp;
         Comparable value = literal.getValueAs(Comparable.class);
         if (value instanceof BigDecimal) {
           BigDecimal bigDecimal = (BigDecimal) value;
+          DecimalUtility.checkValueOverflow(bigDecimal, type.getPrecision(), type.getScale());
           if (bigDecimal.scale() != type.getScale() || bigDecimal.precision() != type.getPrecision()) {
             return makeAbstractCast(type, exp);
           }

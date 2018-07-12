@@ -67,9 +67,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     out.start = 0;
     out.buffer = buffer;
-    java.math.BigDecimal bd = new java.math.BigDecimal(in.value,
-        new java.math.MathContext(precision.value, java.math.RoundingMode.HALF_UP))
-        .setScale(out.scale, java.math.BigDecimal.ROUND_DOWN);
+    java.math.BigDecimal bd = new java.math.BigDecimal(in.value);
+
+    org.apache.drill.exec.util.DecimalUtility.checkValueOverflow(bd, precision.value, scale.value);
+
+    bd = bd.setScale(out.scale, java.math.BigDecimal.ROUND_DOWN);
 
     byte[] bytes = bd.unscaledValue().toByteArray();
     int len = bytes.length;

@@ -64,17 +64,20 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
   public void eval() {
     java.math.BigDecimal bd =
         <#if type.from == "Decimal9" || type.from == "Decimal18">
-        java.math.BigDecimal.valueOf(in.value)
+        java.math.BigDecimal.valueOf(in.value);
         <#else>
         org.apache.drill.exec.util.DecimalUtility
           <#if type.from.contains("Sparse")>
-            .getBigDecimalFromDrillBuf(in.buffer, in.start, in.nDecimalDigits, in.scale, true)
+            .getBigDecimalFromDrillBuf(in.buffer, in.start, in.nDecimalDigits, in.scale, true);
           <#elseif type.from == "VarDecimal">
-            .getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale)
+            .getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
           </#if>
         </#if>
-                .setScale(scale.value, java.math.RoundingMode.HALF_UP)
-                .round(new java.math.MathContext(precision.value, java.math.RoundingMode.HALF_UP));
+
+    org.apache.drill.exec.util.DecimalUtility.checkValueOverflow(bd, precision.value, scale.value);
+
+    bd = bd.setScale(scale.value, java.math.RoundingMode.HALF_UP);
+
     out.scale = scale.value;
     out.precision = precision.value;
     out.start = 0;

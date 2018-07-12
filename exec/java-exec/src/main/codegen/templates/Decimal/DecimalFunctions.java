@@ -193,16 +193,18 @@ public class ${type.name}Functions {
 
 </#list>
 
-<#list ["Abs", "Ceil", "Floor", "Trunc", "Round"] as functionName>
+<#list ["Abs", "Ceil", "Floor", "Trunc", "Round", "Negative"] as functionName>
   <#if functionName == "Ceil">
   @FunctionTemplate(names = {"ceil", "ceiling"},
   <#elseif functionName == "Trunc">
   @FunctionTemplate(names = {"trunc", "truncate"},
+  <#elseif functionName == "Negative">
+  @FunctionTemplate(names = {"negative", "u-", "-"},
   <#else>
   @FunctionTemplate(name = "${functionName?lower_case}",
   </#if>
                     scope = FunctionTemplate.FunctionScope.SIMPLE,
-                  <#if functionName == "Abs">
+                  <#if functionName == "Abs" || functionName == "Negative">
                     returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
                   <#elseif functionName == "Ceil" || functionName == "Floor"
                       || functionName == "Trunc" || functionName == "Round">
@@ -226,6 +228,9 @@ public class ${type.name}Functions {
               .getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale)
           <#if functionName == "Abs">
                   .abs();
+      result.scale = in.scale;
+          <#elseif functionName == "Negative">
+                  .negate();
       result.scale = in.scale;
           <#elseif functionName == "Ceil">
                   .setScale(0, java.math.BigDecimal.ROUND_CEILING);
