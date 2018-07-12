@@ -21,6 +21,12 @@
 #include "drill/common.hpp"
 #include "drill/drillClient.hpp"
 #include "streamSocket.hpp"
+#include "errmsgs.hpp"
+
+#if defined(IS_SSL_ENABLED)
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#endif
 
 namespace Drill {
 
@@ -34,7 +40,7 @@ class UserProperties;
 
             //parse the connection string and set up the host and port to connect to
             connectionStatus_t getDrillbitEndpoint();
-
+            
             const std::string& getProtocol() const {return m_protocol;}
             const std::string& getHost() const {return m_host;}
             const std::string& getPort() const {return m_port;}
@@ -83,21 +89,41 @@ class UserProperties;
 
         SSLChannelContext(DrillUserProperties *props,
                           boost::asio::ssl::context::method tlsVersion,
-                          boost::asio::ssl::verify_mode verifyMode) :
-                ChannelContext(props),
-                m_SSLContext(tlsVersion) {
+                          boost::asio::ssl::verify_mode verifyMode,
+                          const long customSSLCtxOptions = 0) :
+                    ChannelContext(props),
+                    m_SSLContext(tlsVersion),
+                    m_certHostnameVerificationStatus(true) 
+            {
                 m_SSLContext.set_default_verify_paths();
                 m_SSLContext.set_options(
                         boost::asio::ssl::context::default_workarounds
                         | boost::asio::ssl::context::no_sslv2
+                        | boost::asio::ssl::context::no_sslv3
                         | boost::asio::ssl::context::single_dh_use
+                        | customSSLCtxOptions
                         );
                 m_SSLContext.set_verify_mode(verifyMode);
             };
+
             ~SSLChannelContext(){};
             boost::asio::ssl::context& getSslContext(){ return m_SSLContext;}
+
+            /// @brief Check the certificate host name verification status.
+            /// 
+            /// @return FALSE if the verification has failed, TRUE otherwise.
+            const bool GetCertificateHostnameVerificationStatus() const { return m_certHostnameVerificationStatus; }
+
+            /// @brief Set the certificate host name verification status.
+            ///
+            /// @param in_result                The host name verification status.
+            void SetCertHostnameVerificationStatus(bool in_result) { m_certHostnameVerificationStatus = in_result; }
+
         private:
             boost::asio::ssl::context m_SSLContext;
+
+            // The flag to indicate the host name verification result.
+            bool m_certHostnameVerificationStatus;
     };
 
     typedef ChannelContext ChannelContext_t; 
@@ -147,8 +173,19 @@ class UserProperties;
 
             ConnectionEndpoint* getEndpoint(){return m_pEndpoint;}
 
+            ChannelContext_t* getChannelContext(){ return m_pContext; }
+
         protected:
             connectionStatus_t handleError(connectionStatus_t status, std::string msg);
+
+            /// @brief Handle protocol handshake exceptions.
+            /// 
+            /// @param in_err                   The error.
+            /// 
+            /// @return the connectionStatus.
+            virtual connectionStatus_t HandleProtocolHandshakeException(const boost::system::system_error& in_err){
+                return handleError(CONN_HANDSHAKE_FAILED, in_err.what());
+            }
 
             boost::asio::io_service& m_ioService;
             boost::asio::io_service m_ioServiceFallback; // used if m_ioService is not provided
@@ -170,7 +207,7 @@ class UserProperties;
                 try{
                     m_pSocket->protocolHandshake(useSystemConfig);
                 } catch (boost::system::system_error e) {
-                    status = handleError(CONN_HANDSHAKE_FAILED, e.what());
+                    status = HandleProtocolHandshakeException(e);
                 }
                 return status;
             }
@@ -199,6 +236,33 @@ class UserProperties;
                 :Channel(ioService, host, port){
             }
             connectionStatus_t init();
+        protected:
+#if defined(IS_SSL_ENABLED)
+            /// @brief Handle protocol handshake exceptions for SSL specific failures.
+            /// 
+            /// @param in_err               The error.
+            /// 
+            /// @return the connectionStatus.
+            connectionStatus_t HandleProtocolHandshakeException(const boost::system::system_error& in_err) {
+                const boost::system::error_code& errcode = in_err.code();
+                if (!(((SSLChannelContext_t *)m_pContext)->GetCertificateHostnameVerificationStatus())){
+                    return handleError(
+                        CONN_HANDSHAKE_FAILED,
+                        getMessage(ERR_CONN_SSL_CN, in_err.what()));
+                }
+                else if (boost::asio::error::get_ssl_category() == errcode.category() && 
+                    SSL_R_CERTIFICATE_VERIFY_FAILED == ERR_GET_REASON(errcode.value())){
+                    return handleError(
+                        CONN_HANDSHAKE_FAILED,
+                        getMessage(ERR_CONN_SSL_CERTVERIFY, in_err.what()));
+                }
+                else{
+                    return handleError(
+                        CONN_HANDSHAKE_FAILED,
+                        getMessage(ERR_CONN_SSL_GENERAL, in_err.what()));
+                }
+            }
+#endif
     };
 
     class ChannelFactory{
@@ -215,6 +279,52 @@ class UserProperties;
             static ChannelContext_t* getChannelContext(channelType_t t, DrillUserProperties* props);
     };
 
+    /// @brief Hostname verification callback wrapper.
+    class DrillSSLHostnameVerifier{
+        public:
+            /// @brief The constructor.
+            /// 
+            /// @param in_channel                  The Channel.
+            DrillSSLHostnameVerifier(Channel* in_channel) : m_channel(in_channel){
+                DRILL_LOG(LOG_INFO)
+                    << "DrillSSLHostnameVerifier::DrillSSLHostnameVerifier: +++++ Enter +++++" 
+                    << std::endl;
+            }
+
+            /// @brief Perform certificate verification.
+            /// 
+            /// @param in_preverified           Pre-verified indicator.
+            /// @param in_ctx                   Verify context.
+            bool operator()(
+                bool in_preverified,
+                boost::asio::ssl::verify_context& in_ctx){
+                DRILL_LOG(LOG_INFO) << "DrillSSLHostnameVerifier::operator(): +++++ Enter +++++" << std::endl;
+
+                // Gets the channel context.
+                SSLChannelContext_t* context = (SSLChannelContext_t*)(m_channel->getChannelContext());
+
+                // Retrieve the host before we perform Host name verification.
+                // This is because host with ZK mode is selected after the connect() function is called.
+                boost::asio::ssl::rfc2818_verification verifier(m_channel->getEndpoint()->getHost().c_str());
+
+                // Perform verification.
+                bool verified = verifier(in_preverified, in_ctx);
+
+                DRILL_LOG(LOG_DEBUG) 
+                    << "DrillSSLHostnameVerifier::operator(): Verification Result: " 
+                    << verified 
+                    << std::endl;
+
+                // Sets the result back to the context.
+                context->SetCertHostnameVerificationStatus(verified);
+                return verified;
+            }
+
+        private:
+
+            // The SSL channel.
+            Channel* m_channel;
+    };
 
 } // namespace Drill
 

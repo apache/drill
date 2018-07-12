@@ -210,7 +210,19 @@ ChannelContext* ChannelFactory::getChannelContext(channelType_t t, DrillUserProp
                 verifyMode = boost::asio::ssl::context::verify_none;
             }
 
-            pChannelContext = new SSLChannelContext(props, tlsVersion, verifyMode);
+            long customSSLCtxOptions = 0;
+            std::string sslOptions;
+            props->getProp(USERPROP_CUSTOM_SSLCTXOPTIONS, sslOptions);
+            if (!sslOptions.empty()){
+                try{
+                    customSSLCtxOptions = boost::lexical_cast<long>(sslOptions);
+                }
+                catch (...){
+                      DRILL_LOG(LOG_ERROR) << "Unable to parse custom SSL CTX options." << std::endl;
+                 }
+            }
+
+            pChannelContext = new SSLChannelContext(props, tlsVersion, verifyMode, customSSLCtxOptions);
         }
             break;
 #endif
@@ -352,30 +364,32 @@ connectionStatus_t SSLStreamChannel::init(){
     connectionStatus_t ret=CONN_SUCCESS;
 
     const DrillUserProperties* props = m_pContext->getUserProperties();
-	std::string useSystemTrustStore;
-	props->getProp(USERPROP_USESYSTEMTRUSTSTORE, useSystemTrustStore);
-	if (useSystemTrustStore != "true"){
-		std::string certFile;
-		props->getProp(USERPROP_CERTFILEPATH, certFile);
-		try{
-			((SSLChannelContext_t*)m_pContext)->getSslContext().load_verify_file(certFile);
-		}
-		catch (boost::system::system_error e){
-			DRILL_LOG(LOG_ERROR) << "Channel initialization failure. Certificate file  "
-				<< certFile
-				<< " could not be loaded."
-				<< std::endl;
-			handleError(CONN_SSLERROR, getMessage(ERR_CONN_SSLCERTFAIL, certFile.c_str(), e.what()));
-			ret = CONN_FAILURE;
-		}
-	}
+    std::string useSystemTrustStore;
+    props->getProp(USERPROP_USESYSTEMTRUSTSTORE, useSystemTrustStore);
+    if (useSystemTrustStore != "true"){
+        std::string certFile;
+        props->getProp(USERPROP_CERTFILEPATH, certFile);
+        try{
+            ((SSLChannelContext_t*)m_pContext)->getSslContext().load_verify_file(certFile);
+        }
+        catch (boost::system::system_error e){
+            DRILL_LOG(LOG_ERROR) << "Channel initialization failure. Certificate file  "
+                << certFile
+                << " could not be loaded."
+                << std::endl;
+            handleError(CONN_SSLERROR, getMessage(ERR_CONN_SSLCERTFAIL, certFile.c_str(), e.what()));
+            ret = CONN_FAILURE;
+            // Stop here to propagate the load/verify certificate error.
+            return ret;
+        }
+    }
 
+    ((SSLChannelContext_t *)m_pContext)->SetCertHostnameVerificationStatus(true);
     std::string disableHostVerification;
     props->getProp(USERPROP_DISABLE_HOSTVERIFICATION, disableHostVerification);
     if (disableHostVerification != "true") {
-        std::string hostPortStr = m_pEndpoint->getHost() + ":" + m_pEndpoint->getPort();
         ((SSLChannelContext_t *) m_pContext)->getSslContext().set_verify_callback(
-                boost::asio::ssl::rfc2818_verification(hostPortStr.c_str()));
+                DrillSSLHostnameVerifier(this));
     }
 
     m_pSocket=new SslSocket(m_ioService, ((SSLChannelContext_t*)m_pContext)->getSslContext() );
