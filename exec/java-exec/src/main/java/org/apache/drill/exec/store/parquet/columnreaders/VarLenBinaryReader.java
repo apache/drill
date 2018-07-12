@@ -34,11 +34,11 @@ import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatch
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchSizerManager.FieldOverflowState;
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchSizerManager.FieldOverflowStateContainer;
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchSizerManager.VarLenColumnBatchStats;
+import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.vector.ValueVector;
 
 /** Class which handles reading a batch of rows from a set of variable columns */
 public class VarLenBinaryReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarLenBinaryReader.class);
 
   final ParquetRecordReader parentReader;
   final RecordBatchSizerManager batchSizer;
@@ -170,7 +170,8 @@ public class VarLenBinaryReader {
 
         // Lazy initialization
         if (builder == null) {
-          builder = RecordBatchOverflow.newBuilder(parentReader.getOperatorContext().getAllocator());
+          builder = RecordBatchOverflow.newBuilder(parentReader.getOperatorContext().getAllocator(),
+            batchSizer.getBatchStatsContext());
         }
 
         final int numOverflowValues = columnStat.numValuesRead - batchNumRecords;
@@ -181,7 +182,7 @@ public class VarLenBinaryReader {
     // Register batch overflow data with the record batch sizer manager (if any)
     if (builder != null) {
       Map<String, FieldOverflowStateContainer> overflowContainerMap = parentReader.batchSizerMgr.getFieldOverflowMap();
-      Map<String, FieldOverflowDefinition> overflowDefMap           = builder.build().getRecordOverflowDefinition().getFieldOverflowDefs();
+      Map<String, FieldOverflowDefinition> overflowDefMap = builder.build().getRecordOverflowDefinition().getFieldOverflowDefs();
 
       for (Map.Entry<String, FieldOverflowDefinition> entry : overflowDefMap.entrySet()) {
         FieldOverflowStateContainer overflowStateContainer = new FieldOverflowStateContainer(entry.getValue(), null);
@@ -197,9 +198,9 @@ public class VarLenBinaryReader {
     // Finally, re-order the variable length columns since an overflow occurred
     Collections.sort(orderedColumns, comparator);
 
-    if (logger.isDebugEnabled()) {
-      boolean isFirstValue    = true;
-      final StringBuilder msg = new StringBuilder(RecordBatchSizerManager.BATCH_STATS_PREFIX);
+    if (batchSizer.getBatchStatsContext().isEnableBatchSzLogging()) {
+      boolean isFirstValue = true;
+      final StringBuilder msg = new StringBuilder();
       msg.append(": Dumping the variable length columns read order: ");
 
       for (VLColumnContainer container : orderedColumns) {
@@ -212,7 +213,7 @@ public class VarLenBinaryReader {
       }
       msg.append('.');
 
-      logger.debug(msg.toString());
+      RecordBatchStats.logRecordBatchStats(msg.toString(), batchSizer.getBatchStatsContext());
     }
   }
 

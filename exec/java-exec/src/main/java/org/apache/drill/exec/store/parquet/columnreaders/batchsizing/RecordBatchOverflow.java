@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchStatsContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
@@ -39,10 +40,11 @@ public final class RecordBatchOverflow {
 
   /**
    * @param allocator buffer allocator
+   * @param batchStatsContext batch statistics context
    * @return new builder object
    */
-  public static Builder newBuilder(BufferAllocator allocator) {
-    return new Builder(allocator);
+  public static Builder newBuilder(BufferAllocator allocator, RecordBatchStatsContext batchStatsContext) {
+    return new Builder(allocator, batchStatsContext);
   }
 
   /**
@@ -75,13 +77,17 @@ public final class RecordBatchOverflow {
     private final List<FieldOverflowEntry> fieldOverflowEntries = new ArrayList<FieldOverflowEntry>();
     /** Buffer allocator */
     private final BufferAllocator allocator;
+    /** Batch statistics context */
+    private final RecordBatchStatsContext batchStatsContext;
 
     /**
      * Build class to construct a {@link RecordBatchOverflow} object.
      * @param allocator buffer allocator
+     * @param batchStatsContext batch statistics context
      */
-    private Builder(BufferAllocator allocator) {
+    private Builder(BufferAllocator allocator, RecordBatchStatsContext batchStatsContext) {
       this.allocator = allocator;
+      this.batchStatsContext = batchStatsContext;
     }
 
     /**
@@ -101,9 +107,8 @@ public final class RecordBatchOverflow {
      * @return a new built {link BatchRecordOverflow} object instance
      */
     public RecordBatchOverflow build() {
-      RecordOverflowContainer overflowContainer = OverflowSerDeUtil.serialize(fieldOverflowEntries, allocator);
-      RecordBatchOverflow result                =
-        new RecordBatchOverflow(overflowContainer.recordOverflowDef, allocator);
+      RecordOverflowContainer overflowContainer = OverflowSerDeUtil.serialize(fieldOverflowEntries, allocator, batchStatsContext);
+      RecordBatchOverflow result = new RecordBatchOverflow(overflowContainer.recordOverflowDef, allocator);
 
       return result;
     }
