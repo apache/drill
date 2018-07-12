@@ -87,6 +87,7 @@
     <additionalparam>-Xdoclint:none</additionalparam>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
+    <docker.repository>drill/apache-drill</docker.repository>
   </properties>
 
   <scm>
