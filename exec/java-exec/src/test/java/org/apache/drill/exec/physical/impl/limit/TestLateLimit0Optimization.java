@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,35 +21,33 @@ import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
 import org.junit.Test;
 
+import static org.apache.drill.exec.ExecConstants.LATE_LIMIT0_OPT_KEY;
+
 public class TestLateLimit0Optimization extends BaseTestQuery {
-
-  private static String wrapLimit0(final String query) {
-    return "SELECT * FROM (" + query + ") LZT LIMIT 0";
-  }
-
-  private static void checkThatQueryIsOptimized(final String query) throws Exception {
-    PlanTestBase.testPlanMatchingPatterns(wrapLimit0(query),
-        new String[]{
-            ".*Limit\\(offset=\\[0\\], fetch=\\[0\\]\\)(.*[\n\r])+.*Scan.*"
-        }, new String[]{});
-  }
-
-  private static void checkThatQueryIsNotOptimized(final String query) throws Exception {
-    PlanTestBase.testPlanMatchingPatterns(wrapLimit0(query),
-        new String[]{},
-        new String[]{
-            ".*Limit\\(offset=\\[0\\], fetch=\\[0\\]\\)(.*[\n\r])+.*Scan.*"
-        });
-  }
 
   @Test
   public void convertFromJson() throws Exception {
     checkThatQueryIsNotOptimized("SELECT CONVERT_FROM('{x:100, y:215.6}' ,'JSON') AS MYCOL FROM (VALUES(1))");
   }
 
+  private static void checkThatQueryIsNotOptimized(final String query) throws Exception {
+    PlanTestBase.testPlanMatchingPatterns(wrapLimit0(query),
+        null,
+        new String[] {".*Limit\\(offset=\\[0\\], fetch=\\[0\\]\\)(.*[\n\r])+.*Scan.*"});
+  }
+
+  private static String wrapLimit0(final String query) {
+    return "SELECT * FROM (" + query + ") LZT LIMIT 0";
+  }
+
   @Test
   public void convertToIntBE() throws Exception {
     checkThatQueryIsOptimized("SELECT CONVERT_TO(r_regionkey, 'INT_BE') FROM cp.`tpch/region.parquet`");
+  }
+
+  private static void checkThatQueryIsOptimized(final String query) throws Exception {
+    PlanTestBase.testPlanMatchingPatterns(wrapLimit0(query),
+        new String[] {".*Limit\\(offset=\\[0\\], fetch=\\[0\\]\\)(.*[\n\r])+.*Scan.*"});
   }
 
   @Test
@@ -109,4 +107,14 @@ public class TestLateLimit0Optimization extends BaseTestQuery {
             "FROM cp.`employee.json`");
   }
 
+  @Test
+  public void testLimit0IsAbsentWhenDisabled() throws Exception {
+    String query = "SELECT CONVERT_TO(r_regionkey, 'INT_BE') FROM cp.`tpch/region.parquet`";
+    try {
+      setSessionOption(LATE_LIMIT0_OPT_KEY, false);
+      PlanTestBase.testPlanMatchingPatterns(wrapLimit0(query), null, new String[] {".*Limit\\(offset=\\[0\\], fetch=\\[0\\]\\)(.*[\n\r])+.*Scan.*"});
+    } finally {
+      resetSessionOption(LATE_LIMIT0_OPT_KEY);
+    }
+  }
 }
