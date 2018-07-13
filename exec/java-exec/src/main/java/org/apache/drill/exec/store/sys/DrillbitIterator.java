@@ -21,6 +21,7 @@ import java.util.Iterator;
 
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.pojo.NonNullable;
 
 public class DrillbitIterator implements Iterator<Object> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitIterator.class);
@@ -34,13 +35,17 @@ public class DrillbitIterator implements Iterator<Object> {
   }
 
   public static class DrillbitInstance {
+    @NonNullable
     public String hostname;
     public int user_port;
     public int control_port;
     public int data_port;
     public int http_port;
+    @NonNullable
     public boolean current;
+    @NonNullable
     public String version;
+    @NonNullable
     public String state;
   }
 
