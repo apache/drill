@@ -36,7 +36,6 @@ import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileAlreadyExistsException;
 import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -44,11 +43,9 @@ import org.apache.hadoop.fs.FsServerDefaults;
 import org.apache.hadoop.fs.FsStatus;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Options.ChecksumOpt;
-import org.apache.hadoop.fs.ParentNotDirectoryException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.hadoop.fs.UnsupportedFileSystemException;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.fs.permission.AclEntry;
 import org.apache.hadoop.fs.permission.AclStatus;
@@ -65,7 +62,8 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 /**
- * DrillFileSystem is the wrapper around the actual FileSystem implementation.
+ * DrillFileSystem is the wrapper around the actual FileSystem implementation. The {@link DrillFileSystem} is
+ * immutable.
  *
  * If {@link org.apache.drill.exec.ops.OperatorStats} are provided it returns an instrumented FSDataInputStream to
  * measure IO wait time and tracking file open/close operations.
@@ -88,23 +86,42 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   }
 
   public DrillFileSystem(Configuration fsConf, OperatorStats operatorStats) throws IOException {
+    // Configuration objects are mutable, and the underlying FileSystem object may directly use a passed in Configuration.
+    // In order to avoid scenarios where a Configuration can change after a DrillFileSystem is created, we make a copy
+    // of the Configuration.
+    fsConf = new Configuration(fsConf);
     this.underlyingFs = FileSystem.get(fsConf);
     this.codecFactory = new CompressionCodecFactory(fsConf);
     this.operatorStats = operatorStats;
   }
 
-  @Override
-  public void setConf(Configuration conf) {
-    // Guard against setConf(null) call that is called as part of superclass constructor (Configured) of the
-    // DrillFileSystem, at which point underlyingFs is null.
-    if (conf != null && underlyingFs != null) {
-      underlyingFs.setConf(conf);
-    }
+  private void throwUnsupported() {
+    throw new UnsupportedOperationException(DrillFileSystem.class.getCanonicalName() + " is immutable and should not be changed after creation.");
   }
 
+  /**
+   * This method should never be used on {@link DrillFileSystem} since {@link DrillFileSystem} is immutable.
+   * {@inheritDoc}
+   * @throws UnsupportedOperationException when called.
+   */
+  @Override
+  public void setConf(Configuration conf) {
+    if (underlyingFs != null) {
+      throwUnsupported();
+    }
+
+    // The parent class's constructor FileSystem() calls Configured(null) which calls setConf(null).
+    // We want to let that first call to setConf succeed. Any subsequent calls would be made by a user and are not allowed.
+  }
+
+  /**
+   * Returns a copy of {@link Configuration} for this {@link DrillFileSystem}.
+   * <b>Note: </b> a copy of the {@link Configuration} is returned in order to enforce immutability.
+   * @return A copy of {@link Configuration} for this {@link DrillFileSystem}.
+   */
   @Override
   public Configuration getConf() {
-    return underlyingFs.getConf();
+    return new Configuration(this.underlyingFs.getConf());
   }
 
   /**
@@ -143,9 +160,14 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
     return new DrillFSDataInputStream(underlyingFs.open(f), operatorStats);
   }
 
+  /**
+   * This method should never be used on {@link DrillFileSystem} since {@link DrillFileSystem} is immutable.
+   * {@inheritDoc}
+   * @throws UnsupportedOperationException when called.
+   */
   @Override
-  public void initialize(URI name, Configuration conf) throws IOException {
-    underlyingFs.initialize(name, conf);
+  public void initialize(URI name, Configuration conf) {
+    throwUnsupported();
   }
 
   @Override
@@ -205,13 +227,12 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   }
 
   @Override
-  public void createSymlink(Path target, Path link, boolean createParent) throws AccessControlException, FileAlreadyExistsException, FileNotFoundException, ParentNotDirectoryException, UnsupportedFileSystemException, IOException {
+  public void createSymlink(Path target, Path link, boolean createParent) throws IOException {
     underlyingFs.createSymlink(target, link, createParent);
   }
 
   @Override
-  public FileStatus getFileLinkStatus(Path f) throws AccessControlException, FileNotFoundException,
-      UnsupportedFileSystemException, IOException {
+  public FileStatus getFileLinkStatus(Path f) throws IOException {
     return underlyingFs.getFileLinkStatus(f);
   }
 
@@ -230,14 +251,24 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
     return underlyingFs.getFileChecksum(f);
   }
 
+  /**
+   * This method should never be used on {@link DrillFileSystem} since {@link DrillFileSystem} is immutable.
+   * {@inheritDoc}
+   * @throws UnsupportedOperationException when called.
+   */
   @Override
   public void setVerifyChecksum(boolean verifyChecksum) {
-    underlyingFs.setVerifyChecksum(verifyChecksum);
+    throwUnsupported();
   }
 
+  /**
+   * This method should never be used on {@link DrillFileSystem} since {@link DrillFileSystem} is immutable.
+   * {@inheritDoc}
+   * @throws UnsupportedOperationException when called.
+   */
   @Override
   public void setWriteChecksum(boolean writeChecksum) {
-    underlyingFs.setWriteChecksum(writeChecksum);
+    throwUnsupported();
   }
 
   @Override
@@ -567,9 +598,14 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
     return underlyingFs.getHomeDirectory();
   }
 
+  /**
+   * This method should never be used on {@link DrillFileSystem} since {@link DrillFileSystem} is immutable.
+   * {@inheritDoc}
+   * @throws UnsupportedOperationException when called.
+   */
   @Override
   public void setWorkingDirectory(Path new_dir) {
-    underlyingFs.setWorkingDirectory(new_dir);
+    throwUnsupported();
   }
 
   @Override
