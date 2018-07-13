@@ -81,17 +81,16 @@ public class NullableFixedByteAlignedReaders {
       if (usingDictionary) {
         NullableVarBinaryVector.Mutator mutator =  valueVec.getMutator();
         Binary currDictValToWrite;
-        for (int i = 0; i < recordsReadInThisIteration; i++){
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
           currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
           ByteBuffer buf = currDictValToWrite.toByteBuffer();
-          mutator.setSafe(valuesReadInCurrentPass + i, buf, buf.position(),
-              currDictValToWrite.length());
+          mutator.setSafe(valuesReadInCurrentPass + i, buf, buf.position(), currDictValToWrite.length());
         }
         // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
         // and we will go into the else condition below. The readField method of the parent class requires the
         // writer index to be set correctly.
         int writerIndex = castedBaseVector.getBuffer().writerIndex();
-        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int)readLength);
+        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int) readLength);
       } else {
         super.readField(recordsToReadInThisPass);
         // TODO - replace this with fixed binary type in drill
