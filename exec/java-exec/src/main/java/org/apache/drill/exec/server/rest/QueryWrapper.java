@@ -83,12 +83,17 @@ public class QueryWrapper {
     float usagePercent = getHeapUsage();
 
     // Wait until the query execution is complete or there is error submitting the query
-    logger.debug("Wait until the query execution is complete or there is error submitting the query");
+    if (logger.isDebugEnabled()) {
+      logger.debug("Wait until the query execution is complete or there is error submitting the query");
+    }
     do {
       try {
-        isComplete = webUserConnection.await(TimeUnit.SECONDS.toMillis(1)); /*periodically timeout to check heap*/
-      } catch (Exception e) { }
-
+        isComplete = webUserConnection.timedWait(TimeUnit.SECONDS.toMillis(1)); /*periodically timeout 1sec to check heap */
+      } catch (Exception e) { /* Timed Out => Check usage */
+        if (e instanceof UserException) { //Throw UserException only
+          throw e;
+        }
+      }
       usagePercent = getHeapUsage();
       if (usagePercent >  HEAP_MEMORY_FAILURE_THRESHOLD) {
         nearlyOutOfHeapSpace = true;
@@ -97,17 +102,19 @@ public class QueryWrapper {
 
     //Fail if nearly out of heap space
     if (nearlyOutOfHeapSpace) {
+      UserException almostOutOfHeapException = UserException.resourceError(
+          new Throwable(
+              "There is not enough heap memory to run this query using the web interface. "
+              + "Please try a query with fewer columns or with a filter or limit condition to limit the data returned. "
+              + "You can also try an ODBC/JDBC client. "
+              )
+          )
+        .build(logger);
+      //Add event
       workManager.getBee().getForemanForQueryId(queryId)
-        .addToEventQueue(QueryState.FAILED,
-            UserException.resourceError(
-                new Throwable(
-                    "There is not enough heap memory to run this query using the web interface. "
-                    + "Please try a query with fewer columns or with a filter or limit condition to limit the data returned. "
-                    + "You can also try an ODBC/JDBC client. "
-                    )
-                )
-              .build(logger)
-            );
+        .addToEventQueue(QueryState.FAILED, almostOutOfHeapException);
+      //Return NearlyOutOfHeap exception
+      throw almostOutOfHeapException;
     }
 
     if (logger.isTraceEnabled()) {

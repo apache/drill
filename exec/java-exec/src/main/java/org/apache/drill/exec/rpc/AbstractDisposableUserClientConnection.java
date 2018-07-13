@@ -55,6 +55,19 @@ public abstract class AbstractDisposableUserClientConnection implements UserClie
   }
 
   /**
+   * Wait until the query has completed or timeout is passed. (Used only in case of WebUser)
+   *
+   * @throws Exception
+   */
+  public boolean timedWait(final long timeoutMillis) throws Exception {
+    boolean status = latch.await(timeoutMillis, TimeUnit.MILLISECONDS);
+    if (exception != null) {
+      throw exception;
+    }
+    return status;
+  }
+
+  /**
    * Wait indefinitely until the query is completed. Used only in case of WebUser
    *
    * @throws Exception
