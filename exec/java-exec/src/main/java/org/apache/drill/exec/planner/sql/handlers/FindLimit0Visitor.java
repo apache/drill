@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
@@ -75,7 +74,6 @@ import java.util.Set;
  * executing a schema-only query.
  */
 public class FindLimit0Visitor extends RelShuttleImpl {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FindLimit0Visitor.class);
 
   // Some types are excluded in this set:
   // + VARBINARY is not fully tested.
@@ -95,6 +93,25 @@ public class FindLimit0Visitor extends RelShuttleImpl {
               SqlTypeName.INTERVAL_MINUTE_SECOND, SqlTypeName.INTERVAL_SECOND, SqlTypeName.CHAR, SqlTypeName.DECIMAL)
           .build();
 
+  private static final Set<String> unsupportedFunctions = ImmutableSet.<String>builder()
+      // see Mappify
+      .add("KVGEN")
+      .add("MAPPIFY")
+      // see DummyFlatten
+      .add("FLATTEN")
+      // see JsonConvertFrom
+      .add("CONVERT_FROMJSON")
+      // see JsonConvertTo class
+      .add("CONVERT_TOJSON")
+      .add("CONVERT_TOSIMPLEJSON")
+      .add("CONVERT_TOEXTENDEDJSON")
+      .build();
+
+  private boolean contains = false;
+
+  private FindLimit0Visitor() {
+  }
+
   /**
    * If all field types of the given node are {@link #TYPES recognized types} and honored by execution, then this
    * method returns the tree: DrillDirectScanRel(field types). Otherwise, the method returns null.
@@ -104,8 +121,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
    */
   public static DrillRel getDirectScanRelIfFullySchemaed(RelNode rel) {
     final List<RelDataTypeField> fieldList = rel.getRowType().getFieldList();
-    final List<TypeProtos.MajorType> columnTypes = Lists.newArrayList();
-
+    final List<TypeProtos.MajorType> columnTypes = new ArrayList<>();
 
     for (final RelDataTypeField field : fieldList) {
       final SqlTypeName sqlTypeName = field.getType().getSqlTypeName();
@@ -145,32 +161,6 @@ public class FindLimit0Visitor extends RelShuttleImpl {
     return visitor.isContains();
   }
 
-  private boolean contains = false;
-
-  private static final Set<String> unsupportedFunctions = ImmutableSet.<String>builder()
-      // see Mappify
-      .add("KVGEN")
-      .add("MAPPIFY")
-      // see DummyFlatten
-      .add("FLATTEN")
-      // see JsonConvertFrom
-      .add("CONVERT_FROMJSON")
-      // see JsonConvertTo class
-      .add("CONVERT_TOJSON")
-      .add("CONVERT_TOSIMPLEJSON")
-      .add("CONVERT_TOEXTENDEDJSON")
-      .build();
-
-  private static boolean isUnsupportedScalarFunction(final SqlOperator operator) {
-    return operator instanceof DrillSqlOperator &&
-        unsupportedFunctions.contains(operator.getName().toUpperCase());
-  }
-
-  /**
-   * TODO(DRILL-3993): Use RelBuilder to create a limit node to allow for applying this optimization in potentially
-   * any of the transformations, but currently this can be applied after Drill logical transformation, and before
-   * Drill physical transformation.
-   */
   public static DrillRel addLimitOnTopOfLeafNodes(final DrillRel rel) {
     final Pointer<Boolean> isUnsupported = new Pointer<>(false);
 
@@ -195,7 +185,9 @@ public class FindLimit0Visitor extends RelShuttleImpl {
           isUnsupported.value = true;
           return other;
         } else if (other instanceof DrillProjectRelBase) {
-          other.accept(unsupportedFunctionsVisitor);
+          if (!isUnsupported.value) {
+            other.accept(unsupportedFunctionsVisitor);
+          }
           if (isUnsupported.value) {
             return other;
           }
@@ -231,7 +223,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
 
       @Override
       public RelNode visit(RelNode other) {
-        if (other.getInputs().size() == 0) { // leaf operator
+        if (other.getInputs().isEmpty()) { // leaf operator
           return addLimitAsParent(other);
         }
         return super.visit(other);
@@ -241,7 +233,9 @@ public class FindLimit0Visitor extends RelShuttleImpl {
     return (DrillRel) rel.accept(addLimitOnScanVisitor);
   }
 
-  private FindLimit0Visitor() {
+  private static boolean isUnsupportedScalarFunction(final SqlOperator operator) {
+    return operator instanceof DrillSqlOperator &&
+        unsupportedFunctions.contains(operator.getName().toUpperCase());
   }
 
   boolean isContains() {
@@ -275,7 +269,6 @@ public class FindLimit0Visitor extends RelShuttleImpl {
     return super.visit(other);
   }
 
-  // TODO: The following nodes are never visited because this visitor is used after logical transformation!
   // The following set of RelNodes should terminate a search for the limit 0 pattern as they want convey its meaning.
 
   @Override

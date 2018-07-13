@@ -282,7 +282,7 @@ public class TestPartitionFilter extends PlanTestBase {
     // with Parquet RG filter pushdown, reduce to 1 file ( o_custkey all > 10).
     // There is a LIMIT(0) inserted on top of SCAN, so filter push down is not applied.
     // Since this is a LIMIT 0 query, not pushing down the filter should not cause a perf. regression.
-    testIncludeFilter(query, 4, "Filter", 0);
+    testIncludeFilter(query, 1, "Filter\\(", 0);
   }
 
   @Test // see DRILL-2852 and DRILL-3591
