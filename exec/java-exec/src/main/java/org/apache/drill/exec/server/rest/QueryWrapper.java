@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -88,12 +89,8 @@ public class QueryWrapper {
     }
     do {
       try {
-        isComplete = webUserConnection.timedWait(TimeUnit.SECONDS.toMillis(1)); /*periodically timeout 1sec to check heap */
-      } catch (Exception e) { /* Timed Out => Check usage */
-        if (e instanceof UserException) { //Throw UserException only
-          throw e;
-        }
-      }
+        isComplete = webUserConnection.await/*timedWait*/(TimeUnit.SECONDS.toMillis(1)); //periodically timeout 1sec to check heap
+      } catch (InterruptedException e) { /* Timed Out => Check heap usage */ }
       usagePercent = getHeapUsage();
       if (usagePercent >  HEAP_MEMORY_FAILURE_THRESHOLD) {
         nearlyOutOfHeapSpace = true;
@@ -119,6 +116,10 @@ public class QueryWrapper {
 
     if (logger.isTraceEnabled()) {
       logger.trace("Query {} is completed ", queryId);
+    }
+
+    if (webUserConnection.getError() != null) {
+      throw new UserRemoteException(webUserConnection.getError());
     }
 
     if (webUserConnection.results.isEmpty()) {
