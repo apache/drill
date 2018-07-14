@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.sys;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
@@ -89,5 +91,12 @@ public class TestSystemTable extends PlanTestBase {
     String query = "select * from sys.profiles limit 10";
     String numFilesPattern = "maxRecordsToRead=10";
     testPlanMatchingPatterns(query, new String[] {numFilesPattern}, new String[] {});
+  }
+
+  @Test
+  public void testColumnNullability() throws Exception {
+    String query = "select distinct is_nullable, count(*) from INFORMATION_SCHEMA.`COLUMNS` where table_schema = 'sys' group by is_nullable";
+    //Asserting a mix of nullable and non-nullable columns (pre-DRILL-6588, all columns were Not Nullable)
+    assertEquals(2, testSql(query));
   }
 }

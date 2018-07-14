@@ -17,17 +17,19 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
+import java.sql.Timestamp;
+import java.util.Iterator;
+import java.util.Map.Entry;
+
+import javax.annotation.Nullable;
 
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.store.pojo.NonNullable;
 
-import javax.annotation.Nullable;
-import java.sql.Timestamp;
-import java.util.Iterator;
-import java.util.Map.Entry;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
 
 /**
  * System table listing completed profiles
@@ -114,8 +116,10 @@ public class ProfileInfoIterator extends ProfileIterator {
 
     private static final ProfileInfo DEFAULT = new ProfileInfo();
 
+    @NonNullable
     public final String queryId;
     public final Timestamp startTime;
+    @NonNullable
     public final String foreman;
     public final long fragments;
     public final String user;

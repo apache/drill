@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
-
-import java.util.List;
 
 /**
  * RecordDataType defines names and data types of columns in a static drill table.
@@ -30,9 +31,9 @@ import java.util.List;
 public abstract class RecordDataType {
 
   /**
-   * @return the {@link org.apache.calcite.sql.type.SqlTypeName} of columns in the table
+   * @return the {@link org.apache.calcite.sql.type.SqlTypeName} of columns in the table as a pair with its nullability
    */
-  public abstract List<SqlTypeName> getFieldSqlTypeNames();
+  public abstract List<SimpleImmutableEntry<SqlTypeName, Boolean>> getFieldSqlTypeNames();
 
   /**
    * @return the column names in the table
@@ -47,17 +48,21 @@ public abstract class RecordDataType {
    * @return the constructed type
    */
   public final RelDataType getRowType(RelDataTypeFactory factory) {
-    final List<SqlTypeName> types = getFieldSqlTypeNames();
+    final List<SimpleImmutableEntry<SqlTypeName, Boolean>> types = getFieldSqlTypeNames();
     final List<String> names = getFieldNames();
-    final List<RelDataType> fields = Lists.newArrayList();
-    for (final SqlTypeName typeName : types) {
+    final List<RelDataType> fields = new ArrayList<>();
+    for (SimpleImmutableEntry<SqlTypeName, Boolean> sqlTypePair : types) {
+      final SqlTypeName typeName = sqlTypePair.getKey();
+      final RelDataType tempDataType;
       switch (typeName) {
         case VARCHAR:
-          fields.add(factory.createSqlType(typeName, Integer.MAX_VALUE));
+          tempDataType = factory.createSqlType(typeName, Integer.MAX_VALUE);
           break;
         default:
-          fields.add(factory.createSqlType(typeName));
+          tempDataType = factory.createSqlType(typeName);
       }
+      //Add [Non]Nullable RelDataType
+      fields.add(factory.createTypeWithNullability(tempDataType, sqlTypePair.getValue()));
     }
     return factory.createStructType(fields, names);
   }
