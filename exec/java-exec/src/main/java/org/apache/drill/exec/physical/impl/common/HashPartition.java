@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.common;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.RetryAfterSpillException;
 import org.apache.drill.common.exceptions.UserException;
@@ -122,6 +123,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
   private List<HashJoinMemoryCalculator.BatchStat> inMemoryBatchStats = Lists.newArrayList();
   private long partitionInMemorySize;
   private long numInMemoryRecords;
+  private boolean updatedRecordsPerBatch = false;
 
   public HashPartition(FragmentContext context, BufferAllocator allocator, ChainedHashTable baseHashTable,
                        RecordBatch buildBatch, RecordBatch probeBatch,
@@ -153,6 +155,18 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     if ( numPartitions > 1 ) {
       allocateNewCurrentBatchAndHV();
     }
+  }
+
+  /**
+   * Configure a different temporary batch size when spilling probe batches.
+   * @param newRecordsPerBatch The new temporary batch size to use.
+   */
+  public void updateProbeRecordsPerBatch(int newRecordsPerBatch) {
+    Preconditions.checkArgument(newRecordsPerBatch > 0);
+    Preconditions.checkState(!updatedRecordsPerBatch); // Only allow updating once
+    Preconditions.checkState(processingOuter); // We can only update the records per batch when probing.
+
+    recordsPerBatch = newRecordsPerBatch;
   }
 
   /**

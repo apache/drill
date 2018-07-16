@@ -23,7 +23,7 @@ import org.apache.drill.exec.vector.IntVector;
 
 import java.util.Map;
 
-import static org.apache.drill.exec.physical.impl.join.HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl.computeValueVectorSize;
+import static org.apache.drill.exec.physical.impl.join.BatchSizePredictorImpl.computeValueVectorSize;
 
 public class HashTableSizeCalculatorLeanImpl implements HashTableSizeCalculator {
   public static final String TYPE = "LEAN";
