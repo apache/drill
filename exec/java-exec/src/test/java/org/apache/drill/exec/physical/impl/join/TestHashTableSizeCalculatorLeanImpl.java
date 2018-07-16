@@ -42,13 +42,13 @@ public class TestHashTableSizeCalculatorLeanImpl {
     long expected = RecordBatchSizer.multiplyByFactor(
       UInt4Vector.VALUE_WIDTH * 128, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR);
     // First bucket key value vector sizes
-    expected += HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl.computeValueVectorSize(maxNumRecords, 3L);
-    expected += HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl.computeValueVectorSize(maxNumRecords, 8L);
+    expected += BatchSizePredictorImpl.computeValueVectorSize(maxNumRecords, 3L);
+    expected += BatchSizePredictorImpl.computeValueVectorSize(maxNumRecords, 8L);
 
     // Second bucket key value vector sizes
-    expected += HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl.computeValueVectorSize(20, 3L);
+    expected += BatchSizePredictorImpl.computeValueVectorSize(20, 3L);
     expected += RecordBatchSizer.multiplyByFactor(
-      HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl.computeValueVectorSize(20, 8L), HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR);
+      BatchSizePredictorImpl.computeValueVectorSize(20, 8L), HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR);
 
     // Overhead vectors for links and hash values for each batchHolder
     expected += 2 * UInt4Vector.VALUE_WIDTH // links and hash values */

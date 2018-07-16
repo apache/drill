@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.record.RecordBatch;
 import org.junit.Assert;
@@ -26,26 +27,28 @@ public class TestBuildSidePartitioningImpl {
   @Test
   public void testSimpleReserveMemoryCalculationNoHash() {
     final int maxBatchNumRecords = 20;
+    final double fragmentationFactor = 2.0;
+    final double safetyFactor = 1.5;
+
     final HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl calc =
       new HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl(
+        BatchSizePredictorImpl.Factory.INSTANCE,
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_SIZE, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
-        2.0,
-        1.5);
+        fragmentationFactor,
+        safetyFactor);
 
-    final CaseInsensitiveMap<Long> buildValueSizes = CaseInsensitiveMap.newHashMap();
-    final CaseInsensitiveMap<Long> probeValueSizes = CaseInsensitiveMap.newHashMap();
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
     calc.initialize(true,
       false,
       keySizes,
       200,
+      100,
       2,
-      20,
-      10,
-      20,
-      10,
+      false,
+      new MockBatchSizePredictor(20, 20, fragmentationFactor, safetyFactor),
+      new MockBatchSizePredictor(10, 10, fragmentationFactor, safetyFactor),
       10,
       5,
       maxBatchNumRecords,
@@ -69,26 +72,28 @@ public class TestBuildSidePartitioningImpl {
   @Test
   public void testSimpleReserveMemoryCalculationHash() {
     final int maxBatchNumRecords = 20;
+    final double fragmentationFactor = 2.0;
+    final double safetyFactor = 1.5;
+
     final HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl calc =
       new HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl(
+        BatchSizePredictorImpl.Factory.INSTANCE,
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_SIZE, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
-        2.0,
-        1.5);
+        fragmentationFactor,
+        safetyFactor);
 
-    final CaseInsensitiveMap<Long> buildValueSizes = CaseInsensitiveMap.newHashMap();
-    final CaseInsensitiveMap<Long> probeValueSizes = CaseInsensitiveMap.newHashMap();
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
     calc.initialize(false,
       true,
       keySizes,
       350,
+      100, // Ignored for test
       2,
-      20,
-      10,
-      20,
-      10,
+      false,
+      new MockBatchSizePredictor(20, 20, fragmentationFactor, safetyFactor),
+      new MockBatchSizePredictor(10, 10, fragmentationFactor, safetyFactor),
       10,
       5,
       maxBatchNumRecords,
@@ -112,15 +117,17 @@ public class TestBuildSidePartitioningImpl {
   @Test
   public void testAdjustInitialPartitions() {
     final int maxBatchNumRecords = 20;
+    final double fragmentationFactor = 2.0;
+    final double safetyFactor = 1.5;
+
     final HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl calc =
       new HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl(
+        BatchSizePredictorImpl.Factory.INSTANCE,
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_SIZE, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
-        2.0,
-        1.5);
+        fragmentationFactor,
+        safetyFactor);
 
-    final CaseInsensitiveMap<Long> buildValueSizes = CaseInsensitiveMap.newHashMap();
-    final CaseInsensitiveMap<Long> probeValueSizes = CaseInsensitiveMap.newHashMap();
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
     calc.initialize(
@@ -128,11 +135,11 @@ public class TestBuildSidePartitioningImpl {
       false,
       keySizes,
       200,
+      100, // Ignored for test
       4,
-      20,
-      10,
-      20,
-      10,
+      false,
+      new MockBatchSizePredictor(20, 20, fragmentationFactor, safetyFactor),
+      new MockBatchSizePredictor(10, 10, fragmentationFactor, safetyFactor),
       10,
       5,
       maxBatchNumRecords,
@@ -154,19 +161,148 @@ public class TestBuildSidePartitioningImpl {
     Assert.assertEquals(2, calc.getNumPartitions());
   }
 
-  @Test
-  public void testNoRoomInMemoryForBatch1() {
+  @Test(expected = IllegalStateException.class)
+  public void testHasDataProbeEmpty() {
+    final int maxIncomingBatchSize = 100;
     final int maxBatchNumRecords = 20;
+    final double fragmentationFactor = 2.0;
+    final double safetyFactor = 1.5;
 
     final HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl calc =
       new HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl(
+        BatchSizePredictorImpl.Factory.INSTANCE,
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_SIZE, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
-        2.0,
-        1.5);
+        fragmentationFactor,
+        safetyFactor);
 
-    final CaseInsensitiveMap<Long> buildValueSizes = CaseInsensitiveMap.newHashMap();
-    final CaseInsensitiveMap<Long> probeValueSizes = CaseInsensitiveMap.newHashMap();
+    final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
+
+    calc.initialize(
+      true,
+      false,
+      keySizes,
+      240,
+      maxIncomingBatchSize,
+      4,
+      true,
+      new MockBatchSizePredictor(20, 20, fragmentationFactor, safetyFactor),
+      new MockBatchSizePredictor(10, 10, fragmentationFactor, safetyFactor),
+      10,
+      5,
+      maxBatchNumRecords,
+      maxBatchNumRecords,
+      16000,
+      .75);
+  }
+
+  @Test
+  public void testNoProbeDataForStats() {
+    final int maxIncomingBatchSize = 100;
+    final int maxBatchNumRecords = 20;
+    final double fragmentationFactor = 2.0;
+    final double safetyFactor = 1.5;
+
+    final HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl calc =
+      new HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl(
+        BatchSizePredictorImpl.Factory.INSTANCE,
+        new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_SIZE, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
+        HashJoinHelperSizeCalculatorImpl.INSTANCE,
+        fragmentationFactor,
+        safetyFactor);
+
+    final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
+
+    calc.initialize(
+      true,
+      false,
+      keySizes,
+      240,
+      maxIncomingBatchSize,
+      4,
+      false,
+      new MockBatchSizePredictor(20, 20, fragmentationFactor, safetyFactor),
+      new MockBatchSizePredictor(),
+      10,
+      5,
+      maxBatchNumRecords,
+      maxBatchNumRecords,
+      16000,
+      .75);
+
+    final HashJoinMemoryCalculator.PartitionStatSet partitionStatSet =
+      new HashJoinMemoryCalculator.PartitionStatSet(new PartitionStatImpl(), new PartitionStatImpl());
+    calc.setPartitionStatSet(partitionStatSet);
+
+    long expectedReservedMemory = 60 // Max incoming batch size
+      + 2 * 30 // build side batch for each spilled partition
+      + maxIncomingBatchSize;
+    long actualReservedMemory = calc.getBuildReservedMemory();
+
+    Assert.assertEquals(expectedReservedMemory, actualReservedMemory);
+    Assert.assertEquals(2, calc.getNumPartitions());
+  }
+
+  @Test
+  public void testProbeEmpty() {
+    final int maxBatchNumRecords = 20;
+    final double fragmentationFactor = 2.0;
+    final double safetyFactor = 1.5;
+
+    final HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl calc =
+      new HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl(
+        BatchSizePredictorImpl.Factory.INSTANCE,
+        new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_SIZE, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
+        HashJoinHelperSizeCalculatorImpl.INSTANCE,
+        fragmentationFactor,
+        safetyFactor);
+
+    final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
+
+    calc.initialize(
+      true,
+      false,
+      keySizes,
+      200,
+      100, // Ignored for test
+      4,
+      true,
+      new MockBatchSizePredictor(20, 20, fragmentationFactor, safetyFactor),
+      new MockBatchSizePredictor(),
+      10,
+      5,
+      maxBatchNumRecords,
+      maxBatchNumRecords,
+      16000,
+      .75);
+
+    final HashJoinMemoryCalculator.PartitionStatSet partitionStatSet =
+      new HashJoinMemoryCalculator.PartitionStatSet(new PartitionStatImpl(), new PartitionStatImpl(),
+        new PartitionStatImpl(), new PartitionStatImpl());
+    calc.setPartitionStatSet(partitionStatSet);
+
+    long expectedReservedMemory = 60 // Max incoming batch size
+      + 4 * 30; // build side batch for each spilled partition
+    long actualReservedMemory = calc.getBuildReservedMemory();
+
+    Assert.assertEquals(expectedReservedMemory, actualReservedMemory);
+    Assert.assertEquals(4, calc.getNumPartitions());
+  }
+
+  @Test
+  public void testNoRoomInMemoryForBatch1() {
+    final int maxBatchNumRecords = 20;
+    final double fragmentationFactor = 2.0;
+    final double safetyFactor = 1.5;
+
+    final HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl calc =
+      new HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl(
+        BatchSizePredictorImpl.Factory.INSTANCE,
+        new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_SIZE, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
+        HashJoinHelperSizeCalculatorImpl.INSTANCE,
+        fragmentationFactor,
+        safetyFactor);
+
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
     calc.initialize(
@@ -174,11 +310,11 @@ public class TestBuildSidePartitioningImpl {
       false,
       keySizes,
       180,
+      100, // Ignored for test
       2,
-      20,
-      10,
-      20,
-      10,
+      false,
+      new MockBatchSizePredictor(20, 20, fragmentationFactor, safetyFactor),
+      new MockBatchSizePredictor(10, 10, fragmentationFactor, safetyFactor),
       10,
       5,
       maxBatchNumRecords,
@@ -207,15 +343,17 @@ public class TestBuildSidePartitioningImpl {
   @Test
   public void testCompleteLifeCycle() {
     final int maxBatchNumRecords = 20;
+    final double fragmentationFactor = 2.0;
+    final double safetyFactor = 1.5;
+
     final HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl calc =
       new HashJoinMemoryCalculatorImpl.BuildSidePartitioningImpl(
+        BatchSizePredictorImpl.Factory.INSTANCE,
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_SIZE, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
-        2.0,
-        1.5);
+        fragmentationFactor,
+        safetyFactor);
 
-    final CaseInsensitiveMap<Long> buildValueSizes = CaseInsensitiveMap.newHashMap();
-    final CaseInsensitiveMap<Long> probeValueSizes = CaseInsensitiveMap.newHashMap();
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
     calc.initialize(
@@ -223,11 +361,11 @@ public class TestBuildSidePartitioningImpl {
       false,
       keySizes,
       210,
+      100, // Ignored for test
       2,
-      20,
-      10,
-      20,
-      10,
+      false,
+      new MockBatchSizePredictor(20, 20, fragmentationFactor, safetyFactor),
+      new MockBatchSizePredictor(10, 10, fragmentationFactor, safetyFactor),
       10,
       5,
       maxBatchNumRecords,
@@ -275,5 +413,62 @@ public class TestBuildSidePartitioningImpl {
     }
 
     Assert.assertNotNull(calc.next());
+  }
+
+  public static class MockBatchSizePredictor implements BatchSizePredictor {
+    private final boolean hasData;
+    private final long batchSize;
+    private final int numRecords;
+    private final double fragmentationFactor;
+    private final double safetyFactor;
+
+    public MockBatchSizePredictor() {
+      hasData = false;
+      batchSize = 0;
+      numRecords = 0;
+      fragmentationFactor = 0;
+      safetyFactor = 0;
+    }
+
+    public MockBatchSizePredictor(final long batchSize,
+                                  final int numRecords,
+                                  final double fragmentationFactor,
+                                  final double safetyFactor) {
+      hasData = true;
+      this.batchSize = batchSize;
+      this.numRecords = numRecords;
+      this.fragmentationFactor = fragmentationFactor;
+      this.safetyFactor = safetyFactor;
+    }
+
+    @Override
+    public long getBatchSize() {
+      return batchSize;
+    }
+
+    @Override
+    public int getNumRecords() {
+      return numRecords;
+    }
+
+    @Override
+    public boolean hadDataLastTime() {
+      return hasData;
+    }
+
+    @Override
+    public void updateStats() {
+    }
+
+    @Override
+    public long predictBatchSize(int desiredNumRecords, boolean reserveHash) {
+      Preconditions.checkState(hasData);
+      return BatchSizePredictorImpl.computeMaxBatchSize(batchSize,
+        numRecords,
+        desiredNumRecords,
+        fragmentationFactor,
+        safetyFactor,
+        reserveHash);
+    }
   }
 }
