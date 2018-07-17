@@ -67,12 +67,6 @@ public class BasicTypeHelper {
     throw new UnsupportedOperationException(buildErrorMessage("get size", major));
   }
 
-  public static ValueVector getNewVector(String name, BufferAllocator allocator, MajorType type, CallBack callback){
-    MaterializedField field = MaterializedField.create(name, type);
-    return getNewVector(field, allocator, callback);
-  }
-  
-  
   public static Class<? extends ValueVector> getValueVectorClass(MinorType type, DataMode mode){
     switch (type) {
     case UNION:
@@ -233,11 +227,23 @@ public class BasicTypeHelper {
       throw new UnsupportedOperationException(buildErrorMessage("get holder reader implementation", type, mode));
   }
   
+  public static ValueVector getNewVector(String name, BufferAllocator allocator, MajorType type, CallBack callback) {
+    MaterializedField field = MaterializedField.create(name, type);
+    return getNewVector(field, allocator, callback);
+  }
+  
   public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator){
     return getNewVector(field, allocator, null);
   }
-  public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
-    MajorType type = field.getType();
+  
+  public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
+    return getNewVector(field, field.getType(), allocator, callBack);
+  }
+  
+  // Creates an internal or external vector. Internal vectors may have
+  // types that disagree with their materialized field.
+  
+  public static ValueVector getNewVector(MaterializedField field, MajorType type, BufferAllocator allocator, CallBack callBack) {
 
     switch (type.getMinorType()) {
     
@@ -589,5 +595,4 @@ public class BasicTypeHelper {
   </#if>
   </#list>
   </#list>
-
 }
