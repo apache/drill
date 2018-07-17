@@ -1,6 +1,6 @@
 ---
 title: "Kafka Storage Plugin"
-date: 2018-02-08 02:32:57 UTC
+date: 2018-07-17 00:44:42 UTC
 parent: "Connect a Data Source"
 ---
 
@@ -56,7 +56,26 @@ The following examples show Kafka topics and message offsets:
        clickstream-json-demo:3:2765245
        clickstream-json-demo:0:2765245  
 
-##Enabling and Configuring the Kafka Storage Plugin  
+## Filter Pushdown Support  
+
+Prior to Drill 1.14, Drill scanned all of the data in a topic before applying filters. Starting in Drill 1.14, the Drill kafka storage plugin supports filter pushdown for query conditions on the following Kafka metadata fields in messages:  
+
+- kafkaPartitionId  
+- kafkaMsgOffset  
+- kafkaMsgTimestamp  
+
+Pushing down filters to the Kafka data source reduces the number of messages that Drill scans and significantly decrease query time. Drill transforms the filter conditions on the metadata fields to limit the range of offsets scanned from the topic.  
+
+The following table describes filter pushdown support for Kafka metadata message fields:  
+
+| Metadata Field    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kafkaPartitionId  | Conditions on the kafkaPartitionId metadata field limit the number of partitions that Drill scans, which is useful for data exploration. Drill can push down filters when a query contains these conditions on the kafkaPartitionId metadata field: =, >, >=, <, <=                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| kafkaMsgOffset    | Drill can push down filters when a query contains these conditions on the kafkaMsgOffset metadata field: =, >, >=, <, <=                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| kafkaMsgTimestamp | The kafkaMsgTimestamp field maps to the timestamp stored for each Kafka message. Drill can push down filters when a query contains these conditions on the kafkaMsgTimestamp metadata field: =, >, >=          Kafka exposes the following [Consumer API](https://kafka.apache.org/11/javadoc/org/apache/kafka/clients/consumer/MockConsumer.html) to obtain the earliest offset for a given timestamp value:          `public java.util.Map<TopicPartition,OffsetAndTimestamp>offsetsForTimes(java.util.Map<TopicPartition,java.lang.Long> timestampsToSearch)`        This API is used to determine the startOffset for each partition in a topic. Note that the timestamps may not appear in increasing order when reading from a Kafka topic if you have defined the timestamp for a message. However, the API returns the first offset (from the beginning of a topic partition) where the timestamp is greater or equal to the timestamp requested. Therefore, Drill does not support pushdown on < or <= because an earlier timestamp may exist beyond endOffsetcomputed.   |
+  
+
+## Enabling and Configuring the Kafka Storage Plugin  
 
 Enable the Kafka storage plugin on the Storage page of the Drill Web Console and then edit the configuration as needed. 
 
