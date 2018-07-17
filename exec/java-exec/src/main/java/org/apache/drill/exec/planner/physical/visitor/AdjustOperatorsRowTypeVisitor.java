@@ -19,9 +19,6 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-
 import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -35,22 +32,29 @@ import org.apache.calcite.rel.RelNode;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 
-public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{
+/**
+ * AdjustOperatorsRowTypeVisitor visits corresponding operators' which depending upon their functionality
+ * adjusts their output row types. The adjusting mechanism is unique to each operator. In case of joins this visitor
+ * adjusts the field names to make sure that upstream operator only sees that there are unique field names even though
+ * the children of the join has same field names. Whereas in case of lateral/unnest operators it changes the correlated
+ * field and also the unnest operator's output row type.
+ */
+public class AdjustOperatorsRowTypeVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{
 
-  private final Map<String, Prel> sourceOperatorRegistry = new HashMap();
+  private Prel currentLateralJoin = null;
 
-  private static JoinPrelRenameVisitor INSTANCE = new JoinPrelRenameVisitor();
+  private static AdjustOperatorsRowTypeVisitor INSTANCE = new AdjustOperatorsRowTypeVisitor();
 
-  public static Prel insertRenameProject(Prel prel){
+  public static Prel adjustRowType(Prel prel){
     return prel.accept(INSTANCE, null);
   }
 
-  private void register(Prel toRegister) {
-    this.sourceOperatorRegistry.put(toRegister.getClass().getSimpleName(), toRegister);
+  private void register(Prel prel) {
+    this.currentLateralJoin = prel;
   }
 
-  private Prel getRegisteredPrel(Class<?> classname) {
-    return this.sourceOperatorRegistry.get(classname.getSimpleName());
+  private Prel getRegisteredPrel() {
+    return this.currentLateralJoin;
   }
 
   @Override
@@ -58,8 +62,8 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
     return preparePrel(prel, getChildren(prel));
   }
 
-  public void unRegister(Prel unregister) {
-    this.sourceOperatorRegistry.remove(unregister.getClass().getSimpleName());
+  public void unRegister() {
+    this.currentLateralJoin = null;
   }
 
   private List<RelNode> getChildren(Prel prel, int registerForChild) {
@@ -71,7 +75,7 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
       }
       child = child.accept(this, null);
       if (ch == registerForChild) {
-        unRegister(prel);
+        unRegister();
       }
       children.add(child);
       ch++;
@@ -120,11 +124,11 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
 
   @Override
   public Prel visitUnnest(UnnestPrel prel, Void value) throws RuntimeException {
-    Preconditions.checkArgument(getRegisteredPrel(prel.getParentClass()) instanceof LateralJoinPrel);
+    Preconditions.checkArgument(currentLateralJoin != null && currentLateralJoin instanceof LateralJoinPrel);
     Preconditions.checkArgument(prel.getRowType().getFieldCount() == 1);
     RexBuilder builder = prel.getCluster().getRexBuilder();
 
-    LateralJoinPrel lateralJoinPrel = (LateralJoinPrel) getRegisteredPrel(prel.getParentClass());
+    LateralJoinPrel lateralJoinPrel = (LateralJoinPrel) getRegisteredPrel();
     int correlationIndex = lateralJoinPrel.getRequiredColumns().nextSetBit(0);
     String correlationColumnName = lateralJoinPrel.getLeft().getRowType().getFieldNames().get(correlationIndex);
     RexNode corrRef = builder.makeCorrel(lateralJoinPrel.getLeft().getRowType(), lateralJoinPrel.getCorrelationId());
