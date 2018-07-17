@@ -21,10 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -317,8 +313,7 @@ public class Metadata_V3 {
         }
 
         @Override
-        public Object deserializeKey(String key, com.fasterxml.jackson.databind.DeserializationContext ctxt)
-            throws IOException, com.fasterxml.jackson.core.JsonProcessingException {
+        public Object deserializeKey(String key, com.fasterxml.jackson.databind.DeserializationContext ctxt) {
           // key string should contain '`' char if the field was serialized as SchemaPath object
           if (key.contains("`")) {
             return new Key(SchemaPath.parseFromString(key));
@@ -391,10 +386,10 @@ public class Metadata_V3 {
      */
     @Override
     public boolean hasSingleValue(long rowCount) {
-      if (nulls != null) {
+      if (isNumNullsSet()) {
         if (minValue != null) {
           // Objects.deepEquals() is used here, since min and max may be byte arrays
-          return Objects.deepEquals(minValue, maxValue) && (nulls == 0 || nulls == rowCount);
+          return (nulls == 0 || nulls == rowCount) && Objects.deepEquals(minValue, maxValue);
         } else {
           return nulls == rowCount && maxValue == null;
         }
@@ -418,19 +413,10 @@ public class Metadata_V3 {
       return null;
     }
 
-    public static class DeSerializer extends JsonDeserializer<ColumnMetadata_v3> {
-      @Override public ColumnMetadata_v3 deserialize(JsonParser jp, DeserializationContext ctxt)
-          throws IOException, JsonProcessingException {
-        return null;
-      }
-    }
-
-
     // We use a custom serializer and write only non null values.
     public static class Serializer extends JsonSerializer<ColumnMetadata_v3> {
       @Override
-      public void serialize(ColumnMetadata_v3 value, JsonGenerator jgen, SerializerProvider provider)
-          throws IOException, JsonProcessingException {
+      public void serialize(ColumnMetadata_v3 value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
         jgen.writeArrayFieldStart("name");
         for (String n : value.name) {
