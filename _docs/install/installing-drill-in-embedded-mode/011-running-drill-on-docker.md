@@ -1,6 +1,6 @@
 ---
 title: "Running Drill on Docker"
-date: 2018-03-18 20:02:37 UTC
+date: 2018-07-17 01:25:14 UTC
 parent: "Installing Drill in Embedded Mode"
 ---  
 
@@ -28,10 +28,10 @@ The following table describes the options:
 |------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `-i`                           | Keeps STDIN open. STDIN is standard input, an   input stream where data is sent to and read by a program.                                                                                                                                                                                                                |
 | `-t`                           | Allocates a pseudo-tty (a shell).                                                                                                                                                                                                                                                                                        |
-| `--name`                       | Identifies the container. If you do not use this   option to identify a name for the container, the daemon generates a random   string name for you. When you use this option to identify a container name,   you can use the name to reference the container within a Docker network in   foreground or detached mode.  |
-| -p                           | The TCP port for the Drill Web UI. If needed, you can   change this port using the `drill.exec.http.port` [start-up option]({{site.baseurl}}/docs/start-up-options/).                                                                                                                                                                                                 |
-| `drill/apache-drill:<version>` | The GitHub repository and tag. In the following   example, `drill/apache-drill` is   the repository and `1.14.0`   is the tag:     `drill/apache-drill:1.14.0`     The tag correlates with the version of Drill. When a new version of Drill   is available, you can use the new version as the tag.                           |
-| `bin/bash`                     | Runs the Drill image downloaded from the   `apache-drill` repository.                                                                                                                                                                                                                                                      |  
+| `--name`                       | Identifies the container. If you do not use this   option to identify a name for the container, the daemon generates a container ID for you. When you use this option to identify a container name,   you can use the name to reference the container within a Docker network in   foreground or detached mode.  |
+| `-p`                           | The TCP port for the Drill Web UI. If needed, you can   change this port using the `drill.exec.http.port` [start-up option]({{site.baseurl}}/docs/start-up-options/).                                                                                                                                                                                                 |
+| `drill/apache-drill:<version>` | The Docker Hub repository and tag. In the following   example, `drill/apache-drill` is   the repository and `1.14.0`   is the tag:     `drill/apache-drill:1.14.0`     The tag correlates with the version of Drill. When a new version of Drill   is available, you can use the new version as the tag.                           |
+| `bin/bash`                     | Connects to the Drill container using a bash shell.                                                                                                                                                                                                                                                      |  
 
 ### Running the Drill Docker Container in Foreground Mode  
 
