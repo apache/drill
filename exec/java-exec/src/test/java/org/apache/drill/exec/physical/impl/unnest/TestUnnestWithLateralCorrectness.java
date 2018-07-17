@@ -249,6 +249,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
   }
 
+ // FIXME: This test should get fixed by planner changes for implicit RowId
   @Test
   public void testUnnestSchemaChange() {
     Object[][] data = {
@@ -590,7 +591,8 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
     // project is required to rename the columns so as to disambiguate the same column name from
     // unnest operator and the regular scan.
-    final Project projectPopConfig = new Project(DrillLogicalTestutils.parseExprs("unnestColumn", "unnestColumn1"), null);
+    final Project projectPopConfig = new Project(DrillLogicalTestutils.parseExprs("unnestColumn", "unnestColumn1",
+      unnestPopConfig.getImplicitColumn(), unnestPopConfig.getImplicitColumn()), null);
 
     final ProjectRecordBatch projectBatch =
         new ProjectRecordBatch( projectPopConfig, unnestBatch, fixture.getFragmentContext());
@@ -898,11 +900,13 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
     // Create intermediate Project
     final Project projectPopConfig1 =
-        new Project(DrillLogicalTestutils.parseExprs("unnestColumn.colB", "colB"), unnestPopConfig1);
+        new Project(DrillLogicalTestutils.parseExprs("unnestColumn.colB", "colB",
+          unnestPopConfig1.getImplicitColumn(), unnestPopConfig1.getImplicitColumn()), unnestPopConfig1);
     final ProjectRecordBatch projectBatch1 =
         new ProjectRecordBatch(projectPopConfig1, unnestBatch1, fixture.getFragmentContext());
     final Project projectPopConfig2 =
-        new Project(DrillLogicalTestutils.parseExprs("colB", "unnestColumn2"), unnestPopConfig2);
+        new Project(DrillLogicalTestutils.parseExprs("colB", "unnestColumn2",
+          unnestPopConfig2.getImplicitColumn(), unnestPopConfig2.getImplicitColumn()), unnestPopConfig2);
     final ProjectRecordBatch projectBatch2 =
         new ProjectRecordBatch(projectPopConfig2, unnestBatch2, fixture.getFragmentContext());
 
@@ -1018,6 +1022,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   }
 
   @Test
+  // FIXME: This test needs fixes from lateral join
   public void testNestedUnnestMapColumn() {
 
     Object[][] data = getMapData();
