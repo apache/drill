@@ -61,11 +61,11 @@ public class VectorDescriptor {
   }
 
   public VectorDescriptor withName(final String name) {
-    return new VectorDescriptor(field.withPath(name));
+    return new VectorDescriptor(field.copy(name));
   }
 
   public VectorDescriptor withType(final TypeProtos.MajorType type) {
-    return new VectorDescriptor(field.withType(type));
+    return new VectorDescriptor(field.copy(type));
   }
 
   public static VectorDescriptor create(final String name, final TypeProtos.MajorType type) {

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.OffsetVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.TupleState.MapState;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.MapWriter;
-import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 
 /**
@@ -123,7 +123,7 @@ public abstract class ColumnState {
       // Create the map's offset vector.
 
       UInt4Vector offsetVector = new UInt4Vector(
-          BaseRepeatedValueVector.OFFSETS_FIELD,
+          MaterializedField.OFFSETS_FIELD,
           resultSetLoader.allocator());
 
       // Create the writer using the offset vector

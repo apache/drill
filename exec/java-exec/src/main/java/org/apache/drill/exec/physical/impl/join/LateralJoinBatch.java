@@ -773,7 +773,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
 
         // Create the right field with optional type. This will also take care of creating
         // children fields in case of ValueVectors of map type
-        rightField = rightField.withType(outputType);
+        rightField = rightField.copy(outputType);
       }
       container.addOrGet(rightField);
     }

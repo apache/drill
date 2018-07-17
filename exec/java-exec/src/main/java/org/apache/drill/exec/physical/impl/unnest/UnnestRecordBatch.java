@@ -413,7 +413,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       // We should store the clone of MaterializedField for unnest column instead of reference. When the column is of
       // type Map and there is change in any children field of the Map then that will update the reference variable and
       // isEquivalent check will still return true.
-      unnestFieldMetadata = thisField.clone();
+      unnestFieldMetadata = thisField.copy();
       return true;
     }
     return false;

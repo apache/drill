@@ -453,22 +453,15 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         cg.addExpr(expr);
       } else {
         // need to do evaluation.
-        final MaterializedField outputField;
+        ValueVector incomingVector = null;
         if (expr instanceof ValueVectorReadExpression) {
           final TypedFieldId id = ValueVectorReadExpression.class.cast(expr).getFieldId();
-          @SuppressWarnings("resource")
-          final ValueVector incomingVector = incoming.getValueAccessorById(id.getIntermediateClass(), id.getFieldIds()).getValueVector();
-          // outputField is taken from the incoming schema to avoid the loss of nested fields
-          // when the first batch will be empty.
-          if (incomingVector != null) {
-            outputField = incomingVector.getField().clone();
-          } else {
-            outputField = MaterializedField.create(outputName, expr.getMajorType());
-          }
-        } else {
-          outputField = MaterializedField.create(outputName, expr.getMajorType());
+          incomingVector = incoming.getValueAccessorById(id.getIntermediateClass(), id.getFieldIds()).getValueVector();
         }
-        @SuppressWarnings("resource")
+        // outputField is taken from the incoming schema to avoid the loss of nested fields
+        // when the first batch will be empty.
+        final MaterializedField outputField = incomingVector != null ? incomingVector.getField().copy():
+            MaterializedField.create(outputName, expr.getMajorType());
         final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
         allocationVectors.add(vector);
         TypedFieldId fid = container.add(vector);

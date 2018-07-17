@@ -264,7 +264,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   @Override
   public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
-    return new TransferImpl(getField().withPath(ref), allocator);
+    return new TransferImpl(getField().copy(ref), allocator);
   }
 
   @Override

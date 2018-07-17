@@ -317,7 +317,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
   @Override
   public TransferPair getTransferPair(String ref, BufferAllocator allocator){
-    return new TransferImpl(getField().withPath(ref), allocator);
+    return new TransferImpl(getField().copy(ref), allocator);
   }
 
   @Override

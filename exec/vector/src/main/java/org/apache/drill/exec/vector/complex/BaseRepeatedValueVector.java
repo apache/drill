@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeRuntimeException;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -44,11 +43,7 @@ import com.google.common.collect.ObjectArrays;
 public abstract class BaseRepeatedValueVector extends BaseValueVector implements RepeatedValueVector {
 
   public final static ValueVector DEFAULT_DATA_VECTOR = ZeroVector.INSTANCE;
-  public final static String OFFSETS_VECTOR_NAME = "$offsets$";
   public final static String DATA_VECTOR_NAME = "$data$";
-
-  public final static MaterializedField OFFSETS_FIELD =
-      MaterializedField.create(OFFSETS_VECTOR_NAME, Types.required(TypeProtos.MinorType.UINT4));
 
   protected final UInt4Vector offsets;
   protected ValueVector vector;
@@ -59,7 +54,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
 
   protected BaseRepeatedValueVector(MaterializedField field, BufferAllocator allocator, ValueVector vector) {
     super(field, allocator);
-    this.offsets = new UInt4Vector(OFFSETS_FIELD, allocator);
+    this.offsets = new UInt4Vector(MaterializedField.OFFSETS_FIELD, allocator);
     this.vector = Preconditions.checkNotNull(vector, "data vector cannot be null");
   }
 

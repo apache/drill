@@ -46,10 +46,10 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   private final MapWithOrdinal<String, ValueVector> vectors = new MapWithOrdinal<>();
 
   protected AbstractMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
-    super(field.clone(), allocator, callBack);
+    super(field, allocator, callBack);
     // create the hierarchy of the child vectors based on the materialized field
     for (MaterializedField child : field.getChildren()) {
-      if (child.getName().equals(BaseRepeatedValueVector.OFFSETS_FIELD.getName())) {
+      if (child == MaterializedField.OFFSETS_FIELD) {
         continue;
       }
       final String fieldName = child.getName();
