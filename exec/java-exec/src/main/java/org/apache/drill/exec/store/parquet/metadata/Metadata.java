@@ -64,7 +64,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -447,47 +446,40 @@ public class Metadata {
       logger.debug(containsCorruptDates.toString());
     }
     for (BlockMetaData rowGroup : metadata.getBlocks()) {
-      List<ColumnMetadata_v3> columnMetadataList = Lists.newArrayList();
+      List<ColumnMetadata_v3> columnMetadataList = new ArrayList<>();
       long length = 0;
       for (ColumnChunkMetaData col : rowGroup.getColumns()) {
-        ColumnMetadata_v3 columnMetadata;
-
-        boolean statsAvailable = (col.getStatistics() != null && !col.getStatistics().isEmpty());
-
         Statistics<?> stats = col.getStatistics();
         String[] columnName = col.getPath().toArray();
         SchemaPath columnSchemaName = SchemaPath.getCompoundPath(columnName);
         ColTypeInfo colTypeInfo = colTypeInfoMap.get(columnSchemaName);
 
         ColumnTypeMetadata_v3 columnTypeMetadata =
-            new ColumnTypeMetadata_v3(columnName, col.getType(), colTypeInfo.originalType,
+            new ColumnTypeMetadata_v3(columnName, col.getPrimitiveType().getPrimitiveTypeName(), colTypeInfo.originalType,
                 colTypeInfo.precision, colTypeInfo.scale, colTypeInfo.repetitionLevel, colTypeInfo.definitionLevel);
 
         if (parquetTableMetadata.columnTypeInfo == null) {
           parquetTableMetadata.columnTypeInfo = new ConcurrentHashMap<>();
         }
+        parquetTableMetadata.columnTypeInfo.put(new ColumnTypeMetadata_v3.Key(columnTypeMetadata.name), columnTypeMetadata);
+
         // Save the column schema info. We'll merge it into one list
-        parquetTableMetadata.columnTypeInfo
-            .put(new ColumnTypeMetadata_v3.Key(columnTypeMetadata.name), columnTypeMetadata);
+        Object minValue = null;
+        Object maxValue = null;
+        long numNulls = -1;
+        boolean statsAvailable = stats != null && !stats.isEmpty();
         if (statsAvailable) {
-          // Write stats when they are not null
-          Object minValue = null;
-          Object maxValue = null;
           if (stats.hasNonNullValue()) {
             minValue = stats.genericGetMin();
             maxValue = stats.genericGetMax();
-            if (containsCorruptDates == ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION
-                && columnTypeMetadata.originalType == OriginalType.DATE) {
+            if (containsCorruptDates == ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION && columnTypeMetadata.originalType == OriginalType.DATE) {
               minValue = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) minValue);
               maxValue = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) maxValue);
             }
-
           }
-          columnMetadata =
-              new ColumnMetadata_v3(columnTypeMetadata.name, col.getType(), minValue, maxValue, stats.getNumNulls());
-        } else {
-          columnMetadata = new ColumnMetadata_v3(columnTypeMetadata.name, col.getType(), null, null, null);
+          numNulls = stats.getNumNulls();
         }
+        ColumnMetadata_v3 columnMetadata = new ColumnMetadata_v3(columnTypeMetadata.name, col.getPrimitiveType().getPrimitiveTypeName(), minValue, maxValue, numNulls);
         columnMetadataList.add(columnMetadata);
         length += col.getTotalSize();
       }
@@ -632,12 +624,7 @@ public class Metadata {
         List<? extends ParquetFileMetadata> files = parquetTableMetadata.getFiles();
         for (ParquetFileMetadata file : files) {
           List<? extends RowGroupMetadata> rowGroups = file.getRowGroups();
-          for (Iterator<? extends RowGroupMetadata> iter = rowGroups.iterator(); iter.hasNext(); ) {
-            RowGroupMetadata r = iter.next();
-            if (r.getRowCount() == 0) {
-              iter.remove();
-            }
-          }
+          rowGroups.removeIf(r -> r.getRowCount() == 0);
         }
 
       }

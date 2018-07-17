@@ -45,10 +45,7 @@ public class MetadataBase {
    * <p>
    * Note: keep metadata versions synchronized with {@link MetadataVersion.Constants}
    */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-      include = JsonTypeInfo.As.PROPERTY,
-      property = "metadata_version",
-      visible = true)
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "metadata_version", visible = true)
   @JsonSubTypes({
       @JsonSubTypes.Type(value = Metadata_V1.ParquetTableMetadata_v1.class, name = V1),
       @JsonSubTypes.Type(value = Metadata_V2.ParquetTableMetadata_v2.class, name = V2),
@@ -108,6 +105,18 @@ public class MetadataBase {
 
 
   public static abstract class ColumnMetadata {
+
+    /**
+     * Number of nulls is considered to be valid if its value is not null and -1.
+     *
+     * @return true if nulls value is defined, false otherwise
+     */
+    @JsonIgnore
+    public boolean isNumNullsSet() {
+      Long nulls = getNulls();
+      return nulls != null && nulls != -1;
+    }
+
     public abstract String[] getName();
 
     public abstract Long getNulls();

@@ -95,7 +95,7 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector {
       if (columnMetadata != null) {
         final Object min = columnMetadata.getMinValue();
         final Object max = columnMetadata.getMaxValue();
-        final Long numNull = columnMetadata.getNulls();
+        final long numNulls = columnMetadata.getNulls() == null ? -1 : columnMetadata.getNulls();
 
         primitiveType = this.parquetTableMetadata.getPrimitiveType(columnMetadata.getName());
         originalType = this.parquetTableMetadata.getOriginalType(columnMetadata.getName());
@@ -109,7 +109,7 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector {
           precision = columnTypeInfo.precision;
         }
 
-        statMap.put(field, getStat(min, max, numNull, primitiveType, originalType, scale, precision));
+        statMap.put(field, getStat(min, max, numNulls, primitiveType, originalType, scale, precision));
       } else {
         final String columnName = field.getRootSegment().getPath();
         if (implicitColValues.containsKey(columnName)) {
@@ -137,24 +137,21 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector {
    *
    * @param min             min value for statistics
    * @param max             max value for statistics
-   * @param numNull         num_nulls for statistics
+   * @param numNulls        num_nulls for statistics
    * @param primitiveType   type that determines statistics class
    * @param originalType    type that determines statistics class
    * @param scale           scale value (used for DECIMAL type)
    * @param precision       precision value (used for DECIMAL type)
    * @return column statistics
    */
-  private ColumnStatistics getStat(Object min, Object max, Long numNull,
+  private ColumnStatistics getStat(Object min, Object max, long numNulls,
                                    PrimitiveType.PrimitiveTypeName primitiveType, OriginalType originalType,
                                    int scale, int precision) {
     Statistics stat = Statistics.getStatsBasedOnType(primitiveType);
     Statistics convertedStat = stat;
 
     TypeProtos.MajorType type = ParquetReaderUtility.getType(primitiveType, originalType, scale, precision);
-
-    if (numNull != null) {
-      stat.setNumNulls(numNull);
-    }
+    stat.setNumNulls(numNulls);
 
     if (min != null && max != null ) {
       switch (type.getMinorType()) {

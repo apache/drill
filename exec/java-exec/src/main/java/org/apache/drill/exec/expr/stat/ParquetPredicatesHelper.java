@@ -54,7 +54,7 @@ class ParquetPredicatesHelper {
    * @return <tt>true</tt> if the parquet file does not have nulls and <tt>false</tt> otherwise
    */
   static boolean hasNoNulls(Statistics stat) {
-    return stat.getNumNulls() <= 0;
+    return stat.getNumNulls() == 0;
   }
 
 }

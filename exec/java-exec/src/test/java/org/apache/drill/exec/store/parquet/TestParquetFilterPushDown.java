@@ -454,6 +454,38 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan);
   }
 
+  @Test
+  public void testWithMissingStatistics() throws Exception {
+    /*
+      wide_string.parquet
+
+      Schema:
+        message root {
+          optional binary col_str (UTF8);
+        }
+
+      Content:
+      first row -> `a` character repeated 2050 times
+      second row -> null
+     */
+    String tableName = "wide_string_table";
+    java.nio.file.Path wideStringFilePath = Paths.get("parquet", "wide_string.parquet");
+    dirTestWatcher.copyResourceToRoot(wideStringFilePath, Paths.get(tableName, "0_0_0.parquet"));
+    dirTestWatcher.copyResourceToRoot(wideStringFilePath, Paths.get(tableName, "0_0_1.parquet"));
+
+    String query = String.format("select count(1) as cnt from dfs.`%s` where col_str is null", tableName);
+
+    String[] expectedPlan = {"numRowGroups=2"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan);
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("cnt")
+      .baselineValues(2L)
+      .go();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Some test helper functions.
   //////////////////////////////////////////////////////////////////////////////////////////////////

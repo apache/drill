@@ -35,21 +35,16 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
   }
 
   @Test
-  public void ensureCaseDoesntConvertToDirectScan() throws Exception {
+  public void ensureCaseDoesNotConvertToDirectScan() throws Exception {
     testPlanMatchingPatterns(
         "select count(case when n_name = 'ALGERIA' and n_regionkey = 2 then n_nationkey else null end) as cnt\n" +
-            "from dfs.`directcount.parquet`",
-        new String[] { "CASE" },
-        new String[]{});
+            "from dfs.`directcount.parquet`", new String[]{"CASE"});
   }
 
   @Test
   public void ensureConvertSimpleCountToDirectScan() throws Exception {
-    final String sql = "select count(*) as cnt from cp.`tpch/nation.parquet`";
-    testPlanMatchingPatterns(
-        sql,
-        new String[] { "DynamicPojoRecordReader" },
-        new String[]{});
+    String sql = "select count(*) as cnt from cp.`tpch/nation.parquet`";
+    testPlanMatchingPatterns(sql, new String[]{"DynamicPojoRecordReader"});
 
     testBuilder()
         .sqlQuery(sql)
@@ -61,11 +56,8 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
 
   @Test
   public void ensureConvertSimpleCountConstToDirectScan() throws Exception {
-    final String sql = "select count(100) as cnt from cp.`tpch/nation.parquet`";
-    testPlanMatchingPatterns(
-        sql,
-        new String[] { "DynamicPojoRecordReader" },
-        new String[]{});
+    String sql = "select count(100) as cnt from cp.`tpch/nation.parquet`";
+    testPlanMatchingPatterns(sql, new String[]{"DynamicPojoRecordReader"});
 
     testBuilder()
         .sqlQuery(sql)
@@ -77,11 +69,8 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
 
   @Test
   public void ensureConvertSimpleCountConstExprToDirectScan() throws Exception {
-    final String sql = "select count(1 + 2) as cnt from cp.`tpch/nation.parquet`";
-    testPlanMatchingPatterns(
-        sql,
-        new String[] { "DynamicPojoRecordReader" },
-        new String[]{});
+    String sql = "select count(1 + 2) as cnt from cp.`tpch/nation.parquet`";
+    testPlanMatchingPatterns(sql, new String[]{"DynamicPojoRecordReader"});
 
     testBuilder()
         .sqlQuery(sql)
@@ -93,11 +82,8 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
 
   @Test
   public void ensureDoesNotConvertForDirectoryColumns() throws Exception {
-    final String sql = "select count(dir0) as cnt from cp.`tpch/nation.parquet`";
-    testPlanMatchingPatterns(
-        sql,
-        new String[] { "ParquetGroupScan" },
-        new String[]{});
+    String sql = "select count(dir0) as cnt from cp.`tpch/nation.parquet`";
+    testPlanMatchingPatterns(sql, new String[]{"ParquetGroupScan"});
 
     testBuilder()
         .sqlQuery(sql)
@@ -109,11 +95,8 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
 
   @Test
   public void ensureConvertForImplicitColumns() throws Exception {
-    final String sql = "select count(fqn) as cnt from cp.`tpch/nation.parquet`";
-    testPlanMatchingPatterns(
-        sql,
-        new String[] { "DynamicPojoRecordReader" },
-        new String[]{});
+    String sql = "select count(fqn) as cnt from cp.`tpch/nation.parquet`";
+    testPlanMatchingPatterns(sql, new String[]{"DynamicPojoRecordReader"});
 
     testBuilder()
         .sqlQuery(sql)
@@ -126,25 +109,22 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
   @Test
   public void ensureConvertForSeveralColumns() throws Exception {
     test("use dfs.tmp");
-    final String tableName = "parquet_table_counts";
+    String tableName = "parquet_table_counts";
 
     try {
-      final String newFqnColumnName = "new_fqn";
+      String newFqnColumnName = "new_fqn";
       test("alter session set `%s` = '%s'", ExecConstants.IMPLICIT_FQN_COLUMN_LABEL, newFqnColumnName);
       test("create table %s as select * from cp.`parquet/alltypes_optional.parquet`", tableName);
       test("refresh table metadata %s", tableName);
 
-      final String sql = String.format("select\n" +
+      String sql = String.format("select\n" +
           "count(%s) as implicit_count,\n" +
           "count(*) as star_count,\n" +
           "count(col_int) as int_column_count,\n" +
           "count(col_vrchr) as vrchr_column_count\n" +
           "from %s", newFqnColumnName, tableName);
 
-      testPlanMatchingPatterns(
-          sql,
-          new String[] { "DynamicPojoRecordReader" },
-          new String[]{});
+      testPlanMatchingPatterns(sql, new String[]{"DynamicPojoRecordReader"});
 
       testBuilder()
           .sqlQuery(sql)
@@ -155,6 +135,30 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
 
     } finally {
       test("alter session reset `%s`", ExecConstants.IMPLICIT_FQN_COLUMN_LABEL);
+      test("drop table if exists %s", tableName);
+    }
+  }
+
+  @Test
+  public void ensureCorrectCountWithMissingStatistics() throws Exception {
+    test("use dfs.tmp");
+    String tableName = "wide_str_table";
+    try {
+      // table will contain two partitions: one - with null value, second - with non null value
+      test("create table %s partition by (col_str) as select * from cp.`parquet/wide_string.parquet`", tableName);
+
+      String query = String.format("select count(col_str) as cnt_str, count(*) as cnt_total from %s", tableName);
+
+      // direct scan should not be applied since we don't have statistics
+      testPlanMatchingPatterns(query, null, new String[]{"DynamicPojoRecordReader"});
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt_str", "cnt_total")
+        .baselineValues(1L, 2L)
+        .go();
+    } finally {
       test("drop table if exists %s", tableName);
     }
   }

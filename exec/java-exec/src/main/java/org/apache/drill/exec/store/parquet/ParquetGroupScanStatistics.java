@@ -89,12 +89,12 @@ public class ParquetGroupScanStatistics {
         SchemaPath schemaPath = SchemaPath.getCompoundPath(column.getName());
         Long previousCount = columnValueCounts.get(schemaPath);
         if (previousCount != null) {
-          if (previousCount != GroupScan.NO_COLUMN_STATS && column.getNulls() != null) {
+          if (previousCount != GroupScan.NO_COLUMN_STATS && column.isNumNullsSet()) {
             Long newCount = rowCount - column.getNulls();
             columnValueCounts.put(schemaPath, columnValueCounts.get(schemaPath) + newCount);
           }
         } else {
-          if (column.getNulls() != null) {
+          if (column.isNumNullsSet()) {
             Long newCount = rowCount - column.getNulls();
             columnValueCounts.put(schemaPath, newCount);
           } else {
