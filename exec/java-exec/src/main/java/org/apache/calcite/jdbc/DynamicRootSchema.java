@@ -26,6 +26,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.impl.AbstractSchema;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -83,9 +84,9 @@ public class DynamicRootSchema extends DynamicSchema {
       }
 
       // Could not find the plugin of schemaName. The schemaName could be `dfs.tmp`, a 2nd level schema under 'dfs'
-      String[] paths = schemaName.split("\\.");
-      if (paths.length == 2) {
-        plugin = getSchemaFactories().getPlugin(paths[0]);
+      List<String> paths = SchemaUtilites.getSchemaPathAsList(schemaName);
+      if (paths.size() == 2) {
+        plugin = getSchemaFactories().getPlugin(paths.get(0));
         if (plugin == null) {
           return;
         }
@@ -95,7 +96,7 @@ public class DynamicRootSchema extends DynamicSchema {
         plugin.registerSchemas(schemaConfig, thisPlus);
 
         // Load second level schemas for this storage plugin
-        final SchemaPlus firstlevelSchema = thisPlus.getSubSchema(paths[0]);
+        final SchemaPlus firstlevelSchema = thisPlus.getSubSchema(paths.get(0));
         final List<SchemaPlus> secondLevelSchemas = Lists.newArrayList();
         for (String secondLevelSchemaName : firstlevelSchema.getSubSchemaNames()) {
           secondLevelSchemas.add(firstlevelSchema.getSubSchema(secondLevelSchemaName));

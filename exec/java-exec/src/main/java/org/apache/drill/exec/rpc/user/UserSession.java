@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
@@ -196,7 +195,7 @@ public class UserSession implements AutoCloseable {
    */
   public void setDefaultSchemaPath(String newDefaultSchemaPath, SchemaPlus currentDefaultSchema)
       throws ValidationException {
-    final List<String> newDefaultPathAsList = Lists.newArrayList(newDefaultSchemaPath.split("\\."));
+    final List<String> newDefaultPathAsList = SchemaUtilites.getSchemaPathAsList(newDefaultSchemaPath);
     SchemaPlus newDefault;
 
     // First try to find the given schema relative to the current default schema.

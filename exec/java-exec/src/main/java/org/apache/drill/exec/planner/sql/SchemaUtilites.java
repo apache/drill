@@ -27,6 +27,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -73,7 +74,7 @@ public class SchemaUtilites {
    * @return found schema path
    */
   public static SchemaPlus findSchema(final SchemaPlus defaultSchema, final String schemaPath) {
-    final List<String> schemaPathAsList = Lists.newArrayList(schemaPath.split("\\."));
+    final List<String> schemaPathAsList = getSchemaPathAsList(schemaPath);
     return findSchema(defaultSchema, schemaPathAsList);
   }
 
@@ -142,6 +143,11 @@ public class SchemaUtilites {
   /** Utility method to get the schema path for given list of schema path. */
   public static String getSchemaPath(List<String> schemaPath) {
     return SCHEMA_PATH_JOINER.join(schemaPath);
+  }
+
+  /** Utility method to get the list with schema path components for given schema path string. */
+  public static List<String> getSchemaPathAsList(String schemaPath) {
+    return Arrays.asList(schemaPath.split("\\."));
   }
 
   /** Utility method to get the schema path as list for given schema instance. */
