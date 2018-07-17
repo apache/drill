@@ -427,6 +427,25 @@ public class TestCTTAS extends BaseTestQuery {
     test("drop view %s.%s", DFS_TMP_SCHEMA, temporaryTableName);
   }
 
+  @Test
+  public void testJoinTemporaryWithPersistentTable() throws Exception {
+    String temporaryTableName = "temp_tab";
+    String persistentTableName = "pers_tab";
+    String query = String.format("select * from `%s` a join `%s` b on a.c1 = b.c2",
+        persistentTableName, temporaryTableName);
+
+    test("use %s", temp2_schema);
+    test("create TEMPORARY table %s as select '12312' as c2", temporaryTableName);
+    test("create table %s as select '12312' as c1", persistentTableName);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c1", "c2")
+        .baselineValues("12312", "12312")
+        .go();
+  }
+
   private void expectUserRemoteExceptionWithMessage(String message) {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString(message));

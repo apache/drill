@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,6 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
@@ -251,24 +251,24 @@ public class SqlConverter {
         SqlValidatorScope scope) {
       switch (node.getKind()) {
         case AS:
-          if (((SqlCall) node).operand(0) instanceof SqlIdentifier) {
-            SqlIdentifier tempNode = ((SqlCall) node).operand(0);
-            DrillCalciteCatalogReader catalogReader = (SqlConverter.DrillCalciteCatalogReader) getCatalogReader();
+          SqlNode sqlNode = ((SqlCall) node).operand(0);
+          switch (sqlNode.getKind()) {
+            case IDENTIFIER:
+              SqlIdentifier tempNode = (SqlIdentifier) sqlNode;
+              DrillCalciteCatalogReader catalogReader = (SqlConverter.DrillCalciteCatalogReader) getCatalogReader();
 
-            // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
-            if (catalogReader.getTable(Lists.newArrayList(tempNode.names)) == null) {
-              catalogReader.isValidSchema(tempNode.names);
-            }
-            changeNamesIfTableIsTemporary(tempNode);
+              changeNamesIfTableIsTemporary(tempNode);
+
+              // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
+              if (catalogReader.getTable(tempNode.names) == null) {
+                catalogReader.isValidSchema(tempNode.names);
+              }
+              break;
+            case UNNEST:
+              if (((SqlCall) node).operandCount() < 3) {
+                throw RESOURCE.validationError("Alias table and column name are required for UNNEST").ex();
+              }
           }
-          else  if (((SqlCall) node).operand(0).getKind() == SqlKind.UNNEST) {
-            if (((SqlCall) node).operandCount() < 3) {
-              throw RESOURCE.validationError("Alias table and column name are required for UNNEST").ex();
-            }
-          }
-          break;
-        default:
-          break;
       }
       super.validateFrom(node, targetRowType, scope);
     }
@@ -626,7 +626,9 @@ public class SqlConverter {
       if (mightBeTemporaryTable(names, session.getDefaultSchemaPath(), drillConfig)) {
         String temporaryTableName = session.resolveTemporaryTableName(names.get(names.size() - 1));
         if (temporaryTableName != null) {
-          return Lists.newArrayList(temporarySchema, temporaryTableName);
+          List<String> temporaryNames = new ArrayList<>(SchemaUtilites.getSchemaPathAsList(temporarySchema));
+          temporaryNames.add(temporaryTableName);
+          return temporaryNames;
         }
       }
       return null;
