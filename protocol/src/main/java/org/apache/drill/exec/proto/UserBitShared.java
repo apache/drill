@@ -545,6 +545,10 @@ public final class UserBitShared {
      * <code>JDBC_SCAN = 44;</code>
      */
     JDBC_SCAN(44, 44),
+    /**
+     * <code>REGEX_SUB_SCAN = 45;</code>
+     */
+    REGEX_SUB_SCAN(45,45),
     ;
 
     /**
@@ -727,6 +731,11 @@ public final class UserBitShared {
      * <code>JDBC_SCAN = 44;</code>
      */
     public static final int JDBC_SCAN_VALUE = 44;
+    /**
+     * <code>REGEX_SUB_SCAN = 45;</code>
+     */
+    public static final int REGEX_SUB_SCAN_VALUE = 45;
+
 
 
     public final int getNumber() { return value; }
@@ -778,6 +787,7 @@ public final class UserBitShared {
         case 42: return UNNEST;
         case 43: return HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN;
         case 44: return JDBC_SCAN;
+        case 45: return REGEX_SUB_SCAN;
         default: return null;
       }
     }
