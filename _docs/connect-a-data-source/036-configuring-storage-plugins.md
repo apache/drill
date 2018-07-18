@@ -1,12 +1,12 @@
 ---
 title: "Configuring Storage Plugins"
-date: 2018-07-07 01:11:51 UTC
+date: 2018-07-18 22:29:15 UTC
 parent: "Storage Plugin Configuration"
 ---  
 
 Storage plugins enable Drill to access data sources. Drill provides a default set of storage plugin configurations upon installation. However, you can modify the storage plugin configurations, as  described in following sections. When you modify storage plugin configurations on one Drill node in a Drill cluster, Drill broadcasts the information to the other Drill nodes to synchronize the storage plugin configurations across all of the Drill nodes.  
 
-Starting in Drill 1.14, you can use the `storage-plugins-override.conf` file to store your custom storage plugin configurations, as described in the [Storage Plugins Configurations File]({{site.baseurl}}/docs/configuring-storage-plugins/#configuring-storage-plugins-with-the-storage-plugins-override.conf-file) topic below. 
+Starting in Drill 1.14, you can use the `storage-plugins-override.conf` file to store your custom storage plugin configurations, as described in the [Storage Plugins Configurations File]({{site.baseurl}}/docs/configuring-storage-plugins/#configuring-storage-plugins-with-the-storage-plugins-override.conf-file) topic below. You can also export and save your storage plugin configurations to a JSON file, as described in [Exporting Storage Plugin Configurations]({{site.baseurl}}/docs/configuring-storage-plugins/#exporting-storage-plugin-configurations). 
 
 Once you decide how you want to configure storage plugins in Drill, you may also want to reference [Plugin Configuration Basics]({{site.baseurl}}/docs/plugin-configuration-basics/) for configuration details, such as supported data sources and file formats. 
 
@@ -84,7 +84,18 @@ You can set the `drill.exec.storage.action_on_plugins_override_file` option to o
 - `"rename"`  
 The `storage-plugins-override.conf` file name is changed to `storage-plugins-override-[current_timestamp].conf` after Drill uses the file.  
 - `"remove"`  
-The file is removed after Drill uses the file for the first time.
+The file is removed after Drill uses the file for the first time.  
+
+## Exporting Storage Plugin Configurations  
+
+Starting in Drill 1.14, you can export and save your storage plugin configurations from the Storage page in the Drill Web UI. The Export option next to each enabled storage plugin provides an easy way to export your storage plugin configurations to a JSON file when you want to save and reuse the configurations. For example, before an upgrade.  
+
+![](https://i.imgur.com/MnLY75q.png)  
+
+You can also access the Export option on the Update page, by selecting the Update option next to an enabled or disabled storage plugin. 
+
+When you need to configure the storage plugin, copy and paste the contents of the JSON file into the Configuration field. You can access the Configuration field for a storage plugin by selecting Update next to the storage plugin.
+
   
 
 

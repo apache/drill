@@ -1,9 +1,9 @@
 ---
 title: "Storage Plugin Registration"
-date: 2018-02-13 00:00:43 UTC
+date: 2018-07-18 22:29:14 UTC
 parent: "Connect a Data Source"
 ---
-You connect Drill to data sources, such as a file system, Hive, or HBase through storage plugins. You can see the default enabled and disabled storage plugins on the Storage page in the Drill Web Console. You can easily enable and disable storage plugins, reconfigure storage plugins, and create new storage plugin configurations.
+You connect Drill to data sources, such as a file system, Hive, or HBase through storage plugins. You can see the default enabled and disabled storage plugins on the Storage page in the Drill Web UI. You can easily enable and disable storage plugins, reconfigure storage plugins, and create new storage plugin configurations, as described in [Configuring Storage Plugins](https://drill.apache.org/docs/configuring-storage-plugins/).
 
  If [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/#https-support) is not enabled (the default), go to `http://<IP address>:8047/storage` to view and configure a storage plugin. IP address is the host name or IP address of one of the installed Drillbits in a distributed system or `localhost` in an embedded system. If HTTPS support is enabled and you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view and configure a storage plugin, go to `https://<IP address>:8047/storage`. 
 
@@ -46,4 +46,5 @@ Drill saves storage plugin configurations in a temporary directory (embedded mod
      	sys.store.provider.local.path="/mypath"
      }  
 
-See [Persistent Configuration Storage]({{site.baseurl}}/docs/persistent-configuration-storage/) for more information.
+See [Persistent Configuration Storage]({{site.baseurl}}/docs/persistent-configuration-storage/) for more information.  
+

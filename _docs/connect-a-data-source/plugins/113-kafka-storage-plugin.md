@@ -1,6 +1,6 @@
 ---
 title: "Kafka Storage Plugin"
-date: 2018-07-17 01:25:13 UTC
+date: 2018-07-18 22:29:15 UTC
 parent: "Connect a Data Source"
 ---
 
@@ -75,7 +75,7 @@ Drill can push down filters when a query contains the  following conditions on t
 The kafkaMsgTimestamp field maps to the timestamp stored for each Kafka message. Drill can push down filters when a query contains the  following conditions on the kafkaMsgTimestamp metadata field:  
 =, >, >=  
    
-Kafka exposes the following Consumer API to obtain the earliest offset for a given timestamp value:  
+Kafka exposes the following [Consumer API](https://kafka.apache.org/11/javadoc/org/apache/kafka/clients/consumer/MockConsumer.html) to obtain the earliest offset for a given timestamp value:  
 
        public java.util.Map<TopicPartition,OffsetAndTimestamp> offsetsForTimes(java.util.Map<TopicPartition,java.lang.Long> timestampsToSearch)  
   
