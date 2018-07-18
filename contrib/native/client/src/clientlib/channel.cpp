@@ -210,12 +210,12 @@ ChannelContext* ChannelFactory::getChannelContext(channelType_t t, DrillUserProp
                 verifyMode = boost::asio::ssl::context::verify_none;
             }
 
-            long customSSLCtxOptions = 0;
+            long customSSLCtxOptions = SSLChannelContext::ApplyMinTLSRestriction(protocol);
             std::string sslOptions;
             props->getProp(USERPROP_CUSTOM_SSLCTXOPTIONS, sslOptions);
             if (!sslOptions.empty()){
                 try{
-                    customSSLCtxOptions = boost::lexical_cast<long>(sslOptions);
+                    customSSLCtxOptions |= boost::lexical_cast<long>(sslOptions);
                 }
                 catch (...){
                       DRILL_LOG(LOG_ERROR) << "Unable to parse custom SSL CTX options." << std::endl;
