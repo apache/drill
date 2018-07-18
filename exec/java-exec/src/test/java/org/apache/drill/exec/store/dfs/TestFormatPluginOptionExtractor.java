@@ -17,11 +17,7 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.util.Collection;
-
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.RunTimeScan;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -29,7 +25,10 @@ import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 import org.apache.drill.exec.store.image.ImageFormatConfig;
 import org.junit.Test;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 
 public class TestFormatPluginOptionExtractor {
@@ -71,6 +70,9 @@ public class TestFormatPluginOptionExtractor {
           assertEquals(
               "(type: String, fileSystemMetadata: boolean, descriptive: boolean, timeZone: String)", d.presentParams()
           );
+          break;
+        case "logRegex":
+          assertEquals(d.typeName, "(type: String, regex: String, extension: String, maxErrors: int, schema: List)", d.presentParams());
           break;
         default:
           fail("add validation for format plugin type " + d.typeName);

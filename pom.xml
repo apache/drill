@@ -322,6 +322,11 @@
         <configuration>
           <excludeSubprojects>false</excludeSubprojects>
           <excludes>
+            <!-- Types log1, log2, sqllog and sqllog2 are used to test he logRegex format plugin. -->
+            <exclude>**/*.log1</exclude>
+            <exclude>**/*.log2</exclude>
+            <exclude>**/*.sqllog</exclude>
+            <exclude>**/*.sqllog2</exclude>
             <exclude>**/*.log</exclude>
             <exclude>**/*.css</exclude>
             <exclude>**/*.js</exclude>
