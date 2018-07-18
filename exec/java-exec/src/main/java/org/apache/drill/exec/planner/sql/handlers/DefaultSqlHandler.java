@@ -88,11 +88,11 @@ import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
+import org.apache.drill.exec.planner.physical.visitor.AdjustOperatorsSchemaVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ComplexToJsonPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier;
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
 import org.apache.drill.exec.planner.physical.visitor.InsertLocalExchangeVisitor;
-import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.visitor.MemoryEstimationVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.RewriteProjectToFlatten;
@@ -512,8 +512,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * 2.)
      * Join might cause naming conflicts from its left and right child.
      * In such case, we have to insert Project to rename the conflicting names.
+     * Unnest operator might need to adjust the correlated field after the physical planning.
      */
-    phyRelNode = JoinPrelRenameVisitor.insertRenameProject(phyRelNode);
+    phyRelNode = AdjustOperatorsSchemaVisitor.adjustSchema(phyRelNode);
 
     /*
      * 2.1) Swap left / right for INNER hash join, if left's row count is < (1 + margin) right's row count.

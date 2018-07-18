@@ -358,6 +358,7 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testNoExchangeWithStreamAggWithGrpBy() throws Exception {
     String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
             " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord) group by t2.ord.o_orderkey) d1";
+
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
             .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
@@ -530,6 +531,29 @@ public class TestLateralPlans extends BaseTestQuery {
           plan, containsString("TopN(limit=[50])"));
       assertThat("Query plan shouldn't contain Sort operator",
           plan, not(containsString("Sort")));
+    }
+  }
+
+  @Test
+  public void testMultiUnnestQuery() throws Exception {
+    String Sql = "SELECT t5.l_quantity FROM dfs.`lateraljoin/multipleFiles` t, " +
+            "LATERAL (SELECT t2.ordrs.o_lineitems FROM UNNEST(t.c_orders) t2(ordrs)) t3(lineitems), " +
+            "LATERAL (SELECT t4.lineitems.l_quantity FROM UNNEST(t3.lineitems) t4(lineitems)) t5(l_quantity) order by 1";
+
+    String baselineQuery = "select dt.lineitems.l_quantity as l_quantity from (select flatten(dt.orders.o_lineitems) as lineitems " +
+            "from (select flatten(c_orders) as orders from dfs.`lateraljoin/multipleFiles` t) dt)dt order by 1";
+
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+      .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+      .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      client.testBuilder()
+              .ordered()
+              .sqlBaselineQuery(baselineQuery)
+              .sqlQuery(Sql)
+              .go();
     }
   }
 }
