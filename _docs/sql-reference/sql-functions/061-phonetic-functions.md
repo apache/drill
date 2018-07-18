@@ -1,6 +1,6 @@
 ---
 title: "Phonetic Functions"
-date:  2018-07-17 20:52:59 UTC
+date: 2018-07-18 23:39:24 UTC
 parent: "SQL Functions"
 ---
 
@@ -8,21 +8,23 @@ Starting in version 1.14, Drill supports phonetic functions. You can use phoneti
  
 Drill supports the following phonetic matching functions that map text to a number or string based on how a word sounds:  
 
-- `caverphone1(string)`  
-- `caverphone2(string)`  
-- `cologne_phonetic(string)`  
-- `dm_soundex(string)`  
-- `double_metaphone(string)`  
-- `match_rating_encoder(string)`  
-- `metaphone(string)`  
-- `nysiis(string)`  
-- `refined_soundex(string)`  
-- `soundex(string)`  
+- [`caverphone1(string)`]({{site.baseurl}}/docs/phonetic-functions/#caverphone1(string))  
+- [`caverphone2(string)`]({{site.baseurl}}/docs/phonetic-functions/#caverphone2(string))  
+- [`cologne_phonetic(string)`]({{site.baseurl}}/docs/phonetic-functions/#cologne_phonetic(string))  
+- [`dm_soundex(string)`]({{site.baseurl}}/docs/phonetic-functions/#dm_soundex(string))  
+- [`double_metaphone(string)`]({{site.baseurl}}/docs/phonetic-functions/#double_metaphone(string))  
+- [`match_rating_encoder(string)`]({{site.baseurl}}/docs/phonetic-functions/#match_rating_encoder(string))  
+- [`metaphone(string)`]({{site.baseurl}}/docs/phonetic-functions/#metaphone(string))  
+- [`nysiis(string)`]({{site.baseurl}}/docs/phonetic-functions/#nysiis(string))  
+- [`refined_soundex(string)`]({{site.baseurl}}/docs/phonetic-functions/#refined_soundex(string))  
+- [`soundex(string)`]({{site.baseurl}}/docs/phonetic-functions/#soundex(string))  
 
 ## Syntax  
-    SELECT <phonetic-function>(string) FROM…  
+    SELECT <phonetic-function>(string) FROM…    
 
-    //Usage example: SELECT match_rating_encoder('Boston') AS MR FROM (VALUES(1));  
+## Usage Example  
+
+    SELECT match_rating_encoder('Boston') AS MR FROM (VALUES(1));  
 
 ## Function Descriptions  
 The following sections describe each of the phonetic functions that Drill supports.  
@@ -61,9 +63,10 @@ Implements the [Metaphone](https://en.wikipedia.org/wiki/Metaphone) phonetic alg
 
 ### nysiis(string)  
 
-Encodes a string into a NYSIIS value. NYSIIS is an encoding used to relate similar names, but can also be used as a general purpose scheme to find word with similar phonemes. The New York State Identification and Intelligence System Phonetic Code, commonly known as NYSIIS, is a phonetic algorithm devised in 1970 as part of the New York State Identification and Intelligence System (now a part of the New York State Division of Criminal Justice Services). It features an accuracy increase of 2.7% over the traditional Soundex algorithm.
-refined_soundex(string)
-Encodes a string into a Refined Soundex value. Soundex is an encoding used to relate similar names, but can also be used as a general purpose scheme to find word with similar phonemes. 
+Encodes a string into a NYSIIS value. NYSIIS is an encoding used to relate similar names, but can also be used as a general purpose scheme to find word with similar phonemes. The New York State Identification and Intelligence System Phonetic Code, commonly known as NYSIIS, is a phonetic algorithm devised in 1970 as part of the New York State Identification and Intelligence System (now a part of the New York State Division of Criminal Justice Services). It features an accuracy increase of 2.7% over the traditional Soundex algorithm.  
+
+### refined_soundex(string)
+Encodes a string into a Refined Soundex value. Soundex is an encoding used to relate similar names, but can also be used as a general purpose scheme to find a word with similar phonemes. 
 
 ### soundex(string)  
 
