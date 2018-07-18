@@ -33,28 +33,28 @@ import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 
 /**
- * AdjustOperatorsRowTypeVisitor visits corresponding operators' which depending upon their functionality
+ * AdjustOperatorsSchemaVisitor visits corresponding operators' which depending upon their functionality
  * adjusts their output row types. The adjusting mechanism is unique to each operator. In case of joins this visitor
  * adjusts the field names to make sure that upstream operator only sees that there are unique field names even though
  * the children of the join has same field names. Whereas in case of lateral/unnest operators it changes the correlated
  * field and also the unnest operator's output row type.
  */
-public class AdjustOperatorsRowTypeVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{
+public class AdjustOperatorsSchemaVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{
 
-  private Prel currentLateralJoin = null;
+  private Prel registeredPrel = null;
 
-  private static AdjustOperatorsRowTypeVisitor INSTANCE = new AdjustOperatorsRowTypeVisitor();
+  private static AdjustOperatorsSchemaVisitor INSTANCE = new AdjustOperatorsSchemaVisitor();
 
-  public static Prel adjustRowType(Prel prel){
+  public static Prel adjustSchema(Prel prel){
     return prel.accept(INSTANCE, null);
   }
 
   private void register(Prel prel) {
-    this.currentLateralJoin = prel;
+    this.registeredPrel = prel;
   }
 
   private Prel getRegisteredPrel() {
-    return this.currentLateralJoin;
+    return this.registeredPrel;
   }
 
   @Override
@@ -63,7 +63,7 @@ public class AdjustOperatorsRowTypeVisitor extends BasePrelVisitor<Prel, Void, R
   }
 
   public void unRegister() {
-    this.currentLateralJoin = null;
+    this.registeredPrel = null;
   }
 
   private List<RelNode> getChildren(Prel prel, int registerForChild) {
@@ -124,7 +124,7 @@ public class AdjustOperatorsRowTypeVisitor extends BasePrelVisitor<Prel, Void, R
 
   @Override
   public Prel visitUnnest(UnnestPrel prel, Void value) throws RuntimeException {
-    Preconditions.checkArgument(currentLateralJoin != null && currentLateralJoin instanceof LateralJoinPrel);
+    Preconditions.checkArgument(registeredPrel != null && registeredPrel instanceof LateralJoinPrel);
     Preconditions.checkArgument(prel.getRowType().getFieldCount() == 1);
     RexBuilder builder = prel.getCluster().getRexBuilder();
 
