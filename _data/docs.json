@@ -4785,8 +4785,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SQL Window Functions", 
-            "next_url": "/docs/sql-window-functions/", 
+            "next_title": "Phonetic Functions", 
+            "next_url": "/docs/phonetic-functions/", 
             "parent": "SQL Functions", 
             "previous_title": "Aggregate and Aggregate Statistical", 
             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
@@ -8280,6 +8280,27 @@
             "title": "Persistent Configuration Storage", 
             "url": "/docs/persistent-configuration-storage/"
         }, 
+        "Phonetic Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Functions", 
+                    "url": "/docs/sql-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "String Distance Functions", 
+            "next_url": "/docs/string-distance-functions/", 
+            "parent": "SQL Functions", 
+            "previous_title": "Functions for Handling Nulls", 
+            "previous_url": "/docs/functions-for-handling-nulls/", 
+            "relative_path": "_docs/sql-reference/sql-functions/061-phonetic-functions.md", 
+            "title": "Phonetic Functions", 
+            "url": "/docs/phonetic-functions/"
+        }, 
         "Physical Operators": {
             "breadcrumbs": [
                 {
@@ -11363,14 +11384,56 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Window Functions", 
-                    "next_url": "/docs/sql-window-functions/", 
+                    "next_title": "Phonetic Functions", 
+                    "next_url": "/docs/phonetic-functions/", 
                     "parent": "SQL Functions", 
                     "previous_title": "Aggregate and Aggregate Statistical", 
                     "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
                     "relative_path": "_docs/sql-reference/sql-functions/060-functions-for-handling-nulls.md", 
                     "title": "Functions for Handling Nulls", 
                     "url": "/docs/functions-for-handling-nulls/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Functions", 
+                            "url": "/docs/sql-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "String Distance Functions", 
+                    "next_url": "/docs/string-distance-functions/", 
+                    "parent": "SQL Functions", 
+                    "previous_title": "Functions for Handling Nulls", 
+                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "relative_path": "_docs/sql-reference/sql-functions/061-phonetic-functions.md", 
+                    "title": "Phonetic Functions", 
+                    "url": "/docs/phonetic-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Functions", 
+                            "url": "/docs/sql-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Window Functions", 
+                    "next_url": "/docs/sql-window-functions/", 
+                    "parent": "SQL Functions", 
+                    "previous_title": "Phonetic Functions", 
+                    "previous_url": "/docs/phonetic-functions/", 
+                    "relative_path": "_docs/sql-reference/sql-functions/062-string-distance-functions.md", 
+                    "title": "String Distance Functions", 
+                    "url": "/docs/string-distance-functions/"
                 }
             ], 
             "next_title": "About SQL Function Examples", 
@@ -11684,14 +11747,56 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SQL Window Functions", 
-                            "next_url": "/docs/sql-window-functions/", 
+                            "next_title": "Phonetic Functions", 
+                            "next_url": "/docs/phonetic-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Aggregate and Aggregate Statistical", 
                             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
                             "relative_path": "_docs/sql-reference/sql-functions/060-functions-for-handling-nulls.md", 
                             "title": "Functions for Handling Nulls", 
                             "url": "/docs/functions-for-handling-nulls/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions", 
+                                    "url": "/docs/sql-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "String Distance Functions", 
+                            "next_url": "/docs/string-distance-functions/", 
+                            "parent": "SQL Functions", 
+                            "previous_title": "Functions for Handling Nulls", 
+                            "previous_url": "/docs/functions-for-handling-nulls/", 
+                            "relative_path": "_docs/sql-reference/sql-functions/061-phonetic-functions.md", 
+                            "title": "Phonetic Functions", 
+                            "url": "/docs/phonetic-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions", 
+                                    "url": "/docs/sql-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SQL Window Functions", 
+                            "next_url": "/docs/sql-window-functions/", 
+                            "parent": "SQL Functions", 
+                            "previous_title": "Phonetic Functions", 
+                            "previous_url": "/docs/phonetic-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-functions/062-string-distance-functions.md", 
+                            "title": "String Distance Functions", 
+                            "url": "/docs/string-distance-functions/"
                         }
                     ], 
                     "next_title": "About SQL Function Examples", 
@@ -11820,8 +11925,8 @@
                     "next_title": "SQL Window Functions Introduction", 
                     "next_url": "/docs/sql-window-functions-introduction/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "Functions for Handling Nulls", 
-                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "previous_title": "String Distance Functions", 
+                    "previous_url": "/docs/string-distance-functions/", 
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
                     "title": "SQL Window Functions", 
                     "url": "/docs/sql-window-functions/"
@@ -12810,8 +12915,8 @@
             "next_title": "SQL Window Functions Introduction", 
             "next_url": "/docs/sql-window-functions-introduction/", 
             "parent": "SQL Reference", 
-            "previous_title": "Functions for Handling Nulls", 
-            "previous_url": "/docs/functions-for-handling-nulls/", 
+            "previous_title": "String Distance Functions", 
+            "previous_url": "/docs/string-distance-functions/", 
             "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
             "title": "SQL Window Functions", 
             "url": "/docs/sql-window-functions/"
@@ -13613,6 +13718,27 @@
             "relative_path": "_docs/connect-a-data-source/020-storage-plugin-registration.md", 
             "title": "Storage Plugin Registration", 
             "url": "/docs/storage-plugin-registration/"
+        }, 
+        "String Distance Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Functions", 
+                    "url": "/docs/sql-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SQL Window Functions", 
+            "next_url": "/docs/sql-window-functions/", 
+            "parent": "SQL Functions", 
+            "previous_title": "Phonetic Functions", 
+            "previous_url": "/docs/phonetic-functions/", 
+            "relative_path": "_docs/sql-reference/sql-functions/062-string-distance-functions.md", 
+            "title": "String Distance Functions", 
+            "url": "/docs/string-distance-functions/"
         }, 
         "String Manipulation": {
             "breadcrumbs": [
@@ -18818,14 +18944,56 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SQL Window Functions", 
-                            "next_url": "/docs/sql-window-functions/", 
+                            "next_title": "Phonetic Functions", 
+                            "next_url": "/docs/phonetic-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Aggregate and Aggregate Statistical", 
                             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
                             "relative_path": "_docs/sql-reference/sql-functions/060-functions-for-handling-nulls.md", 
                             "title": "Functions for Handling Nulls", 
                             "url": "/docs/functions-for-handling-nulls/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions", 
+                                    "url": "/docs/sql-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "String Distance Functions", 
+                            "next_url": "/docs/string-distance-functions/", 
+                            "parent": "SQL Functions", 
+                            "previous_title": "Functions for Handling Nulls", 
+                            "previous_url": "/docs/functions-for-handling-nulls/", 
+                            "relative_path": "_docs/sql-reference/sql-functions/061-phonetic-functions.md", 
+                            "title": "Phonetic Functions", 
+                            "url": "/docs/phonetic-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions", 
+                                    "url": "/docs/sql-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SQL Window Functions", 
+                            "next_url": "/docs/sql-window-functions/", 
+                            "parent": "SQL Functions", 
+                            "previous_title": "Phonetic Functions", 
+                            "previous_url": "/docs/phonetic-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-functions/062-string-distance-functions.md", 
+                            "title": "String Distance Functions", 
+                            "url": "/docs/string-distance-functions/"
                         }
                     ], 
                     "next_title": "About SQL Function Examples", 
@@ -18954,8 +19122,8 @@
                     "next_title": "SQL Window Functions Introduction", 
                     "next_url": "/docs/sql-window-functions-introduction/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "Functions for Handling Nulls", 
-                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "previous_title": "String Distance Functions", 
+                    "previous_url": "/docs/string-distance-functions/", 
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
                     "title": "SQL Window Functions", 
                     "url": "/docs/sql-window-functions/"
