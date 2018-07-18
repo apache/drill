@@ -347,7 +347,7 @@ public class BaseTestQuery extends ExecTest {
   }
 
   public static int testRunAndPrint(final QueryType type, final String query) throws Exception {
-    return QueryTestUtil.testRunAndPrint(client, type, query);
+    return QueryTestUtil.testRunAndLog(client, type, query);
   }
 
   protected static void testWithListener(QueryType type, String query, UserResultsListener resultListener) {
@@ -389,11 +389,11 @@ public class BaseTestQuery extends ExecTest {
   }
 
   public static void test(String query, Object... args) throws Exception {
-    QueryTestUtil.test(client, String.format(query, args));
+    QueryTestUtil.testRunAndLog(client, String.format(query, args));
   }
 
   public static void test(final String query) throws Exception {
-    QueryTestUtil.test(client, query);
+    QueryTestUtil.testRunAndLog(client, query);
   }
 
   protected static int testPhysical(String query) throws Exception{
@@ -513,7 +513,7 @@ public class BaseTestQuery extends ExecTest {
     this.columnWidths = columnWidths;
   }
 
-  protected int printResult(List<QueryDataBatch> results) throws SchemaChangeException {
+  protected int logResult(List<QueryDataBatch> results) throws SchemaChangeException {
     int rowCount = 0;
     final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
     for(final QueryDataBatch result : results) {
@@ -521,11 +521,16 @@ public class BaseTestQuery extends ExecTest {
       loader.load(result.getHeader().getDef(), result.getData());
       // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
       // SchemaChangeException, so check/clean throw clause above.
-      VectorUtil.showVectorAccessibleContent(loader, columnWidths);
+      VectorUtil.logVectorAccessibleContent(loader, columnWidths);
       loader.clear();
       result.release();
     }
     return rowCount;
+  }
+
+  protected int printResult(final List<QueryDataBatch> results) throws SchemaChangeException {
+    int result = PrintingUtils.printAndThrow(() -> logResult(results));
+    return result;
   }
 
   protected static String getResultString(List<QueryDataBatch> results, String delimiter)

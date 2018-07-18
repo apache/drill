@@ -96,7 +96,7 @@ public class TestHBaseQueries extends BaseHBaseTest {
         List<QueryDataBatch> resultList = runHBaseSQLlWithResults("SELECT row_key,\n"
             + " CAST(t.f.c1 as INT) c1, CAST(t.f.c2 as BIGINT) c2, CAST(t.f.c3 as INT) c3,\n"
             + " CAST(t.f.c4 as INT) c4 FROM hbase.TestTableNullStr t where row_key='a1'");
-        printResult(resultList);
+        logResult(resultList);
     }
     finally {
         test("alter system reset `drill.exec.functions.cast_empty_string_to_null`;");

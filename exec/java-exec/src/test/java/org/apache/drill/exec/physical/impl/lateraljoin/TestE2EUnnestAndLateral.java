@@ -61,7 +61,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     String Sql = "SELECT customer.c_name, customer.c_address, orders.o_id, orders.o_amount " +
       "FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
       "(SELECT t.ord.o_id as o_id, t.ord.o_amount as o_amount FROM UNNEST(customer.orders) t(ord) LIMIT 1) orders";
-    test(Sql);
+    runAndLog(Sql);
   }
 
   @Test
@@ -69,7 +69,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     String Sql = "SELECT customer.c_name, customer.c_address, orders.o_id, orders.o_amount " +
       "FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
       "(SELECT t.ord.o_id as o_id, t.ord.o_amount as o_amount FROM UNNEST(customer.orders) t(ord) WHERE t.ord.o_amount > 10) orders";
-    test(Sql);
+    runAndLog(Sql);
   }
 
   @Test
@@ -77,7 +77,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     String Sql = "SELECT customer.c_name, customer.c_address, orders.o_id, orders.o_amount " +
       "FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
       "(SELECT t.ord.o_id as o_id, t.ord.o_amount as o_amount FROM UNNEST(customer.orders) t(ord) WHERE t.ord.o_amount > 10 LIMIT 1) orders";
-    test(Sql);
+    runAndLog(Sql);
   }
 
   @Test
@@ -105,7 +105,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   @Test
   public void testLateral_WithSortAndLimitInSubQuery() throws Exception {
 
-    test("alter session set `planner.enable_topn`=false");
+    runAndLog("alter session set `planner.enable_topn`=false");
 
     String Sql = "SELECT customer.c_name, orders.o_id, orders.o_amount " +
       "FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
@@ -123,7 +123,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         .baselineValues("customer4", 32.0,  1030.1)
         .go();
     } finally {
-      test("alter session set `planner.enable_topn`=true");
+      runAndLog("alter session set `planner.enable_topn`=true");
     }
   }
 
@@ -149,7 +149,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     String Sql = "SELECT customer.c_name, customer.c_address, orders.o_id, orders.o_amount " +
       "FROM cp.`lateraljoin/nested-customer.parquet` customer OUTER APPLY " +
       "(SELECT t.ord.o_id as o_id , t.ord.o_amount as o_amount FROM UNNEST(customer.orders) t(ord) WHERE t.ord.o_amount > 10 LIMIT 1) orders";
-    test(Sql);
+    runAndLog(Sql);
   }
 
   @Test
@@ -157,7 +157,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     String Sql = "SELECT customer.c_name, customer.c_address, orders.o_id, orders.o_amount " +
       "FROM cp.`lateraljoin/nested-customer.parquet` customer LEFT JOIN LATERAL " +
       "(SELECT t.ord.o_id as o_id, t.ord.o_amount as o_amount FROM UNNEST(customer.orders) t(ord) WHERE t.ord.o_amount > 10 LIMIT 1) orders ON TRUE";
-    test(Sql);
+    runAndLog(Sql);
   }
 
   @Test
@@ -167,7 +167,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       " (SELECT t.ord.o_id AS order_id, t.ord.o_amount AS order_amt, U2.item_name AS itemName, U2.item_num AS " +
         "itemNum FROM UNNEST(customer.orders) t(ord) , LATERAL" +
       " (SELECT t1.ord.i_name AS item_name, t1.ord.i_number AS item_num FROM UNNEST(t.ord) AS t1(ord)) AS U2) AS U1";
-    test(Sql);
+    runAndLog(Sql);
   }
 
   @Test
@@ -261,7 +261,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   public void testNestedUnnest() throws Exception {
     String Sql = "select * from (select customer.orders as orders from cp.`lateraljoin/nested-customer.parquet` customer ) t1," +
         " lateral ( select t.ord.items as items from unnest(t1.orders) t(ord) ) t2, unnest(t2.items) t3(item) ";
-    test(Sql);
+    runAndLog(Sql);
   }
 
   /***********************************************************************************************
@@ -273,7 +273,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     String sql = "SELECT customer.c_name, customer.c_address, orders.o_orderkey, orders.o_totalprice " +
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
       "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord)) orders";
-    test(sql);
+    runAndLog(sql);
   }
 
   @Test
@@ -281,7 +281,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     String sql = "SELECT customer.c_name, customer.c_address, orders.o_orderkey, orders.o_totalprice " +
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
       "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord) LIMIT 10) orders";
-    test(sql);
+    runAndLog(sql);
   }
 
   @Test
@@ -303,7 +303,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   @Test
   public void testMultipleBatchesLateral_WithSortAndLimitInSubQuery() throws Exception {
 
-    test("alter session set `planner.enable_topn`=false");
+    runAndLog("alter session set `planner.enable_topn`=false");
 
     String sql = "SELECT customer.c_name, orders.o_orderkey, orders.o_totalprice " +
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
@@ -319,7 +319,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         .baselineValues("Customer#000007180", (long)54646821, 367189.55)
         .go();
     } finally {
-      test("alter session set `planner.enable_topn`=true");
+      runAndLog("alter session set `planner.enable_topn`=true");
     }
   }
 
@@ -346,7 +346,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
       "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord) WHERE t.ord.o_totalprice > 100000 LIMIT 2) " +
       "orders";
-    test(sql);
+    runAndLog(sql);
   }
 
   /***********************************************************************************************
@@ -362,7 +362,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       String sql = "SELECT customer.c_name, customer.c_address, orders.o_orderkey, orders.o_totalprice " +
         "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
         "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST (customer.c_orders) t(ord)) orders";
-      test(sql);
+      runAndLog(sql);
     } catch (Exception ex) {
       fail();
     } finally {
@@ -393,7 +393,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         "FROM UNNEST(customer.c_orders) t1(o)) orders, " +
         "LATERAL (SELECT t2.l.l_partkey as l_partkey, t2.l.l_linenumber as l_linenumber, t2.l.l_quantity as l_quantity " +
         "FROM UNNEST(orders.lineitems) t2(l)) olineitems";
-      test(sql);
+      runAndLog(sql);
     } catch (Exception ex) {
       fail();
     } finally {
@@ -409,7 +409,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       String sql = "SELECT customer.c_name, customer.c_address, orders.o_orderkey, orders.o_totalprice " +
         "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
         "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord)) orders";
-      test(sql);
+      runAndLog(sql);
     } catch (Exception ex) {
       fail();
     } finally {
@@ -429,7 +429,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         " t1.o.o_shippriority as spriority FROM UNNEST(customer.c_orders) t1(o)) orders, " +
         "LATERAL (SELECT t2.l.l_partkey as l_partkey, t2.l.l_linenumber as l_linenumber, t2.l.l_quantity as l_quantity " +
         "FROM UNNEST(orders.lineitems) t2(l)) olineitems";
-      test(sql);
+      runAndLog(sql);
     } catch (Exception ex) {
       fail();
     } finally {
@@ -446,7 +446,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         "orders.o_totalprice FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
         "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice, t.ord.o_shippriority o_shippriority FROM UNNEST(customer.c_orders) t(ord)) orders";
 
-      test(sql);
+      runAndLog(sql);
     } catch (Exception ex) {
       fail();
     } finally {
@@ -464,7 +464,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
       "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice  as o_totalprice FROM UNNEST(customer.c_orders) t(ord) WHERE t.ord.o_totalprice > 100000 LIMIT 2) " +
       "orders LIMIT 1";
-    test(sql);
+    runAndLog(sql);
   }
 
   @Test
@@ -473,7 +473,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
       "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord) WHERE t.ord.o_totalprice > 100000 LIMIT 2) " +
       "orders WHERE orders.o_totalprice > 240000";
-    test(sql);
+    runAndLog(sql);
   }
 
   @Test
@@ -482,7 +482,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
       "(SELECT t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord) WHERE t.ord.o_totalprice > 100000 LIMIT 2) " +
       "orders GROUP BY customer.c_name";
-    test(sql);
+    runAndLog(sql);
   }
 
   @Test
@@ -491,7 +491,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
       "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord)) orders " +
       "ORDER BY orders.o_orderkey";
-    test(sql);
+    runAndLog(sql);
   }
 
   @Test
@@ -515,7 +515,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       .baselineValues(177819)
       .build().run();
     } finally {
-      test("alter session set `" + PlannerSettings.STREAMAGG.getOptionName() + "` = true");
+      runAndLog("alter session set `" + PlannerSettings.STREAMAGG.getOptionName() + "` = true");
     }
   }
 
@@ -541,7 +541,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       .baselineValues("dd",222L)
       .build().run();
     } finally {
-      test("alter session set `" + PlannerSettings.STREAMAGG.getOptionName() + "` = true");
+      runAndLog("alter session set `" + PlannerSettings.STREAMAGG.getOptionName() + "` = true");
     }
   }
 

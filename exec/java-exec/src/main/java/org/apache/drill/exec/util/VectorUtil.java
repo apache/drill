@@ -39,7 +39,7 @@ public class VectorUtil {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorUtil.class);
   public static final int DEFAULT_COLUMN_WIDTH = 15;
 
-  public static void showVectorAccessibleContent(VectorAccessible va, final String delimiter) {
+  public static void logVectorAccessibleContent(VectorAccessible va, final String delimiter) {
     final StringBuilder sb = new StringBuilder();
     int rows = va.getRecordCount();
     sb.append(rows).append(" row(s):\n");
@@ -133,15 +133,15 @@ public class VectorUtil {
     }
   }
 
-  public static void showVectorAccessibleContent(VectorAccessible va) {
-    showVectorAccessibleContent(va, DEFAULT_COLUMN_WIDTH);
+  public static void logVectorAccessibleContent(VectorAccessible va) {
+    logVectorAccessibleContent(va, DEFAULT_COLUMN_WIDTH);
   }
 
-  public static void showVectorAccessibleContent(VectorAccessible va, int columnWidth) {
-    showVectorAccessibleContent(va, new int[]{ columnWidth });
+  public static void logVectorAccessibleContent(VectorAccessible va, int columnWidth) {
+    logVectorAccessibleContent(va, new int[]{ columnWidth });
   }
 
-  public static void showVectorAccessibleContent(VectorAccessible va, int[] columnWidths) {
+  public static void logVectorAccessibleContent(VectorAccessible va, int[] columnWidths) {
     final StringBuilder sb = new StringBuilder();
     int width = 0;
     int columnIndex = 0;
@@ -194,6 +194,8 @@ public class VectorUtil {
     for (VectorWrapper<?> vw : va) {
       vw.clear();
     }
+
+    logger.info(sb.toString());
   }
 
   private static String expandMapSchema(MaterializedField mapField) {

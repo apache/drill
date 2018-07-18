@@ -518,7 +518,7 @@ public class TestConvertFunctions extends BaseTestQuery {
       count += result.getHeader().getRowCount();
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() > 0) {
-        VectorUtil.showVectorAccessibleContent(loader);
+        VectorUtil.logVectorAccessibleContent(loader);
       }
       loader.clear();
       result.release();

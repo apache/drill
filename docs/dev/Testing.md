@@ -149,7 +149,6 @@ Drill uses the [Maven Surefire plugin](http://maven.apache.org/components/surefi
               -Ddrill.exec.sys.store.provider.local.write=false
               -Dorg.apache.drill.exec.server.Drillbit.system_options=\
                "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
-              -Ddrill.test.query.printing.silent=true
               -Ddrill.catastrophic_to_standard_out=true
               -XX:MaxPermSize=512M -XX:MaxDirectMemorySize=3072M
               -Djava.net.preferIPv4Stack=true

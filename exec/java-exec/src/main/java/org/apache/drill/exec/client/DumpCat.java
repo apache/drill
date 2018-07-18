@@ -261,7 +261,7 @@ public class DumpCat {
     }
 
     /* show the contents in the batch */
-    VectorUtil.showVectorAccessibleContent(vectorContainer);
+    VectorUtil.logVectorAccessibleContent(vectorContainer);
   }
 
   /* Get batch meta info : rows, selectedRows, dataSize */
