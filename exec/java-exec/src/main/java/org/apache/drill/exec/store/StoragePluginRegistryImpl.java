@@ -49,7 +49,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.ischema.InfoSchemaConfig;
 import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
@@ -327,14 +326,8 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   @Override
   public FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig)
       throws ExecutionSetupException {
-    StoragePlugin p = getPlugin(storageConfig);
-    if (!(p instanceof FileSystemPlugin)) {
-      throw new ExecutionSetupException(
-          String.format("You tried to request a format plugin for a storage plugin that wasn't of type "
-              + "FileSystemPlugin. The actual type of plugin was %s.", p.getClass().getName()));
-    }
-    FileSystemPlugin storage = (FileSystemPlugin) p;
-    return storage.getFormatPlugin(formatConfig);
+    StoragePlugin storagePlugin = getPlugin(storageConfig);
+    return storagePlugin.getFormatPlugin(formatConfig);
   }
 
   private StoragePlugin create(String name, StoragePluginConfig pluginConfig) throws ExecutionSetupException {
