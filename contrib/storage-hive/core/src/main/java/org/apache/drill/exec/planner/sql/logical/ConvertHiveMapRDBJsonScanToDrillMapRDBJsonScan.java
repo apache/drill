@@ -124,13 +124,6 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
     Map<String, String> parameters = hiveScan.getHiveReadEntry().getHiveTableWrapper().getParameters();
 
     JsonScanSpec scanSpec = new JsonScanSpec(parameters.get(MAPRDB_TABLE_NAME), null);
-    MapRDBFormatPlugin mapRDBFormatPlugin = new MapRDBFormatPlugin(
-        "hive-maprdb",
-        hiveScan.getStoragePlugin().getContext(),
-        hiveScan.getHiveConf(),
-        hiveScan.getStoragePlugin().getConfig(),
-        new MapRDBFormatPluginConfig()
-    );
     List<SchemaPath> hiveScanCols = hiveScanRel.getColumns().stream()
         .map(colNameSchemaPath -> replaceOverriddenSchemaPath(parameters, colNameSchemaPath))
         .collect(Collectors.toList());
@@ -138,7 +131,8 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
         new JsonTableGroupScan(
             hiveScan.getUserName(),
             hiveScan.getStoragePlugin(),
-            mapRDBFormatPlugin,
+            // TODO: We should use Hive format plugins here, once it will be implemented. DRILL-6621
+            (MapRDBFormatPlugin) hiveScan.getStoragePlugin().getFormatPlugin(new MapRDBFormatPluginConfig()),
             scanSpec,
             hiveScanCols
         );

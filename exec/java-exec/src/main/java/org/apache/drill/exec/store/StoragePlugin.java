@@ -24,10 +24,12 @@ import java.util.Set;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.options.SessionOptionManager;
+import org.apache.drill.exec.store.dfs.FormatPlugin;
 
 /** Interface for all implementations of the storage plugins. Different implementations of the storage
  * formats will implement methods that indicate if Drill can write or read its tables from that format,
@@ -101,4 +103,13 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * Initialize the storage plugin. The storage plugin will not be used until this method is called.
    */
   void start() throws IOException;
+
+  /**
+   * Allows to get the format plugin for current storage plugin based on appropriate format plugin config usage.
+   *
+   * @param config format plugin config
+   * @return format plugin instance
+   * @throws UnsupportedOperationException, if storage plugin doesn't support format plugins.
+   */
+  FormatPlugin getFormatPlugin(FormatPluginConfig config);
 }

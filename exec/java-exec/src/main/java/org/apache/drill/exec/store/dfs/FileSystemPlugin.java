@@ -152,6 +152,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
    * @param config format plugin configuration
    * @return format plugin for given configuration if found, null otherwise
    */
+  @Override
   public FormatPlugin getFormatPlugin(FormatPluginConfig config) {
     if (config instanceof NamedFormatPluginConfig) {
       return formatCreator.getFormatPluginByName(((NamedFormatPluginConfig) config).name);
@@ -167,9 +168,9 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   @Override
   public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     Builder<StoragePluginOptimizerRule> setBuilder = ImmutableSet.builder();
-    for(FormatPlugin plugin : formatCreator.getConfiguredFormatPlugins()){
+    for (FormatPlugin plugin : formatCreator.getConfiguredFormatPlugins()) {
       Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules();
-      if(rules != null && rules.size() > 0){
+      if (rules != null && rules.size() > 0) {
         setBuilder.addAll(rules);
       }
     }

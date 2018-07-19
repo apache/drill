@@ -37,6 +37,7 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -49,10 +50,13 @@ import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
+import org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -61,6 +65,8 @@ import org.apache.thrift.transport.TTransportException;
 public class HiveStoragePlugin extends AbstractStoragePlugin {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveStoragePlugin.class);
+
+  public static final String HIVE_MAPRDB_FORMAT_PLUGIN_NAME = "hive-maprdb";
 
   private final HiveStoragePluginConfig config;
   private HiveSchemaFactory schemaFactory;
@@ -214,6 +220,21 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
       ruleBuilder.add(ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan.INSTANCE);
     }
     return ruleBuilder.build();
+  }
+
+  @Override
+  public FormatPlugin getFormatPlugin(FormatPluginConfig formatConfig) {
+    //  TODO: implement formatCreator similar to FileSystemPlugin formatCreator. DRILL-6621
+    if (formatConfig instanceof MapRDBFormatPluginConfig) {
+      try {
+        return new MapRDBFormatPlugin(HIVE_MAPRDB_FORMAT_PLUGIN_NAME, context, hiveConf, config,
+            (MapRDBFormatPluginConfig) formatConfig);
+      } catch (IOException e) {
+        throw new DrillRuntimeException("The error is occurred while connecting to MapR-DB", e);
+      }
+    }
+    throw new DrillRuntimeException(String.format("Hive storage plugin doesn't support usage of %s format plugin",
+        formatConfig.getClass().getName()));
   }
 
 }

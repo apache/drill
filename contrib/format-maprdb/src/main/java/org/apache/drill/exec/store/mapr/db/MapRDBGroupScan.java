@@ -32,11 +32,11 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -249,8 +249,8 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
   }
 
   @JsonProperty("storage")
-  public FileSystemConfig getStorageConfig() {
-    return (FileSystemConfig) storagePlugin.getConfig();
+  public StoragePluginConfig getStorageConfig() {
+    return storagePlugin.getConfig();
   }
 
   @JsonIgnore
