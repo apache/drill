@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import org.apache.drill.exec.util.ValueVectorElementFormatter;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -24,6 +25,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import io.netty.channel.ChannelFuture;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -106,13 +108,15 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
         for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
           columns.add(loader.getSchema().getColumn(i).getName());
         }
+        ValueVectorElementFormatter formatter = new ValueVectorElementFormatter(webSessionResources.getSession().getOptions());
         for (int i = 0; i < rows; ++i) {
           final Map<String, String> record = Maps.newHashMap();
           for (VectorWrapper<?> vw : loader) {
             final String field = vw.getValueVector().getMetadata().getNamePart().getName();
+            final TypeProtos.MinorType fieldMinorType = vw.getValueVector().getMetadata().getMajorType().getMinorType();
             final Accessor accessor = vw.getValueVector().getAccessor();
             final Object value = i < accessor.getValueCount() ? accessor.getObject(i) : null;
-            final String display = value == null ? null : value.toString();
+            final String display = value == null ? null : formatter.format(value, fieldMinorType);
             record.put(field, display);
           }
           results.add(record);

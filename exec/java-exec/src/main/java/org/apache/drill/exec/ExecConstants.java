@@ -22,6 +22,7 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
+import org.apache.drill.exec.server.options.TypeValidators.DateTimeFormatValidator;
 import org.apache.drill.exec.server.options.TypeValidators.IntegerValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
@@ -683,6 +684,27 @@ public final class ExecConstants {
    */
   public static final String WEB_LOGS_MAX_LINES = "web.logs.max_lines";
   public static final OptionValidator WEB_LOGS_MAX_LINES_VALIDATOR = new PositiveLongValidator(WEB_LOGS_MAX_LINES, Integer.MAX_VALUE, null);
+
+  public static final String WEB_DISPLAY_FORMAT_TIMESTAMP = "web.display_format.timestamp";
+  public static final OptionValidator WEB_DISPLAY_FORMAT_TIMESTAMP_VALIDATOR = new DateTimeFormatValidator(WEB_DISPLAY_FORMAT_TIMESTAMP,
+      new OptionDescription("Display format template for timestamp. "
+                          + "It will be passed to java.time.format.DateTimeFormatter. "
+                          + "See https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html for the details about acceptable patterns. "
+                          + "If empty then the default formatting will be used. (Drill 1.15 and later)"));
+
+  public static final String WEB_DISPLAY_FORMAT_DATE = "web.display_format.date";
+  public static final OptionValidator WEB_DISPLAY_FORMAT_DATE_VALIDATOR = new DateTimeFormatValidator(WEB_DISPLAY_FORMAT_DATE,
+      new OptionDescription("Display format template for date. "
+                          + "It will be passed to java.time.format.DateTimeFormatter. "
+                          + "See https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html for the details about acceptable patterns. "
+                          + "If empty then the default formatting will be used. (Drill 1.15 and later)"));
+
+  public static final String WEB_DISPLAY_FORMAT_TIME = "web.display_format.time";
+  public static final OptionValidator WEB_DISPLAY_FORMAT_TIME_VALIDATOR = new DateTimeFormatValidator(WEB_DISPLAY_FORMAT_TIME,
+      new OptionDescription("Display format template for time. "
+                          + "It will be passed to java.time.format.DateTimeFormatter. "
+                          + "See https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html for the details about acceptable patterns. "
+                          + "If empty then the default formatting will be used. (Drill 1.15 and later)"));
 
   public static final String CODE_GEN_EXP_IN_METHOD_SIZE = "exec.java.compiler.exp_in_method_size";
   public static final LongValidator CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR = new LongValidator(CODE_GEN_EXP_IN_METHOD_SIZE,
