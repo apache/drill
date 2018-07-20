@@ -1,10 +1,16 @@
 ---
 title: "Phonetic Functions"
-date: 2018-07-18 23:39:24 UTC
+date: 2018-07-20 01:25:28 UTC
 parent: "SQL Functions"
 ---
 
-Starting in version 1.14, Drill supports phonetic functions. You can use phonetic functions to match similar sounding words. For example, the names “Jayme” and “Jamie” have the same soundex values.  
+Starting in version 1.14, Drill supports phonetic functions. Typically, you use phonetic functions in the WHERE clause of a query to find words that sound similar. For example, to find all the people named Jaime in a data source, you could issue the following query on the data source: 
+
+       SELECT first_name
+       FROM name_data
+       WHERE soundex( `first_name` ) = soundex( “Jayme” );
+
+The search would return data from rows where the first name field contains names that sound similar to Jayme, such as Jaime, Jaymee, and so on.   
  
 Drill supports the following phonetic matching functions that map text to a number or string based on how a word sounds:  
 
@@ -18,16 +24,10 @@ Drill supports the following phonetic matching functions that map text to a numb
 - [`nysiis(string)`]({{site.baseurl}}/docs/phonetic-functions/#nysiis(string))  
 - [`refined_soundex(string)`]({{site.baseurl}}/docs/phonetic-functions/#refined_soundex(string))  
 - [`soundex(string)`]({{site.baseurl}}/docs/phonetic-functions/#soundex(string))  
-
-## Syntax  
-    SELECT <phonetic-function>(string) FROM…    
-
-## Usage Example  
-
-    SELECT match_rating_encoder('Boston') AS MR FROM (VALUES(1));  
+   
 
 ## Function Descriptions  
-The following sections describe each of the phonetic functions that Drill supports.  
+The following sections describe each of the phonetic functions that Drill supports. Each function has a different algorithm that may work better for certain words.  
 
 ### caverphone1(string)  
 

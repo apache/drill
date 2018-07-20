@@ -1,10 +1,21 @@
 ---
 title: "String Distance Functions"
-date: 2018-07-18 23:39:26 UTC
+date: 2018-07-20 01:25:29 UTC
 parent: "SQL Functions"
 ---
 
-String distance functions measure the difference between two strings. Starting in version 1.14, Drill supports the following string distance functions: 
+Starting in version 1.14, Drill supports string distance functions. Typically, you use string distance functions in the WHERE clause of a query to measure the difference between two strings. For example, if you want to match a street address, but do not know how to spell a street name, you could issue a query on the data source with the street addresses:
+
+       SELECT street_address
+       FROM address-data
+       WHERE cosine_distance( `street_address`, “1234 North Quail Ln” ) <  0.5; 
+
+The search would return addresses from rows with street addresses similar to 1234 North Quail Ln, such as:   
+
+       1234 N. Quail Lane
+       1234 N Quaile Lan  
+
+Drill supports the following string distance functions:   
 
 - [`cosine_distance(string1,string2)`]({{site.baseurl}}/docs/string-distance-functions/#cosine_distance(string1,string2))
 - [`fuzzy_score(string1,string2)`]({{site.baseurl}}/docs/string-distance-functions/#fuzzy_score(string1,string2))
@@ -14,14 +25,6 @@ String distance functions measure the difference between two strings. Starting i
 - [`levenshtein_distance(string1,string2)`]({{site.baseurl}}/docs/string-distance-functions/#levenshtein_distance-(string1,string2))
 - [`longest_common_substring_distance(string1,string2)`]({{site.baseurl}}/docs/string-distance-functions/#longest_common_substring_distance(string1,string2))  
 
-## Syntax  
-
-       SELECT <string-distance-function>( string1, string2 ) FROM…
-  
-
-## Example Usage
-
-       SELECT fuzzy_score( string1, string2 ) AS fuzzy_score FROM…
 
 ## Function Descriptions  
 The following sections describe each of the string distance functions that Drill supports.   
