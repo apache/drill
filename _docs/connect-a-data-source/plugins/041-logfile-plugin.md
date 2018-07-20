@@ -1,6 +1,6 @@
 ---
 title: "Logfile Plugin"
-date:  2018-07-19 00:42:18 UTC
+date: 2018-07-20 02:04:40 UTC
 parent: "Connect a Data Source"
 ---
 
@@ -46,7 +46,9 @@ The following configuration shows a Logfile configuration that you could use if 
 Refer to [Storage Plugin Configuration]({{site.baseurl}}/docs/storage-plugin-configuration/) for information about how to configure storage plugins.
 
 
-### Logfile Configuration Options
+### Logfile Configuration Options  
+
+The following list describes each of the Logfile plugin options that you can use in the Logfile configuration:
 
 * **`pattern`**:  This is the regular expression which defines how the log file lines will be split.  You must enclose the parts of the regex in grouping parentheses that you wish to extract.  Note that this plugin uses Java regular expressions and requires that shortcuts such as `\d` have an additional slash:  ie `\\d`.
 * **`fieldNames`**:  This is a list of field names which you are extracting. Note that you must have the same number of fields as extracting groups in your pattern.
