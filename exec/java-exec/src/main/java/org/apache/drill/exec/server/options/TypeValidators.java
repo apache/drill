@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.options;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -285,6 +286,31 @@ public class TypeValidators {
         int availProc = Runtime.getRuntime().availableProcessors();
         long maxWidthPerNode = Math.max(1, Math.min(availProc, Math.round(availProc * cpuLoadAverage)));
         return (int) maxWidthPerNode;
+      }
+    }
+  }
+
+  /**
+   * Validator that checks if the given DateTime format template is valid.
+   * See {@link DateTimeFormatter} for the acceptable values.
+   */
+  public static class DateTimeFormatValidator extends StringValidator {
+
+    public DateTimeFormatValidator(String name, OptionDescription description) {
+      super(name, description);
+    }
+
+    @Override
+    public void validate(OptionValue v, OptionMetaData metaData, OptionSet manager) {
+      super.validate(v, metaData, manager);
+      if (!v.string_val.isEmpty()) {
+        try {
+          DateTimeFormatter.ofPattern(v.string_val);
+        } catch (IllegalArgumentException e) {
+          throw UserException.validationError()
+              .message("'%s' is not a valid DateTime format pattern: %s", v.string_val, e.getMessage())
+              .build(logger);
+        }
       }
     }
   }
