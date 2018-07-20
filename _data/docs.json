@@ -2610,8 +2610,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "HBase Storage Plugin", 
-                    "next_url": "/docs/hbase-storage-plugin/", 
+                    "next_title": "Logfile Plugin", 
+                    "next_url": "/docs/logfile-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Drill Default Input Format", 
                     "previous_url": "/docs/drill-default-input-format/", 
@@ -2627,11 +2627,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Hive Storage Plugin", 
-                    "next_url": "/docs/hive-storage-plugin/", 
+                    "next_title": "HBase Storage Plugin", 
+                    "next_url": "/docs/hbase-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "File System Storage Plugin", 
                     "previous_url": "/docs/file-system-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/041-logfile-plugin.md", 
+                    "title": "Logfile Plugin", 
+                    "url": "/docs/logfile-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Hive Storage Plugin", 
+                    "next_url": "/docs/hive-storage-plugin/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Logfile Plugin", 
+                    "previous_url": "/docs/logfile-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/060-hbase-storage-plugin.md", 
                     "title": "HBase Storage Plugin", 
                     "url": "/docs/hbase-storage-plugin/"
@@ -4764,8 +4781,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "HBase Storage Plugin", 
-            "next_url": "/docs/hbase-storage-plugin/", 
+            "next_title": "Logfile Plugin", 
+            "next_url": "/docs/logfile-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "Drill Default Input Format", 
             "previous_url": "/docs/drill-default-input-format/", 
@@ -4957,8 +4974,8 @@
             "next_title": "Hive Storage Plugin", 
             "next_url": "/docs/hive-storage-plugin/", 
             "parent": "Connect a Data Source", 
-            "previous_title": "File System Storage Plugin", 
-            "previous_url": "/docs/file-system-storage-plugin/", 
+            "previous_title": "Logfile Plugin", 
+            "previous_url": "/docs/logfile-plugin/", 
             "relative_path": "_docs/connect-a-data-source/plugins/060-hbase-storage-plugin.md", 
             "title": "HBase Storage Plugin", 
             "url": "/docs/hbase-storage-plugin/"
@@ -6450,6 +6467,23 @@
             "relative_path": "_docs/log-and-debug/001-log-and-debug-introduction.md", 
             "title": "Log and Debug Introduction", 
             "url": "/docs/log-and-debug-introduction/"
+        }, 
+        "Logfile Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "HBase Storage Plugin", 
+            "next_url": "/docs/hbase-storage-plugin/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "File System Storage Plugin", 
+            "previous_url": "/docs/file-system-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/041-logfile-plugin.md", 
+            "title": "Logfile Plugin", 
+            "url": "/docs/logfile-plugin/"
         }, 
         "Logging and Tracing": {
             "breadcrumbs": [
@@ -16814,8 +16848,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "HBase Storage Plugin", 
-                    "next_url": "/docs/hbase-storage-plugin/", 
+                    "next_title": "Logfile Plugin", 
+                    "next_url": "/docs/logfile-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Drill Default Input Format", 
                     "previous_url": "/docs/drill-default-input-format/", 
@@ -16831,11 +16865,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Hive Storage Plugin", 
-                    "next_url": "/docs/hive-storage-plugin/", 
+                    "next_title": "HBase Storage Plugin", 
+                    "next_url": "/docs/hbase-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "File System Storage Plugin", 
                     "previous_url": "/docs/file-system-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/041-logfile-plugin.md", 
+                    "title": "Logfile Plugin", 
+                    "url": "/docs/logfile-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Hive Storage Plugin", 
+                    "next_url": "/docs/hive-storage-plugin/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Logfile Plugin", 
+                    "previous_url": "/docs/logfile-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/060-hbase-storage-plugin.md", 
                     "title": "HBase Storage Plugin", 
                     "url": "/docs/hbase-storage-plugin/"
