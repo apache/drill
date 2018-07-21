@@ -188,16 +188,19 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   public IterOutcome innerNext() {
 
     // if a special batch has been sent, we have no data in the incoming so exit early
-    if ( done || specialBatchSent) {
+    if (done || specialBatchSent) {
+      assert (sendEmit != true); // if special batch sent with emit then flag will not be set
       return NONE;
     }
 
     // We sent an OK_NEW_SCHEMA and also encountered the end of a data set. So we need to send
     // an EMIT with an empty batch now
     if (sendEmit) {
+      first = false; // first is set only in the case when we see a NONE after an empty first (and only) batch
       sendEmit = false;
       firstBatchForDataSet = true;
       recordCount = 0;
+      specialBatchSent = false;
       return EMIT;
     }
 
@@ -212,15 +215,19 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       logger.debug("Next outcome of {}", lastKnownOutcome);
       switch (lastKnownOutcome) {
         case NONE:
-          if (firstBatchForDataSet && popConfig.getKeys().size() == 0) {
+
+          if (first && popConfig.getKeys().size() == 0) {
             // if we have a straight aggregate and empty input batch, we need to handle it in a different way
+            // Wewant to produce the special batch only if we got a NONE as the first outcome after
+            // OK_NEW_SCHEMA. If we get a NONE immediately after we see an EMIT, then we have already handled
+            // the case of the empty batch
             constructSpecialBatch();
             // set state to indicate the fact that we have sent a special batch and input is empty
             specialBatchSent = true;
             // If outcome is NONE then we send the special batch in the first iteration and the NONE
             // outcome in the next iteration. If outcome is EMIT, we can send the special
             // batch and the EMIT outcome at the same time.
-            return getFinalOutcome();
+            return IterOutcome.OK;
           }
           // else fall thru
         case OUT_OF_MEMORY:
@@ -238,13 +245,12 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           // we have to do the special handling
           if (firstBatchForDataSet && popConfig.getKeys().size() == 0 && incoming.getRecordCount() == 0) {
             constructSpecialBatch();
-            // set state to indicate the fact that we have sent a special batch and input is empty
-            specialBatchSent = true;
             firstBatchForDataSet = true; // reset on the next iteration
             // If outcome is NONE then we send the special batch in the first iteration and the NONE
             // outcome in the next iteration. If outcome is EMIT, we can send the special
-            // batch and the EMIT outcome at the same time.
-            return getFinalOutcome();
+            // batch and the EMIT outcome at the same time. (unless the finalOutcome is OK_NEW_SCHEMA)
+            IterOutcome finalOutcome =  getFinalOutcome();
+            return finalOutcome;
           }
           // else fall thru
         case OK:
@@ -269,13 +275,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           }
         }
       }
-      // We sent an EMIT in the previous iteration, so we must be starting a new data set
-      if (firstBatchForDataSet) {
-        done = false;
-        sendEmit = false;
-        specialBatchSent = false;
-        firstBatchForDataSet = false;
-      }
     }
     AggOutcome aggOutcome = aggregator.doWork(lastKnownOutcome);
     recordCount = aggregator.getOutputCount();
@@ -296,14 +295,15 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         if (firstBatchForDataSet && popConfig.getKeys().size() == 0 && recordCount == 0) {
           // if we have a straight aggregate and empty input batch, we need to handle it in a different way
           constructSpecialBatch();
-          // set state to indicate the fact that we have sent a special batch and input is empty
-          specialBatchSent = true;
           // If outcome is NONE then we send the special batch in the first iteration and the NONE
           // outcome in the next iteration. If outcome is EMIT, we can send the special
           // batch and the EMIT outcome at the same time.
-          return getFinalOutcome();
+
+          IterOutcome finalOutcome =  getFinalOutcome();
+          return finalOutcome;
         }
         firstBatchForDataSet = true;
+        firstBatchForSchema = false;
         if(first) {
           first = false;
         }
@@ -332,9 +332,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           }
         } else if (lastKnownOutcome == OK && first) {
           lastKnownOutcome = OK_NEW_SCHEMA;
-        } else if (lastKnownOutcome != IterOutcome.OUT_OF_MEMORY) {
-          first = false;
         }
+        first = false;
         return lastKnownOutcome;
       case UPDATE_AGGREGATOR:
         // We could get this either between data sets or within a data set.
@@ -629,12 +628,12 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
     if (firstBatchForSchema) {
       outcomeToReturn = OK_NEW_SCHEMA;
+      sendEmit = true;
       firstBatchForSchema = false;
     } else if (lastKnownOutcome == EMIT) {
       firstBatchForDataSet = true;
       outcomeToReturn = EMIT;
     } else {
-      // get the outcome to return before calling refresh since that resets the lastKnowOutcome to OK
       outcomeToReturn = (recordCount == 0) ? NONE : OK;
     }
     return outcomeToReturn;

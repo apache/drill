@@ -40,7 +40,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
   // First batch after build schema phase
   private boolean first = true;
-  private boolean firstBatchForSchema = true; // true if the current batch came in with an OK_NEW_SCHEMA.
+  private boolean firstBatchForSchema = false; // true if the current batch came in with an OK_NEW_SCHEMA.
   private boolean firstBatchForDataSet = true; // true if the current batch is the first batch in a data set
 
   private boolean newSchema = false;
