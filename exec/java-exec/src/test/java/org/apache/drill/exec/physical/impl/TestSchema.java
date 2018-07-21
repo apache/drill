@@ -84,4 +84,33 @@ public class TestSchema extends DrillTest {
     }
   }
 
+  @Test
+  public void testLocal() throws Exception {
+    try {
+      client.queryBuilder()
+          .sql("create table dfs.tmp.t1 as select 1 as c1")
+          .run();
+
+      client.queryBuilder()
+          .sql("create table dfs.tmp.t2 as select 1 as c1")
+          .run();
+
+      client.testBuilder()
+          .sqlQuery("select a.c1 from dfs.tmp.`t1` a\n" +
+            "join `dfs.tmp`.`t2` b ON b.c1 = a.c1\n")
+          .unOrdered()
+          .baselineColumns("c1")
+          .baselineValues(1)
+          .go();
+    } finally {
+      client.queryBuilder()
+          .sql("drop table if exists `dfs.tmp`.t1")
+          .run();
+
+      client.queryBuilder()
+          .sql("drop table if exists dfs.tmp.t2")
+          .run();
+    }
+  }
+
 }

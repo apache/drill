@@ -17,7 +17,6 @@
  */
 package org.apache.calcite.jdbc;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.DataContext;
 
 import org.apache.calcite.linq4j.tree.Expression;
@@ -33,6 +32,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.SubSchemaWrapper;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -70,16 +70,16 @@ public class DynamicRootSchema extends DynamicSchema {
   }
 
   /**
-   * load schema factory(storage plugin) for schemaName
-   * @param schemaName
-   * @param caseSensitive
+   * Loads schema factory(storage plugin) for specified {@code schemaName}
+   * @param schemaName the name of the schema
+   * @param caseSensitive whether matching for the schema name is case sensitive
    */
   public void loadSchemaFactory(String schemaName, boolean caseSensitive) {
     try {
-      SchemaPlus thisPlus = this.plus();
+      SchemaPlus schemaPlus = this.plus();
       StoragePlugin plugin = getSchemaFactories().getPlugin(schemaName);
       if (plugin != null) {
-        plugin.registerSchemas(schemaConfig, thisPlus);
+        plugin.registerSchemas(schemaConfig, schemaPlus);
         return;
       }
 
@@ -91,15 +91,17 @@ public class DynamicRootSchema extends DynamicSchema {
           return;
         }
 
-        // Found the storage plugin for first part(e.g. 'dfs') of schemaName (e.g. 'dfs.tmp')
-        // register schema for this storage plugin to 'this'.
-        plugin.registerSchemas(schemaConfig, thisPlus);
-
+        // Looking for the SchemaPlus for the top level (e.g. 'dfs') of schemaName (e.g. 'dfs.tmp')
+        SchemaPlus firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
+        if (firstLevelSchema == null) {
+          // register schema for this storage plugin to 'this'.
+          plugin.registerSchemas(schemaConfig, schemaPlus);
+          firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
+        }
         // Load second level schemas for this storage plugin
-        final SchemaPlus firstlevelSchema = thisPlus.getSubSchema(paths.get(0));
-        final List<SchemaPlus> secondLevelSchemas = Lists.newArrayList();
-        for (String secondLevelSchemaName : firstlevelSchema.getSubSchemaNames()) {
-          secondLevelSchemas.add(firstlevelSchema.getSubSchema(secondLevelSchemaName));
+        List<SchemaPlus> secondLevelSchemas = new ArrayList<>();
+        for (String secondLevelSchemaName : firstLevelSchema.getSubSchemaNames()) {
+          secondLevelSchemas.add(firstLevelSchema.getSubSchema(secondLevelSchemaName));
         }
 
         for (SchemaPlus schema : secondLevelSchemas) {
@@ -110,7 +112,7 @@ public class DynamicRootSchema extends DynamicSchema {
             throw new RuntimeException(String.format("Schema '%s' is not expected under root schema", schema.getName()));
           }
           SubSchemaWrapper wrapper = new SubSchemaWrapper(drillSchema);
-          thisPlus.add(wrapper.getName(), wrapper);
+          schemaPlus.add(wrapper.getName(), wrapper);
         }
       }
     } catch(ExecutionSetupException | IOException ex) {
