@@ -19,9 +19,16 @@ package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,6 +36,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Category(OperatorTest.class)
@@ -205,5 +213,34 @@ public class TestHashJoinAdvanced extends JoinTestBase {
 
     final Pattern sortHashJoinPattern = Pattern.compile(".*Sort.*HashJoin", Pattern.DOTALL);
     testPlanMatchingPatterns(query, new Pattern[]{sortHashJoinPattern}, null);
+  }
+
+  @Test // DRILL-6606
+  public void testJoinLimit0Schema() throws Exception {
+    String query = "SELECT l.l_quantity, l.l_shipdate, o.o_custkey\n" +
+      "FROM (SELECT * FROM cp.`tpch/lineitem.parquet` LIMIT 0) l\n" +
+      "    JOIN (SELECT * FROM cp.`tpch/orders.parquet` LIMIT 0) o \n" +
+      "    ON l.l_orderkey = o.o_orderkey\n";
+    final List<QueryDataBatch> dataBatches = client.runQuery(UserBitShared.QueryType.SQL, query);
+
+    Assert.assertEquals(1, dataBatches.size());
+
+    final QueryDataBatch queryDataBatch = dataBatches.get(0);
+    final RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
+
+    try {
+      batchLoader.load(queryDataBatch.getHeader().getDef(), queryDataBatch.getData());
+
+      final BatchSchema actualSchema = batchLoader.getSchema();
+      final BatchSchema expectedSchema = new SchemaBuilder()
+        .add("l_quantity", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.REQUIRED)
+        .add("l_shipdate", TypeProtos.MinorType.DATE, TypeProtos.DataMode.REQUIRED)
+        .add("o_custkey", TypeProtos.MinorType.INT, TypeProtos.DataMode.REQUIRED)
+        .build();
+
+      Assert.assertTrue(expectedSchema.isEquivalent(actualSchema));
+    } finally {
+      batchLoader.clear();
+    }
   }
 }
