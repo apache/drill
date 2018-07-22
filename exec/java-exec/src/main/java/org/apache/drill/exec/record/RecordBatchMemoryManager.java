@@ -154,6 +154,9 @@ public class RecordBatchMemoryManager {
 
   public void update() {};
 
+  public void update(RecordBatch recordBatch) {
+  }
+
   public void update(RecordBatch recordBatch, int index) {
     // Get sizing information for the batch.
     setRecordBatchSizer(index, new RecordBatchSizer(recordBatch));

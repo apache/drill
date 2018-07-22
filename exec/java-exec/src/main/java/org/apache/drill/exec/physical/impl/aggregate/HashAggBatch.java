@@ -114,8 +114,13 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     @Override
     public void update() {
+      update(incoming);
+    }
+
+    @Override
+    public void update(RecordBatch incomingRecordBatch) {
       // Get sizing information for the batch.
-      setRecordBatchSizer(new RecordBatchSizer(incoming));
+      setRecordBatchSizer(new RecordBatchSizer(incomingRecordBatch));
 
       int fieldId = 0;
       int newOutgoingRowWidth = 0;
