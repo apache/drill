@@ -798,12 +798,10 @@ public abstract class HashTableTemplate implements HashTable {
 
     IntVector newStartIndices = allocMetadataVector(tableSize, EMPTY_SLOT);
 
-    int idx = 0;
     for (int i = 0; i < batchHolders.size(); i++) {
       BatchHolder bh = batchHolders.get(i);
-      int batchStartIdx = idx;
+      int batchStartIdx = i * BATCH_SIZE;
       bh.rehash(tableSize, newStartIndices, batchStartIdx);
-      idx += bh.getTargetBatchRowCount();
     }
 
     startIndices.clear();
@@ -816,7 +814,7 @@ public abstract class HashTableTemplate implements HashTable {
         logger.debug("Bucket: {}, startIdx[ {} ] = {}.", i, i, startIndices.getAccessor().get(i));
         int startIdx = startIndices.getAccessor().get(i);
         BatchHolder bh = batchHolders.get((startIdx >>> 16) & BATCH_MASK);
-        bh.dump(idx);
+        bh.dump(startIdx);
       }
     }
     resizingTime += System.currentTimeMillis() - t0;
