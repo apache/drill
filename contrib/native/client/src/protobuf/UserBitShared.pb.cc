@@ -750,7 +750,7 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "TATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020"
     "\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022"
     "\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005"
-    "\022\032\n\026CANCELLATION_REQUESTED\020\006*\377\006\n\020CoreOpe"
+    "\022\032\n\026CANCELLATION_REQUESTED\020\006*\223\007\n\020CoreOpe"
     "ratorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAS"
     "T_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE"
     "\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HAS"
@@ -773,10 +773,11 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "N\020&\022\021\n\rKUDU_SUB_SCAN\020\'\022\013\n\007FLATTEN\020(\022\020\n\014L"
     "ATERAL_JOIN\020)\022\n\n\006UNNEST\020*\022,\n(HIVE_DRILL_"
     "NATIVE_PARQUET_ROW_GROUP_SCAN\020+\022\r\n\tJDBC_"
-    "SCAN\020,*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016"
-    "\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014"
-    "SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.a"
-    "pache.drill.exec.protoB\rUserBitSharedH\001", 5199);
+    "SCAN\020,\022\022\n\016REGEX_SUB_SCAN\020-*g\n\nSaslStatus"
+    "\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SA"
+    "SL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SA"
+    "SL_FAILED\020\004B.\n\033org.apache.drill.exec.pro"
+    "toB\rUserBitSharedH\001", 5219);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   UserCredentials::default_instance_ = new UserCredentials();
@@ -942,6 +943,7 @@ bool CoreOperatorType_IsValid(int value) {
     case 42:
     case 43:
     case 44:
+    case 45:
       return true;
     default:
       return false;
