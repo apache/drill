@@ -17,10 +17,10 @@
     limitations under the License.
 
 -->
+
 <#include "*/generic.ftl">
 <#macro page_head>
   <script src="/static/js/jquery.form.js"></script>
-
   <!-- Ace Libraries for Syntax Formatting -->
   <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
@@ -38,26 +38,59 @@
       </textarea>
     </div>
     <a class="btn btn-default" href="/storage">Back</a>
-    <button class="btn btn-default" type="submit" onclick="doUpdate();">
-      <#if model.exists()>Update<#else>Create</#if>
-    </button>
-    <#if model.exists()>
-      <#if model.enabled()>
-        <a id="enabled" class="btn btn-default">Disable</a>
-      <#else>
-        <a id="enabled" class="btn btn-primary">Enable</a>
-      </#if>
-      <a class="btn btn-default" href="/storage/${model.getName()}/export"">Export</a>
-      <a id="del" class="btn btn-danger" onclick="deleteFunction()">Delete</a>
+    <button class="btn btn-default" type="submit" onclick="doUpdate();">Update</button>
+    <#if model.enabled()>
+      <a id="enabled" class="btn btn-default">Disable</a>
+    <#else>
+      <a id="enabled" class="btn btn-primary">Enable</a>
     </#if>
+    <button type="button" class="btn btn-default export" name="${model.getName()}" data-toggle="modal"
+            data-target="#pluginsModal">
+      Export
+    </button>
+    <a id="del" class="btn btn-danger" onclick="deleteFunction()">Delete</a>
   </form>
   <br>
   <div id="message" class="hidden alert alert-info">
   </div>
-  <script>
-    var editor = ace.edit("editor");
-    var textarea = $('textarea[name="config"]');
 
+  <#-- Modal window-->
+  <div class="modal fade" id="pluginsModal" tabindex="-1" role="dialog" aria-labelledby="exportPlugin" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="exportPlugin">Export Plugin config</h4>
+        </div>
+        <div class="modal-body">
+          <div id="format" style="display: inline-block; position: center;">
+            <label for="format">File type</label>
+            <div class="radio">
+              <label>
+                <input type="radio" name="format" id="json" value="json" checked="checked">
+                JSON
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio" name="format" id="hocon" value="conf">
+                HOCON
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" id="export" class="btn btn-primary">Export</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const editor = ace.edit("editor");
+    const textarea = $('textarea[name="config"]');
 
     editor.setAutoScrollEditorIntoView(true);
     editor.setOption("maxLines", 25);
@@ -87,8 +120,8 @@
     });
     function doUpdate() {
       $("#updateForm").ajaxForm(function(data) {
-        var messageEl = $("#message");
-        if (data.result == "success") {
+        const messageEl = $("#message");
+        if (data.result === "success") {
           messageEl.removeClass("hidden")
                    .removeClass("alert-danger")
                    .addClass("alert-info")
@@ -107,15 +140,34 @@
           }, 200);
         }
       });
-    };
+    }
     function deleteFunction() {
-      var temp = confirm("Are you sure?");
-      if (temp == true) {
-        $.get("/storage/${model.getName()}/delete", function(data) {
+      if (confirm("Are you sure?")) {
+        $.get("/storage/${model.getName()}/delete", function() {
           window.location.href = "/storage";
         });
       }
-    };
+    }
+
+    // Modal window management
+    $('#pluginsModal').on('show.bs.modal', function (event) {
+      const button = $(event.relatedTarget) // Button that triggered the modal
+      let exportInstance = button.attr("name");
+      const modal = $(this);
+      modal.find('.modal-title').text('Export '+ exportInstance.toUpperCase() +' Plugin configs');
+      modal.find('.btn-primary').click(function(){
+        let format = "";
+        if (modal.find('#json').is(":checked")) {
+          format = 'json';
+        }
+        if (modal.find('#hocon').is(":checked")) {
+          format = 'conf';
+        }
+
+        let url = '/storage/' + exportInstance + '/export/' + format;
+        window.open(url);
+      });
+    })
   </script>
 </#macro>
 
