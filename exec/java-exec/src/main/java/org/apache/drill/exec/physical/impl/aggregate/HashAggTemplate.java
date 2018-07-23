@@ -584,6 +584,11 @@ public abstract class HashAggTemplate implements HashAggregator {
         currentBatchRecordCount = incoming.getRecordCount(); // initialize for first non empty batch
         // Calculate the number of partitions based on actual incoming data
         delayedSetup();
+        // Update the record batch manager since this is the first batch with data; we need to
+        // perform the update before any processing.
+        // NOTE - We pass the incoming record batch explicitly because it could be a spilled record (different
+        //        from the instance owned by the HashAggBatch).
+        outgoing.getRecordBatchMemoryManager().update(incoming);
       }
 
       //
@@ -666,7 +671,9 @@ public abstract class HashAggTemplate implements HashAggregator {
           // remember EMIT, but continue like handling OK
 
         case OK:
-          outgoing.getRecordBatchMemoryManager().update();
+          // NOTE - We pass the incoming record batch explicitly because it could be a spilled record (different
+          //        from the instance owned by the HashAggBatch).
+          outgoing.getRecordBatchMemoryManager().update(incoming);
 
           currentBatchRecordCount = incoming.getRecordCount(); // size of next batch
 
