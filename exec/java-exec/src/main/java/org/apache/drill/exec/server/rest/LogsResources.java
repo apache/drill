@@ -35,6 +35,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -44,7 +45,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -138,9 +138,9 @@ public class LogsResources {
   @Produces(MediaType.TEXT_PLAIN)
   public Response getFullLog(@PathParam("name") final String name) {
     File file = getFileByName(getLogFolder(), name);
-    Response.ResponseBuilder response = Response.ok(file);
-    response.header("Content-Disposition", String.format("attachment;filename=\"%s\"", name));
-    return response.build();
+    return Response.ok(file)
+        .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s\"", name))
+        .build();
   }
 
   private File getLogFolder() {
@@ -148,12 +148,7 @@ public class LogsResources {
   }
 
   private File getFileByName(File folder, final String name) {
-    File[] files = folder.listFiles(new FilenameFilter() {
-      @Override
-      public boolean accept(File dir, String fileName) {
-        return fileName.equals(name);
-      }
-    });
+    File[] files = folder.listFiles((dir, fileName) -> fileName.equals(name));
     if (files.length == 0) {
       throw new DrillRuntimeException (name + " doesn't exist");
     }
