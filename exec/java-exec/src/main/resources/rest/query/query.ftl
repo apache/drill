@@ -112,6 +112,12 @@
       enableBasicAutocompletion: true,
       enableLiveAutocompletion: false
     });
+    // meta-enter to submit query
+    document.getElementById('queryForm')
+            .addEventListener('keydown', function(e) {
+      if (!(e.keyCode == 13 && e.metaKey)) return;
+      if (e.target.form) e.target.form.submit();
+    });
   </script>
 
 </#macro>
