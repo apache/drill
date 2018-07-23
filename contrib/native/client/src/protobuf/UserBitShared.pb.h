@@ -248,11 +248,12 @@ enum CoreOperatorType {
   LATERAL_JOIN = 41,
   UNNEST = 42,
   HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43,
-  JDBC_SCAN = 44
+  JDBC_SCAN = 44,
+  REGEX_SUB_SCAN = 45
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = JDBC_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = REGEX_SUB_SCAN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();
