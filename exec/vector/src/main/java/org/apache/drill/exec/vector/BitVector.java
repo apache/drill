@@ -323,7 +323,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       if (length % 8 != 0) {
         // start is not byte aligned so we have to copy some bits from the last full byte read in the
         // previous loop
-        byte lastButOneByte = byteIPlus1;
+        // if numBytesHoldingSourceBits == 1, lastButOneByte is the first byte, but we have not read it yet, so read it
+        byte lastButOneByte = (numBytesHoldingSourceBits == 1) ? this.data.getByte(firstByteIndex) : byteIPlus1;
         byte bitsFromLastButOneByte = (byte)((lastButOneByte & 0xFF) >>> firstBitOffset);
 
         // If we have to read more bits than what we have already read, read it into lastByte otherwise set lastByte to 0.
