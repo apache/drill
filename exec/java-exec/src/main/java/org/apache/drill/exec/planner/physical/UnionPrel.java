@@ -49,4 +49,9 @@ public abstract class UnionPrel extends DrillUnionRelBase implements Prel{
     return false;
   }
 
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
+                                            this.getClass().getSimpleName() + " operator ");
+  }
 }

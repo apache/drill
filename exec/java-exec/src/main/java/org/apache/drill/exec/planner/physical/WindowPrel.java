@@ -182,4 +182,9 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
     return rowType;
   }
 
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
+                                            this.getClass().getSimpleName() + " operator ");
+  }
 }

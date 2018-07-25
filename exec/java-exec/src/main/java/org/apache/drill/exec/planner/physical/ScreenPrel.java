@@ -84,4 +84,10 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel, HasDistribut
   public DistributionAffinity getDistributionAffinity() {
     return DistributionAffinity.HARD;
   }
+
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
+                                            this.getClass().getSimpleName() + " operator ");
+  }
 }

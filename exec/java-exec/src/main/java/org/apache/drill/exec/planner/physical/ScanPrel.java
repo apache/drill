@@ -168,4 +168,10 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   public DistributionAffinity getDistributionAffinity() {
     return groupScan.getDistributionAffinity();
   }
+
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
+                                              this.getClass().getSimpleName() + " operator ");
+  }
 }

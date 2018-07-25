@@ -83,5 +83,4 @@ public class HashAggPrel extends AggPrelBase implements Prel{
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
-
 }

@@ -71,4 +71,9 @@ public class ComplexToJsonPrel extends SingleRel implements Prel {
     return true;
   }
 
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
+                                            this.getClass().getSimpleName() + " operator ");
+  }
 }

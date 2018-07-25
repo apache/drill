@@ -93,6 +93,7 @@ import org.apache.drill.exec.planner.physical.visitor.ComplexToJsonPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier;
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
 import org.apache.drill.exec.planner.physical.visitor.InsertLocalExchangeVisitor;
+import org.apache.drill.exec.planner.physical.visitor.LateralUnnestRowIDVisitor;
 import org.apache.drill.exec.planner.physical.visitor.MemoryEstimationVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.RewriteProjectToFlatten;
@@ -562,6 +563,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      */
     phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
 
+    /* Insert the IMPLICIT_COLUMN in the lateral unnest pipeline */
+    phyRelNode = LateralUnnestRowIDVisitor.insertRowID(phyRelNode);
 
     /* 5.)
      * Add ProducerConsumer after each scan if the option is set

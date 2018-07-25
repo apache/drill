@@ -29,6 +29,7 @@ import org.apache.drill.exec.physical.base.LateralContract;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.UnnestPOP;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
+import org.apache.drill.exec.planner.common.DrillUnnestRelBase;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.VectorContainer;
@@ -501,7 +502,7 @@ import static org.junit.Assert.assertTrue;
     }
 
     // Get the unnest POPConfig
-    final UnnestPOP unnestPopConfig = new UnnestPOP(null, new SchemaPath(new PathSegment.NameSegment("unnestColumn")));
+    final UnnestPOP unnestPopConfig = new UnnestPOP(null, new SchemaPath(new PathSegment.NameSegment("unnestColumn")), DrillUnnestRelBase.IMPLICIT_COLUMN);
 
     // Get the IterOutcomes for LJ
     final List<RecordBatch.IterOutcome> outcomes = new ArrayList<>(iterOutcomes.length);

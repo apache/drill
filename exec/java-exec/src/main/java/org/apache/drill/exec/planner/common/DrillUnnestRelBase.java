@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 public class DrillUnnestRelBase extends AbstractRelNode implements DrillRelNode {
 
   final protected RexNode ref;
+  final public static String IMPLICIT_COLUMN = DrillRelOptUtil.IMPLICIT_COLUMN;
 
   public DrillUnnestRelBase(RelOptCluster cluster, RelTraitSet traitSet, RexNode ref) {
     super(cluster, traitSet);

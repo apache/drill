@@ -51,6 +51,7 @@ import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.config.UnnestPOP;
 import org.apache.drill.exec.physical.config.WindowPOP;
+import org.apache.drill.exec.planner.common.DrillUnnestRelBase;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -235,7 +236,7 @@ public class BasicOptimizer extends Optimizer {
 
     @Override
     public PhysicalOperator visitUnnest(final Unnest unnest, final Object obj) {
-      return new UnnestPOP(null, unnest.getColumn());
+      return new UnnestPOP(null, unnest.getColumn(), DrillUnnestRelBase.IMPLICIT_COLUMN);
     }
   }
 }

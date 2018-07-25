@@ -138,4 +138,9 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
           FieldReference.getWithQuotedRef(rightFields.get(pair.right))));
     }
   }
+
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " + this.getClass().getSimpleName() + " operator ");
+  }
 }

@@ -89,27 +89,8 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
     return true;
   }
 
-//  @Override
-//  public LogicalOperator implement(DrillImplementor implementor) {
-//    LogicalOperator inputOp = implementor.visitChild(this, 0, getInput());
-//
-//    // First offset to include into results (inclusive). Null implies it is starting from offset 0
-//    int first = offset != null ? Math.max(0, RexLiteral.intValue(offset)) : 0;
-//
-//    // Last offset to stop including into results (exclusive), translating fetch row counts into an offset.
-//    // Null value implies including entire remaining result set from first offset
-//    Integer last = fetch != null ? Math.max(0, RexLiteral.intValue(fetch)) + first : null;
-//    Limit limit = new Limit(first, last);
-//    limit.setInput(inputOp);
-//    return limit;
-//  }
-
-//  public static LimitPrel convert(Limit limit, ConversionContext context) throws InvalidRelException{
-//    RelNode input = context.toRel(limit.getInput());
-//    RexNode first = context.getRexBuilder().makeExactLiteral(BigDecimal.valueOf(limit.getFirst()), context.getTypeFactory().createSqlType(SqlTypeName.INTEGER));
-//    RexNode last = context.getRexBuilder().makeExactLiteral(BigDecimal.valueOf(limit.getLast()), context.getTypeFactory().createSqlType(SqlTypeName.INTEGER));
-//    return new LimitPrel(context.getCluster(), context.getLogicalTraits(), input, first, last);
-//  }
-
-
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    return (Prel) this.copy(this.traitSet, children);
+  }
 }
