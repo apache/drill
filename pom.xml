@@ -254,6 +254,7 @@
               <version>${hadoop.version}</version>
               <classifier>tests</classifier>
             </dependency>
+ <!--  Remove dependency on tests - see DRILL-6637
             <dependency>
               <groupId>org.apache.drill.exec</groupId>
               <artifactId>drill-java-exec</artifactId>
@@ -266,6 +267,7 @@
               <version>${project.version}</version>
               <classifier>tests</classifier>
             </dependency>
+ -->
             <dependency>
               <groupId>com.github.tomakehurst</groupId>
               <artifactId>wiremock-standalone</artifactId>
