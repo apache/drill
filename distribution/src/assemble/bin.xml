@@ -102,9 +102,9 @@
         <include>org.apache.drill.contrib:drill-format-mapr</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage</include>
         <include>org.apache.drill.contrib:drill-kudu-storage</include>
-        <include>org.apache.drill.contrib:drill-gis</include>
         <include>org.apache.drill.contrib:drill-storage-kafka</include>
         <include>org.apache.drill.contrib:drill-opentsdb-storage</include>
+        <include>org.apache.drill.contrib:drill-udfs</include>
       </includes>
       <excludes>
         <exclude>org.apache.drill.contrib.storage-hive:drill-storage-hive-core:jar:tests</exclude>
