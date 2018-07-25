@@ -249,7 +249,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
   }
 
- // FIXME: This test should get fixed by planner changes for implicit RowId
   @Test
   public void testUnnestSchemaChange() {
     Object[][] data = {
@@ -1022,7 +1021,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   }
 
   @Test
-  // FIXME: This test needs fixes from lateral join
   public void testNestedUnnestMapColumn() {
 
     Object[][] data = getMapData();

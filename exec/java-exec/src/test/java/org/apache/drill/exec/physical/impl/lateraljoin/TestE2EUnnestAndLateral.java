@@ -82,7 +82,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
-  @Ignore
+  @Ignore ("DRILL-6635")
   public void testLateral_WithTopNInSubQuery() throws Exception {
     String Sql = "SELECT customer.c_name, orders.o_id, orders.o_amount " +
       "FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
@@ -105,7 +105,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
    * subquery. The same query as in above test is executed and same result is expected.
    */
   @Test
-  @Ignore
+  @Ignore ("DRILL-6635")
   public void testLateral_WithSortAndLimitInSubQuery() throws Exception {
 
     runAndLog("alter session set `planner.enable_topn`=false");
@@ -174,6 +174,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
+  @Ignore ("DRILL-6638")
   public void testUnnestWithItem() throws Exception {
     String sql = "select u.item from\n" +
         "cp.`lateraljoin/nested-customer.parquet` c," +
@@ -207,6 +208,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
+  @Ignore ("DRILL-6638")
   public void testUnnestWithMap() throws Exception {
     String sql = "select u.item from\n" +
         "cp.`lateraljoin/nested-customer.parquet` c," +
@@ -225,6 +227,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
+  @Ignore ("DRILL-6638")
   public void testMultiUnnestWithMap() throws Exception {
     String sql = "select u.item from\n" +
         "cp.`lateraljoin/nested-customer.parquet` c," +
@@ -288,7 +291,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
-  @Ignore
+  @Ignore ("DRILL-6635")
   public void testMultipleBatchesLateral_WithTopNInSubQuery() throws Exception {
     String sql = "SELECT customer.c_name, orders.o_orderkey, orders.o_totalprice " +
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
