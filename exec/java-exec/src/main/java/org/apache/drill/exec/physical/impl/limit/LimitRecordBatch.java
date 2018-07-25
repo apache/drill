@@ -78,6 +78,10 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
         }
         // If EMIT that means leaf operator is UNNEST, in this case refresh the limit states and return EMIT.
         if (upStream == EMIT) {
+          // Clear the memory for the incoming batch
+          for (VectorWrapper<?> wrapper : incoming) {
+            wrapper.getValueVector().clear();
+          }
           refreshLimitState();
           return upStream;
         }
