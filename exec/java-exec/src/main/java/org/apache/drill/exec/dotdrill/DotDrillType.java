@@ -56,6 +56,28 @@ public enum DotDrillType {
     return ending;
   }
 
+  /**
+   * Return Glob pattern for given Dot Drill Types.
+   * @param types
+   * @return Glob pattern representing For Dot Drill Types provided as types param
+   */
+  public static String getDrillFileGlobPattern(DotDrillType[] types) {
+    if (types.length == 1) {
+      return "." + types[0].name().toLowerCase() + ".drill";
+    }
+
+    StringBuffer b = new StringBuffer();
+    b.append(".{");
+    for (DotDrillType d : types) {
+      if (b.length() > 2) {
+        b.append(',');
+      }
+      b.append(d.name().toLowerCase());
+    }
+    b.append("}.drill");
+    return b.toString();
+  }
+
   public static final String DOT_DRILL_GLOB;
 
   static{
