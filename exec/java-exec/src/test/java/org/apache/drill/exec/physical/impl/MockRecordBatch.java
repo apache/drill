@@ -38,6 +38,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
 
   // These resources are owned by this RecordBatch
   protected VectorContainer container;
+  protected SelectionVector2 sv2;
   private int currentContainerIndex;
   private int currentOutcomeIndex;
   private boolean isDone;
@@ -45,6 +46,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
 
   // All the below resources are owned by caller
   private final List<VectorContainer> allTestContainers;
+  private List<SelectionVector2> allTestContainersSv2;
   private final List<IterOutcome> allOutcomes;
   private final FragmentContext context;
   protected final OperatorContext oContext;
@@ -62,19 +64,32 @@ public class MockRecordBatch implements CloseableRecordBatch {
     this.currentContainerIndex = 0;
     this.currentOutcomeIndex = 0;
     this.isDone = false;
+    this.allTestContainersSv2 = null;
+    this.sv2 = null;
+  }
+
+  public MockRecordBatch(FragmentContext context, OperatorContext oContext,
+                         List<VectorContainer> testContainers, List<IterOutcome> iterOutcomes,
+                         List<SelectionVector2> testContainersSv2, BatchSchema schema) {
+    this(context, oContext, testContainers, iterOutcomes, schema);
+    allTestContainersSv2 = testContainersSv2;
+    sv2 = (allTestContainersSv2 != null && allTestContainersSv2.size() > 0) ? new SelectionVector2(allocator) : null;
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     container.clear();
     container.setRecordCount(0);
     currentContainerIndex = 0;
     currentOutcomeIndex = 0;
+    if (sv2 != null) {
+      sv2.clear();
+    }
   }
 
   @Override
   public SelectionVector2 getSelectionVector2() {
-    return null;
+    return sv2;
   }
 
   @Override
@@ -94,7 +109,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
 
   @Override
   public int getRecordCount() {
-    return container.getRecordCount();
+    return (sv2 == null) ? container.getRecordCount() : sv2.getCount();
   }
 
   @Override
@@ -103,6 +118,9 @@ public class MockRecordBatch implements CloseableRecordBatch {
       isDone = true;
       container.clear();
       container.setRecordCount(0);
+      if (sv2 != null) {
+        sv2.clear();
+      }
     }
   }
 
@@ -142,6 +160,18 @@ public class MockRecordBatch implements CloseableRecordBatch {
       }
       container.transferIn(input);
       container.setRecordCount(recordCount);
+
+      // Transfer the sv2 as well
+      final SelectionVector2 inputSv2 =
+        (allTestContainersSv2 != null && allTestContainersSv2.size() > 0)
+          ? allTestContainersSv2.get(currentContainerIndex) : null;
+      if (inputSv2 != null) {
+        sv2.allocateNewSafe(inputSv2.getCount());
+        for (int i=0; i<inputSv2.getCount(); ++i) {
+          sv2.setIndex(i, inputSv2.getIndex(i));
+        }
+        sv2.setRecordCount(inputSv2.getCount());
+      }
     }
 
     if (currentOutcomeIndex < allOutcomes.size()) {
