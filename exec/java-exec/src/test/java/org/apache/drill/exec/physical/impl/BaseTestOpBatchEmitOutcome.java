@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.store.mock.MockStorePOP;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
@@ -47,6 +48,9 @@ public class BaseTestOpBatchEmitOutcome extends PhysicalOpUnitTestBase {
 
   // List of incoming containers
   protected final List<VectorContainer> inputContainer = new ArrayList<>(5);
+
+  // List of SV2's
+  protected final List<SelectionVector2> inputContainerSv2 = new ArrayList<>(5);
 
   // List of incoming IterOutcomes
   protected final List<RecordBatch.IterOutcome> inputOutcomes = new ArrayList<>(5);
@@ -79,6 +83,7 @@ public class BaseTestOpBatchEmitOutcome extends PhysicalOpUnitTestBase {
     nonEmptyInputRowSet.clear();
     inputContainer.clear();
     inputOutcomes.clear();
+    inputContainerSv2.clear();
     outputRecordCount = 0;
   }
 }
