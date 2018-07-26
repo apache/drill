@@ -94,6 +94,11 @@ public class TestSplitAndTransfer {
   @Test
   public void testBitVectorUnalignedStart() throws Exception {
 
+    testBitVectorImpl(16, new int[][] {{2, 4}}, TestBitPattern.RANDOM);
+    testBitVectorImpl(16, new int[][] {{2, 4}}, TestBitPattern.ONE);
+    testBitVectorImpl(16, new int[][] {{2, 4}}, TestBitPattern.ZERO);
+    testBitVectorImpl(16, new int[][] {{2, 4}}, TestBitPattern.ALTERNATING);
+
     testBitVectorImpl(4096, new int[][] {{4092, 4}}, TestBitPattern.ONE);
     testBitVectorImpl(4096, new int[][] {{4092, 4}}, TestBitPattern.ZERO);
     testBitVectorImpl(4096, new int[][] {{4092, 4}}, TestBitPattern.ALTERNATING);
@@ -123,10 +128,11 @@ public class TestSplitAndTransfer {
   @Test
   public void testBitVectorAlignedStart() throws Exception {
 
+    testBitVectorImpl(32, new int[][] {{0, 4}}, TestBitPattern.RANDOM);
     testBitVectorImpl(32, new int[][] {{0, 4}}, TestBitPattern.ONE);
     testBitVectorImpl(32, new int[][] {{0, 4}}, TestBitPattern.ZERO);
     testBitVectorImpl(32, new int[][] {{0, 4}}, TestBitPattern.ALTERNATING);
-    testBitVectorImpl(32, new int[][] {{0, 4}}, TestBitPattern.RANDOM);
+
 
     testBitVectorImpl(32, new int[][] {{0, 8}}, TestBitPattern.ONE);
     testBitVectorImpl(32, new int[][] {{0, 8}}, TestBitPattern.ZERO);

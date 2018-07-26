@@ -326,6 +326,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
         // if numBytesHoldingSourceBits == 1, lastButOneByte is the first byte, but we have not read it yet, so read it
         byte lastButOneByte = (numBytesHoldingSourceBits == 1) ? this.data.getByte(firstByteIndex) : byteIPlus1;
         byte bitsFromLastButOneByte = (byte)((lastButOneByte & 0xFF) >>> firstBitOffset);
+        // if last bit to be copied is before the end of the first byte, then mask of the trailing extra bits
+        if (8 > (length + firstBitOffset)) {
+          byte mask = (byte)((0x1 << length) - 1);
+          bitsFromLastButOneByte = (byte)((bitsFromLastButOneByte & mask));
+        }
 
         // If we have to read more bits than what we have already read, read it into lastByte otherwise set lastByte to 0.
         // (length % 8) is num of remaining bits to be read.
