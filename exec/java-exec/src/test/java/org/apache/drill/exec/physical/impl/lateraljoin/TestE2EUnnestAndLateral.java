@@ -174,7 +174,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   public void testUnnestWithItem() throws Exception {
     String sql = "select u.item from\n" +
         "cp.`lateraljoin/nested-customer.parquet` c," +
-        "unnest(c.orders['items']) as u(item)\n" +
+        "unnest(c.orders[0]['items']) as u(item)\n" +
         "limit 1";
 
     testBuilder()
@@ -207,7 +207,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   public void testUnnestWithMap() throws Exception {
     String sql = "select u.item from\n" +
         "cp.`lateraljoin/nested-customer.parquet` c," +
-        "unnest(c.orders.items) as u(item)\n" +
+        "unnest(c.orders[0].items) as u(item)\n" +
         "limit 1";
 
     testBuilder()
@@ -225,8 +225,8 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   public void testMultiUnnestWithMap() throws Exception {
     String sql = "select u.item from\n" +
         "cp.`lateraljoin/nested-customer.parquet` c," +
-        "unnest(c.orders.items) as u(item)," +
-        "unnest(c.orders.items) as u1(item1)\n" +
+        "unnest(c.orders[0].items) as u(item)," +
+        "unnest(c.orders[0].items) as u1(item1)\n" +
         "limit 1";
 
     testBuilder()
