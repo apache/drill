@@ -131,7 +131,9 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
           // Pretend that an operator somewhere between lateral and unnest
           // wants to terminate processing of the record.
           if(unnestLimit > 0 && unnestCount >= unnestLimit) {
-            unnest.kill(true);
+            // break here rather than sending kill to unnest since with partitionLimitBatch kill will never be
+            // sent to unnest from subquery
+            break;
           }
         }
         return currentOutcome;
