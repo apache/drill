@@ -607,4 +607,20 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         .build().run();
   }
 
+  @Test
+  public void testUnnestNestedStarSubquery() throws Exception {
+    String sql = "select t2.o.o_id o_id\n" +
+        "from (select * from cp.`lateraljoin/nested-customer.json` limit 1) t,\n" +
+        "unnest(t.orders) t2(o)";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("o_id")
+        .baselineValues(1L)
+        .baselineValues(2L)
+        .baselineValues(3L)
+        .go();
+  }
+
 }
