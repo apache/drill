@@ -82,30 +82,34 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
-  @Ignore ("DRILL-6635")
   public void testLateral_WithTopNInSubQuery() throws Exception {
+    runAndLog("alter session set `planner.enable_topn`=false");
+
     String Sql = "SELECT customer.c_name, orders.o_id, orders.o_amount " +
       "FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
       "(SELECT t.ord.o_id as o_id, t.ord.o_amount as o_amount FROM UNNEST(customer.orders) t(ord) ORDER BY " +
       "o_amount DESC LIMIT 1) orders";
 
-    testBuilder()
-      .sqlQuery(Sql)
-      .unOrdered()
-      .baselineColumns("c_name", "o_id", "o_amount")
-      .baselineValues("customer1", 3.0,  294.5)
-      .baselineValues("customer2", 10.0,  724.5)
-      .baselineValues("customer3", 23.0,  772.2)
-      .baselineValues("customer4", 32.0,  1030.1)
-      .go();
+    try {
+      testBuilder()
+         .sqlQuery(Sql)
+         .unOrdered()
+         .baselineColumns("c_name", "o_id", "o_amount")
+         .baselineValues("customer1", 3.0,  294.5)
+         .baselineValues("customer2", 10.0,  724.5)
+         .baselineValues("customer3", 23.0,  772.2)
+         .baselineValues("customer4", 32.0,  1030.1)
+         .go();
+    } finally {
+      runAndLog("alter session set `planner.enable_topn`=true");
+    }
   }
 
   /**
-   * Test which disables the TopN operator from planner settings before running query using SORT and LIMIT in
+   * Test which disables the TopN operator from planner settintestLateral_WithTopNInSubQuerygs before running query using SORT and LIMIT in
    * subquery. The same query as in above test is executed and same result is expected.
    */
   @Test
-  @Ignore ("DRILL-6635")
   public void testLateral_WithSortAndLimitInSubQuery() throws Exception {
 
     runAndLog("alter session set `planner.enable_topn`=false");
@@ -291,8 +295,9 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
-  @Ignore ("DRILL-6635")
   public void testMultipleBatchesLateral_WithTopNInSubQuery() throws Exception {
+    runAndLog("alter session set `planner.enable_topn`=false");
+
     String sql = "SELECT customer.c_name, orders.o_orderkey, orders.o_totalprice " +
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
       "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord)" +
