@@ -257,11 +257,12 @@ enum CoreOperatorType {
   JSON_WRITER = 50,
   HTPPD_LOG_SUB_SCAN = 51,
   IMAGE_SUB_SCAN = 52,
-  SEQUENCE_SUB_SCAN = 53
+  SEQUENCE_SUB_SCAN = 53,
+  PARTITION_LIMIT = 54
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = SEQUENCE_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = PARTITION_LIMIT;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();
