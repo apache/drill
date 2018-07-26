@@ -17,9 +17,12 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import org.apache.calcite.rel.RelWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Limit;
+import org.apache.drill.exec.physical.config.PartitionLimit;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.calcite.rel.RelNode;
@@ -33,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class LimitPrel extends DrillLimitRelBase implements Prel {
+  private boolean isPartitioned = false;
 
   public LimitPrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch) {
     super(cluster, traitSet, child, offset, fetch);
@@ -42,9 +46,14 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
     super(cluster, traitSet, child, offset, fetch, pushDown);
   }
 
+  public LimitPrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch, boolean pushDown, boolean isPartitioned) {
+    super(cluster, traitSet, child, offset, fetch, pushDown);
+    this.isPartitioned = isPartitioned;
+  }
+
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new LimitPrel(getCluster(), traitSet, sole(inputs), offset, fetch, isPushDown());
+    return new LimitPrel(getCluster(), traitSet, sole(inputs), offset, fetch, isPushDown(), isPartitioned);
   }
 
   @Override
@@ -60,7 +69,12 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
     // Null value implies including entire remaining result set from first offset
     Integer last = fetch != null ? Math.max(0, RexLiteral.intValue(fetch)) + first : null;
 
-    Limit limit = new Limit(childPOP, first, last);
+    Limit limit;
+    if (isPartitioned) {
+      limit = new PartitionLimit(childPOP, first, last, DrillRelOptUtil.IMPLICIT_COLUMN);
+    } else {
+      limit = new Limit(childPOP, first, last);
+    }
     return creator.addMetadata(this, limit);
   }
 
@@ -72,6 +86,13 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
   @Override
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
     return logicalVisitor.visitPrel(this, value);
+  }
+
+  @Override
+  public RelWriter explainTerms(RelWriter pw) {
+    super.explainTerms(pw);
+    pw.itemIf("partitioned", isPartitioned, isPartitioned);
+    return pw;
   }
 
   @Override
@@ -91,6 +112,6 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
 
   @Override
   public Prel addImplicitRowIDCol(List<RelNode> children) {
-    return (Prel) this.copy(this.traitSet, children);
+    return new LimitPrel(this.getCluster(), this.traitSet, children.get(0), getOffset(), getFetch(), isPushDown(), true);
   }
 }
