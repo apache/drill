@@ -144,7 +144,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   @Override
   public int getWriterOperatorType() {
-    throw new UnsupportedOperationException();
+     return CoreOperatorType.JSON_WRITER_VALUE;
   }
 
   @Override

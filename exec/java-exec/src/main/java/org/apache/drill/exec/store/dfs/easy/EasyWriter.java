@@ -101,6 +101,6 @@ public class EasyWriter extends AbstractWriter {
 
   @Override
   public int getOperatorType() {
-    return formatPlugin.getReaderOperatorType();
+    return formatPlugin.getWriterOperatorType();
   }
 }
