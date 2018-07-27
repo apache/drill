@@ -250,9 +250,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
             // outcome in the next iteration. If outcome is EMIT, we can send the special
             // batch and the EMIT outcome at the same time. (unless the finalOutcome is OK_NEW_SCHEMA)
             IterOutcome finalOutcome =  getFinalOutcome();
-            if(finalOutcome  == OK_NEW_SCHEMA) {
-              sendEmit = true;
-            }
             return finalOutcome;
           }
           // else fall thru
@@ -303,9 +300,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           // batch and the EMIT outcome at the same time.
 
           IterOutcome finalOutcome =  getFinalOutcome();
-          if(finalOutcome  == OK_NEW_SCHEMA) {
-            sendEmit = true;
-          }
           return finalOutcome;
         }
         firstBatchForDataSet = true;
@@ -634,6 +628,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
     if (firstBatchForSchema) {
       outcomeToReturn = OK_NEW_SCHEMA;
+      sendEmit = true;
       firstBatchForSchema = false;
     } else if (lastKnownOutcome == EMIT) {
       firstBatchForDataSet = true;
