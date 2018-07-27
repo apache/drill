@@ -81,7 +81,7 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
 
   @Override
   public int getWriterOperatorType() {
-    return 0;
+    throw new UnsupportedOperationException();
   }
 
   @Override

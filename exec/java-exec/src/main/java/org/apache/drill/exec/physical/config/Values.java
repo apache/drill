@@ -60,6 +60,7 @@ public class Values extends AbstractBase implements Leaf {
 
   @Override
   public int getOperatorType() {
+    // TODO: DRILL-6643: this implementation should be revisited
     return -1;
   }
 

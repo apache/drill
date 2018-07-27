@@ -67,7 +67,15 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
     UNNEST(42),
     HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN(43),
     JDBC_SCAN(44),
-    REGEX_SUB_SCAN(45);
+    REGEX_SUB_SCAN(45),
+    MAPRDB_SUB_SCAN(46),
+    MONGO_SUB_SCAN(47),
+    KUDU_WRITER(48),
+    OPEN_TSDB_SUB_SCAN(49),
+    JSON_WRITER(50),
+    HTPPD_LOG_SUB_SCAN(51),
+    IMAGE_SUB_SCAN(52),
+    SEQUENCE_SUB_SCAN(53);
     
     public final int number;
     
@@ -131,6 +139,14 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
             case 43: return HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN;
             case 44: return JDBC_SCAN;
             case 45: return REGEX_SUB_SCAN;
+            case 46: return MAPRDB_SUB_SCAN;
+            case 47: return MONGO_SUB_SCAN;
+            case 48: return KUDU_WRITER;
+            case 49: return OPEN_TSDB_SUB_SCAN;
+            case 50: return JSON_WRITER;
+            case 51: return HTPPD_LOG_SUB_SCAN;
+            case 52: return IMAGE_SUB_SCAN;
+            case 53: return SEQUENCE_SUB_SCAN;
             default: return null;
         }
     }
