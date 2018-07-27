@@ -253,6 +253,10 @@ public class OperatorWrapper {
    * @return index of spill metric
    */
   private int getSpillCycleMetricIndex(CoreOperatorType operatorType) {
+    // TODO: DRILL-6642, replace null values for ProtocolMessageEnum with UNRECOGNIZED NullValue to avoid null checks
+    if (operatorType == null) {
+      return NO_SPILL_METRIC_INDEX;
+    }
     String metricName;
 
     switch (operatorType) {

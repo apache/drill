@@ -249,11 +249,19 @@ enum CoreOperatorType {
   UNNEST = 42,
   HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43,
   JDBC_SCAN = 44,
-  REGEX_SUB_SCAN = 45
+  REGEX_SUB_SCAN = 45,
+  MAPRDB_SUB_SCAN = 46,
+  MONGO_SUB_SCAN = 47,
+  KUDU_WRITER = 48,
+  OPEN_TSDB_SUB_SCAN = 49,
+  JSON_WRITER = 50,
+  HTPPD_LOG_SUB_SCAN = 51,
+  IMAGE_SUB_SCAN = 52,
+  SEQUENCE_SUB_SCAN = 53
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = REGEX_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = SEQUENCE_SUB_SCAN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();

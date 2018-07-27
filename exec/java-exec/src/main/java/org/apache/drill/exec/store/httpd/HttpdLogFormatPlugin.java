@@ -34,6 +34,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -266,11 +267,11 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
 
   @Override
   public int getReaderOperatorType() {
-    return -1;
+    return CoreOperatorType.HTPPD_LOG_SUB_SCAN_VALUE;
   }
 
   @Override
   public int getWriterOperatorType() {
-    return -1;
+    throw new UnsupportedOperationException();
   }
 }
