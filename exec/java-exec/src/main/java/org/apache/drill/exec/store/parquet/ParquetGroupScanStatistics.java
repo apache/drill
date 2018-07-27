@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -44,7 +45,7 @@ public class ParquetGroupScanStatistics {
   // only for partition columns : value is unique for each partition
   private Map<SchemaPath, TypeProtos.MajorType> partitionColTypeMap;
   // total number of non-null value for each column in parquet files
-  private Map<SchemaPath, Long> columnValueCounts;
+  private Map<SchemaPath, MutableLong> columnValueCounts;
   // total number of rows (obtained from parquet footer)
   private long rowCount;
 
@@ -61,7 +62,8 @@ public class ParquetGroupScanStatistics {
   }
 
   public long getColumnValueCount(SchemaPath column) {
-    return columnValueCounts.containsKey(column) ? columnValueCounts.get(column) : 0;
+    MutableLong count = columnValueCounts.get(column);
+    return count != null ? count.getValue() : 0;
   }
 
   public List<SchemaPath> getPartitionColumns() {
@@ -87,19 +89,15 @@ public class ParquetGroupScanStatistics {
       long rowCount = rowGroup.getRowCount();
       for (ColumnMetadata column : rowGroup.getColumns()) {
         SchemaPath schemaPath = SchemaPath.getCompoundPath(column.getName());
-        Long previousCount = columnValueCounts.get(schemaPath);
-        if (previousCount != null) {
-          if (previousCount != GroupScan.NO_COLUMN_STATS && column.isNumNullsSet()) {
-            Long newCount = rowCount - column.getNulls();
-            columnValueCounts.put(schemaPath, columnValueCounts.get(schemaPath) + newCount);
-          }
+        MutableLong emptyCount = new MutableLong();
+        MutableLong previousCount = columnValueCounts.putIfAbsent(schemaPath, emptyCount);
+        if (previousCount == null) {
+          previousCount = emptyCount;
+        }
+        if (previousCount.longValue() != GroupScan.NO_COLUMN_STATS && column.isNumNullsSet()) {
+          previousCount.add(rowCount - column.getNulls());
         } else {
-          if (column.isNumNullsSet()) {
-            Long newCount = rowCount - column.getNulls();
-            columnValueCounts.put(schemaPath, newCount);
-          } else {
-            columnValueCounts.put(schemaPath, GroupScan.NO_COLUMN_STATS);
-          }
+          previousCount.setValue(GroupScan.NO_COLUMN_STATS);
         }
         boolean partitionColumn = checkForPartitionColumn(column, first, rowCount, parquetTableMetadata);
         if (partitionColumn) {
