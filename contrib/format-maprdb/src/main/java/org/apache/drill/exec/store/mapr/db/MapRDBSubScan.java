@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -120,7 +121,7 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
 
   @Override
   public int getOperatorType() {
-    return 1001;
+    return  CoreOperatorType.MAPRDB_SUB_SCAN_VALUE;
   }
 
   @JsonIgnore

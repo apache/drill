@@ -29,6 +29,7 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -114,7 +115,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
   @Override
   public int getOperatorType() {
-    return 1009;
+    return CoreOperatorType.MONGO_SUB_SCAN_VALUE;
   }
 
   @Override

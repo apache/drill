@@ -334,6 +334,14 @@ enum CoreOperatorType {
   HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;
   JDBC_SCAN = 44;
   REGEX_SUB_SCAN = 45;
+  MAPRDB_SUB_SCAN = 46;
+  MONGO_SUB_SCAN = 47;
+  KUDU_WRITER = 48;
+  OPEN_TSDB_SUB_SCAN = 49;
+  JSON_WRITER = 50;
+  HTPPD_LOG_SUB_SCAN = 51;
+  IMAGE_SUB_SCAN = 52;
+  SEQUENCE_SUB_SCAN = 53;
 }
 
 /* Registry that contains list of jars, each jar contains its name and list of function signatures.
