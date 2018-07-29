@@ -18,10 +18,8 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -89,14 +87,8 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
   @Override
   public Prel addImplicitRowIDCol(List<RelNode> children) {
     RexBuilder builder = this.getCluster().getRexBuilder();
-    return (Prel) this.copy(this.traitSet, children.get(0), DrillRelOptUtil.transformExpr(builder, condition, buildMap()));
-  }
-
-  private Map<Integer, Integer> buildMap() {
-    Map<Integer, Integer> map = new HashMap<>();
-    for (int i=0;i<this.getInput().getRowType().getFieldCount();i++) {
-      map.put(i, i+1);
-    }
-    return map;
+    // right shift the previous field indices.
+    return (Prel) this.copy(this.traitSet, children.get(0), DrillRelOptUtil.transformExpr(builder,
+            condition, DrillRelOptUtil.rightShiftColsInRowType(this.getInput().getRowType())));
   }
 }

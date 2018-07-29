@@ -56,6 +56,9 @@ public interface Prel extends DrillRelNode, Iterable<Prel> {
   SelectionVectorMode getEncoding();
   boolean needsFinalColumnReordering();
 
-  Prel addImplicitRowIDCol(List<RelNode> children);
+  default Prel addImplicitRowIDCol(List<RelNode> children) {
+    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
+            this.getClass().getSimpleName() + " operator ");
+  }
 
 }

@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.common;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -317,6 +318,20 @@ public abstract class DrillRelOptUtil {
     public List<RexInputRef> getInputRefs() {
       return inputRefList;
     }
+  }
+
+  /**
+   * For a given row type return a map between old field indices and one index right shifted fields.
+   * @param rowType : row type to be right shifted.
+   * @return map: hash map between old and new indices
+   */
+  public static Map<Integer, Integer> rightShiftColsInRowType(RelDataType rowType) {
+    Map<Integer, Integer> map = new HashMap<>();
+    int fieldCount = rowType.getFieldCount();
+    for (int i = 0; i< fieldCount; i++) {
+      map.put(i, i+1);
+    }
+    return map;
   }
 
   /**

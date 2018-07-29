@@ -19,10 +19,8 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -143,7 +141,9 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
     RexBuilder builder = this.getCluster().getRexBuilder();
     List<RexNode> projects = Lists.newArrayList();
     projects.add(builder.makeInputRef(typeFactory.createSqlType(SqlTypeName.INTEGER), 0));
-    projects.addAll(DrillRelOptUtil.transformExprs(builder, this.getProjects(), buildMap()));
+    // right shift the previous field indices.
+    projects.addAll(DrillRelOptUtil.transformExprs(builder, this.getProjects(),
+                        DrillRelOptUtil.rightShiftColsInRowType(this.getInput().getRowType())));
 
     List<String> fieldNames = new ArrayList<>();
     List<RelDataType> fieldTypes = new ArrayList<>();
@@ -159,13 +159,5 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
     RelDataType newRowType = typeFactory.createStructType(fieldTypes, fieldNames);
 
     return (Prel) this.copy(this.getTraitSet(), children.get(0), projects, newRowType);
-  }
-
-  private Map<Integer, Integer> buildMap() {
-    Map<Integer, Integer> map = new HashMap<>();
-    for (int i=0;i<this.getInput().getRowType().getFieldCount();i++) {
-      map.put(i, i+1);
-    }
-    return map;
   }
 }

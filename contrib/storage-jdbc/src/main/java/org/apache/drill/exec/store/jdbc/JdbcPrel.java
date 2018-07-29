@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.jdbc;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.adapter.jdbc.JdbcImplementor;
@@ -132,9 +131,4 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
     return false;
   }
 
-  @Override
-  public Prel addImplicitRowIDCol(List<RelNode> children) {
-    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
-                                            this.getClass().getSimpleName() + " operator ");
-  }
 }
