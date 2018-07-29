@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -53,9 +52,4 @@ public abstract class SinglePrel extends SingleRel implements Prel{
     return true;
   }
 
-  @Override
-  public Prel addImplicitRowIDCol(List<RelNode> children) {
-    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
-                                            this.getClass().getSimpleName() + " operator ");
-  }
 }

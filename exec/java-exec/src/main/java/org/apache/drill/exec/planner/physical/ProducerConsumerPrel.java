@@ -80,9 +80,4 @@ public class ProducerConsumerPrel extends SingleRel implements DrillRelNode, Pre
     return true;
   }
 
-  @Override
-  public Prel addImplicitRowIDCol(List<RelNode> children) {
-    throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
-                                            this.getClass().getSimpleName() + " operator ");
-  }
 }

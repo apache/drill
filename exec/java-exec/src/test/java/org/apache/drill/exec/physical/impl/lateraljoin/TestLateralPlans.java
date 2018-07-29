@@ -97,16 +97,6 @@ public class TestLateralPlans extends BaseTestQuery {
         .baselineColumns("c_name", "o_shop")
         .baselineValues("customer1", "Meno Park 1st")
         .go();
-    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
-
-    try (ClusterFixture cluster = builder.build();
-         ClientFixture client = cluster.clientFixture()) {
-      String explainText = client.queryBuilder()
-            .sql(query)
-            .explainText();
-      System.out.println(explainText);
-    }
   }
 
   @Test

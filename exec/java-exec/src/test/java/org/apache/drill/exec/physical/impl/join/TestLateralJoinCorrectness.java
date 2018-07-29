@@ -109,7 +109,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     emptyLeftRowSet = fixture.rowSetBuilder(leftSchema).build();
 
     rightSchema = new SchemaBuilder()
-      .add(ljPopConfig.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(ljPopConfig.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_right", TypeProtos.MinorType.INT)
       .add("cost_right", TypeProtos.MinorType.INT)
       .add("name_right", TypeProtos.MinorType.VARCHAR)
@@ -692,7 +692,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Create right input schema
     TupleMetadata rightSchema2 = new SchemaBuilder()
-      .add(ljPopConfig.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(ljPopConfig.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_right", TypeProtos.MinorType.INT)
       .add("cost_right", TypeProtos.MinorType.VARCHAR)
       .add("name_right", TypeProtos.MinorType.VARCHAR)
@@ -789,7 +789,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Create right input schema
     TupleMetadata rightSchema2 = new SchemaBuilder()
-      .add(ljPopConfig.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(ljPopConfig.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_right", TypeProtos.MinorType.INT)
       .add("cost_right", TypeProtos.MinorType.VARCHAR)
       .add("name_right", TypeProtos.MinorType.VARCHAR)
@@ -1768,7 +1768,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Create right input schema
     TupleMetadata rightSchema2 = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_right_1", TypeProtos.MinorType.INT)
       .add("cost_right_1", TypeProtos.MinorType.INT)
       .add("name_right_1", TypeProtos.MinorType.VARCHAR)
@@ -1839,7 +1839,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Create a left batch with implicit column for lower lateral left unnest
     TupleMetadata leftSchemaWithImplicit = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_left", TypeProtos.MinorType.INT)
       .add("cost_left", TypeProtos.MinorType.INT)
       .add("name_left", TypeProtos.MinorType.VARCHAR)
@@ -1953,7 +1953,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     final LateralJoinPOP popConfig_1 = new LateralJoinPOP(null, null, JoinRelType.INNER, DrillLateralJoinRelBase.IMPLICIT_COLUMN, Lists.newArrayList());
 
     TupleMetadata leftSchemaWithImplicit = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_left", TypeProtos.MinorType.INT)
       .add("cost_left", TypeProtos.MinorType.INT)
       .add("name_left", TypeProtos.MinorType.VARCHAR)
@@ -2082,7 +2082,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     final LateralJoinPOP popConfig_1 = new LateralJoinPOP(null, null, JoinRelType.INNER, DrillLateralJoinRelBase.IMPLICIT_COLUMN, Lists.newArrayList());
 
     TupleMetadata leftSchemaWithImplicit = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_left", TypeProtos.MinorType.INT)
       .add("cost_left", TypeProtos.MinorType.INT)
       .add("name_left", TypeProtos.MinorType.VARCHAR)
@@ -2099,7 +2099,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Create left input schema2 for schema change batch
     TupleMetadata leftSchema2 = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("new_id_left", TypeProtos.MinorType.INT)
       .add("new_cost_left", TypeProtos.MinorType.INT)
       .add("new_name_left", TypeProtos.MinorType.VARCHAR)
@@ -2230,7 +2230,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     final LateralJoinPOP popConfig_1 = new LateralJoinPOP(null, null, JoinRelType.INNER, DrillLateralJoinRelBase.IMPLICIT_COLUMN, Lists.newArrayList());
 
     TupleMetadata leftSchemaWithImplicit = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_left", TypeProtos.MinorType.INT)
       .add("cost_left", TypeProtos.MinorType.INT)
       .add("name_left", TypeProtos.MinorType.VARCHAR)
@@ -2259,7 +2259,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Get the right container with dummy data
     TupleMetadata rightSchema2 = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_right_new", TypeProtos.MinorType.INT)
       .add("cost_right_new", TypeProtos.MinorType.VARCHAR)
       .add("name_right_new", TypeProtos.MinorType.VARCHAR)
@@ -2376,7 +2376,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     final LateralJoinPOP popConfig_1 = new LateralJoinPOP(null, null, JoinRelType.INNER, DrillLateralJoinRelBase.IMPLICIT_COLUMN, Lists.newArrayList());
 
     TupleMetadata leftSchemaWithImplicit = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_left", TypeProtos.MinorType.INT)
       .add("cost_left", TypeProtos.MinorType.INT)
       .add("name_left", TypeProtos.MinorType.VARCHAR)
@@ -2390,7 +2390,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Create left input schema for first batch
     TupleMetadata leftSchema2 = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_left_new", TypeProtos.MinorType.INT)
       .add("cost_left_new", TypeProtos.MinorType.INT)
       .add("name_left_new", TypeProtos.MinorType.VARCHAR)
@@ -2417,7 +2417,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Get the right container with dummy data
     TupleMetadata rightSchema2 = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_right_new", TypeProtos.MinorType.INT)
       .add("cost_right_new", TypeProtos.MinorType.VARCHAR)
       .add("name_right_new", TypeProtos.MinorType.VARCHAR)
@@ -2654,7 +2654,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Create right input schema
     TupleMetadata rightSchema2 = new SchemaBuilder()
-      .add(ljPopConfig.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(ljPopConfig.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_right", TypeProtos.MinorType.INT)
       .add("cost_right", TypeProtos.MinorType.VARCHAR)
       .add("name_right", TypeProtos.MinorType.VARCHAR)
@@ -2745,7 +2745,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     final LateralJoinPOP popConfig_1 = new LateralJoinPOP(null, null, JoinRelType.INNER, DrillLateralJoinRelBase.IMPLICIT_COLUMN, Lists.newArrayList());
 
     TupleMetadata leftSchemaWithImplicit = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_left", TypeProtos.MinorType.INT)
       .add("cost_left", TypeProtos.MinorType.INT)
       .add("name_left", TypeProtos.MinorType.VARCHAR)
@@ -2759,7 +2759,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Create left input schema for first batch
     TupleMetadata leftSchema2 = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_left_new", TypeProtos.MinorType.INT)
       .add("cost_left_new", TypeProtos.MinorType.INT)
       .add("name_left_new", TypeProtos.MinorType.VARCHAR)
@@ -2786,7 +2786,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
 
     // Get the right container with dummy data
     TupleMetadata rightSchema2 = new SchemaBuilder()
-      .add(popConfig_1.getImplicitColumn(), TypeProtos.MinorType.INT)
+      .add(popConfig_1.getImplicitRIDColumn(), TypeProtos.MinorType.INT)
       .add("id_right_new", TypeProtos.MinorType.INT)
       .add("cost_right_new", TypeProtos.MinorType.VARCHAR)
       .add("name_right_new", TypeProtos.MinorType.VARCHAR)
