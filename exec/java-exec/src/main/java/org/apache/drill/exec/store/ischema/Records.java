@@ -24,9 +24,16 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 
 import com.google.common.base.MoreObjects;
+
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 public class Records {
 
@@ -541,6 +548,41 @@ public class Records {
       this.SCHEMA_OWNER = owner;
       this.TYPE = type;
       this.IS_MUTABLE = isMutable ? "YES" : "NO";
+    }
+  }
+
+  /** Pojo object for a record in INFORMATION_SCHEMA.FILES */
+  public static class File {
+
+    public final String SCHEMA_NAME;
+    public final String ROOT_SCHEMA_NAME;
+    public final String WORKSPACE_NAME;
+    public final String FILE_NAME;
+    public final String RELATIVE_PATH;
+    public final boolean IS_DIRECTORY;
+    public final boolean IS_FILE;
+    public final long LENGTH;
+    public final String OWNER;
+    public final String GROUP;
+    public final String PERMISSION;
+    public final String MODIFICATION_TIME;
+
+    public File(String schemaName, WorkspaceSchemaFactory.WorkspaceSchema wsSchema, FileStatus fileStatus) {
+      this.SCHEMA_NAME = schemaName;
+      this.ROOT_SCHEMA_NAME = wsSchema.getSchemaPath().get(0);
+      this.WORKSPACE_NAME = wsSchema.getName();
+      this.FILE_NAME = fileStatus.getPath().getName();
+      this.RELATIVE_PATH = Path.getPathWithoutSchemeAndAuthority(new Path(wsSchema.getDefaultLocation())).toUri()
+        .relativize(Path.getPathWithoutSchemeAndAuthority(fileStatus.getPath()).toUri()).getPath();
+      this.IS_DIRECTORY = fileStatus.isDirectory();
+      this.IS_FILE = fileStatus.isFile();
+      this.LENGTH = fileStatus.getLen();
+      this.OWNER = fileStatus.getOwner();
+      this.GROUP = fileStatus.getGroup();
+      this.PERMISSION = fileStatus.getPermission().toString();
+      this.MODIFICATION_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+          .withZone(ZoneOffset.UTC)
+          .format(Instant.ofEpochMilli(fileStatus.getModificationTime()));
     }
   }
 }

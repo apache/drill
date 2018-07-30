@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BaseTestImpersonation extends PlanTestBase {
   protected static final String MINIDFS_STORAGE_PLUGIN_NAME = "miniDfsPlugin";
@@ -137,9 +138,19 @@ public class BaseTestImpersonation extends PlanTestBase {
 
   protected static void createAndAddWorkspace(String name, String path, short permissions, String owner,
       String group, final Map<String, WorkspaceConfig> workspaces) throws Exception {
-    final Path dirPath = new Path(path);
-    FileSystem.mkdirs(fs, dirPath, new FsPermission(permissions));
+
+    FsPermission permission = new FsPermission(permissions);
+
+    Path dirPath = new Path(path);
+    assertTrue(FileSystem.mkdirs(fs, dirPath, permission));
     fs.setOwner(dirPath, owner, group);
+
+    // create sample file in the workspace to check show files command
+    Path sampleFile = new Path(dirPath, String.format("sample_%s.txt", name));
+    assertTrue(fs.createNewFile(sampleFile));
+    fs.setPermission(sampleFile, permission);
+    fs.setOwner(sampleFile, owner, group);
+
     final WorkspaceConfig ws = new WorkspaceConfig(path, true, "parquet", false);
     workspaces.put(name, ws);
   }

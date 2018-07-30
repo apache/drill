@@ -23,7 +23,6 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_I
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_COLUMNS;
 
 import java.util.List;
 
@@ -45,6 +44,7 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.SqlConverter;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
+import org.apache.drill.exec.store.ischema.InfoSchemaTableType;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.google.common.collect.ImmutableList;
@@ -56,17 +56,17 @@ public class DescribeTableHandler extends DefaultSqlHandler {
 
   /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.COLUMNS ... */
   @Override
-  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException, ForemanSetupException {
+  public SqlNode rewrite(SqlNode sqlNode) throws ForemanSetupException {
     DrillSqlDescribeTable node = unwrap(sqlNode, DrillSqlDescribeTable.class);
 
     try {
       List<SqlNode> selectList =
-          ImmutableList.of((SqlNode) new SqlIdentifier(COLS_COL_COLUMN_NAME, SqlParserPos.ZERO),
-                                     new SqlIdentifier(COLS_COL_DATA_TYPE, SqlParserPos.ZERO),
-                                     new SqlIdentifier(COLS_COL_IS_NULLABLE, SqlParserPos.ZERO));
+          ImmutableList.of(new SqlIdentifier(COLS_COL_COLUMN_NAME, SqlParserPos.ZERO),
+                           new SqlIdentifier(COLS_COL_DATA_TYPE, SqlParserPos.ZERO),
+                           new SqlIdentifier(COLS_COL_IS_NULLABLE, SqlParserPos.ZERO));
 
       SqlNode fromClause = new SqlIdentifier(
-          ImmutableList.of(IS_SCHEMA_NAME, TAB_COLUMNS), null, SqlParserPos.ZERO, null);
+          ImmutableList.of(IS_SCHEMA_NAME, InfoSchemaTableType.COLUMNS.name()), null, SqlParserPos.ZERO, null);
 
       final SqlIdentifier table = node.getTable();
       final SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();

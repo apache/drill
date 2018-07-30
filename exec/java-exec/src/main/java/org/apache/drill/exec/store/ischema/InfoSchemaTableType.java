@@ -23,6 +23,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Catalogs;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Columns;
+import org.apache.drill.exec.store.ischema.InfoSchemaTable.Files;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Schemata;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Tables;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Views;
@@ -32,14 +33,13 @@ import org.apache.drill.exec.store.pojo.PojoRecordReader;
  * The set of tables/views in INFORMATION_SCHEMA.
  */
 public enum InfoSchemaTableType {
-  // TODO:  Resolve how to not have two different place defining table names:
-  // NOTE: These identifiers have to match the string values in
-  // InfoSchemaConstants.
+
   CATALOGS(new Catalogs()),
   SCHEMATA(new Schemata()),
   VIEWS(new Views()),
   COLUMNS(new Columns()),
-  TABLES(new Tables());
+  TABLES(new Tables()),
+  FILES(new Files());
 
   private final InfoSchemaTable<?> tableDef;
 

@@ -20,14 +20,20 @@ package org.apache.drill.exec.store.ischema;
 import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_ROOT_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_WORKSPACE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_CONNECT;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_DESCR;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_DESCRIPTION;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_TYPE;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +48,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.Result;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
@@ -49,6 +56,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.util.FileSystemUtil;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Generates records for POJO RecordReader by scanning the given schema. At every level (catalog, schema, table, field),
@@ -108,6 +118,9 @@ public abstract class InfoSchemaRecordGenerator<S> {
    * @param field Field object
    */
   public void visitField(String schemaName, String tableName, RelDataTypeField field) {
+  }
+
+  public void visitFiles(String schemaName, SchemaPlus schema) {
   }
 
   protected boolean shouldVisitCatalog() {
@@ -189,6 +202,32 @@ public abstract class InfoSchemaRecordGenerator<S> {
     return filter.evaluate(recordValues) != Result.FALSE;
   }
 
+  protected boolean shouldVisitFiles(String schemaName, SchemaPlus schemaPlus) {
+    if (filter == null) {
+      return true;
+    }
+
+    AbstractSchema schema;
+    try {
+      schema = schemaPlus.unwrap(AbstractSchema.class);
+    } catch (ClassCastException e) {
+      return false;
+    }
+
+    if (!(schema instanceof WorkspaceSchemaFactory.WorkspaceSchema)) {
+      return false;
+    }
+
+    WorkspaceSchemaFactory.WorkspaceSchema wsSchema = (WorkspaceSchemaFactory.WorkspaceSchema) schema;
+
+    Map<String, String> recordValues = new HashMap<>();
+    recordValues.put(FILES_COL_SCHEMA_NAME, schemaName);
+    recordValues.put(FILES_COL_ROOT_SCHEMA_NAME, wsSchema.getSchemaPath().get(0));
+    recordValues.put(FILES_COL_WORKSPACE_NAME, wsSchema.getName());
+
+    return filter.evaluate(recordValues) != Result.FALSE;
+  }
+
   public abstract PojoRecordReader<S> getRecordReader();
 
   public void scanSchema(SchemaPlus root) {
@@ -207,13 +246,17 @@ public abstract class InfoSchemaRecordGenerator<S> {
     // Recursively scan any subschema.
     for (String name: schema.getSubSchemaNames()) {
       scanSchema(schemaPath +
-          (schemaPath == "" ? "" : ".") + // If we have an empty schema path, then don't insert a leading dot.
+          ("".equals(schemaPath) ? "" : ".") + // If we have an empty schema path, then don't insert a leading dot.
           name, schema.getSubSchema(name));
     }
 
     // Visit this schema and if requested ...
     if (shouldVisitSchema(schemaPath, schema) && visitSchema(schemaPath, schema)) {
       visitTables(schemaPath, schema);
+    }
+
+    if (shouldVisitFiles(schemaPath, schema)) {
+      visitFiles(schemaPath, schema);
     }
   }
 
@@ -256,7 +299,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
 
     @Override
     public boolean visitCatalog() {
-      records = ImmutableList.of(new Records.Catalog(IS_CATALOG_NAME, IS_CATALOG_DESCR, IS_CATALOG_CONNECT));
+      records = ImmutableList.of(new Records.Catalog(IS_CATALOG_NAME, IS_CATALOG_DESCRIPTION, IS_CATALOG_CONNECT));
       return false;
     }
   }
@@ -316,7 +359,6 @@ public abstract class InfoSchemaRecordGenerator<S> {
           .checkNotNull(type, "Error. Type information for table %s.%s provided is null.", schemaName,
               tableName);
       records.add(new Records.Table(IS_CATALOG_NAME, schemaName, tableName, type.toString()));
-      return;
     }
 
     @Override
@@ -371,4 +413,39 @@ public abstract class InfoSchemaRecordGenerator<S> {
       records.add(new Records.Column(IS_CATALOG_NAME, schemaName, tableName, field));
     }
   }
+
+  public static class Files extends InfoSchemaRecordGenerator<Records.File> {
+
+    List<Records.File> records = new ArrayList<>();
+
+    public Files(OptionManager optionManager) {
+      super(optionManager);
+    }
+
+    @Override
+    public PojoRecordReader<Records.File> getRecordReader() {
+      return new PojoRecordReader<>(Records.File.class, records);
+    }
+
+    @Override
+    public void visitFiles(String schemaName, SchemaPlus schemaPlus) {
+      try {
+        AbstractSchema schema = schemaPlus.unwrap(AbstractSchema.class);
+        if (schema instanceof WorkspaceSchemaFactory.WorkspaceSchema) {
+          WorkspaceSchemaFactory.WorkspaceSchema wsSchema = (WorkspaceSchemaFactory.WorkspaceSchema) schema;
+          String defaultLocation = wsSchema.getDefaultLocation();
+          FileSystem fs = wsSchema.getFS();
+          boolean recursive = optionManager.getBoolean(ExecConstants.LIST_FILES_RECURSIVELY);
+          FileSystemUtil.listAll(fs, new Path(defaultLocation), recursive).forEach(
+              fileStatus -> records.add(new Records.File(schemaName, wsSchema, fileStatus))
+          );
+        }
+      } catch (ClassCastException | UnsupportedOperationException e) {
+        // ignore the exception since either this is not a Drill schema or schema does not support files listing
+      } catch (IOException e) {
+        logger.warn("Failure while trying to list files", e);
+      }
+    }
+  }
+
 }

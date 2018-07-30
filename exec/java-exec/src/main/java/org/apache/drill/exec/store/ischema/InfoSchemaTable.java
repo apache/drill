@@ -33,6 +33,18 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_N
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_NUMERIC_PRECISION_RADIX;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_NUMERIC_SCALE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_ORDINAL_POSITION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_FILE_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_GROUP;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_IS_DIRECTORY;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_IS_FILE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_LENGTH;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_MODIFICATION_TIME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_OWNER;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_PERMISSION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_RELATIVE_PATH;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_ROOT_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_WORKSPACE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_CATALOG_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_IS_MUTABLE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
@@ -41,11 +53,6 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_T
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_CATALOG;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_CATALOGS;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_COLUMNS;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_SCHEMATA;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_TABLES;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_VIEWS;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_TYPE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.VIEWS_COL_VIEW_DEFINITION;
 
@@ -63,8 +70,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
- * Base class for tables in INFORMATION_SCHEMA.  Defines the table (fields and
- * types).
+ * Base class for tables in INFORMATION_SCHEMA.  Defines the table (fields and types).
  */
 public abstract class InfoSchemaTable<S> {
 
@@ -80,28 +86,15 @@ public abstract class InfoSchemaTable<S> {
     }
   }
 
-  public static final MajorType VARCHAR = Types.required(MinorType.VARCHAR);
   public static final MajorType INT = Types.required(MinorType.INT);
+  public static final MajorType BIGINT = Types.required(MinorType.BIGINT);
+  public static final MajorType VARCHAR = Types.required(MinorType.VARCHAR);
+  public static final MajorType BIT = Types.required(MinorType.BIT);
 
-  private final String tableName;
   private final List<Field> fields;
 
-  public InfoSchemaTable(String tableName, List<Field> fields) {
-    this.tableName = tableName;
+  public InfoSchemaTable(List<Field> fields) {
     this.fields = fields;
-  }
-
-  static public RelDataType getRelDataType(RelDataTypeFactory typeFactory, MajorType type) {
-    switch (type.getMinorType()) {
-    case INT:
-      return typeFactory.createSqlType(SqlTypeName.INTEGER);
-    case VARCHAR:
-      // Note:  Remember to not default to "VARCHAR(1)":
-      return typeFactory.createSqlType(SqlTypeName.VARCHAR, Integer.MAX_VALUE);
-    default:
-      throw new UnsupportedOperationException(
-          "Only INT and VARCHAR types are supported in INFORMATION_SCHEMA");
-    }
   }
 
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
@@ -117,10 +110,26 @@ public abstract class InfoSchemaTable<S> {
     return typeFactory.createStructType(relTypes, fieldNames);
   }
 
+  private RelDataType getRelDataType(RelDataTypeFactory typeFactory, MajorType type) {
+    switch (type.getMinorType()) {
+      case INT:
+        return typeFactory.createSqlType(SqlTypeName.INTEGER);
+      case BIGINT:
+        return typeFactory.createSqlType(SqlTypeName.BIGINT);
+      case VARCHAR:
+        // Note:  Remember to not default to "VARCHAR(1)":
+        return typeFactory.createSqlType(SqlTypeName.VARCHAR, Integer.MAX_VALUE);
+      case BIT:
+        return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
+      default:
+        throw new UnsupportedOperationException("Only INT, BIGINT, VARCHAR and BOOLEAN types are supported in " + InfoSchemaConstants.IS_SCHEMA_NAME);
+    }
+  }
+
   public abstract InfoSchemaRecordGenerator<S> getRecordGenerator(OptionManager optionManager);
 
   /** Layout for the CATALOGS table. */
-  static public class Catalogs extends InfoSchemaTable<Records.Catalog> {
+  public static class Catalogs extends InfoSchemaTable<Records.Catalog> {
     // NOTE:  Nothing seems to verify that the types here (apparently used
     // by SQL validation) match the types of the fields in Records.Catalogs).
     private static final List<Field> fields = ImmutableList.of(
@@ -128,8 +137,8 @@ public abstract class InfoSchemaTable<S> {
         Field.create(CATS_COL_CATALOG_DESCRIPTION, VARCHAR),
         Field.create(CATS_COL_CATALOG_CONNECT, VARCHAR));
 
-    Catalogs() {
-      super(TAB_CATALOGS, fields);
+    public Catalogs() {
+      super(fields);
     }
 
     @Override
@@ -150,7 +159,7 @@ public abstract class InfoSchemaTable<S> {
         Field.create(SCHS_COL_IS_MUTABLE, VARCHAR));
 
     public Schemata() {
-      super(TAB_SCHEMATA, fields);
+      super(fields);
     }
 
     @Override
@@ -170,7 +179,7 @@ public abstract class InfoSchemaTable<S> {
         Field.create(TBLS_COL_TABLE_TYPE, VARCHAR));
 
     public Tables() {
-      super(TAB_TABLES, fields);
+      super(fields);
     }
 
     @Override
@@ -180,7 +189,7 @@ public abstract class InfoSchemaTable<S> {
   }
 
   /** Layout for the VIEWS table. */
-  static public class Views extends InfoSchemaTable<Records.View> {
+  public static class Views extends InfoSchemaTable<Records.View> {
     // NOTE:  Nothing seems to verify that the types here (apparently used
     // by SQL validation) match the types of the fields in Records.Views).
     private static final List<Field> fields = ImmutableList.of(
@@ -190,7 +199,7 @@ public abstract class InfoSchemaTable<S> {
         Field.create(VIEWS_COL_VIEW_DEFINITION, VARCHAR));
 
     public Views() {
-      super(TAB_VIEWS, fields);
+      super(fields);
     }
 
     @Override
@@ -242,7 +251,7 @@ public abstract class InfoSchemaTable<S> {
         );
 
     public Columns() {
-      super(TAB_COLUMNS, fields);
+      super(fields);
     }
 
     @Override
@@ -250,4 +259,33 @@ public abstract class InfoSchemaTable<S> {
       return new InfoSchemaRecordGenerator.Columns(optionManager);
     }
   }
+
+  /** Layout for the FILES table. */
+  public static class Files extends InfoSchemaTable<Records.File> {
+
+    private static final List<Field> fields = ImmutableList.of(
+        Field.create(FILES_COL_SCHEMA_NAME, VARCHAR),
+        Field.create(FILES_COL_ROOT_SCHEMA_NAME, VARCHAR),
+        Field.create(FILES_COL_WORKSPACE_NAME, VARCHAR),
+        Field.create(FILES_COL_FILE_NAME, VARCHAR),
+        Field.create(FILES_COL_RELATIVE_PATH, VARCHAR),
+        Field.create(FILES_COL_IS_DIRECTORY, BIT),
+        Field.create(FILES_COL_IS_FILE, BIT),
+        Field.create(FILES_COL_LENGTH, BIGINT),
+        Field.create(FILES_COL_OWNER, VARCHAR),
+        Field.create(FILES_COL_GROUP, VARCHAR),
+        Field.create(FILES_COL_PERMISSION, VARCHAR),
+        Field.create(FILES_COL_MODIFICATION_TIME, VARCHAR)
+    );
+
+    public Files() {
+      super(fields);
+    }
+
+    @Override
+    public InfoSchemaRecordGenerator<Records.File> getRecordGenerator(OptionManager optionManager) {
+      return new InfoSchemaRecordGenerator.Files(optionManager);
+    }
+  }
+
 }

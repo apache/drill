@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
-import org.apache.drill.exec.planner.sql.handlers.ShowFileHandler;
+import org.apache.drill.exec.planner.sql.handlers.ShowFilesHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -61,7 +61,7 @@ public class SqlShowFiles extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    return Collections.singletonList( (SqlNode) db);
+    return Collections.singletonList(db);
   }
 
   @Override
@@ -75,7 +75,7 @@ public class SqlShowFiles extends DrillSqlCall {
 
   @Override
   public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
-    return new ShowFileHandler(config);
+    return new ShowFilesHandler(config);
   }
 
   public SqlIdentifier getDb() { return db; }
