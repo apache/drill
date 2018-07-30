@@ -121,6 +121,7 @@ public class TestPostBuildCalculationsImpl {
 
     final HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        true,
         new ConditionalMockBatchSizePredictor(
           Lists.newArrayList(maxBatchNumRecordsProbe, recordsPerPartitionBatchProbe),
           Lists.newArrayList(maxProbeBatchSize, partitionProbeBatchSize),
@@ -167,6 +168,7 @@ public class TestPostBuildCalculationsImpl {
 
     final HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        true,
         new ConditionalMockBatchSizePredictor(),
         50,
         1000,
@@ -188,7 +190,16 @@ public class TestPostBuildCalculationsImpl {
   }
 
   @Test
-  public void testHasNoProbeDataButProbeNonEmpty() {
+  public void testHasNoProbeDataButProbeNonEmptyFirstCycle() {
+    testHasNoProbeDataButProbeNonEmptyHelper(true);
+  }
+
+  @Test
+  public void testHasNoProbeDataButProbeNonEmptyNotFirstCycle() {
+    testHasNoProbeDataButProbeNonEmptyHelper(false);
+  }
+
+  private void testHasNoProbeDataButProbeNonEmptyHelper(final boolean firstCycle) {
     final Map<String, Long> keySizes = org.apache.drill.common.map.CaseInsensitiveMap.newHashMap();
 
     final PartitionStatImpl partition1 = new PartitionStatImpl();
@@ -210,14 +221,16 @@ public class TestPostBuildCalculationsImpl {
     final int recordsPerPartitionBatchProbe = 5;
     final long partitionProbeBatchSize = 15;
     final long maxProbeBatchSize = 60;
+    final long accountedProbeBatchSize = (firstCycle? 0: maxProbeBatchSize);
 
     final HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        firstCycle,
         new ConditionalMockBatchSizePredictor(
           Lists.newArrayList(maxBatchNumRecordsProbe, recordsPerPartitionBatchProbe),
           Lists.newArrayList(maxProbeBatchSize, partitionProbeBatchSize),
           false),
-        290,
+        230 + accountedProbeBatchSize,
         20,
         maxBatchNumRecordsProbe,
         recordsPerPartitionBatchProbe,
@@ -232,7 +245,7 @@ public class TestPostBuildCalculationsImpl {
 
     calc.initialize(false);
 
-    long expected = 60 // maxProbeBatchSize
+    long expected = accountedProbeBatchSize
       + 160 // in memory partitions
       + 20 // max output batch size
       + 2 * 10 // Hash Table
@@ -243,7 +256,16 @@ public class TestPostBuildCalculationsImpl {
   }
 
   @Test
-  public void testProbingAndPartitioningBuildAllInMemoryNoSpill() {
+  public void testProbingAndPartitioningBuildAllInMemoryNoSpillFirstCycle() {
+    testProbingAndPartitioningBuildAllInMemoryNoSpillHelper(true);
+  }
+
+  @Test
+  public void testProbingAndPartitioningBuildAllInMemoryNoSpillNotFirstCycle() {
+    testProbingAndPartitioningBuildAllInMemoryNoSpillHelper(false);
+  }
+
+  private void testProbingAndPartitioningBuildAllInMemoryNoSpillHelper(final boolean firstCycle) {
     final Map<String, Long> keySizes = org.apache.drill.common.map.CaseInsensitiveMap.newHashMap();
 
     final PartitionStatImpl partition1 = new PartitionStatImpl();
@@ -265,14 +287,16 @@ public class TestPostBuildCalculationsImpl {
     final int recordsPerPartitionBatchProbe = 5;
     final long partitionProbeBatchSize = 15;
     final long maxProbeBatchSize = 60;
+    final long accountedProbeBatchSize = (firstCycle? 0: maxProbeBatchSize);
 
     final HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        firstCycle,
         new ConditionalMockBatchSizePredictor(
           Lists.newArrayList(maxBatchNumRecordsProbe, recordsPerPartitionBatchProbe),
           Lists.newArrayList(maxProbeBatchSize, partitionProbeBatchSize),
           true),
-        290,
+        230 + accountedProbeBatchSize,
         20,
         maxBatchNumRecordsProbe,
         recordsPerPartitionBatchProbe,
@@ -287,7 +311,7 @@ public class TestPostBuildCalculationsImpl {
 
     calc.initialize(false);
 
-    long expected = 60 // maxProbeBatchSize
+    long expected = accountedProbeBatchSize
       + 160 // in memory partitions
       + 20 // max output batch size
       + 2 * 10 // Hash Table
@@ -298,7 +322,16 @@ public class TestPostBuildCalculationsImpl {
   }
 
   @Test
-  public void testProbingAndPartitioningBuildAllInMemorySpill() {
+  public void testProbingAndPartitioningBuildAllInMemorySpillFirstCycle() {
+    testProbingAndPartitioningBuildAllInMemorySpillHelper(true);
+  }
+
+  @Test
+  public void testProbingAndPartitioningBuildAllInMemorySpillNotFirstCycle() {
+    testProbingAndPartitioningBuildAllInMemorySpillHelper(false);
+  }
+
+  private void testProbingAndPartitioningBuildAllInMemorySpillHelper(final boolean firstCycle) {
     final Map<String, Long> keySizes = org.apache.drill.common.map.CaseInsensitiveMap.newHashMap();
 
     final PartitionStatImpl partition1 = new PartitionStatImpl();
@@ -320,16 +353,18 @@ public class TestPostBuildCalculationsImpl {
     final int recordsPerPartitionBatchProbe = 5;
     final long partitionProbeBatchSize = 15;
     final long maxProbeBatchSize = 60;
+    final long accountedProbeBatchSize = (firstCycle? 0: maxProbeBatchSize);
 
     HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        firstCycle,
         new ConditionalMockBatchSizePredictor(
           Lists.newArrayList(maxBatchNumRecordsProbe, recordsPerPartitionBatchProbe),
           Lists.newArrayList(maxProbeBatchSize, partitionProbeBatchSize),
           true),
-        270,
+        210 + accountedProbeBatchSize,
         20,
-         maxBatchNumRecordsProbe,
+        maxBatchNumRecordsProbe,
         recordsPerPartitionBatchProbe,
         buildPartitionStatSet,
         keySizes,
@@ -342,7 +377,7 @@ public class TestPostBuildCalculationsImpl {
 
     calc.initialize(false);
 
-    long expected = 60 // maxProbeBatchSize
+    long expected = accountedProbeBatchSize
       + 160 // in memory partitions
       + 20 // max output batch size
       + 2 * 10 // Hash Table
@@ -351,7 +386,7 @@ public class TestPostBuildCalculationsImpl {
     Assert.assertEquals(expected, calc.getConsumedMemory());
     partition1.spill();
 
-    expected = 60 // maxProbeBatchSize
+    expected = accountedProbeBatchSize
       + 80 // in memory partitions
       + 20 // max output batch size
       + 10 // Hash Table
@@ -363,7 +398,16 @@ public class TestPostBuildCalculationsImpl {
   }
 
   @Test
-  public void testProbingAndPartitioningBuildAllInMemoryNoSpillWithHash() {
+  public void testProbingAndPartitioningBuildAllInMemoryNoSpillWithHashFirstCycle() {
+    testProbingAndPartitioningBuildAllInMemoryNoSpillWithHashHelper(true);
+  }
+
+  @Test
+  public void testProbingAndPartitioningBuildAllInMemoryNoSpillWithHashNotFirstCycle() {
+    testProbingAndPartitioningBuildAllInMemoryNoSpillWithHashHelper(false);
+  }
+
+  private void testProbingAndPartitioningBuildAllInMemoryNoSpillWithHashHelper(final boolean firstCycle) {
     final Map<String, Long> keySizes = org.apache.drill.common.map.CaseInsensitiveMap.newHashMap();
 
     final PartitionStatImpl partition1 = new PartitionStatImpl();
@@ -381,14 +425,16 @@ public class TestPostBuildCalculationsImpl {
     final int recordsPerPartitionBatchProbe = 5;
     final long partitionProbeBatchSize = 15;
     final long maxProbeBatchSize = 60;
+    final long accountedProbeBatchSize = (firstCycle? 0: maxProbeBatchSize);
 
     HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        firstCycle,
         new ConditionalMockBatchSizePredictor(
           Lists.newArrayList(maxBatchNumRecordsProbe, recordsPerPartitionBatchProbe),
           Lists.newArrayList(maxProbeBatchSize, partitionProbeBatchSize),
           true),
-        180,
+        120 + accountedProbeBatchSize,
         20,
         maxBatchNumRecordsProbe,
         recordsPerPartitionBatchProbe,
@@ -403,7 +449,7 @@ public class TestPostBuildCalculationsImpl {
 
     calc.initialize(false);
 
-    long expected = 60 // maxProbeBatchSize
+    long expected = accountedProbeBatchSize // probe batch
       + 2 * 5 * 3 // partition batches
       + 20; // max output batch size
     Assert.assertFalse(calc.shouldSpill());
@@ -412,7 +458,16 @@ public class TestPostBuildCalculationsImpl {
   }
 
   @Test
-  public void testProbingAndPartitioningBuildAllInMemoryWithSpill() {
+  public void testProbingAndPartitioningBuildAllInMemoryWithSpillFirstCycle() {
+    testProbingAndPartitioningBuildAllInMemoryWithSpillHelper(true);
+  }
+
+  @Test
+  public void testProbingAndPartitioningBuildAllInMemoryWithSpillNotFirstCycle() {
+    testProbingAndPartitioningBuildAllInMemoryWithSpillHelper(false);
+  }
+
+  private void testProbingAndPartitioningBuildAllInMemoryWithSpillHelper(final boolean firstCycle) {
     final Map<String, Long> keySizes = org.apache.drill.common.map.CaseInsensitiveMap.newHashMap();
 
     final PartitionStatImpl partition1 = new PartitionStatImpl();
@@ -434,14 +489,16 @@ public class TestPostBuildCalculationsImpl {
     final int recordsPerPartitionBatchProbe = 5;
     final long partitionProbeBatchSize = 15;
     final long maxProbeBatchSize = 60;
+    final long accountedProbeBatchSize = (firstCycle? 0: maxProbeBatchSize);
 
     HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        firstCycle,
         new ConditionalMockBatchSizePredictor(
           Lists.newArrayList(maxBatchNumRecordsProbe, recordsPerPartitionBatchProbe),
           Lists.newArrayList(maxProbeBatchSize, partitionProbeBatchSize),
           true),
-        200,
+        140 + accountedProbeBatchSize,
         20,
         maxBatchNumRecordsProbe,
         recordsPerPartitionBatchProbe,
@@ -456,7 +513,7 @@ public class TestPostBuildCalculationsImpl {
 
     calc.initialize(false);
 
-    long expected = 60 // maxProbeBatchSize
+    long expected = accountedProbeBatchSize
       + 80 // in memory partition
       + 10 // hash table size
       + 10 // hash join helper size
@@ -471,7 +528,16 @@ public class TestPostBuildCalculationsImpl {
   }
 
   @Test
-  public void testProbingAndPartitioningBuildSomeInMemory() {
+  public void testProbingAndPartitioningBuildSomeInMemoryFirstCycle() {
+    testProbingAndPartitioningBuildSomeInMemoryHelper(true);
+  }
+
+  @Test
+  public void testProbingAndPartitioningBuildSomeInMemoryNotFirstCycle() {
+    testProbingAndPartitioningBuildSomeInMemoryHelper(false);
+  }
+
+  private void testProbingAndPartitioningBuildSomeInMemoryHelper(final boolean firstCycle) {
     final Map<String, Long> keySizes = org.apache.drill.common.map.CaseInsensitiveMap.newHashMap();
 
     final PartitionStatImpl partition1 = new PartitionStatImpl();
@@ -497,14 +563,16 @@ public class TestPostBuildCalculationsImpl {
     final int recordsPerPartitionBatchProbe = 5;
     final long partitionProbeBatchSize = 15;
     final long maxProbeBatchSize = 60;
+    final long accountedProbeBatchSize = (firstCycle? 0: maxProbeBatchSize);
 
     HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        firstCycle,
         new ConditionalMockBatchSizePredictor(
           Lists.newArrayList(maxBatchNumRecordsProbe, recordsPerPartitionBatchProbe),
           Lists.newArrayList(maxProbeBatchSize, partitionProbeBatchSize),
           true),
-        230,
+        170 + accountedProbeBatchSize,
         20,
         maxBatchNumRecordsProbe,
         recordsPerPartitionBatchProbe,
@@ -519,7 +587,7 @@ public class TestPostBuildCalculationsImpl {
 
     calc.initialize(false);
 
-    long expected = 60 // maxProbeBatchSize
+    long expected = accountedProbeBatchSize
       + 80 // in memory partition
       + 10 // hash table size
       + 10 // hash join helper size
@@ -533,8 +601,16 @@ public class TestPostBuildCalculationsImpl {
   }
 
   @Test
-  public void testProbingAndPartitioningBuildNoneInMemory() {
+  public void testProbingAndPartitioningBuildNoneInMemoryFirstCycle() {
+    testProbingAndPartitioningBuildNoneInMemoryHelper(true);
+  }
 
+  @Test
+  public void testProbingAndPartitioningBuildNoneInMemoryNotFirstCycle() {
+    testProbingAndPartitioningBuildNoneInMemoryHelper(false);
+  }
+
+  private void testProbingAndPartitioningBuildNoneInMemoryHelper(final boolean firstCycle) {
     final Map<String, Long> keySizes = org.apache.drill.common.map.CaseInsensitiveMap.newHashMap();
 
     final PartitionStatImpl partition1 = new PartitionStatImpl();
@@ -554,14 +630,16 @@ public class TestPostBuildCalculationsImpl {
     final int recordsPerPartitionBatchProbe = 5;
     final long partitionProbeBatchSize = 15;
     final long maxProbeBatchSize = 60;
+    final long accountedProbeBatchSize = (firstCycle? 0: maxProbeBatchSize);
 
     HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        firstCycle,
         new ConditionalMockBatchSizePredictor(
           Lists.newArrayList(maxBatchNumRecordsProbe, recordsPerPartitionBatchProbe),
           Lists.newArrayList(maxProbeBatchSize, partitionProbeBatchSize),
           true),
-        110,
+        110 + accountedProbeBatchSize,
         20,
         maxBatchNumRecordsProbe,
         recordsPerPartitionBatchProbe,
@@ -576,7 +654,7 @@ public class TestPostBuildCalculationsImpl {
 
     calc.initialize(false);
     Assert.assertFalse(calc.shouldSpill());
-    Assert.assertEquals(110, calc.getConsumedMemory());
+    Assert.assertEquals(50 + accountedProbeBatchSize, calc.getConsumedMemory());
     Assert.assertNotNull(calc.next());
   }
 
@@ -611,6 +689,7 @@ public class TestPostBuildCalculationsImpl {
 
     HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl calc =
       new HashJoinMemoryCalculatorImpl.PostBuildCalculationsImpl(
+        true,
         new ConditionalMockBatchSizePredictor(
           Lists.newArrayList(maxBatchNumRecordsProbe, recordsPerPartitionBatchProbe),
           Lists.newArrayList(maxProbeBatchSize, partitionProbeBatchSize),
@@ -708,7 +787,7 @@ public class TestPostBuildCalculationsImpl {
 
     @Override
     public long getBatchSize() {
-      return 0;
+      return batchSize.get(0);
     }
 
     @Override
