@@ -69,10 +69,6 @@ public abstract class BaseValueVector implements ValueVector {
     return field;
   }
 
-  public MaterializedField getField(String ref) {
-    return getField().withPath(ref);
-  }
-
   @Override
   public TransferPair getTransferPair(BufferAllocator allocator) {
     return getTransferPair(getField().getName(), allocator);

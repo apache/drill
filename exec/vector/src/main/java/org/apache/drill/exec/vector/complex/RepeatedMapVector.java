@@ -64,7 +64,7 @@ public class RepeatedMapVector extends AbstractMapVector
   private final EmptyValuePopulator emptyPopulator;
 
   public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
-    this(field, new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator), callBack);
+    this(field, new UInt4Vector(MaterializedField.OFFSETS_FIELD, allocator), callBack);
   }
 
   public RepeatedMapVector(MaterializedField field, UInt4Vector offsets, CallBack callBack) {
@@ -484,7 +484,7 @@ public class RepeatedMapVector extends AbstractMapVector
       for (int i =  offsets.getAccessor().get(index); i < end; i++) {
         final Map<String, Object> vv = Maps.newLinkedHashMap();
         for (final MaterializedField field : getField().getChildren()) {
-          if (!field.equals(BaseRepeatedValueVector.OFFSETS_FIELD)) {
+          if (field != MaterializedField.OFFSETS_FIELD) {
             fieldName = field.getName();
             final Object value = getChild(fieldName).getAccessor().getObject(i);
             if (value != null) {

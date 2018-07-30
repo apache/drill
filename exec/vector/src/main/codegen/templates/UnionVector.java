@@ -128,11 +128,11 @@ public class UnionVector implements ValueVector {
     // have two types: one batch has type A, the other type B, but the
     // batches must list both A and B as subtypes.
     
-    this.field = field.clone();
+    this.field = field;
     this.allocator = allocator;
     this.internalMap = new MapVector(INTERNAL_MAP_NAME, allocator, callBack);
     this.typeVector = internalMap.addOrGet(TYPE_VECTOR_NAME, Types.required(MinorType.UINT1), UInt1Vector.class);
-    this.field.addChild(internalMap.getField().clone());
+    this.field.addChild(internalMap.getField());
     this.callBack = callBack;
   }
 
@@ -354,7 +354,7 @@ public class UnionVector implements ValueVector {
 
   @Override
   public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
-    return new TransferImpl(field.withPath(ref), allocator);
+    return new TransferImpl(field.copy(ref), allocator);
   }
 
   @Override

@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.complex;
 import static org.apache.drill.test.TestBuilder.listOf;
 import static org.apache.drill.test.TestBuilder.mapOf;
 
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -41,7 +42,7 @@ public class TestEmptyPopulation extends BaseTestQuery {
 
   @Before
   public void initialize() {
-    offsets = new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator);
+    offsets = new UInt4Vector(MaterializedField.OFFSETS_FIELD, allocator);
     offsets.allocateNewSafe();
     accessor = offsets.getAccessor();
     mutator = offsets.getMutator();

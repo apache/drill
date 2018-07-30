@@ -114,7 +114,7 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
 
   @Override
   public TransferPair getTransferPair(String ref, BufferAllocator allocator){
-    return new TransferImpl(getField().withPath(ref), allocator);
+    return new TransferImpl(getField().copy(ref), allocator);
   }
 
   @Override

@@ -105,7 +105,7 @@ public class ListVector extends BaseRepeatedValueVector {
 
   @Override
   public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
-    return new TransferImpl(field.withPath(ref), allocator);
+    return new TransferImpl(field.copy(ref), allocator);
   }
 
   @Override

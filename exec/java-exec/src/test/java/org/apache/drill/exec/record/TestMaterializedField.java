@@ -21,7 +21,7 @@ import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -58,32 +58,24 @@ public class TestMaterializedField {
   }
 
   @Test
-  public void testClone() {
-    final MaterializedField cloneParent = parent.clone();
-    final boolean isParentEqual = parent.equals(cloneParent);
-    assertTrue("Cloned parent does not match the original", isParentEqual);
+  public void testCopy() {
+    final MaterializedField cloneParent = parent.copy();
+    assertEquals("Parent copy does not match the original", parent, cloneParent);
 
-    final MaterializedField cloneChild = child.clone();
-    final boolean isChildEqual = child.equals(cloneChild);
-    assertTrue("Cloned child does not match the original", isChildEqual);
+    final MaterializedField cloneChild = child.copy();
+    assertEquals("Child copy does not match the original", child, cloneChild);
 
-    for (final MaterializedField field:new MaterializedField[]{parent, child}) {
-      for (Object[] args:matrix) {
-        final String path = args[0].toString();
-        final TypeProtos.MajorType type = TypeProtos.MajorType.class.cast(args[1]);
-
-        final MaterializedField clone = field.withPathAndType(path, type);
-
-        final boolean isPathEqual = path.equals(clone.getName());
-        assertTrue("Cloned path does not match the original", isPathEqual);
-
-        final boolean isTypeEqual = type.equals(clone.getType());
-        assertTrue("Cloned type does not match the original", isTypeEqual);
-
-        final boolean isChildrenEqual = field.getChildren().equals(clone.getChildren());
-        assertTrue("Cloned children do not match the original", isChildrenEqual);
-      }
+    for (Object[] args : matrix) {
+      assertTypeAndPath(parent, (String)args[0], (TypeProtos.MajorType)args[1]);
+      assertTypeAndPath(child, (String)args[0], (TypeProtos.MajorType)args[1]);
     }
+  }
 
+  private void assertTypeAndPath(MaterializedField field, String path, TypeProtos.MajorType type) {
+    final MaterializedField clone = field.copy(path, type);
+
+    assertEquals("field copy path does not match the original", path, clone.getName());
+    assertEquals("field copy type does not match the original", type, clone.getType());
+    assertEquals("field copy children do not match the original", field.getChildren(), clone.getChildren());
   }
 }

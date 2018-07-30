@@ -869,7 +869,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         }
 
         // make sure to project field with children for children to show up in the schema
-        final MaterializedField projected = field.withType(outputType);
+        final MaterializedField projected = field.copy(outputType);
         // Add the vector to our output container
         container.addOrGet(projected);
       }

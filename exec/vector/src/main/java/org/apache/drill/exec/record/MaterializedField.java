@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.record;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -30,6 +30,9 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
+import org.apache.drill.exec.vector.ValueVector;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Meta-data description of a column characterized by a name and a type
@@ -38,6 +41,8 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
  */
 
 public class MaterializedField {
+  public final static MaterializedField OFFSETS_FIELD = new MaterializedField(ValueVector.OFFSETS_VECTOR_NAME, Types.required(MinorType.UINT4), 0);
+
   private final String name;
   private MajorType type;
   // use an ordered set as existing code relies on order (e,g. parquet writer)
@@ -49,39 +54,79 @@ public class MaterializedField {
     this.children = children;
   }
 
+  private MaterializedField(String name, MajorType type, int size) {
+    this(name, type, new LinkedHashSet<>(size));
+  }
+
+  private <T> void copyFrom(Collection<T> source, Function<T, MaterializedField> transformation) {
+    Preconditions.checkState(children.isEmpty());
+    source.forEach(child -> children.add(transformation.apply(child)));
+  }
+
+  public static MaterializedField create(String name, MajorType type) {
+    return new MaterializedField(name, type, 0);
+  }
+
   public static MaterializedField create(SerializedField serField) {
-    LinkedHashSet<MaterializedField> children = new LinkedHashSet<>();
-    for (SerializedField sf : serField.getChildList()) {
-      children.add(MaterializedField.create(sf));
+    MaterializedField field = new MaterializedField(serField.getNamePart().getName(), serField.getMajorType(), serField.getChildCount());
+    if (OFFSETS_FIELD.equals(field)) {
+      return OFFSETS_FIELD;
     }
-    return new MaterializedField(serField.getNamePart().getName(), serField.getMajorType(), children);
+    field.copyFrom(serField.getChildList(), MaterializedField::create);
+    return field;
   }
 
-  /**
-   * Create and return a serialized field based on the current state.
-   */
-  public SerializedField getSerializedField() {
-    SerializedField.Builder serializedFieldBuilder = getAsBuilder();
-    for(MaterializedField childMaterializedField : getChildren()) {
-      serializedFieldBuilder.addChild(childMaterializedField.getSerializedField());
-    }
-    return serializedFieldBuilder.build();
+  public MaterializedField copy() {
+    return copy(getName(), getType());
   }
 
-  public SerializedField.Builder getAsBuilder() {
-    return SerializedField.newBuilder()
-        .setMajorType(type)
-        .setNamePart(NamePart.newBuilder().setName(name).build());
+  public MaterializedField copy(MajorType type) {
+    return copy(name, type);
+  }
+
+  public MaterializedField copy(String name) {
+    return copy(name, getType());
+  }
+
+  public MaterializedField copy(String name, final MajorType type) {
+    if (this == OFFSETS_FIELD) {
+      return this;
+    }
+    MaterializedField field = new MaterializedField(name, type, getChildren().size());
+    field.copyFrom(getChildren(), MaterializedField::copy);
+    return field;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public MajorType getType() {
+    return type;
   }
 
   public Collection<MaterializedField> getChildren() {
-    return new ArrayList<>(children);
+    return children;
   }
 
-  public MaterializedField newWithChild(MaterializedField child) {
-    MaterializedField newField = clone();
-    newField.addChild(child);
-    return newField;
+  public int getWidth() {
+    return type.getWidth();
+  }
+
+  public int getScale() {
+    return type.getScale();
+  }
+
+  public int getPrecision() {
+    return type.getPrecision();
+  }
+
+  public boolean isNullable() {
+    return type.getMode() == DataMode.OPTIONAL;
+  }
+
+  public DataMode getDataMode() {
+    return type.getMode();
   }
 
   public void addChild(MaterializedField field) {
@@ -90,6 +135,21 @@ public class MaterializedField {
 
   public void removeChild(MaterializedField field) {
     children.remove(field);
+  }
+
+  /**
+   * Create and return a serialized field based on the current state.
+   */
+  public SerializedField getSerializedField() {
+    SerializedField.Builder builder = getAsBuilder();
+    getChildren().forEach(field -> builder.addChild(field.getSerializedField()));
+    return builder.build();
+  }
+
+  public SerializedField.Builder getAsBuilder() {
+    return SerializedField.newBuilder()
+        .setMajorType(type)
+        .setNamePart(NamePart.newBuilder().setName(name).build());
   }
 
   /**
@@ -115,36 +175,9 @@ public class MaterializedField {
    */
 
   public void replaceType(MajorType newType) {
-    assert type.getMinorType() == newType.getMinorType();
-    assert type.getMode() == newType.getMode();
+    Preconditions.checkArgument(type.getMinorType() == newType.getMinorType());
+    Preconditions.checkArgument(type.getMode() == newType.getMode());
     type = newType;
-  }
-
-  @Override
-  public MaterializedField clone() {
-    return withPathAndType(name, getType());
-  }
-
-  public MaterializedField cloneEmpty() {
-    return create(name, type.toBuilder()
-        .clearSubType()
-        .build());
-  }
-
-  public MaterializedField withType(MajorType type) {
-    return withPathAndType(name, type);
-  }
-
-  public MaterializedField withPath(String name) {
-    return withPathAndType(name, getType());
-  }
-
-  public MaterializedField withPathAndType(String name, final MajorType type) {
-    final LinkedHashSet<MaterializedField> newChildren = new LinkedHashSet<>(children.size());
-    for (final MaterializedField child:children) {
-      newChildren.add(child.clone());
-    }
-    return new MaterializedField(name, type, newChildren);
   }
 
   // TODO: rewrite without as direct match rather than conversion then match.
@@ -152,18 +185,6 @@ public class MaterializedField {
     MaterializedField f = create(field);
     return f.equals(this);
   }
-
-  public static MaterializedField create(String name, MajorType type) {
-    return new MaterializedField(name, type, new LinkedHashSet<MaterializedField>());
-  }
-
-  public String getName() { return name; }
-  public int getWidth() { return type.getWidth(); }
-  public MajorType getType() { return type; }
-  public int getScale() { return type.getScale(); }
-  public int getPrecision() { return type.getPrecision(); }
-  public boolean isNullable() { return type.getMode() == DataMode.OPTIONAL; }
-  public DataMode getDataMode() { return type.getMode(); }
 
   public MaterializedField getOtherNullableVersion() {
     MajorType mt = type;
@@ -187,7 +208,7 @@ public class MaterializedField {
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.name, this.type, this.children);
+    return Objects.hash(this.name, this.type);
   }
 
   /**
