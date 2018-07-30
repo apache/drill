@@ -96,14 +96,13 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
    * </ul>
    */
   interface BuildSidePartitioning extends HashJoinStateCalculator<PostBuildCalculations> {
-    void initialize(boolean autoTune,
+    void initialize(boolean firstCycle,
                     boolean reserveHash,
                     RecordBatch buildSideBatch,
                     RecordBatch probeSideBatch,
                     Set<String> joinColumns,
                     boolean probeEmpty,
                     long memoryAvailable,
-                    long maxIncomingBatchSize,
                     int initialPartitions,
                     int recordsPerPartitionBatchBuild,
                     int recordsPerPartitionBatchProbe,
