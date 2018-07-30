@@ -23,6 +23,7 @@ import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,6 +39,7 @@ import org.junit.experimental.categories.Category;
 import java.util.Map;
 
 import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -154,37 +156,34 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     updateClient(user1);
 
     // Try show tables in schema "drillTestGrp1_700" which is owned by "user1"
-    test("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME);
+    int count = testSql(String.format("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME));
+    assertTrue(count > 0);
 
-    // Try show tables in schema "drillTestGrp0_750" which is owned by "processUser" and has group permissions for
-    // "user1"
-    test("SHOW FILES IN %s.drillTestGrp0_750", MINIDFS_STORAGE_PLUGIN_NAME);
+    // Try show tables in schema "drillTestGrp0_750" which is owned by "processUser" and has group permissions for "user1"
+    count = testSql(String.format("SHOW FILES IN %s.drillTestGrp0_750", MINIDFS_STORAGE_PLUGIN_NAME));
+    assertTrue(count > 0);
   }
 
   @Test
   public void testShowFilesInWSWithOtherPermissionsForQueryUser() throws Exception {
     updateClient(user2);
-    // Try show tables in schema "drillTestGrp0_755" which is owned by "processUser" and group0. "user2" is not part
-    // of the "group0"
-    test("SHOW FILES IN %s.drillTestGrp0_755", MINIDFS_STORAGE_PLUGIN_NAME);
+    // Try show tables in schema "drillTestGrp0_755" which is owned by "processUser" and group0. "user2" is not part of the "group0"
+    int count = testSql(String.format("SHOW FILES IN %s.drillTestGrp0_755", MINIDFS_STORAGE_PLUGIN_NAME));
+    assertTrue(count > 0);
   }
 
   @Test
   public void testShowFilesInWSWithNoPermissionsForQueryUser() throws Exception {
-    UserRemoteException ex = null;
-
     updateClient(user2);
-    try {
-      // Try show tables in schema "drillTestGrp1_700" which is owned by "user1"
-      test("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME);
-    } catch(UserRemoteException e) {
-      ex = e;
-    }
 
-    assertNotNull("UserRemoteException is expected", ex);
-    assertThat(ex.getMessage(),
-        containsString("Permission denied: user=drillTestUser2, " +
-            "access=READ_EXECUTE, inode=\"/drillTestGrp1_700\":drillTestUser1:drillTestGrp1:drwx------"));
+    try {
+      setSessionOption(ExecConstants.LIST_FILES_RECURSIVELY, true);
+      // Try show tables in schema "drillTestGrp1_700" which is owned by "user1"
+      int count = testSql(String.format("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME));
+      assertEquals("Counts should match", 0, count);
+    } finally {
+      resetSessionOption(ExecConstants.LIST_FILES_RECURSIVELY);
+    }
   }
 
   @Test

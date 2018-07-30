@@ -18,7 +18,7 @@
 package org.apache.drill.exec.work.metadata;
 
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_CONNECT;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_DESCR;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_DESCRIPTION;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -61,7 +61,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     CatalogMetadata c = catalogs.get(0);
     assertEquals(IS_CATALOG_NAME, c.getCatalogName());
-    assertEquals(IS_CATALOG_DESCR, c.getDescription());
+    assertEquals(IS_CATALOG_DESCRIPTION, c.getDescription());
     assertEquals(IS_CATALOG_CONNECT, c.getConnect());
   }
 
@@ -78,7 +78,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     CatalogMetadata c = catalogs.get(0);
     assertEquals(IS_CATALOG_NAME, c.getCatalogName());
-    assertEquals(IS_CATALOG_DESCR, c.getDescription());
+    assertEquals(IS_CATALOG_DESCRIPTION, c.getDescription());
     assertEquals(IS_CATALOG_CONNECT, c.getConnect());
   }
 
@@ -149,13 +149,14 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(17, tables.size());
+    assertEquals(18, tables.size());
 
     verifyTable("INFORMATION_SCHEMA", "CATALOGS", tables);
     verifyTable("INFORMATION_SCHEMA", "COLUMNS", tables);
     verifyTable("INFORMATION_SCHEMA", "SCHEMATA", tables);
     verifyTable("INFORMATION_SCHEMA", "TABLES", tables);
     verifyTable("INFORMATION_SCHEMA", "VIEWS", tables);
+    verifyTable("INFORMATION_SCHEMA", "FILES", tables);
     verifyTable("sys", "boot", tables);
     verifyTable("sys", "drillbits", tables);
     verifyTable("sys", "memory", tables);
@@ -186,13 +187,14 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(17, tables.size());
+    assertEquals(18, tables.size());
 
     verifyTable("INFORMATION_SCHEMA", "CATALOGS", tables);
     verifyTable("INFORMATION_SCHEMA", "COLUMNS", tables);
     verifyTable("INFORMATION_SCHEMA", "SCHEMATA", tables);
     verifyTable("INFORMATION_SCHEMA", "TABLES", tables);
     verifyTable("INFORMATION_SCHEMA", "VIEWS", tables);
+    verifyTable("INFORMATION_SCHEMA", "FILES", tables);
     verifyTable("sys", "boot", tables);
     verifyTable("sys", "drillbits", tables);
     verifyTable("sys", "memory", tables);
@@ -248,7 +250,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(118, columns.size());
+    assertEquals(130, columns.size());
     // too many records to verify the output.
   }
 

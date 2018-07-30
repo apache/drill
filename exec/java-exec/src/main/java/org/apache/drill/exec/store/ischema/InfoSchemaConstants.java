@@ -17,55 +17,42 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-public final class InfoSchemaConstants {
-  /** Prevents instantiation. */
-  private InfoSchemaConstants() {
-  }
+public interface InfoSchemaConstants {
 
   /** Name of catalog containing information schema. */
-  public static final String IS_CATALOG_NAME = "DRILL";
+  String IS_CATALOG_NAME = "DRILL";
 
   /** Catalog description */
-  public static final String IS_CATALOG_DESCR = "The internal metadata used by Drill";
+  String IS_CATALOG_DESCRIPTION = "The internal metadata used by Drill";
 
   /** Catalog connect string. Currently empty */
-  public static final String IS_CATALOG_CONNECT = "";
+   String IS_CATALOG_CONNECT = "";
 
   /** Name of information schema. */
-  public static final String IS_SCHEMA_NAME = "INFORMATION_SCHEMA";
-
-  // TODO:  Resolve how to not have two different place defining table names:
-  // NOTE: These string values have to match the identifiers for SelectedTable's
-  // enumerators.
-  // Information schema's tables' names:
-  public static final String TAB_CATALOGS = "CATALOGS";
-  public static final String TAB_COLUMNS = "COLUMNS";
-  public static final String TAB_SCHEMATA = "SCHEMATA";
-  public static final String TAB_TABLES = "TABLES";
-  public static final String TAB_VIEWS = "VIEWS";
+   String IS_SCHEMA_NAME = "INFORMATION_SCHEMA";
 
   // CATALOGS column names:
-  public static final String CATS_COL_CATALOG_CONNECT = "CATALOG_CONNECT";
-  public static final String CATS_COL_CATALOG_DESCRIPTION = "CATALOG_DESCRIPTION";
-  public static final String CATS_COL_CATALOG_NAME = "CATALOG_NAME";
+   String CATS_COL_CATALOG_CONNECT = "CATALOG_CONNECT";
+   String CATS_COL_CATALOG_DESCRIPTION = "CATALOG_DESCRIPTION";
+   String CATS_COL_CATALOG_NAME = "CATALOG_NAME";
 
   // SCHEMATA column names:
-  public static final String SCHS_COL_CATALOG_NAME = "CATALOG_NAME";
-  public static final String SCHS_COL_SCHEMA_NAME = "SCHEMA_NAME";
-  public static final String SCHS_COL_SCHEMA_OWNER = "SCHEMA_OWNER";
-  public static final String SCHS_COL_TYPE = "TYPE";
-  public static final String SCHS_COL_IS_MUTABLE = "IS_MUTABLE";
+   String SCHS_COL_CATALOG_NAME = "CATALOG_NAME";
+   String SCHS_COL_SCHEMA_NAME = "SCHEMA_NAME";
+   String SCHS_COL_SCHEMA_OWNER = "SCHEMA_OWNER";
+   String SCHS_COL_TYPE = "TYPE";
+   String SCHS_COL_IS_MUTABLE = "IS_MUTABLE";
 
   // Common TABLES / VIEWS / COLUMNS columns names:
-  public static final String SHRD_COL_TABLE_CATALOG = "TABLE_CATALOG";
-  public static final String SHRD_COL_TABLE_SCHEMA = "TABLE_SCHEMA";
-  public static final String SHRD_COL_TABLE_NAME = "TABLE_NAME";
+   String SHRD_COL_TABLE_CATALOG = "TABLE_CATALOG";
+   String SHRD_COL_TABLE_SCHEMA = "TABLE_SCHEMA";
+   String SHRD_COL_TABLE_NAME = "TABLE_NAME";
 
   // Remaining TABLES column names:
-  public static final String TBLS_COL_TABLE_TYPE = "TABLE_TYPE";
+   String TBLS_COL_TABLE_TYPE = "TABLE_TYPE";
 
   // Remaining VIEWS column names:
-  public static final String VIEWS_COL_VIEW_DEFINITION = "VIEW_DEFINITION";
+   String VIEWS_COL_VIEW_DEFINITION = "VIEW_DEFINITION";
 
   // COLUMNS columns, from SQL standard:
   // 1. TABLE_CATALOG
@@ -87,18 +74,31 @@ public final class InfoSchemaConstants {
   // 17. CHARACTER_SET_CATALOG ...
 
   // Remaining COLUMNS column names:
-  public static final String COLS_COL_COLUMN_NAME = "COLUMN_NAME";
-  public static final String COLS_COL_ORDINAL_POSITION = "ORDINAL_POSITION";
-  public static final String COLS_COL_COLUMN_DEFAULT = "COLUMN_DEFAULT";
-  public static final String COLS_COL_IS_NULLABLE = "IS_NULLABLE";
-  public static final String COLS_COL_DATA_TYPE = "DATA_TYPE";
-  public static final String COLS_COL_CHARACTER_MAXIMUM_LENGTH = "CHARACTER_MAXIMUM_LENGTH";
-  public static final String COLS_COL_CHARACTER_OCTET_LENGTH = "CHARACTER_OCTET_LENGTH";
-  public static final String COLS_COL_NUMERIC_PRECISION = "NUMERIC_PRECISION";
-  public static final String COLS_COL_NUMERIC_PRECISION_RADIX = "NUMERIC_PRECISION_RADIX";
-  public static final String COLS_COL_NUMERIC_SCALE = "NUMERIC_SCALE";
-  public static final String COLS_COL_DATETIME_PRECISION = "DATETIME_PRECISION";
-  public static final String COLS_COL_INTERVAL_TYPE = "INTERVAL_TYPE";
-  public static final String COLS_COL_INTERVAL_PRECISION = "INTERVAL_PRECISION";
+   String COLS_COL_COLUMN_NAME = "COLUMN_NAME";
+   String COLS_COL_ORDINAL_POSITION = "ORDINAL_POSITION";
+   String COLS_COL_COLUMN_DEFAULT = "COLUMN_DEFAULT";
+   String COLS_COL_IS_NULLABLE = "IS_NULLABLE";
+   String COLS_COL_DATA_TYPE = "DATA_TYPE";
+   String COLS_COL_CHARACTER_MAXIMUM_LENGTH = "CHARACTER_MAXIMUM_LENGTH";
+   String COLS_COL_CHARACTER_OCTET_LENGTH = "CHARACTER_OCTET_LENGTH";
+   String COLS_COL_NUMERIC_PRECISION = "NUMERIC_PRECISION";
+   String COLS_COL_NUMERIC_PRECISION_RADIX = "NUMERIC_PRECISION_RADIX";
+   String COLS_COL_NUMERIC_SCALE = "NUMERIC_SCALE";
+   String COLS_COL_DATETIME_PRECISION = "DATETIME_PRECISION";
+   String COLS_COL_INTERVAL_TYPE = "INTERVAL_TYPE";
+   String COLS_COL_INTERVAL_PRECISION = "INTERVAL_PRECISION";
 
+  // FILES column names:
+   String FILES_COL_SCHEMA_NAME = SCHS_COL_SCHEMA_NAME;
+   String FILES_COL_ROOT_SCHEMA_NAME = "ROOT_SCHEMA_NAME";
+   String FILES_COL_WORKSPACE_NAME = "WORKSPACE_NAME";
+   String FILES_COL_FILE_NAME = "FILE_NAME";
+   String FILES_COL_RELATIVE_PATH = "RELATIVE_PATH";
+   String FILES_COL_IS_DIRECTORY = "IS_DIRECTORY";
+   String FILES_COL_IS_FILE = "IS_FILE";
+   String FILES_COL_LENGTH = "LENGTH";
+   String FILES_COL_OWNER = "OWNER";
+   String FILES_COL_GROUP = "GROUP";
+   String FILES_COL_PERMISSION = "PERMISSION";
+   String FILES_COL_MODIFICATION_TIME = "MODIFICATION_TIME";
 }

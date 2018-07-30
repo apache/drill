@@ -129,8 +129,6 @@ public class TestDropTable extends PlanTestBase {
     final String nestedJsonTable = tableName + Path.SEPARATOR + "json_table";
     test(CREATE_SIMPLE_TABLE, BACK_TICK + nestedJsonTable + BACK_TICK);
 
-    test("show files from " + tableName);
-
     boolean dropFailed = false;
     // this should fail, because the directory contains non-homogenous files
     try {
