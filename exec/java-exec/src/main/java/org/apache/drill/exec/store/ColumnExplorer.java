@@ -255,13 +255,17 @@ public class ColumnExplorer {
    * 1. table columns
    * 2. partition columns
    * 3. implicit file columns
+   * If it is a star query, then only includes implicit columns that were
+   * explicitly selected (e.g., SELECT *, FILENAME FROM ..)
    */
   private void init() {
-    if (isStarQuery) {
-      selectedImplicitColumns.putAll(allImplicitColumns);
-    } else {
-      for (SchemaPath column : columns) {
-        String path = column.getRootSegmentPath();
+    for (SchemaPath column : columns) {
+      final String path = column.getRootSegmentPath();
+      if (isStarQuery) {
+        if (allImplicitColumns.get(path) != null) {
+          selectedImplicitColumns.put(path, allImplicitColumns.get(path));
+        }
+      } else {
         if (isPartitionColumn(partitionDesignator, path)) {
           selectedPartitionColumns.add(Integer.parseInt(path.substring(partitionDesignator.length())));
         } else if (allImplicitColumns.get(path) != null) {
