@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 package org.apache.drill.test;
-;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.LoggingResultsListener;
