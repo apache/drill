@@ -136,12 +136,14 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                   outcome = out;
                   return AggOutcome.RETURN_OUTCOME;
                 case EMIT:
+                  outerOutcome = EMIT;
                   if (incoming.getRecordCount() == 0) {
                     // When we see an EMIT we let the  agg record batch know that it should either
                     // send out an EMIT or an OK_NEW_SCHEMA, followed by an EMIT. To do that we simply return
                     // RETURN_AND_RESET with the outcome so the record batch can take care of it.
                     return setOkAndReturnEmit();
                   } else {
+                    currentIndex = this.getVectorIndex(underlyingIndex);
                     break outer;
                   }
 
