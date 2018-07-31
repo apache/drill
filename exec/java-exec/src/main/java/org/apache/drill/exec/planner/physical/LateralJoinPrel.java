@@ -72,7 +72,7 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
     if (getColumn() != null) {
       excludedColumns.add(getColumn());
     }
-    LateralJoinPOP ljoin = new LateralJoinPOP(leftPop, rightPop, jtype.toJoinType(), excludedColumns);
+    LateralJoinPOP ljoin = new LateralJoinPOP(leftPop, rightPop, jtype.toJoinType(), DrillLateralJoinRelBase.IMPLICIT_COLUMN, excludedColumns);
     return creator.addMetadata(this, ljoin);
   }
 

@@ -22,14 +22,12 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.RelFactories;
-import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,22 +78,13 @@ public class DrillProjectPushIntoLateralJoinRule extends RelOptRule {
 
     if (!DrillRelOptUtil.isTrivialProject(origProj, true)) {
       Map<Integer, Integer> mapWithoutCorr = buildMapWithoutCorrColumn(corr, correlationIndex);
-      List<RexNode> outputExprs = transformExprs(origProj.getCluster().getRexBuilder(), origProj.getChildExps(), mapWithoutCorr);
+      List<RexNode> outputExprs = DrillRelOptUtil.transformExprs(origProj.getCluster().getRexBuilder(), origProj.getChildExps(), mapWithoutCorr);
 
       relNode = new DrillProjectRel(origProj.getCluster(),
                                     left.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
                                     relNode, outputExprs, origProj.getRowType());
     }
     call.transformTo(relNode);
-  }
-
-  private List<RexNode> transformExprs(RexBuilder builder, List<RexNode> exprs, Map<Integer, Integer> corrMap) {
-    List<RexNode> outputExprs = new ArrayList<>();
-    DrillRelOptUtil.RexFieldsTransformer transformer = new DrillRelOptUtil.RexFieldsTransformer(builder, corrMap);
-    for (RexNode expr : exprs) {
-      outputExprs.add(transformer.go(expr));
-    }
-    return outputExprs;
   }
 
   private Map<Integer, Integer> buildMapWithoutCorrColumn(RelNode corr, int correlationIndex) {

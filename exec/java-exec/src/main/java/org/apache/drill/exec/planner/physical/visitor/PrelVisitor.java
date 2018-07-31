@@ -40,5 +40,4 @@ public interface PrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   RETURN visitPrel(Prel prel, EXTRA value) throws EXCEP;
   RETURN visitUnnest(UnnestPrel prel, EXTRA value) throws EXCEP;
   RETURN visitLateral(LateralJoinPrel prel, EXTRA value) throws EXCEP;
-
 }

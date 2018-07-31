@@ -35,6 +35,8 @@ import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.physical.impl.join.LateralJoinBatch;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
+import org.apache.drill.exec.planner.common.DrillLateralJoinRelBase;
+import org.apache.drill.exec.planner.common.DrillUnnestRelBase;
 import org.apache.drill.exec.planner.logical.DrillLogicalTestutils;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
@@ -70,7 +72,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
   @BeforeClass public static void setUpBeforeClass() throws Exception {
     mockPopConfig = new MockStorePOP(null);
-    ljPopConfig = new LateralJoinPOP(null, null, JoinRelType.INNER, Lists.newArrayList());
+    ljPopConfig = new LateralJoinPOP(null, null, JoinRelType.INNER, DrillLateralJoinRelBase.IMPLICIT_COLUMN, Lists.newArrayList());
     operatorContext = fixture.newOperatorContext(mockPopConfig);
   }
 
@@ -350,7 +352,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     LateralJoinPOP previoudPop = ljPopConfig;
     List<SchemaPath> excludedCols = new ArrayList<>();
     excludedCols.add(SchemaPath.getSimplePath("unnestColumn"));
-    ljPopConfig = new LateralJoinPOP(null, null, JoinRelType.INNER, excludedCols);
+    ljPopConfig = new LateralJoinPOP(null, null, JoinRelType.INNER, DrillLateralJoinRelBase.IMPLICIT_COLUMN, excludedCols);
     final int limitedOutputBatchSize = 127;
     final int inputBatchSize = limitedOutputBatchSize + 1;
     // Since we want 127 row count and because of nearest power of 2 adjustment output row count will be reduced to
@@ -569,7 +571,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     }
 
     // Get the unnest POPConfig
-    final UnnestPOP unnestPopConfig = new UnnestPOP(null, SchemaPath.getCompoundPath("unnestColumn"));
+    final UnnestPOP unnestPopConfig = new UnnestPOP(null, SchemaPath.getCompoundPath("unnestColumn"), DrillUnnestRelBase.IMPLICIT_COLUMN);
 
     // Get the IterOutcomes for LJ
     final List<RecordBatch.IterOutcome> outcomes = new ArrayList<>(iterOutcomes.length);
@@ -588,7 +590,8 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
     // project is required to rename the columns so as to disambiguate the same column name from
     // unnest operator and the regular scan.
-    final Project projectPopConfig = new Project(DrillLogicalTestutils.parseExprs("unnestColumn", "unnestColumn1"), null);
+    final Project projectPopConfig = new Project(DrillLogicalTestutils.parseExprs("unnestColumn", "unnestColumn1",
+      unnestPopConfig.getImplicitColumn(), unnestPopConfig.getImplicitColumn()), null);
 
     final ProjectRecordBatch projectBatch =
         new ProjectRecordBatch( projectPopConfig, unnestBatch, fixture.getFragmentContext());
@@ -874,8 +877,8 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     }
 
     // Get the unnest POPConfig
-    final UnnestPOP unnestPopConfig1 = new UnnestPOP(null, SchemaPath.getSimplePath("unnestColumn"));
-    final UnnestPOP unnestPopConfig2 = new UnnestPOP(null, SchemaPath.getSimplePath("colB"));
+    final UnnestPOP unnestPopConfig1 = new UnnestPOP(null, SchemaPath.getSimplePath("unnestColumn"), DrillUnnestRelBase.IMPLICIT_COLUMN);
+    final UnnestPOP unnestPopConfig2 = new UnnestPOP(null, SchemaPath.getSimplePath("colB"), DrillUnnestRelBase.IMPLICIT_COLUMN);
 
     // Get the IterOutcomes for LJ
     final List<RecordBatch.IterOutcome> outcomes = new ArrayList<>(iterOutcomes.length);
@@ -896,16 +899,18 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
     // Create intermediate Project
     final Project projectPopConfig1 =
-        new Project(DrillLogicalTestutils.parseExprs("unnestColumn.colB", "colB"), unnestPopConfig1);
+        new Project(DrillLogicalTestutils.parseExprs("unnestColumn.colB", "colB",
+          unnestPopConfig1.getImplicitColumn(), unnestPopConfig1.getImplicitColumn()), unnestPopConfig1);
     final ProjectRecordBatch projectBatch1 =
         new ProjectRecordBatch(projectPopConfig1, unnestBatch1, fixture.getFragmentContext());
     final Project projectPopConfig2 =
-        new Project(DrillLogicalTestutils.parseExprs("colB", "unnestColumn2"), unnestPopConfig2);
+        new Project(DrillLogicalTestutils.parseExprs("colB", "unnestColumn2",
+          unnestPopConfig2.getImplicitColumn(), unnestPopConfig2.getImplicitColumn()), unnestPopConfig2);
     final ProjectRecordBatch projectBatch2 =
         new ProjectRecordBatch(projectPopConfig2, unnestBatch2, fixture.getFragmentContext());
 
-    final LateralJoinPOP ljPopConfig2 = new LateralJoinPOP(projectPopConfig1, projectPopConfig2, JoinRelType.INNER, Lists.newArrayList());
-    final LateralJoinPOP ljPopConfig1 = new LateralJoinPOP(mockPopConfig, ljPopConfig2, JoinRelType.INNER, Lists.newArrayList());
+    final LateralJoinPOP ljPopConfig2 = new LateralJoinPOP(projectPopConfig1, projectPopConfig2, JoinRelType.INNER, DrillLateralJoinRelBase.IMPLICIT_COLUMN, Lists.newArrayList());
+    final LateralJoinPOP ljPopConfig1 = new LateralJoinPOP(mockPopConfig, ljPopConfig2, JoinRelType.INNER, DrillLateralJoinRelBase.IMPLICIT_COLUMN, Lists.newArrayList());
 
     final LateralJoinBatch lateralJoinBatch2 =
         new LateralJoinBatch(ljPopConfig2, fixture.getFragmentContext(), projectBatch1, projectBatch2);

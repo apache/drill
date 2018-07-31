@@ -39,6 +39,9 @@ import static org.apache.drill.exec.proto.UserBitShared.CoreOperatorType.UNNEST_
 public class UnnestPOP extends AbstractBase implements Leaf {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnnestPOP.class);
 
+  @JsonProperty("implicitColumn")
+  private String implicitColumn;
+
   private SchemaPath column;
 
   @JsonIgnore
@@ -47,14 +50,16 @@ public class UnnestPOP extends AbstractBase implements Leaf {
   @JsonCreator
   public UnnestPOP(
       @JsonProperty("child") PhysicalOperator child, // Operator with incoming record batch
-      @JsonProperty("column") SchemaPath column) {
+      @JsonProperty("column") SchemaPath column,
+      @JsonProperty("implicitColumn") String implicitColumn) {
     this.column = column;
+    this.implicitColumn = implicitColumn;
   }
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     assert children.isEmpty();
-    UnnestPOP newUnnest = new UnnestPOP(null, column);
+    UnnestPOP newUnnest = new UnnestPOP(null, column, this.implicitColumn);
     newUnnest.addUnnestBatch(this.unnestBatch);
     return newUnnest;
   }
@@ -81,6 +86,9 @@ public class UnnestPOP extends AbstractBase implements Leaf {
   public UnnestRecordBatch getUnnestBatch() {
     return this.unnestBatch;
   }
+
+  @JsonProperty("implicitColumn")
+  public String getImplicitColumn() { return this.implicitColumn; }
 
   @Override
   public int getOperatorType() {

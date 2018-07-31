@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.common;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +55,8 @@ import org.apache.drill.exec.resolver.TypeCastRules;
  * static methods that are needed during either logical or physical planning.
  */
 public abstract class DrillRelOptUtil {
+
+  final public static String IMPLICIT_COLUMN = "$drill_implicit_field$";
 
   // Similar to RelOptUtil.areRowTypesEqual() with the additional check for allowSubstring
   public static boolean areRowTypesCompatible(
@@ -317,6 +320,47 @@ public abstract class DrillRelOptUtil {
     }
   }
 
+  /**
+   * For a given row type return a map between old field indices and one index right shifted fields.
+   * @param rowType : row type to be right shifted.
+   * @return map: hash map between old and new indices
+   */
+  public static Map<Integer, Integer> rightShiftColsInRowType(RelDataType rowType) {
+    Map<Integer, Integer> map = new HashMap<>();
+    int fieldCount = rowType.getFieldCount();
+    for (int i = 0; i< fieldCount; i++) {
+      map.put(i, i+1);
+    }
+    return map;
+  }
+
+  /**
+   * Given a list of rexnodes it transforms the rexnodes by changing the expr to use new index mapped to the old index.
+   * @param builder : RexBuilder from the planner.
+   * @param exprs: RexNodes to be transformed.
+   * @param corrMap: Mapping between old index to new index.
+   * @return
+   */
+  public static List<RexNode> transformExprs(RexBuilder builder, List<RexNode> exprs, Map<Integer, Integer> corrMap) {
+    List<RexNode> outputExprs = new ArrayList<>();
+    DrillRelOptUtil.RexFieldsTransformer transformer = new DrillRelOptUtil.RexFieldsTransformer(builder, corrMap);
+    for (RexNode expr : exprs) {
+      outputExprs.add(transformer.go(expr));
+    }
+    return outputExprs;
+  }
+
+  /**
+   * Given a of rexnode it transforms the rexnode by changing the expr to use new index mapped to the old index.
+   * @param builder : RexBuilder from the planner.
+   * @param expr: RexNode to be transformed.
+   * @param corrMap: Mapping between old index to new index.
+   * @return
+   */
+  public static RexNode transformExpr(RexBuilder builder, RexNode expr, Map<Integer, Integer> corrMap) {
+    DrillRelOptUtil.RexFieldsTransformer transformer = new DrillRelOptUtil.RexFieldsTransformer(builder, corrMap);
+    return transformer.go(expr);
+  }
 
   /**
    * RexFieldsTransformer is a utility class used to convert column refs in a RexNode

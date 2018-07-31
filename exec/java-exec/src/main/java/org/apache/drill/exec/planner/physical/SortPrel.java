@@ -19,7 +19,11 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
+import com.google.common.collect.Lists;
+import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ExternalSort;
@@ -119,4 +123,22 @@ public class SortPrel extends org.apache.calcite.rel.core.Sort implements Prel {
     return true;
   }
 
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    List<RelFieldCollation> relFieldCollations = Lists.newArrayList();
+    relFieldCollations.add(new RelFieldCollation(0,
+                            RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST));
+    for (RelFieldCollation fieldCollation : this.collation.getFieldCollations()) {
+      relFieldCollations.add(new RelFieldCollation(fieldCollation.getFieldIndex() + 1,
+              fieldCollation.direction, fieldCollation.nullDirection));
+    }
+
+    RelCollation collationTrait = RelCollationImpl.of(relFieldCollations);
+    RelTraitSet traits = RelTraitSet.createEmpty()
+                                    .replace(this.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE))
+                                    .replace(collationTrait)
+                                    .replace(DRILL_PHYSICAL);
+
+    return this.copy(traits, children.get(0), collationTrait, this.offset, this.fetch);
+  }
 }

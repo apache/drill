@@ -130,4 +130,5 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
   public boolean needsFinalColumnReordering() {
     return false;
   }
+
 }

@@ -138,4 +138,5 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
           FieldReference.getWithQuotedRef(rightFields.get(pair.right))));
     }
   }
+
 }

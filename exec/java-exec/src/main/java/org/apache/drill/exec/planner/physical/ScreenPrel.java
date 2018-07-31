@@ -84,4 +84,5 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel, HasDistribut
   public DistributionAffinity getDistributionAffinity() {
     return DistributionAffinity.HARD;
   }
+
 }

@@ -42,6 +42,8 @@ import java.util.List;
 
 public abstract class DrillLateralJoinRelBase extends Correlate implements DrillRelNode {
 
+  final public static String IMPLICIT_COLUMN = DrillRelOptUtil.IMPLICIT_COLUMN;
+
   final private static double CORRELATE_MEM_COPY_COST = DrillCostBase.MEMORY_TO_CPU_RATIO * DrillCostBase.BASE_CPU_COST;
   final public boolean excludeCorrelateColumn;
   public DrillLateralJoinRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, boolean excludeCorrelateCol,
@@ -71,7 +73,7 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
       case LEFT:
       case INNER:
         return constructRowType(SqlValidatorUtil.deriveJoinRowType(left.getRowType(),
-          right.getRowType(), joinType.toJoinType(),
+          removeImplicitField(right.getRowType()), joinType.toJoinType(),
           getCluster().getTypeFactory(), null,
           ImmutableList.of()));
       case ANTI:
@@ -116,6 +118,21 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
       return getCluster().getTypeFactory().createStructType(fields, fieldNames);
     }
     return inputRowType;
+  }
+
+  public RelDataType removeImplicitField(RelDataType inputRowType) {
+    List<RelDataType> fields = new ArrayList<>();
+    List<String> fieldNames = new ArrayList<>();
+
+    for (RelDataTypeField field : inputRowType.getFieldList()) {
+      if (field.getName().equals(IMPLICIT_COLUMN)) {
+        continue;
+      }
+      fieldNames.add(field.getName());
+      fields.add(field.getType());
+    }
+
+    return getCluster().getTypeFactory().createStructType(fields, fieldNames);
   }
 
   @Override

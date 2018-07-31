@@ -18,11 +18,18 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.common.DrillProjectRelBase;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -128,4 +135,29 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
     return false;
   }
 
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    RelDataTypeFactory typeFactory = this.getCluster().getTypeFactory();
+    RexBuilder builder = this.getCluster().getRexBuilder();
+    List<RexNode> projects = Lists.newArrayList();
+    projects.add(builder.makeInputRef(typeFactory.createSqlType(SqlTypeName.INTEGER), 0));
+    // right shift the previous field indices.
+    projects.addAll(DrillRelOptUtil.transformExprs(builder, this.getProjects(),
+                        DrillRelOptUtil.rightShiftColsInRowType(this.getInput().getRowType())));
+
+    List<String> fieldNames = new ArrayList<>();
+    List<RelDataType> fieldTypes = new ArrayList<>();
+
+    fieldNames.add("$drill_implicit_field$");
+    fieldTypes.add(typeFactory.createSqlType(SqlTypeName.INTEGER));
+
+    for (RelDataTypeField field : this.rowType.getFieldList()) {
+      fieldNames.add(field.getName());
+      fieldTypes.add(field.getType());
+    }
+
+    RelDataType newRowType = typeFactory.createStructType(fieldTypes, fieldNames);
+
+    return (Prel) this.copy(this.getTraitSet(), children.get(0), projects, newRowType);
+  }
 }

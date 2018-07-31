@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl.lateraljoin;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -34,7 +33,6 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.Ignore;
 
 import java.nio.file.Paths;
 import java.util.regex.Matcher;
@@ -49,12 +47,6 @@ public class TestLateralPlans extends BaseTestQuery {
     dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_1));
     dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_2));
     test("alter session set `planner.enable_unnest_lateral`=true");
-  }
-
-  @Test
-  public void testLateralPlan1() throws Exception {
-    int numOutputRecords = testPhysical(getFile("lateraljoin/lateralplan1.json"));
-    assertEquals(numOutputRecords, 12);
   }
 
   @Test
@@ -257,13 +249,12 @@ public class TestLateralPlans extends BaseTestQuery {
   }
 
   @Test
-  @Ignore ()
   public void testUnnestWithAggInSubquery() throws Exception {
-    String Sql = "select t.c_name, t3.items from cp.`lateraljoin/nested-customer.parquet` t," +
+    String Sql = "select t.c_name, sum(t4.items) from cp.`lateraljoin/nested-customer.parquet` t," +
         " lateral (select t2.ord.items as items from unnest(t.orders) t2(ord)) d1," +
-        " lateral (select avg(t3.items.i_number) from unnest(d1.items) t3(items)) where t.c_id > 1";
+        " lateral (select sum(t3.items.i_number) from unnest(d1.items) t3(items)) t4(items) where t.c_id > 1 group by t.c_name";
 
-    String baselineQuery = "select t.c_name, avg(t3.items.i_number) from cp.`lateraljoin/nested-customer.parquet` t " +
+    String baselineQuery = "select t.c_name, sum(t3.items.i_number) from cp.`lateraljoin/nested-customer.parquet` t " +
         " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
         "t3(name, orders, items) on t.c_name = t3.name where t.c_id > 1 group by t.c_name";
 
@@ -273,9 +264,11 @@ public class TestLateralPlans extends BaseTestQuery {
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       client
-          .queryBuilder()
-          .sql(Sql)
-          .run();
+          .testBuilder()
+          .ordered()
+          .sqlBaselineQuery(baselineQuery)
+          .sqlQuery(Sql)
+          .go();
     }
   }
 

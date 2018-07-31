@@ -19,9 +19,13 @@ package org.apache.drill.exec.planner.physical;
 
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.UnnestPOP;
@@ -30,8 +34,10 @@ import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 public class UnnestPrel extends DrillUnnestRelBase implements Prel {
 
@@ -40,7 +46,7 @@ public class UnnestPrel extends DrillUnnestRelBase implements Prel {
   public UnnestPrel(RelOptCluster cluster, RelTraitSet traits,
                     RelDataType rowType, RexNode ref) {
     super(cluster, traits, ref);
-    this.unnestPOP = new UnnestPOP(null, SchemaPath.getSimplePath(((RexFieldAccess)ref).getField().getName()));
+    this.unnestPOP = new UnnestPOP(null, SchemaPath.getSimplePath(((RexFieldAccess)ref).getField().getName()), DrillUnnestRelBase.IMPLICIT_COLUMN);
     this.rowType = rowType;
   }
 
@@ -77,5 +83,23 @@ public class UnnestPrel extends DrillUnnestRelBase implements Prel {
 
   public Class<?> getParentClass() {
     return LateralJoinPrel.class;
+  }
+
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    RelDataTypeFactory typeFactory = this.getCluster().getTypeFactory();
+    List<String> fieldNames = new ArrayList<>();
+    List<RelDataType> fieldTypes = new ArrayList<>();
+
+    fieldNames.add(IMPLICIT_COLUMN);
+    fieldTypes.add(typeFactory.createSqlType(SqlTypeName.INTEGER));
+
+    for (RelDataTypeField field : this.rowType.getFieldList()) {
+      fieldNames.add(field.getName());
+      fieldTypes.add(field.getType());
+    }
+
+    RelDataType newRowType = typeFactory.createStructType(fieldTypes, fieldNames);
+    return new UnnestPrel(this.getCluster(), this.getTraitSet(), newRowType, ref);
   }
 }

@@ -111,8 +111,8 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
         IterOutcome outcome;
         // consume all the outout from unnest until EMIT or end of
         // incoming data
-        int unnestCount = 0; // number of values unnested for current record
-        while (recordIndex < incoming.getRecordCount()) {
+        int unnestCount = 0; // number of values unnested by current iteration
+        while (true) {
           outcome = unnest.next();
           if (outcome == IterOutcome.OK_NEW_SCHEMA) {
             // setup schema does nothing (this is just a place holder)
@@ -122,13 +122,11 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
           }
           // We put each batch output from unnest into a hypervector
           // the calling test can match this against the baseline
-          //unnestCount +=
-          //    unnest.getOutgoingContainer().hasRecordCount() ? unnest.getOutgoingContainer().getRecordCount() : 0;
           unnestCount += addBatchToHyperContainer(unnest);
           if (outcome == IterOutcome.EMIT) {
             // reset unnest count
             unnestCount = 0;
-            moveToNextRecord();
+            break;
           }
           // Pretend that an operator somewhere between lateral and unnest
           // wants to terminate processing of the record.

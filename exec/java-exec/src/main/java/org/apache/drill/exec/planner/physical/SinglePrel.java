@@ -51,4 +51,5 @@ public abstract class SinglePrel extends SingleRel implements Prel{
   public boolean needsFinalColumnReordering() {
     return true;
   }
+
 }

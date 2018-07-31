@@ -168,4 +168,5 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   public DistributionAffinity getDistributionAffinity() {
     return groupScan.getDistributionAffinity();
   }
+
 }

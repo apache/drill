@@ -188,4 +188,26 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
     return true;
   }
 
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    List<Integer> groupingCols = Lists.newArrayList();
+    groupingCols.add(0);
+    for (int groupingCol : groupSet.asList()) {
+      groupingCols.add(groupingCol + 1);
+    }
+
+    ImmutableBitSet groupingSet = ImmutableBitSet.of(groupingCols);
+    List<ImmutableBitSet> groupingSets = Lists.newArrayList();
+    groupingSets.add(groupingSet);
+    List<AggregateCall> aggregateCalls = Lists.newArrayList();
+    for (AggregateCall aggCall : aggCalls) {
+      List<Integer> arglist = Lists.newArrayList();
+      for (int arg : aggCall.getArgList()) {
+        arglist.add(arg + 1);
+      }
+      aggregateCalls.add(AggregateCall.create(aggCall.getAggregation(), aggCall.isDistinct(),
+              aggCall.isApproximate(), arglist, aggCall.filterArg, aggCall.type, aggCall.name));
+    }
+    return (Prel) copy(traitSet, children.get(0),indicator,groupingSet,groupingSets, aggregateCalls);
+  }
 }

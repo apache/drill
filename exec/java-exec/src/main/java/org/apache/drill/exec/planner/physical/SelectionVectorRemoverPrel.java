@@ -54,5 +54,8 @@ public class SelectionVectorRemoverPrel extends SinglePrel{
     return SelectionVectorMode.NONE;
   }
 
-
+  @Override
+  public Prel addImplicitRowIDCol(List<RelNode> children) {
+    return (Prel) this.copy(this.traitSet, children);
+  }
 }
