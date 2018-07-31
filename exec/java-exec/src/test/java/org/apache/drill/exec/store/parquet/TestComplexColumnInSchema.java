@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
+package org.apache.drill.exec.store.parquet;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
