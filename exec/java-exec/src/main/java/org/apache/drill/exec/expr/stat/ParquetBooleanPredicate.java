@@ -46,15 +46,29 @@ public abstract class ParquetBooleanPredicate<C extends Comparable<C>> extends B
       ExpressionPosition pos
   ) {
     return new ParquetBooleanPredicate<C>(name, args, pos) {
+      /**
+       * Evaluates a compound "AND" filter on the statistics of a RowGroup (the filter reads "filterA and filterB").
+       * Return value :<ul>
+       *   <li>ALL : only if all filters return ALL
+       *   <li>NONE : if one filter at least returns NONE
+       *   <li>SOME : all other cases
+       * </ul>
+       */
       @Override
-      public boolean canDrop(RangeExprEvaluator<C> evaluator) {
-        // "and" : as long as one branch is OK to drop, we can drop it.
+      public RowsMatch matches(RangeExprEvaluator<C> evaluator) {
+        RowsMatch resultMatch = RowsMatch.ALL;
         for (LogicalExpression child : this) {
-          if (child instanceof ParquetFilterPredicate && ((ParquetFilterPredicate)child).canDrop(evaluator)) {
-            return true;
+          if (child instanceof ParquetFilterPredicate) {
+            switch (((ParquetFilterPredicate) child).matches(evaluator)) {
+              case NONE:
+                return RowsMatch.NONE;  // No row comply to 1 filter part => can drop RG
+              case SOME:
+                resultMatch = RowsMatch.SOME;
+              default: // Do nothing
+            }
           }
         }
-        return false;
+        return resultMatch;
       }
     };
   }
@@ -66,15 +80,29 @@ public abstract class ParquetBooleanPredicate<C extends Comparable<C>> extends B
       ExpressionPosition pos
   ) {
     return new ParquetBooleanPredicate<C>(name, args, pos) {
+      /**
+       * Evaluates a compound "OR" filter on the statistics of a RowGroup (the filter reads "filterA or filterB").
+       * Return value :<ul>
+       *   <li>NONE : only if all filters return NONE
+       *   <li>ALL : if one filter at least returns ALL
+       *   <li>SOME : all other cases
+       * </ul>
+       */
       @Override
-      public boolean canDrop(RangeExprEvaluator<C> evaluator) {
+      public RowsMatch matches(RangeExprEvaluator<C> evaluator) {
+        RowsMatch resultMatch = RowsMatch.NONE;
         for (LogicalExpression child : this) {
-          // "or" : as long as one branch is NOT ok to drop, we can NOT drop it.
-          if (!(child instanceof ParquetFilterPredicate) || !((ParquetFilterPredicate)child).canDrop(evaluator)) {
-            return false;
+          if (child instanceof ParquetFilterPredicate) {
+            switch (((ParquetFilterPredicate) child).matches(evaluator)) {
+              case ALL:
+                return RowsMatch.ALL;  // One at least is ALL => can drop filter but not RG
+              case SOME:
+                resultMatch = RowsMatch.SOME;
+              default: // Do nothing
+            }
           }
         }
-        return true;
+        return resultMatch;
       }
     };
   }
