@@ -124,7 +124,7 @@ public class SortPrel extends org.apache.calcite.rel.core.Sort implements Prel {
   }
 
   @Override
-  public Prel addImplicitRowIDCol(List<RelNode> children) {
+  public Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
     List<RelFieldCollation> relFieldCollations = Lists.newArrayList();
     relFieldCollations.add(new RelFieldCollation(0,
                             RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST));
