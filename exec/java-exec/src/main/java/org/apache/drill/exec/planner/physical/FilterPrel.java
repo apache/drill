@@ -85,7 +85,7 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
   }
 
   @Override
-  public Prel addImplicitRowIDCol(List<RelNode> children) {
+  public Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
     RexBuilder builder = this.getCluster().getRexBuilder();
     // right shift the previous field indices.
     return (Prel) this.copy(this.traitSet, children.get(0), DrillRelOptUtil.transformExpr(builder,

@@ -86,7 +86,7 @@ public class UnnestPrel extends DrillUnnestRelBase implements Prel {
   }
 
   @Override
-  public Prel addImplicitRowIDCol(List<RelNode> children) {
+  public Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
     RelDataTypeFactory typeFactory = this.getCluster().getTypeFactory();
     List<String> fieldNames = new ArrayList<>();
     List<RelDataType> fieldTypes = new ArrayList<>();

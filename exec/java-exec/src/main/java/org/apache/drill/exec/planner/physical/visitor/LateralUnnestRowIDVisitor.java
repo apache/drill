@@ -43,7 +43,7 @@ public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, Ru
   public Prel visitPrel(Prel prel, Boolean isRightOfLateral) throws RuntimeException {
     List<RelNode> children = getChildren(prel, isRightOfLateral);
     if (isRightOfLateral) {
-      return prel.addImplicitRowIDCol(children);
+      return prel.prepareForLateralUnnestPipeline(children);
     } else {
       return (Prel) prel.copy(prel.getTraitSet(), children);
     }
@@ -61,7 +61,7 @@ public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, Ru
   @Override
   public Prel visitLateral(LateralJoinPrel prel, Boolean value) throws RuntimeException {
     List<RelNode> children = Lists.newArrayList();
-    children.add(((Prel)prel.getInput(0)).accept(this, false));
+    children.add(((Prel)prel.getInput(0)).accept(this, value));
     children.add(((Prel) prel.getInput(1)).accept(this, true));
 
     return (Prel) prel.copy(prel.getTraitSet(), children);
@@ -69,6 +69,6 @@ public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, Ru
 
   @Override
   public Prel visitUnnest(UnnestPrel prel, Boolean value) throws RuntimeException {
-    return prel.addImplicitRowIDCol(null);
+    return prel.prepareForLateralUnnestPipeline(null);
   }
 }
