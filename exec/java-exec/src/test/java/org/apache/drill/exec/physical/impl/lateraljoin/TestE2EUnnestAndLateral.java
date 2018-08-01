@@ -25,7 +25,6 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.TestBuilder;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -178,7 +177,6 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
-  @Ignore ("DRILL-6638")
   public void testUnnestWithItem() throws Exception {
     String sql = "select u.item from\n" +
         "cp.`lateraljoin/nested-customer.parquet` c," +
@@ -212,7 +210,6 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
-  @Ignore ("DRILL-6638")
   public void testUnnestWithMap() throws Exception {
     String sql = "select u.item from\n" +
         "cp.`lateraljoin/nested-customer.parquet` c," +
@@ -231,7 +228,6 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   }
 
   @Test
-  @Ignore ("DRILL-6638")
   public void testMultiUnnestWithMap() throws Exception {
     String sql = "select u.item from\n" +
         "cp.`lateraljoin/nested-customer.parquet` c," +
