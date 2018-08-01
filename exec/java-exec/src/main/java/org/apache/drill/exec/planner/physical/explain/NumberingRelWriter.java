@@ -84,7 +84,9 @@ class NumberingRelWriter implements RelWriter {
     s.append("  ");
 
     if (id != null && id.opId == 0) {
-      for(int i =0; i < spacer.get(); i++){ s.append('-');}
+      for (int i = 0; i < spacer.get(); i++) {
+        s.append('-');
+      }
     }else{
       spacer.spaces(s);
     }

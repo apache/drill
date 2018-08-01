@@ -49,8 +49,7 @@ public interface StreamingAggregator {
     RETURN_OUTCOME,
     CLEANUP_AND_RETURN,
     UPDATE_AGGREGATOR,
-    RETURN_AND_RESET
-    ;
+    RETURN_AND_RESET;
   }
 
   public abstract void setup(OperatorContext context, RecordBatch incoming, StreamingAggBatch outgoing) throws SchemaChangeException;

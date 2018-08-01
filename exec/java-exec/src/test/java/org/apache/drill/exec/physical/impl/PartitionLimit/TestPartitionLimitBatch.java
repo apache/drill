@@ -344,7 +344,7 @@ public class TestPartitionLimitBatch extends BaseTestOpBatchEmitOutcome {
     expectedRowSets.add(expectedRowSet1);
     expectedRowSets.add(expectedRowSet2);
 
-    testPartitionLimitCommon(0 ,1);
+    testPartitionLimitCommon(0, 1);
   }
 
   @Test
@@ -385,7 +385,7 @@ public class TestPartitionLimitBatch extends BaseTestOpBatchEmitOutcome {
 
     expectedRowSets.add(expectedRowSet1);
 
-    testPartitionLimitCommon(2 ,3);
+    testPartitionLimitCommon(2, 3);
   }
 
   /**
@@ -440,7 +440,7 @@ public class TestPartitionLimitBatch extends BaseTestOpBatchEmitOutcome {
     expectedRowSets.add(expectedRowSet1);
     expectedRowSets.add(expectedRowSet2);
 
-    testPartitionLimitCommon(0 ,5);
+    testPartitionLimitCommon(0, 5);
   }
 
   /**

@@ -44,7 +44,7 @@ public interface HashAggregator {
 
   // For returning results from outputCurrentBatch
   // OK - batch returned, NONE - end of data, RESTART - call again, EMIT - like OK but EMIT
-  enum AggIterOutcome { AGG_OK, AGG_NONE, AGG_RESTART , AGG_EMIT }
+  enum AggIterOutcome { AGG_OK, AGG_NONE, AGG_RESTART, AGG_EMIT }
 
   void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext, RecordBatch incoming, HashAggBatch outgoing,
              LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException, ClassTransformationException;

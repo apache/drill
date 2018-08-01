@@ -101,8 +101,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
       .addRow(30, mapArray(
           mapValue(310, "d3.1"),
           mapValue(320, "d3.2"),
-          mapValue(330, "d3.3")))
-      ;
+          mapValue(330, "d3.3")));
 
     // Verify the first batch
 
@@ -144,8 +143,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
       .addRow(60, mapArray(
           mapValue(610, "d6.1", "e6.1"),
           mapValue(620, "d6.2", null),
-          mapValue(630, "d6.3", "e6.3")))
-      ;
+          mapValue(630, "d6.3", "e6.3")));
 
     // Verify the second batch
 
@@ -207,8 +205,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
       .addRow(30, mapArray(
           mapValue(310, strArray("d3.1.1", "d3.2.2")),
           mapValue(320, strArray()),
-          mapValue(330, strArray("d3.3.1", "d1.2.2"))))
-      ;
+          mapValue(330, strArray("d3.3.1", "d1.2.2"))));
 
     // Verify the batch
 

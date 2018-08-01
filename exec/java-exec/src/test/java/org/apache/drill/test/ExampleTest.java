@@ -134,7 +134,8 @@ public class ExampleTest {
 
       ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher).configProperty(ExecConstants.SLICE_TARGET, 10);
 
-      try (ClusterFixture cluster = builder.build(); ClientFixture client = cluster.clientFixture()) {
+      try (ClusterFixture cluster = builder.build();
+           ClientFixture client = cluster.clientFixture()) {
         String sql = "SELECT * FROM `dfs`.`test/employee.json`";
         logger.info(client.queryBuilder().sql(sql).explainJson());
         QuerySummary results = client.queryBuilder().sql(sql).run();

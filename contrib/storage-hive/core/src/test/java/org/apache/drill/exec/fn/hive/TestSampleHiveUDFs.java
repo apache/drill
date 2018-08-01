@@ -84,7 +84,8 @@ public class TestSampleHiveUDFs extends HiveTestBase {
   @Test
   public void floatInOut() throws Exception{
     String query = "SELECT testHiveUDFFloat(float_field) as col1 FROM hive.readtest";
-    String expected = "col1\n" + "4.67\n" + "null\n";    helper(query, expected);
+    String expected = "col1\n" + "4.67\n" + "null\n";
+    helper(query, expected);
   }
 
   @Test
@@ -105,7 +106,8 @@ public class TestSampleHiveUDFs extends HiveTestBase {
   public void binaryInOut() throws Exception{
     String query = "SELECT testHiveUDFBinary(binary_field) as col1 FROM hive.readtest";
     String expected = "col1\n" + "binaryfield\n" + "null\n";
-    helper(query, expected);    helper(query, expected);
+    helper(query, expected);
+    helper(query, expected);
   }
 
   @Test

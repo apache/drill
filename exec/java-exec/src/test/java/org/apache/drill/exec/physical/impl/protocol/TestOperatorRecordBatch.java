@@ -99,7 +99,10 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     }
 
     @Override
-    public boolean buildSchema() { buildSchemaCalled = true; return ! schemaEOF; }
+    public boolean buildSchema() {
+      buildSchemaCalled = true;
+      return !schemaEOF;
+    }
 
     @Override
     public boolean next() {

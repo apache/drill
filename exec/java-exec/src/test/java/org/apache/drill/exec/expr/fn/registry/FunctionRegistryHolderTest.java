@@ -204,7 +204,7 @@ public class FunctionRegistryHolderTest {
     for (List<FunctionHolder> functionHolders : newJars.values()) {
       for (FunctionHolder functionHolder : functionHolders) {
         if ("lower".equals(functionHolder.getName())) {
-          expectedResult.add(functionHolder.getHolder()) ;
+          expectedResult.add(functionHolder.getHolder());
         }
       }
     }
@@ -220,7 +220,7 @@ public class FunctionRegistryHolderTest {
     for (List<FunctionHolder> functionHolders : newJars.values()) {
       for (FunctionHolder functionHolder : functionHolders) {
         if ("lower".equals(functionHolder.getName())) {
-          expectedResult.add(functionHolder.getHolder()) ;
+          expectedResult.add(functionHolder.getHolder());
         }
       }
     }

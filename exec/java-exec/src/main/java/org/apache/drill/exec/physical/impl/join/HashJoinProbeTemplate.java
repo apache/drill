@@ -162,7 +162,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
    */
   private int appendBuild(VectorContainer buildSrcContainer, int buildSrcIndex) {
     // "- 1" to skip the last "hash values" added column
-    int lastColIndex = buildSrcContainer.getNumberOfColumns() - 1 ;
+    int lastColIndex = buildSrcContainer.getNumberOfColumns() - 1;
     for (int vectorIndex = 0; vectorIndex < lastColIndex; vectorIndex++) {
       ValueVector destVector = container.getValueVector(vectorIndex).getValueVector();
       ValueVector srcVector = buildSrcContainer.getValueVector(vectorIndex).getValueVector();
@@ -292,7 +292,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
           int hashCode = ( cycleNum == 0 ) ?
             partitions[0].getProbeHashCode(recordsProcessed)
             : read_left_HV_vector.getAccessor().get(recordsProcessed);
-          int currBuildPart = hashCode & partitionMask ;
+          int currBuildPart = hashCode & partitionMask;
           hashCode >>>= bitsInMask;
 
           // Set and keep the current partition (may be used again on subsequent probe calls as

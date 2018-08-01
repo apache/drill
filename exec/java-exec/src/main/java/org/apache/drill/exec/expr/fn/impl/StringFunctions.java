@@ -498,7 +498,7 @@ public class StringFunctions{
 
       for (int id = input.start; id < input.end; id++) {
         byte  currentByte = input.buffer.getByte(id);
-        out.buffer.setByte(id - input.start, Character.toLowerCase(currentByte)) ;
+        out.buffer.setByte(id - input.start, Character.toLowerCase(currentByte));
       }
     }
   }
@@ -529,7 +529,7 @@ public class StringFunctions{
 
       for (int id = input.start; id < input.end; id++) {
         byte currentByte = input.buffer.getByte(id);
-        out.buffer.setByte(id - input.start, Character.toUpperCase(currentByte)) ;
+        out.buffer.setByte(id - input.start, Character.toUpperCase(currentByte));
       }
     }
   }
@@ -711,9 +711,9 @@ public class StringFunctions{
         final int charCount = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(string.buffer, string.start, string.end);
         final int charLen;
         if (length.value > 0) {
-          charLen = Math.min((int)length.value, charCount);  //left('abc', 5) -> 'abc'
+          charLen = Math.min((int) length.value, charCount);  //left('abc', 5) -> 'abc'
         } else if (length.value < 0) {
-          charLen = Math.max(0, charCount + (int)length.value) ; // left('abc', -5) ==> ''
+          charLen = Math.max(0, charCount + (int) length.value); // left('abc', -5) ==> ''
         } else {
           charLen = 0;
         }
@@ -830,7 +830,7 @@ public class StringFunctions{
 
           if (j == from.end ) {
             //find a true match ("from" is not empty), copy entire "to" string to out buffer
-            for (int k = to.start ; k < to.end; k++) {
+            for (int k = to.start; k < to.end; k++) {
               out.buffer.setByte(out.end++, to.buffer.getByte(k));
             }
 
@@ -921,7 +921,7 @@ public class StringFunctions{
                 (currentByte & 0xE0) == 0xC0 ||   // 2-byte char. First byte is 110xxxxx
                 (currentByte & 0xF0) == 0xE0 ||   // 3-byte char. First byte is 1110xxxx
                 (currentByte & 0xF8) == 0xF0) {   //4-byte char. First byte is 11110xxx
-              count ++;  //Advance the counter, since we find one char.
+              count++;  //Advance the counter, since we find one char.
             }
             out.buffer.setByte(out.end++, currentByte);
           }
@@ -1070,7 +1070,7 @@ public class StringFunctions{
                 (currentByte & 0xE0) == 0xC0 ||   // 2-byte char. First byte is 110xxxxx
                 (currentByte & 0xF0) == 0xE0 ||   // 3-byte char. First byte is 1110xxxx
                 (currentByte & 0xF8) == 0xF0) {   //4-byte char. First byte is 11110xxx
-              count ++;  //Advance the counter, since we find one char.
+              count++;  //Advance the counter, since we find one char.
             }
             out.buffer.setByte(out.end++, currentByte);
           }
@@ -1429,7 +1429,7 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
+      out.buffer = buffer = buffer.reallocIfNeeded((left.end - left.start) + (right.end - right.start));
       out.start = out.end = 0;
 
       int id = 0;
@@ -1493,7 +1493,7 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));;
+      out.buffer = buffer = buffer.reallocIfNeeded((left.end - left.start) + (right.end - right.start));
       out.start = out.end = 0;
 
       int id = 0;

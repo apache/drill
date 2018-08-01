@@ -72,6 +72,6 @@ public class SimpleDurationFormat {
     return (days > 0 ? days + " day " : "") +
         ((hours + days) > 0 ? hours + " hr " : "") +
         ((minutes + hours + days) > 0 ? String.format("%02d min ", minutes) : "") +
-        seconds + "." + String.format("%03d sec", milliSeconds) ;
+        seconds + "." + String.format("%03d sec", milliSeconds);
   }
 }

@@ -235,7 +235,8 @@ public class TestTableGenerator {
       for (int i = 0; i < numberRegions; i++) {
         Put p = new Put((""+rowKeyChar+iteration).getBytes());
         for (int j = 1; j <= numColumns; j++) {
-          bytes = new byte[5000]; random.nextBytes(bytes);
+          bytes = new byte[5000];
+          random.nextBytes(bytes);
           p.addColumn("f".getBytes(), ("c"+j).getBytes(), bytes);
         }
         table.mutate(p);
@@ -316,7 +317,7 @@ public class TestTableGenerator {
     long endTime    = startTime + MILLISECONDS_IN_A_YEAR;
     long interval   = MILLISECONDS_IN_A_DAY / 3;
 
-    for (long ts = startTime, counter = 0; ts < endTime; ts += interval, counter ++) {
+    for (long ts = startTime, counter = 0; ts < endTime; ts += interval, counter++) {
       byte[] rowKey = ByteBuffer.allocate(16) .putLong(ts).array();
 
       for(int i = 0; i < 8; ++i) {
@@ -356,7 +357,7 @@ public class TestTableGenerator {
     long largeInterval   = MILLISECONDS_IN_A_SEC * 42;
     long interval        = smallInterval;
 
-    for (long ts = startTime, counter = 0; ts < endTime; ts += interval, counter ++) {
+    for (long ts = startTime, counter = 0; ts < endTime; ts += interval, counter++) {
       byte[] rowKey = ByteBuffer.allocate(16) .putLong(ts).array();
 
       for(int i = 0; i < 8; ++i) {
@@ -398,7 +399,7 @@ public class TestTableGenerator {
     int stopVal = 1000;
     int interval = 47;
     long counter = 0;
-    for (int i = startVal; i < stopVal; i += interval, counter ++) {
+    for (int i = startVal; i < stopVal; i += interval, counter++) {
       byte[] rowKey = ByteBuffer.allocate(12).putInt(i).array();
 
       for(int j = 0; j < 8; ++j) {
@@ -492,7 +493,7 @@ public class TestTableGenerator {
 
     BufferedMutator table = conn.getBufferedMutator(tableName);
     long startTime = (long)1438034423 * 1000;
-    for (long i = startTime; i <= startTime + 100; i ++) {
+    for (long i = startTime; i <= startTime + 100; i++) {
       byte[] bytes = new byte[9];
       PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 9);
       OrderedBytes.encodeInt64(br, i, Order.ASCENDING);
@@ -523,7 +524,7 @@ public class TestTableGenerator {
 
     BufferedMutator table = conn.getBufferedMutator(tableName);
 
-    for (int i = -49; i <= 100; i ++) {
+    for (int i = -49; i <= 100; i++) {
       byte[] bytes = new byte[5];
       PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 5);
       OrderedBytes.encodeInt32(br, i, Order.ASCENDING);
@@ -616,7 +617,7 @@ public class TestTableGenerator {
 
     BufferedMutator table = conn.getBufferedMutator(tableName);
     long startTime = (long)1438034423 * 1000;
-    for (long i = startTime; i <= startTime + 100; i ++) {
+    for (long i = startTime; i <= startTime + 100; i++) {
       byte[] bytes = new byte[9];
       PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 9);
       OrderedBytes.encodeInt64(br, i, Order.DESCENDING);
@@ -648,7 +649,7 @@ public class TestTableGenerator {
 
     BufferedMutator table = conn.getBufferedMutator(tableName);
 
-    for (int i = -49; i <= 100; i ++) {
+    for (int i = -49; i <= 100; i++) {
       byte[] bytes = new byte[5];
       PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 5);
       OrderedBytes.encodeInt32(br, i, Order.DESCENDING);

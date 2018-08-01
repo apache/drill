@@ -214,7 +214,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     }
 
     if (value.contains(funcHolderExpr)) {
-      ValueHolder result ;
+      ValueHolder result;
       try {
         result = InterpreterEvaluator.evaluateConstantExpr(udfUtilities, funcHolderExpr);
       } catch (Exception e) {

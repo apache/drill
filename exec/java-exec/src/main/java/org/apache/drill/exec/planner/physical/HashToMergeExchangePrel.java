@@ -38,7 +38,7 @@ public class HashToMergeExchangePrel extends ExchangePrel {
 
   private final List<DistributionField> distFields;
   private int numEndPoints = 0;
-  private final RelCollation collation ;
+  private final RelCollation collation;
 
   public HashToMergeExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input,
                                  List<DistributionField> fields,

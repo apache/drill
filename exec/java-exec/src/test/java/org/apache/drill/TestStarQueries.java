@@ -293,7 +293,7 @@ public class TestStarQueries extends BaseTestQuery {
   @Test(expected = UserException.class)  // Should get "At line 1, column 8: Column 'n_nationkey' is ambiguous"
   public void testSelStarAmbiguousJoin() throws Exception {
     try {
-      test("select x.n_nationkey, x.n_name, x.n_regionkey, x.r_name from (select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey) x " ) ;
+      test("select x.n_nationkey, x.n_name, x.n_regionkey, x.r_name from (select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey) x " );
     } catch (UserException e) {
       logger.info("***** Test resulted in expected failure: " + e.getMessage());
       throw e;

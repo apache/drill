@@ -336,7 +336,7 @@ public class TestFlatten extends BaseTestQuery {
     // currently runs
     // TODO - re-verify results by hand
     if(RUN_ADVANCED_TESTS){
-      test("select flatten(kvgen(visited_cellid_counts)) as mytb from dfs.`tmp/mapkv.json`") ;
+      test("select flatten(kvgen(visited_cellid_counts)) as mytb from dfs.`tmp/mapkv.json`");
     }
   }
 

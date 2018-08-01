@@ -553,8 +553,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
       .addRow(10, mapValue(intArray(110, 120, 130),
                            strArray("d1.1", "d1.2", "d1.3", "d1.4")))
       .addRow(20, mapValue(intArray(210), strArray()))
-      .addRow(30, mapValue(intArray(), strArray("d3.1")))
-      ;
+      .addRow(30, mapValue(intArray(), strArray("d3.1")));
 
     // Validate first batch
 
@@ -573,15 +572,13 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     rsLoader.startBatch();
     rootWriter
       .addRow(40, mapValue(intArray(410, 420), strArray("d4.1", "d4.2")))
-      .addRow(50, mapValue(intArray(510), strArray("d5.1")))
-      ;
+      .addRow(50, mapValue(intArray(510), strArray("d5.1")));
 
     TupleWriter mapWriter = rootWriter.tuple("m");
     mapWriter.addColumn(SchemaBuilder.columnSchema("e", MinorType.VARCHAR, DataMode.REPEATED));
     rootWriter
       .addRow(60, mapValue(intArray(610, 620), strArray("d6.1", "d6.2"), strArray("e6.1", "e6.2")))
-      .addRow(70, mapValue(intArray(710), strArray(), strArray("e7.1", "e7.2")))
-      ;
+      .addRow(70, mapValue(intArray(710), strArray(), strArray("e7.1", "e7.2")));
 
     // Validate first batch. The new array should have been back-filled with
     // empty offsets for the missing rows.

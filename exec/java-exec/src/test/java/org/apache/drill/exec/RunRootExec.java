@@ -55,7 +55,7 @@ public class RunRootExec {
     FunctionImplementationRegistry registry = bitContext.getFunctionImplementationRegistry();
     FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), null, registry);
     SimpleRootExec exec;
-    for (int i = 0; i < iterations; i ++) {
+    for (int i = 0; i < iterations; i++) {
       Stopwatch w = Stopwatch.createStarted();
       logger.info("STARTITER: {}", i);
       exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));

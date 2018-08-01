@@ -39,9 +39,9 @@ public class ParquetInternalsTest extends ClusterTest {
 
   @BeforeClass
   public static void setup( ) throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
       // Set options, etc.
-      ;
+
     startCluster(builder);
   }
 

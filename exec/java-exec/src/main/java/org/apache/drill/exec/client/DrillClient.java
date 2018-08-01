@@ -824,7 +824,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   private class ListHoldingResultsListener implements UserResultsListener {
     private final Vector<QueryDataBatch> results = new Vector<>();
     private final SettableFuture<List<QueryDataBatch>> future = SettableFuture.create();
-    private final UserProtos.RunQuery query ;
+    private final UserProtos.RunQuery query;
 
     public ListHoldingResultsListener(UserProtos.RunQuery query) {
       logger.debug( "Listener created for query \"\"\"{}\"\"\"", query );

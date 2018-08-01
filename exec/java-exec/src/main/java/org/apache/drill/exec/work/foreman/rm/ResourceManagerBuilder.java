@@ -53,7 +53,7 @@ public class ResourceManagerBuilder {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResourceManagerBuilder.class);
 
-  private DrillbitContext context ;
+  private DrillbitContext context;
 
   public ResourceManagerBuilder(final DrillbitContext context) {
     this.context = context;

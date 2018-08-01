@@ -182,7 +182,6 @@ public class AMSecurityManagerImpl implements AMSecurityManager {
       managerImpl.init();
     } else if (DoYUtil.isBlank(authType)
         || DrillOnYarnConfig.AUTH_TYPE_NONE.equals(authType)) {
-      ;
     } else {
       LOG.error("Unrecognized authorization type for "
           + DrillOnYarnConfig.HTTP_AUTH_TYPE + ": " + authType

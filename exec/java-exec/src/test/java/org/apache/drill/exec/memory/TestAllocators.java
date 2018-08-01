@@ -181,8 +181,7 @@ public class TestAllocators extends DrillTest {
     final DrillConfig config = DrillConfig.create(TEST_CONFIGURATIONS);
 
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-        final Drillbit bit = new Drillbit(config, serviceSet)) {
-      ;
+         final Drillbit bit = new Drillbit(config, serviceSet)) {
       bit.run();
       final DrillbitContext bitContext = bit.getContext();
       FunctionImplementationRegistry functionRegistry = bitContext.getFunctionImplementationRegistry();

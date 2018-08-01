@@ -117,7 +117,7 @@ public class DrillStringUtils {
    */
   public static String toBinaryString(ByteBuf buf, int strStart, int strEnd) {
     StringBuilder result = new StringBuilder();
-    for (int i = strStart; i < strEnd ; ++i) {
+    for (int i = strStart; i < strEnd; ++i) {
       appendByte(result, buf.getByte(i));
     }
     return result.toString();

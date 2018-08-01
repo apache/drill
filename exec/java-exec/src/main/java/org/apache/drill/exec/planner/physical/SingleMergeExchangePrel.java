@@ -40,7 +40,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 
 public class SingleMergeExchangePrel extends ExchangePrel {
 
-  private final RelCollation collation ;
+  private final RelCollation collation;
 
   public SingleMergeExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, RelCollation collation) {
     super(cluster, traitSet, input);

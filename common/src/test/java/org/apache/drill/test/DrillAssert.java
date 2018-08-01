@@ -36,13 +36,16 @@ public class DrillAssert {
         ch1 = expected.charAt(idx1);
         ch2 = actual.charAt(idx2);
         if (isNewLineChar(ch1)) {
-          idx1++; continue;
+          idx1++;
+          continue;
         } else if (isNewLineChar(ch2)) {
-          idx2++; continue;
+          idx2++;
+          continue;
         } else if (ch1 != ch2) {
           break outside;
         } else {
-          idx1++; idx2++;
+          idx1++;
+          idx2++;
         }
       }
       // skip newlines at the end

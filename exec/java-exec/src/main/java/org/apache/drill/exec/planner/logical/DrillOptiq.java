@@ -301,10 +301,15 @@ public class DrillOptiq {
       case "CHAR":
         castType = Types.required(MinorType.VARCHAR).toBuilder().setPrecision(call.getType().getPrecision()).build();
         break;
-
-      case "INTEGER": castType = Types.required(MinorType.INT); break;
-      case "FLOAT": castType = Types.required(MinorType.FLOAT4); break;
-      case "DOUBLE": castType = Types.required(MinorType.FLOAT8); break;
+      case "INTEGER":
+        castType = Types.required(MinorType.INT);
+        break;
+      case "FLOAT":
+        castType = Types.required(MinorType.FLOAT4);
+        break;
+      case "DOUBLE":
+        castType = Types.required(MinorType.FLOAT8);
+        break;
       case "DECIMAL":
         if (!context.getPlannerSettings().getOptions().getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val) {
           throw UserException
@@ -327,7 +332,9 @@ public class DrillOptiq {
 
         case "INTERVAL_YEAR":
         case "INTERVAL_YEAR_MONTH":
-        case "INTERVAL_MONTH": castType = Types.required(MinorType.INTERVALYEAR); break;
+        case "INTERVAL_MONTH":
+          castType = Types.required(MinorType.INTERVALYEAR);
+          break;
         case "INTERVAL_DAY":
         case "INTERVAL_DAY_HOUR":
         case "INTERVAL_DAY_MINUTE":
@@ -337,11 +344,19 @@ public class DrillOptiq {
         case "INTERVAL_HOUR_SECOND":
         case "INTERVAL_MINUTE":
         case "INTERVAL_MINUTE_SECOND":
-        case "INTERVAL_SECOND": castType = Types.required(MinorType.INTERVALDAY); break;
-        case "BOOLEAN": castType = Types.required(MinorType.BIT); break;
-        case "BINARY": castType = Types.required(MinorType.VARBINARY); break;
-        case "ANY": return arg; // Type will be same as argument.
-        default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
+        case "INTERVAL_SECOND":
+          castType = Types.required(MinorType.INTERVALDAY);
+          break;
+        case "BOOLEAN":
+          castType = Types.required(MinorType.BIT);
+          break;
+        case "BINARY":
+          castType = Types.required(MinorType.VARBINARY);
+          break;
+        case "ANY":
+          return arg; // Type will be same as argument.
+        default:
+          castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
       return FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
     }

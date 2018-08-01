@@ -54,7 +54,8 @@ public class TestParquetPhysicalPlan extends ExecTest {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     DrillConfig config = DrillConfig.create();
 
-    try (Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator())) {
+    try (Drillbit bit1 = new Drillbit(config, serviceSet);
+         DrillClient client = new DrillClient(config, serviceSet.getCoordinator())) {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8));

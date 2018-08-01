@@ -138,8 +138,8 @@ public class TestDateTypes extends PopUnitTestBase {
 
                 ValueVector.Accessor accessor = v.getValueVector().getAccessor();
 
-                assertEquals(accessor.getObject(0).toString() ,"1970-01-02 10:20:33.000");
-                assertEquals(accessor.getObject(1).toString() ,"2008-12-28 11:34:00.129");
+                assertEquals(accessor.getObject(0).toString(),"1970-01-02 10:20:33.000");
+                assertEquals(accessor.getObject(1).toString(),"2008-12-28 11:34:00.129");
                 assertEquals(accessor.getObject(2).toString(), "2000-02-27 14:24:00.000");
             }
 

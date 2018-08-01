@@ -57,7 +57,7 @@ public class Types {
   }
 
   public static boolean isRepeated(final MajorType type) {
-    return type.getMode() == REPEATED ;
+    return type.getMode() == REPEATED;
   }
 
   public static boolean isNumericType(final MajorType type) {

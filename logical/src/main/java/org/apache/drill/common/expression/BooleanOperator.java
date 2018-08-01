@@ -59,7 +59,7 @@ public class BooleanOperator extends FunctionCall{
       i++;
     }
 
-    return (int) (cost / i) ;
+    return cost / i;
   }
 
 }

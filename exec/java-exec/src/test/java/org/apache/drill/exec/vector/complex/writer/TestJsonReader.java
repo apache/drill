@@ -591,7 +591,7 @@ public class TestJsonReader extends BaseTestQuery {
       table_dir.mkdir();
       BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "mostlynulls.json")));
       // Create an entire batch of null values for 3 columns
-      for (int i = 0 ; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+      for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
         os.write("{\"a\": null, \"b\": null, \"c\": null}".getBytes());
       }
       // Add a row with {bigint,  float, string} values

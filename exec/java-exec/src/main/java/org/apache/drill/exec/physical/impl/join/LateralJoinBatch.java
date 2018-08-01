@@ -626,8 +626,8 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
           if (leftUpstream == EMIT || leftUpstream == OK_NEW_SCHEMA) {
             break;
           } else {
-            logger.debug("Output batch still has some space left, getting new batches from left and right. OutIndex: {}"
-              , outputIndex);
+            logger.debug("Output batch still has some space left, getting new batches from left and right. OutIndex: {}",
+              outputIndex);
             // Get both left batch and the right batch and make sure indexes are properly set
             leftUpstream = processLeftBatch();
 
