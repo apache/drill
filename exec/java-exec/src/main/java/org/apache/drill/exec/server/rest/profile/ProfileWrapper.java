@@ -65,7 +65,7 @@ public class ProfileWrapper {
     this.profile = profile;
     this.id = profile.hasQueryId() ? profile.getQueryId() : QueryIdHelper.getQueryId(profile.getId());
     //Generating Operator Name map (DRILL-6140)
-    String profileTextPlan = profile.hasPlan() ? profile.getPlan() : "" ;
+    String profileTextPlan = profile.hasPlan()? profile.getPlan(): "";
     generateOpMap(profileTextPlan);
 
     final List<FragmentWrapper> fragmentProfiles = new ArrayList<>();

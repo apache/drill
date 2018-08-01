@@ -476,7 +476,7 @@ public abstract class HashTableTemplate implements HashTable {
     if (tableSize > MAXIMUM_CAPACITY) {
       tableSize = MAXIMUM_CAPACITY;
     }
-    originalTableSize = tableSize ; // retain original size
+    originalTableSize = tableSize; // retain original size
 
     threshold = (int) Math.ceil(tableSize * loadf);
 

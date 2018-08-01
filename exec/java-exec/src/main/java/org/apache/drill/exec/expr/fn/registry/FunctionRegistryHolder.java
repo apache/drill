@@ -316,7 +316,7 @@ public class FunctionRegistryHolder {
       final String functionName = function.getName();
       Queue<String> jarFunctions = jar.get(functionName);
       if (jarFunctions == null) {
-        jarFunctions = Queues.newConcurrentLinkedQueue();;
+        jarFunctions = Queues.newConcurrentLinkedQueue();
         jar.put(functionName, jarFunctions);
       }
       final String functionSignature = function.getSignature();

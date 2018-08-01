@@ -84,7 +84,7 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
     // First input batch
     RowSetBuilder builder2 = operatorFixture.rowSetBuilder(inputSchema);
     if ( inp2_1 != null ) {
-      for ( int i = 0; i < inp2_1.length ; i++) {
+      for (int i = 0; i < inp2_1.length; i++) {
         builder2 = builder2.addRow(inp2_1[i], inp2_2[i], inp2_3[i]);
       }
     }
@@ -93,7 +93,7 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
     // Second input batch
     RowSetBuilder builder3 = operatorFixture.rowSetBuilder(inputSchema);
     if ( inp3_1 != null ) {
-      for ( int i = 0; i < inp3_1.length ; i++) {
+      for (int i = 0; i < inp3_1.length; i++) {
         builder3 = builder3.addRow(inp3_1[i], inp3_2[i], inp3_3[i]);
       }
     }

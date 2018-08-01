@@ -809,7 +809,7 @@ public class ScriptUtils {
         }
         result.analyze();
       } catch (FileNotFoundException e) {
-        ;
+        // noop
       }
     }
 

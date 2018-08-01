@@ -795,8 +795,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       .attribute("activeSchemaVersion", activeSchemaVersion)
       .attribute("harvestSchemaVersion", harvestSchemaVersion)
       .attribute("pendingRowCount", pendingRowCount)
-      .attribute("targetRowCount", targetRowCount)
-      ;
+      .attribute("targetRowCount", targetRowCount);
     format.attribute("root");
     rootState.dump(format);
     format.attribute("rootWriter");

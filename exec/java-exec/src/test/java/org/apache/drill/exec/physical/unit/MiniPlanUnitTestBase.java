@@ -230,7 +230,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
     protected long maxAllocation = MAX_ALLOCATION;
 
     final private List<RecordBatch> inputs = Lists.newArrayList();
-    final PopBuilder parent ;
+    final PopBuilder parent;
 
     public PopBuilder() {
       this.parent = null;

@@ -87,7 +87,7 @@ public class ParquetSimpleTestFileGenerator {
           //  "      required int64 _TIMESTAMP_MICROS_int64  ( TIMESTAMP_MICROS ) ; \n" +
           "  required fixed_len_byte_array(12) _INTERVAL_fixed_len_byte_array_12  ( INTERVAL ) ; \n" +
           "  required int96  _INT96_RAW  ; \n" +
-          "} \n" ;
+          "} \n";
   public static String simpleNullableSchemaMsg =
       "message ParquetLogicalDataTypes { \n" +
           "  required int32 rowKey; \n" +
@@ -115,7 +115,7 @@ public class ParquetSimpleTestFileGenerator {
           //  "      optional int64 _TIMESTAMP_MICROS_int64  ( TIMESTAMP_MICROS ) ; \n" +
           "  optional fixed_len_byte_array(12) _INTERVAL_fixed_len_byte_array_12  ( INTERVAL ) ; \n" +
           "  optional int96  _INT96_RAW  ; \n" +
-          "} \n" ;
+          "} \n";
 
   public static String complexSchemaMsg =
       "message ParquetLogicalDataTypes { \n" +
@@ -160,7 +160,7 @@ public class ParquetSimpleTestFileGenerator {
           "      required int96  _INT96_RAW  ; \n" +
           "    } \n" +
           "  } \n" +
-          "} \n" ;
+          "} \n";
   public static String complexNullableSchemaMsg =
       "message ParquetLogicalDataTypes { \n" +
           "  required int32 rowKey; \n" +
@@ -204,7 +204,7 @@ public class ParquetSimpleTestFileGenerator {
           "      optional int96  _INT96_RAW  ; \n" +
           "    } \n" +
           "  } \n" +
-          "} \n" ;
+          "} \n";
 
   public static MessageType simpleSchema = MessageTypeParser.parseMessageType(simpleSchemaMsg);
   public static MessageType complexSchema = MessageTypeParser.parseMessageType(complexSchemaMsg);
@@ -292,7 +292,8 @@ public class ParquetSimpleTestFileGenerator {
           .append("_INT_64", 0x7FFFFFFFFFFFFFFFL)
           .append("_UINT_64", 0xFFFFFFFFFFFFFFFFL)
           .append("_DECIMAL_decimal18", 0xFFFFFFFFFFFFFFFFL);
-      byte[] bytes = new byte[30]; Arrays.fill(bytes, (byte)1);
+      byte[] bytes = new byte[30];
+      Arrays.fill(bytes, (byte)1);
       numeric.addGroup("FixedLen").append("_DECIMAL_fixed_n", Binary.fromConstantByteArray(bytes, 0, 20));
       numeric.addGroup("Binary").append("_DECIMAL_unlimited", Binary.fromConstantByteArray(bytes, 0, 30));
       numeric.addGroup("DateTimeTypes")
@@ -375,7 +376,8 @@ public class ParquetSimpleTestFileGenerator {
     }
     {
       Group simpleGroup = sgf.newGroup();
-      byte[] bytes = new byte[30]; Arrays.fill(bytes, (byte)1);
+      byte[] bytes = new byte[30];
+      Arrays.fill(bytes, (byte)1);
       simpleGroup.append("rowKey", ++rowKey);
       simpleGroup.append("_UTF8", "UTF8 string" + rowKey)
           .append("_Enum", MAX_VALUE.toString())

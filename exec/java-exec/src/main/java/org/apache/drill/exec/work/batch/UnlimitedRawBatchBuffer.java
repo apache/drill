@@ -40,7 +40,7 @@ public class UnlimitedRawBatchBuffer extends BaseRawBatchBuffer<RawFragmentBatch
   }
 
   private class UnlimitedBufferQueue implements BufferQueue<RawFragmentBatch> {
-    private final LinkedBlockingDeque<RawFragmentBatch> buffer = Queues.newLinkedBlockingDeque();;
+    private final LinkedBlockingDeque<RawFragmentBatch> buffer = Queues.newLinkedBlockingDeque();
 
     @Override
     public void addOomBatch(RawFragmentBatch batch) {

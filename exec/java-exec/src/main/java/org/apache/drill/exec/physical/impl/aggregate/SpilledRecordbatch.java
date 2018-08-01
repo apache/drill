@@ -135,7 +135,7 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
 
     if ( spillStream == null ) {
       throw new IllegalStateException("Spill stream was null");
-    };
+    }
 
     if ( spillSet.getPosition(spillStream)  < 0 ) {
       HashAggTemplate.logger.warn("Position is {} for stream {}", spillSet.getPosition(spillStream), spillStream.toString());
@@ -155,7 +155,7 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
       throw UserException.dataReadError(e).addContext("Failed reading from a spill file").build(HashAggTemplate.logger);
     }
 
-    spilledBatches-- ; // one less batch to read
+    spilledBatches--; // one less batch to read
     return IterOutcome.OK;
   }
 

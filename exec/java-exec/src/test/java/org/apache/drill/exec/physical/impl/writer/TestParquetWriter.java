@@ -164,7 +164,7 @@ public class TestParquetWriter extends BaseTestQuery {
     final int numCols = 1000;
     String[] colNames = new String[numCols];
     Object[] values = new Object[numCols];
-    for (int i = 0 ; i < numCols - 1; i++) {
+    for (int i = 0; i < numCols - 1; i++) {
       sb.append(String.format("\"col_%d\" : 100,", i));
       colNames[i] = "col_" + i;
       values[i] = 100L;

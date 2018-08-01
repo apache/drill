@@ -113,7 +113,7 @@ public abstract class FlattenTemplate implements Flattener {
               } catch (OversizedAllocationException ex) {
                 // unable to flatten due to a soft buffer overflow. split the batch here and resume execution.
                 logger.debug("Reached allocation limit. Splitting the batch at input index: {} - inner index: {} - current completed index: {}",
-                    valueIndexLocal, innerValueIndexLocal, currentInnerValueIndexLocal) ;
+                    valueIndexLocal, innerValueIndexLocal, currentInnerValueIndexLocal);
 
                 /*
                  * TODO

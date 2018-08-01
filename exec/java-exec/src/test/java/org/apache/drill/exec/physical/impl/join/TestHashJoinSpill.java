@@ -101,7 +101,7 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
     List<String> rightTable = Lists.newArrayList("[{\"rgt\": 0, \"b\" : \"a string\"}]",
       "[{\"rgt\": 0, \"b\" : \"a different string\"},{\"rgt\": 0, \"b\" : \"yet another\"}]");
     int numRows = 4_000; // 100_000
-    for ( int cnt = 1; cnt <= numRows / 2 ; cnt++ ) { // inner use only half, to check the left-outer join
+    for (int cnt = 1; cnt <= numRows / 2; cnt++) { // inner use only half, to check the left-outer join
       // leftTable.add("[{\"lft\": " + cnt + ", \"a\" : \"a string\"}]");
       rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
     }

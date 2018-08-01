@@ -65,7 +65,7 @@ public class StarColumnHelper {
   }
 
   public static boolean isPrefixedStarColumn(String fieldName) {
-    return fieldName.indexOf(PREFIXED_STAR_COLUMN) > 0 ; // the delimiter * starts at none-zero position.
+    return fieldName.indexOf(PREFIXED_STAR_COLUMN) > 0; // the delimiter * starts at none-zero position.
   }
 
   public static boolean isNonPrefixedStarColumn(String fieldName) {

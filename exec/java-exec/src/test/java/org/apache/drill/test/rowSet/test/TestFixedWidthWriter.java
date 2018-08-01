@@ -401,7 +401,7 @@ public class TestFixedWidthWriter extends SubOperatorTest {
       });
       writer.startWrite();
       try {
-        for (int i = 0; ; i++ ) {
+        for (int i = 0;; i++ ) {
           index.index = i;
           writer.startRow();
           writer.setInt(i);

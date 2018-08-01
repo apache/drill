@@ -96,7 +96,7 @@ public class DrillDistributionTrait implements RelTrait {
 
   @Override
   public int hashCode() {
-    return  fields == null ? type.hashCode() : type.hashCode() | fields.hashCode() << 4 ;
+    return  fields == null? type.hashCode(): type.hashCode() | fields.hashCode() << 4;
   }
 
   @Override
@@ -106,7 +106,7 @@ public class DrillDistributionTrait implements RelTrait {
     }
     if (obj instanceof DrillDistributionTrait) {
       DrillDistributionTrait that = (DrillDistributionTrait) obj;
-      return this.type == that.type && this.fields.equals(that.fields) ;
+      return this.type == that.type && this.fields.equals(that.fields);
     }
     return false;
   }

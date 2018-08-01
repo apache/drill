@@ -24,7 +24,7 @@ import org.apache.drill.exec.record.RawFragmentBatch;
 
 public interface DataCollector extends AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataCollector.class);
-  public boolean batchArrived(int minorFragmentId, RawFragmentBatch batch) throws IOException ;
+  public boolean batchArrived(int minorFragmentId, RawFragmentBatch batch) throws IOException;
   public int getOppositeMajorFragmentId();
   public RawBatchBuffer[] getBuffers();
   public int getTotalIncomingFragments();

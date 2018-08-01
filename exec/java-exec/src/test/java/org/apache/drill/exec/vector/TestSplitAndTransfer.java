@@ -170,9 +170,9 @@ public class TestSplitAndTransfer {
     bitVector.allocateNew(valueCount  + 8); // extra byte at the end that gets filled with junk
     final int[] compareArray = new int[valueCount];
 
-    int testBitValue = 0 ;
+    int testBitValue = 0;
     final BitVector.Mutator mutator = bitVector.getMutator();
-    for (int i = 0; i < valueCount; i ++) {
+    for (int i = 0; i < valueCount; i++) {
       testBitValue = getBit(pattern, i);
       mutator.set(i, testBitValue);
       compareArray[i] = testBitValue;

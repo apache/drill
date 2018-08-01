@@ -58,7 +58,7 @@ public class CodeGeneratorMethod implements Iterable<CodeGeneratorArgument> {
       throw new RuntimeException(String.format("Unexpected number of parameter names %s.  Expected %s on method %s.", Arrays.toString(parameterNames), Arrays.toString(types), m.toGenericString()));
     }
     arguments = new CodeGeneratorArgument[parameterNames.length];
-    for (int i = 0 ; i < parameterNames.length; i++) {
+    for (int i = 0; i < parameterNames.length; i++) {
       arguments[i] = new CodeGeneratorArgument(parameterNames[i], types[i]);
     }
     exs = m.getExceptionTypes();

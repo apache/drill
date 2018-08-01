@@ -137,7 +137,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
                                     // just to make sure Cartesian Join is more expensive
                                     // than Non-Cartesian Join.
 
-    final int keySize = 1 ;  // assume having 1 join key, when estimate join cost.
+    final int keySize = 1;  // assume having 1 join key, when estimate join cost.
     final DrillCostBase cost = (DrillCostBase) computeHashJoinCostWithKeySize(planner, keySize, mq).multiplyBy(mulFactor);
 
     // Cartesian join row count will be product of two inputs. The other factors come from the above estimated DrillCost.
@@ -197,7 +197,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
         ) * buildRowCount * factor;
 
     double cpuCost = joinConditionCost * (probeRowCount) // probe size determine the join condition comparison cost
-        + cpuCostBuild + cpuCostProbe ;
+        + cpuCostBuild + cpuCostProbe;
 
     DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
 

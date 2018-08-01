@@ -29,8 +29,7 @@ public enum SerializationDefinition {
   STORAGE_PLUGINS(3003, StoragePlugins.class),
   FRAGMENT_STATUS(3004, FragmentStatus.class),
   FRAGMENT_HANDLE(3005, FragmentHandle.class),
-  PLAN_FRAGMENT(3006, PlanFragment.class)
-  ;
+  PLAN_FRAGMENT(3006, PlanFragment.class);
 
   public final int id;
   public final Class<?> clazz;

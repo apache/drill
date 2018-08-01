@@ -442,7 +442,7 @@ public class TestBuilder {
         precision = String.format("(%d,%d)", type.getPrecision(), type.getScale());
         break;
       default:
-        ; // do nothing empty string set above
+        // do nothing empty string set above
     }
     return precision;
   }

@@ -54,7 +54,7 @@ public class UnnestImpl implements Unnest {
   private RepeatedValueVector.RepeatedAccessor accessor;
   private RecordBatch outgoing;
 
-  private IntVector rowIdVector ; // Allocated and owned by the UnnestRecordBatch
+  private IntVector rowIdVector; // Allocated and owned by the UnnestRecordBatch
   private IntVector.Mutator rowIdVectorMutator;
 
   /**

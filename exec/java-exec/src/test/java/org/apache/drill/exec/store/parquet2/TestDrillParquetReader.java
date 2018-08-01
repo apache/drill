@@ -128,7 +128,8 @@ public class TestDrillParquetReader extends BaseTestQuery {
   @Test //DRILL-5971
   public void testLogicalIntTypes2() throws Exception {
     byte[] bytes12 = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b' };
-    byte[] bytesOnes = new byte[12]; Arrays.fill(bytesOnes, (byte)1);
+    byte[] bytesOnes = new byte[12];
+    Arrays.fill(bytesOnes, (byte)1);
     byte[] bytesZeros = new byte[12];
     String query = String.format(
         " select " +
@@ -202,7 +203,8 @@ public class TestDrillParquetReader extends BaseTestQuery {
   @Test //DRILL-5971
   public void testLogicalIntTypes3() throws Exception {
     byte[] bytes12 = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b' };
-    byte[] bytesOnes = new byte[12]; Arrays.fill(bytesOnes, (byte)1);
+    byte[] bytesOnes = new byte[12];
+    Arrays.fill(bytesOnes, (byte)1);
     byte[] bytesZeros = new byte[12];
     String query = String.format(
         " select " +

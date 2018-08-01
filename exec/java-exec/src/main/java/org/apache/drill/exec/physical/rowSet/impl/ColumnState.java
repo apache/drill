@@ -347,8 +347,7 @@ public abstract class ColumnState {
       .attribute("addVersion", addVersion)
       .attribute("state", state)
       .attributeIdentity("writer", writer)
-      .attribute("vectorState")
-      ;
+      .attribute("vectorState");
     vectorState.dump(format);
     format.endObject();
   }

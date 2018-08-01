@@ -72,7 +72,7 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
       .ordered()
       .baselineColumns("kl", "vl");
 
-    for (long i = 0; i< 12 ; ++i) {
+    for (long i = 0; i < 12; ++i) {
       if (i %2 == 0) {
         builder.baselineValues(i, i);
       } else {
@@ -102,7 +102,7 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
       .ordered()
       .baselineColumns("kl", "vl");
 
-    for (long i = 0; i< 24 ; i+=2) {
+    for (long i = 0; i < 24; i+=2) {
         builder.baselineValues(i, i);
     }
 

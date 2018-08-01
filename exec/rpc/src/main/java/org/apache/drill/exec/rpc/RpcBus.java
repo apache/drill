@@ -135,7 +135,6 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
         }
       }
-      ;
     }
   }
 

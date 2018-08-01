@@ -266,7 +266,7 @@ public class SortMemoryManager {
     memoryLimit = (configMemoryLimit == 0) ? opMemoryLimit
                 : Math.min(opMemoryLimit, configMemoryLimit);
 
-    preferredSpillBatchSize = config.spillBatchSize();;
+    preferredSpillBatchSize = config.spillBatchSize();
     preferredMergeBatchSize = config.mergeBatchSize();
 
     // Initialize the buffer memory limit for the first batch.

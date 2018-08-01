@@ -305,7 +305,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     public JdbcCatalogSchema(String name) {
       super(ImmutableList.<String> of(), name);
 
-      try (Connection con = source.getConnection(); ResultSet set = con.getMetaData().getCatalogs()) {
+      try (Connection con = source.getConnection();
+           ResultSet set = con.getMetaData().getCatalogs()) {
         while (set.next()) {
           final String catalogName = set.getString(1);
           CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(
@@ -347,7 +348,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
     private boolean addSchemas() {
       boolean added = false;
-      try (Connection con = source.getConnection(); ResultSet set = con.getMetaData().getSchemas()) {
+      try (Connection con = source.getConnection();
+           ResultSet set = con.getMetaData().getSchemas()) {
         while (set.next()) {
           final String schemaName = set.getString(1);
           final String catalogName = set.getString(2);

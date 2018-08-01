@@ -42,7 +42,8 @@ public class DrillAssert {
         } else if (ch1 != ch2) {
           break outside;
         } else {
-          idx1++; idx2++;
+          idx1++;
+          idx2++;
         }
       }
       // skip newlines at the end

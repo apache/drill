@@ -227,7 +227,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
   }
 
   private void showValueVectorContent(ValueVector vw) {
-    for (int row = 0; row < vw.getAccessor().getValueCount(); row ++ ) {
+    for (int row = 0; row < vw.getAccessor().getValueCount(); row++ ) {
       final Object o = vw.getAccessor().getObject(row);
       final String cellString;
       if (o instanceof byte[]) {

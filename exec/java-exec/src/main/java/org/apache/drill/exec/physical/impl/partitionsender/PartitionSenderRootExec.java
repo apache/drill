@@ -269,7 +269,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
     // set up partitioning function
     final LogicalExpression expr = operator.getExpr();
     final ErrorCollector collector = new ErrorCollectorImpl();
-    final ClassGenerator<Partitioner> cg ;
+    final ClassGenerator<Partitioner> cg;
 
     cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);

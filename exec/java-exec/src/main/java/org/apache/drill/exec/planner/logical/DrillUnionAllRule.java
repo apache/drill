@@ -61,7 +61,7 @@ public class DrillUnionAllRule extends RelOptRule {
       call.transformTo(new DrillUnionRel(union.getCluster(), traits, convertedInputs, union.all,
           true /* check compatibility */));
     } catch (InvalidRelException e) {
-      tracer.warn(e.toString()) ;
+      tracer.warn(e.toString());
     }
   }
 }

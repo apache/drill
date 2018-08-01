@@ -436,7 +436,7 @@ public class HiveUtilities {
       storageHandler.configureInputJobProperties(tableDesc, table.getParameters());
       return (Class<? extends InputFormat<?, ?>>) storageHandler.getInputFormatClass();
     } else {
-      return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName) ;
+      return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName);
     }
   }
 
