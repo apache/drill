@@ -1,10 +1,10 @@
 ---
 title: "Logfile Plugin"
-date: 2018-07-20 02:04:40 UTC
+date: 2018-08-02 22:29:54 UTC
 parent: "Connect a Data Source"
 ---
 
-Starting in Drill 1.14, you can configure a Logfile plugin that enables Drill to directly read and query log files of any format. For example, you can configure a Logfile plugin to query MySQL log files like the following:  
+Starting in Drill 1.14, you can configure a Logfile plugin that enables Drill to directly read and query log files of any format. For example, you can configure a Logfile plugin to query MySQL log files like the one shown in the following example:  
 
        070823 21:00:32       1 Connect     root@localhost on test1
        070823 21:00:48       1 Query       show tables
@@ -14,7 +14,7 @@ Starting in Drill 1.14, you can configure a Logfile plugin that enables Drill to
 
 To configure the Logfile plugin, you must first add the `drill-logfile-plugin-1.0.0` JAR file to Drill and then add the Logfile configuration to a `dfs` storage plugin, as described in the following sections.  
 
-## Adding `drill-logfile-plugin-1.0.0.jar` to Drill  
+## Adding drill-logfile-plugin-1.0.0.jar to Drill  
 
 You can either [download](https://github.com/cgivre/drill-logfile-plugin/releases/download/v1.0/drill-logfile-plugin-1.0.0.jar) or build the `drill-logfile-plugin-1.0.0` JAR file with Maven, by running the following commands:  
 
@@ -22,7 +22,7 @@ You can either [download](https://github.com/cgivre/drill-logfile-plugin/release
        cd drill-logfile-plugin
        mvn clean install -DskipTests 
 
-       //The JAR file builds to targets/.  
+       //The JAR file installs to targets/.  
 
 Add the JAR file to the `<DRILL_INSTALL>/jars/3rdParty/` directory.  
 
@@ -30,7 +30,7 @@ Add the JAR file to the `<DRILL_INSTALL>/jars/3rdParty/` directory.
 
 To configure the Logfile plugin, update or create a new `dfs` storage plugin instance and then add the Logfile configuration to the `<extensions>` section of the `dfs` storage plugin configuration.  
 
-The following configuration shows a Logfile configuration that you could use if you wanted Drill to query MySQL log files (like the one in the log sample above):   
+The following example shows a Logfile configuration that you could use if you want Drill to query MySQL log files (like the one in the MySQL log file example above):   
 
        "log" : {
              "type" : "log",

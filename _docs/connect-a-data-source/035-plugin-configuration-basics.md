@@ -1,6 +1,6 @@
 ---
 title: "Plugin Configuration Basics"
-date: 2018-07-06 21:03:52 UTC
+date: 2018-08-02 22:29:53 UTC
 parent: "Storage Plugin Configuration"
 ---
 There are several ways you can configure storage plugins. For example, you can configure storage plugins in the Drill Web UI,  using REST API, or through configuration files. See [Configuring Storage Plugins]({{site.baseurl}}/docs/configuring-storage-plugins/) for more information.
@@ -73,19 +73,19 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats"</td>
-    <td>"pcap"<br>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"image"<br>"sequencefile"</td>
+    <td>"pcap"<br><a href="https://pcapng.github.io/pcapng/">"pcapng"</a><br>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"image"<br>"sequencefile"</td>
     <td>yes</td>
     <td>One or more valid file formats for reading. Drill detects formats of some files; others require configuration. The maprdb format is in installations of the mapr-drill package.  </td>
   </tr>
   <tr>
     <td>"formats" . . . "type"</td>
-    <td>"pcap"<br>"text"<br>"parquet"<br>"json"<br>"maprdb"<br>"avro"<br>"image"<br>"sequencefile"</td>
+    <td>"pcap"<br>"pcapng"<br>"text"<br>"parquet"<br>"json"<br>"maprdb"<br>"avro"<br>"image"<br>"sequencefile"</td>
     <td>yes</td>
     <td>Format type. You can define two formats, csv and psv, as type "Text", but having different delimiters. </td>
   </tr>
   <tr>
     <td>formats . . . "extensions"</td>
-    <td>["csv"]</td>
+    <td>["csv"]<br><a href="https://drill.apache.org/docs/logfile-plugin/">["log"]</a><br></td>
     <td>format-dependent</td>
     <td>File name extensions that Drill can read.</td>
   </tr>
