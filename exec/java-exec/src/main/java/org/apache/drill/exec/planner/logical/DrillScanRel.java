@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.ArrayList;
 import java.io.IOException;
 import java.util.List;
 
@@ -61,12 +62,12 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
                       final RelOptTable table) {
     this(cluster, traits, table, false);
   }
-    /** Creates a DrillScan. */
+  /** Creates a DrillScan. */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
-      final RelOptTable table, boolean partitionFilterPushdown) {
+                      final RelOptTable table, boolean partitionFilterPushdown) {
     // By default, scan does not support project pushdown.
     // Decision whether push projects into scan will be made solely in DrillPushProjIntoScanRule.
-    this(cluster, traits, table, table.getRowType(), GroupScan.ALL_COLUMNS, partitionFilterPushdown);
+    this(cluster, traits, table, table.getRowType(), getProjectedColumns(table, true), partitionFilterPushdown);
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
   }
 
@@ -78,7 +79,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   /** Creates a DrillScan. */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
-      final RelOptTable table, final RelDataType rowType, final List<SchemaPath> columns, boolean partitionFilterPushdown) {
+                      final RelOptTable table, final RelDataType rowType, final List<SchemaPath> columns, boolean partitionFilterPushdown) {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
     this.rowType = rowType;
@@ -100,7 +101,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   /** Creates a DrillScanRel for a particular GroupScan */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
-      final RelOptTable table, final GroupScan groupScan, final RelDataType rowType, final List<SchemaPath> columns, boolean partitionFilterPushdown) {
+                      final RelOptTable table, final GroupScan groupScan, final RelDataType rowType, final List<SchemaPath> columns, boolean partitionFilterPushdown) {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.rowType = rowType;
     this.columns = columns;
@@ -192,6 +193,23 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   public boolean partitionFilterPushdown() {
     return this.partitionFilterPushdown;
+  }
+
+  private static List<SchemaPath> getProjectedColumns(final RelOptTable table, boolean isSelectStar) {
+    List<String> columnNames = table.getRowType().getFieldNames();
+    List<SchemaPath> projectedColumns = new ArrayList<SchemaPath>(columnNames.size());
+
+    for (String columnName : columnNames) {
+       projectedColumns.add(SchemaPath.getSimplePath(columnName));
+    }
+
+    // If the row-type doesn't contain the STAR keyword, then insert it
+    // as we are dealing with a  SELECT_STAR query.
+    if (isSelectStar && !Utilities.isStarQuery(projectedColumns)) {
+      projectedColumns.add(SchemaPath.STAR_COLUMN);
+    }
+
+    return projectedColumns;
   }
 
 }
