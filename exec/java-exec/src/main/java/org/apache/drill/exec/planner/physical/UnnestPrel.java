@@ -25,6 +25,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -83,6 +84,15 @@ public class UnnestPrel extends DrillUnnestRelBase implements Prel {
 
   public Class<?> getParentClass() {
     return LateralJoinPrel.class;
+  }
+
+  @Override
+  public RelNode accept(RexShuttle shuttle) {
+    RexNode ref = shuttle.apply(this.ref);
+    if (this.ref == ref) {
+      return this;
+    }
+    return new UnnestPrel(getCluster(), traitSet, rowType, ref);
   }
 
   @Override

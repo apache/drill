@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -116,29 +118,28 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
     children.add(op.getLeft().accept(this, iNode));
     children.add(op.getRight().accept(this, iNode));
-    UnnestPOP unnestInLeftInput = iNode.getUnnest();
+    UnnestPOP unnestForThisLateral = iNode.getUnnest();
 
     PhysicalOperator newOp = op.getNewWithChildren(children);
     newOp.setCost(op.getCost());
     newOp.setOperatorId(Short.MAX_VALUE & op.getOperatorId());
 
-    ((LateralJoinPOP)newOp).setUnnestForLateralJoin(unnestInLeftInput);
-
+    ((LateralJoinPOP) newOp).setUnnestForLateralJoin(unnestForThisLateral);
     return newOp;
   }
 
   @Override
   public PhysicalOperator visitUnnest(UnnestPOP unnest, IndexedFragmentNode value) throws ExecutionSetupException {
     PhysicalOperator newOp = visitOp(unnest, value);
-    value.addUnnest((UnnestPOP)newOp);
+    value.addUnnest((UnnestPOP) newOp);
     return newOp;
   }
 
   public static class IndexedFragmentNode{
-    final Wrapper info;
-    final int minorFragmentId;
+    private final Wrapper info;
+    private final int minorFragmentId;
 
-    UnnestPOP unnest = null;
+    private final Deque<UnnestPOP> unnest = new ArrayDeque<>();
 
     public IndexedFragmentNode(int minorFragmentId, Wrapper info) {
       super();
@@ -163,11 +164,11 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     }
 
     public void addUnnest(UnnestPOP unnest) {
-      this.unnest = unnest;
+      this.unnest.addFirst(unnest);
     }
 
     public UnnestPOP getUnnest() {
-      return this.unnest;
+      return this.unnest.removeFirst();
     }
 
   }

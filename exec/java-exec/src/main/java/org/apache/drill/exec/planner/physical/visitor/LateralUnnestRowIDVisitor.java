@@ -19,11 +19,18 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.CorrelationId;
+import org.apache.calcite.rel.rules.ProjectCorrelateTransposeRule;
+import org.apache.calcite.rex.RexCorrelVariable;
+import org.apache.calcite.rex.RexShuttle;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * LateralUnnestRowIDVisitor traverses the physical plan and modifies all the operators in the
@@ -59,16 +66,55 @@ public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, Ru
   }
 
   @Override
-  public Prel visitLateral(LateralJoinPrel prel, Boolean value) throws RuntimeException {
+  public Prel visitLateral(LateralJoinPrel prel, Boolean isRightOfLateral) throws RuntimeException {
     List<RelNode> children = Lists.newArrayList();
-    children.add(((Prel)prel.getInput(0)).accept(this, value));
+    children.add(((Prel) prel.getInput(0)).accept(this, isRightOfLateral));
     children.add(((Prel) prel.getInput(1)).accept(this, true));
 
-    return (Prel) prel.copy(prel.getTraitSet(), children);
+    if (!isRightOfLateral) {
+      return (Prel) prel.copy(prel.getTraitSet(), children);
+    } else {
+      //Adjust the column numbering due to an additional column "$drill_implicit_field$" is added to the inputs.
+      Map<Integer, Integer> requiredColsMap = new HashMap<>();
+      for (Integer corrColIndex : prel.getRequiredColumns()) {
+        requiredColsMap.put(corrColIndex, corrColIndex + 1);
+      }
+      ImmutableBitSet requiredColumns = prel.getRequiredColumns().shift(1);
+
+      CorrelationId corrId = prel.getCluster().createCorrel();
+      RexCorrelVariable updatedCorrel =
+              (RexCorrelVariable) prel.getCluster().getRexBuilder().makeCorrel(
+                      children.get(0).getRowType(),
+                      corrId);
+      RelNode rightChild = children.get(1).accept(
+              new CorrelateVarReplacer(
+                      new ProjectCorrelateTransposeRule.RexFieldAccessReplacer(prel.getCorrelationId(),
+                              updatedCorrel, prel.getCluster().getRexBuilder(), requiredColsMap)));
+      return (Prel) prel.copy(prel.getTraitSet(), children.get(0), rightChild,
+              corrId, requiredColumns, prel.getJoinType());
+    }
   }
 
   @Override
-  public Prel visitUnnest(UnnestPrel prel, Boolean value) throws RuntimeException {
+  public Prel visitUnnest(UnnestPrel prel, Boolean isRightOfLateral) throws RuntimeException {
     return prel.prepareForLateralUnnestPipeline(null);
+  }
+
+  /**
+   * Visitor for RelNodes which applies specified {@link RexShuttle} visitor
+   * for every node in the tree.
+   */
+  public static class CorrelateVarReplacer extends ProjectCorrelateTransposeRule.RelNodesExprsHandler {
+    protected final RexShuttle rexVisitor;
+
+    public CorrelateVarReplacer(RexShuttle rexVisitor) {
+      super(rexVisitor);
+      this.rexVisitor = rexVisitor;
+    }
+
+    @Override
+    public RelNode visit(RelNode other) {
+      return super.visit(other.accept(rexVisitor));
+    }
   }
 }
