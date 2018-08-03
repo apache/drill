@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.fragment;
 
 import java.util.List;
+import java.util.Stack;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
@@ -116,14 +117,13 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
     children.add(op.getLeft().accept(this, iNode));
     children.add(op.getRight().accept(this, iNode));
-    UnnestPOP unnestInLeftInput = iNode.getUnnest();
+    UnnestPOP unnestForThisLateral = iNode.getUnnest();
 
     PhysicalOperator newOp = op.getNewWithChildren(children);
     newOp.setCost(op.getCost());
     newOp.setOperatorId(Short.MAX_VALUE & op.getOperatorId());
 
-    ((LateralJoinPOP)newOp).setUnnestForLateralJoin(unnestInLeftInput);
-
+    ((LateralJoinPOP)newOp).setUnnestForLateralJoin(unnestForThisLateral);
     return newOp;
   }
 
@@ -138,7 +138,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     final Wrapper info;
     final int minorFragmentId;
 
-    UnnestPOP unnest = null;
+    Stack<UnnestPOP> unnest = new Stack<>();
 
     public IndexedFragmentNode(int minorFragmentId, Wrapper info) {
       super();
@@ -163,11 +163,11 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     }
 
     public void addUnnest(UnnestPOP unnest) {
-      this.unnest = unnest;
+      this.unnest.push(unnest);
     }
 
     public UnnestPOP getUnnest() {
-      return this.unnest;
+      return this.unnest.pop();
     }
 
   }

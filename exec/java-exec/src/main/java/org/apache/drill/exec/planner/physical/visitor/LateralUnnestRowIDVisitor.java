@@ -19,6 +19,8 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.CorrelationId;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
@@ -64,7 +66,14 @@ public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, Ru
     children.add(((Prel)prel.getInput(0)).accept(this, value));
     children.add(((Prel) prel.getInput(1)).accept(this, true));
 
-    return (Prel) prel.copy(prel.getTraitSet(), children);
+    if (!value) {
+      return (Prel) prel.copy(prel.getTraitSet(), children);
+    } else {
+      CorrelationId corrId = new CorrelationId(prel.getCorrelationId().getId() + 1);
+      ImmutableBitSet requiredColumns = prel.getRequiredColumns().shift(1);
+      return new LateralJoinPrel(prel.getCluster(), prel.getTraitSet(), children.get(0), children.get(1),
+              prel.excludeCorrelateColumn, corrId, requiredColumns, prel.getJoinType());
+    }
   }
 
   @Override

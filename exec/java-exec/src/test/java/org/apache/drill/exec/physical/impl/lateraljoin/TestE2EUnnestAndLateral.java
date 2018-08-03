@@ -169,11 +169,29 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
   @Test
   public void testMultiUnnestAtSameLevel() throws Exception {
     String Sql = "EXPLAIN PLAN FOR SELECT customer.c_name, customer.c_address, U1.order_id, U1.order_amt," +
-      " U1.itemName, U1.itemNum" + " FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL" +
-      " (SELECT t.ord.o_id AS order_id, t.ord.o_amount AS order_amt, U2.item_name AS itemName, U2.item_num AS " +
-        "itemNum FROM UNNEST(customer.orders) t(ord) , LATERAL" +
-      " (SELECT t1.ord.i_name AS item_name, t1.ord.i_number AS item_num FROM UNNEST(t.ord) AS t1(ord)) AS U2) AS U1";
+            " U1.itemName, U1.itemNum" + " FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL" +
+            " (SELECT t.ord.o_id AS order_id, t.ord.o_amount AS order_amt, U2.item_name AS itemName, U2.item_num AS " +
+            "itemNum FROM UNNEST(customer.orders) t(ord) , LATERAL" +
+            " (SELECT t1.ord.i_name AS item_name, t1.ord.i_number AS item_num FROM UNNEST(t.ord) AS t1(ord)) AS U2) AS U1";
     runAndLog(Sql);
+  }
+
+  @Test
+  public void testMultiUnnestAtSameLevelExec() throws Exception {
+    String Sql = "SELECT customer.c_name, customer.c_address, U1.order_id, U1.order_amt," +
+      " U1.itemName, U1.itemNum FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL" +
+      " (SELECT dt.order_id, dt.order_amt, U2.item_name AS itemName, U2.item_num AS itemNum from" +
+            "(select t.ord.items as items, t.ord.o_id AS order_id, t.ord.o_amount AS order_amt FROM UNNEST(customer.orders) t(ord)) dt , LATERAL" +
+      " (SELECT t1.items.i_name AS item_name, t1.items.i_number AS item_num FROM UNNEST(dt.items) AS t1(items)) AS U2) AS U1";
+    String baseline = "SELECT customer.c_name, customer.c_address, U1.order_id, U1.order_amount as order_amt, U2.item_name as itemName, U2.item_num as itemNum" +
+            " FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
+            "(SELECT t.ord.items as items, t.ord.o_id as order_id, t.ord.o_amount as order_amount from UNNEST(customer.orders) t(ord)) U1, LATERAL" +
+            "(SELECT t1.items.i_name as item_name, t1.items.i_number as item_num from UNNEST(U1.items) t1(items)) U2";
+    testBuilder()
+            .unOrdered()
+            .sqlQuery(Sql)
+            .sqlBaselineQuery(baseline)
+            .go();
   }
 
   @Test
