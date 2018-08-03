@@ -18,12 +18,11 @@
 package org.apache.drill.exec.physical.rowSet.impl;
 
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.OffsetVectorState;
-import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.ValuesVectorState;
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.SimpleVectorState;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
@@ -33,14 +32,12 @@ import org.apache.drill.exec.vector.complex.RepeatedValueVector;
  */
 
 public class RepeatedVectorState implements VectorState {
-  private final ColumnMetadata schema;
   private final AbstractArrayWriter arrayWriter;
   private final RepeatedValueVector vector;
   private final OffsetVectorState offsetsState;
-  private final ValuesVectorState valuesState;
+  private final SimpleVectorState valuesState;
 
-  public RepeatedVectorState(AbstractObjectWriter writer, RepeatedValueVector vector) {
-    this.schema = writer.schema();
+  public RepeatedVectorState(ArrayWriter writer, RepeatedValueVector vector) {
 
     // Get the repeated vector
 
@@ -49,9 +46,9 @@ public class RepeatedVectorState implements VectorState {
     // Create the values state using the value (data) portion of the repeated
     // vector, and the scalar (value) portion of the array writer.
 
-    arrayWriter = (AbstractArrayWriter) writer.array();
-    AbstractScalarWriter colWriter = (AbstractScalarWriter) arrayWriter.scalar();
-    valuesState = new ValuesVectorState(schema, colWriter, vector.getDataVector());
+    arrayWriter = (AbstractArrayWriter) writer;
+    AbstractScalarWriter colWriter = (AbstractScalarWriter) writer.scalar();
+    valuesState = SimpleVectorState.vectorState(writer.schema(), colWriter, vector.getDataVector());
 
     // Create the offsets state with the offset vector portion of the repeated
     // vector, and the offset writer portion of the array writer.
@@ -59,11 +56,12 @@ public class RepeatedVectorState implements VectorState {
     offsetsState = new OffsetVectorState(
         arrayWriter.offsetWriter(),
         vector.getOffsetVector(),
-        (AbstractObjectWriter) arrayWriter.entry());
+        colWriter);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public ValueVector vector() { return vector; }
+  public <T extends ValueVector> T vector() { return (T) vector; }
 
   @Override
   public int allocate(int cardinality) {
@@ -72,7 +70,7 @@ public class RepeatedVectorState implements VectorState {
   }
 
   private int childCardinality(int cardinality) {
-    return cardinality * schema.expectedElementCount();
+    return cardinality * arrayWriter.schema().expectedElementCount();
   }
 
   /**
@@ -146,16 +144,19 @@ public class RepeatedVectorState implements VectorState {
   }
 
   @Override
-  public void reset() {
-    offsetsState.reset();
-    valuesState.reset();
+  public void close() {
+    offsetsState.close();
+    valuesState.close();
   }
+
+  @Override
+  public boolean isProjected() { return true; }
 
   @Override
   public void dump(HierarchicalFormatter format) {
     format
       .startObject(this)
-      .attribute("schema", schema)
+      .attribute("schema", arrayWriter.schema())
       .attributeIdentity("writer", arrayWriter)
       .attributeIdentity("vector", vector)
       .attribute("offsetsState");

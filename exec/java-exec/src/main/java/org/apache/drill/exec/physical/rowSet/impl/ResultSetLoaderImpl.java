@@ -17,26 +17,28 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
-import java.util.Collection;
-
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.TupleState.RowState;
+import org.apache.drill.exec.physical.rowSet.project.ImpliedTupleRequest;
+import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
+import org.apache.drill.exec.physical.rowSet.project.RequestedTupleImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
- * Implementation of the result set loader.
+ * Implementation of the result set loader. Caches vectors
+ * for a row or map.
+ *
  * @see {@link ResultSetLoader}
  */
 
-public class ResultSetLoaderImpl implements ResultSetLoader {
+public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
   /**
    * Read-only set of options for the result set loader.
@@ -46,26 +48,35 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
     public final int vectorSizeLimit;
     public final int rowCountLimit;
     public final ResultVectorCache vectorCache;
-    public final Collection<SchemaPath> projection;
+    public final RequestedTuple projectionSet;
     public final TupleMetadata schema;
     public final long maxBatchSize;
 
     public ResultSetOptions() {
       vectorSizeLimit = ValueVector.MAX_BUFFER_SIZE;
       rowCountLimit = DEFAULT_ROW_COUNT;
-      projection = null;
+      projectionSet = new ImpliedTupleRequest(true);
       vectorCache = null;
       schema = null;
       maxBatchSize = -1;
     }
 
     public ResultSetOptions(OptionBuilder builder) {
-      this.vectorSizeLimit = builder.vectorSizeLimit;
-      this.rowCountLimit = builder.rowCountLimit;
-      this.projection = builder.projection;
-      this.vectorCache = builder.vectorCache;
-      this.schema = builder.schema;
-      this.maxBatchSize = builder.maxBatchSize;
+      vectorSizeLimit = builder.vectorSizeLimit;
+      rowCountLimit = builder.rowCountLimit;
+      vectorCache = builder.vectorCache;
+      schema = builder.schema;
+      maxBatchSize = builder.maxBatchSize;
+
+      // If projection, build the projection map.
+      // The caller might have already built the map. If so,
+      // use it.
+
+      if (builder.projectionSet != null) {
+        projectionSet = builder.projectionSet;
+      } else {
+        projectionSet = RequestedTupleImpl.parse(builder.projection);
+      }
     }
 
     public void dump(HierarchicalFormatter format) {
@@ -73,12 +84,13 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
         .startObject(this)
         .attribute("vectorSizeLimit", vectorSizeLimit)
         .attribute("rowCountLimit", rowCountLimit)
-        .attribute("projection", projection)
+//        .attribute("projection", projection)
         .endObject();
     }
   }
 
   private enum State {
+
     /**
      * Before the first batch.
      */
@@ -192,13 +204,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
   private final RowSetLoaderImpl rootWriter;
 
   /**
-   * Vector cache for this loader.
-   * @see {@link OptionBuilder#setVectorCache()}.
-   */
-
-  private final ResultVectorCache vectorCache;
-
-  /**
    * Tracks the state of the row set loader. Handling vector overflow requires
    * careful stepping through a variety of states as the write proceeds.
    */
@@ -224,14 +229,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
    */
 
   private int harvestSchemaVersion;
-
-  /**
-   * Builds the harvest vector container that includes only the columns that
-   * are included in the harvest schema version. That is, it excludes columns
-   * added while writing the overflow row.
-   */
-
-  private VectorContainerBuilder containerBuilder;
 
   /**
    * Counts the batches harvested (sent downstream) from this loader. Does
@@ -271,7 +268,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
 
   protected int accumulatedBatchSize;
 
-  protected final ProjectionSet projectionSet;
+  protected final RequestedTuple projectionSet;
 
   public ResultSetLoaderImpl(BufferAllocator allocator, ResultSetOptions options) {
     this.allocator = allocator;
@@ -279,19 +276,22 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
     targetRowCount = options.rowCountLimit;
     writerIndex = new WriterIndexImpl(this);
 
+    // Set the projections
+
+    projectionSet = options.projectionSet;
+
+    // Determine the root vector cache
+
+    ResultVectorCache vectorCache;
     if (options.vectorCache == null) {
       vectorCache = new NullResultVectorCacheImpl(allocator);
     } else {
       vectorCache = options.vectorCache;
     }
 
-    // If projection, build the projection map.
-
-    projectionSet = ProjectionSetImpl.parse(options.projection);
-
     // Build the row set model depending on whether a schema is provided.
 
-    rootState = new RowState(this);
+    rootState = new RowState(this, vectorCache);
     rootWriter = rootState.rootWriter();
 
     // If no schema, columns will be added incrementally as they
@@ -304,21 +304,23 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
       // won't be if known up front.
 
       logger.debug("Schema: " + options.schema.toString());
-      rootState.buildSchema(options.schema);
+      new BuildFromSchema().buildTuple(rootWriter, options.schema);
     }
   }
 
   private void updateCardinality() {
-    rootState.updateCardinality(targetRowCount());
+    rootState.updateCardinality();
   }
 
   public ResultSetLoaderImpl(BufferAllocator allocator) {
     this(allocator, new ResultSetOptions());
   }
 
+  @Override
   public BufferAllocator allocator() { return allocator; }
 
-  protected int bumpVersion() {
+  @Override
+  public int bumpVersion() {
 
     // Update the active schema version. We cannot update the published
     // schema version at this point because a column later in this same
@@ -341,17 +343,49 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
   }
 
   @Override
-  public int schemaVersion() { return harvestSchemaVersion; }
+  public int schemaVersion() {
+    switch (state) {
+    case ACTIVE:
+    case IN_OVERFLOW:
+    case OVERFLOW:
+    case FULL_BATCH:
+
+      // Write in progress: use current writer schema
+
+      return activeSchemaVersion;
+    case HARVESTED:
+    case LOOK_AHEAD:
+    case START:
+
+      // Batch is published. Use harvest schema.
+
+      return harvestSchemaVersion;
+    default:
+
+      // Not really in a position to give a schema
+      // version.
+
+      throw new IllegalStateException("Unexpected state: " + state);
+    }
+  }
 
   @Override
   public void startBatch() {
+    startBatch(false);
+  }
+
+  public void startEmptyBatch() {
+    startBatch(true);
+  }
+
+  public void startBatch(boolean schemaOnly) {
     switch (state) {
     case HARVESTED:
     case START:
       logger.trace("Start batch");
       accumulatedBatchSize = 0;
       updateCardinality();
-      rootState.startBatch();
+      rootState.startBatch(schemaOnly);
       checkInitialAllocation();
 
       // The previous batch ended without overflow, so start
@@ -369,7 +403,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
       // a column-by-column basis, which is done by the visitor.
 
       logger.trace("Start batch after overflow");
-      rootState.startBatch();
+      rootState.startBatch(schemaOnly);
 
       // Note: no need to do anything with the writers; they were left
       // pointing to the correct positions in the look-ahead batch.
@@ -496,7 +530,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
 
   private boolean isBatchActive() {
     return state == State.ACTIVE || state == State.OVERFLOW ||
-           state == State.FULL_BATCH ;
+           state == State.FULL_BATCH;
   }
 
   /**
@@ -531,7 +565,27 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
   @Override
   public int targetVectorSize() { return options.vectorSizeLimit; }
 
-  protected void overflowed() {
+  @Override
+  public int skipRows(int requestedCount) {
+
+    // Can only skip rows when a batch is active.
+
+    if (state != State.ACTIVE) {
+      throw new IllegalStateException("No batch is active.");
+    }
+
+    // Skip as many rows as the vector limit allows.
+
+    return writerIndex.skipRows(requestedCount);
+  }
+
+  @Override
+  public boolean isProjectionEmpty() {
+    return ! rootState.hasProjections();
+  }
+
+  @Override
+  public void overflowed() {
     logger.trace("Vector overflow");
 
     // If we see overflow when we are already handling overflow, it means
@@ -569,8 +623,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
 
     updateCardinality();
 
-//    rootWriter.dump(new HierarchicalPrinter());
-
     // Wrap up the completed rows into a batch. Sets
     // vector value counts. The rollover data still exists so
     // it can be moved, but it is now past the recorded
@@ -585,7 +637,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
     rootState.rollover();
 
     // Adjust writer state to match the new vector values. This is
-    // surprisingly easy if we not that the current row is shifted to
+    // surprisingly easy if we note that the current row is shifted to
     // the 0 position in the new vector, so we just shift all offsets
     // downward by the current row position at each repeat level.
 
@@ -612,7 +664,13 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
     state = State.OVERFLOW;
   }
 
-  protected boolean hasOverflow() { return state == State.OVERFLOW; }
+  @Override
+  public boolean hasOverflow() { return state == State.OVERFLOW; }
+
+  @Override
+  public VectorContainer outputContainer() {
+    return rootState.outputContainer();
+  }
 
   @Override
   public VectorContainer harvest() {
@@ -631,9 +689,8 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
       throw new IllegalStateException("Unexpected state: " + state);
     }
 
-    // Build the output container
-
-    VectorContainer container = outputContainer();
+    rootState.updateOutput(harvestSchemaVersion);
+    VectorContainer container = rootState.outputContainer();
     container.setRecordCount(rowCount);
 
     // Finalize: update counts, set state.
@@ -660,19 +717,8 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
   }
 
   @Override
-  public VectorContainer outputContainer() {
-    // Build the output container.
-
-    if (containerBuilder == null) {
-      containerBuilder = new VectorContainerBuilder(this);
-    }
-    containerBuilder.update(harvestSchemaVersion);
-    return containerBuilder.container();
-  }
-
-  @Override
   public TupleMetadata harvestSchema() {
-    return containerBuilder.schema();
+    return rootState.outputSchema();
   }
 
   @Override
@@ -702,18 +748,9 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
     return total;
   }
 
-  public ResultVectorCache vectorCache() { return vectorCache; }
   public RowState rootState() { return rootState; }
 
-  /**
-   * Return whether a vector within the current batch can expand. Limits
-   * are enforce only if a limit was provided in the options.
-   *
-   * @param delta increase in vector size
-   * @return true if the vector can expand, false if an overflow
-   * event should occur
-   */
-
+  @Override
   public boolean canExpand(int delta) {
     accumulatedBatchSize += delta;
     return state == State.IN_OVERFLOW ||
@@ -721,13 +758,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
            accumulatedBatchSize <= options.maxBatchSize;
   }
 
-  /**
-   * Accumulate the initial vector allocation sizes.
-   *
-   * @param allocationBytes number of bytes allocated to a vector
-   * in the batch setup step
-   */
-
+  @Override
   public void tallyAllocations(int allocationBytes) {
     accumulatedBatchSize += allocationBytes;
   }
@@ -771,5 +802,15 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
     format.attribute("rootWriter");
     rootWriter.dump(format);
     format.endObject();
+  }
+
+  @Override
+  public ResultVectorCache vectorCache() {
+    return rootState.vectorCache();
+  }
+
+  @Override
+  public int rowIndex() {
+    return writerIndex().vectorIndex();
   }
 }

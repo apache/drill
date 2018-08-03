@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.rowSet;
 
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
@@ -30,4 +31,7 @@ import org.apache.drill.exec.vector.ValueVector;
 public interface ResultVectorCache {
   BufferAllocator allocator();
   ValueVector addOrGet(MaterializedField colSchema);
+  MajorType getType(String name);
+  boolean isPermissive();
+  ResultVectorCache childCache(String colName);
 }

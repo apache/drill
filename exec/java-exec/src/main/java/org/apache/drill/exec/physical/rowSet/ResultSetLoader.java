@@ -112,6 +112,16 @@ public interface ResultSetLoader {
    */
 
   RowSetLoader writer();
+
+  /**
+   * Reports whether the loader is in a writable state. The writable state
+   * occurs only when a batch has been started, and before that batch
+   * becomes full.
+   *
+   * @return true if the client can add a row to the loader, false if
+   * not
+   */
+
   boolean writeable();
 
   /**
@@ -135,28 +145,52 @@ public interface ResultSetLoader {
   ResultSetLoader setRow(Object...values);
 
   /**
-   * Return the output container, primarily to obtain the schema
-   * and set of vectors. Depending on when this is called, the
-   * data may or may not be populated: call
-   * {@link #harvest()} to obtain the container for a batch.
+   * Requests to skip the given number of rows. Returns the number of rows
+   * actually skipped (which is limited by batch count.)
    * <p>
-   * This method is useful when the schema is known and fixed.
-   * After declaring the schema, call this method to get the container
-   * that holds the vectors for use in planning projection, etc.
+   * Used in <tt>SELECT COUNT(*)</tt> style queries when the downstream
+   * operators want just record count, but no actual rows.
    * <p>
-   * If the result set schema changes, then a call to this method will
-   * return the latest schema. But, if the schema changes during the
-   * overflow row, then this method will not see those changes until
-   * after harvesting the current batch. (This avoid the appearance
-   * of phantom columns in the output since the new column won't
-   * appear until the next batch.)
-   * <p>
-   * Never count on the data in the container; it may be empty, half
-   * written, or inconsistent. Always call
-   * {@link #harvest()} to obtain the container for a batch.
+   * Also used to fill in a batch of only null values (such a filling
+   * in a set of null vectors for unprojected columns.)
    *
-   * @return the output container including schema and value
-   * vectors
+   * @param requestedCount
+   *          the number of rows to skip
+   * @return the actual number of rows skipped, which may be less than the
+   *         requested amount. If less, the client should call this method for
+   *         multiple batches until the requested count is reached
+   */
+
+  int skipRows(int requestedCount);
+
+  /**
+   * Reports if this is an empty projection such as occurs in a
+   * <tt>SELECT COUNT(*)</tt> query. If the projection is empty, then
+   * the downstream needs only the row count set in each batch, but no
+   * actual vectors will be created. In this case, the client can do
+   * the work to populate rows (the data will be discarded), or can call
+   * {@link #skipRows(int)} to skip over the number of rows that would
+   * have been read if any data had been projected.
+   * <p>
+   * Note that the empty schema case can also occur if the project list
+   * from the <tt>SELECT</tt> clause is disjoint from the table schema.
+   * For example, <tt>SELECT a, b</tt> from a table with schema
+   * <tt>(c, d)</tt>.
+   *
+   * @return true if no columns are actually projected, false if at
+   * least one column is projected
+   */
+
+  boolean isProjectionEmpty();
+
+  /**
+   * Returns the output container which holds (or will hold) batches
+   * from this loader. For use when the container is needed prior
+   * to "harvesting" a batch. The data is not valid until
+   * {@link #harvest()} is called, and is no longer valid once
+   * {@link #startBatch()} is called.
+   *
+   * @return container used to publish results from this loader
    */
 
   VectorContainer outputContainer();
@@ -192,6 +226,15 @@ public interface ResultSetLoader {
    */
 
   TupleMetadata harvestSchema();
+
+  /**
+   * Peek at the internal vector cache for readers that need a bit of help
+   * resolving types based on what was previously seen.
+   *
+   * @return real or dummy vector cache
+   */
+
+  ResultVectorCache vectorCache();
 
   /**
    * Called after all rows are returned, whether because no more data is

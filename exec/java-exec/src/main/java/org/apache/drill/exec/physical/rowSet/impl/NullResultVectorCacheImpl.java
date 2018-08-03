@@ -17,11 +17,16 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
+
+/**
+ * A vector cache implementation which does not actually cache.
+ */
 
 public class NullResultVectorCacheImpl implements ResultVectorCache {
 
@@ -37,5 +42,16 @@ public class NullResultVectorCacheImpl implements ResultVectorCache {
   @Override
   public ValueVector addOrGet(MaterializedField colSchema) {
     return TypeHelper.getNewVector(colSchema, allocator, null);
+  }
+
+  @Override
+  public MajorType getType(String name) { return null; }
+
+  @Override
+  public boolean isPermissive() { return false; }
+
+  @Override
+  public ResultVectorCache childCache(String colName) {
+    return new NullResultVectorCacheImpl(allocator);
   }
 }

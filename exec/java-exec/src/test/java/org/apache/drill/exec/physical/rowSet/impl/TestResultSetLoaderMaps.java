@@ -21,11 +21,14 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
@@ -42,7 +45,6 @@ import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
@@ -69,6 +71,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .setSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    assertFalse(rsLoader.isProjectionEmpty());
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Verify structure and schema
@@ -102,7 +105,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     try {
       mWriter.addColumn(SchemaBuilder.columnSchema("c", MinorType.INT, DataMode.OPTIONAL));
       fail();
-    } catch (IllegalArgumentException e) {
+    } catch (UserException e) {
       // Expected
     }
 
@@ -115,6 +118,9 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     RowSet actual = fixture.wrap(rsLoader.harvest());
     assertEquals(5, rsLoader.schemaVersion());
     assertEquals(2, actual.rowCount());
+    @SuppressWarnings("resource")
+    MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
+    assertEquals(2, mapVector.getAccessor().getValueCount());
 
     // Validate data
 
@@ -238,6 +244,8 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     // Ensure metadata was added
 
     assertTrue(mapWriter.tupleSchema().size() == 1);
+    assertSame(mapWriter.tupleSchema(), mapWriter.schema().mapSchema());
+    assertSame(mapWriter.tupleSchema().metadata(colIndex), mapWriter.scalar(colIndex).schema());
 
     rootWriter
       .addRow(20, mapValue("fred"))
@@ -250,6 +258,8 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
     MaterializedField mapField = mapVector.getField();
     assertEquals(1, mapField.getChildren().size());
+    assertTrue(mapWriter.scalar(colIndex).schema().schema().isEquivalent(
+        mapField.getChildren().iterator().next()));
 
     // Validate first batch
 
@@ -584,8 +594,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(70, mapValue(intArray(710), strArray(), strArray("e7.1", "e7.2")))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
-
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
@@ -641,6 +650,16 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
     RowSet result = fixture.wrap(rsLoader.harvest());
     assertEquals(expectedCount, result.rowCount());
+
+    // Ensure the odd map vector value count variable is set correctly.
+
+    @SuppressWarnings("resource")
+    MapVector m1Vector = (MapVector) result.container().getValueVector(1).getValueVector();
+    assertEquals(expectedCount, m1Vector.getAccessor().getValueCount());
+    @SuppressWarnings("resource")
+    MapVector m2Vector = (MapVector) m1Vector.getChildByOrdinal(1);
+    assertEquals(expectedCount, m2Vector.getAccessor().getValueCount());
+
     result.clear();
 
     // Next batch should start with the overflow row
@@ -837,6 +856,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .setSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    assertFalse(rsLoader.isProjectionEmpty());
     RowSetLoader rootWriter = rsLoader.writer();
 
     rsLoader.startBatch();
@@ -877,7 +897,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(31, mapValue(32, mapValue(33)))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 }

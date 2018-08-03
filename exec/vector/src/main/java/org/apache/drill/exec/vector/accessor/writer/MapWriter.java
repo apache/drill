@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ProjectionType;
-import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter;
@@ -181,19 +180,21 @@ public abstract class MapWriter extends AbstractTupleWriter {
   }
 
   public static ArrayObjectWriter buildMapArray(ColumnMetadata schema,
-      UInt4Vector offsetVector,
+      RepeatedMapVector mapVector,
       List<AbstractObjectWriter> writers) {
     MapWriter mapWriter;
     if (schema.isProjected()) {
+      assert mapVector != null;
       mapWriter = new ArrayMapWriter(schema, writers);
     } else {
+      assert mapVector == null;
       mapWriter = new DummyArrayMapWriter(schema, writers);
     }
     TupleObjectWriter mapArray = new TupleObjectWriter(mapWriter);
     AbstractArrayWriter arrayWriter;
     if (schema.isProjected()) {
       arrayWriter = new ObjectArrayWriter(schema,
-          offsetVector,
+          mapVector.getOffsetVector(),
           mapArray);
     } else  {
       arrayWriter = new DummyArrayWriter(schema, mapArray);
@@ -206,8 +207,7 @@ public abstract class MapWriter extends AbstractTupleWriter {
       List<AbstractObjectWriter> writers) {
     if (schema.isArray()) {
       return MapWriter.buildMapArray(schema,
-          vector == null ? null :
-          ((RepeatedMapVector) vector).getOffsetVector(), writers);
+          (RepeatedMapVector) vector, writers);
     } else {
       return MapWriter.buildMap(schema, (MapVector) vector, writers);
     }
