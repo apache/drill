@@ -1,6 +1,6 @@
 ---
 title: "LATERAL Join"
-date: 2018-08-02 15:12:49 UTC  
+date: 2018-08-03 21:09:27 UTC
 parent: "SQL Commands"
 ---
 
@@ -47,8 +47,7 @@ The following parameters are specific to lateral join. The list does not include
 
 * *join_clause*  
      Identifies the tables with the data you want to join, the type of join to be performed on the tables, and the conditions on which to join the tables. Starting in Drill 1.14, Drill supports lateral joins. 
-
-       **NOTE:** See LATERAL Join for additional information and examples of queries with lateral joins.  
+  
   
 * *LATERAL*  
      Keyword that represents a lateral join. A lateral join is essentially a foreach loop in SQL. A lateral join combines the results of the outer query with the results of a lateral subquery. When you use the UNNEST relational operator, Drill infers the LATERAL keyword. 
@@ -120,9 +119,130 @@ The following sections provide query examples to demonstrate the use of lateral 
 
 The following customer table contains customer data, including customer orders and returns, with the order and return data stored as complex types (arrays of maps). The store_id column is a foreign key.  
 
-INSERT TABLE
 
-If you want to query the Customer table for the average order amount for each customer in the month of November, you could write the following query, which uses a combination of left outer join, group by, and flatten operations:  
+<table class=MsoNormalTable border=0 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse'>
+ <tr style='height:.5in'>
+  <td valign=top style='border:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;
+  height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>cust_id</span></p>
+  </td>
+  <td valign=top style='border:solid black 1.0pt;border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;
+  height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>cust_name</span></p>
+  </td>
+  <td valign=top style='border:solid black 1.0pt;border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;
+  height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>store_id<br>
+   </span></p>
+  </td>
+  <td valign=top style='border:solid black 1.0pt;border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;
+  height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>orders</span></p>
+  </td>
+  <td valign=top style='border:solid black 1.0pt;border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;
+  height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>returns</span></p>
+  </td>
+ </tr>
+ <tr style='height:135.0pt'>
+  <td valign=top style='border:solid black 1.0pt;border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;
+  height:135.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>101</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:135.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>Fred</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:135.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>5</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:135.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>[<br>
+   &nbsp;&nbsp;{order_id: 1, order_date: 10/10/2017, order_amount: $200, items:<br>
+   &nbsp;[{type: “chair”, quantity: 3}, {type: ...} ] },</span></p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'> &nbsp;&nbsp;{order_id: 2,
+  order_date:<br>
+   &nbsp;11/10/2017, order_amount: $500, &nbsp;items: [{type: “lamp”, quantity:
+  2},<br>
+   &nbsp;{type: ...}]}</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:135.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'> [ {order_id: 2,
+  return_date: 11/20/2017, return_amount: $200,<br>
+   &nbsp;items: [{type: ...} ] } ]</span></p>
+  </td>
+ </tr>
+ <tr style='height:.5in'>
+  <td valign=top style='border:solid black 1.0pt;border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;
+  height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>102</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>Jack</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>7</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>&lt;orders<br>
+   &nbsp;data&gt;</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:.5in'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>&lt;returns<br>
+   &nbsp;data&gt;</span></p>
+  </td>
+ </tr>
+ <tr style='height:23.0pt'>
+  <td valign=top style='border:solid black 1.0pt;border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt;
+  height:23.0pt'></td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:23.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>...</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:23.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>...</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:23.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>...</span></p>
+  </td>
+  <td valign=top style='border-top:none;border-left:none;border-bottom:solid black 1.0pt;
+  border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt;height:23.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+  normal'><span style='font-size:9.0pt;color:black'>...</span></p>
+  </td>
+ </tr>
+</table>
+
+If you want to query the Customer table for the average order amount for each customer in the month of November, you could write the following query, which uses a combination of a left outer join, group by, and the flatten function to unnest the orders field that contains complex types:  
 
        SELECT t1.cust_name, t2.avg_orders
        FROM  customer t1
