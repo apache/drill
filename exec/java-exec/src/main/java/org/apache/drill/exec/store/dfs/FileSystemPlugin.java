@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.dfs;
 import static org.apache.drill.exec.store.dfs.FileSystemSchemaFactory.DEFAULT_WS_NAME;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -77,6 +78,10 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
 
+      if (isS3Connection(fsConf)) {
+        handleS3Credentials(fsConf);
+      }
+
       formatCreator = newFormatCreator(config, context, fsConf);
       List<FormatMatcher> matchers = new ArrayList<>();
       formatPluginsByConfig = new HashMap<>();
@@ -101,6 +106,33 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure setting up file system plugin.", e);
+    }
+  }
+
+  private boolean isS3Connection(Configuration conf) {
+    URI uri = FileSystem.getDefaultUri(conf);
+    return uri.getScheme().equals("s3a");
+  }
+
+  /**
+   * Retrieve secret and access keys from configured (with
+   * {@link org.apache.hadoop.security.alias.CredentialProviderFactory#CREDENTIAL_PROVIDER_PATH} property)
+   * credential providers and set it into {@code conf}. If provider path is not configured or credential
+   * is absent in providers, it will conditionally fallback to configuration setting. The fallback will occur unless
+   * {@link org.apache.hadoop.security.alias.CredentialProvider#CLEAR_TEXT_FALLBACK} is set to {@code false}.
+   *
+   * @param conf {@code Configuration} which will be updated with credentials from provider
+   * @throws IOException thrown if a credential cannot be retrieved from provider
+   */
+  private void handleS3Credentials(Configuration conf) throws IOException {
+    String[] credentialKeys = {"fs.s3a.secret.key", "fs.s3a.access.key"};
+    for (String key : credentialKeys) {
+      char[] credentialChars = conf.getPassword(key);
+      if (credentialChars == null) {
+        logger.warn(String.format("Property '%s' is absent.", key));
+      } else {
+        conf.set(key, String.valueOf(credentialChars));
+      }
     }
   }
 

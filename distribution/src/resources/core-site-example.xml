@@ -30,4 +30,18 @@
         <value>ENTER_YOUR_SECRETKEY</value>
     </property>
 
+    <!--Use this property to specify one or more credential provider URIs instead of
+        configuring above credentials in plain text-->
+    <!--<property>
+        <name>hadoop.security.credential.provider.path</name>
+        <value>ENTER_YOUR_PROVIDER_PATH</value>
+    </property>-->
+
+    <!--Set this property to true to avoid caching of S3 file system configuration properties,
+        so when you add/update a property (e.g. fs.s3a.secret.key) in S3 storage plugin its new value will be taken-->
+    <!--<property>
+        <name>fs.s3a.impl.disable.cache</name>
+        <value>true</value>
+    </property>-->
+
 </configuration>
