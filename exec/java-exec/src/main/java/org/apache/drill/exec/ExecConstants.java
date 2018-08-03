@@ -34,6 +34,7 @@ import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.apache.drill.exec.server.options.TypeValidators.AdminUsersValidator;
 import org.apache.drill.exec.server.options.TypeValidators.AdminUserGroupsValidator;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.vector.ValueVector;
 
 public final class ExecConstants {
   private ExecConstants() {
@@ -322,7 +323,7 @@ public final class ExecConstants {
 
   // Controls the flat parquet reader batching constraints (number of record and memory limit)
   public static final String PARQUET_FLAT_BATCH_NUM_RECORDS = "store.parquet.flat.batch.num_records";
-  public static final OptionValidator PARQUET_FLAT_BATCH_NUM_RECORDS_VALIDATOR = new RangeLongValidator(PARQUET_FLAT_BATCH_NUM_RECORDS, 1, Integer.MAX_VALUE);
+  public static final OptionValidator PARQUET_FLAT_BATCH_NUM_RECORDS_VALIDATOR = new RangeLongValidator(PARQUET_FLAT_BATCH_NUM_RECORDS, 1, ValueVector.MAX_ROW_COUNT);
   public static final String PARQUET_FLAT_BATCH_MEMORY_SIZE = "store.parquet.flat.batch.memory_size";
   // This configuration is used to overwrite the common memory batch sizing configuration property
   public static final OptionValidator PARQUET_FLAT_BATCH_MEMORY_SIZE_VALIDATOR = new RangeLongValidator(PARQUET_FLAT_BATCH_MEMORY_SIZE, 0, Integer.MAX_VALUE);
