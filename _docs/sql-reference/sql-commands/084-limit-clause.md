@@ -1,6 +1,6 @@
 ---
 title: "LIMIT Clause"
-date: 2018-08-02 22:29:54 UTC
+date: 2018-08-03 02:07:16 UTC
 parent: "SQL Commands"
 ---
 The LIMIT clause limits the result set to the specified number of rows. You can use LIMIT with or without an ORDER BY clause.
@@ -30,7 +30,7 @@ LIMIT 0 quickly returns an empty set. Use LIMIT 0 to test the validity of the SQ
 - Run LIMIT 0 with a query and then evaluate the query plan to verify that the query is optimized.  
   
 
-### LIMIT 0 Optimization  
+### LIMIT 0 Optimizations  
 
 Drill optimizes LIMIT 0 queries through the following options, which are enabled by default:  
 

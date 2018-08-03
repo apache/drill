@@ -1,6 +1,6 @@
 ---
 title: "FROM Clause"
-date:  
+date: 2018-08-03 02:07:16 UTC
 parent: "SQL Commands"
 ---
 The FROM clause lists the references (tables, views, and subqueries) that data is selected from. Drill expands the traditional concept of a “table reference” in a standard SQL FROM clause to refer to files and directories in a local or distributed file system.
@@ -17,10 +17,28 @@ Includes one or more *table_references* and is typically followed by the WHERE, 
 
 *table_reference*
 
+       tableReference:
+       
        with_subquery_table_name [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
-       table_name [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
-       ( subquery ) [ AS ] alias [ ( column_alias [, ...] ) ]
-       table_reference [ ON join_condition ]
+          | table_name [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
+          | ( subquery ) [ AS ] alias [ ( column_alias [, ...] ) ]
+          | <join_clause>
+          | [ LATERAL ] [<lateral_join_type>] <lateral_subquery> [ON TRUE]
+       
+       join_clause:
+          	tableReference <join_type> tableReference [ON <join_condition>]
+       
+       lateral_subquery:
+             <unnest_table_expr>
+          | ( SELECT_clause FROM <unnest_table_expr> [,...] )
+       
+       lateral_join_type:
+       [INNER] JOIN
+       LEFT [OUTER] JOIN
+       
+       unnest_table_expr:
+        UNNEST '(' expression ')'  [AS] <alias_table_name>(<alias_column_name>)
+
 
    * *with\_subquery\_table_name*  
    A table defined by a subquery in the WITH clause.
@@ -47,25 +65,55 @@ Includes one or more *table_references* and is typically followed by the WHERE, 
        * IN  
        * SOME  
       
-       In general, correlated subqueries are supported. EXISTS and NOT EXISTS subqueries that do not contain a correlation join are not yet supported.
+       In general, correlated subqueries are supported. EXISTS and NOT EXISTS subqueries that do not contain a correlation join are not yet supported.  
+
+
+   * *join_clause*  
+     Identifies the tables with the data you want to join, the type of join to be performed on the tables, and the conditions on which to join the tables. Starting in Drill 1.14, Drill supports lateral joins. 
+
+       **NOTE:** See [Lateral Join]({{site.baseurl}}/docs/lateral-join/) for additional information and examples of queries with lateral joins.  
+  
+   * *LATERAL*  
+     Keyword that represents a lateral join. A lateral join is essentially a foreach loop in SQL. A lateral join combines the results of the outer query with the results of a lateral subquery. When you use the UNNEST relational operator, Drill infers the LATERAL keyword. 
+
+   * *lateral\_sub_query*  
+     A lateral subquery is like correlated subqueries except that you use a lateral subquery in the FROM clause instead of the WHERE clause. Also, lateral subqueries can return any number of rows; correlated subqueries return exactly one row.
+
+   * *unnest\_table_expr*  
+     References the table produced by the UNNEST relational operator. UNNEST converts a collection to a relation. You must use the UNNEST relational operator with LATERAL subqueries when a field contains repeated types, like an array of maps. You must also indicate an alias for the table produced by UNNEST. 
+
+   * *lateral\_join_type*  
+     The type of join used with the lateral subquery. Lateral subqueries support [INNER] JOIN and LEFT [OUTER] JOIN, for example:  
+
+        ...FROM table1 LEFT OUTER JOIN LATERAL (select a from t2) ON TRUE;  
+ 
+     If you do not indicate the join type, Drill infers an INNER JOIN.  
+
+   * *ON TRUE*  
+     The join condition when the results of a lateral subquery are joined with fields in rows of the table referenced. This condition is implicit. You do not have to include the condition in the query.  
 
    * *join_type*  
-   Specifies one of the following join types:  
-       [INNER] JOIN  
-       LEFT [OUTER] JOIN  
-       RIGHT [OUTER] JOIN  
-       FULL [OUTER] JOIN
+   Specifies the type of join between two tables in the join clause when you do not use a lateral join. The join clause supports the following join types:  
+  
+        [INNER] JOIN  
+        LEFT [OUTER] JOIN  
+        RIGHT [OUTER] JOIN  
+        FULL [OUTER] JOIN
 
    * *ON join_condition*  
-   A type of join specification where the joining columns are stated as a condition that follows the ON keyword.  
-       Example:  ` homes join listing on homes.listid=listing.listid and homes.homeid=listing.homeid`
+   A type of join specification where the joining columns are stated as a condition that follows the ON keyword, for example:  
+  
+        homes join listing on homes.listid=listing.listid and homes.homeid=listing.homeid
 
 ## Join Types
 INNER JOIN  
 Return matching rows only, based on the join condition or list of joining columns.  
 
 OUTER JOIN  
-Return all of the rows that the equivalent inner join would return plus non-matching rows from the "left" table, "right" table, or both tables. The left table is the first-listed table, and the right table is the second-listed table. The non-matching rows contain NULL values to fill the gaps in the output columns.
+Return all of the rows that the equivalent inner join would return plus non-matching rows from the "left" table, "right" table, or both tables. The left table is the first-listed table, and the right table is the second-listed table. The non-matching rows contain NULL values to fill the gaps in the output columns.  
+
+LATERAL  
+A lateral join is essentially a foreach loop in SQL. A lateral join is represented by the keyword LATERAL with an inner subquery in the FROM clause. See [Lateral Join]({{site.baseurl}}/docs/lateral-join/).
 
 ## Usage Notes  
    * Joined columns must have comparable data types.
