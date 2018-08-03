@@ -4629,8 +4629,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SELECT", 
-            "next_url": "/docs/select/", 
+            "next_title": "LATERAL Join", 
+            "next_url": "/docs/lateral-join/", 
             "parent": "SQL Commands", 
             "previous_title": "DROP VIEW", 
             "previous_url": "/docs/drop-view/", 
@@ -6069,6 +6069,27 @@
             "relative_path": "_docs/connect-a-data-source/plugins/113-kafka-storage-plugin.md", 
             "title": "Kafka Storage Plugin", 
             "url": "/docs/kafka-storage-plugin/"
+        }, 
+        "LATERAL Join": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SELECT", 
+            "next_url": "/docs/select/", 
+            "parent": "SQL Commands", 
+            "previous_title": "EXPLAIN", 
+            "previous_url": "/docs/explain/", 
+            "relative_path": "_docs/sql-reference/sql-commands/071-lateral-join.md", 
+            "title": "LATERAL Join", 
+            "url": "/docs/lateral-join/"
         }, 
         "LIMIT Clause": {
             "breadcrumbs": [
@@ -10457,8 +10478,8 @@
             "next_title": "SELECT List", 
             "next_url": "/docs/select-list/", 
             "parent": "SQL Commands", 
-            "previous_title": "EXPLAIN", 
-            "previous_url": "/docs/explain/", 
+            "previous_title": "LATERAL Join", 
+            "previous_url": "/docs/lateral-join/", 
             "relative_path": "_docs/sql-reference/sql-commands/079-select.md", 
             "title": "SELECT", 
             "url": "/docs/select/"
@@ -10861,8 +10882,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT", 
-                    "next_url": "/docs/select/", 
+                    "next_title": "LATERAL Join", 
+                    "next_url": "/docs/lateral-join/", 
                     "parent": "SQL Commands", 
                     "previous_title": "DROP VIEW", 
                     "previous_url": "/docs/drop-view/", 
@@ -10882,11 +10903,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT List", 
-                    "next_url": "/docs/select-list/", 
+                    "next_title": "SELECT", 
+                    "next_url": "/docs/select/", 
                     "parent": "SQL Commands", 
                     "previous_title": "EXPLAIN", 
                     "previous_url": "/docs/explain/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/071-lateral-join.md", 
+                    "title": "LATERAL Join", 
+                    "url": "/docs/lateral-join/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SELECT List", 
+                    "next_url": "/docs/select-list/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "LATERAL Join", 
+                    "previous_url": "/docs/lateral-join/", 
                     "relative_path": "_docs/sql-reference/sql-commands/079-select.md", 
                     "title": "SELECT", 
                     "url": "/docs/select/"
@@ -12398,8 +12440,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT", 
-                            "next_url": "/docs/select/", 
+                            "next_title": "LATERAL Join", 
+                            "next_url": "/docs/lateral-join/", 
                             "parent": "SQL Commands", 
                             "previous_title": "DROP VIEW", 
                             "previous_url": "/docs/drop-view/", 
@@ -12419,11 +12461,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT List", 
-                            "next_url": "/docs/select-list/", 
+                            "next_title": "SELECT", 
+                            "next_url": "/docs/select/", 
                             "parent": "SQL Commands", 
                             "previous_title": "EXPLAIN", 
                             "previous_url": "/docs/explain/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/071-lateral-join.md", 
+                            "title": "LATERAL Join", 
+                            "url": "/docs/lateral-join/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT List", 
+                            "next_url": "/docs/select-list/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "LATERAL Join", 
+                            "previous_url": "/docs/lateral-join/", 
                             "relative_path": "_docs/sql-reference/sql-commands/079-select.md", 
                             "title": "SELECT", 
                             "url": "/docs/select/"
@@ -19612,8 +19675,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT", 
-                            "next_url": "/docs/select/", 
+                            "next_title": "LATERAL Join", 
+                            "next_url": "/docs/lateral-join/", 
                             "parent": "SQL Commands", 
                             "previous_title": "DROP VIEW", 
                             "previous_url": "/docs/drop-view/", 
@@ -19633,11 +19696,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT List", 
-                            "next_url": "/docs/select-list/", 
+                            "next_title": "SELECT", 
+                            "next_url": "/docs/select/", 
                             "parent": "SQL Commands", 
                             "previous_title": "EXPLAIN", 
                             "previous_url": "/docs/explain/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/071-lateral-join.md", 
+                            "title": "LATERAL Join", 
+                            "url": "/docs/lateral-join/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT List", 
+                            "next_url": "/docs/select-list/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "LATERAL Join", 
+                            "previous_url": "/docs/lateral-join/", 
                             "relative_path": "_docs/sql-reference/sql-commands/079-select.md", 
                             "title": "SELECT", 
                             "url": "/docs/select/"
