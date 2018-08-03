@@ -56,7 +56,13 @@ public interface Prel extends DrillRelNode, Iterable<Prel> {
   SelectionVectorMode getEncoding();
   boolean needsFinalColumnReordering();
 
-  default Prel addImplicitRowIDCol(List<RelNode> children) {
+  /**
+   * If the operator is in Lateral/Unnest pipeline, then it generates a new operator which knows how to process
+   * the rows accordingly during execution.
+   * eg: TopNPrel -> SortPrel and LimitPrel
+   * Other operators like FilterPrel, ProjectPrel etc will add an implicit row id to the output.
+   */
+  default Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
     throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
             this.getClass().getSimpleName() + " operator ");
   }

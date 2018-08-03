@@ -55,7 +55,7 @@ public class SelectionVectorRemoverPrel extends SinglePrel{
   }
 
   @Override
-  public Prel addImplicitRowIDCol(List<RelNode> children) {
+  public Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
     return (Prel) this.copy(this.traitSet, children);
   }
 }

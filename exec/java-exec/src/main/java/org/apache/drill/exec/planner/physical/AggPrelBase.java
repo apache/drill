@@ -189,7 +189,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
   }
 
   @Override
-  public Prel addImplicitRowIDCol(List<RelNode> children) {
+  public Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
     List<Integer> groupingCols = Lists.newArrayList();
     groupingCols.add(0);
     for (int groupingCol : groupSet.asList()) {

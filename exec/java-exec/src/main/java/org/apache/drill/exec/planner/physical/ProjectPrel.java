@@ -136,7 +136,7 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
   }
 
   @Override
-  public Prel addImplicitRowIDCol(List<RelNode> children) {
+  public Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
     RelDataTypeFactory typeFactory = this.getCluster().getTypeFactory();
     RexBuilder builder = this.getCluster().getRexBuilder();
     List<RexNode> projects = Lists.newArrayList();
