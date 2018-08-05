@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2018-03-18 20:02:37 UTC
+date: 2018-08-05 04:52:48 UTC
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -9,6 +9,25 @@ the semi-structured and rapidly evolving data coming from modern Big Data
 applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.  
+
+## What's New in Apache Drill 1.14  
+- Ability to [run Drill in a Docker container]({{site.baseurl}}/docs/running-drill-on-docker/). ([DRILL-6346](https://issues.apache.org/jira/browse/DRILL-6346))  
+- Ability to [export and save your storage plugin configurations]({{site.baseurl}}/docs/configuring-storage-plugins/#exporting-storage-plugin-configurations) to a JSON file for reuse. ([DRILL-4580](https://issues.apache.org/jira/browse/DRILL-4580))  
+- Ability to manage storage plugin configurations in the Drill configuration file, [storage-plugins-override.conf]({{site.baseurl}}/docs/configuring-storage-plugins/#configuring-storage-plugins-with-the-storage-plugins-override.conf-file). ([DRILL-6494](https://issues.apache.org/jira/browse/DRILL-6494))  
+- [Functions that return data type information]({{site.baseurl}}/docs/data-type-functions/). ([DRILL-6361](https://issues.apache.org/jira/browse/DRILL-6361))  
+- The Drill [kafka storage plugin supports filter pushdown for query conditions]({{site.baseurl}}/docs/kafka-storage-plugin/#filter-pushdown-support) on certain Kafka metadata fields in messages. ([DRILL-5977](https://issues.apache.org/jira/browse/DRILL-5977))  
+- [Spill to disk]({{site.baseurl}}/docs/sort-based-and-hash-based-memory-constrained-operators/#spill-to-disk) for the Hash Join operator. ([DRILL-6027](https://issues.apache.org/jira/browse/DRILL-6027))  
+- The dfs storage plugin supports a [Logfile plugin extension]({{site.baseurl}}/docs/logfile-plugin/) that enables Drill to directly read and query log files of any format. ([DRILL-6104](https://issues.apache.org/jira/browse/DRILL-6104))  
+- [Phonetic]({{site.baseurl}}/docs/phonetic-functions/) and [string distance]({{site.baseurl}}/docs/phonetic-functions/) functions. ([DRILL-6519](https://issues.apache.org/jira/browse/DRILL-6519))  
+- The [store.hive.conf.properties option]({{site.baseurl}}/docs/hive-storage-plugin/#setting-hive-properties) enables you to specify Hive properties at the session level using the SET command. ([DRILL-6575](https://issues.apache.org/jira/browse/DRILL-6575))  
+- [Drill can directly manage the CPU resources]({{site.baseurl}}/docs/configuring-cgroups-to-control-cpu-usage/) through the Drill start-up script, drill-env.sh; you no longer have to manually add the PID to the cgroup.procs file each time a Drillbit restarts. ([DRILL-143](https://issues.apache.org/jira/browse/DRILL-143))  
+- Drill can query the metadata in various image formats with the [image metadata format plugin]({{site.baseurl}}/docs/image-metadata-format-plugin/). ([DRILL-4364](https://issues.apache.org/jira/browse/DRILL-4364))  
+- [Enhanced decimal data type support]({{site.baseurl}}/docs/supported-data-types/#decimal-data-type). ([DRILL-6094](https://issues.apache.org/jira/browse/DRILL-6094))  
+- [Option to push LIMIT(0) on top of SCAN]({{site.baseurl}}/docs/limit-clause/#limit-0). ([DRILL-6574](https://issues.apache.org/jira/browse/DRILL-6574))  
+- Parquet filter pushdown improvements:  
+       - Drill can [infer filter conditions]({{site.baseurl}}/docs/parquet-filter-pushdown/#viewing-the-query-plan) for join queries and push the filter conditions down to the data source. ([DRILL-6173](https://issues.apache.org/jira/browse/DRILL-6173))  
+       - Drill uses a native reader to read Hive tables when you enable the [store.hive.optimize_scan_with_native_readers option]({{site.baseurl}}/docs/configuration-options-introduction/). When enabled, Drill reads data faster and applies filter pushdown optimizations. ([DRILL-6331](https://issues.apache.org/jira/browse/DRILL-6331))  
+- Early release of [lateral join]({{site.baseurl}}/docs/lateral-join/). ([DRILL-5999](https://issues.apache.org/jira/browse/DRILL-5999))        
 
 ## What's New in Apache Drill 1.13  
 - JDK 8 support. ([DRILL-1491](https://issues.apache.org/jira/browse/DRILL-1491))    

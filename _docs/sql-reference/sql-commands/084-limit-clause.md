@@ -1,6 +1,6 @@
 ---
 title: "LIMIT Clause"
-date: 2018-08-03 02:07:16 UTC
+date: 2018-08-05 04:52:50 UTC
 parent: "SQL Commands"
 ---
 The LIMIT clause limits the result set to the specified number of rows. You can use LIMIT with or without an ORDER BY clause.
@@ -9,14 +9,15 @@ The LIMIT clause limits the result set to the specified number of rows. You can 
 ## Syntax
 The LIMIT clause supports the following syntax:  
 
-       LIMIT { count | ALL }
-
-Specifying ALL returns all records, which is equivalent to omitting the LIMIT clause from the SELECT statement.
+       LIMIT { count | ALL }  
 
 ## Parameters
 *count*  
 Specifies the maximum number of rows to return.
 If the count expression evaluates to NULL, Drill treats it as LIMIT ALL.  
+
+*ALL*  
+Specifying ALL returns all records, which is equivalent to omitting the LIMIT clause from the SELECT statement.  
 
 ## LIMIT 0
 
