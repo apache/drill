@@ -1,6 +1,6 @@
 ---
 title: "LATERAL Join"
-date: 2018-08-03 21:09:27 UTC
+date: 2018-08-06 23:12:05 UTC
 parent: "SQL Commands"
 ---
 
@@ -105,8 +105,7 @@ The following parameters are specific to lateral join. The list does not include
 - UNNEST and LATERAL work similarly to FLATTEN, but differ from FLATTEN in the follow ways:  
        - UNNEST is a SQL standard, whereas FLATTEN is not.  
        - FLATTEN is only allowed in the SELECT list of query, not in the FROM clause.  
-       - FLATTEN does not work with schema changes, but UNNEST can if the queries do not have hash aggregates. FLATTEN requires all data in a column to be of the same type. For example, if a column contains integers in some rows and float in others, UNNEST can process the query, whereas FLATTEN cannot.  
-       - The original order of a table can be maintained when you use UNNEST, but not with FLATTEN.  
+       - FLATTEN does not work with schema changes, but UNNEST can if the queries do not have hash aggregates. FLATTEN requires all data in a column to be of the same type. For example, if a column contains integers in some rows and float in others, UNNEST can process the query, whereas FLATTEN cannot.    
        - LATERAL and UNNEST cover a wider set of use cases than FLATTEN. For example, when you use LATERAL and UNNEST, Drill can perform a LEFT OUTER JOIN on data. If you used FLATTEN, Drill must scan the source table twice to perform an OUTER JOIN after flattening the data. Also, with LATERAL and UNNEST, you can apply a filter, aggregate, or limit on each row. With FLATTEN, the filter or aggregate is applied after flattening, however you cannot apply the limit on each row.  
        - FLATTEN unnests data into a table and processes the entire table; filters and subqueries are applied on the entire table at the same time.  
 
@@ -338,6 +337,75 @@ The subquery that corresponds to the lateral, aggregates the order count, groupe
           select count(_orders.c_order.o_orderkey) as o_orderCount, _orders.c_order.o_orderpriority as o_orderpriority from UNNEST(customer.c_orders) _orders(c_order) group by _orders.c_order.o_orderpriority
          ) t_orders
        ;  
+
+
+### FLATTEN vs LATERAL and UNNEST Queries  
+
+Each of the following examples shows a query written with the FLATTEN function and also written with a lateral join and UNNEST relational operator, which performs like a table function. These queries demonstrate how to use LATERAL and UNNEST instead of FLATTEN to simplify the writing of such queries.   
+
+**Example 1** 
+
+The queries in this example return the order total for the top 50 customers.  
+
+*FLATTEN*  
+
+       SELECT l.c_custkey, l.c_name, r.orderkey, 
+       SUM(r.totalprice) sum_order 
+       FROM customer l 
+       INNER JOIN (SELECT g.custkey custkey, g.name, g.orderkey, g.totalprice totalprice 
+       FROM (SELECT row_number() OVER(PARTITION BY c_custkey) 
+       AS rn, f.c_custkey custkey, f.c_name name, f.o.o_orderkey orderkey, f.o.o_totalprice totalprice 
+       FROM (SELECT c_custkey, c_name, 
+       FLATTEN(c_orders) 
+       AS o 
+       FROM customer) f) g) r 
+       ON (l.c_custkey = r.custkey) 
+       GROUP BY l.c_custkey, l.c_name, r.orderkey 
+       ORDER BY sum_order 
+       LIMIT 50;  
+
+*LATERAL and UNNEST*   
+
+       SELECT customer.c_custkey, customer.c_name, orders.o_orderkey, sum(orders.o_totalprice) total_spending from customer, 
+       LATERAL (SELECT t.o.o_orderkey o_orderkey, t.o.o_totalprice o_totalprice 
+       FROM
+       UNNEST(customer.c_orders) t(o)) orders 
+       GROUP BY customer.c_custkey, customer.c_name, orders.o_orderkey 
+       ORDER BY total_spending
+       LIMIT 50;  
+
+**Example 2**  
+
+The queries in this example return the first 2000 orders of the top 50 customers for orders greater than one thousand dollars. 
+
+*FLATTEN*   
+
+       SELECT l.c_custkey, l.c_name, r.orderkey, r.totalprice 
+       FROM customer l 
+       LEFT OUTER JOIN (SELECT g.custkey custkey, g.name, g.orderkey, g.totalprice totalprice 
+       FROM (SELECT row_number() OVER(PARTITION BY c_custkey) 
+       AS rn, f.c_custkey custkey, f.c_name name, f.o.o_orderkey orderkey, f.o.o_totalprice totalprice 
+       FROM (SELECT c_custkey, c_name, 
+       FLATTEN(c_orders) 
+       AS o 
+       FROM customer) f 
+       WHERE f.o.o_totalprice > 1000) g 
+       WHERE rn < 2001) r 
+       ON (l.c_custkey = r.custkey) 
+       ORDER BY l.c_custkey, r.totalprice 
+       LIMIT 50;
+
+*LATERAL and UNNEST*   
+
+       SELECT customer.c_custkey, customer.c_name, orders.o_orderkey, orders.o_totalprice 
+       FROM customer 
+       LEFT JOIN LATERAL (SELECT t.o.o_orderkey o_orderkey, t.o.o_totalprice o_totalprice 
+       FROM
+       UNNEST(customer.c_orders) t(o) 
+       WHERE t.o.o_totalprice > 1000 LIMIT 2000) orders ON TRUE
+       ORDER BY c_custkey, orders.o_totalprice
+       LIMIT 50;  
+
 
 
 
