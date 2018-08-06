@@ -177,7 +177,7 @@ By default, INT96 timestamp values represent the local date and time, which is s
 
 
 ### SQL Types to Parquet Logical Types
-Parquet also supports logical types, fully described on the [Apache Parquet site](https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md). Embedded types, JSON and BSON, annotate a binary primitive type representing a JSON or BSON document. The logical types and their mapping to SQL types are:
+Parquet also supports logical types, fully described on the [Apache Parquet site](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md). Embedded types, JSON and BSON, annotate a binary primitive type representing a JSON or BSON document. The logical types and their mapping to SQL types are:
  
 | SQL Type   | Drill Description                                                              | Parquet Logical Type | Parquet Description                                                                                                                        |
 |------------|--------------------------------------------------------------------------------|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
