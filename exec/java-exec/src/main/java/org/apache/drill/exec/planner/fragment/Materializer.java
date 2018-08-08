@@ -17,8 +17,9 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
@@ -138,7 +139,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     final Wrapper info;
     final int minorFragmentId;
 
-    Stack<UnnestPOP> unnest = new Stack<>();
+    private final Deque<UnnestPOP> unnest = new ArrayDeque<>();
 
     public IndexedFragmentNode(int minorFragmentId, Wrapper info) {
       super();
@@ -163,11 +164,11 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     }
 
     public void addUnnest(UnnestPOP unnest) {
-      this.unnest.push(unnest);
+      this.unnest.addFirst(unnest);
     }
 
     public UnnestPOP getUnnest() {
-      return this.unnest.pop();
+      return this.unnest.removeFirst();
     }
 
   }
