@@ -276,8 +276,9 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
    */
   @Override
   public RecordBatch getIncoming() {
-    Preconditions.checkState (left != null, "Retuning null left batch. It's unexpected since right side will only be " +
-      "called iff there is any valid left batch");
+    Preconditions.checkState (left != null,
+      "Retuning null left batch. It's unexpected since right side will only be called iff " +
+        "there is any valid left batch");
     return left;
   }
 
@@ -348,7 +349,8 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
     if (!prefetchFirstBatchFromBothSides()) {
       return;
     }
-    Preconditions.checkState(right.getRecordCount() == 0, "Unexpected non-empty first right batch received");
+    Preconditions.checkState(right.getRecordCount() == 0,
+      "Unexpected non-empty first right batch received");
 
     // Setup output container schema based on known left and right schema
     setupNewSchema();
@@ -728,7 +730,6 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
 
     // Set the record count in the container
     container.setRecordCount(outputIndex);
-    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
     batchMemoryManager.updateOutgoingStats(outputIndex);
 
@@ -976,12 +977,19 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
       int leftRowId = leftJoinIndex + 1;
       int numRowsCopied = 0;
 
-      Preconditions.checkState(currentRowId <= leftRecordCount || leftJoinIndex <= leftRecordCount,
-        "Either RowId in right batch is greater than total records in left batch or all rows in left batch " +
-          "is processed but there are still rows in right batch. Details[RightRowId: %s, LeftRecordCount: %s, " +
-          "LeftJoinIndex: %s, RightJoinIndex: %s]", currentRowId, leftRecordCount, leftJoinIndex, rightJoinIndex);
+      if (currentRowId > leftRecordCount || leftJoinIndex > leftRecordCount) {
+        // Not using Preconditions.checkState here since along with condition evaluation there will be cost of boxing
+        // the arguments.
+        throw new IllegalStateException(String.format("Either RowId in right batch is greater than total records in " +
+          "left batch or all rows in left batch is processed but there are still rows in right batch. " +
+          "Details[RightRowId: %s, LeftRecordCount: %s, LeftJoinIndex: %s, RightJoinIndex: %s]",
+          currentRowId, leftRecordCount, leftJoinIndex, rightJoinIndex));
+      }
 
-      logger.trace("leftRowId and currentRowId are: {}, {}", leftRowId, currentRowId);
+      if (logger.isTraceEnabled()) {
+        // Inside the if condition to eliminate parameter boxing cost
+        logger.trace("leftRowId and currentRowId are: {}, {}", leftRowId, currentRowId);
+      }
 
       // If leftRowId matches the rowId in right row then emit left and right row. Increment outputIndex, rightJoinIndex
       // and numRowsCopied. Also set leftMatchFound to true to indicate when to increase leftJoinIndex.
@@ -1089,10 +1097,14 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
   private void copyDataToOutputVectors(int fromRowIndex, int toRowIndex, Map<ValueVector, ValueVector> mapping,
                                        int numRowsToCopy, boolean isRightBatch) {
     for (Map.Entry<ValueVector, ValueVector> entry : mapping.entrySet()) {
-      logger.trace("Copying data from incoming batch vector to outgoing batch vector. [IncomingBatch: " +
+
+      if (logger.isTraceEnabled()) {
+        // Inside the if condition to eliminate parameter boxing cost
+        logger.trace("Copying data from incoming batch vector to outgoing batch vector. [IncomingBatch: " +
           "(RowIndex: {}, ColumnName: {}), OutputBatch: (RowIndex: {}, ColumnName: {}) and Other: (TimeEachValue: {})]",
-        fromRowIndex, entry.getKey().getField().getName(), toRowIndex, entry.getValue().getField().getName(),
-        numRowsToCopy);
+          fromRowIndex, entry.getKey().getField().getName(), toRowIndex, entry.getValue().getField().getName(),
+          numRowsToCopy);
+      }
 
       // Copy data from input vector to output vector for numRowsToCopy times.
       for (int j = 0; j < numRowsToCopy; ++j) {
@@ -1109,8 +1121,11 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
    * @param numRowsToCopy - number of rows to copy from source vector to destination vectors
    */
   private void emitLeft(int leftIndex, int outIndex, int numRowsToCopy) {
-    logger.trace("Copying the left batch data. Details: [leftIndex: {}, outputIndex: {}, numsCopy: {}]",
-      leftIndex, outIndex, numRowsToCopy);
+    if (logger.isTraceEnabled()) {
+      // Inside the if condition to eliminate parameter boxing cost
+      logger.trace("Copying the left batch data. Details: [leftIndex: {}, outputIndex: {}, numsCopy: {}]",
+        leftIndex, outIndex, numRowsToCopy);
+    }
     copyDataToOutputVectors(leftIndex, outIndex, leftInputOutputVector, numRowsToCopy, false);
   }
 
@@ -1122,8 +1137,11 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
    * @param numRowsToCopy - number of rows to copy from source vector to destination vectors
    */
   private void emitRight(int rightIndex, int outIndex, int numRowsToCopy) {
-    logger.trace("Copying the right batch data. Details: [rightIndex: {}, outputIndex: {}, numsCopy: {}]",
-      rightIndex, outIndex, numRowsToCopy);
+    if (logger.isTraceEnabled()) {
+      // Inside the if condition to eliminate parameter boxing cost
+      logger.trace("Copying the right batch data. Details: [rightIndex: {}, outputIndex: {}, numsCopy: {}]",
+        rightIndex, outIndex, numRowsToCopy);
+    }
     copyDataToOutputVectors(rightIndex, outIndex, rightInputOutputVector, numRowsToCopy, true);
   }
 

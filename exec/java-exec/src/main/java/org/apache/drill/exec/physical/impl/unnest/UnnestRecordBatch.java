@@ -284,10 +284,6 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     Preconditions.checkNotNull(lateral);
     unnest.setOutputCount(memoryManager.getOutputRowCount());
     final int incomingRecordCount = incoming.getRecordCount();
-    final int currentRecord = lateral.getRecordIndex();
-    // We call this in setupSchema, but we also need to call it here so we have a reference to the appropriate vector
-    // inside of the the unnest for the current batch
-    setUnnestVector();
 
     int remainingRecordCount = unnest.getUnnestField().getAccessor().getInnerValueCount() - remainderIndex;
 
