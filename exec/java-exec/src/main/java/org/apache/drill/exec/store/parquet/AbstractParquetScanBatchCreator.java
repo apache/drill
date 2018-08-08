@@ -106,11 +106,21 @@ public abstract class AbstractParquetScanBatchCreator {
           ParquetReaderUtility.detectCorruptDates(footer, rowGroupScan.getColumns(), autoCorrectCorruptDates);
         logger.debug("Contains corrupt dates: {}", containsCorruptDates);
 
-        if (!context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER)
-            && !ParquetReaderUtility.containsComplexColumn(footer, rowGroupScan.getColumns())) {
-          logger.debug("Query {} qualifies for new Parquet reader",
-              QueryIdHelper.getQueryId(oContext.getFragmentContext().getHandle().getQueryId()));
-          readers.add(new ParquetRecordReader(context,
+        boolean useNewReader = context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER);
+        boolean containsComplexColumn = ParquetReaderUtility.containsComplexColumn(footer, rowGroupScan.getColumns());
+        logger.debug("PARQUET_NEW_RECORD_READER is {}. Complex columns {}.", useNewReader ? "enabled" : "disabled",
+            containsComplexColumn ? "found." : "not found.");
+        RecordReader reader;
+
+        if (useNewReader || containsComplexColumn) {
+          reader = new DrillParquetReader(context,
+              footer,
+              rowGroup,
+              columnExplorer.getTableColumns(),
+              fs,
+              containsCorruptDates);
+        } else {
+          reader = new ParquetRecordReader(context,
               rowGroup.getPath(),
               rowGroup.getRowGroupIndex(),
               rowGroup.getNumRecordsToRead(),
@@ -118,17 +128,13 @@ public abstract class AbstractParquetScanBatchCreator {
               CodecFactory.createDirectCodecFactory(fs.getConf(), new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
               footer,
               rowGroupScan.getColumns(),
-              containsCorruptDates));
-        } else {
-          logger.debug("Query {} doesn't qualify for new reader, using old one",
-              QueryIdHelper.getQueryId(oContext.getFragmentContext().getHandle().getQueryId()));
-          readers.add(new DrillParquetReader(context,
-              footer,
-              rowGroup,
-              columnExplorer.getTableColumns(),
-              fs,
-              containsCorruptDates));
+              containsCorruptDates);
         }
+
+        logger.debug("Query {} uses {}",
+            QueryIdHelper.getQueryId(oContext.getFragmentContext().getHandle().getQueryId()),
+            reader.getClass().getSimpleName());
+        readers.add(reader);
 
         List<String> partitionValues = rowGroupScan.getPartitionValues(rowGroup);
         Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(rowGroup.getPath(), partitionValues, rowGroupScan.supportsFileImplicitColumns());
