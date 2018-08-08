@@ -435,6 +435,10 @@
             let rowElem = $(shutdownBtn).parent().parent();
             let hostAddr = $(rowElem).find('#address').contents().get(0).nodeValue.trim();
             let hostPort = $(rowElem).find('#httpPort').html();
+            // Always use the host address from the url for the current Drillbit. For details refer DRILL-6663
+            if ((rowElem.find("#current").html() == "Current")) {
+              hostAddr = location.hostname;
+            }
             let host = hostAddr+":"+hostPort
 
             if (confirm("Are you sure you want to shutdown Drillbit running on " + host + " node?")) {
