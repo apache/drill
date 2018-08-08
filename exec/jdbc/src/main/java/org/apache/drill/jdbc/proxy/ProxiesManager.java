@@ -107,8 +107,7 @@ class ProxiesManager {
       catch ( InstantiationException | IllegalAccessException
               | IllegalArgumentException | InvocationTargetException
               | NoSuchMethodException | SecurityException e ) {
-        throw new RuntimeException(
-            "Error creating proxy for " + declaredType + ": " + e , e );
+        throw new RuntimeException("Error creating proxy for " + declaredType + ": " + e, e);
       }
     }
     return proxyInstance;

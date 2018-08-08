@@ -117,10 +117,10 @@ public class TestDrillParquetReader extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns(columns)
-        .baselineValues( 0L                   , 0           , 0        , 0       , 0L                    , 0            , 0       ,0       )
-        .baselineValues( -1L                  , -1          , -1       , -1      , -1L                   , -1           , -1      , -1     )
-        .baselineValues( 1L                   , 1           , 1        , 1       , -9223372036854775808L , 1            , 1       , 1      )
-        .baselineValues( 9223372036854775807L , 2147483647  , 65535    , 255     , 9223372036854775807L  , -2147483648  , -32768  , -128   )
+        .baselineValues(0L, 0, 0, 0, 0L, 0, 0, 0)
+        .baselineValues(-1L, -1, -1, -1, -1L, -1, -1, -1)
+        .baselineValues(1L, 1, 1, 1, -9223372036854775808L, 1, 1, 1)
+        .baselineValues(9223372036854775807L, 2147483647, 65535, 255, 9223372036854775807L, -2147483648, -32768, -128)
         .build()
         .run();
   }
@@ -156,23 +156,23 @@ public class TestDrillParquetReader extends BaseTestQuery {
             " order by t.rowKey "
     );
     String[] columns = {
-        "rowKey " ,
-        "_UTF8" ,
-        "_Enum" ,
-        "_INT32_RAW" ,
-        "_INT_8" ,
-        "_INT_16" ,
-        "_INT_32" ,
-        "_UINT_8" ,
-        "_UINT_16" ,
-        "_UINT_32" ,
-        "_INT64_RAW" ,
-        "_INT_64" ,
-        "_UINT_64" ,
-        "_DATE_int32" ,
-        "_TIME_MILLIS_int32" ,
-        "_TIMESTAMP_MILLIS_int64" ,
-        "_INTERVAL_fixed_len_byte_array_12" ,
+        "rowKey ",
+        "_UTF8",
+        "_Enum",
+        "_INT32_RAW",
+        "_INT_8",
+        "_INT_16",
+        "_INT_32",
+        "_UINT_8",
+        "_UINT_16",
+        "_UINT_32",
+        "_INT64_RAW",
+        "_INT_64",
+        "_UINT_64",
+        "_DATE_int32",
+        "_TIME_MILLIS_int32",
+        "_TIMESTAMP_MILLIS_int64",
+        "_INTERVAL_fixed_len_byte_array_12",
         "_INT96_RAW"
 
     };
@@ -231,23 +231,23 @@ public class TestDrillParquetReader extends BaseTestQuery {
             " order by t.rowKey "
     );
     String[] columns = {
-        "rowKey " ,
-        "_UTF8" ,
-        "_Enum" ,
-        "_INT32_RAW" ,
-        "_INT_8" ,
-        "_INT_16" ,
-        "_INT_32" ,
-        "_UINT_8" ,
-        "_UINT_16" ,
-        "_UINT_32" ,
-        "_INT64_RAW" ,
-        "_INT_64" ,
-        "_UINT_64" ,
-        "_DATE_int32" ,
-        "_TIME_MILLIS_int32" ,
-        "_TIMESTAMP_MILLIS_int64" ,
-        "_INTERVAL_fixed_len_byte_array_12" ,
+        "rowKey ",
+        "_UTF8",
+        "_Enum",
+        "_INT32_RAW",
+        "_INT_8",
+        "_INT_16",
+        "_INT_32",
+        "_UINT_8",
+        "_UINT_16",
+        "_UINT_32",
+        "_INT64_RAW",
+        "_INT_64",
+        "_UINT_64",
+        "_DATE_int32",
+        "_TIME_MILLIS_int32",
+        "_TIMESTAMP_MILLIS_int64",
+        "_INTERVAL_fixed_len_byte_array_12",
         "_INT96_RAW"
 
     };

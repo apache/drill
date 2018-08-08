@@ -334,7 +334,7 @@ public class TestBuilder {
    * @param baselineValues - the baseline values to validate
    * @return the test builder
    */
-  public TestBuilder baselineValues(Object ... baselineValues) {
+  public TestBuilder baselineValues(Object... baselineValues) {
     assert getExpectedSchema() == null : "The expected schema is not needed when baselineValues are provided ";
     if (ordered == null) {
       throw new RuntimeException("Ordering not set, before specifying baseline data you must explicitly call the ordered() or unOrdered() method on the " + this.getClass().getSimpleName());
@@ -410,7 +410,7 @@ public class TestBuilder {
         baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }
 
-  public BaselineQueryTestBuilder sqlBaselineQuery(String query, String ...replacements) {
+  public BaselineQueryTestBuilder sqlBaselineQuery(String query, String... replacements) {
     return sqlBaselineQuery(String.format(query, (Object[]) replacements));
   }
 
@@ -471,7 +471,7 @@ public class TestBuilder {
     }
 
     // convenience method to convert minor types to major types if no decimals with precisions are needed
-    public CSVTestBuilder baselineTypes(TypeProtos.MinorType ... baselineTypes) {
+    public CSVTestBuilder baselineTypes(TypeProtos.MinorType... baselineTypes) {
       TypeProtos.MajorType[] majorTypes = new TypeProtos.MajorType[baselineTypes.length];
       int i = 0;
       for(TypeProtos.MinorType minorType : baselineTypes) {

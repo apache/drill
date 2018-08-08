@@ -44,14 +44,6 @@
 
   <module name="FileTabCharacter"/>
 
-  <!--
-    This check is necessary because none of the existing checks catch consecutive semicolons in imports.
-  -->
-  <module name="RegexpSingleline">
-    <property name="format" value=";;$"/>
-    <property name="message" value="A line of code cannot end with multiple semicolons."/>
-  </module>
-
   <module name="RegexpSingleline">
     <property name="format" value="\s+$"/>
     <property name="message" value="A line of code cannot contain any trailing whitespace"/>

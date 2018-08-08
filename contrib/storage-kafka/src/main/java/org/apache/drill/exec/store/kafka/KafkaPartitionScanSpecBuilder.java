@@ -41,7 +41,7 @@ public class KafkaPartitionScanSpecBuilder extends
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KafkaPartitionScanSpecBuilder.class);
   private final LogicalExpression le;
   private final KafkaGroupScan groupScan;
-  private final KafkaConsumer<? ,?> kafkaConsumer;
+  private final KafkaConsumer<?, ?> kafkaConsumer;
   private ImmutableMap<TopicPartition, KafkaPartitionScanSpec> fullScanSpec;
   private static final long CLOSE_TIMEOUT_MS = 200;
 

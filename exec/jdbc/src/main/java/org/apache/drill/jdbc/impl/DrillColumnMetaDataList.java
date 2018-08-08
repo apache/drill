@@ -128,10 +128,16 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
 
       final int nullability;
       switch ( field.getDataMode() ) {
-        case OPTIONAL: nullability = ResultSetMetaData.columnNullable; break;
-        case REQUIRED: nullability = ResultSetMetaData.columnNoNulls;  break;
+        case OPTIONAL:
+          nullability = ResultSetMetaData.columnNullable;
+          break;
+        case REQUIRED:
+          nullability = ResultSetMetaData.columnNoNulls;
+          break;
         // Should REPEATED still map to columnNoNulls? or to columnNullable?
-        case REPEATED: nullability = ResultSetMetaData.columnNoNulls;  break;
+        case REPEATED:
+          nullability = ResultSetMetaData.columnNoNulls;
+          break;
         default:
           throw new AssertionError( "Unexpected new DataMode value '"
                                     + field.getDataMode().name() + "'" );

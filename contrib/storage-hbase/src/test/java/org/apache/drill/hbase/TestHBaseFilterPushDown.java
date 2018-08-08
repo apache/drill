@@ -91,8 +91,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + " FROM hbase.`TestTableCompositeDate` tableName\n"
         + " WHERE\n"
         + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') < DATE '2015-06-18' AND\n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') > DATE '2015-06-13'"
-        , 12);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') > DATE '2015-06-13'",
+        12);
   }
 
   @Test
@@ -104,8 +104,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
         + " FROM hbase.`TestTableCompositeDate` tableName\n"
         + " WHERE\n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') = DATE '2015-08-22'"
-        , 3);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') = DATE '2015-08-22'",
+        3);
   }
 
   @Test
@@ -118,8 +118,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + " FROM hbase.`TestTableCompositeDate` tableName\n"
         + " WHERE\n"
         + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') < DATE '2015-06-18' AND\n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') > DATE '2015-06-13'"
-        , 1);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') > DATE '2015-06-13'",
+        1);
   }
 
   @Test
@@ -133,8 +133,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + " FROM hbase.`TestTableCompositeDate` tableName\n"
         + " WHERE\n"
         + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'timestamp_epoch_be') >= TIMESTAMP '2015-06-18 08:00:00.000' AND\n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'timestamp_epoch_be') < TIMESTAMP '2015-06-20 16:00:00.000'"
-        , 7);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'timestamp_epoch_be') < TIMESTAMP '2015-06-20 16:00:00.000'",
+        7);
   }
 
   @Test
@@ -146,8 +146,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
         + " FROM hbase.`TestTableCompositeTime` tableName\n"
         + " WHERE\n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') = TIME '23:57:15.275'"//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'), 'BIGINT_BE') \n"
-        , 1);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') = TIME '23:57:15.275'",//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'), 'BIGINT_BE') \n"
+        1);
   }
 
   @Test
@@ -159,8 +159,9 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
         + " FROM hbase.`TestTableCompositeTime` tableName\n"
         + " WHERE\n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') = TIME '23:55:51.250'"//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'), 'BIGINT_BE') \n"
-        , 1);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') = TIME '23:55:51.250'",//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'),
+        // 'BIGINT_BE') \n"
+        1);
   }
 
   @Test
@@ -173,8 +174,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + " FROM hbase.`TestTableCompositeTime` tableName\n"
         + " WHERE\n"
         + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') > TIME '23:57:06' AND"//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'), 'BIGINT_BE') \n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') < TIME '23:59:59'"
-        , 8);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') < TIME '23:59:59'",
+        8);
   }
 
   @Test
@@ -186,8 +187,9 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
         + " FROM hbase.`TestTableCompositeDate` tableName\n"
         + " WHERE\n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'bigint_be') = cast(1409040000000 as bigint)"//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'), 'BIGINT_BE') \n"
-        , 1);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'bigint_be') = cast(1409040000000 as bigint)",//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'),
+        // 'BIGINT_BE') \n"
+        1);
   }
 
   @Test
@@ -202,8 +204,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + " FROM hbase.`TestTableCompositeDate` tableName\n"
         + " WHERE\n"
         + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'uint8_be') > cast(1438300800000 as bigint) AND\n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'uint8_be') < cast(1438617600000 as bigint)"
-        , 10);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'uint8_be') < cast(1438617600000 as bigint)",
+        10);
   }
 
   @Test
@@ -216,8 +218,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + " FROM hbase.`TestTableCompositeInt` tableName\n"
         + " WHERE\n"
         + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') >= cast(423 as int) AND"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') < cast(940 as int)"
-        , 11);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') < cast(940 as int)",
+        11);
   }
 
   @Test
@@ -230,8 +232,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + " FROM hbase.`TestTableCompositeInt` tableName\n"
         + " WHERE\n"
         + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') >= cast(300 as int) AND"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') < cast(900 as int)"
-        , 1);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') < cast(900 as int)",
+        1);
   }
 
   @Test
@@ -243,8 +245,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
         + " FROM hbase.`TestTableCompositeInt` tableName\n"
         + " WHERE\n"
-        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') = cast(658 as int)"
-        , 1);
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') = cast(658 as int)",
+        1);
   }
 
   @Test
@@ -256,8 +258,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "FROM\n"
         + "  hbase.`TestTableDoubleOB` t\n"
         + "WHERE\n"
-        + "  CONVERT_FROM(row_key, 'DOUBLE_OB') > cast(95.54 as DOUBLE)"
-        , 6);
+        + "  CONVERT_FROM(row_key, 'DOUBLE_OB') > cast(95.54 as DOUBLE)",
+        6);
   }
 
   @Test
@@ -270,8 +272,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "FROM\n"
         + "  hbase.`TestTableDoubleOB` t\n"
         + "WHERE\n"
-        + "  CONVERT_FROM(row_key, 'DOUBLE_OB') > cast(95.54 as DOUBLE)"
-        , 1);
+        + "  CONVERT_FROM(row_key, 'DOUBLE_OB') > cast(95.54 as DOUBLE)",
+        1);
   }
 
   @Test
@@ -283,8 +285,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "FROM\n"
         + "  hbase.`TestTableDoubleOBDesc` t\n"
         + "WHERE\n"
-        + "  CONVERT_FROM(row_key, 'DOUBLE_OBD') > cast(95.54 as DOUBLE)"
-        , 6);
+        + "  CONVERT_FROM(row_key, 'DOUBLE_OBD') > cast(95.54 as DOUBLE)",
+        6);
   }
 
   @Test
@@ -297,8 +299,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "FROM\n"
         + "  hbase.`TestTableDoubleOBDesc` t\n"
         + "WHERE\n"
-        + "  CONVERT_FROM(row_key, 'DOUBLE_OBD') > cast(95.54 as DOUBLE)"
-        , 1);
+        + "  CONVERT_FROM(row_key, 'DOUBLE_OBD') > cast(95.54 as DOUBLE)",
+        1);
   }
 
   @Test
@@ -311,8 +313,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableIntOB` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'INT_OB') >= cast(-32 as INT) AND"
-        + "  CONVERT_FROM(row_key, 'INT_OB') < cast(59 as INT)"
-        , 91);
+        + "  CONVERT_FROM(row_key, 'INT_OB') < cast(59 as INT)",
+        91);
   }
 
   @Test
@@ -325,8 +327,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableIntOBDesc` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'INT_OBD') >= cast(-32 as INT) AND"
-        + "  CONVERT_FROM(row_key, 'INT_OBD') < cast(59 as INT)"
-        , 91);
+        + "  CONVERT_FROM(row_key, 'INT_OBD') < cast(59 as INT)",
+        91);
   }
 
   @Test
@@ -340,8 +342,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableIntOB` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'INT_OB') > cast(-23 as INT) AND"
-        + "  CONVERT_FROM(row_key, 'INT_OB') < cast(14 as INT)"
-        , 1);
+        + "  CONVERT_FROM(row_key, 'INT_OB') < cast(14 as INT)",
+        1);
   }
 
   @Test
@@ -355,8 +357,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableIntOBDesc` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'INT_OBD') > cast(-23 as INT) AND"
-        + "  CONVERT_FROM(row_key, 'INT_OBD') < cast(14 as INT)"
-        , 1);
+        + "  CONVERT_FROM(row_key, 'INT_OBD') < cast(14 as INT)",
+        1);
   }
 
   @Test
@@ -369,8 +371,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableBigIntOB` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'BIGINT_OB') > cast(1438034423063 as BIGINT) AND"
-        + "  CONVERT_FROM(row_key, 'BIGINT_OB') <= cast(1438034423097 as BIGINT)"
-        , 34);
+        + "  CONVERT_FROM(row_key, 'BIGINT_OB') <= cast(1438034423097 as BIGINT)",
+        34);
   }
 
   @Test
@@ -384,8 +386,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableBigIntOB` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'BIGINT_OB') > cast(1438034423063 as BIGINT) AND"
-        + "  CONVERT_FROM(row_key, 'BIGINT_OB') < cast(1438034423097 as BIGINT)"
-        , 1);
+        + "  CONVERT_FROM(row_key, 'BIGINT_OB') < cast(1438034423097 as BIGINT)",
+        1);
   }
 
   @Test
@@ -398,8 +400,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableFloatOB` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'FLOAT_OB') > cast(95.74 as FLOAT) AND"
-        + "  CONVERT_FROM(row_key, 'FLOAT_OB') < cast(99.5 as FLOAT)"
-        , 5);
+        + "  CONVERT_FROM(row_key, 'FLOAT_OB') < cast(99.5 as FLOAT)",
+        5);
   }
 
   @Test
@@ -413,8 +415,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableFloatOB` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'FLOAT_OB') > cast(95.54 as FLOAT) AND"
-        + "  CONVERT_FROM(row_key, 'FLOAT_OB') < cast(99.77 as FLOAT)"
-        , 1);
+        + "  CONVERT_FROM(row_key, 'FLOAT_OB') < cast(99.77 as FLOAT)",
+        1);
   }
 
   @Test
@@ -427,8 +429,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableBigIntOBDesc` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'BIGINT_OBD') > cast(1438034423063 as BIGINT) AND"
-        + "  CONVERT_FROM(row_key, 'BIGINT_OBD') <= cast(1438034423097 as BIGINT)"
-        , 34);
+        + "  CONVERT_FROM(row_key, 'BIGINT_OBD') <= cast(1438034423097 as BIGINT)",
+        34);
   }
 
   @Test
@@ -442,8 +444,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableBigIntOBDesc` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'BIGINT_OBD') > cast(1438034423063 as BIGINT) AND"
-        + "  CONVERT_FROM(row_key, 'BIGINT_OBD') < cast(1438034423097 as BIGINT)"
-        , 1);
+        + "  CONVERT_FROM(row_key, 'BIGINT_OBD') < cast(1438034423097 as BIGINT)",
+        1);
   }
 
   @Test
@@ -456,8 +458,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableFloatOBDesc` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'FLOAT_OBD') > cast(95.74 as FLOAT) AND"
-        + "  CONVERT_FROM(row_key, 'FLOAT_OBD') < cast(99.5 as FLOAT)"
-        , 5);
+        + "  CONVERT_FROM(row_key, 'FLOAT_OBD') < cast(99.5 as FLOAT)",
+        5);
   }
 
   @Test
@@ -471,8 +473,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "  hbase.`TestTableFloatOBDesc` t\n"
         + "WHERE\n"
         + "  CONVERT_FROM(row_key, 'FLOAT_OBD') > cast(95.54 as FLOAT) AND"
-        + "  CONVERT_FROM(row_key, 'FLOAT_OBD') < cast(99.77 as FLOAT)"
-        , 1);
+        + "  CONVERT_FROM(row_key, 'FLOAT_OBD') < cast(99.77 as FLOAT)",
+        1);
   }
 
   @Test
@@ -680,8 +682,8 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
         + "WHERE\n"
-        + "  convert_from(row_key, 'INT_BE') = 75"
-        , 1);
+        + "  convert_from(row_key, 'INT_BE') = 75",
+        1);
   }
 
   @Test

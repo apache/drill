@@ -154,7 +154,13 @@ public abstract class HashAggTemplate implements HashAggregator {
   private int cycleNum = 0; // primary, secondary, tertiary, etc.
   private int originalPartition = -1; // the partition a secondary reads from
 
-  private static class SpilledPartition { public int spilledBatches; public String spillFile; int cycleNum; int origPartn; int prevOrigPartn; }
+  private static class SpilledPartition {
+    public int spilledBatches;
+    public String spillFile;
+    int cycleNum;
+    int origPartn;
+    int prevOrigPartn;
+  }
 
   private ArrayList<SpilledPartition> spilledPartitionsList;
   private int operatorId; // for the spill file name

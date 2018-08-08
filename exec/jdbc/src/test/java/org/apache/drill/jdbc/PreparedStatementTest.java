@@ -258,7 +258,7 @@ public class PreparedStatementTest extends JdbcTestBase {
   public void testDefaultGetQueryTimeout() throws SQLException {
     try (PreparedStatement stmt = connection.prepareStatement(SYS_VERSION_SQL)) {
       int timeoutValue = stmt.getQueryTimeout();
-      assertEquals( 0L , timeoutValue );
+      assertEquals(0L, timeoutValue);
     }
   }
 
@@ -288,7 +288,7 @@ public class PreparedStatementTest extends JdbcTestBase {
       int valueToSet = new Random(20150304).nextInt(59)+1;
       logger.info("Setting timeout as {} seconds", valueToSet);
       stmt.setQueryTimeout(valueToSet);
-      assertEquals( valueToSet , stmt.getQueryTimeout() );
+      assertEquals(valueToSet, stmt.getQueryTimeout());
     }
   }
 
@@ -306,7 +306,7 @@ public class PreparedStatementTest extends JdbcTestBase {
         rs.getBytes(1);
         rowCount++;
       }
-      assertEquals( 3 , rowCount );
+      assertEquals(3, rowCount);
     }
   }
 
@@ -406,7 +406,7 @@ public class PreparedStatementTest extends JdbcTestBase {
         rs.getBytes(1);
         rowCount++;
       }
-      assertEquals( 1 , rowCount );
+      assertEquals(1, rowCount);
     }
   }
 

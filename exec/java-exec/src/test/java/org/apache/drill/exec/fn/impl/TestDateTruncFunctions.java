@@ -87,7 +87,7 @@ public class TestDateTruncFunctions extends BaseTestQuery {
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
-        .baselineColumns("second", "minute", "hour", "day", "month", "week" , "year", "q1", "q2", "q3", "decade1", "decade2", "decade3")
+        .baselineColumns("second", "minute", "hour", "day", "month", "week", "year", "q1", "q2", "q3", "decade1", "decade2", "decade3")
         .baselineValues(
             DateUtility.parseLocalDate("2011-02-03"), // seconds
             DateUtility.parseLocalDate("2011-02-03"), // minute
@@ -183,7 +183,7 @@ public class TestDateTruncFunctions extends BaseTestQuery {
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
-        .baselineColumns("second", "minute", "hour", "day", "month", "week" , "year", "q1", "q2", "q3", "decade1", "decade2", "decade3")
+        .baselineColumns("second", "minute", "hour", "day", "month", "week", "year", "q1", "q2", "q3", "decade1", "decade2", "decade3")
         .baselineValues(
             DateUtility.parseLocalDateTime("2011-02-03 10:11:12.0"), // seconds
             DateUtility.parseLocalDateTime("2011-02-03 10:11:00.0"), // minute

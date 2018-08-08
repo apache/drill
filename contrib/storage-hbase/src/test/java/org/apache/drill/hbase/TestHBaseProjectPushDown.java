@@ -31,8 +31,8 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
     runHBaseSQLVerifyCount("SELECT\n"
         + "row_key\n"
         + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName"
-        , 8);
+        + "  hbase.`[TABLE_NAME]` tableName",
+        8);
   }
 
   @Test
@@ -41,8 +41,8 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
     runHBaseSQLVerifyCount("SELECT\n"
         + "t.f2.c7 as `t.f2.c7`\n"
         + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` t"
-        , 1);
+        + "  hbase.`[TABLE_NAME]` t",
+        1);
   }
 
   @Test
@@ -55,8 +55,8 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
         + "row_key, t.f.c1 * 31 as `t dot f dot c1 * 31`, "
         + "t.f.c2 as `t dot f dot c2`, 5 as `5`, 'abc' as `'abc'`\n"
         + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` t"
-        , 8);
+        + "  hbase.`[TABLE_NAME]` t",
+        8);
   }
 
   @Test
@@ -65,8 +65,8 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
     runHBaseSQLVerifyCount("SELECT\n"
         + "row_key, f, f2\n"
         + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName"
-        , 8);
+        + "  hbase.`[TABLE_NAME]` tableName",
+        8);
   }
 
 }

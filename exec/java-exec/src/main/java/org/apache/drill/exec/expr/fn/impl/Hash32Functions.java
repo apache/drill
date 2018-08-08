@@ -346,7 +346,7 @@ public class Hash32Functions {
     }
   }
 
-  @FunctionTemplate(names = {"hash", "hash32" ,"hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash", "hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableTimeHash implements DrillSimpleFunc {
     @Param  NullableTimeHolder in;
     @Output IntHolder out;
