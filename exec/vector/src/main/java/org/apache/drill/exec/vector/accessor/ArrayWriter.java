@@ -86,6 +86,7 @@ public interface ArrayWriter extends ColumnWriter {
   ScalarWriter scalar();
   TupleWriter tuple();
   ArrayWriter array();
+  VariantWriter variant();
 
   /**
    * When the array contains a tuple or an array, call <tt>save()</tt>

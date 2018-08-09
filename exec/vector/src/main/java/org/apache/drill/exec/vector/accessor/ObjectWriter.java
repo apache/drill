@@ -47,4 +47,6 @@ public interface ObjectWriter extends ColumnWriter {
   TupleWriter tuple();
 
   ArrayWriter array();
+
+  VariantWriter variant();
 }

@@ -33,4 +33,5 @@ public interface ObjectReader extends ColumnReader {
   ScalarReader scalar();
   TupleReader tuple();
   ArrayReader array();
+  VariantReader variant();
 }

@@ -49,10 +49,6 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 public class RepeatedListVector extends AbstractContainerVector
     implements RepeatedValueVector {
 
-  public final static MajorType TYPE = Types.repeated(MinorType.LIST);
-  private final RepeatedListReaderImpl reader = new RepeatedListReaderImpl(null, this);
-  private final DelegateRepeatedVector delegate;
-
   protected static class DelegateRepeatedVector extends BaseRepeatedValueVector {
 
     private final RepeatedListAccessor accessor = new RepeatedListAccessor();
@@ -209,7 +205,7 @@ public class RepeatedListVector extends AbstractContainerVector
     }
 
     public void copyFromSafe(int fromIndex, int thisIndex, DelegateRepeatedVector from) {
-      if(ephPair == null || ephPair.target != from) {
+      if (ephPair == null || ephPair.target != from) {
         ephPair = DelegateTransferPair.class.cast(from.makeTransferPair(this));
       }
       ephPair.copyValueSafe(fromIndex, thisIndex);
@@ -257,6 +253,10 @@ public class RepeatedListVector extends AbstractContainerVector
   public RepeatedListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     this(field, allocator, callBack, new DelegateRepeatedVector(field, allocator));
   }
+
+  public final static MajorType TYPE = Types.repeated(MinorType.LIST);
+  private final RepeatedListReaderImpl reader = new RepeatedListReaderImpl(null, this);
+  private final DelegateRepeatedVector delegate;
 
   protected RepeatedListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack, DelegateRepeatedVector delegate) {
     super(field, allocator, callBack);
@@ -316,6 +316,10 @@ public class RepeatedListVector extends AbstractContainerVector
     return result;
   }
 
+  public void setChildVector(ValueVector childVector) {
+    delegate.setChildVector(childVector);
+  }
+
   @Override
   public int size() {
     return delegate.size();
@@ -372,7 +376,6 @@ public class RepeatedListVector extends AbstractContainerVector
     return delegate.getBuffers(clear);
   }
 
-
   @Override
   public void load(SerializedField metadata, DrillBuf buf) {
     delegate.load(metadata, buf);
@@ -397,6 +400,7 @@ public class RepeatedListVector extends AbstractContainerVector
    * @deprecated
    *   prefer using {@link #addOrGetVector(org.apache.drill.exec.vector.VectorDescriptor)} instead.
    */
+  @Deprecated
   @Override
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
     final AddOrGetResult<T> result = addOrGetVector(VectorDescriptor.create(type));
@@ -440,6 +444,7 @@ public class RepeatedListVector extends AbstractContainerVector
     copyFromSafe(fromIndex, toIndex, (RepeatedListVector) from);
   }
 
+  @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {
     delegate.collectLedgers(ledgers);
   }
@@ -454,8 +459,7 @@ public class RepeatedListVector extends AbstractContainerVector
 
   @Override
   public void exchange(ValueVector other) {
-    // TODO: Figure out how to test this scenario, then what to do...
-    throw new UnsupportedOperationException("Exchange() not yet supported for repeated lists");
+    delegate.exchange(((RepeatedListVector) other).delegate);
   }
 
   @Override

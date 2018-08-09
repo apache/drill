@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.accessor;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter.ColumnWriterListener;
 import org.apache.drill.exec.vector.accessor.TupleWriter.TupleWriterListener;
+import org.apache.drill.exec.vector.accessor.VariantWriter.VariantWriterListener;
 
 /**
  * Generic information about a column writer including:
@@ -57,6 +58,10 @@ public interface ColumnWriter extends WriterPosition {
      */
 
     void bindListener(ColumnWriterListener listener);
+  }
+
+  interface VariantListenable {
+    void bindListener(VariantWriterListener listener);
   }
 
   /**

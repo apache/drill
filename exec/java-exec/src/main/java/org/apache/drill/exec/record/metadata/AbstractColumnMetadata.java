@@ -57,7 +57,7 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
 
   public AbstractColumnMetadata(MaterializedField schema) {
     name = schema.getName();
-    MajorType majorType = schema.getType();
+    final MajorType majorType = schema.getType();
     type = majorType.getMinorType();
     mode = majorType.getMode();
     precision = majorType.getPrecision();
@@ -122,6 +122,9 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
   public boolean isVariant() { return false; }
 
   @Override
+  public boolean isMultiList() { return false; }
+
+  @Override
   public TupleMetadata mapSchema() { return null; }
 
   @Override
@@ -132,7 +135,7 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
 
   @Override
   public boolean isVariableWidth() {
-    MinorType type = type();
+    final MinorType type = type();
     return type == MinorType.VARCHAR || type == MinorType.VAR16CHAR || type == MinorType.VARBINARY;
   }
 
@@ -177,7 +180,7 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
 
   @Override
   public String toString() {
-    StringBuilder buf = new StringBuilder()
+    final StringBuilder buf = new StringBuilder()
         .append("[")
         .append(getClass().getSimpleName())
         .append(" ")

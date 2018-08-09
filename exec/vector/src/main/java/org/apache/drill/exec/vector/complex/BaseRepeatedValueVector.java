@@ -151,7 +151,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
   public DrillBuf[] getBuffers(boolean clear) {
     final DrillBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(false), vector.getBuffers(false), DrillBuf.class);
     if (clear) {
-      for (DrillBuf buffer:buffers) {
+      for (final DrillBuf buffer:buffers) {
         buffer.retain();
       }
       clear();
@@ -212,6 +212,22 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     vector = v;
   }
 
+  public void setChildVector(ValueVector childVector) {
+
+    // When created, the list uses the default vector of type LATE.
+    // That entry appears as a child vector. Remove it and add the
+    // new type instead.
+    //
+    // Here we are simply asserting that the client is following the basic protocol:
+    // that the child vector can be set only once, to change the original LATE vector
+    // to something else.
+
+    assert vector == DEFAULT_DATA_VECTOR;
+    replaceDataVector(childVector);
+    field.addChild(childVector.getField());
+    assert field.getChildren().size() == 1;
+  }
+
   @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {
     offsets.collectLedgers(ledgers);
@@ -223,13 +239,13 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     if (valueCount == 0) {
       return 0;
     }
-    int entryCount = offsets.getAccessor().get(valueCount);
+    final int entryCount = offsets.getAccessor().get(valueCount);
     return offsets.getPayloadByteCount(valueCount) + vector.getPayloadByteCount(entryCount);
   }
 
   @Override
   public void exchange(ValueVector other) {
-    BaseRepeatedValueVector target = (BaseRepeatedValueVector) other;
+    final BaseRepeatedValueVector target = (BaseRepeatedValueVector) other;
     vector.exchange(target.vector);
     offsets.exchange(target.offsets);
   }

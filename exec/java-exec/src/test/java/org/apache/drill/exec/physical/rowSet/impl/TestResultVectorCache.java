@@ -38,7 +38,7 @@ public class TestResultVectorCache extends SubOperatorTest {
   @Test
   public void testIsPromotable() {
 
-    MaterializedField required = MaterializedField.create("a",
+    final MaterializedField required = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.INT)
           .setMode(DataMode.REQUIRED)
@@ -51,7 +51,7 @@ public class TestResultVectorCache extends SubOperatorTest {
 
     // Required is promotable to null
 
-    MaterializedField nullable = MaterializedField.create("a",
+    final MaterializedField nullable = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.INT)
           .setMode(DataMode.OPTIONAL)
@@ -66,7 +66,7 @@ public class TestResultVectorCache extends SubOperatorTest {
 
     // Arrays cannot be promoted to/from other types
 
-    MaterializedField repeated = MaterializedField.create("a",
+    final MaterializedField repeated = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.INT)
           .setMode(DataMode.REPEATED)
@@ -79,19 +79,19 @@ public class TestResultVectorCache extends SubOperatorTest {
 
     // Narrower precision promotable to wider
 
-    MaterializedField narrow = MaterializedField.create("a",
+    final MaterializedField narrow = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.REQUIRED)
           .setPrecision(10)
           .build());
-    MaterializedField wide = MaterializedField.create("a",
+    final MaterializedField wide = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.REQUIRED)
           .setPrecision(20)
           .build());
-    MaterializedField unset = MaterializedField.create("a",
+    final MaterializedField unset = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.REQUIRED)
@@ -104,34 +104,33 @@ public class TestResultVectorCache extends SubOperatorTest {
     assertFalse(narrow.isPromotableTo(unset, false));
   }
 
-  @SuppressWarnings("resource")
   @Test
   public void testBasics() {
-    ResultVectorCache cache = new ResultVectorCacheImpl(fixture.allocator());
+    final ResultVectorCache cache = new ResultVectorCacheImpl(fixture.allocator());
 
     // Create a vector
 
-    MaterializedField required = MaterializedField.create("a",
+    final MaterializedField required = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.INT)
           .setMode(DataMode.REQUIRED)
           .build());
-    ValueVector vector1 = cache.addOrGet(required);
+    final ValueVector vector1 = cache.addOrGet(required);
     assertTrue(vector1.getField().isEquivalent(required));
 
     // Request the same schema, should get the same vector.
 
-    ValueVector vector2 = cache.addOrGet(required);
+    final ValueVector vector2 = cache.addOrGet(required);
     assertSame(vector1, vector2);
 
     // Non-permissive. Change in mode means different vector.
 
-    MaterializedField optional = MaterializedField.create("a",
+    final MaterializedField optional = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.INT)
           .setMode(DataMode.OPTIONAL)
           .build());
-    ValueVector vector3 = cache.addOrGet(optional);
+    final ValueVector vector3 = cache.addOrGet(optional);
     assertTrue(vector3.getField().isEquivalent(optional));
     assertNotSame(vector1, vector3);
 
@@ -139,51 +138,51 @@ public class TestResultVectorCache extends SubOperatorTest {
     // Name is the key, and we can have only one type associated
     // with each name.
 
-    ValueVector vector4 = cache.addOrGet(required);
+    final ValueVector vector4 = cache.addOrGet(required);
     assertTrue(vector4.getField().isEquivalent(required));
     assertNotSame(vector3, vector4);
     assertNotSame(vector1, vector4);
 
     // Varchar, no precision.
 
-    MaterializedField varchar1 = MaterializedField.create("a",
+    final MaterializedField varchar1 = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.REQUIRED)
           .build());
 
-    ValueVector vector5 = cache.addOrGet(varchar1);
+    final ValueVector vector5 = cache.addOrGet(varchar1);
     assertTrue(vector5.getField().isEquivalent(varchar1));
 
     // Varchar, with precision, no match.
 
-    MaterializedField varchar2 = MaterializedField.create("a",
+    final MaterializedField varchar2 = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.REQUIRED)
           .setPrecision(10)
           .build());
 
-    ValueVector vector6 = cache.addOrGet(varchar2);
+    final ValueVector vector6 = cache.addOrGet(varchar2);
     assertTrue(vector6.getField().isEquivalent(varchar2));
     assertNotSame(vector5, vector6);
 
     // Does match if same precision.
 
-    ValueVector vector7 = cache.addOrGet(varchar2);
+    final ValueVector vector7 = cache.addOrGet(varchar2);
     assertTrue(vector7.getField().isEquivalent(varchar2));
     assertSame(vector6, vector7);
 
     // Different names have different types
 
-    MaterializedField varchar3 = MaterializedField.create("b",
+    final MaterializedField varchar3 = MaterializedField.create("b",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.REQUIRED)
           .setPrecision(10)
           .build());
 
-    ValueVector vector8 = cache.addOrGet(varchar3);
+    final ValueVector vector8 = cache.addOrGet(varchar3);
     assertTrue(vector8.getField().isEquivalent(varchar3));
     assertSame(vector7, cache.addOrGet(varchar2));
     assertSame(vector8, cache.addOrGet(varchar3));
@@ -191,80 +190,79 @@ public class TestResultVectorCache extends SubOperatorTest {
     ((ResultVectorCacheImpl) cache).close();
   }
 
-  @SuppressWarnings("resource")
   @Test
   public void testPermissive() {
-    ResultVectorCache cache = new ResultVectorCacheImpl(fixture.allocator(), true);
+    final ResultVectorCache cache = new ResultVectorCacheImpl(fixture.allocator(), true);
 
     // Create a nullable vector
 
-    MaterializedField optional = MaterializedField.create("a",
+    final MaterializedField optional = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.INT)
           .setMode(DataMode.OPTIONAL)
           .build());
-    ValueVector vector1 = cache.addOrGet(optional);
+    final ValueVector vector1 = cache.addOrGet(optional);
 
     // Ask for a required version of the same name and type.
     // Should return the nullable version.
 
-    MaterializedField required = MaterializedField.create("a",
+    final MaterializedField required = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.INT)
           .setMode(DataMode.REQUIRED)
           .build());
-    ValueVector vector2 = cache.addOrGet(required);
+    final ValueVector vector2 = cache.addOrGet(required);
     assertTrue(vector2.getField().isEquivalent(optional));
     assertSame(vector1, vector2);
 
     // Repeat with Varchar
 
-    MaterializedField varchar1 = MaterializedField.create("a",
+    final MaterializedField varchar1 = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.OPTIONAL)
           .build());
 
-    ValueVector vector3 = cache.addOrGet(varchar1);
+    final ValueVector vector3 = cache.addOrGet(varchar1);
 
-    MaterializedField varchar2 = MaterializedField.create("a",
+    final MaterializedField varchar2 = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.REQUIRED)
           .build());
 
-    ValueVector vector4 = cache.addOrGet(varchar2);
+    final ValueVector vector4 = cache.addOrGet(varchar2);
     assertSame(vector3, vector4);
 
     // Larger precision. Needs new vector.
 
-    MaterializedField varchar3 = MaterializedField.create("a",
+    final MaterializedField varchar3 = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.OPTIONAL)
           .setPrecision(10)
           .build());
 
-    ValueVector vector5 = cache.addOrGet(varchar3);
+    final ValueVector vector5 = cache.addOrGet(varchar3);
     assertTrue(vector5.getField().isEquivalent(varchar3));
     assertNotSame(vector4, vector5);
 
     // Smaller precision, reuse vector.
 
-    ValueVector vector6 = cache.addOrGet(varchar1);
+    final ValueVector vector6 = cache.addOrGet(varchar1);
     assertTrue(vector6.getField().isEquivalent(varchar3));
     assertSame(vector5, vector6);
 
     // Same precision, required: reuse vector.
 
-    MaterializedField varchar4 = MaterializedField.create("a",
+    final MaterializedField varchar4 = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.VARCHAR)
           .setMode(DataMode.REQUIRED)
           .setPrecision(5)
           .build());
 
-    ValueVector vector7 = cache.addOrGet(varchar4);
+    final ValueVector vector7 = cache.addOrGet(varchar4);
     assertTrue(vector7.getField().isEquivalent(varchar3));
     assertSame(vector5, vector7);
 
@@ -273,19 +271,18 @@ public class TestResultVectorCache extends SubOperatorTest {
     ((ResultVectorCacheImpl) cache).close();
   }
 
-  @SuppressWarnings("resource")
   @Test
   public void testClose() {
-    ResultVectorCache cache = new ResultVectorCacheImpl(fixture.allocator());
+    final ResultVectorCache cache = new ResultVectorCacheImpl(fixture.allocator());
 
     // Create a vector
 
-    MaterializedField required = MaterializedField.create("a",
+    final MaterializedField required = MaterializedField.create("a",
         MajorType.newBuilder()
           .setMinorType(MinorType.INT)
           .setMode(DataMode.REQUIRED)
           .build());
-    IntVector vector1 = (IntVector) cache.addOrGet(required);
+    final IntVector vector1 = (IntVector) cache.addOrGet(required);
     vector1.allocateNew(100);
 
     // Close the cache. Note: close is on the implementation, not
