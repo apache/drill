@@ -293,7 +293,7 @@ public class ParquetSimpleTestFileGenerator {
           .append("_UINT_64", 0xFFFFFFFFFFFFFFFFL)
           .append("_DECIMAL_decimal18", 0xFFFFFFFFFFFFFFFFL);
       byte[] bytes = new byte[30];
-      Arrays.fill(bytes, (byte)1);
+      Arrays.fill(bytes, (byte) 1);
       numeric.addGroup("FixedLen").append("_DECIMAL_fixed_n", Binary.fromConstantByteArray(bytes, 0, 20));
       numeric.addGroup("Binary").append("_DECIMAL_unlimited", Binary.fromConstantByteArray(bytes, 0, 30));
       numeric.addGroup("DateTimeTypes")
@@ -377,7 +377,7 @@ public class ParquetSimpleTestFileGenerator {
     {
       Group simpleGroup = sgf.newGroup();
       byte[] bytes = new byte[30];
-      Arrays.fill(bytes, (byte)1);
+      Arrays.fill(bytes, (byte) 1);
       simpleGroup.append("rowKey", ++rowKey);
       simpleGroup.append("_UTF8", "UTF8 string" + rowKey)
           .append("_Enum", MAX_VALUE.toString())

@@ -235,7 +235,7 @@ public class JoinUtils {
       if (currentrel instanceof DrillAggregateRel) {
         agg = (DrillAggregateRel)currentrel;
       } else if (currentrel instanceof RelSubset) {
-        currentrel = ((RelSubset)currentrel).getBest();
+        currentrel = ((RelSubset) currentrel).getBest();
       } else if (currentrel instanceof DrillLimitRel) {
         // TODO: Improve this check when DRILL-5691 is fixed.
         // The problem is that RelMdMaxRowCount currently cannot be used

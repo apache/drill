@@ -711,9 +711,9 @@ public class StringFunctions{
         final int charCount = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(string.buffer, string.start, string.end);
         final int charLen;
         if (length.value > 0) {
-          charLen = Math.min((int)length.value, charCount);  //left('abc', 5) -> 'abc'
+          charLen = Math.min((int) length.value, charCount);  //left('abc', 5) -> 'abc'
         } else if (length.value < 0) {
-          charLen = Math.max(0, charCount + (int)length.value); // left('abc', -5) ==> ''
+          charLen = Math.max(0, charCount + (int) length.value); // left('abc', -5) ==> ''
         } else {
           charLen = 0;
         }

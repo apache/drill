@@ -83,7 +83,7 @@ public class StatementTest extends JdbcTestBase {
   public void testDefaultGetQueryTimeout() throws SQLException {
     try(Statement stmt = connection.createStatement()) {
       int timeoutValue = stmt.getQueryTimeout();
-      assertEquals( 0, timeoutValue );
+      assertEquals(0, timeoutValue);
     }
   }
 
