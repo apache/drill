@@ -41,18 +41,17 @@ public class ContainerVisitor<R, A> {
 
   public R visitChildren(VectorContainer container, A arg) {
     for (int i = 0; i < container.getNumberOfColumns(); i++) {
-      @SuppressWarnings("resource")
-      ValueVector vector = container.getValueVector(i).getValueVector();
+      final ValueVector vector = container.getValueVector(i).getValueVector();
       apply(vector, arg);
     }
     return null;
   }
 
   protected R apply(ValueVector vector, A arg) {
-    MaterializedField schema = vector.getField();
-    MajorType majorType = schema.getType();
-    MinorType type = majorType.getMinorType();
-    DataMode mode = majorType.getMode();
+    final MaterializedField schema = vector.getField();
+    final MajorType majorType = schema.getType();
+    final MinorType type = majorType.getMinorType();
+    final DataMode mode = majorType.getMode();
     switch (type) {
     case MAP:
       if (mode == DataMode.REPEATED) {

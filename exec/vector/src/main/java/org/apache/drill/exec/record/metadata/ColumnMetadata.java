@@ -126,6 +126,16 @@ public interface ColumnMetadata {
   boolean isVariant();
 
   /**
+   * Determine if the schema represents a column with a LIST type with
+   * UNION elements. (Lists can be of a single
+   * type (with nullable elements) or can be of unions.)
+   *
+   * @return true if the column is of type LIST of UNIONs
+   */
+
+  boolean isMultiList();
+
+  /**
    * Report whether one column is equivalent to another. Columns are equivalent
    * if they have the same name, type and structure (ignoring internal structure
    * such as offset vectors.)

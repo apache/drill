@@ -86,7 +86,6 @@ public interface TupleWriter extends ColumnWriter, TupleListenable {
     }
   }
 
-
   /**
    * Allows a client to "sniff" the projection set to determine if a
    * field is projected. Some clients can omit steps if they know that
@@ -141,6 +140,10 @@ public interface TupleWriter extends ColumnWriter, TupleListenable {
   ArrayWriter array(int colIndex);
 
   ArrayWriter array(String colName);
+
+  VariantWriter variant(int colIndex);
+
+  VariantWriter variant(String colName);
 
   ObjectType type(int colIndex);
 

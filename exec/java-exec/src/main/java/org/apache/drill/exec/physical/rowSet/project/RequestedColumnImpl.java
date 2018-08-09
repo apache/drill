@@ -116,7 +116,7 @@ public class RequestedColumnImpl implements RequestedColumn {
       return 0;
     }
     int max = 0;
-    for (Integer index : indexes) {
+    for (final Integer index : indexes) {
       max = Math.max(max, index);
     }
     return max;
@@ -127,9 +127,9 @@ public class RequestedColumnImpl implements RequestedColumn {
     if (! hasIndexes()) {
       return null;
     }
-    int max = maxIndex();
-    boolean map[] = new boolean[max+1];
-    for (Integer index : indexes) {
+    final int max = maxIndex();
+    final boolean map[] = new boolean[max+1];
+    for (final Integer index : indexes) {
       map[index] = true;
     }
     return map;
@@ -137,7 +137,7 @@ public class RequestedColumnImpl implements RequestedColumn {
 
   @Override
   public String fullName() {
-    StringBuilder buf = new StringBuilder();
+    final StringBuilder buf = new StringBuilder();
     buildName(buf);
     return buf.toString();
   }
@@ -189,7 +189,7 @@ public class RequestedColumnImpl implements RequestedColumn {
 
   @Override
   public String toString() {
-    StringBuilder buf = new StringBuilder();
+    final StringBuilder buf = new StringBuilder();
     buf
       .append("[")
       .append(getClass().getSimpleName())

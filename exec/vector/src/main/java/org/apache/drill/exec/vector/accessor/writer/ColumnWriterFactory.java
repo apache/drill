@@ -69,6 +69,7 @@ public class ColumnWriterFactory {
     case NULL:
     case LIST:
     case MAP:
+    case UNION:
       throw new UnsupportedOperationException(schema.type().toString());
     default:
       switch (schema.mode()) {
@@ -117,6 +118,7 @@ public class ColumnWriterFactory {
     case LATE:
     case LIST:
     case MAP:
+    case UNION:
       throw new UnsupportedOperationException(schema.type().toString());
     default:
       ScalarObjectWriter scalarWriter = new ScalarObjectWriter(

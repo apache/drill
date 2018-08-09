@@ -294,7 +294,7 @@ public abstract class TupleState extends ContainerState
     @Override
     public int addOutputColumn(ValueVector vector, ColumnMetadata colSchema) {
       outputContainer.add(vector);
-      int index = outputSchema.addColumn(colSchema);
+      final int index = outputSchema.addColumn(colSchema);
       assert outputContainer.getNumberOfColumns() == outputSchema.size();
       return index;
     }
@@ -326,14 +326,13 @@ public abstract class TupleState extends ContainerState
       writer().bindListener(this);
     }
 
-    @SuppressWarnings("resource")
     @Override
     public int addOutputColumn(ValueVector vector, ColumnMetadata colSchema) {
-      AbstractMapVector mapVector = parentColumn.vector();
+      final AbstractMapVector mapVector = parentColumn.vector();
       if (isVersioned()) {
         mapVector.putChild(colSchema.name(), vector);
       }
-      int index = outputSchema.addColumn(colSchema);
+      final int index = outputSchema.addColumn(colSchema);
       assert mapVector.size() == outputSchema.size();
       assert mapVector.getField().getChildren().size() == outputSchema.size();
       return index;
@@ -353,8 +352,7 @@ public abstract class TupleState extends ContainerState
       // columns must be nullable, so back-filling of nulls is possible.
 
       if (! isVersioned()) {
-        @SuppressWarnings("resource")
-        AbstractMapVector mapVector = parentColumn.vector();
+        final AbstractMapVector mapVector = parentColumn.vector();
         mapVector.putChild(colState.schema().name(), colState.vector());
       }
     }
@@ -496,8 +494,8 @@ public abstract class TupleState extends ContainerState
 
     // Verify name is not a (possibly case insensitive) duplicate.
 
-    TupleMetadata tupleSchema = schema();
-    String colName = columnSchema.name();
+    final TupleMetadata tupleSchema = schema();
+    final String colName = columnSchema.name();
     if (tupleSchema.column(colName) != null) {
       throw UserException
         .validationError()
@@ -514,7 +512,7 @@ public abstract class TupleState extends ContainerState
   }
 
   public boolean hasProjections() {
-    for (ColumnState colState : columns) {
+    for (final ColumnState colState : columns) {
       if (colState.isProjected()) {
         return true;
       }
@@ -532,7 +530,7 @@ public abstract class TupleState extends ContainerState
     // Scan all columns
 
     for (int i = 0; i < columns.size(); i++) {
-      ColumnState colState = columns.get(i);
+      final ColumnState colState = columns.get(i);
 
       // Ignore unprojected columns
 
@@ -562,7 +560,7 @@ public abstract class TupleState extends ContainerState
       // output schema.
 
       if (colState.schema().isMap()) {
-        MapState childMap = ((MapColumnState) colState).mapState();
+        final MapState childMap = ((MapColumnState) colState).mapState();
         childMap.updateOutput(curSchemaVersion);
       }
     }

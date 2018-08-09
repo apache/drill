@@ -331,14 +331,14 @@ public class ColumnAccessors {
       vectorIndex.nextElement();
     }
     <#if drillType == "VarChar">
-    
+
     @Override
     public final void setString(String value) {
       final byte bytes[] = value.getBytes(Charsets.UTF_8);
       setBytes(bytes, bytes.length);
     }
     <#elseif drillType == "Var16Char">
-    
+
     @Override
     public final void setString(String value) {
       final byte bytes[] = value.getBytes(Charsets.UTF_16);

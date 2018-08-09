@@ -62,8 +62,11 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
   public StructureType structureType() { return StructureType.MULTI_ARRAY; }
 
   @Override
+  public boolean isMultiList() { return true; }
+
+  @Override
   public MaterializedField schema() {
-    MaterializedField field = emptySchema();
+    final MaterializedField field = emptySchema();
     if (childSchema != null) {
       field.addChild(childSchema.schema());
     }
