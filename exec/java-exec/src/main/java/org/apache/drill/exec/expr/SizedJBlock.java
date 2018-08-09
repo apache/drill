@@ -42,7 +42,7 @@ public class SizedJBlock {
   }
 
   public void incCounter() {
-    this.count ++;
+    this.count++;
   }
 
   public int getCount() {

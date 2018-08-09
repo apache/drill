@@ -51,7 +51,7 @@ public interface JsonProcessor {
                                                        String msg,
                                                        Object... args);
 
-  public boolean ignoreJSONParseError() ;
+  public boolean ignoreJSONParseError();
 
   public void setIgnoreJSONParseErrors(boolean ignoreJSONParseErrors);
 }

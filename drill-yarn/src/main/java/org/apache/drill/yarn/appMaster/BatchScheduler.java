@@ -35,7 +35,10 @@ public class BatchScheduler extends AbstractScheduler {
   }
 
   @Override
-  public int resize(int level) { quantity = level; return quantity; }
+  public int resize(int level) {
+    quantity = level;
+    return quantity;
+  }
 
   @Override
   public int getTarget() { return quantity; }

@@ -49,7 +49,7 @@ public final class ExecConstants {
   public static final String ZK_REFRESH = "drill.exec.zk.refresh";
   public static final String BIT_RETRY_TIMES = "drill.exec.rpc.bit.server.retry.count";
   public static final String BIT_RETRY_DELAY = "drill.exec.rpc.bit.server.retry.delay";
-  public static final String BIT_TIMEOUT = "drill.exec.bit.timeout" ;
+  public static final String BIT_TIMEOUT = "drill.exec.bit.timeout";
   public static final String SERVICE_NAME = "drill.exec.cluster-id";
   public static final String INITIAL_BIT_PORT = "drill.exec.rpc.bit.server.port";
   public static final String INITIAL_DATA_PORT = "drill.exec.rpc.bit.server.dataport";

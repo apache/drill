@@ -84,7 +84,7 @@ public abstract class DrillLimitRelBase extends SingleRel implements DrillRelNod
 
   @Override
   public double estimateRowCount(RelMetadataQuery mq) {
-    int off = offset != null ? RexLiteral.intValue(offset) : 0 ;
+    int off = offset != null? RexLiteral.intValue(offset): 0;
 
     if (fetch == null) {
       // If estimated rowcount is less than offset return 0

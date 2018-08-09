@@ -216,7 +216,7 @@ public class HashPartitionTest {
         hashPartition.completeAnInnerBatch(false, false);
         hashPartition.spillThisPartition();
         final String spillFile = hashPartition.getSpillFile();
-        final int batchesCount = hashPartition.getPartitionBatchesCount();;
+        final int batchesCount = hashPartition.getPartitionBatchesCount();
         hashPartition.closeWriter();
 
         SpilledRecordbatch spilledBuildBatch = new SpilledRecordbatch(spillFile, batchesCount, context, buildSchema, operatorContext, spillSet);
@@ -270,8 +270,8 @@ public class HashPartitionTest {
         final BatchSchema probeSchema = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, probeCols);
         final RecordBatch probeBatch = testCase.createProbeBatch(probeSchema, allocator);
 
-        final LogicalExpression buildColExpression = SchemaPath.getSimplePath(buildColB.getName());;
-        final LogicalExpression probeColExpression = SchemaPath.getSimplePath(probeColB.getName());;
+        final LogicalExpression buildColExpression = SchemaPath.getSimplePath(buildColB.getName());
+        final LogicalExpression probeColExpression = SchemaPath.getSimplePath(probeColB.getName());
 
         final JoinCondition condition = new JoinCondition(DrillJoinRel.EQUALITY_CONDITION, probeColExpression, buildColExpression);
         final List<Comparator> comparators = Lists.newArrayList(JoinUtils.checkAndReturnSupportedJoinComparator(condition));

@@ -44,7 +44,7 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
    * Create sublists of the partition locations, each sublist of size
    * at most {@link PartitionDescriptor#PARTITION_BATCH_SIZE}
    */
-  protected abstract void createPartitionSublists() ;
+  protected abstract void createPartitionSublists();
 
   /**
    * Iterator that traverses over the super list of partition locations and

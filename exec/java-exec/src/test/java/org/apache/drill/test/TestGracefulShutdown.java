@@ -71,7 +71,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
   @Test
   public void testOnlineEndPoints() throws  Exception {
 
-    String[] drillbits = {"db1" ,"db2","db3"};
+    String[] drillbits = {"db1", "db2", "db3"};
     ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withLocalZk().withBits(drillbits);
     enableDrillPortHunting(builder);
 
@@ -142,7 +142,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
   @Test
   public void testRestApiShutdown() throws Exception {
 
-    String[] drillbits = {"db1" ,"db2", "db3"};
+    String[] drillbits = {"db1", "db2", "db3"};
     ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withLocalZk().withBits(drillbits);
     enableWebServer(builder);
     QueryBuilder.QuerySummaryFuture listener;

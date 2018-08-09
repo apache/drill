@@ -80,7 +80,6 @@ class JdbcExpressionCheck implements RexVisitor<Boolean> {
     if (!visitCall(over)) {
       return false;
     }
-    ;
 
     final RexWindow window = over.getWindow();
     for (RexFieldCollation orderKey : window.orderKeys) {

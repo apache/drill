@@ -169,7 +169,7 @@ public class DrillCostBase implements DrillRelOptCost {
       || (this.io == Double.POSITIVE_INFINITY)
       || (this.network == Double.POSITIVE_INFINITY)
       || (this.rowCount == Double.POSITIVE_INFINITY)
-      || (this.memory == Double.POSITIVE_INFINITY) ;
+      || (this.memory == Double.POSITIVE_INFINITY);
   }
 
   @Override

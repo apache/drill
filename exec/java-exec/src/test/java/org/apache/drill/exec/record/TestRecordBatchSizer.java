@@ -1333,7 +1333,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
       ValueVector valueVector1 = mapVector.getChild("value");
       assertEquals(((Integer.highestOneBit(testRowCount * STD_REPETITION_FACTOR) << 1)), keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
-      assertEquals((Integer.highestOneBit(testRowCount * STD_REPETITION_FACTOR) << 1) , offsetVector.getValueCapacity());
+      assertEquals((Integer.highestOneBit(testRowCount * STD_REPETITION_FACTOR) << 1), offsetVector.getValueCapacity());
       assertEquals(Integer.highestOneBit(testRowCount * STD_REPETITION_FACTOR << 1)  - 1, valueVector1.getValueCapacity());
 
       // Allocates the same as value passed since it is already power of two.

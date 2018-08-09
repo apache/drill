@@ -91,14 +91,14 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
      * @param baselineValues
      * @return
      */
-    public MiniPlanTestBuilder baselineValues(Object ... baselineValues) {
+    public MiniPlanTestBuilder baselineValues(Object... baselineValues) {
       if (baselineRecords == null) {
         baselineRecords = new ArrayList<>();
       }
 
       Map<String, Object> ret = new HashMap<>();
       int i = 0;
-      Preconditions.checkArgument(expectSchema != null , "Expected schema should be set before specify baseline values.");
+      Preconditions.checkArgument(expectSchema != null, "Expected schema should be set before specify baseline values.");
       Preconditions.checkArgument(baselineValues.length == expectSchema.getFieldCount(),
           "Must supply the same number of baseline values as columns in expected schema.");
 
@@ -230,7 +230,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
     protected long maxAllocation = MAX_ALLOCATION;
 
     final private List<RecordBatch> inputs = Lists.newArrayList();
-    final PopBuilder parent ;
+    final PopBuilder parent;
 
     public PopBuilder() {
       this.parent = null;
@@ -334,13 +334,13 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
     }
 
     @SuppressWarnings("unchecked")
-    public T columnsToRead(SchemaPath ... columnsToRead) {
+    public T columnsToRead(SchemaPath... columnsToRead) {
       this.columnsToRead = Lists.newArrayList(columnsToRead);
       return (T) this;
     }
 
     @SuppressWarnings("unchecked")
-    public T columnsToRead(String ... columnsToRead) {
+    public T columnsToRead(String... columnsToRead) {
       this.columnsToRead = Lists.newArrayList();
 
       for (String column : columnsToRead) {

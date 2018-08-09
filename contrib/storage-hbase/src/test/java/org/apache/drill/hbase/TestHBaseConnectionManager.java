@@ -31,8 +31,8 @@ public class TestHBaseConnectionManager extends BaseHBaseTest {
     runHBaseSQLVerifyCount("SELECT\n"
         + "row_key\n"
         + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName"
-        , 8);
+        + "  hbase.`[TABLE_NAME]` tableName",
+        8);
 
     /*
      * Simulate HBase connection close and ensure that the connection
@@ -42,8 +42,8 @@ public class TestHBaseConnectionManager extends BaseHBaseTest {
     runHBaseSQLVerifyCount("SELECT\n"
         + "row_key\n"
         + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName"
-        , 8);
+        + "  hbase.`[TABLE_NAME]` tableName",
+        8);
 
     /*
      * Simulate HBase cluster restart and ensure that running query against
@@ -54,8 +54,8 @@ public class TestHBaseConnectionManager extends BaseHBaseTest {
     runHBaseSQLVerifyCount("SELECT\n"
         + "row_key\n"
         + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName"
-        , 8);
+        + "  hbase.`[TABLE_NAME]` tableName",
+        8);
 
   }
 

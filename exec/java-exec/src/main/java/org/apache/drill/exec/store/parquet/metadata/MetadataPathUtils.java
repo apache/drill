@@ -87,7 +87,7 @@ public class MetadataPathUtils {
       ParquetTableMetadata_v3 tableMetadataWithAbsolutePaths, String baseDir) {
     List<String> directoriesWithRelativePaths = Lists.newArrayList();
     for (String directory : tableMetadataWithAbsolutePaths.getDirectories()) {
-      directoriesWithRelativePaths.add(relativize(baseDir, directory)) ;
+      directoriesWithRelativePaths.add(relativize(baseDir, directory));
     }
     List<ParquetFileMetadata_v3> filesWithRelativePaths = Lists.newArrayList();
     for (ParquetFileMetadata_v3 file : tableMetadataWithAbsolutePaths.files) {

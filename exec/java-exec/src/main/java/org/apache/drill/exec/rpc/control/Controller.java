@@ -42,7 +42,7 @@ public interface Controller extends AutoCloseable {
    * @param node
    * @return
    */
-  public ControlTunnel getTunnel(DrillbitEndpoint node) ;
+  public ControlTunnel getTunnel(DrillbitEndpoint node);
 
   public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint, boolean allowPortHunting)
       throws DrillbitStartupException;

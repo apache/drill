@@ -104,6 +104,6 @@ public class HashAggregate extends AbstractSingle {
   public boolean isBufferedOperator(QueryContext queryContext) {
     // In case forced to use a single partition - do not consider this a buffered op (when memory is divided)
     return queryContext == null ||
-      1 < (int)queryContext.getOptions().getOption(ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR) ;
+      1 < (int) queryContext.getOptions().getOption(ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR);
   }
 }

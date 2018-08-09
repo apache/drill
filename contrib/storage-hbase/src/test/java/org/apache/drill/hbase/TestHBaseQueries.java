@@ -54,8 +54,8 @@ public class TestHBaseQueries extends BaseHBaseTest {
       setColumnWidths(new int[] {8, 15});
       runHBaseSQLVerifyCount("SELECT *\n"
           + "FROM\n"
-          + "  hbase.`" + tableName + "` tableName\n"
-          , 1);
+          + "  hbase.`" + tableName + "` tableName\n",
+          1);
     } finally {
       try {
         admin.disableTable(tableName);
@@ -78,8 +78,8 @@ public class TestHBaseQueries extends BaseHBaseTest {
       setColumnWidths(new int[] {8, 15});
       runHBaseSQLVerifyCount("SELECT row_key, count(*)\n"
           + "FROM\n"
-          + "  hbase.`" + tableName + "` tableName GROUP BY row_key\n"
-          , 0);
+          + "  hbase.`" + tableName + "` tableName GROUP BY row_key\n",
+          0);
     } finally {
       try {
         admin.disableTable(tableName);

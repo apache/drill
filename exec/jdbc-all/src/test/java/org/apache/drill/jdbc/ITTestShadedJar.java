@@ -175,7 +175,8 @@ public class ITTestShadedJar {
   private static void printQuery(Connection c, String query) throws SQLException {
     final StringBuilder sb = new StringBuilder();
 
-    try (Statement s = c.createStatement(); ResultSet result = s.executeQuery(query)) {
+    try (Statement s = c.createStatement();
+         ResultSet result = s.executeQuery(query)) {
       while (result.next()) {
         final int columnCount = result.getMetaData().getColumnCount();
         for(int i = 1; i < columnCount+1; i++){

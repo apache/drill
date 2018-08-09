@@ -56,7 +56,7 @@ public class VectorUtil {
       int columnCounter = 0;
       for (VectorWrapper<?> vw : va) {
         boolean lastColumn = columnCounter == width - 1;
-        Object o ;
+        Object o;
         try{
           o = vw.getValueVector().getAccessor().getObject(row);
         } catch (Exception e) {

@@ -28,10 +28,10 @@ public class HashTableStats {
   }
 
   public void addStats (HashTableStats newStats) {
-    this.numBuckets += newStats.numBuckets ;
-    this.numEntries += newStats.numEntries ;
-    this.numResizing += newStats.numResizing ;
-    this.resizingTime += newStats.resizingTime ;
+    this.numBuckets += newStats.numBuckets;
+    this.numEntries += newStats.numEntries;
+    this.numResizing += newStats.numResizing;
+    this.resizingTime += newStats.resizingTime;
   }
 }
 

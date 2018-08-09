@@ -180,7 +180,7 @@ public class DumpCat {
       aggBatchMetaInfo.add(getBatchMetaInfo(vcSerializable));
 
       if (vectorContainer.getRecordCount() == 0) {
-        emptyBatchNum ++;
+        emptyBatchNum++;
       }
 
       if (prevSchema != null && !vectorContainer.getSchema().equals(prevSchema)) {
@@ -188,7 +188,7 @@ public class DumpCat {
       }
 
       prevSchema = vectorContainer.getSchema();
-      batchNum ++;
+      batchNum++;
 
       vectorContainer.zeroVectors();
     }
@@ -219,7 +219,7 @@ public class DumpCat {
 
     VectorAccessibleSerializable vcSerializable = null;
 
-    while (input.available() > 0 && batchNum ++ < targetBatchNum) {
+    while (input.available() > 0 && batchNum++ < targetBatchNum) {
       vcSerializable = new VectorAccessibleSerializable(DumpCat.allocator);
       vcSerializable.readFromStream(input);
 

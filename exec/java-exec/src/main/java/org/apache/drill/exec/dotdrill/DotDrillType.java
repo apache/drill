@@ -21,10 +21,10 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 public enum DotDrillType {
-  VIEW
+  VIEW;
   // ,FORMAT
   // ,STATS
-  ;
+
 
   private final String ending;
 

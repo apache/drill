@@ -81,7 +81,7 @@ public class TestConfig {
         try {
           return file.toURI().toURL();
         } catch (MalformedURLException e) {
-          ;
+          // noop
         }
       }
       return null;

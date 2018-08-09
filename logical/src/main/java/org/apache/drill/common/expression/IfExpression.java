@@ -153,7 +153,7 @@ public class IfExpression extends LogicalExpressionBase {
       i++;
     }
 
-    return (int) (cost / i) ;
+    return cost / i;
   }
 
 }

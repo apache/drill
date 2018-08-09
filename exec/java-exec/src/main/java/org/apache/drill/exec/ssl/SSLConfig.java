@@ -253,8 +253,7 @@ public abstract class SSLConfig {
           .append("\n\ttrustStorePassword: ").append(getPrintablePassword(getTrustStorePassword()))
           .append("\n\thandshakeTimeout: ").append(getHandshakeTimeout())
           .append("\n\tdisableHostVerification: ").append(disableHostVerification())
-          .append("\n\tdisableCertificateVerification: ").append(disableCertificateVerification())
-      ;
+          .append("\n\tdisableCertificateVerification: ").append(disableCertificateVerification());
     }
     return sb.toString();
   }

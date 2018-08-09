@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NavigableMap;
@@ -176,8 +177,9 @@ public class TestHBaseRegionScanAssignments extends BaseHBaseTest {
     scan.applyAssignments(endpoints);
 
     LinkedList<Integer> sizes = Lists.newLinkedList();
-    sizes.add(1); sizes.add(1); sizes.add(1); sizes.add(1); sizes.add(1); sizes.add(1); sizes.add(1); sizes.add(1);
-    sizes.add(2); sizes.add(2); sizes.add(2); sizes.add(2); sizes.add(2);
+    Collections.addAll(sizes, 1, 1, 1, 1, 1, 1, 1, 1);
+    Collections.addAll(sizes, 2, 2, 2, 2, 2);
+
     for (int i = 0; i < endpoints.size(); i++) {
       assertTrue(sizes.remove((Integer)scan.getSpecificScan(i).getRegionScanSpecList().size()));
     }

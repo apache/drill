@@ -91,7 +91,7 @@ public class HashAggPrule extends AggPruleBase {
         createTransformRequest(call, aggregate, input, traits);
 
         if (create2PhasePlan(call, aggregate)) {
-          traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL) ;
+          traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
 
           RelNode convertedInput = convert(input, traits);
           new TwoPhaseSubset(call, distOnAllKeys).go(aggregate, convertedInput);

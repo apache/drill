@@ -65,7 +65,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     addMiniDfsBasedStorage(createTestWorkspaces());
   }
 
-  private static Map<String , WorkspaceConfig> createTestWorkspaces() throws Exception {
+  private static Map<String, WorkspaceConfig> createTestWorkspaces() throws Exception {
     // Create "/tmp" folder and set permissions to "777"
     final Path tmpPath = new Path("/tmp");
     fs.delete(tmpPath, true);

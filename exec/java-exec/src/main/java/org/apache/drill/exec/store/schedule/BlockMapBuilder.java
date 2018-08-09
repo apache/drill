@@ -192,7 +192,7 @@ public class BlockMapBuilder {
     final Timer.Context context = metrics.timer(BLOCK_MAP_BUILDER_TIMER).time();
     BlockLocation[] blocks;
     ImmutableRangeMap<Long,BlockLocation> blockMap;
-    blocks = fs.getFileBlockLocations(status, 0 , status.getLen());
+    blocks = fs.getFileBlockLocations(status, 0, status.getLen());
     ImmutableRangeMap.Builder<Long, BlockLocation> blockMapBuilder = new ImmutableRangeMap.Builder<Long,BlockLocation>();
     for (BlockLocation block : blocks) {
       long start = block.getOffset();

@@ -248,7 +248,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
 
     for (String s : names) {
       if (uniqueNames.contains(s)) {
-        for (int i = 0; ; i++ ) {
+        for (int i = 0;; i++) {
           s = s + i;
           if (! origNames.contains(s) && ! uniqueNames.contains(s)) {
             break;

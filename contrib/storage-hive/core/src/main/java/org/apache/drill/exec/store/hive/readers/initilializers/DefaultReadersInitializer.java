@@ -46,7 +46,7 @@ public class DefaultReadersInitializer extends AbstractReadersInitializer {
 
     List<RecordReader> readers = new LinkedList<>();
     Constructor<? extends HiveAbstractReader> readerConstructor = createReaderConstructor();
-    for (int i = 0 ; i < inputSplits.size(); i++) {
+    for (int i = 0; i < inputSplits.size(); i++) {
       readers.add(createReader(readerConstructor, hasPartitions ? partitions.get(i) : null, inputSplits.get(i)));
     }
     return readers;

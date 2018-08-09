@@ -55,7 +55,7 @@ public class TestHashAggrSpill extends DrillTest {
      *
      * @throws Exception
      */
-    private void testSpill(long maxMem, long numPartitions, long minBatches, int maxParallel, boolean fallback ,boolean predict,
+    private void testSpill(long maxMem, long numPartitions, long minBatches, int maxParallel, boolean fallback, boolean predict,
                            String sql, long expectedRows, int cycle, int fromPart, int toPart) throws Exception {
         ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
           .sessionOption(ExecConstants.HASHAGG_MAX_MEMORY_KEY,maxMem)

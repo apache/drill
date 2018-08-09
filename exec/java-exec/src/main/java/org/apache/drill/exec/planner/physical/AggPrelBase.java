@@ -49,7 +49,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
 
   public enum OperatorPhase {PHASE_1of1, PHASE_1of2, PHASE_2of2}
 
-  protected OperatorPhase operPhase = OperatorPhase.PHASE_1of1 ; // default phase
+  protected OperatorPhase operPhase = OperatorPhase.PHASE_1of1; // default phase
   protected List<NamedExpression> keys = Lists.newArrayList();
   protected List<NamedExpression> aggExprs = Lists.newArrayList();
   protected List<AggregateCall> phase2AggCallList = Lists.newArrayList();

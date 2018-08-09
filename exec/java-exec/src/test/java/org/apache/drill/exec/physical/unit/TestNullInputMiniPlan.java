@@ -525,7 +525,7 @@ public class TestNullInputMiniPlan extends MiniPlanUnitTestBase{
         .expectNullBatch(true)
         .go();
 
-    final RecordBatch input2 = createScanBatchFromJson(SINGLE_EMPTY_JSON, SINGLE_EMPTY_JSON2);;
+    final RecordBatch input2 = createScanBatchFromJson(SINGLE_EMPTY_JSON, SINGLE_EMPTY_JSON2);
     RecordBatch batch2 = new PopBuilder()
         .physicalOperator(pop)
         .addInput(input2)

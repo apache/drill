@@ -70,7 +70,6 @@ public class CleanCommand extends ClientCommand {
     try {
       dfs.removeDrillFile(archiveName);
       System.out.println(" Removed");
-      ;
     } catch (DfsFacadeException e) {
       System.out.println();
       System.err.println(e.getMessage());

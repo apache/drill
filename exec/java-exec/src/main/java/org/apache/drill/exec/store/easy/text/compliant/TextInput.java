@@ -96,7 +96,7 @@ final class TextInput {
     this.lineSeparator = settings.getNewLineDelimiter();
     byte normalizedLineSeparator = settings.getNormalizedNewLine();
     Preconditions.checkArgument(input instanceof Seekable, "Text input only supports an InputStream that supports Seekable.");
-    boolean isCompressed = input instanceof CompressionInputStream ;
+    boolean isCompressed = input instanceof CompressionInputStream;
     Preconditions.checkArgument(!isCompressed || startPos == 0, "Cannot use split on compressed stream.");
 
     // splits aren't allowed with compressed data.  The split length will be the compressed size which means we'll normally end prematurely.

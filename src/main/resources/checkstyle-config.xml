@@ -36,6 +36,10 @@
     <module name="AvoidStarImport"/>
     <module name="NeedBraces"/>
     <module name="PackageDeclaration"/>
+    <module name="EmptyStatement"/>
+    <module name="NoWhitespaceBefore"/>
+    <module name="OneStatementPerLine"/>
+
   </module>
 
   <module name="FileTabCharacter"/>

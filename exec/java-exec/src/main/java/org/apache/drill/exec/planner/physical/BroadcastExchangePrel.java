@@ -56,7 +56,7 @@ public class BroadcastExchangePrel extends ExchangePrel{
     final double inputRows = mq.getRowCount(child);
 
     final int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
-    final double cpuCost = broadcastFactor * DrillCostBase.SVR_CPU_COST * inputRows ;
+    final double cpuCost = broadcastFactor * DrillCostBase.SVR_CPU_COST * inputRows;
     final double networkCost = broadcastFactor * DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth * numEndPoints;
 
     return new DrillCostBase(inputRows, cpuCost, 0, networkCost);

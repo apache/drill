@@ -50,7 +50,7 @@ public class DrillUnionRel extends DrillUnionRelBase implements DrillRel {
       return new DrillUnionRel(getCluster(), traitSet, inputs, all,
           false /* don't check compatibility during copy */);
     } catch (InvalidRelException e) {
-      throw new AssertionError(e) ;
+      throw new AssertionError(e);
     }
   }
 

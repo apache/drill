@@ -778,7 +778,7 @@ public class EvaluationVisitor {
         setBlock.assign(out.getValue(), JExpr.lit(1));
       } else {
         assert (e == null);
-        eval.assign(out.getValue(), JExpr.lit(1)) ;
+        eval.assign(out.getValue(), JExpr.lit(1));
       }
 
       generator.unNestEvalBlock();     // exit from nested block
@@ -841,7 +841,7 @@ public class EvaluationVisitor {
         setBlock.assign(out.getValue(), JExpr.lit(0));
       } else {
         assert (e == null);
-        eval.assign(out.getValue(), JExpr.lit(0)) ;
+        eval.assign(out.getValue(), JExpr.lit(0));
       }
 
       generator.unNestEvalBlock();   // exit from nested block.
