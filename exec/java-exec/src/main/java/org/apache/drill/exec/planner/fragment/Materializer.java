@@ -124,20 +124,20 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     newOp.setCost(op.getCost());
     newOp.setOperatorId(Short.MAX_VALUE & op.getOperatorId());
 
-    ((LateralJoinPOP)newOp).setUnnestForLateralJoin(unnestForThisLateral);
+    ((LateralJoinPOP) newOp).setUnnestForLateralJoin(unnestForThisLateral);
     return newOp;
   }
 
   @Override
   public PhysicalOperator visitUnnest(UnnestPOP unnest, IndexedFragmentNode value) throws ExecutionSetupException {
     PhysicalOperator newOp = visitOp(unnest, value);
-    value.addUnnest((UnnestPOP)newOp);
+    value.addUnnest((UnnestPOP) newOp);
     return newOp;
   }
 
   public static class IndexedFragmentNode{
-    final Wrapper info;
-    final int minorFragmentId;
+    private final Wrapper info;
+    private final int minorFragmentId;
 
     private final Deque<UnnestPOP> unnest = new ArrayDeque<>();
 
