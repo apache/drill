@@ -17,19 +17,23 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class AbstractSV2Copier extends AbstractCopier {
   protected ValueVector[] vvIn;
   private SelectionVector2 sv2;
+  protected List<TransferPair> transferPairs = new ArrayList<>();
 
   @Override
-  public void setup(RecordBatch incoming, VectorContainer outgoing) throws SchemaChangeException {
+  public void setup(RecordBatch incoming, VectorContainer outgoing) {
     super.setup(incoming, outgoing);
     this.sv2 = incoming.getSelectionVector2();
 
@@ -46,7 +50,20 @@ public abstract class AbstractSV2Copier extends AbstractCopier {
     }
   }
 
-  public void copyEntryIndirect(int inIndex, int outIndex) throws SchemaChangeException {
+  public void copyEntryIndirect(int inIndex, int outIndex) {
     copyEntry(sv2.getIndex(inIndex), outIndex);
+  }
+
+  @Override
+  public int copyRecords(int index, int recordCount) {
+    if (sv2.doFullTransfer()) {
+      for (TransferPair pair : transferPairs) {
+        pair.transfer();
+      }
+      updateCounts(recordCount);
+      return recordCount;
+    }
+
+    return super.copyRecords(index, recordCount);
   }
 }

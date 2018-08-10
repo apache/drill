@@ -47,7 +47,7 @@ import org.apache.drill.exec.physical.config.TopN;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
 import org.apache.drill.exec.physical.impl.svremover.Copier;
-import org.apache.drill.exec.physical.impl.svremover.GenericSV4Copier;
+import org.apache.drill.exec.physical.impl.svremover.GenericCopierFactory;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -360,7 +360,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     SelectionVector4 selectionVector4 = priorityQueue.getSv4();
     SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
     if (copier == null) {
-      copier = GenericSV4Copier.createCopier(batch, newContainer, null);
+      copier = GenericCopierFactory.createAndSetupCopier(batch, newContainer, null);
     } else {
       for (VectorWrapper<?> i : batch) {
 
@@ -468,7 +468,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     @SuppressWarnings("resource")
     final SelectionVector4 selectionVector4 = priorityQueue.getSv4();
     final SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
-    copier = GenericSV4Copier.createCopier(batch, newContainer, null);
+    copier = GenericCopierFactory.createAndSetupCopier(batch, newContainer, null);
     @SuppressWarnings("resource")
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
     try {
