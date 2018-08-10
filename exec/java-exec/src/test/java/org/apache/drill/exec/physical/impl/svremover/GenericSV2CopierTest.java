@@ -21,7 +21,9 @@ import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
+
 public class GenericSV2CopierTest extends AbstractGenericCopierTest {
+
   @Override
   public RowSet createSrcRowSet(RootAllocator allocator) {
     return new RowSetBuilder(allocator, createTestSchema(BatchSchema.SelectionVectorMode.TWO_BYTE))
@@ -32,10 +34,5 @@ public class GenericSV2CopierTest extends AbstractGenericCopierTest {
       .addRow(row3())
       .withSv2()
       .build();
-  }
-
-  @Override
-  public Copier createCopier() {
-    return new GenericSV2Copier();
   }
 }

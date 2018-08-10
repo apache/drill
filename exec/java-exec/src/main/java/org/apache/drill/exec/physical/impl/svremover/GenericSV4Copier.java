@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -25,25 +24,23 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
 public class GenericSV4Copier extends AbstractSV4Copier {
+
+  public GenericSV4Copier(RecordBatch incomingBatch, VectorContainer outputContainer,
+                          SchemaChangeCallBack callBack) {
+    for(VectorWrapper<?> vv : incomingBatch){
+      @SuppressWarnings("resource")
+      ValueVector v = vv.getValueVectors()[0];
+      v.makeTransferPair(outputContainer.addOrGet(v.getField(), callBack));
+    }
+  }
+
   @Override
-  public void copyEntry(int inIndex, int outIndex) throws SchemaChangeException {
+  public void copyEntry(int inIndex, int outIndex) {
     int inOffset = inIndex & 0xFFFF;
     int inVector = inIndex >>> 16;
     for ( int i = 0;  i < vvIn.length;  i++ ) {
       ValueVector[] vectorsFromIncoming = vvIn[i].getValueVectors();
       vvOut[i].copyEntry(outIndex, vectorsFromIncoming[inVector], inOffset);
     }
-  }
-
-  public static Copier createCopier(RecordBatch batch, VectorContainer container, SchemaChangeCallBack callBack) throws SchemaChangeException {
-    for(VectorWrapper<?> vv : batch){
-      @SuppressWarnings("resource")
-      ValueVector v = vv.getValueVectors()[0];
-      v.makeTransferPair(container.addOrGet(v.getField(), callBack));
-    }
-
-    Copier copier = new GenericSV4Copier();
-    copier.setup(batch, container);
-    return copier;
   }
 }

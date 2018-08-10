@@ -96,6 +96,7 @@ public class IndirectRowSet extends AbstractSingleRowSet {
       destIndex++;
     }
     sv2.setRecordCount(rowCount);
+    sv2.setBatchActualRecordCount(container.getRecordCount());
     container.buildSchema(SelectionVectorMode.TWO_BYTE);
     return sv2;
   }

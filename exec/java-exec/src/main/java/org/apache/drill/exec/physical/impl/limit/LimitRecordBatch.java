@@ -194,6 +194,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
     // clear memory for incoming sv (if any)
     if (incomingSv != null) {
+      outgoingSv.setBatchActualRecordCount(incomingSv.getBatchActualRecordCount());
       incomingSv.clear();
     }
 

@@ -17,34 +17,34 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBatch;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
-
-import java.util.List;
 
 public abstract class AbstractGenericCopierTest {
   @Test
   public void testCopyRecords() throws SchemaChangeException {
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {
-      final BatchSchema batchSchema = createTestSchema(BatchSchema.SelectionVectorMode.NONE);
+      final TupleMetadata batchSchema = createTestSchema(BatchSchema.SelectionVectorMode.NONE);
       final RowSet srcRowSet = createSrcRowSet(allocator);
       final RowSet destRowSet = new RowSetBuilder(allocator, batchSchema).build();
       final VectorContainer destContainer = destRowSet.container();
-      final Copier copier = createCopier();
+      final Copier copier = createCopier(new RowSetBatch(srcRowSet), destContainer, null);
       final RowSet expectedRowSet = createExpectedRowset(allocator);
 
-      copier.setup(new RowSetBatch(srcRowSet), destContainer);
       copier.copyRecords(0, 3);
 
       try {
@@ -65,14 +65,13 @@ public abstract class AbstractGenericCopierTest {
   @Test
   public void testAppendRecords() throws SchemaChangeException {
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {
-      final BatchSchema batchSchema = createTestSchema(BatchSchema.SelectionVectorMode.NONE);
+      final TupleMetadata batchSchema = createTestSchema(BatchSchema.SelectionVectorMode.NONE);
       final RowSet srcRowSet = createSrcRowSet(allocator);
       final RowSet destRowSet = new RowSetBuilder(allocator, batchSchema).build();
       final VectorContainer destContainer = destRowSet.container();
-      final Copier copier = createCopier();
+      final Copier copier = createCopier(new RowSetBatch(srcRowSet), destContainer, null);
       final RowSet expectedRowSet = createExpectedRowset(allocator);
 
-      copier.setup(new RowSetBatch(srcRowSet), destContainer);
       copier.appendRecord(0);
       copier.appendRecords(1, 2);
 
@@ -93,7 +92,10 @@ public abstract class AbstractGenericCopierTest {
 
   public abstract RowSet createSrcRowSet(RootAllocator allocator) throws SchemaChangeException;
 
-  public abstract Copier createCopier();
+  public Copier createCopier(RecordBatch incoming, VectorContainer outputContainer,
+                                      SchemaChangeCallBack callback) {
+    return GenericCopierFactory.createAndSetupCopier(incoming, outputContainer, callback);
+  }
 
   public static Object[] row1() {
     return new Object[]{110, "green", new float[]{5.5f, 2.3f}, new String[]{"1a", "1b"}};
@@ -115,7 +117,7 @@ public abstract class AbstractGenericCopierTest {
     return new Object[]{106, "black", new float[]{.75f}, new String[]{"4a"}};
   }
 
-  public static RowSet createExpectedRowset(RootAllocator allocator) {
+  private RowSet createExpectedRowset(RootAllocator allocator) {
     return new RowSetBuilder(allocator, createTestSchema(BatchSchema.SelectionVectorMode.NONE))
       .addRow(row1())
       .addRow(row2())
@@ -123,14 +125,17 @@ public abstract class AbstractGenericCopierTest {
       .build();
   }
 
-  public static BatchSchema createTestSchema(BatchSchema.SelectionVectorMode mode) {
+  protected TupleMetadata createTestSchema(BatchSchema.SelectionVectorMode mode) {
     MaterializedField colA = MaterializedField.create("colA", Types.required(TypeProtos.MinorType.INT));
     MaterializedField colB = MaterializedField.create("colB", Types.required(TypeProtos.MinorType.VARCHAR));
     MaterializedField colC = MaterializedField.create("colC", Types.repeated(TypeProtos.MinorType.FLOAT4));
     MaterializedField colD = MaterializedField.create("colD", Types.repeated(TypeProtos.MinorType.VARCHAR));
 
-    List<MaterializedField> cols = Lists.newArrayList(colA, colB, colC, colD);
-    BatchSchema batchSchema = new BatchSchema(mode, cols);
-    return batchSchema;
+    return new SchemaBuilder().add(colA)
+      .add(colB)
+      .add(colC)
+      .add(colD)
+      .withSVMode(mode)
+      .buildSchema();
   }
 }

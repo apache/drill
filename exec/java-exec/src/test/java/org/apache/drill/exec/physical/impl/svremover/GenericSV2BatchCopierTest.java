@@ -17,12 +17,24 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
 
-public interface Copier {
-  void setup(RecordBatch incoming, VectorContainer outgoing);
-  int copyRecords(int index, int recordCount);
-  int appendRecord(int index);
-  int appendRecords(int index, int recordCount);
+/**
+ * Verifies optimization in SV2 such that when total record to copy is same as number of records in the
+ * underlying batch for SV2 then SV2 will do transfer rather than row by row copy
+ */
+public class GenericSV2BatchCopierTest extends AbstractGenericCopierTest {
+
+  @Override
+  public RowSet createSrcRowSet(RootAllocator allocator) {
+    return new RowSetBuilder(allocator, createTestSchema(BatchSchema.SelectionVectorMode.TWO_BYTE))
+      .addSelection(true, row1())
+      .addRow(row2())
+      .addSelection(true, row3())
+      .withSv2()
+      .build();
+  }
 }

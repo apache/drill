@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl.svremover;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -31,7 +30,7 @@ public abstract class AbstractCopier implements Copier {
   protected VectorContainer outgoing;
 
   @Override
-  public void setup(RecordBatch incoming, VectorContainer outgoing) throws SchemaChangeException {
+  public void setup(RecordBatch incoming, VectorContainer outgoing) {
     this.outgoing = outgoing;
 
     final int count = outgoing.getNumberOfColumns();
@@ -43,7 +42,7 @@ public abstract class AbstractCopier implements Copier {
   }
 
   @Override
-  public int copyRecords(int index, int recordCount) throws SchemaChangeException {
+  public int copyRecords(int index, int recordCount) {
     for(VectorWrapper<?> out : outgoing){
       TypeProtos.MajorType type = out.getField().getType();
       if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
@@ -57,7 +56,7 @@ public abstract class AbstractCopier implements Copier {
   }
 
   @Override
-  public int appendRecord(int index) throws SchemaChangeException {
+  public int appendRecord(int index) {
     int outgoingPosition = outgoing.getRecordCount();
     copyEntryIndirect(index, outgoingPosition);
     outgoingPosition++;
@@ -66,11 +65,11 @@ public abstract class AbstractCopier implements Copier {
   }
 
   @Override
-  public int appendRecords(int index, int recordCount) throws SchemaChangeException {
+  public int appendRecords(int index, int recordCount) {
     return insertRecords(outgoing.getRecordCount(), index, recordCount);
   }
 
-  private int insertRecords(int outgoingPosition, int index, int recordCount) throws SchemaChangeException {
+  private int insertRecords(int outgoingPosition, int index, int recordCount) {
     final int endIndex = index + recordCount;
 
     for(int svIndex = index; svIndex < endIndex; svIndex++, outgoingPosition++){
@@ -81,7 +80,7 @@ public abstract class AbstractCopier implements Copier {
     return outgoingPosition;
   }
 
-  private void updateCounts(int numRecords) {
+  protected void updateCounts(int numRecords) {
     outgoing.setRecordCount(numRecords);
 
     for (int vectorIndex = 0; vectorIndex < vvOut.length; vectorIndex++) {
@@ -89,7 +88,7 @@ public abstract class AbstractCopier implements Copier {
     }
   }
 
-  public abstract void copyEntryIndirect(int inIndex, int outIndex) throws SchemaChangeException;
+  public abstract void copyEntryIndirect(int inIndex, int outIndex);
 
-  public abstract void copyEntry(int inIndex, int outIndex) throws SchemaChangeException;
+  public abstract void copyEntry(int inIndex, int outIndex);
 }
