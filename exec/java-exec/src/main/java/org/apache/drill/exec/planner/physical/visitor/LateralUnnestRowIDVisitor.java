@@ -82,14 +82,14 @@ public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, Ru
       ImmutableBitSet requiredColumns = prel.getRequiredColumns().shift(1);
 
       CorrelationId corrId = prel.getCluster().createCorrel();
-      RexCorrelVariable rexCorrel =
+      RexCorrelVariable updatedCorrel =
               (RexCorrelVariable) prel.getCluster().getRexBuilder().makeCorrel(
                       children.get(0).getRowType(),
                       corrId);
       RelNode rightChild = children.get(1).accept(
               new CorrelateVarReplacer(
-                      new ProjectCorrelateTransposeRule.RexFieldAccessReplacer(corrId,
-                              rexCorrel, prel.getCluster().getRexBuilder(), requiredColsMap)));
+                      new ProjectCorrelateTransposeRule.RexFieldAccessReplacer(prel.getCorrelationId(),
+                              updatedCorrel, prel.getCluster().getRexBuilder(), requiredColsMap)));
       return (Prel) prel.copy(prel.getTraitSet(), children.get(0), rightChild,
               corrId, requiredColumns, prel.getJoinType());
     }
