@@ -34,7 +34,7 @@ import java.util.Set;
  * different memory calculations at each phase. The phases of execution have been broken down
  * into an explicit state machine diagram below. What ocurrs in each state is described in
  * the documentation of the {@link HashJoinState} class below. <b>Note:</b> the transition from Probing
- * and Partitioning back to Build Side Partitioning. This happens we had to spill probe side
+ * and Partitioning back to Build Side Partitioning. This happens when we had to spill probe side
  * partitions and we needed to recursively process spilled partitions. This recursion is
  * described in more detail in the example below.
  * </p>
@@ -86,6 +86,14 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
   /**
    * The interface representing the {@link HashJoinStateCalculator} corresponding to the
    * {@link HashJoinState#BUILD_SIDE_PARTITIONING} state.
+   *
+   * <h4>Invariants</h4>
+   * <ul>
+   *   <li>
+   *     This calculator will only be used when there is build side data. If there is no build side data, the caller
+   *     should not invoke this calculator.
+   *   </li>
+   * </ul>
    */
   interface BuildSidePartitioning extends HashJoinStateCalculator<PostBuildCalculations> {
     void initialize(boolean autoTune,
@@ -93,13 +101,14 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
                     RecordBatch buildSideBatch,
                     RecordBatch probeSideBatch,
                     Set<String> joinColumns,
+                    boolean probeEmpty,
                     long memoryAvailable,
+                    long maxIncomingBatchSize,
                     int initialPartitions,
                     int recordsPerPartitionBatchBuild,
                     int recordsPerPartitionBatchProbe,
                     int maxBatchNumRecordsBuild,
                     int maxBatchNumRecordsProbe,
-                    int outputBatchNumRecords,
                     int outputBatchSize,
                     double loadFactor);
 
@@ -121,7 +130,13 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
    * {@link HashJoinState#POST_BUILD_CALCULATIONS} state.
    */
   interface PostBuildCalculations extends HashJoinStateCalculator<HashJoinMemoryCalculator> {
-    void initialize();
+    /**
+     * Initializes the calculator with additional information needed.
+     * @param probeEmty True if the probe is empty. False otherwise.
+     */
+    void initialize(boolean probeEmty);
+
+    int getProbeRecordsPerBatch();
 
     boolean shouldSpill();
 
