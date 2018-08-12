@@ -59,7 +59,7 @@ public class OutputWidthCalculators {
                 throw new IllegalArgumentException();
             }
             for (FixedLenExpr expr : args) {
-                outputSize += expr.getWidth();
+                outputSize += expr.getDataWidth();
             }
             outputSize = adjustOutputWidth(outputSize, "ConcatOutputWidthCalculator:");
             return outputSize;
@@ -85,7 +85,7 @@ public class OutputWidthCalculators {
             if (args == null || args.size() < 1) {
                 throw new IllegalArgumentException();
             }
-            outputSize = args.get(0).getWidth();
+            outputSize = args.get(0).getDataWidth();
             outputSize = adjustOutputWidth(outputSize, "CloneOutputWidthCalculator:");
             return outputSize;
         }
