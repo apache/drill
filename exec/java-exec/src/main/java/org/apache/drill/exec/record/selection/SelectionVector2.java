@@ -36,7 +36,10 @@ import org.apache.drill.exec.record.DeadBuf;
 public class SelectionVector2 implements AutoCloseable {
 
   private final BufferAllocator allocator;
+  // Indicates number of indexes stored in the SV2 buffer which may be less than actual number of rows stored in
+  // RecordBatch container owning this SV2 instance
   private int recordCount;
+  // Indicates actual number of rows in the RecordBatch container which owns this SV2 instance
   private int batchActualRecordCount = -1;
   private DrillBuf buffer = DeadBuf.DEAD_BUFFER;
 
@@ -159,7 +162,7 @@ public class SelectionVector2 implements AutoCloseable {
     this.recordCount = recordCount;
   }
 
-  public boolean doFullTransfer() {
+  public boolean canDoFullTransfer() {
     return (recordCount == batchActualRecordCount);
   }
 
