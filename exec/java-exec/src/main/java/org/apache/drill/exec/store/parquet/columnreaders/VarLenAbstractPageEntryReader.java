@@ -97,4 +97,22 @@ abstract class VarLenAbstractPageEntryReader extends VarLenAbstractEntryReader {
   protected final int remainingPageData() {
     return pageInfo.pageDataLen - pageInfo.pageDataOff;
   }
+
+  /**
+   * Fixed length readers calculate upfront the maximum number of entries to process as entry length
+   * are known.
+   * @param valuesToRead requested number of values to read
+   * @param entrySz sizeof(integer) + column's precision
+   * @return maximum entries to read within each call (based on the bulk entry, entry size, and requested
+   *         number of entries to read)
+   */
+  protected final int getFixedLengthMaxRecordsToRead(int valuesToRead, int entrySz) {
+    // Let's start with bulk's entry and requested values-to-read constraints
+    int numEntriesToRead = Math.min(entry.getMaxEntries(), valuesToRead);
+
+    // Now include the size of the fixed entry (since they are fixed)
+    numEntriesToRead = Math.min(numEntriesToRead, buffer.limit() / entrySz);
+
+    return numEntriesToRead;
+  }
 }
