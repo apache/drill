@@ -260,9 +260,10 @@ public class Foreman implements Runnable {
         break;
       case SQL:
         final String sql = queryRequest.getPlan();
-        // log query id and query text before starting any real work. Also, put
+        // log query id, username and query text before starting any real work. Also, put
         // them together such that it is easy to search based on query id
-        logger.info("Query text for query id {}: {}", this.queryIdString, sql);
+        logger.info("Query text for query with id {} issued by {}: {}", queryIdString,
+            queryContext.getQueryUserName(), sql);
         runSQL(sql);
         break;
       case EXECUTION:
