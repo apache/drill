@@ -43,7 +43,7 @@ final class VarLenFixedEntryReader extends VarLenAbstractPageEntryReader {
 
     final int expectedDataLen = columnPrecInfo.precision;
     final int entrySz = 4 + columnPrecInfo.precision;
-    final int readBatch = Math.min(entry.getMaxEntries(), valuesToRead);
+    final int readBatch = getFixedLengthMaxRecordsToRead(valuesToRead, entrySz);
     Preconditions.checkState(readBatch > 0, "Read batch count [%d] should be greater than zero", readBatch);
 
     final int[] valueLengths = entry.getValuesLength();
