@@ -17,9 +17,8 @@
  */
 package org.apache.drill.exec.schema;
 
+import com.google.common.base.MoreObjects;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-
-import com.google.common.base.Objects;
 
 public class OrderedField extends Field {
     private final int index;
@@ -38,7 +37,7 @@ public class OrderedField extends Field {
     }
 
     @Override
-    protected Objects.ToStringHelper addAttributesToHelper(Objects.ToStringHelper helper) {
+    protected MoreObjects.ToStringHelper addAttributesToHelper(MoreObjects.ToStringHelper helper) {
         return helper;
     }
 }

@@ -68,6 +68,7 @@ package org.apache.drill.exec.vector.accessor;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.vector.DateUtilities;
@@ -79,8 +80,6 @@ import org.apache.drill.exec.vector.accessor.reader.BaseScalarReader.BaseFixedWi
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
 import org.apache.drill.exec.vector.accessor.writer.AbstractFixedWidthWriter.BaseFixedWidthWriter;
 import org.apache.drill.exec.vector.accessor.writer.BaseVarWidthWriter;
-
-import com.google.common.base.Charsets;
 
 import io.netty.buffer.DrillBuf;
 
@@ -225,13 +224,13 @@ public class ColumnAccessors {
 
     @Override
     public String getString() {
-      return new String(getBytes(${indexVar}), Charsets.UTF_8);
+      return new String(getBytes(${indexVar}), StandardCharsets.UTF_8);
     }
   <#elseif drillType == "Var16Char">
 
     @Override
     public String getString() {
-      return new String(getBytes(${indexVar}), Charsets.UTF_16);
+      return new String(getBytes(${indexVar}), StandardCharsets.UTF_16);
     }
   <#elseif drillType == "VarDecimal">
 
@@ -334,14 +333,14 @@ public class ColumnAccessors {
     
     @Override
     public final void setString(String value) {
-      final byte bytes[] = value.getBytes(Charsets.UTF_8);
+      final byte bytes[] = value.getBytes(StandardCharsets.UTF_8);
       setBytes(bytes, bytes.length);
     }
     <#elseif drillType == "Var16Char">
     
     @Override
     public final void setString(String value) {
-      final byte bytes[] = value.getBytes(Charsets.UTF_16);
+      final byte bytes[] = value.getBytes(StandardCharsets.UTF_16);
       setBytes(bytes, bytes.length);
     }
 

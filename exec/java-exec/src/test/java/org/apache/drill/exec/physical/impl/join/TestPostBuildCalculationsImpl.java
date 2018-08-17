@@ -25,6 +25,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class TestPostBuildCalculationsImpl {
   @Test
@@ -697,8 +698,8 @@ public class TestPostBuildCalculationsImpl {
     public ConditionalMockBatchSizePredictor(final List<Integer> recordsPerBatch,
                                              final List<Long> batchSize,
                                              final boolean hasData) {
-      this.recordsPerBatch = Preconditions.checkNotNull(recordsPerBatch);
-      this.batchSize = Preconditions.checkNotNull(batchSize);
+      this.recordsPerBatch = Objects.requireNonNull(recordsPerBatch);
+      this.batchSize = Objects.requireNonNull(batchSize);
 
       Preconditions.checkArgument(recordsPerBatch.size() == batchSize.size());
 

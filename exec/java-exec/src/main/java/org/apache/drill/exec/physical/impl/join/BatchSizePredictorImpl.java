@@ -23,6 +23,7 @@ import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.vector.IntVector;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class BatchSizePredictorImpl implements BatchSizePredictor {
   private RecordBatch batch;
@@ -37,7 +38,7 @@ public class BatchSizePredictorImpl implements BatchSizePredictor {
   public BatchSizePredictorImpl(final RecordBatch batch,
                                 final double fragmentationFactor,
                                 final double safetyFactor) {
-    this.batch = Preconditions.checkNotNull(batch);
+    this.batch = Objects.requireNonNull(batch);
     this.fragmentationFactor = fragmentationFactor;
     this.safetyFactor = safetyFactor;
   }

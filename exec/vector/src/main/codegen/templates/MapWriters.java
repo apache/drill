@@ -31,6 +31,7 @@
 package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -39,8 +40,6 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
-import com.google.common.collect.Maps;
-
 /*
  * This class is generated using FreeMarker and the ${.template_name} template.
  */
@@ -48,7 +47,7 @@ import com.google.common.collect.Maps;
 public class ${mode}MapWriter extends AbstractFieldWriter {
 
   protected final ${containerClass} container;
-  private final Map<String, FieldWriter> fields = Maps.newHashMap();
+  private final Map<String, FieldWriter> fields = new HashMap<>();
   <#if mode == "Repeated">private int currentChildIndex = 0;</#if>
 
   private final boolean unionEnabled;

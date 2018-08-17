@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -30,6 +29,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.IntVector;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
@@ -48,7 +48,7 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
   // Start offset of the records
   private int recordStartOffset;
   private int numberOfRecords;
-  private final List<TransferPair> transfers = Lists.newArrayList();
+  private final List<TransferPair> transfers = new ArrayList<>();
 
   // Partition RowId which is currently being processed, this will help to handle cases when rows for a partition id
   // flows across 2 batches

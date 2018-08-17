@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ObjectArrays;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ObjectArrays;
 
 import com.google.common.base.Preconditions;
@@ -64,6 +63,7 @@ import java.io.Closeable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

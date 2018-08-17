@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.schema;
 
+import com.google.common.base.MoreObjects;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 
 public abstract class Field {
@@ -52,10 +52,10 @@ public abstract class Field {
     this.read = read;
   }
 
-  protected abstract Objects.ToStringHelper addAttributesToHelper(Objects.ToStringHelper helper);
+  protected abstract MoreObjects.ToStringHelper addAttributesToHelper(MoreObjects.ToStringHelper helper);
 
-  Objects.ToStringHelper getAttributesStringHelper() {
-    return Objects.toStringHelper(this).add("type", fieldType)
+  MoreObjects.ToStringHelper getAttributesStringHelper() {
+    return MoreObjects.toStringHelper(this).add("type", fieldType)
         .add("fullFieldName", getFullFieldName())
         .add("schema", schema == null ? null : schema.toSchemaString()).omitNullValues();
   }

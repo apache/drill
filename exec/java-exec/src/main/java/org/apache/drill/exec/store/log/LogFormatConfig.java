@@ -19,12 +19,12 @@ package org.apache.drill.exec.store.log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Objects;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @JsonTypeName("logRegex")
 public class LogFormatConfig implements FormatPluginConfig {
@@ -76,10 +76,10 @@ public class LogFormatConfig implements FormatPluginConfig {
       return false;
     }
     LogFormatConfig other = (LogFormatConfig) obj;
-    return Objects.equal(regex, other.regex) &&
-        Objects.equal(maxErrors, other.maxErrors) &&
-        Objects.equal(schema, other.schema) &&
-        Objects.equal(extension, other.extension);
+    return Objects.equals(regex, other.regex) &&
+        Objects.equals(maxErrors, other.maxErrors) &&
+        Objects.equals(schema, other.schema) &&
+        Objects.equals(extension, other.extension);
   }
 
   @Override

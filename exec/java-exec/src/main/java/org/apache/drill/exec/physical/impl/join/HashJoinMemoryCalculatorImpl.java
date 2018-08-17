@@ -221,9 +221,9 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
                                      HashJoinHelperSizeCalculator hashJoinHelperSizeCalculator,
                                      double fragmentationFactor,
                                      double safetyFactor) {
-      this.batchSizePredictorFactory = Preconditions.checkNotNull(batchSizePredictorFactory);
-      this.hashTableSizeCalculator = Preconditions.checkNotNull(hashTableSizeCalculator);
-      this.hashJoinHelperSizeCalculator = Preconditions.checkNotNull(hashJoinHelperSizeCalculator);
+      this.batchSizePredictorFactory = Objects.requireNonNull(batchSizePredictorFactory);
+      this.hashTableSizeCalculator = Objects.requireNonNull(hashTableSizeCalculator);
+      this.hashJoinHelperSizeCalculator = Objects.requireNonNull(hashJoinHelperSizeCalculator);
       this.fragmentationFactor = fragmentationFactor;
       this.safetyFactor = safetyFactor;
     }
@@ -616,7 +616,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
                                       final double safetyFactor,
                                       final double loadFactor,
                                       final boolean reserveHash) {
-      this.probeSizePredictor = Preconditions.checkNotNull(probeSizePredictor);
+      this.probeSizePredictor = Objects.requireNonNull(probeSizePredictor);
       this.memoryAvailable = memoryAvailable;
       this.maxOutputBatchSize = maxOutputBatchSize;
       this.buildPartitionStatSet = Objects.requireNonNull(buildPartitionStatSet);

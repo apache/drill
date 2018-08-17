@@ -29,7 +29,6 @@ import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.calcite.rel.RelNode;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 
 /**
@@ -68,7 +67,7 @@ public class AdjustOperatorsSchemaVisitor extends BasePrelVisitor<Prel, Void, Ru
 
   private List<RelNode> getChildren(Prel prel, int registerForChild) {
     int ch = 0;
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     for(Prel child : prel){
       if (ch == registerForChild) {
         register(prel);
@@ -98,7 +97,7 @@ public class AdjustOperatorsSchemaVisitor extends BasePrelVisitor<Prel, Void, Ru
 
     final int leftCount = children.get(0).getRowType().getFieldCount();
 
-    List<RelNode> reNamedChildren = Lists.newArrayList();
+    List<RelNode> reNamedChildren = new ArrayList<>();
 
     RelNode left = prel.getJoinInput(0, children.get(0));
     RelNode right = prel.getJoinInput(leftCount, children.get(1));
