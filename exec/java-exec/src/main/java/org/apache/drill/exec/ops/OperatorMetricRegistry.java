@@ -32,14 +32,18 @@ import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Registry of operator metrics.
  */
 public class OperatorMetricRegistry {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorMetricRegistry.class);
 
-  // Mapping: operator type --> metric id --> metric name
-  private static final String[][] OPERATOR_METRICS = new String[CoreOperatorType.values().length][];
+  // Mapping: key : operator type, value : metric id --> metric name
+  private static final Map<Integer, String[]> OPERATOR_METRICS = new HashMap<>();
 
   static {
     register(CoreOperatorType.SCREEN_VALUE, ScreenCreator.ScreenRoot.Metric.class);
@@ -61,13 +65,12 @@ public class OperatorMetricRegistry {
 
   private static void register(final int operatorType, final Class<? extends MetricDef> metricDef) {
     // Currently registers a metric def that has enum constants
-    final MetricDef[] enumConstants = metricDef.getEnumConstants();
+    MetricDef[] enumConstants = metricDef.getEnumConstants();
     if (enumConstants != null) {
-      final String[] names = new String[enumConstants.length];
-      for (int i = 0; i < enumConstants.length; i++) {
-        names[i] = enumConstants[i].name();
-      }
-      OPERATOR_METRICS[operatorType] = names;
+      String[] names = Arrays.stream(enumConstants)
+              .map(MetricDef::name)
+              .toArray((String[]::new));
+      OPERATOR_METRICS.put(operatorType, names);
     }
   }
 
@@ -77,8 +80,8 @@ public class OperatorMetricRegistry {
    * @param operatorType the operator type
    * @return metric names if operator was registered, null otherwise
    */
-  public static String[] getMetricNames(final int operatorType) {
-    return OPERATOR_METRICS[operatorType];
+  public static String[] getMetricNames(int operatorType) {
+    return OPERATOR_METRICS.get(operatorType);
   }
 
   // to prevent instantiation
