@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -46,7 +47,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   private static final Expression EXPRESSION = new DefaultExpression(Object.class);
 
   public AbstractSchema(List<String> parentSchemaPath, String name) {
-    schemaPath = Lists.newArrayList();
+    name = name == null ? null : name.toLowerCase();
+    schemaPath = new ArrayList<>();
     schemaPath.addAll(parentSchemaPath);
     schemaPath.add(name);
     this.name = name;
@@ -96,7 +98,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
    * Create a new view given definition.
    * @param view View info including name, definition etc.
    * @return Returns true if an existing view is replaced with the given view. False otherwise.
-   * @throws IOException
+   * @throws IOException in case of error creating a view
    */
   public boolean createView(View view) throws IOException {
     throw UserException.unsupportedError()
@@ -107,8 +109,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   /**
    * Drop the view with given name.
    *
-   * @param viewName
-   * @throws IOException
+   * @param viewName view name
+   * @throws IOException in case of error dropping the view
    */
   public void dropView(String viewName) throws IOException {
     throw UserException.unsupportedError()
@@ -217,7 +219,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
    * plugin supports).
    * It is not guaranteed that the retrieved tables would have RowType and Statistic being fully populated.
    *
-   * Specifically, calling {@link Table#getRowType(RelDataTypeFactory)} or {@link Table#getStatistic()} might incur
+   * Specifically, calling {@link Table#getRowType(org.apache.calcite.rel.type.RelDataTypeFactory)} or {@link Table#getStatistic()} might incur
    * {@link UnsupportedOperationException} being thrown.
    *
    * @param  tableNames the requested tables, specified by the table names
@@ -261,6 +263,17 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
     }
 
     return tableNamesAndTypes;
+  }
+
+  /**
+   * Indicates if table names in schema are case sensitive. By default they are.
+   * If schema implementation claims its table names are case insensitive,
+   * it is responsible for making case insensitive look up by table name.
+   *
+   * @return true if table names are case sensitive
+   */
+  public boolean areTableNamesCaseSensitive() {
+    return true;
   }
 
 }

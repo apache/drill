@@ -104,7 +104,8 @@ public class SchemaUtilites {
   /** Utility method to search for schema path starting from the given <i>schema</i> reference */
   private static SchemaPlus searchSchemaTree(SchemaPlus schema, final List<String> schemaPath) {
     for (String schemaName : schemaPath) {
-      schema = schema.getSubSchema(schemaName);
+      // schemas in Drill are case insensitive and stored in lower case
+      schema = schema.getSubSchema(schemaName.toLowerCase());
       if (schema == null) {
         return null;
       }

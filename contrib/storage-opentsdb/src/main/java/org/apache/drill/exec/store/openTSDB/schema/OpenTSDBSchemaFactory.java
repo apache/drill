@@ -20,8 +20,8 @@ package org.apache.drill.exec.store.openTSDB.schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.openTSDB.DrillOpenTSDBTable;
 import org.apache.drill.exec.store.openTSDB.OpenTSDBScanSpec;
 import org.apache.drill.exec.store.openTSDB.OpenTSDBStoragePlugin;
@@ -34,41 +34,40 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
-public class OpenTSDBSchemaFactory implements SchemaFactory {
+public class OpenTSDBSchemaFactory extends AbstractSchemaFactory {
 
-  private static final Logger log = LoggerFactory.getLogger(OpenTSDBSchemaFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(OpenTSDBSchemaFactory.class);
 
-  private final String schemaName;
   private final OpenTSDBStoragePlugin plugin;
 
   public OpenTSDBSchemaFactory(OpenTSDBStoragePlugin plugin, String schemaName) {
+    super(schemaName);
     this.plugin = plugin;
-    this.schemaName = schemaName;
   }
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    OpenTSDBSchema schema = new OpenTSDBSchema(schemaName);
-    parent.add(schemaName, schema);
+    OpenTSDBSchema schema = new OpenTSDBSchema(getName());
+    parent.add(getName(), schema);
   }
 
   class OpenTSDBSchema extends AbstractSchema {
 
     OpenTSDBSchema(String name) {
-      super(Collections.<String>emptyList(), name);
+      super(Collections.emptyList(), name);
     }
 
     @Override
     public Table getTable(String name) {
       OpenTSDBScanSpec scanSpec = new OpenTSDBScanSpec(name);
       try {
-        return new DrillOpenTSDBTable(schemaName, plugin, new Schema(plugin.getClient(), name), scanSpec);
+        return new DrillOpenTSDBTable(getName(), plugin, new Schema(plugin.getClient(), name), scanSpec);
       } catch (Exception e) {
         // Calcite firstly looks for a table in the default schema, if the table was not found,
         // it looks in the root schema.
         // If the table does not exist, a query will fail at validation stage,
         // so the error should not be thrown here.
-        logger.warn("Failure while loading table '{}' for database '{}'.", name, schemaName, e.getCause());
+        logger.warn("Failure while loading table '{}' for database '{}'.", name, getName(), e.getCause());
         return null;
       }
     }

@@ -92,10 +92,10 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   private static final String v_student_u1g1_750 = "v_student_u1g1_750";
 
   private static final String query_v_student_u0g0_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750);
+      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750);
 
   private static final String query_v_student_u1g1_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u1g1_750);
+      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u1g1_750);
 
   // Create a view on "partitioned_student_u0_700". View is owned by user0:group0 and has permissions 750
   private static final String v_partitioned_student_u0g0_750 = "v_partitioned_student_u0g0_750";
@@ -104,11 +104,11 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   private static final String v_partitioned_student_u1g1_750 = "v_partitioned_student_u1g1_750";
 
   private static final String query_v_partitioned_student_u0g0_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINIDFS_STORAGE_PLUGIN_NAME, "tmp",
+      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp",
       v_partitioned_student_u0g0_750);
 
   private static final String query_v_partitioned_student_u1g1_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINIDFS_STORAGE_PLUGIN_NAME, "tmp",
+      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp",
       v_partitioned_student_u1g1_750);
 
   @BeforeClass
@@ -199,16 +199,14 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             hivePluginName, db_general, g_student_u0_700));
 
     createView(org1Users[1], org1Groups[1], v_student_u1g1_750,
-        String.format("SELECT rownum, name, age FROM %s.%s.%s",
-            MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750));
+        String.format("SELECT rownum, name, age FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750));
 
     createView(org1Users[0], org1Groups[0], v_partitioned_student_u0g0_750,
         String.format("SELECT rownum, name, age, studentnum FROM %s.%s.%s",
             hivePluginName, db_general, g_partitioned_student_u0_700));
 
     createView(org1Users[1], org1Groups[1], v_partitioned_student_u1g1_750,
-        String.format("SELECT rownum, name, age FROM %s.%s.%s",
-            MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_partitioned_student_u0g0_750));
+        String.format("SELECT rownum, name, age FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_partitioned_student_u0g0_750));
   }
 
   private static void createPartitionedTable(final Driver hiveDriver, final String db, final String tbl,
@@ -521,15 +519,15 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   @Test
   public void selectUser2_v_student_u0g0_750() throws Exception {
     updateClient(org1Users[2]);
-    errorMsgTestHelper(query_v_student_u0g0_750,
-        "Not authorized to read view [v_student_u0g0_750] in schema [miniDfsPlugin.tmp]");
+    errorMsgTestHelper(query_v_student_u0g0_750, String.format(
+        "Not authorized to read view [v_student_u0g0_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
   }
 
   @Test
   public void selectUser0_v_student_u1g1_750() throws Exception {
     updateClient(org1Users[0]);
-    errorMsgTestHelper(query_v_student_u1g1_750,
-        "Not authorized to read view [v_student_u1g1_750] in schema [miniDfsPlugin.tmp]");
+    errorMsgTestHelper(query_v_student_u1g1_750, String.format(
+        "Not authorized to read view [v_student_u1g1_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
   }
 
   @Test
@@ -555,15 +553,15 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   @Test
   public void selectUser2_v_partitioned_student_u0g0_750() throws Exception {
     updateClient(org1Users[2]);
-    errorMsgTestHelper(query_v_partitioned_student_u0g0_750,
-        "Not authorized to read view [v_partitioned_student_u0g0_750] in schema [miniDfsPlugin.tmp]");
+    errorMsgTestHelper(query_v_partitioned_student_u0g0_750, String.format(
+        "Not authorized to read view [v_partitioned_student_u0g0_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
   }
 
   @Test
   public void selectUser0_v_partitioned_student_u1g1_750() throws Exception {
     updateClient(org1Users[0]);
-    errorMsgTestHelper(query_v_partitioned_student_u1g1_750,
-        "Not authorized to read view [v_partitioned_student_u1g1_750] in schema [miniDfsPlugin.tmp]");
+    errorMsgTestHelper(query_v_partitioned_student_u1g1_750, String.format(
+        "Not authorized to read view [v_partitioned_student_u1g1_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
   }
 
   @Test

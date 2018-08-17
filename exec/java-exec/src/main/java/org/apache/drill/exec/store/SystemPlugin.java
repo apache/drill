@@ -15,24 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.ischema;
+package org.apache.drill.exec.store;
 
-import org.apache.drill.common.logical.StoragePluginConfig;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class InfoSchemaConfig extends StoragePluginConfig {
-
-  public static final String NAME = "ischema";
-
-  public static final InfoSchemaConfig INSTANCE = new InfoSchemaConfig();
-
-  @Override
-  public int hashCode(){
-    return 1;
-  }
-
-  @Override
-  public boolean equals(Object o){
-    return o instanceof InfoSchemaConfig;
-  }
-
+/**
+ * Is used to indicated system plugins which will be dynamically initialized during storage plugin registry init stage.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface SystemPlugin {
 }

@@ -33,8 +33,8 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
@@ -48,8 +48,8 @@ import org.apache.thrift.TException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
-public class HiveSchemaFactory implements SchemaFactory {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaFactory.class);
+public class HiveSchemaFactory extends AbstractSchemaFactory {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaFactory.class);
 
   // MetaStoreClient created using process user credentials
   private final DrillHiveMetaStoreClient processUserMetastoreClient;
@@ -57,13 +57,12 @@ public class HiveSchemaFactory implements SchemaFactory {
   private final LoadingCache<String, DrillHiveMetaStoreClient> metaStoreClientLoadingCache;
 
   private final HiveStoragePlugin plugin;
-  private final String schemaName;
   private final HiveConf hiveConf;
   private final boolean isDrillImpersonationEnabled;
   private final boolean isHS2DoAsSet;
 
   public HiveSchemaFactory(final HiveStoragePlugin plugin, final String name, final HiveConf hiveConf) throws ExecutionSetupException {
-    this.schemaName = name;
+    super(name);
     this.plugin = plugin;
 
     this.hiveConf = hiveConf;
@@ -126,8 +125,8 @@ public class HiveSchemaFactory implements SchemaFactory {
         throw new IOException("Failure setting up Hive metastore client.", e);
       }
     }
-    HiveSchema schema = new HiveSchema(schemaConfig, mClientForSchemaTree, schemaName);
-    SchemaPlus hPlus = parent.add(schemaName, schema);
+    HiveSchema schema = new HiveSchema(schemaConfig, mClientForSchemaTree, getName());
+    SchemaPlus hPlus = parent.add(getName(), schema);
     schema.setHolder(hPlus);
   }
 
@@ -137,7 +136,7 @@ public class HiveSchemaFactory implements SchemaFactory {
     private final DrillHiveMetaStoreClient mClient;
     private HiveDatabaseSchema defaultSchema;
 
-    public HiveSchema(final SchemaConfig schemaConfig, final DrillHiveMetaStoreClient mClient, final String name) {
+    HiveSchema(final SchemaConfig schemaConfig, final DrillHiveMetaStoreClient mClient, final String name) {
       super(ImmutableList.<String>of(), name);
       this.schemaConfig = schemaConfig;
       this.mClient = mClient;
@@ -149,7 +148,7 @@ public class HiveSchemaFactory implements SchemaFactory {
       try {
         List<String> dbs = mClient.getDatabases(schemaConfig.getIgnoreAuthErrors());
         if (!dbs.contains(name)) {
-          logger.debug("Database '{}' doesn't exists in Hive storage '{}'", name, schemaName);
+          logger.debug("Database '{}' doesn't exists in Hive storage '{}'", name, getName());
           return null;
         }
         HiveDatabaseSchema schema = getSubSchemaKnownExists(name);
@@ -164,8 +163,7 @@ public class HiveSchemaFactory implements SchemaFactory {
 
     /** Help method to get subschema when we know it exists (already checks the existence) */
     private HiveDatabaseSchema getSubSchemaKnownExists(String name) {
-      HiveDatabaseSchema schema = new HiveDatabaseSchema(this, name, mClient, schemaConfig);
-      return schema;
+      return new HiveDatabaseSchema(this, name, mClient, schemaConfig);
     }
 
     void setHolder(SchemaPlus plusOfThis) {
@@ -206,6 +204,11 @@ public class HiveSchemaFactory implements SchemaFactory {
       return defaultSchema.getTableNames();
     }
 
+    @Override
+    public boolean areTableNamesCaseSensitive() {
+      return false;
+    }
+
     DrillTable getDrillTable(String dbName, String t) {
       HiveReadEntry entry = getSelectionBaseOnName(dbName, t);
       if (entry == null) {
@@ -216,9 +219,9 @@ public class HiveSchemaFactory implements SchemaFactory {
           ImpersonationUtil.getProcessUserName();
 
       if (entry.getJdbcTableType() == TableType.VIEW) {
-        return new DrillHiveViewTable(schemaName, plugin, userToImpersonate, entry);
+        return new DrillHiveViewTable(getName(), plugin, userToImpersonate, entry);
       } else {
-        return new DrillHiveTable(schemaName, plugin, userToImpersonate, entry);
+        return new DrillHiveTable(getName(), plugin, userToImpersonate, entry);
       }
     }
 

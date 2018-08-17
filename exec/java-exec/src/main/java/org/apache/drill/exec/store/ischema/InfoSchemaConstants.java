@@ -29,7 +29,7 @@ public interface InfoSchemaConstants {
    String IS_CATALOG_CONNECT = "";
 
   /** Name of information schema. */
-   String IS_SCHEMA_NAME = "INFORMATION_SCHEMA";
+   String IS_SCHEMA_NAME = "information_schema";
 
   // CATALOGS column names:
    String CATS_COL_CATALOG_CONNECT = "CATALOG_CONNECT";

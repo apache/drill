@@ -29,37 +29,35 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Writer;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.kudu.Schema;
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.ListTablesResponse;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
-public class KuduSchemaFactory implements SchemaFactory {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduSchemaFactory.class);
+public class KuduSchemaFactory extends AbstractSchemaFactory {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduSchemaFactory.class);
 
-  final String schemaName;
-  final KuduStoragePlugin plugin;
+  private final KuduStoragePlugin plugin;
 
   public KuduSchemaFactory(KuduStoragePlugin plugin, String name) throws IOException {
+    super(name);
     this.plugin = plugin;
-    this.schemaName = name;
   }
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    KuduTables schema = new KuduTables(schemaName);
-    SchemaPlus hPlus = parent.add(schemaName, schema);
+    KuduTables schema = new KuduTables(getName());
+    SchemaPlus hPlus = parent.add(getName(), schema);
     schema.setHolder(hPlus);
   }
 
   class KuduTables extends AbstractSchema {
 
-    public KuduTables(String name) {
-      super(ImmutableList.<String>of(), name);
+    KuduTables(String name) {
+      super(Collections.emptyList(), name);
     }
 
     public void setHolder(SchemaPlus plusOfThis) {
@@ -81,7 +79,7 @@ public class KuduSchemaFactory implements SchemaFactory {
       try {
         KuduTable table = plugin.getClient().openTable(name);
         Schema schema = table.getSchema();
-        return new DrillKuduTable(schemaName, plugin, schema, scanSpec);
+        return new DrillKuduTable(getName(), plugin, schema, scanSpec);
       } catch (Exception e) {
         logger.warn("Failure while retrieving kudu table {}", name, e);
         return null;

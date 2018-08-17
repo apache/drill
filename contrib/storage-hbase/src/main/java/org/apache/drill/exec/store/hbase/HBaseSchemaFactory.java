@@ -24,36 +24,34 @@ import java.util.Set;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Admin;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
-public class HBaseSchemaFactory implements SchemaFactory {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSchemaFactory.class);
+public class HBaseSchemaFactory extends AbstractSchemaFactory {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSchemaFactory.class);
 
-  final String schemaName;
-  final HBaseStoragePlugin plugin;
+  private final HBaseStoragePlugin plugin;
 
   public HBaseSchemaFactory(HBaseStoragePlugin plugin, String name) throws IOException {
+    super(name);
     this.plugin = plugin;
-    this.schemaName = name;
   }
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    HBaseSchema schema = new HBaseSchema(schemaName);
-    SchemaPlus hPlus = parent.add(schemaName, schema);
+    HBaseSchema schema = new HBaseSchema(getName());
+    SchemaPlus hPlus = parent.add(getName(), schema);
     schema.setHolder(hPlus);
   }
 
   class HBaseSchema extends AbstractSchema {
 
-    public HBaseSchema(String name) {
-      super(ImmutableList.<String>of(), name);
+    HBaseSchema(String name) {
+      super(Collections.emptyList(), name);
     }
 
     public void setHolder(SchemaPlus plusOfThis) {
@@ -73,13 +71,13 @@ public class HBaseSchemaFactory implements SchemaFactory {
     public Table getTable(String name) {
       HBaseScanSpec scanSpec = new HBaseScanSpec(name);
       try {
-        return new DrillHBaseTable(schemaName, plugin, scanSpec);
+        return new DrillHBaseTable(getName(), plugin, scanSpec);
       } catch (Exception e) {
         // Calcite firstly looks for a table in the default schema, if the table was not found,
         // it looks in the root schema.
         // If the table does not exist, a query will fail at validation stage,
         // so the error should not be thrown here.
-        logger.warn("Failure while loading table '{}' for database '{}'.", name, schemaName, e.getCause());
+        logger.warn("Failure while loading table '{}' for database '{}'.", name, getName(), e.getCause());
         return null;
       }
     }
@@ -94,7 +92,7 @@ public class HBaseSchemaFactory implements SchemaFactory {
         }
         return tableNames;
       } catch (Exception e) {
-        logger.warn("Failure while loading table names for database '{}'.", schemaName, e.getCause());
+        logger.warn("Failure while loading table names for database '{}'.", getName(), e.getCause());
         return Collections.emptySet();
       }
     }

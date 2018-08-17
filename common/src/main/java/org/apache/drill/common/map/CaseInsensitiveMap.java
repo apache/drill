@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -41,7 +42,7 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
    * @return key case-insensitive concurrent map
    */
   public static <VALUE> CaseInsensitiveMap<VALUE> newConcurrentMap() {
-    return new CaseInsensitiveMap<>(Maps.<String, VALUE>newConcurrentMap());
+    return new CaseInsensitiveMap<>(Maps.newConcurrentMap());
   }
 
   /**
@@ -51,7 +52,7 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
    * @return key case-insensitive hash map
    */
   public static <VALUE> CaseInsensitiveMap<VALUE> newHashMap() {
-    return new CaseInsensitiveMap<>(Maps.<String, VALUE>newHashMap());
+    return new CaseInsensitiveMap<>(Maps.newHashMap());
   }
 
   /**
@@ -63,7 +64,7 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
    * @return key case-insensitive hash map
    */
   public static <VALUE> CaseInsensitiveMap<VALUE> newHashMapWithExpectedSize(final int expectedSize) {
-    return new CaseInsensitiveMap<>(Maps.<String, VALUE>newHashMapWithExpectedSize(expectedSize));
+    return new CaseInsensitiveMap<>(Maps.newHashMapWithExpectedSize(expectedSize));
   }
 
   /**
@@ -154,4 +155,22 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
   public Set<Entry<String, VALUE>> entrySet() {
     return underlyingMap.entrySet();
   }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(underlyingMap);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof CaseInsensitiveMap)) {
+      return false;
+    }
+    CaseInsensitiveMap<?> that = (CaseInsensitiveMap<?>) o;
+    return Objects.equals(underlyingMap, that.underlyingMap);
+  }
+
 }

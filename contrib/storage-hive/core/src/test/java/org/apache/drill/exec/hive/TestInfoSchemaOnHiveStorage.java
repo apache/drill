@@ -90,7 +90,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("dfs.tmp")
         .baselineValues("sys")
         .baselineValues("cp.default")
-        .baselineValues("INFORMATION_SCHEMA")
+        .baselineValues("information_schema")
         .go();
   }
 

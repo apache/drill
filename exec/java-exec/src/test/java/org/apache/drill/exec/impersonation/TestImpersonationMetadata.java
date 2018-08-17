@@ -52,8 +52,8 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   private static final String user1 = "drillTestUser1";
   private static final String user2 = "drillTestUser2";
 
-  private static final String group0 = "drillTestGrp0";
-  private static final String group1 = "drillTestGrp1";
+  private static final String group0 = "drill_test_grp_0";
+  private static final String group1 = "drill_test_grp_1";
 
   static {
     UserGroupInformation.createUserForTesting(user1, new String[]{ group1, group0 });
@@ -75,23 +75,23 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     Map<String, WorkspaceConfig> workspaces = Maps.newHashMap();
 
-    // Create /drillTestGrp0_700 directory with permissions 700 (owned by user running the tests)
-    createAndAddWorkspace("drillTestGrp0_700", "/drillTestGrp0_700", (short)0700, processUser, group0, workspaces);
+    // Create /drill_test_grp_0_700 directory with permissions 700 (owned by user running the tests)
+    createAndAddWorkspace("drill_test_grp_0_700", "/drill_test_grp_0_700", (short)0700, processUser, group0, workspaces);
 
-    // Create /drillTestGrp0_750 directory with permissions 750 (owned by user running the tests)
-    createAndAddWorkspace("drillTestGrp0_750", "/drillTestGrp0_750", (short)0750, processUser, group0, workspaces);
+    // Create /drill_test_grp_0_750 directory with permissions 750 (owned by user running the tests)
+    createAndAddWorkspace("drill_test_grp_0_750", "/drill_test_grp_0_750", (short)0750, processUser, group0, workspaces);
 
-    // Create /drillTestGrp0_755 directory with permissions 755 (owned by user running the tests)
-    createAndAddWorkspace("drillTestGrp0_755", "/drillTestGrp0_755", (short)0755, processUser, group0, workspaces);
+    // Create /drill_test_grp_0_755 directory with permissions 755 (owned by user running the tests)
+    createAndAddWorkspace("drill_test_grp_0_755", "/drill_test_grp_0_755", (short)0755, processUser, group0, workspaces);
 
-    // Create /drillTestGrp0_770 directory with permissions 770 (owned by user running the tests)
-    createAndAddWorkspace("drillTestGrp0_770", "/drillTestGrp0_770", (short)0770, processUser, group0, workspaces);
+    // Create /drill_test_grp_0_770 directory with permissions 770 (owned by user running the tests)
+    createAndAddWorkspace("drill_test_grp_0_770", "/drill_test_grp_0_770", (short)0770, processUser, group0, workspaces);
 
-    // Create /drillTestGrp0_777 directory with permissions 777 (owned by user running the tests)
-    createAndAddWorkspace("drillTestGrp0_777", "/drillTestGrp0_777", (short)0777, processUser, group0, workspaces);
+    // Create /drill_test_grp_0_777 directory with permissions 777 (owned by user running the tests)
+    createAndAddWorkspace("drill_test_grp_0_777", "/drill_test_grp_0_777", (short)0777, processUser, group0, workspaces);
 
-    // Create /drillTestGrp1_700 directory with permissions 700 (owned by user1)
-    createAndAddWorkspace("drillTestGrp1_700", "/drillTestGrp1_700", (short)0700, user1, group1, workspaces);
+    // Create /drill_test_grp_1_700 directory with permissions 700 (owned by user1)
+    createAndAddWorkspace("drill_test_grp_1_700", "/drill_test_grp_1_700", (short)0700, user1, group1, workspaces);
 
     // create /user2_workspace1 with 775 permissions (owner by user1)
     createAndAddWorkspace("user2_workspace1", "/user2_workspace1", (short)0775, user2, group1, workspaces);
@@ -107,17 +107,17 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     // create tables as user2
     updateClient(user2);
-    test("use `%s.user2_workspace1`", MINIDFS_STORAGE_PLUGIN_NAME);
+    test("use `%s.user2_workspace1`", MINI_DFS_STORAGE_PLUGIN_NAME);
     // create a table that can be dropped by another user in a different group
     test("create table parquet_table_775 as select * from cp.`employee.json`");
 
     // create a table that cannot be dropped by another user
-    test("use `%s.user2_workspace2`", MINIDFS_STORAGE_PLUGIN_NAME);
+    test("use `%s.user2_workspace2`", MINI_DFS_STORAGE_PLUGIN_NAME);
     test("create table parquet_table_700 as select * from cp.`employee.json`");
 
     // Drop tables as user1
     updateClient(user1);
-    test("use `%s.user2_workspace1`", MINIDFS_STORAGE_PLUGIN_NAME);
+    test("use `%s.user2_workspace1`", MINI_DFS_STORAGE_PLUGIN_NAME);
     testBuilder()
         .sqlQuery("drop table parquet_table_775")
         .unOrdered()
@@ -125,7 +125,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
         .baselineValues(true, String.format("Table [%s] dropped", "parquet_table_775"))
         .go();
 
-    test("use `%s.user2_workspace2`", MINIDFS_STORAGE_PLUGIN_NAME);
+    test("use `%s.user2_workspace2`", MINI_DFS_STORAGE_PLUGIN_NAME);
     boolean dropFailed = false;
     try {
       test("drop table parquet_table_700");
@@ -142,7 +142,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     updateClient(processUser);
 
     // Process user start the mini dfs, he has read/write permissions by default
-    final String viewName = String.format("%s.drillTestGrp0_700.testView", MINIDFS_STORAGE_PLUGIN_NAME);
+    final String viewName = String.format("%s.drill_test_grp_0_700.testView", MINI_DFS_STORAGE_PLUGIN_NAME);
     try {
       test("CREATE VIEW " + viewName + " AS SELECT * FROM cp.`region.json`");
       test("SELECT * FROM " + viewName + " LIMIT 2");
@@ -155,20 +155,20 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   public void testShowFilesInWSWithUserAndGroupPermissionsForQueryUser() throws Exception {
     updateClient(user1);
 
-    // Try show tables in schema "drillTestGrp1_700" which is owned by "user1"
-    int count = testSql(String.format("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME));
+    // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
+    int count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME));
     assertTrue(count > 0);
 
-    // Try show tables in schema "drillTestGrp0_750" which is owned by "processUser" and has group permissions for "user1"
-    count = testSql(String.format("SHOW FILES IN %s.drillTestGrp0_750", MINIDFS_STORAGE_PLUGIN_NAME));
+    // Try show tables in schema "drill_test_grp_0_750" which is owned by "processUser" and has group permissions for "user1"
+    count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_0_750", MINI_DFS_STORAGE_PLUGIN_NAME));
     assertTrue(count > 0);
   }
 
   @Test
   public void testShowFilesInWSWithOtherPermissionsForQueryUser() throws Exception {
     updateClient(user2);
-    // Try show tables in schema "drillTestGrp0_755" which is owned by "processUser" and group0. "user2" is not part of the "group0"
-    int count = testSql(String.format("SHOW FILES IN %s.drillTestGrp0_755", MINIDFS_STORAGE_PLUGIN_NAME));
+    // Try show tables in schema "drill_test_grp_0_755" which is owned by "processUser" and group0. "user2" is not part of the "group0"
+    int count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_0_755", MINI_DFS_STORAGE_PLUGIN_NAME));
     assertTrue(count > 0);
   }
 
@@ -178,8 +178,8 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     try {
       setSessionOption(ExecConstants.LIST_FILES_RECURSIVELY, true);
-      // Try show tables in schema "drillTestGrp1_700" which is owned by "user1"
-      int count = testSql(String.format("SHOW FILES IN %s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME));
+      // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
+      int count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME));
       assertEquals("Counts should match", 0, count);
     } finally {
       resetSessionOption(ExecConstants.LIST_FILES_RECURSIVELY);
@@ -189,53 +189,53 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   @Test
   public void testShowSchemasAsUser1() throws Exception {
     // "user1" is part of "group0" and has access to following workspaces
-    // drillTestGrp1_700 (through ownership)
-    // drillTestGrp0_750, drillTestGrp0_770 (through "group" category permissions)
-    // drillTestGrp0_755, drillTestGrp0_777 (through "others" category permissions)
+    // drill_test_grp_1_700 (through ownership)
+    // drill_test_grp_0_750, drill_test_grp_0_770 (through "group" category permissions)
+    // drill_test_grp_0_755, drill_test_grp_0_777 (through "others" category permissions)
     updateClient(user1);
     testBuilder()
-        .sqlQuery("SHOW SCHEMAS LIKE '%drillTest%'")
+        .sqlQuery("SHOW SCHEMAS LIKE '%drill_test%'")
         .unOrdered()
         .baselineColumns("SCHEMA_NAME")
-        .baselineValues(String.format("%s.drillTestGrp0_750", MINIDFS_STORAGE_PLUGIN_NAME))
-        .baselineValues(String.format("%s.drillTestGrp0_755", MINIDFS_STORAGE_PLUGIN_NAME))
-        .baselineValues(String.format("%s.drillTestGrp0_770", MINIDFS_STORAGE_PLUGIN_NAME))
-        .baselineValues(String.format("%s.drillTestGrp0_777", MINIDFS_STORAGE_PLUGIN_NAME))
-        .baselineValues(String.format("%s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drill_test_grp_0_750", MINI_DFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drill_test_grp_0_755", MINI_DFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drill_test_grp_0_770", MINI_DFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drill_test_grp_0_777", MINI_DFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME))
         .go();
   }
 
   @Test
   public void testShowSchemasAsUser2() throws Exception {
     // "user2" is part of "group0", but part of "group1" and has access to following workspaces
-    // drillTestGrp0_755, drillTestGrp0_777 (through "others" category permissions)
+    // drill_test_grp_0_755, drill_test_grp_0_777 (through "others" category permissions)
     updateClient(user2);
     testBuilder()
-        .sqlQuery("SHOW SCHEMAS LIKE '%drillTest%'")
+        .sqlQuery("SHOW SCHEMAS LIKE '%drill_test%'")
         .unOrdered()
         .baselineColumns("SCHEMA_NAME")
-        .baselineValues(String.format("%s.drillTestGrp0_755", MINIDFS_STORAGE_PLUGIN_NAME))
-        .baselineValues(String.format("%s.drillTestGrp0_777", MINIDFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drill_test_grp_0_755", MINI_DFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drill_test_grp_0_777", MINI_DFS_STORAGE_PLUGIN_NAME))
         .go();
   }
 
   @Test
   public void testCreateViewInDirWithUserPermissionsForQueryUser() throws Exception {
-    final String viewSchema = MINIDFS_STORAGE_PLUGIN_NAME + ".drillTestGrp1_700"; // Workspace dir owned by "user1"
+    final String viewSchema = MINI_DFS_STORAGE_PLUGIN_NAME + ".drill_test_grp_1_700"; // Workspace dir owned by "user1"
     testCreateViewTestHelper(user1, viewSchema, "view1");
   }
 
   @Test
   public void testCreateViewInDirWithGroupPermissionsForQueryUser() throws Exception {
     // Workspace dir owned by "processUser", workspace group is "group0" and "user1" is part of "group0"
-    final String viewSchema = MINIDFS_STORAGE_PLUGIN_NAME + ".drillTestGrp0_770";
+    final String viewSchema = MINI_DFS_STORAGE_PLUGIN_NAME + ".drill_test_grp_0_770";
     testCreateViewTestHelper(user1, viewSchema, "view1");
   }
 
   @Test
   public void testCreateViewInDirWithOtherPermissionsForQueryUser() throws Exception {
     // Workspace dir owned by "processUser", workspace group is "group0" and "user2" is not part of "group0"
-    final String viewSchema = MINIDFS_STORAGE_PLUGIN_NAME + ".drillTestGrp0_777";
+    final String viewSchema = MINI_DFS_STORAGE_PLUGIN_NAME + ".drill_test_grp_0_777";
     testCreateViewTestHelper(user2, viewSchema, "view1");
   }
 
@@ -273,7 +273,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   @Test
   public void testCreateViewInWSWithNoPermissionsForQueryUser() throws Exception {
     // Workspace dir owned by "processUser", workspace group is "group0" and "user2" is not part of "group0"
-    final String viewSchema = MINIDFS_STORAGE_PLUGIN_NAME + ".drillTestGrp0_755";
+    final String viewSchema = MINI_DFS_STORAGE_PLUGIN_NAME + ".drill_test_grp_0_755";
     final String viewName = "view1";
 
     updateClient(user2);
@@ -282,7 +282,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     final String query = "CREATE VIEW " + viewName + " AS SELECT " +
         "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;";
-    final String expErrorMsg = "PERMISSION ERROR: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/drillTestGrp0_755/";
+    final String expErrorMsg = "PERMISSION ERROR: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/drill_test_grp_0_755/";
     errorMsgTestHelper(query, expErrorMsg);
 
     // SHOW TABLES is expected to return no records as view creation fails above.
@@ -296,21 +296,21 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
   @Test
   public void testCreateTableInDirWithUserPermissionsForQueryUser() throws Exception {
-    final String tableWS = "drillTestGrp1_700"; // Workspace dir owned by "user1"
+    final String tableWS = "drill_test_grp_1_700"; // Workspace dir owned by "user1"
     testCreateTableTestHelper(user1, tableWS, "table1");
   }
 
   @Test
   public void testCreateTableInDirWithGroupPermissionsForQueryUser() throws Exception {
     // Workspace dir owned by "processUser", workspace group is "group0" and "user1" is part of "group0"
-    final String tableWS = "drillTestGrp0_770";
+    final String tableWS = "drill_test_grp_0_770";
     testCreateTableTestHelper(user1, tableWS, "table1");
   }
 
   @Test
   public void testCreateTableInDirWithOtherPermissionsForQueryUser() throws Exception {
     // Workspace dir owned by "processUser", workspace group is "group0" and "user2" is not part of "group0"
-    final String tableWS = "drillTestGrp0_777";
+    final String tableWS = "drill_test_grp_0_777";
     testCreateTableTestHelper(user2, tableWS, "table1");
   }
 
@@ -319,7 +319,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     try {
       updateClient(user);
 
-      test("USE " + Joiner.on(".").join(MINIDFS_STORAGE_PLUGIN_NAME, tableWS));
+      test("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
 
       test("CREATE TABLE " + tableName + " AS SELECT " +
           "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;");
@@ -345,7 +345,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   @Test
   public void testCreateTableInWSWithNoPermissionsForQueryUser() throws Exception {
     // Workspace dir owned by "processUser", workspace group is "group0" and "user2" is not part of "group0"
-    final String tableWS = "drillTestGrp0_755";
+    final String tableWS = "drill_test_grp_0_755";
     final String tableName = "table1";
 
     UserRemoteException ex = null;
@@ -353,7 +353,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     try {
       updateClient(user2);
 
-      test("USE " + Joiner.on(".").join(MINIDFS_STORAGE_PLUGIN_NAME, tableWS));
+      test("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
 
       test("CREATE TABLE " + tableName + " AS SELECT " +
           "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;");
@@ -363,16 +363,16 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     assertNotNull("UserRemoteException is expected", ex);
     assertThat(ex.getMessage(),
-        containsString("SYSTEM ERROR: RemoteException: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/drillTestGrp0_755/"));
+        containsString("SYSTEM ERROR: RemoteException: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/drill_test_grp_0_755/"));
   }
 
   @Test
   public void testRefreshMetadata() throws Exception {
     final String tableName = "nation1";
-    final String tableWS = "drillTestGrp1_700";
+    final String tableWS = "drill_test_grp_1_700";
 
     updateClient(user1);
-    test("USE " + Joiner.on(".").join(MINIDFS_STORAGE_PLUGIN_NAME, tableWS));
+    test("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
 
     test("CREATE TABLE " + tableName + " partition by (n_regionkey) AS SELECT * " +
               "FROM cp.`tpch/nation.parquet`;");
@@ -390,8 +390,8 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   }
 
   @AfterClass
-  public static void removeMiniDfsBasedStorage() throws Exception {
-    getDrillbitContext().getStorage().deletePlugin(MINIDFS_STORAGE_PLUGIN_NAME);
+  public static void removeMiniDfsBasedStorage() {
+    getDrillbitContext().getStorage().deletePlugin(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }

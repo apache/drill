@@ -96,7 +96,7 @@ public class TestDirectoryExplorerUDFs extends PlanTestBase {
         .add("BIGFILE_2")
         .build();
 
-    String query = "select * from dfs.`%s/*/*.csv` where dir0 = %s('dfs.root','%s')";
+    String query = "select * from dfs.`%s/*/*.csv` where dir0 = %s('dFs.RoOt','%s')";
     for (ConstantFoldingTestConfig config : tests) {
       // make all of the other folders unexpected patterns, except for the one expected in this case
       List<String> excludedPatterns = Lists.newArrayList();

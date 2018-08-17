@@ -80,9 +80,9 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
         .build(logger);
     }
 
+    AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schemaPlus);
     StoragePlugin storagePlugin;
     try {
-      AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schemaPlus);
       storagePlugin = context.getStorage().getPlugin(drillSchema.getSchemaPath().get(0));
       if (storagePlugin == null) {
         throw new DrillRuntimeException(String.format("Unable to find storage plugin with the following name [%s].",
@@ -95,10 +95,10 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
     try {
       Map configMap = mapper.convertValue(storagePlugin.getConfig(), Map.class);
       if (storagePlugin instanceof FileSystemPlugin) {
-        transformWorkspaces(schema.names, configMap);
+        transformWorkspaces(drillSchema.getSchemaPath(), configMap);
       }
       String properties = mapper.writeValueAsString(configMap);
-      return DirectPlan.createDirectPlan(context, new DescribeSchemaResult(Joiner.on(".").join(schema.names), properties));
+      return DirectPlan.createDirectPlan(context, new DescribeSchemaResult(drillSchema.getFullSchemaName(), properties));
     } catch (JsonProcessingException e) {
       throw new DrillRuntimeException("Error while trying to convert storage config to json string", e);
     }
