@@ -27,8 +27,7 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.sys.PersistentStore;
 
 public interface StoragePluginRegistry extends Iterable<Map.Entry<String, StoragePlugin>>, AutoCloseable {
-  String SYS_PLUGIN = "sys";
-  String INFORMATION_SCHEMA_PLUGIN = "INFORMATION_SCHEMA";
+
   String STORAGE_PLUGIN_REGISTRY_IMPL = "drill.exec.storage.registry";
   String ACTION_ON_STORAGE_PLUGINS_OVERRIDE_FILE = "drill.exec.storage.action_on_plugins_override_file";
   String PSTORE_NAME = "sys.storage_plugins";
@@ -92,8 +91,7 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
    * @return A FormatPlugin instance
    * @throws ExecutionSetupException if plugin cannot be obtained
    */
-  FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig)
-      throws ExecutionSetupException;
+  FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig) throws ExecutionSetupException;
 
   /**
    * Get the PStore for this StoragePluginRegistry. (Used in the management layer.)

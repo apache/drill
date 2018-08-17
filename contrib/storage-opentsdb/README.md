@@ -1,4 +1,4 @@
-# drill-storage-openTSDB
+# drill--opentsdb-storage
 
 Implementation of TSDB storage plugin. Plugin uses REST API to work with TSDB. 
 
@@ -30,12 +30,12 @@ List of supported time
 
 Params must be specified in FROM clause of the query separated by commas. For example
 
-`openTSDB.(metric=metric_name, start=4d-ago, aggregator=sum)`
+`opentsdb.(metric=metric_name, start=4d-ago, aggregator=sum)`
 
 Supported queries for now are listed below:
 
 ```
-USE openTSDB
+USE opentsdb
 ```
 
 ```
@@ -44,26 +44,26 @@ SHOW tables
 Will print available metrics. Max number of the printed results is a Integer.MAX value
 
 ```
-SELECT * FROM openTSDB. `(metric=warp.speed.test, start=47y-ago, aggregator=sum)` 
+SELECT * FROM opentsdb. `(metric=warp.speed.test, start=47y-ago, aggregator=sum)` 
 ```
 Return aggregated elements from `warp.speed.test` table since 47y-ago 
 
 ```
-SELECT * FROM openTSDB.`(metric=warp.speed.test, aggregator=avg, start=47y-ago)`
+SELECT * FROM opentsdb.`(metric=warp.speed.test, aggregator=avg, start=47y-ago)`
 ```
 Return aggregated elements from `warp.speed.test` table
 
 ```
-SELECT `timestamp`, sum(`aggregated value`) FROM openTSDB.`(metric=warp.speed.test, aggregator=avg, start=47y-ago)` GROUP BY `timestamp`
+SELECT `timestamp`, sum(`aggregated value`) FROM opentsdb.`(metric=warp.speed.test, aggregator=avg, start=47y-ago)` GROUP BY `timestamp`
 ```
 Return aggregated and grouped value by standard drill functions from `warp.speed.test table`, but with the custom aggregator
 
 ```
-SELECT * FROM openTSDB.`(metric=warp.speed.test, aggregator=avg, start=47y-ago, downsample=5m-avg)`
+SELECT * FROM opentsdb.`(metric=warp.speed.test, aggregator=avg, start=47y-ago, downsample=5m-avg)`
 ```
 Return aggregated data limited by downsample
 
 ```
-SELECT * FROM openTSDB.`(metric=warp.speed.test, aggregator=avg, start=47y-ago, end=1407165403000)`
+SELECT * FROM opentsdb.`(metric=warp.speed.test, aggregator=avg, start=47y-ago, end=1407165403000)`
 ```
 Return aggregated data limited by end time

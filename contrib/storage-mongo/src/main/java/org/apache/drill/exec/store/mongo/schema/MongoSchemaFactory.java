@@ -32,8 +32,8 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.mongo.MongoScanSpec;
 import org.apache.drill.exec.store.mongo.MongoStoragePlugin;
 import org.apache.drill.exec.store.mongo.MongoStoragePluginConfig;
@@ -49,21 +49,19 @@ import com.google.common.collect.Sets;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoDatabase;
 
-public class MongoSchemaFactory implements SchemaFactory {
+public class MongoSchemaFactory extends AbstractSchemaFactory {
 
-  static final Logger logger = LoggerFactory
-      .getLogger(MongoSchemaFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(MongoSchemaFactory.class);
 
   private static final String DATABASES = "databases";
 
   private LoadingCache<String, List<String>> databases;
   private LoadingCache<String, List<String>> tableNameLoader;
-  private final String schemaName;
   private final MongoStoragePlugin plugin;
 
   public MongoSchemaFactory(MongoStoragePlugin plugin, String schemaName) throws ExecutionSetupException {
+    super(schemaName);
     this.plugin = plugin;
-    this.schemaName = schemaName;
 
     databases = CacheBuilder //
         .newBuilder() //
@@ -119,8 +117,8 @@ public class MongoSchemaFactory implements SchemaFactory {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    MongoSchema schema = new MongoSchema(schemaName);
-    SchemaPlus hPlus = parent.add(schemaName, schema);
+    MongoSchema schema = new MongoSchema(getName());
+    SchemaPlus hPlus = parent.add(getName(), schema);
     schema.setHolder(hPlus);
   }
 
@@ -186,7 +184,7 @@ public class MongoSchemaFactory implements SchemaFactory {
 
     DrillTable getDrillTable(String dbName, String collectionName) {
       MongoScanSpec mongoScanSpec = new MongoScanSpec(dbName, collectionName);
-      return new DynamicDrillTable(plugin, schemaName, null, mongoScanSpec);
+      return new DynamicDrillTable(plugin, getName(), null, mongoScanSpec);
     }
 
     @Override

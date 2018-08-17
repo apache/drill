@@ -36,7 +36,7 @@ public class PartitionExplorerImpl implements PartitionExplorer {
                                            List<String> partitionValues
                                            ) throws PartitionNotFoundException {
 
-    AbstractSchema subSchema = rootSchema.getSubSchema(schema).unwrap(AbstractSchema.class);
+    AbstractSchema subSchema = rootSchema.getSubSchema(schema.toLowerCase()).unwrap(AbstractSchema.class);
     return subSchema.getSubPartitions(table, partitionColumns, partitionValues);
   }
 }

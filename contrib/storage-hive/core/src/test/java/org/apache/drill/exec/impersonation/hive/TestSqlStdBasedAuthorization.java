@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.security.SessionStateConfigUserAuthenticator;
@@ -34,6 +33,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
@@ -66,10 +66,10 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   private static final String v_student_u1g1_750 = "v_student_u1g1_750";
 
   private static final String query_v_student_u0g0_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750);
+      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750);
 
   private static final String query_v_student_u1g1_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u1g1_750);
+      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u1g1_750);
 
   // Role for testing purpose
   private static final String test_role0 = "role0";
@@ -82,7 +82,7 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     startHiveMetaStore();
     startDrillCluster(true);
     addHiveStoragePlugin(getHivePluginConfig());
-    addMiniDfsBasedStorage(Maps.<String, WorkspaceConfig>newHashMap());
+    addMiniDfsBasedStorage(new HashMap<>());
     generateTestData();
   }
 
@@ -134,8 +134,7 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
             hivePluginName, db_general, g_student_user0));
 
     createView(org1Users[1], org1Groups[1], v_student_u1g1_750,
-        String.format("SELECT rownum, name, age FROM %s.%s.%s",
-            MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750));
+        String.format("SELECT rownum, name, age FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750));
   }
 
   private static void createTbl(final Driver driver, final String db, final String tbl, final String tblDef,
@@ -277,15 +276,15 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   @Test
   public void selectUser2_v_student_u0g0_750() throws Exception {
     updateClient(org1Users[2]);
-    errorMsgTestHelper(query_v_student_u0g0_750,
-        "Not authorized to read view [v_student_u0g0_750] in schema [miniDfsPlugin.tmp]");
+    errorMsgTestHelper(query_v_student_u0g0_750, String.format(
+        "Not authorized to read view [v_student_u0g0_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
   }
 
   @Test
   public void selectUser0_v_student_u1g1_750() throws Exception {
     updateClient(org1Users[0]);
-    errorMsgTestHelper(query_v_student_u1g1_750,
-        "Not authorized to read view [v_student_u1g1_750] in schema [miniDfsPlugin.tmp]");
+    errorMsgTestHelper(query_v_student_u1g1_750, String.format(
+        "Not authorized to read view [v_student_u1g1_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
   }
 
   @Test

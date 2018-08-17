@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -66,4 +67,18 @@ public class TestCaseInsensitiveMap {
     final Set<Map.Entry<String, Integer>> entrySet = map.entrySet();
     assertEquals(2, entrySet.size());
   }
+
+  @Test
+  public void checkEquals() {
+    Map<String, String> map1 = CaseInsensitiveMap.newHashMap();
+    map1.put("key_1", "value_1");
+
+    Map<String, String> map2 = CaseInsensitiveMap.newHashMap();
+    map2.put("KEY_1", "value_1");
+    assertEquals(map1, map2);
+
+    map2.put("key_2", "value_2");
+    assertNotEquals(map1, map2);
+  }
+
 }

@@ -23,7 +23,6 @@ import org.apache.drill.common.logical.StoragePluginConfig;
  * A namesake plugin configuration for system tables.
  */
 public class SystemTablePluginConfig extends StoragePluginConfig {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTablePluginConfig.class);
 
   public static final String NAME = "system-tables";
 

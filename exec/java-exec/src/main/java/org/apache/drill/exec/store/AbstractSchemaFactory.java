@@ -15,24 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.ischema;
+package org.apache.drill.exec.store;
 
-import org.apache.drill.common.logical.StoragePluginConfig;
+/**
+ * Abstract implementation of {@link SchemaFactory}, ensures that given schema name is always converted is lower case.
+ */
+public abstract class AbstractSchemaFactory implements SchemaFactory {
 
-public class InfoSchemaConfig extends StoragePluginConfig {
+  private final String name;
 
-  public static final String NAME = "ischema";
-
-  public static final InfoSchemaConfig INSTANCE = new InfoSchemaConfig();
-
-  @Override
-  public int hashCode(){
-    return 1;
+  protected AbstractSchemaFactory(String name) {
+    this.name = name == null ? null : name.toLowerCase();
   }
 
-  @Override
-  public boolean equals(Object o){
-    return o instanceof InfoSchemaConfig;
+  public String getName() {
+    return name;
   }
 
 }

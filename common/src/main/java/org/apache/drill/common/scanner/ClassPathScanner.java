@@ -133,12 +133,9 @@ public final class ClassPathScanner {
      * @return the class names of all children direct or indirect
      */
     public Set<ChildClassDescriptor> getChildrenOf(String name) {
-      Set<ChildClassDescriptor> result = new HashSet<>();
       Collection<ChildClassDescriptor> scannedChildren = children.get(name);
       // add all scanned children
-      for (ChildClassDescriptor child : scannedChildren) {
-        result.add(child);
-      }
+      Set<ChildClassDescriptor> result = new HashSet<>(scannedChildren);
       // recursively add children's children
       Collection<ChildClassDescriptor> allChildren = new ArrayList<>();
       allChildren.addAll(scannedChildren);
@@ -272,7 +269,7 @@ public final class ClassPathScanner {
           List<FieldDescriptor> fieldDescriptors = new ArrayList<>(classFields.size());
           for (FieldInfo field : classFields) {
             String fieldName = field.getName();
-            AnnotationsAttribute fieldAnnotations = ((AnnotationsAttribute)field.getAttribute(AnnotationsAttribute.visibleTag));
+            AnnotationsAttribute fieldAnnotations = ((AnnotationsAttribute) field.getAttribute(AnnotationsAttribute.visibleTag));
             fieldDescriptors.add(new FieldDescriptor(fieldName, field.getDescriptor(), getAnnotationDescriptors(fieldAnnotations)));
           }
           functions.add(new AnnotatedClassDescriptor(classFile.getName(), classAnnotations, fieldDescriptors));
@@ -281,6 +278,9 @@ public final class ClassPathScanner {
     }
 
     private List<AnnotationDescriptor> getAnnotationDescriptors(AnnotationsAttribute annotationsAttr) {
+      if (annotationsAttr == null) {
+        return Collections.emptyList();
+      }
       List<AnnotationDescriptor> annotationDescriptors = new ArrayList<>(annotationsAttr.numAnnotations());
       for (javassist.bytecode.annotation.Annotation annotation : annotationsAttr.getAnnotations()) {
         // Sigh: javassist uses raw collections (is this 2002?)
@@ -319,7 +319,7 @@ public final class ClassPathScanner {
    *           to scan for (relative to specified class loaders' classpath roots)
    * @param  returnRootPathname  whether to collect classpath root portion of
    *           URL for each resource instead of full URL of each resource
-   * @returns  ...; empty set if none
+   * @return  empty set if none
    */
   public static Set<URL> forResource(final String resourcePathname, final boolean returnRootPathname) {
     logger.debug("Scanning classpath for resources with pathname \"{}\".",
@@ -437,11 +437,11 @@ public final class ClassPathScanner {
 
   static ScanResult emptyResult() {
     return new ScanResult(
-        Collections.<String>emptyList(),
-        Collections.<String>emptyList(),
-        Collections.<String>emptyList(),
-        Collections.<AnnotatedClassDescriptor>emptyList(),
-        Collections.<ParentClassDescriptor>emptyList());
+        Collections.emptyList(),
+        Collections.emptyList(),
+        Collections.emptyList(),
+        Collections.emptyList(),
+        Collections.emptyList());
   }
 
   public static ScanResult fromPrescan(DrillConfig config) {

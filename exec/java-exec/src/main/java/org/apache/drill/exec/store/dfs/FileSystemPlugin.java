@@ -57,6 +57,8 @@ import com.google.common.collect.ImmutableSet.Builder;
  */
 public class FileSystemPlugin extends AbstractStoragePlugin {
 
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemPlugin.class);
+
   private final FileSystemSchemaFactory schemaFactory;
   private final FormatCreator formatCreator;
   private final Map<FormatPluginConfig, FormatPlugin> formatPluginsByConfig;

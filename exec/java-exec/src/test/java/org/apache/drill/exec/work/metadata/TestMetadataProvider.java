@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.test.BaseTestQuery;
@@ -105,7 +105,7 @@ public class TestMetadataProvider extends BaseTestQuery {
     List<SchemaMetadata> schemas = resp.getSchemasList();
     assertEquals(6, schemas.size());
 
-    verifySchema("INFORMATION_SCHEMA", schemas);
+    verifySchema("information_schema", schemas);
     verifySchema("cp.default", schemas);
     verifySchema("dfs.default", schemas);
     verifySchema("dfs.root", schemas);
@@ -115,15 +115,15 @@ public class TestMetadataProvider extends BaseTestQuery {
 
   @Test
   public void schemasWithSchemaNameFilter() throws Exception {
-    // test("SELECT * FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME LIKE '%y%'"); // SQL equivalent
+    // test("SELECT * FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME LIKE '%tion_sc%'"); // SQL equivalent
 
-    GetSchemasResp resp = client.getSchemas(null, LikeFilter.newBuilder().setPattern("%y%").build()).get();
+    GetSchemasResp resp = client.getSchemas(null, LikeFilter.newBuilder().setPattern("%TiOn_Sc%").build()).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<SchemaMetadata> schemas = resp.getSchemasList();
     assertEquals(1, schemas.size());
 
-    verifySchema("sys", schemas);
+    verifySchema("information_schema", schemas);
   }
 
   @Test
@@ -151,12 +151,12 @@ public class TestMetadataProvider extends BaseTestQuery {
     List<TableMetadata> tables = resp.getTablesList();
     assertEquals(18, tables.size());
 
-    verifyTable("INFORMATION_SCHEMA", "CATALOGS", tables);
-    verifyTable("INFORMATION_SCHEMA", "COLUMNS", tables);
-    verifyTable("INFORMATION_SCHEMA", "SCHEMATA", tables);
-    verifyTable("INFORMATION_SCHEMA", "TABLES", tables);
-    verifyTable("INFORMATION_SCHEMA", "VIEWS", tables);
-    verifyTable("INFORMATION_SCHEMA", "FILES", tables);
+    verifyTable("information_schema", "CATALOGS", tables);
+    verifyTable("information_schema", "COLUMNS", tables);
+    verifyTable("information_schema", "SCHEMATA", tables);
+    verifyTable("information_schema", "TABLES", tables);
+    verifyTable("information_schema", "VIEWS", tables);
+    verifyTable("information_schema", "FILES", tables);
     verifyTable("sys", "boot", tables);
     verifyTable("sys", "drillbits", tables);
     verifyTable("sys", "memory", tables);
@@ -172,7 +172,7 @@ public class TestMetadataProvider extends BaseTestQuery {
   public void tablesWithTableFilter() throws Exception {
     // test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_TYPE IN ('TABLE')"); // SQL equivalent
 
-    GetTablesResp resp = client.getTables(null, null, null, Arrays.asList("TABLE")).get();
+    GetTablesResp resp = client.getTables(null, null, null, Collections.singletonList("TABLE")).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
@@ -183,18 +183,18 @@ public class TestMetadataProvider extends BaseTestQuery {
   public void tablesWithSystemTableFilter() throws Exception {
     // test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_TYPE IN ('SYSTEM_TABLE')"); // SQL equivalent
 
-    GetTablesResp resp = client.getTables(null, null, null, Arrays.asList("SYSTEM_TABLE")).get();
+    GetTablesResp resp = client.getTables(null, null, null, Collections.singletonList("SYSTEM_TABLE")).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
     assertEquals(18, tables.size());
 
-    verifyTable("INFORMATION_SCHEMA", "CATALOGS", tables);
-    verifyTable("INFORMATION_SCHEMA", "COLUMNS", tables);
-    verifyTable("INFORMATION_SCHEMA", "SCHEMATA", tables);
-    verifyTable("INFORMATION_SCHEMA", "TABLES", tables);
-    verifyTable("INFORMATION_SCHEMA", "VIEWS", tables);
-    verifyTable("INFORMATION_SCHEMA", "FILES", tables);
+    verifyTable("information_schema", "CATALOGS", tables);
+    verifyTable("information_schema", "COLUMNS", tables);
+    verifyTable("information_schema", "SCHEMATA", tables);
+    verifyTable("information_schema", "TABLES", tables);
+    verifyTable("information_schema", "VIEWS", tables);
+    verifyTable("information_schema", "FILES", tables);
     verifyTable("sys", "boot", tables);
     verifyTable("sys", "drillbits", tables);
     verifyTable("sys", "memory", tables);
