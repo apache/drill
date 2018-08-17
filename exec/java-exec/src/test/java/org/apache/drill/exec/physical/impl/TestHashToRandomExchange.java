@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl;
 
 import static org.junit.Assert.assertEquals;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.categories.OperatorTest;
@@ -31,7 +30,6 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.junit.Test;
 
-import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
 @Category(OperatorTest.class)
@@ -50,8 +48,7 @@ public class TestHashToRandomExchange extends PopUnitTestBase {
       bit2.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/sender/hash_exchange.json"),
-              StandardCharsets.UTF_8));
+          DrillFileUtils.getResourceAsString("/sender/hash_exchange.json"));
       int count = 0;
       for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {

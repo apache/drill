@@ -96,7 +96,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
   private static class AvroFormatMatcher extends BasicFormatMatcher {
 
     public AvroFormatMatcher(AvroFormatPlugin plugin) {
-      super(plugin, ImmutableList.of(Pattern.compile(".*\\.avro$")), ImmutableList.of());
+      super(plugin, ImmutableList.of(Pattern.compile(".*\\.avro$")), Collections.emptyList());
     }
 
     @Override

@@ -21,7 +21,6 @@ import static org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory.defaul
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -44,8 +43,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 
-import com.google.common.io.Files;
-
 import org.mockito.Mockito;
 
 /**
@@ -63,7 +60,7 @@ public class DumpCatTest  extends ExecTest {
       UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
       PhysicalPlanReader reader = defaultPhysicalPlanReader(c);
-      PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/trace/simple_trace.json"), StandardCharsets.UTF_8));
+      PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/trace/simple_trace.json"));
       FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
       FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
       SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));

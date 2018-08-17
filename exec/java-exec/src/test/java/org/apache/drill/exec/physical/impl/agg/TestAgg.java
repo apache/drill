@@ -41,46 +41,42 @@ import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.junit.Test;
 
-import com.google.common.io.Files;
-
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-
-import java.nio.charset.StandardCharsets;
 
 @Category(OperatorTest.class)
 public class TestAgg extends ExecTest {
   private final DrillConfig c = DrillConfig.create();
 
   private SimpleRootExec doTest(String file) throws Exception {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile(file), StandardCharsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString(file));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     return exec;
   }
 
   @Test
   public void oneKeyAgg() throws Throwable {
-    final SimpleRootExec exec = doTest("/agg/test1.json");
+    SimpleRootExec exec = doTest("/agg/test1.json");
 
-    while(exec.next()) {
-      final BigIntVector cnt = exec.getValueVectorById(SchemaPath.getSimplePath("cnt"), BigIntVector.class);
-      final IntVector key = exec.getValueVectorById(SchemaPath.getSimplePath("blue"), IntVector.class);
-      final long[] cntArr = {10001, 9999};
-      final int[] keyArr = {Integer.MIN_VALUE, Integer.MAX_VALUE};
+    while (exec.next()) {
+      BigIntVector cnt = exec.getValueVectorById(SchemaPath.getSimplePath("cnt"), BigIntVector.class);
+      IntVector key = exec.getValueVectorById(SchemaPath.getSimplePath("blue"), IntVector.class);
+      long[] cntArr = {10001, 9999};
+      int[] keyArr = {Integer.MIN_VALUE, Integer.MAX_VALUE};
 
-      for(int i = 0; i < exec.getRecordCount(); i++) {
+      for (int i = 0; i < exec.getRecordCount(); i++) {
         assertEquals((Long) cntArr[i], cnt.getAccessor().getObject(i));
         assertEquals((Integer) keyArr[i], key.getAccessor().getObject(i));
       }
     }
 
-    if(exec.getContext().getExecutorState().getFailureCause() != null) {
+    if (exec.getContext().getExecutorState().getFailureCause() != null) {
       throw exec.getContext().getExecutorState().getFailureCause();
     }
 
@@ -91,17 +87,17 @@ public class TestAgg extends ExecTest {
   public void twoKeyAgg() throws Throwable {
     SimpleRootExec exec = doTest("/agg/twokey.json");
 
-    while(exec.next()) {
-      final IntVector key1 = exec.getValueVectorById(SchemaPath.getSimplePath("key1"), IntVector.class);
-      final BigIntVector key2 = exec.getValueVectorById(SchemaPath.getSimplePath("key2"), BigIntVector.class);
-      final BigIntVector cnt = exec.getValueVectorById(SchemaPath.getSimplePath("cnt"), BigIntVector.class);
-      final NullableBigIntVector total = exec.getValueVectorById(SchemaPath.getSimplePath("total"), NullableBigIntVector.class);
-      final Integer[] keyArr1 = {Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
-      final long[] keyArr2 = {0,1,2,0,1,2};
-      final long[] cntArr = {34,34,34,34,34,34};
-      final long[] totalArr = {0,34,68,0,34,68};
+    while (exec.next()) {
+      IntVector key1 = exec.getValueVectorById(SchemaPath.getSimplePath("key1"), IntVector.class);
+      BigIntVector key2 = exec.getValueVectorById(SchemaPath.getSimplePath("key2"), BigIntVector.class);
+      BigIntVector cnt = exec.getValueVectorById(SchemaPath.getSimplePath("cnt"), BigIntVector.class);
+      NullableBigIntVector total = exec.getValueVectorById(SchemaPath.getSimplePath("total"), NullableBigIntVector.class);
+      Integer[] keyArr1 = {Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
+      long[] keyArr2 = {0, 1, 2, 0, 1, 2};
+      long[] cntArr = {34, 34, 34, 34, 34, 34};
+      long[] totalArr = {0, 34, 68, 0, 34, 68};
 
-      for(int i = 0; i < exec.getRecordCount(); i++) {
+      for (int i = 0; i < exec.getRecordCount(); i++) {
         assertEquals((Long) cntArr[i], cnt.getAccessor().getObject(i));
         assertEquals(keyArr1[i], key1.getAccessor().getObject(i));
         assertEquals((Long) keyArr2[i], key2.getAccessor().getObject(i));
@@ -109,7 +105,7 @@ public class TestAgg extends ExecTest {
       }
     }
 
-    if(exec.getContext().getExecutorState().getFailureCause() != null){
+    if (exec.getContext().getExecutorState().getFailureCause() != null) {
       throw exec.getContext().getExecutorState().getFailureCause();
     }
     assertTrue(!exec.getContext().getExecutorState().isFailed());

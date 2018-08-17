@@ -41,12 +41,8 @@ import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
 import org.junit.Test;
 
-import com.google.common.io.Files;
-
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-
-import java.nio.charset.StandardCharsets;
 
 @Category(OperatorTest.class)
 public class TestMathFunctions extends ExecTest {
@@ -59,7 +55,7 @@ public class TestMathFunctions extends ExecTest {
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/functions/simple_math_functions.json"), StandardCharsets.UTF_8));
+    final PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/functions/simple_math_functions.json"));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));

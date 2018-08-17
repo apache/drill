@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +48,7 @@ public class ParallelizationInfo {
   }
 
   public static ParallelizationInfo create(int minWidth, int maxWidth) {
-    return create(minWidth, maxWidth, ImmutableList.of());
+    return create(minWidth, maxWidth, Collections.emptyList());
   }
 
   public static ParallelizationInfo create(int minWidth, int maxWidth, List<EndpointAffinity> endpointAffinities) {

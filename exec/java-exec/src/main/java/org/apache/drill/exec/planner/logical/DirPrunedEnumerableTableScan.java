@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.plan.RelOptCluster;
@@ -29,6 +28,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.schema.Table;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,7 +61,7 @@ public class DirPrunedEnumerableTableScan extends EnumerableTableScan {
     Class elementType = EnumerableTableScan.deduceElementType(table);
     List<RelCollation> relCollations = Optional.ofNullable(table)
         .map(t -> t.getStatistic().getCollations())
-        .orElse(ImmutableList.of());
+        .orElse(Collections.emptyList());
     RelTraitSet traitSet =
         cluster.traitSetOf(EnumerableConvention.INSTANCE)
             .replaceIfs(RelCollationTraitDef.INSTANCE, () -> relCollations);

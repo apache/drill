@@ -273,7 +273,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
   }
 
   private void handleUnshardedCollection(List<String> hosts) {
-    String chunkName = String.join(".", Arrays.asList(scanSpec.getDbName(), scanSpec.getCollectionName()));
+    String chunkName = String.join(".", scanSpec.getDbName(), scanSpec.getCollectionName());
     Set<ServerAddress> addressList = new HashSet<>();
 
     for (String host : hosts) {
@@ -549,9 +549,11 @@ public class MongoGroupScan extends AbstractGroupScan implements
         }
       }
     }
-    logger.debug("Took {} µs to get operator affinity",
-        watch.elapsed(TimeUnit.NANOSECONDS) / 1000);
-    logger.debug("Affined drillbits : " + affinityMap.values());
+    if (logger.isDebugEnabled()) {
+      logger.debug("Took {} µs to get operator affinity",
+          watch.elapsed(TimeUnit.NANOSECONDS) / 1000);
+      logger.debug("Affined drillbits : {}", affinityMap.values());
+    }
     return new ArrayList<>(affinityMap.values());
   }
 

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,7 +38,6 @@ import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.util.Pointer;
 
@@ -133,7 +133,7 @@ public class SqlCreateTable extends DrillSqlCall {
 
   public List<String> getSchemaPath() {
     if (tblName.isSimple()) {
-      return ImmutableList.of();
+      return Collections.emptyList();
     }
 
     return tblName.names.subList(0, tblName.names.size() - 1);

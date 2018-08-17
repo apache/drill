@@ -34,7 +34,6 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatSelection;
-import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
@@ -92,7 +91,7 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
   private static class PcapFormatMatcher extends BasicFormatMatcher {
 
     public PcapFormatMatcher(PcapFormatPlugin plugin) {
-      super(plugin, ImmutableList.of(Pattern.compile(".*\\.pcap$")), ImmutableList.<MagicString>of());
+      super(plugin, ImmutableList.of(Pattern.compile(".*\\.pcap$")), Collections.emptyList());
     }
 
     @Override

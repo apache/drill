@@ -44,6 +44,7 @@ import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -139,7 +140,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
     List<RexNode> qualifiedPredList = new ArrayList<>();
 
     for (RexNode pred : predList) {
-      if (DrillRelOptUtil.findOperators(pred, ImmutableList.of(), BANNED_OPERATORS) == null) {
+      if (DrillRelOptUtil.findOperators(pred, Collections.emptyList(), BANNED_OPERATORS) == null) {
         qualifiedPredList.add(pred);
       }
     }

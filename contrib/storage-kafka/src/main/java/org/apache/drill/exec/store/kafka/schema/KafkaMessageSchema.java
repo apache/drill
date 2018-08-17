@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka.schema;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -35,8 +36,6 @@ import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-
 public class KafkaMessageSchema extends AbstractSchema {
 
   private static final Logger logger = LoggerFactory.getLogger(KafkaMessageSchema.class);
@@ -45,7 +44,7 @@ public class KafkaMessageSchema extends AbstractSchema {
   private Set<String> tableNames;
 
   public KafkaMessageSchema(final KafkaStoragePlugin plugin, final String name) {
-    super(ImmutableList.<String> of(), name);
+    super(Collections.emptyList(), name);
     this.plugin = plugin;
   }
 

@@ -256,7 +256,7 @@ public class LocalFunctionRegistry {
       boolean isNiladic = false;
       for (DrillFuncHolder func : function.getValue()) {
         int paramCount = func.getParamCount();
-        if(func.isAggregating()) {
+        if (func.isAggregating()) {
           aggregateFunctions.put(paramCount, func);
         } else {
           Pair<Integer, Integer> argNumberRange;
@@ -293,7 +293,7 @@ public class LocalFunctionRegistry {
             .setNiladic(isNiladic);
       }
       for (Entry<Integer, Collection<DrillFuncHolder>> entry : aggregateFunctions.asMap().entrySet()) {
-        if(!mapAgg.containsKey(name)) {
+        if (!mapAgg.containsKey(name)) {
           mapAgg.put(name, new DrillSqlAggOperator.DrillSqlAggOperatorBuilder().setName(name));
         }
 
@@ -310,7 +310,7 @@ public class LocalFunctionRegistry {
           entry.getValue().build());
     }
 
-    for(Entry<String, DrillSqlAggOperator.DrillSqlAggOperatorBuilder> entry : mapAgg.entrySet()) {
+    for (Entry<String, DrillSqlAggOperator.DrillSqlAggOperatorBuilder> entry : mapAgg.entrySet()) {
       operatorTable.addOperatorWithInference(
           entry.getKey(),
           entry.getValue().build());

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive.schema;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,8 +46,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.thrift.TException;
-
-import com.google.common.collect.ImmutableList;
 
 public class HiveSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaFactory.class);
@@ -138,7 +137,7 @@ public class HiveSchemaFactory implements SchemaFactory {
     private HiveDatabaseSchema defaultSchema;
 
     public HiveSchema(final SchemaConfig schemaConfig, final DrillHiveMetaStoreClient mClient, final String name) {
-      super(ImmutableList.<String>of(), name);
+      super(Collections.emptyList(), name);
       this.schemaConfig = schemaConfig;
       this.mClient = mClient;
       getSubSchema("default");

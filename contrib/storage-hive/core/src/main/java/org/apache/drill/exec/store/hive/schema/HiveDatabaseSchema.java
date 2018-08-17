@@ -88,7 +88,7 @@ public class HiveDatabaseSchema extends AbstractSchema{
         .getTablesByNamesByBulkLoadHelper(mClient, tableNames, schemaName, bulkSize);
 
     List<Pair<String, ? extends Table>> tableNameToTable = new ArrayList<>();
-    for (final org.apache.hadoop.hive.metastore.api.Table table : tables) {
+    for (org.apache.hadoop.hive.metastore.api.Table table : tables) {
       if (table == null) {
         continue;
       }
@@ -108,7 +108,7 @@ public class HiveDatabaseSchema extends AbstractSchema{
   private static class HiveTableWithoutStatisticAndRowType implements Table {
     private final TableType tableType;
 
-    public HiveTableWithoutStatisticAndRowType(final TableType tableType) {
+    public HiveTableWithoutStatisticAndRowType(TableType tableType) {
       this.tableType = tableType;
     }
 

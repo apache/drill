@@ -607,8 +607,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       leftExpr = null;
     } else {
       if (probeBatch.getSchema().getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
-        String errorMsg = new StringBuilder().append("Hash join does not support probe batch with selection vectors. ").append("Probe batch has selection mode = ").append
-          (probeBatch.getSchema().getSelectionVectorMode()).toString();
+        String errorMsg = new StringBuilder().append("Hash join does not support probe batch with selection vectors. ")
+            .append("Probe batch has selection mode = ")
+            .append(probeBatch.getSchema().getSelectionVectorMode())
+            .toString();
         throw new SchemaChangeException(errorMsg);
       }
     }

@@ -33,6 +33,7 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_T
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -286,7 +287,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
   }
 
   public static class Catalogs extends InfoSchemaRecordGenerator<Records.Catalog> {
-    List<Records.Catalog> records = ImmutableList.of();
+    List<Records.Catalog> records = Collections.emptyList();
 
     public Catalogs(OptionManager optionManager) {
       super(optionManager);

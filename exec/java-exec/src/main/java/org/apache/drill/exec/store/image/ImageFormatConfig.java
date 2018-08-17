@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.image;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -25,12 +26,11 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.ImmutableList;
 
 @JsonTypeName("image") @JsonInclude(Include.NON_DEFAULT)
 public class ImageFormatConfig implements FormatPluginConfig {
 
-  public List<String> extensions = ImmutableList.of();
+  public List<String> extensions = Collections.emptyList();
   public boolean fileSystemMetadata = true;
   public boolean descriptive = true;
   public String timeZone = null;

@@ -57,8 +57,6 @@ import org.slf4j.Logger;
 
 class DrillCursor implements Cursor {
 
-  ////////////////////////////////////////
-  // ResultsListener:
   static class ResultsListener implements UserResultsListener {
     private static final org.slf4j.Logger logger =
         org.slf4j.LoggerFactory.getLogger(ResultsListener.class);

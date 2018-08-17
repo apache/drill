@@ -18,6 +18,7 @@
 package org.apache.drill.exec.dotdrill;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.calcite.avatica.util.TimeUnit;
@@ -218,7 +219,7 @@ public class View {
       fields.add(new FieldType(f.getName(), f.getType()));
     }
     this.workspaceSchemaPath =
-        workspaceSchemaPath == null ? ImmutableList.of() : ImmutableList.copyOf(workspaceSchemaPath);
+        workspaceSchemaPath == null ? Collections.emptyList() : ImmutableList.copyOf(workspaceSchemaPath);
   }
 
   @JsonCreator
@@ -230,7 +231,7 @@ public class View {
     this.sql = sql;
     this.fields = fields;
     this.workspaceSchemaPath =
-        workspaceSchemaPath == null ? ImmutableList.of() : ImmutableList.copyOf(workspaceSchemaPath);
+        workspaceSchemaPath == null ? Collections.emptyList() : ImmutableList.copyOf(workspaceSchemaPath);
   }
 
   public RelDataType getRowType(RelDataTypeFactory factory) {

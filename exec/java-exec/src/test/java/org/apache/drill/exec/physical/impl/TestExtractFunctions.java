@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.categories.SlowTest;
@@ -35,7 +34,6 @@ import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
 /* This class tests the existing date types. Simply using date types
@@ -112,7 +110,7 @@ public class TestExtractFunctions extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-        Files.toString(DrillFileUtils.getResourceAsFile("/functions/extractFrom.json"), StandardCharsets.UTF_8)
+        DrillFileUtils.getResourceAsString("/functions/extractFrom.json")
         .replace("#{TEST_TYPE}", fromType)
         .replace("#{TEST_FILE}", testDataFile)
         .replace("#{COLUMN_NAME}", columnName));

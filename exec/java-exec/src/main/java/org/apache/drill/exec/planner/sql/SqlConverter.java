@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.sql;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -666,7 +667,7 @@ public class SqlConverter {
     @Override
     public List<List<String>> getSchemaPaths() {
       if (useRootSchema) {
-        return ImmutableList.of(ImmutableList.of());
+        return ImmutableList.of(Collections.emptyList());
       }
       return super.getSchemaPaths();
     }

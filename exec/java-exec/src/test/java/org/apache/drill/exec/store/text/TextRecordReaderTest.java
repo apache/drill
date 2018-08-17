@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.text;
 
 import static org.junit.Assert.assertEquals;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillFileUtils;
@@ -32,26 +31,23 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.Test;
 
-import com.google.common.io.Files;
-
 public class TextRecordReaderTest extends PopUnitTestBase {
 
   @Test
   public void testFullExecution() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(
-                      DrillFileUtils.getResourceAsFile("/store/text/test.json"), StandardCharsets.UTF_8)
-                      .replace("#{DATA_FILE}", DrillFileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString()));
+        DrillFileUtils.getResourceAsString("/store/text/test.json")
+          .replace("#{DATA_FILE}", DrillFileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString()));
       int count = 0;
       RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
-      for(QueryDataBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }

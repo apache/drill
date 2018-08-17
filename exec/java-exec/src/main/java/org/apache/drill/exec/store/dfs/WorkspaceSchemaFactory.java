@@ -134,7 +134,7 @@ public class WorkspaceSchemaFactory {
         throw new ExecutionSetupException(message);
       }
       FormatMatcher fallbackMatcher = new BasicFormatMatcher(formatPlugin,
-          ImmutableList.of(Pattern.compile(".*")), ImmutableList.of());
+          ImmutableList.of(Pattern.compile(".*")), Collections.emptyList());
       fileMatchers.add(fallbackMatcher);
       dropFileMatchers = fileMatchers.subList(0, fileMatchers.size() - 1);
     } else {
@@ -507,7 +507,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public Table getTable(String tableName) {
-      TableInstance tableKey = new TableInstance(new TableSignature(tableName), ImmutableList.of());
+      TableInstance tableKey = new TableInstance(new TableSignature(tableName), Collections.emptyList());
       // first check existing tables.
       if (tables.alreadyContainsKey(tableKey)) {
         return tables.get(tableKey);

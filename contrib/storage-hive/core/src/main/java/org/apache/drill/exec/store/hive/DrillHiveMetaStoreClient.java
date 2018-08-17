@@ -21,7 +21,6 @@ import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -270,7 +269,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
         eachBulkofTables = DrillHiveMetaStoreClient.getTableObjectsByNameHelper(mClient, schemaName, eachBulkofTableNames);
       } catch (Exception e) {
         logger.warn("Exception occurred while trying to read tables from {}: {}", schemaName, e.getCause());
-        return ImmutableList.of();
+        return Collections.emptyList();
       }
       tables.addAll(eachBulkofTables);
     }

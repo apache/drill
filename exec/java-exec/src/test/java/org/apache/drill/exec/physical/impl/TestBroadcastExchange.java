@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl;
 
 import static org.junit.Assert.assertEquals;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.categories.OperatorTest;
@@ -33,7 +32,6 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.junit.Test;
 
-import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
 @Category({OperatorTest.class, SlowTest.class})
@@ -50,8 +48,7 @@ public class TestBroadcastExchange extends PopUnitTestBase {
       bit2.run();
       client.connect();
 
-      String physicalPlan = Files.toString(
-              DrillFileUtils.getResourceAsFile("/sender/broadcast_exchange.json"), StandardCharsets.UTF_8)
+      String physicalPlan = DrillFileUtils.getResourceAsString("/sender/broadcast_exchange.json")
               .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.left.json").toURI().toString())
               .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.right.json").toURI().toString());
       List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, physicalPlan);
@@ -78,8 +75,7 @@ public class TestBroadcastExchange extends PopUnitTestBase {
       bit2.run();
       client.connect();
 
-      String physicalPlan = Files.toString(
-          DrillFileUtils.getResourceAsFile("/sender/broadcast_exchange_long_run.json"), StandardCharsets.UTF_8);
+      String physicalPlan = DrillFileUtils.getResourceAsString("/sender/broadcast_exchange_long_run.json");
       List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, physicalPlan);
       int count = 0;
       for (QueryDataBatch b : results) {

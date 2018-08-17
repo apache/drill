@@ -587,9 +587,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     c1.setRecordCount(count);
 
     String spillDir = dirs.next();
-    Path currSpillPath = new Path(spillDir + "/" + fileName);
+    Path currSpillPath = new Path(spillDir, fileName);
     currSpillDirs.add(currSpillPath);
-    String outputFile = currSpillPath+ "/" + spillCount++;
+    String outputFile = currSpillPath + "/" + spillCount++;
     try {
         fs.deleteOnExit(currSpillPath);
     } catch (IOException e) {

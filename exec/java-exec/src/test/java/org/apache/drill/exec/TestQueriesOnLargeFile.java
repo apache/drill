@@ -17,11 +17,10 @@
  */
 package org.apache.drill.exec;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.categories.SlowTest;
@@ -33,7 +32,6 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class})
@@ -74,7 +72,7 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
       }
 
       BigIntVector countV = (BigIntVector) batchLoader.getValueAccessorById(BigIntVector.class, 0).getValueVector();
-      assertTrue("Total of "+ NUM_RECORDS + " records expected in count", countV.getAccessor().get(0) == NUM_RECORDS);
+      assertEquals("Total of " + NUM_RECORDS + " records expected in count", countV.getAccessor().get(0), NUM_RECORDS);
 
       batchLoader.clear();
       batch.release();
@@ -83,17 +81,17 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
 
   @Test
   public void testMergingReceiver() throws Exception {
-    String plan = Files.toString(DrillFileUtils.getResourceAsFile("/largefiles/merging_receiver_large_data.json"),
-      StandardCharsets.UTF_8).replace("#{TEST_FILE}", escapeJsonString(dataFile.getPath()));
+    String plan = DrillFileUtils.getResourceAsString("/largefiles/merging_receiver_large_data.json")
+      .replace("#{TEST_FILE}", escapeJsonString(dataFile.getPath()));
     List<QueryDataBatch> results = testPhysicalWithResults(plan);
 
     int recordsInOutput = 0;
-    for(QueryDataBatch batch : results) {
+    for (QueryDataBatch batch : results) {
       recordsInOutput += batch.getHeader().getDef().getRecordCount();
       batch.release();
     }
 
-    assertTrue(String.format("Number of records in output is wrong: expected=%d, actual=%s",
-        NUM_RECORDS, recordsInOutput), NUM_RECORDS == recordsInOutput);
+    assertEquals(String.format("Number of records in output is wrong: expected=%d, actual=%s",
+        NUM_RECORDS, recordsInOutput), NUM_RECORDS, recordsInOutput);
   }
 }

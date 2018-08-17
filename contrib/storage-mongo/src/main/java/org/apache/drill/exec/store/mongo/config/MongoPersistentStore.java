@@ -149,7 +149,7 @@ public class MongoPersistentStore<V> extends BasePersistentStore<V> {
 
     private MongoCursor<Document> cursor;
 
-    public MongoIterator(final MongoCursor<Document> cursor) {
+    public MongoIterator(MongoCursor<Document> cursor) {
       this.cursor = Objects.requireNonNull(cursor);
     }
 

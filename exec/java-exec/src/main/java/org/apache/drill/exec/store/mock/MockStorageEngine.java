@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
 public class MockStorageEngine extends AbstractStoragePlugin {
@@ -120,12 +120,12 @@ public class MockStorageEngine extends AbstractStoragePlugin {
     private final Map<String, Table> tableCache = new WeakHashMap<>();
 
     public MockSchema(MockStorageEngine engine) {
-      super(ImmutableList.<String>of(), MockStorageEngineConfig.NAME);
+      super(Collections.emptyList(), MockStorageEngineConfig.NAME);
       this.engine = engine;
     }
 
     public MockSchema(MockStorageEngine engine, String name) {
-      super(ImmutableList.<String>of(), name);
+      super(Collections.emptyList(), name);
       this.engine = engine;
     }
 

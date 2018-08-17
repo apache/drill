@@ -23,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -135,8 +134,7 @@ public class MapWithOrdinal<K, V> implements Map<K, V> {
     @Override
     public Set<Entry<K, V>> entrySet() {
       return primary.entrySet().stream()
-          .map((Function<Entry<K, Entry<Integer, V>>, Entry<K, V>>) entry ->
-              new AbstractMap.SimpleImmutableEntry<>(entry.getKey(), entry.getValue().getValue()))
+          .map(entry -> new AbstractMap.SimpleImmutableEntry<>(entry.getKey(), entry.getValue().getValue()))
           .collect(Collectors.toSet());
     }
   };

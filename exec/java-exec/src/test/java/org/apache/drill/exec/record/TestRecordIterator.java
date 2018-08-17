@@ -20,6 +20,7 @@ package org.apache.drill.exec.record;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -44,11 +45,9 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,17 +58,17 @@ public class TestRecordIterator extends PopUnitTestBase {
 
   @Test
   public void testSimpleIterator() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
 
-    final String planStr = Files.toString(DrillFileUtils.getResourceAsFile("/record/test_recorditerator.json"), StandardCharsets.UTF_8);
+    String planStr = DrillFileUtils.getResourceAsString("/record/test_recorditerator.json");
 
-    final PhysicalPlan plan = reader.readPhysicalPlan(planStr);
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
-    final List<PhysicalOperator> operatorList = plan.getSortedOperators(false);
+    PhysicalPlan plan = reader.readPhysicalPlan(planStr);
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
+    List<PhysicalOperator> operatorList = plan.getSortedOperators(false);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) operatorList.iterator().next()));
 
     RecordBatch singleBatch = exec.getIncoming();
@@ -93,8 +92,8 @@ public class TestRecordIterator extends PopUnitTestBase {
             vectors.add(vw.getValueVector());
           }
         }
-        final int position = iter.getCurrentPosition();
-        if (position %2 == 0 ) {
+        int position = iter.getCurrentPosition();
+        if (position % 2 == 0) {
           assertTrue(checkValues(vectors, position));
         } else {
           assertTrue(checkValues(vectors, position));
@@ -106,26 +105,26 @@ public class TestRecordIterator extends PopUnitTestBase {
     assertEquals(11112, totalRecords);
     try {
       iter.mark();
-      assertTrue(false);
+      fail();
     } catch (UnsupportedOperationException e) {}
     try {
       iter.reset();
-      assertTrue(false);
+      fail();
     } catch (UnsupportedOperationException e) {}
   }
 
   @Test
   public void testMarkResetIterator() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final String planStr = Files.toString(DrillFileUtils.getResourceAsFile("/record/test_recorditerator.json"), StandardCharsets.UTF_8);
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    String planStr = DrillFileUtils.getResourceAsString("/record/test_recorditerator.json");
 
-    final PhysicalPlan plan = reader.readPhysicalPlan(planStr);
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
-    final List<PhysicalOperator> operatorList = plan.getSortedOperators(false);
+    PhysicalPlan plan = reader.readPhysicalPlan(planStr);
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
+    List<PhysicalOperator> operatorList = plan.getSortedOperators(false);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) operatorList.iterator().next()));
 
     RecordBatch singleBatch = exec.getIncoming();
@@ -134,7 +133,7 @@ public class TestRecordIterator extends PopUnitTestBase {
         OperatorUtilities.getChildCount(dummyPop));
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0, null);
-    List<ValueVector> vectors = null;
+    List<ValueVector> vectors;
     // batche sizes
     // 1, 100, 10, 10000, 1, 1000
     // total = 11112
@@ -311,11 +310,11 @@ public class TestRecordIterator extends PopUnitTestBase {
 
   private static boolean checkValues(List<ValueVector> vectors, int position) {
     boolean result = true;
-    final int expected = (position % 2 == 0)? Integer.MIN_VALUE : Integer.MAX_VALUE;
+    int expected = (position % 2 == 0) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
     for (ValueVector vv : vectors) {
-      final Object o = vv.getAccessor().getObject(position);
+      Object o = vv.getAccessor().getObject(position);
       if (o instanceof Integer) {
-        final Integer v = (Integer)o;
+        Integer v = (Integer) o;
         result &= (v == expected);
       } else {
         logger.error("Found wrong type {} at position {}", o.getClass(), position);

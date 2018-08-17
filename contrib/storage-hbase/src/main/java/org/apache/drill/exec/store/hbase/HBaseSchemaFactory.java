@@ -30,8 +30,6 @@ import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Admin;
 
-import com.google.common.collect.ImmutableList;
-
 public class HBaseSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSchemaFactory.class);
 
@@ -53,7 +51,7 @@ public class HBaseSchemaFactory implements SchemaFactory {
   class HBaseSchema extends AbstractSchema {
 
     public HBaseSchema(String name) {
-      super(ImmutableList.<String>of(), name);
+      super(Collections.emptyList(), name);
     }
 
     public void setHolder(SchemaPlus plusOfThis) {

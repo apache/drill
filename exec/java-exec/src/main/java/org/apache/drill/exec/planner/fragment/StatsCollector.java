@@ -101,7 +101,7 @@ public class StatsCollector extends AbstractOpWrapperVisitor<Void, RuntimeExcept
   public Void visitOp(PhysicalOperator op, Wrapper wrapper) {
     Stats stats = wrapper.getStats();
     if (op instanceof HasAffinity) {
-      HasAffinity hasAffinity = (HasAffinity)op;
+      HasAffinity hasAffinity = (HasAffinity) op;
       stats.addEndpointAffinities(hasAffinity.getOperatorAffinity());
       stats.setDistributionAffinity(hasAffinity.getDistributionAffinity());
     }

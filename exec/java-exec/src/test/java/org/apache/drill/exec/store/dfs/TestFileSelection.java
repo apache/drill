@@ -20,17 +20,17 @@ package org.apache.drill.exec.store.dfs;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNull;
 
+import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 
 public class TestFileSelection extends BaseTestQuery {
-  private static final List<FileStatus> EMPTY_STATUSES = ImmutableList.of();
-  private static final List<String> EMPTY_FILES = ImmutableList.of();
+  private static final List<FileStatus> EMPTY_STATUSES = Collections.emptyList();
+  private static final List<String> EMPTY_FILES = Collections.emptyList();
   private static final String EMPTY_ROOT = "";
 
   @Test

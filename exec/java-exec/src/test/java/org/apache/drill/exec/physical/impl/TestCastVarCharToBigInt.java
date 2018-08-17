@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillFileUtils;
@@ -33,9 +32,6 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
-
-import com.google.common.io.Files;
-
 
 public class TestCastVarCharToBigInt extends PopUnitTestBase {
 //    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCastVarCharToBigInt.class);
@@ -50,8 +46,8 @@ public class TestCastVarCharToBigInt extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(DrillFileUtils.getResourceAsFile("/functions/cast/test_cast_varchar_to_bigint.json"), StandardCharsets.UTF_8)
-                            .replace("#{TEST_FILE}", "/scan_json_test_cast.json")
+                DrillFileUtils.getResourceAsString("/functions/cast/test_cast_varchar_to_bigint.json")
+                    .replace("#{TEST_FILE}", "/scan_json_test_cast.json")
             );
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());

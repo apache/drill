@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.common;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
@@ -37,8 +36,8 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
 
 public abstract class DrillLateralJoinRelBase extends Correlate implements DrillRelNode {
 
@@ -75,7 +74,7 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
         return constructRowType(SqlValidatorUtil.deriveJoinRowType(left.getRowType(),
           removeImplicitField(right.getRowType()), joinType.toJoinType(),
           getCluster().getTypeFactory(), null,
-          ImmutableList.of()));
+          Collections.emptyList()));
       case ANTI:
       case SEMI:
         return constructRowType(left.getRowType());

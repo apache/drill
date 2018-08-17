@@ -126,9 +126,9 @@ public class EvaluationVisitor {
     }
   }
 
-  Map<ExpressionHolder,HoldingContainer> previousExpressions = new HashMap<>();
+  Map<ExpressionHolder, HoldingContainer> previousExpressions = new HashMap<>();
 
-  Stack<Map<ExpressionHolder,HoldingContainer>> mapStack = new Stack<>();
+  Stack<Map<ExpressionHolder, HoldingContainer>> mapStack = new Stack<>();
 
   void newScope() {
     mapStack.push(previousExpressions);

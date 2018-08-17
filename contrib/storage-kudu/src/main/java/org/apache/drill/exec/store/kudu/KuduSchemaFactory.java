@@ -36,8 +36,6 @@ import org.apache.kudu.Schema;
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.ListTablesResponse;
 
-import com.google.common.collect.ImmutableList;
-
 public class KuduSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduSchemaFactory.class);
 
@@ -59,7 +57,7 @@ public class KuduSchemaFactory implements SchemaFactory {
   class KuduTables extends AbstractSchema {
 
     public KuduTables(String name) {
-      super(ImmutableList.<String>of(), name);
+      super(Collections.emptyList(), name);
     }
 
     public void setHolder(SchemaPlus plusOfThis) {

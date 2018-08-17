@@ -72,15 +72,15 @@ public class Bug1735ResultSetCloseReleasesBuffersTest extends JdbcTestQueryBase 
         (Function<Connection, Void>) connection -> {
           try {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery( "USE dfs.tmp" );
+            ResultSet resultSet = statement.executeQuery("USE dfs.tmp");
             // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
             // race conditions are fixed (not just DRILL-2245 fixes).
             // resultSet.close( resultSet );
             statement.close();
             // connection.close() is in withConnection(...)
             return null;
-          } catch ( SQLException e ) {
-            throw new RuntimeException( e );
+          } catch (SQLException e) {
+            throw new RuntimeException(e);
           }
       });
   }

@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoDatabase;
 
@@ -129,7 +128,7 @@ public class MongoSchemaFactory implements SchemaFactory {
     private final Map<String, MongoDatabaseSchema> schemaMap = new HashMap<>();
 
     public MongoSchema(String name) {
-      super(ImmutableList.of(), name);
+      super(Collections.emptyList(), name);
     }
 
     @Override

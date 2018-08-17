@@ -37,12 +37,8 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import com.google.common.io.Files;
-
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-
-import java.nio.charset.StandardCharsets;
 
 /*
  * This test uses a physical plan with the mock scan that generates 100k records.
@@ -62,7 +58,7 @@ public class TestTraceMultiRecordBatch extends ExecTest {
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/trace/multi_record_batch_trace.json"), StandardCharsets.UTF_8));
+    final PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/trace/multi_record_batch_trace.json"));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));

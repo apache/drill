@@ -37,12 +37,8 @@ import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.junit.Test;
 
-import com.google.common.io.Files;
-
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-
-import java.nio.charset.StandardCharsets;
 
 // See also TestUnionDistinct for a test that does not need JMockit
 @Category(OperatorTest.class)
@@ -55,7 +51,7 @@ public class TestSimpleUnion extends ExecTest {
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/union/test1.json"), StandardCharsets.UTF_8));
+    final PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/union/test1.json"));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));

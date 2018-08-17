@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link FragmentParallelizer} where fragment has zero or more endpoints with affinities. Width
@@ -134,12 +135,9 @@ public class SoftAffinityFragmentParallelizer implements FragmentParallelizer {
       Set<DrillbitEndpoint> endpointsWithAffinity = endpointAffinityMap.keySet();
 
       if (endpointAffinityMap.size() > 0) {
-        endpointsWithNoAffinity = new ArrayList<>();
-        for (DrillbitEndpoint ep : activeEndpoints) {
-          if (!endpointsWithAffinity.contains(ep)) {
-            endpointsWithNoAffinity.add(ep);
-          }
-        }
+        endpointsWithNoAffinity = activeEndpoints.stream()
+            .filter(endpoint -> !endpointsWithAffinity.contains(endpoint))
+            .collect(Collectors.toList());
       } else {
         endpointsWithNoAffinity = new ArrayList<>(activeEndpoints); // Need to create a copy instead of an
         // immutable copy, because we need to shuffle the list (next statement) and Collections.shuffle() doesn't

@@ -55,7 +55,7 @@ public class TransientStoreConfig<V> {
   public boolean equals(Object obj) {
     if (obj instanceof TransientStoreConfig && obj.getClass().equals(getClass())) {
       @SuppressWarnings("unchecked")
-      TransientStoreConfig<V> other = (TransientStoreConfig<V>)obj;
+      TransientStoreConfig<V> other = (TransientStoreConfig<V>) obj;
       return Objects.equals(name, other.name) && Objects.equals(serializer, other.serializer);
     }
     return false;

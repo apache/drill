@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,6 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.jdbc.DrillJdbcRuleBase.DrillJdbcFilterRule;
 import org.apache.drill.exec.store.jdbc.DrillJdbcRuleBase.DrillJdbcProjectRule;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class JdbcStoragePlugin extends AbstractStoragePlugin {
@@ -301,7 +301,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     private final CapitalizingJdbcSchema defaultSchema;
 
     public JdbcCatalogSchema(String name) {
-      super(ImmutableList.<String> of(), name);
+      super(Collections.emptyList(), name);
 
       try (Connection con = source.getConnection();
            ResultSet set = con.getMetaData().getCatalogs()) {
@@ -323,7 +323,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
         if (!schemasAdded) {
           // there were no schemas, just create a default one (the jdbc system doesn't support catalogs/schemas).
-          schemaMap.put("default", new CapitalizingJdbcSchema(ImmutableList.<String> of(), name, source, dialect,
+          schemaMap.put("default", new CapitalizingJdbcSchema(Collections.emptyList(), name, source, dialect,
               convention, null, null));
         }
       } else {
