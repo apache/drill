@@ -25,6 +25,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.Period;
@@ -33,20 +34,20 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestDrillParquetReader extends BaseTestQuery {
-  // enable decimal data type
+  // enable decimal data type and make sure DrillParquetReader is used to handle test queries
   @BeforeClass
-  public static void enableDecimalDataType() throws Exception {
-    test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  public static void setup() throws Exception {
+    alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+    alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
   }
 
   @AfterClass
-  public static void disableDecimalDataType() throws Exception {
-    test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  public static void cleanup() throws Exception {
+    resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
   }
 
   private void testColumn(String columnName) throws Exception {
-    testNoResult("alter session set `store.parquet.use_new_reader` = true");
-
     BigDecimal result = new BigDecimal("1.20000000");
 
     testBuilder()
@@ -55,8 +56,6 @@ public class TestDrillParquetReader extends BaseTestQuery {
       .baselineColumns(columnName)
       .baselineValues(result)
       .go();
-
-    testNoResult("alter session set `store.parquet.use_new_reader` = false");
   }
 
   @Test
@@ -149,6 +148,7 @@ public class TestDrillParquetReader extends BaseTestQuery {
             " t._DATE_int32 as _DATE_int32, " +
             " t._TIME_MILLIS_int32 as _TIME_MILLIS_int32, " +
             " t._TIMESTAMP_MILLIS_int64 as _TIMESTAMP_MILLIS_int64, " +
+            " t._TIMESTAMP_MICROS_int64 as _TIMESTAMP_MICROS_int64, " +
             " t._INTERVAL_fixed_len_byte_array_12 as _INTERVAL_fixed_len_byte_array_12, " +
             " t._INT96_RAW as _INT96_RAW " +
             " from " +
@@ -172,6 +172,7 @@ public class TestDrillParquetReader extends BaseTestQuery {
         "_DATE_int32",
         "_TIME_MILLIS_int32",
         "_TIMESTAMP_MILLIS_int64",
+        "_TIMESTAMP_MICROS_int64",
         "_INTERVAL_fixed_len_byte_array_12",
         "_INT96_RAW"
 
@@ -183,19 +184,19 @@ public class TestDrillParquetReader extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"),
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"),
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
         .build()
         .run();
   }
@@ -224,6 +225,7 @@ public class TestDrillParquetReader extends BaseTestQuery {
             " t._DATE_int32 as _DATE_int32, " +
             " t._TIME_MILLIS_int32 as _TIME_MILLIS_int32, " +
             " t._TIMESTAMP_MILLIS_int64 as _TIMESTAMP_MILLIS_int64, " +
+            " t._TIMESTAMP_MICROS_int64 as _TIMESTAMP_MICROS_int64, " +
             " t._INTERVAL_fixed_len_byte_array_12 as _INTERVAL_fixed_len_byte_array_12, " +
             " t._INT96_RAW as _INT96_RAW " +
             " from " +
@@ -247,6 +249,7 @@ public class TestDrillParquetReader extends BaseTestQuery {
         "_DATE_int32",
         "_TIME_MILLIS_int32",
         "_TIMESTAMP_MILLIS_int64",
+        "_TIMESTAMP_MICROS_int64",
         "_INTERVAL_fixed_len_byte_array_12",
         "_INT96_RAW"
 
@@ -258,21 +261,176 @@ public class TestDrillParquetReader extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"),
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"),
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
         .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null)
+            null, null, null, null, null)
+        .build().run();
+  }
+
+  @Test //DRILL-6670: include tests on data with dictionary encoding disabled
+  public void testLogicalIntTypes4() throws Exception {
+    byte[] bytes12 = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b' };
+    byte[] bytesOnes = new byte[12];
+    Arrays.fill(bytesOnes, (byte)1);
+    byte[] bytesZeros = new byte[12];
+    String query = String.format(
+        " select " +
+            " t.rowKey as rowKey, " +
+            " t._UTF8 as _UTF8, " +
+            " t._Enum as _Enum, " +
+            " t._INT32_RAW as _INT32_RAW, " +
+            " t._INT_8 as _INT_8, " +
+            " t._INT_16 as _INT_16, " +
+            " t._INT_32 as _INT_32, " +
+            " t._UINT_8 as _UINT_8, " +
+            " t._UINT_16 as _UINT_16, " +
+            " t._UINT_32 as _UINT_32, " +
+            " t._INT64_RAW as _INT64_RAW, " +
+            " t._INT_64 as _INT_64, " +
+            " t._UINT_64 as _UINT_64, " +
+            " t._DATE_int32 as _DATE_int32, " +
+            " t._TIME_MILLIS_int32 as _TIME_MILLIS_int32, " +
+            " t._TIMESTAMP_MILLIS_int64 as _TIMESTAMP_MILLIS_int64, " +
+            " t._TIMESTAMP_MICROS_int64 as _TIMESTAMP_MICROS_int64, " +
+            " t._INTERVAL_fixed_len_byte_array_12 as _INTERVAL_fixed_len_byte_array_12, " +
+            " t._INT96_RAW as _INT96_RAW " +
+            " from " +
+            " cp.`parquet/parquet_logical_types_simple_nodict.parquet` t " +
+            " order by t.rowKey "
+    );
+    String[] columns = {
+        "rowKey ",
+        "_UTF8",
+        "_Enum",
+        "_INT32_RAW",
+        "_INT_8",
+        "_INT_16",
+        "_INT_32",
+        "_UINT_8",
+        "_UINT_16",
+        "_UINT_32",
+        "_INT64_RAW",
+        "_INT_64",
+        "_UINT_64",
+        "_DATE_int32",
+        "_TIME_MILLIS_int32",
+        "_TIMESTAMP_MILLIS_int64",
+        "_TIMESTAMP_MICROS_int64",
+        "_INTERVAL_fixed_len_byte_array_12",
+        "_INT96_RAW"
+
+    };
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns(columns)
+        .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
+            1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
+            ZonedDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
+            bytes12)
+        .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
+            9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
+            ZonedDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
+            bytesOnes)
+        .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
+            -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
+            ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+        .build()
+        .run();
+  }
+
+  @Test //DRILL-6670: include tests on data with dictionary encoding disabled
+  public void testLogicalIntTypes5() throws Exception {
+    byte[] bytes12 = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b' };
+    byte[] bytesOnes = new byte[12];
+    Arrays.fill(bytesOnes, (byte)1);
+    byte[] bytesZeros = new byte[12];
+    String query = String.format(
+        " select " +
+            " t.rowKey as rowKey, " +
+            " t._UTF8 as _UTF8, " +
+            " t._Enum as _Enum, " +
+            " t._INT32_RAW as _INT32_RAW, " +
+            " t._INT_8 as _INT_8, " +
+            " t._INT_16 as _INT_16, " +
+            " t._INT_32 as _INT_32, " +
+            " t._UINT_8 as _UINT_8, " +
+            " t._UINT_16 as _UINT_16, " +
+            " t._UINT_32 as _UINT_32, " +
+            " t._INT64_RAW as _INT64_RAW, " +
+            " t._INT_64 as _INT_64, " +
+            " t._UINT_64 as _UINT_64, " +
+            " t._DATE_int32 as _DATE_int32, " +
+            " t._TIME_MILLIS_int32 as _TIME_MILLIS_int32, " +
+            " t._TIMESTAMP_MILLIS_int64 as _TIMESTAMP_MILLIS_int64, " +
+            " t._TIMESTAMP_MICROS_int64 as _TIMESTAMP_MICROS_int64, " +
+            " t._INTERVAL_fixed_len_byte_array_12 as _INTERVAL_fixed_len_byte_array_12, " +
+            " t._INT96_RAW as _INT96_RAW " +
+            " from " +
+            " cp.`parquet/parquet_logical_types_simple_nullable_nodict.parquet` t " +
+            " order by t.rowKey "
+    );
+    String[] columns = {
+        "rowKey ",
+        "_UTF8",
+        "_Enum",
+        "_INT32_RAW",
+        "_INT_8",
+        "_INT_16",
+        "_INT_32",
+        "_UINT_8",
+        "_UINT_16",
+        "_UINT_32",
+        "_INT64_RAW",
+        "_INT_64",
+        "_UINT_64",
+        "_DATE_int32",
+        "_TIME_MILLIS_int32",
+        "_TIMESTAMP_MILLIS_int64",
+        "_TIMESTAMP_MICROS_int64",
+        "_INTERVAL_fixed_len_byte_array_12",
+        "_INT96_RAW"
+
+    };
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns(columns)
+        .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
+            1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
+            ZonedDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
+            bytes12)
+        .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
+            9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
+            ZonedDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
+            bytesOnes)
+        .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
+            -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
+            ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+        .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null)
         .build().run();
   }
 

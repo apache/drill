@@ -219,8 +219,10 @@ public class DrillParquetGroupConverter extends GroupConverter {
           return new DrillBigIntConverter(writer);
         }
         switch(type.getOriginalType()) {
+          // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
           case UINT_64:
-          case INT_64 : {
+          case INT_64 :
+          case TIMESTAMP_MICROS: {
             BigIntWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).bigInt() : mapWriter.bigInt(name);
             return new DrillBigIntConverter(writer);
           }

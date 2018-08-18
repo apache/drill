@@ -77,6 +77,10 @@ public class ColumnReaderFactory {
       } else if (!columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY) && (
           columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY
               || columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.INT96)) {
+        if (convertedType == null) {
+          return new FixedByteAlignedReader.FixedBinaryReader(recordReader, descriptor,
+              columnChunkMetaData, (VariableWidthVector) v, schemaElement);
+        }
         switch (convertedType) {
           case DECIMAL:
             return new FixedByteAlignedReader.VarDecimalReader(recordReader, descriptor,
@@ -131,7 +135,9 @@ public class ColumnReaderFactory {
                 return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
               }
               switch (convertedType) {
+                // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
                 case INT_64:
+                case TIMESTAMP_MICROS:
                   return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
                 case UINT_64:
                   return new ParquetFixedWidthDictionaryReaders.DictionaryUInt8Reader(recordReader, descriptor, columnChunkMetaData, fixedLength, (UInt8Vector) v, schemaElement);
@@ -291,6 +297,9 @@ public class ColumnReaderFactory {
                   columnDescriptor, columnChunkMetaData, fixedLength, (NullableVarDecimalVector) valueVec, schemaElement);
             case TIMESTAMP_MILLIS:
               return new NullableFixedByteAlignedReaders.NullableDictionaryTimeStampReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeStampVector)valueVec, schemaElement);
+            // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
+            case TIMESTAMP_MICROS:
+              return new NullableFixedByteAlignedReaders.NullableDictionaryBigIntReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableBigIntVector)valueVec, schemaElement);
             default:
               throw new ExecutionSetupException("Unsupported nullable converted type " + convertedType + " for primitive type INT64");
           }
