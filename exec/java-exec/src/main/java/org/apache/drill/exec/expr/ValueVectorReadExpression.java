@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
@@ -25,6 +24,7 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.TypedFieldId;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -91,7 +91,7 @@ public class ValueVectorReadExpression implements LogicalExpression {
 
   @Override
   public Iterator<LogicalExpression> iterator() {
-    return ImmutableSet.<LogicalExpression>of().iterator();
+    return Collections.emptyIterator();
   }
 
   @Override

@@ -66,8 +66,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 
-import com.google.common.collect.ImmutableSet;
-
 public class ParquetFormatPlugin implements FormatPlugin{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
 
@@ -123,7 +121,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-    return ImmutableSet.of();
+    return Collections.emptySet();
   }
 
   @Override
