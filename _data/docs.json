@@ -4655,6 +4655,36 @@
             "title": "EXPLAIN", 
             "url": "/docs/explain/"
         }, 
+        "Ecosystem": {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Ecosystem", 
+                            "url": "/docs/ecosystem/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "", 
+                    "next_url": "", 
+                    "parent": "Ecosystem", 
+                    "previous_title": "Ecosystem", 
+                    "previous_url": "/docs/ecosystem/", 
+                    "relative_path": "_docs/ecosystem/010-using-saiku-analytics-with-apache-drill.md", 
+                    "title": "Using Saiku Analytics with Apache Drill", 
+                    "url": "/docs/using-saiku-analytics-with-apache-drill/"
+                }
+            ], 
+            "next_title": "Using Saiku Analytics with Apache Drill", 
+            "next_url": "/docs/using-saiku-analytics-with-apache-drill/", 
+            "parent": "", 
+            "previous_title": "Project Bylaws", 
+            "previous_url": "/docs/project-bylaws/", 
+            "relative_path": "_docs/171-ecosystem.md", 
+            "title": "Ecosystem", 
+            "url": "/docs/ecosystem/"
+        }, 
         "Embedded Mode Prerequisites": {
             "breadcrumbs": [
                 {
@@ -8456,8 +8486,8 @@
         "Project Bylaws": {
             "breadcrumbs": [], 
             "children": [], 
-            "next_title": "", 
-            "next_url": "", 
+            "next_title": "Ecosystem", 
+            "next_url": "/docs/ecosystem/", 
             "parent": "", 
             "previous_title": "Wikipedia Edit History", 
             "previous_url": "/docs/wikipedia-edit-history/", 
@@ -15019,6 +15049,23 @@
             "title": "Using SQL Functions, Clauses, and Joins", 
             "url": "/docs/using-sql-functions-clauses-and-joins/"
         }, 
+        "Using Saiku Analytics with Apache Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "Ecosystem", 
+                    "url": "/docs/ecosystem/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "", 
+            "next_url": "", 
+            "parent": "Ecosystem", 
+            "previous_title": "Ecosystem", 
+            "previous_url": "/docs/ecosystem/", 
+            "relative_path": "_docs/ecosystem/010-using-saiku-analytics-with-apache-drill.md", 
+            "title": "Using Saiku Analytics with Apache Drill", 
+            "url": "/docs/using-saiku-analytics-with-apache-drill/"
+        }, 
         "Using Tibco Spotfire Desktop with Drill": {
             "breadcrumbs": [
                 {
@@ -21316,14 +21363,44 @@
         {
             "breadcrumbs": [], 
             "children": [], 
-            "next_title": "", 
-            "next_url": "", 
+            "next_title": "Ecosystem", 
+            "next_url": "/docs/ecosystem/", 
             "parent": "", 
             "previous_title": "Wikipedia Edit History", 
             "previous_url": "/docs/wikipedia-edit-history/", 
             "relative_path": "_docs/170-bylaws.md", 
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
+        }, 
+        {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Ecosystem", 
+                            "url": "/docs/ecosystem/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "", 
+                    "next_url": "", 
+                    "parent": "Ecosystem", 
+                    "previous_title": "Ecosystem", 
+                    "previous_url": "/docs/ecosystem/", 
+                    "relative_path": "_docs/ecosystem/010-using-saiku-analytics-with-apache-drill.md", 
+                    "title": "Using Saiku Analytics with Apache Drill", 
+                    "url": "/docs/using-saiku-analytics-with-apache-drill/"
+                }
+            ], 
+            "next_title": "Using Saiku Analytics with Apache Drill", 
+            "next_url": "/docs/using-saiku-analytics-with-apache-drill/", 
+            "parent": "", 
+            "previous_title": "Project Bylaws", 
+            "previous_url": "/docs/project-bylaws/", 
+            "relative_path": "_docs/171-ecosystem.md", 
+            "title": "Ecosystem", 
+            "url": "/docs/ecosystem/"
         }
     ]
 }
