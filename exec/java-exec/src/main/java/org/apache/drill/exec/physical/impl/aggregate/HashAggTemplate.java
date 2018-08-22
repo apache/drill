@@ -562,9 +562,15 @@ public abstract class HashAggTemplate implements HashAggregator {
       else { estValuesRowWidth += fieldSize; }
     }
     // multiply by the max number of rows in a batch to get the final estimated max size
-    estMaxBatchSize = Math.max(estRowWidth, estInputRowWidth) * MAX_BATCH_ROW_COUNT;
+    long estimatedMaxWidth = Math.max(estRowWidth, estInputRowWidth);
+    estMaxBatchSize = estimatedMaxWidth * MAX_BATCH_ROW_COUNT;
+    // estimated batch size should not exceed the configuration given size
+    int configuredBatchSize = outgoing.getRecordBatchMemoryManager().getOutputBatchSize();
+    estMaxBatchSize = Math.min(estMaxBatchSize, configuredBatchSize);
+    // work back the number of rows (may have been reduced from MAX_BATCH_ROW_COUNT)
+    long rowsInBatch = estMaxBatchSize / estimatedMaxWidth;
     // (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
-    estValuesBatchSize = Math.max(estValuesRowWidth, 1) * MAX_BATCH_ROW_COUNT;
+    estValuesBatchSize = Math.max(estValuesRowWidth, 1) * rowsInBatch;
     estOutgoingAllocSize = estValuesBatchSize; // initially assume same size
 
     logger.trace("{} phase. Estimated internal row width: {} Values row width: {} batch size: {}  memory limit: {}  max column width: {}",

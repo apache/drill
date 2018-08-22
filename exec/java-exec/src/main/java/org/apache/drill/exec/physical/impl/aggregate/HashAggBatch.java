@@ -48,6 +48,7 @@ import org.apache.drill.exec.physical.impl.aggregate.HashAggregator.AggOutcome;
 import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
+import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -185,6 +186,23 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     // get the output batch size from config.
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
+
+    // If needed - reduce the size to allow enough batches in the available memory
+    long memAvail = oContext.getAllocator().getLimit();
+    long minBatchesPerPartition = context.getOptions().getOption(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR);
+    long minBatchesNeeded = 2 * minBatchesPerPartition; // 2 - to cover overheads, etc.
+    boolean is2ndPhase = popConfig.getAggPhase() == AggPrelBase.OperatorPhase.PHASE_2of2;
+    boolean fallbackEnabled = context.getOptions().getOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY).bool_val;
+    if ( is2ndPhase && !fallbackEnabled ) {
+      minBatchesNeeded *= 2;  // 2nd phase (w/o fallback) needs at least 2 partitions
+    }
+    if ( configuredBatchSize > memAvail / minBatchesNeeded ) { // no cast - memAvail may be bigger than max-int
+      int reducedBatchSize = (int)(memAvail / minBatchesNeeded);
+      logger.trace("Reducing configured batch size from: {} to: {}, due to Mem limit: {}",
+        configuredBatchSize, reducedBatchSize, memAvail);
+      configuredBatchSize = reducedBatchSize;
+    }
+
     hashAggMemoryManager = new HashAggMemoryManager(configuredBatchSize);
     logger.debug("BATCH_STATS, configured output batch size: {}", configuredBatchSize);
 
