@@ -1275,7 +1275,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
    * Temporary test to validate LATERAL handling output batch getting filled without consuming full output from left
    * and right batch join.
    * <p>
-   * For this test we are updating {@link LateralJoinBatch#MAX_BATCH_SIZE} by making it public, which might not expected
+   * For this test we are updating {@link LateralJoinBatch#MAX_BATCH_ROW_COUNT} by making it public, which might not expected
    * after including the BatchSizing logic
    * TODO: Update the test after incorporating the BatchSizing change.
    *
@@ -1943,7 +1943,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
    * This test generates an operator tree for multi level LATERAL by stacking 2 LATERAL and finally an UNNEST pair
    * (using MockRecord Batch) as left and right child of lower level LATERAL. Then we call next() on top level
    * LATERAL to simulate the operator tree and compare the outcome and record count generated with expected values.
-   * This test also changes the MAX_BATCH_SIZE to simulate the output being produced in multiple batches.
+   * This test also changes the MAX_BATCH_ROW_COUNT to simulate the output being produced in multiple batches.
    * @throws Exception
    */
   @Test

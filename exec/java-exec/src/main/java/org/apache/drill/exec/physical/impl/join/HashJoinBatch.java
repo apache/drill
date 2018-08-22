@@ -737,7 +737,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     {
       // Initializing build calculator
       // Limit scope of these variables to this block
-      int maxBatchSize = firstCycle? RecordBatch.MAX_BATCH_SIZE: RECORDS_PER_BATCH;
+      int maxBatchSize = firstCycle? RecordBatch.MAX_BATCH_ROW_COUNT : RECORDS_PER_BATCH;
       boolean hasProbeData = leftUpstream != IterOutcome.NONE;
       boolean doMemoryCalculation = canSpill && hasProbeData;
       HashJoinMemoryCalculator calc = getCalculatorImpl();

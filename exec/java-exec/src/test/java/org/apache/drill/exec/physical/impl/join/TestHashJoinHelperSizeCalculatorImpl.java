@@ -30,7 +30,7 @@ public class TestHashJoinHelperSizeCalculatorImpl {
       ((long) TypeHelper.getSize(TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.INT).build()));
 
     // Account for the overhead of a selection vector
-    long expected = intSize * RecordBatch.MAX_BATCH_SIZE;
+    long expected = intSize * RecordBatch.MAX_BATCH_ROW_COUNT;
     // Account for sv4 vector for batches
     expected += intSize * 3500;
 

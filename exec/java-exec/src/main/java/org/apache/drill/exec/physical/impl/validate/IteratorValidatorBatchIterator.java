@@ -307,12 +307,12 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
         }
         // It's legal for a batch to have zero field. For instance, a relational table could have
         // zero columns. Querying such table requires execution operator to process batch with 0 field.
-        if (incoming.getRecordCount() > MAX_BATCH_SIZE) {
+        if (incoming.getRecordCount() > MAX_BATCH_ROW_COUNT) {
           throw new IllegalStateException(
               String.format(
                   "Incoming batch [#%d, %s] has size %d, which is beyond the"
                   + " limit of %d",
-                  instNum, batchTypeName, incoming.getRecordCount(), MAX_BATCH_SIZE
+                  instNum, batchTypeName, incoming.getRecordCount(), MAX_BATCH_ROW_COUNT
                   ));
         }
 
