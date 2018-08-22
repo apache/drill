@@ -29,8 +29,6 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import org.apache.calcite.plan.RelOptCostImpl;
-import org.apache.calcite.plan.RelOptLattice;
-import org.apache.calcite.plan.RelOptMaterialization;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptUtil;
@@ -111,7 +109,6 @@ import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.slf4j.Logger;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
@@ -164,7 +161,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
   }
 
-  protected void log(final String name, final PhysicalPlan plan, final Logger logger) throws JsonProcessingException {
+  protected void log(final String name, final PhysicalPlan plan, final Logger logger) {
     if (logger.isDebugEnabled()) {
       PropertyFilter filter = new SimpleBeanPropertyFilter.SerializeExceptFilter(Sets.newHashSet("password"));
       String planText = plan.unparse(context.getLpPersistence().getMapper()
@@ -193,9 +190,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    * Rewrite the parse tree. Used before validating the parse tree. Useful if a particular statement needs to converted
    * into another statement.
    *
-   * @param node
+   * @param node sql parse tree to be rewritten
    * @return Rewritten sql parse tree
-   * @throws RelConversionException
    */
   protected SqlNode rewrite(SqlNode node) throws RelConversionException, ForemanSetupException {
     return node;
@@ -217,10 +213,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    *
    * @param relNode relational node
    * @return Drill Logical RelNode tree
-   * @throws SqlUnsupportedException
-   * @throws RelConversionException
+   * @throws SqlUnsupportedException if query cannot be planned
    */
-  protected DrillRel convertToRawDrel(final RelNode relNode) throws SqlUnsupportedException, RelConversionException {
+  protected DrillRel convertToRawDrel(final RelNode relNode) throws SqlUnsupportedException {
     if (context.getOptions().getOption(ExecConstants.EARLY_LIMIT0_OPT) &&
         context.getPlannerSettings().isTypeInferenceEnabled() &&
         FindLimit0Visitor.containsLimit0(relNode)) {
@@ -299,7 +294,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     } catch (RelOptPlanner.CannotPlanException ex) {
       logger.error(ex.getMessage());
 
-      if(JoinUtils.checkCartesianJoin(relNode, new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Boolean>())) {
+      if (JoinUtils.checkCartesianJoin(relNode, new ArrayList<>(), new ArrayList<>(), new ArrayList<>())) {
         throw new UnsupportedRelOperatorException("This query cannot be planned possibly due to either a cartesian join or an inequality join");
       } else {
         throw ex;
@@ -313,10 +308,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    *
    * @param relNode root RelNode corresponds to Calcite Logical RelNode.
    * @return Drill Logical RelNode tree
-   * @throws RelConversionException
-   * @throws SqlUnsupportedException
+   * @throws SqlUnsupportedException if query cannot be planned
    */
-  protected DrillRel convertToDrel(RelNode relNode) throws RelConversionException, SqlUnsupportedException {
+  protected DrillRel convertToDrel(RelNode relNode) throws SqlUnsupportedException {
     final DrillRel convertedRelNode = convertToRawDrel(relNode);
 
     return new DrillScreenRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(),
@@ -429,7 +423,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
           "Cluster is expected to be constructed using VolcanoPlanner. Was actually of type %s.", planner.getClass()
               .getName());
       output = program.run(planner, input, toTraits,
-          ImmutableList.<RelOptMaterialization>of(), ImmutableList.<RelOptLattice>of());
+          ImmutableList.of(), ImmutableList.of());
 
       break;
     }
@@ -465,7 +459,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     } catch (RelOptPlanner.CannotPlanException ex) {
       logger.error(ex.getMessage());
 
-      if(JoinUtils.checkCartesianJoin(drel, new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Boolean>())) {
+      if (JoinUtils.checkCartesianJoin(drel, new ArrayList<>(), new ArrayList<>(), new ArrayList<>())) {
         throw new UnsupportedRelOperatorException("This query cannot be planned possibly due to either a cartesian join or an inequality join");
       } else {
         throw ex;
@@ -488,7 +482,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       } catch (RelOptPlanner.CannotPlanException ex) {
         logger.error(ex.getMessage());
 
-        if(JoinUtils.checkCartesianJoin(drel, new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Boolean>())) {
+        if (JoinUtils.checkCartesianJoin(drel, new ArrayList<>(), new ArrayList<>(), new ArrayList<>())) {
           throw new UnsupportedRelOperatorException("This query cannot be planned possibly due to either a cartesian join or an inequality join");
         } else {
           throw ex;
@@ -526,8 +520,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * We want to have smaller dataset on the right side, since hash table builds on right side.
      */
     if (context.getPlannerSettings().isHashJoinSwapEnabled()) {
-      phyRelNode = SwapHashJoinVisitor.swapHashJoin(phyRelNode, Double.valueOf(context.getPlannerSettings()
-          .getHashJoinSwapMarginFactor()));
+      phyRelNode = SwapHashJoinVisitor.swapHashJoin(phyRelNode,
+          context.getPlannerSettings().getHashJoinSwapMarginFactor());
     }
 
     /* Parquet row group filter pushdown in planning time */
@@ -710,7 +704,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       throw ex;
     }
 
-    return rel;
+    // moves complex expressions below Uncollect to the right side of Correlate
+    return ComplexUnnestVisitor.rewriteUnnestWithComplexExprs(rel);
   }
 
   protected DrillRel addRenamedProject(DrillRel rel, RelDataType validatedRowType) {
