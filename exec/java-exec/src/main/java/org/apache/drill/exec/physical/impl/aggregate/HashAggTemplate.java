@@ -80,7 +80,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
 import static org.apache.drill.exec.physical.impl.common.HashTable.BATCH_MASK;
-import static org.apache.drill.exec.record.RecordBatch.MAX_BATCH_SIZE;
+import static org.apache.drill.exec.record.RecordBatch.MAX_BATCH_ROW_COUNT;
 
 public abstract class HashAggTemplate implements HashAggregator {
   protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregator.class);
@@ -562,9 +562,15 @@ public abstract class HashAggTemplate implements HashAggregator {
       else { estValuesRowWidth += fieldSize; }
     }
     // multiply by the max number of rows in a batch to get the final estimated max size
-    estMaxBatchSize = Math.max(estRowWidth, estInputRowWidth) * MAX_BATCH_SIZE;
+    long estimatedMaxWidth = Math.max(estRowWidth, estInputRowWidth);
+    estMaxBatchSize = estimatedMaxWidth * MAX_BATCH_ROW_COUNT;
+    // estimated batch size should not exceed the configuration given size
+    int configuredBatchSize = outgoing.getRecordBatchMemoryManager().getOutputBatchSize();
+    estMaxBatchSize = Math.min(estMaxBatchSize, configuredBatchSize);
+    // work back the number of rows (may have been reduced from MAX_BATCH_ROW_COUNT)
+    long rowsInBatch = estMaxBatchSize / estimatedMaxWidth;
     // (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
-    estValuesBatchSize = Math.max(estValuesRowWidth, 1) * MAX_BATCH_SIZE;
+    estValuesBatchSize = Math.max(estValuesRowWidth, 1) * rowsInBatch;
     estOutgoingAllocSize = estValuesBatchSize; // initially assume same size
 
     logger.trace("{} phase. Estimated internal row width: {} Values row width: {} batch size: {}  memory limit: {}  max column width: {}",
@@ -1490,13 +1496,13 @@ public abstract class HashAggTemplate implements HashAggregator {
     long maxMemoryNeeded = 0;
     if ( !forceSpill ) { // need to check the memory in order to decide
       // calculate the (max) new memory needed now; plan ahead for at least MIN batches
-      maxMemoryNeeded = minBatchesPerPartition * Math.max(1, plannedBatches) * (estMaxBatchSize + MAX_BATCH_SIZE * (4 + 4 /* links + hash-values */));
+      maxMemoryNeeded = minBatchesPerPartition * Math.max(1, plannedBatches) * (estMaxBatchSize + MAX_BATCH_ROW_COUNT * (4 + 4 /* links + hash-values */));
       // Add the (max) size of the current hash table, in case it will double
       int maxSize = 1;
       for (int insp = 0; insp < numPartitions; insp++) {
         maxSize = Math.max(maxSize, batchHolders[insp].size());
       }
-      maxMemoryNeeded += MAX_BATCH_SIZE * 2 * 2 * 4 * maxSize; // 2 - double, 2 - max when %50 full, 4 - Uint4
+      maxMemoryNeeded += MAX_BATCH_ROW_COUNT * 2 * 2 * 4 * maxSize; // 2 - double, 2 - max when %50 full, 4 - Uint4
 
       // log a detailed debug message explaining why a spill may be needed
       logger.trace("MEMORY CHECK: Allocated mem: {}, agg phase: {}, trying to add to partition {} with {} batches. " + "Max memory needed {}, Est batch size {}, mem limit {}",

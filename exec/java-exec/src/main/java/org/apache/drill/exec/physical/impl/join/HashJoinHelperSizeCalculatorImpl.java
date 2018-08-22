@@ -34,7 +34,7 @@ public class HashJoinHelperSizeCalculatorImpl implements HashJoinHelperSizeCalcu
     Preconditions.checkArgument(!partitionStat.isSpilled());
 
     // Account for the size of the SV4 in a hash join helper
-    long joinHelperSize = IntVector.VALUE_WIDTH * RecordBatch.MAX_BATCH_SIZE;
+    long joinHelperSize = IntVector.VALUE_WIDTH * RecordBatch.MAX_BATCH_ROW_COUNT;
 
     // Account for the SV4 for each batch that holds links for each batch
     for (HashJoinMemoryCalculator.BatchStat batchStat: partitionStat.getInMemoryBatches()) {

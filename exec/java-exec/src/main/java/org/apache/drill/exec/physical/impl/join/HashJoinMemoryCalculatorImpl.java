@@ -66,9 +66,9 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       final HashTableSizeCalculator hashTableSizeCalculator;
 
       if (hashTableCalculatorType.equals(HashTableSizeCalculatorLeanImpl.TYPE)) {
-        hashTableSizeCalculator = new HashTableSizeCalculatorLeanImpl(RecordBatch.MAX_BATCH_SIZE, hashTableDoublingFactor);
+        hashTableSizeCalculator = new HashTableSizeCalculatorLeanImpl(RecordBatch.MAX_BATCH_ROW_COUNT, hashTableDoublingFactor);
       } else if (hashTableCalculatorType.equals(HashTableSizeCalculatorConservativeImpl.TYPE)) {
-        hashTableSizeCalculator = new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_SIZE, hashTableDoublingFactor);
+        hashTableSizeCalculator = new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, hashTableDoublingFactor);
       } else {
         throw new IllegalArgumentException("Invalid calc type: " + hashTableCalculatorType);
       }
