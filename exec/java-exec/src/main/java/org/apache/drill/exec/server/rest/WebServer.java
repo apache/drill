@@ -136,7 +136,8 @@ public class WebServer implements AutoCloseable {
     final boolean portHunt = config.getBoolean(ExecConstants.HTTP_PORT_HUNT);
     final int acceptors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_ACCEPTORS);
     final int selectors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_SELECTORS);
-    final QueuedThreadPool threadPool = new QueuedThreadPool(2, 2, 60000);
+    final int handlers = config.getInt(ExecConstants.HTTP_JETTY_SERVER_HANDLERS);
+    final QueuedThreadPool threadPool = new QueuedThreadPool(2, 2);
     embeddedJetty = new Server(threadPool);
     ServletContextHandler webServerContext = createServletContextHandler(authEnabled);
     //Allow for Other Drillbits to make REST calls
@@ -147,7 +148,7 @@ public class WebServer implements AutoCloseable {
     embeddedJetty.setHandler(webServerContext);
 
     ServerConnector connector = createConnector(port, acceptors, selectors);
-    threadPool.setMaxThreads(1 + connector.getAcceptors() + connector.getSelectorManager().getSelectorCount());
+    threadPool.setMaxThreads(handlers + connector.getAcceptors() + connector.getSelectorManager().getSelectorCount());
     embeddedJetty.addConnector(connector);
     for (int retry = 0; retry < PORT_HUNT_TRIES; retry++) {
       connector.setPort(port);
