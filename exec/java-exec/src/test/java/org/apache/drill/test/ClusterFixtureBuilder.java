@@ -19,9 +19,9 @@ package org.apache.drill.test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.server.options.OptionDefinition;
@@ -61,7 +61,7 @@ public class ClusterFixtureBuilder {
   protected final BaseDirTestWatcher dirTestWatcher;
 
   public ClusterFixtureBuilder(BaseDirTestWatcher dirTestWatcher) {
-    this.dirTestWatcher = Objects.requireNonNull(dirTestWatcher);
+    this.dirTestWatcher = Preconditions.checkNotNull(dirTestWatcher);
   }
 
   /**

@@ -17,9 +17,8 @@
  */
 package org.apache.drill.exec.coord.store;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.serialization.InstanceSerializer;
-
-import java.util.Objects;
 
 public class TransientStoreConfigBuilder<T> {
   private String name;
@@ -32,7 +31,7 @@ public class TransientStoreConfigBuilder<T> {
   }
 
   public TransientStoreConfigBuilder<T> name(String name) {
-    this.name = Objects.requireNonNull(name);
+    this.name = Preconditions.checkNotNull(name);
     return this;
   }
 
@@ -41,7 +40,7 @@ public class TransientStoreConfigBuilder<T> {
   }
 
   public TransientStoreConfigBuilder<T> serializer(InstanceSerializer<T> serializer) {
-    this.serializer = Objects.requireNonNull(serializer);
+    this.serializer = Preconditions.checkNotNull(serializer);
     return this;
   }
 

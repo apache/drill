@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.rpc;
 
-import com.google.common.base.Preconditions;
 import io.netty.channel.socket.SocketChannel;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.security.SaslProperties;
@@ -29,7 +28,9 @@ import javax.security.auth.login.LoginException;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
-import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 public abstract class AbstractServerConnection<S extends ServerConnection<S>>
     extends AbstractRemoteConnection
@@ -61,7 +62,7 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
 
   @Override
   public void initSaslServer(String mechanismName) throws SaslException {
-    Preconditions.checkState(saslServer == null);
+    checkState(saslServer == null);
     try {
       this.saslServer = config.getAuthProvider()
           .getAuthenticatorFactory(mechanismName)
@@ -87,13 +88,13 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
 
         @Override
         public byte[] wrap(byte[] data, int offset, int len) throws SaslException {
-          Preconditions.checkState(saslServer != null);
+          checkState(saslServer != null);
           return saslServer.wrap(data, offset, len);
         }
 
         @Override
         public byte[] unwrap(byte[] data, int offset, int len) throws SaslException {
-          Preconditions.checkState(saslServer != null);
+          checkState(saslServer != null);
           return saslServer.unwrap(data, offset, len);
         }
       };
@@ -102,7 +103,7 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
 
   @Override
   public SaslServer getSaslServer() {
-    Preconditions.checkState(saslServer != null);
+    checkState(saslServer != null);
     return saslServer;
   }
 
@@ -125,7 +126,8 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
 
   @Override
   public void changeHandlerTo(RequestHandler<S> handler) {
-    this.currentHandler = Objects.requireNonNull(handler);
+    checkNotNull(handler);
+    this.currentHandler = handler;
   }
 
   @Override

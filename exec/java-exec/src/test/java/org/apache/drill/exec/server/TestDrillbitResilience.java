@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.math3.util.Pair;
@@ -93,6 +92,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Test how resilient drillbits are to throwing exceptions during various phases of query
@@ -232,7 +233,7 @@ public class TestDrillbitResilience extends DrillTest {
    * Clear all injections.
    */
   private static void clearAllInjections() {
-    Objects.requireNonNull(drillClient);
+    Preconditions.checkNotNull(drillClient);
     ControlsInjectionUtil.clearControls(drillClient);
   }
 
@@ -423,7 +424,7 @@ public class TestDrillbitResilience extends DrillTest {
      * Method that cancels and resumes the query, in order.
      */
     protected final void cancelAndResume() {
-      Objects.requireNonNull(queryId);
+      Preconditions.checkNotNull(queryId);
       final ExtendedLatch trigger = new ExtendedLatch(1);
       (new CancellingThread(queryId, ex, trigger)).start();
       (new ResumingThread(queryId, ex, trigger)).start();

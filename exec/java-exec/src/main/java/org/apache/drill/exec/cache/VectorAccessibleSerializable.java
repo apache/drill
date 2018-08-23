@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -41,6 +40,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.google.common.base.Preconditions;
 
 /**
  * A wrapper around a VectorAccessible. Will serialize a VectorAccessible and
@@ -206,7 +206,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
   @SuppressWarnings("resource")
   @Override
   public void writeToStream(OutputStream output) throws IOException {
-    Objects.requireNonNull(output);
+    Preconditions.checkNotNull(output);
     Timer.Context timerContext = metrics.timer(WRITER_TIMER).time();
 
     DrillBuf[] incomingBuffers = batch.getBuffers();

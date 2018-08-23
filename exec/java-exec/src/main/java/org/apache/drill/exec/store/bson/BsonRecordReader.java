@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -43,6 +42,8 @@ import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.joda.time.DateTime;
 
+import com.google.common.base.Preconditions;
+
 import io.netty.buffer.DrillBuf;
 
 public class BsonRecordReader {
@@ -59,7 +60,7 @@ public class BsonRecordReader {
   }
 
   public BsonRecordReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean readNumbersAsDouble) {
-    assert Objects.requireNonNull(columns).size() > 0 : "bson record reader requires at least a column";
+    assert Preconditions.checkNotNull(columns).size() > 0 : "bson record reader requires at least a column";
     this.readNumbersAsDouble = readNumbersAsDouble;
     this.workBuf = managedBuf;
     this.columns = columns;

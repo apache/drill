@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
@@ -198,7 +197,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
           "frag:" + QueryIdHelper.getFragmentId(fragment.getHandle()),
           fragment.getMemInitial(),
           fragment.getMemMax());
-      Objects.requireNonNull(allocator, "Unable to acuqire allocator");
+      Preconditions.checkNotNull(allocator, "Unable to acuqire allocator");
     } catch (final OutOfMemoryException e) {
       throw UserException.memoryError(e)
         .addContext("Fragment", getHandle().getMajorFragmentId() + ":" + getHandle().getMinorFragmentId())

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.test.rowSet;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
@@ -29,13 +30,12 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
 import java.util.Iterator;
-import java.util.Objects;
 
 public class RowSetBatch implements RecordBatch {
   private final RowSet rowSet;
 
   public RowSetBatch(final RowSet rowSet) {
-    this.rowSet = Objects.requireNonNull(rowSet);
+    this.rowSet = Preconditions.checkNotNull(rowSet);
   }
 
   @Override

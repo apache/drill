@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc;
 
+import com.google.common.base.Preconditions;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
@@ -45,7 +46,6 @@ import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -306,7 +306,8 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
 
     ClientHandshakeHandler(CC connection) {
       super(BasicClient.this.handshakeType, BasicClient.this.handshakeParser);
-      this.connection = Objects.requireNonNull(connection);
+      Preconditions.checkNotNull(connection);
+      this.connection = connection;
     }
 
     @Override

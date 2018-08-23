@@ -20,7 +20,6 @@ package org.apache.drill.exec.rpc.control;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
-import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -36,6 +35,7 @@ import org.apache.drill.exec.rpc.control.Controller.CustomMessageHandler;
 import org.apache.drill.exec.rpc.control.Controller.CustomResponse;
 
 import com.carrotsearch.hppc.IntObjectHashMap;
+import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 
 public class CustomHandlerRegistry {
@@ -58,9 +58,9 @@ public class CustomHandlerRegistry {
       CustomMessageHandler<REQUEST, RESPONSE> handler,
       Controller.CustomSerDe<REQUEST> requestSerde,
       Controller.CustomSerDe<RESPONSE> responseSerde) {
-    Objects.requireNonNull(handler);
-    Objects.requireNonNull(requestSerde);
-    Objects.requireNonNull(responseSerde);
+    Preconditions.checkNotNull(handler);
+    Preconditions.checkNotNull(requestSerde);
+    Preconditions.checkNotNull(responseSerde);
     try (@SuppressWarnings("unused") Closeable lock = write.open()) {
       ParsingHandler<?, ?> parsingHandler = handlers.get(messageTypeId);
       if (parsingHandler != null) {

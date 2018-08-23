@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
-import java.util.Objects;
 
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.categories.VectorTest;
@@ -69,6 +68,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import io.netty.buffer.DrillBuf;
@@ -698,7 +698,7 @@ the interface to load has changed
     public final TypeProtos.MajorType[] types;
 
     public ChildVerifier(TypeProtos.MajorType... childTypes) {
-      this.types = Objects.requireNonNull(childTypes);
+      this.types = Preconditions.checkNotNull(childTypes);
     }
 
     @Override

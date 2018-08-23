@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.coord.store;
 
+import com.google.common.base.Preconditions;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.StreamSupport;
@@ -31,7 +32,7 @@ public abstract class BaseTransientStore<V> implements TransientStore<V> {
   protected final TransientStoreConfig<V> config;
 
   protected BaseTransientStore(TransientStoreConfig<V> config) {
-    this.config = Objects.requireNonNull(config, "config cannot be null");
+    this.config = Preconditions.checkNotNull(config, "config cannot be null");
   }
 
   public TransientStoreConfig<V> getConfig() {
@@ -62,11 +63,11 @@ public abstract class BaseTransientStore<V> implements TransientStore<V> {
 
   @Override
   public void addListener(TransientStoreListener listener) {
-    listeners.add(Objects.requireNonNull(listener, "listener cannot be null"));
+    listeners.add(Preconditions.checkNotNull(listener, "listener cannot be null"));
   }
 
   @Override
   public void removeListener(TransientStoreListener listener) {
-    listeners.remove(Objects.requireNonNull(listener, "listener cannot be null"));
+    listeners.remove(Preconditions.checkNotNull(listener, "listener cannot be null"));
   }
 }

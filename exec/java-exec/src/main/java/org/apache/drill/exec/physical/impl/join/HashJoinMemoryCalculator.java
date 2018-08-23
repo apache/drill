@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.record.RecordBatch;
 import org.slf4j.Logger;
@@ -24,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -163,10 +163,10 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
     private final PartitionStat[] partitionStats;
 
     public PartitionStatSet(final PartitionStat... partitionStats) {
-      this.partitionStats = Objects.requireNonNull(partitionStats);
+      this.partitionStats = Preconditions.checkNotNull(partitionStats);
 
       for (PartitionStat partitionStat: partitionStats) {
-        Objects.requireNonNull(partitionStat);
+        Preconditions.checkNotNull(partitionStat);
       }
     }
 

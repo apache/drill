@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -34,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 
 @JsonTypeName("fs-writer")
 public class EasyWriter extends AbstractWriter {
@@ -55,7 +55,7 @@ public class EasyWriter extends AbstractWriter {
 
     super(child);
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
-    Objects.requireNonNull(formatPlugin, "Unable to load format plugin for provided format config.");
+    Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.location = location;
     this.partitionColumns = partitionColumns;
     setStorageStrategy(storageStrategy);

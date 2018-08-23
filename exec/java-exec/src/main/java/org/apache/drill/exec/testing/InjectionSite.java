@@ -20,17 +20,17 @@ package org.apache.drill.exec.testing;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.KeyDeserializer;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class InjectionSite {
   private final Class<?> clazz;
   private final String desc;
 
   public InjectionSite(Class<?> clazz, String desc) {
-    Objects.requireNonNull(clazz);
-    Objects.requireNonNull(desc);
+    Preconditions.checkNotNull(clazz);
+    Preconditions.checkNotNull(desc);
 
     this.clazz = clazz;
     this.desc = desc;

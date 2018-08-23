@@ -13,10 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@defaultMessage Use Objects.requireNonNull
-com.google.common.base.Preconditions#checkNotNull(java.lang.Object)
-com.google.common.base.Preconditions#checkNotNull(java.lang.Object, java.lang.Object)
-
 @defaultMessage Use java.util.Objects.equals
 com.google.common.base.Objects#equal(java.lang.Object, java.lang.Object)
 

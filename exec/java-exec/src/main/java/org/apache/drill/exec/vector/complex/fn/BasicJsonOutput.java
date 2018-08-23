@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-import java.util.Objects;
 
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -29,6 +28,7 @@ import org.joda.time.Period;
 import org.joda.time.format.ISOPeriodFormat;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.common.base.Preconditions;
 
 /**
  * A JSON output class that generates standard JSON. By default, literals are output such that they can be implicitly
@@ -46,8 +46,8 @@ public class BasicJsonOutput implements JsonOutput {
   }
 
   protected BasicJsonOutput(JsonGenerator gen, DateOutputFormat dateOutput) {
-    Objects.requireNonNull(dateOutput);
-    Objects.requireNonNull(gen);
+    Preconditions.checkNotNull(dateOutput);
+    Preconditions.checkNotNull(gen);
 
     this.gen = gen;
 

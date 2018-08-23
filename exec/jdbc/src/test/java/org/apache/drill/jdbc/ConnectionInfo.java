@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -35,7 +36,7 @@ public class ConnectionInfo {
   }
 
   public ConnectionInfo(String url, ImmutableMap<Object, Object> params) {
-    this.url = Objects.requireNonNull(url, "URL cannot be null");
+    this.url = Preconditions.checkNotNull(url, "URL cannot be null");
     this.params = params;
   }
 

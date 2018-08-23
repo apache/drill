@@ -18,7 +18,6 @@
 package org.apache.drill.exec.record;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.PathSegment;
@@ -27,6 +26,7 @@ import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.carrotsearch.hppc.IntArrayList;
+import com.google.common.base.Preconditions;
 
 /**
  * Declares a value vector field, providing metadata about the field.
@@ -189,8 +189,8 @@ public class TypedFieldId {
     }
 
     public TypedFieldId build() {
-      Objects.requireNonNull(intermediateType);
-      Objects.requireNonNull(finalType);
+      Preconditions.checkNotNull(intermediateType);
+      Preconditions.checkNotNull(finalType);
 
       if (intermediateType == null) {
         intermediateType = finalType;

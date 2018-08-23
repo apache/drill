@@ -17,11 +17,11 @@
  */
 package org.apache.drill.test;
 
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
@@ -141,13 +141,13 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
     public Builder setScanExecutor(final ExecutorService scanExecutor)
     {
-      this.scanExecutor = Objects.requireNonNull(scanExecutor);
+      this.scanExecutor = Preconditions.checkNotNull(scanExecutor);
       return this;
     }
 
     public Builder setScanDecoderExecutor(final ExecutorService scanDecoderExecutor)
     {
-      this.scanDecoderExecutor = Objects.requireNonNull(scanDecoderExecutor);
+      this.scanDecoderExecutor = Preconditions.checkNotNull(scanDecoderExecutor);
       return this;
     }
 
@@ -181,9 +181,9 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
                                final ExecutorService scanExecutorService,
                                final ExecutorService scanDecodeExecutorService) {
       super(newFunctionRegistry(config, options));
-      this.config = Objects.requireNonNull(config);
-      this.options = Objects.requireNonNull(options);
-      this.allocator = Objects.requireNonNull(allocator);
+      this.config = Preconditions.checkNotNull(config);
+      this.options = Preconditions.checkNotNull(options);
+      this.allocator = Preconditions.checkNotNull(allocator);
       this.scanExecutorService = scanExecutorService;
       this.scanDecodeExecutorService = scanDecodeExecutorService;
       this.controls = new ExecutionControls(options);

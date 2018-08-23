@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import com.google.common.base.Preconditions;
 import com.typesafe.config.ConfigException;
 import io.netty.buffer.DrillBuf;
 
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -53,7 +53,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
   @Override
   public void setup(FragmentContext context, BufferAllocator allocator, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException {
     // we pass in the local hyperBatch since that is where we'll be reading data.
-    Objects.requireNonNull(vector4);
+    Preconditions.checkNotNull(vector4);
     this.vector4 = vector4.createNewWrapperCurrent();
     this.context = context;
     vector4.clear();

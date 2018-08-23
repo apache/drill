@@ -22,9 +22,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
@@ -38,7 +38,7 @@ public class FragmentWrapper {
   private final long start;
 
   public FragmentWrapper(final MajorFragmentProfile major, final long start) {
-    this.major = Objects.requireNonNull(major);
+    this.major = Preconditions.checkNotNull(major);
     this.start = start;
   }
 

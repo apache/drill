@@ -23,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -316,8 +315,8 @@ public class QueryBuilder {
    */
 
   public List<QueryDataBatch> results() throws RpcException {
-    Objects.requireNonNull(queryType, "Query not provided.");
-    Objects.requireNonNull(queryText, "Query not provided.");
+    Preconditions.checkNotNull(queryType, "Query not provided.");
+    Preconditions.checkNotNull(queryText, "Query not provided.");
     return client.client().runQuery(queryType, queryText);
   }
 
@@ -468,7 +467,7 @@ public class QueryBuilder {
    */
 
   public void withListener(UserResultsListener listener) {
-    Objects.requireNonNull(queryType, "Query not provided.");
+    Preconditions.checkNotNull(queryType, "Query not provided.");
     if (planFragments != null) {
       try {
         client.client().runQuery(QueryType.EXECUTION, planFragments, listener);
@@ -476,7 +475,7 @@ public class QueryBuilder {
         throw new IllegalStateException(e);
       }
     } else {
-      Objects.requireNonNull(queryText, "Query not provided.");
+      Preconditions.checkNotNull(queryText, "Query not provided.");
       client.client().runQuery(queryType, queryText, listener);
     }
   }

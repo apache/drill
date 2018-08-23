@@ -39,7 +39,8 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedExceptionAction;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Handles SASL exchange, on the client-side.
@@ -158,9 +159,9 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
     final C connection;
 
     SaslChallengeContext(SaslMessage challenge, UserGroupInformation ugi, C connection) {
-      this.challenge = Objects.requireNonNull(challenge);
-      this.ugi = Objects.requireNonNull(ugi);
-      this.connection = Objects.requireNonNull(connection);
+      this.challenge = checkNotNull(challenge);
+      this.ugi = checkNotNull(ugi);
+      this.connection = checkNotNull(connection);
     }
   }
 

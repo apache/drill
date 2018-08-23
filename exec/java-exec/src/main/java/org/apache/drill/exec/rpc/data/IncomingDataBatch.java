@@ -23,7 +23,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.record.RawFragmentBatch;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * An incoming batch of data. The data is held by the original allocator. Any use of the associated data must be
@@ -46,9 +46,11 @@ public class IncomingDataBatch {
    *          AckSender to use for underlying RawFragmentBatches.
    */
   public IncomingDataBatch(FragmentRecordBatch header, DrillBuf body, AckSender sender) {
-    this.header = Objects.requireNonNull(header);
+    Preconditions.checkNotNull(header);
+    Preconditions.checkNotNull(sender);
+    this.header = header;
     this.body = body;
-    this.sender = Objects.requireNonNull(sender);
+    this.sender = sender;
   }
 
   /**

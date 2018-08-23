@@ -19,8 +19,8 @@ package org.apache.drill.exec.store.sys;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import com.typesafe.config.ConfigException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -35,8 +35,8 @@ public class PersistentStoreRegistry<C extends ClusterCoordinator> {
   private final C coordinator;
 
   public PersistentStoreRegistry(C coordinator, DrillConfig config) {
-    this.coordinator = Objects.requireNonNull(coordinator, "coordinator cannot be null");
-    this.config = Objects.requireNonNull(config, "config cannot be null");
+    this.coordinator = Preconditions.checkNotNull(coordinator, "coordinator cannot be null");
+    this.config = Preconditions.checkNotNull(config, "config cannot be null");
   }
 
   public C getCoordinator() {

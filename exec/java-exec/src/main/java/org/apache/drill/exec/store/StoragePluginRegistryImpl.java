@@ -31,7 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -65,6 +64,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.io.Resources;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginRegistryImpl.class);
 
@@ -79,9 +80,9 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   private final LoadingCache<StoragePluginConfig, StoragePlugin> ephemeralPlugins;
 
   public StoragePluginRegistryImpl(DrillbitContext context) {
-    this.context = Objects.requireNonNull(context);
-    this.lpPersistence = Objects.requireNonNull(context.getLpPersistence());
-    this.classpathScan = Objects.requireNonNull(context.getClasspathScan());
+    this.context = checkNotNull(context);
+    this.lpPersistence = checkNotNull(context.getLpPersistence());
+    this.classpathScan = checkNotNull(context.getClasspathScan());
     try {
       this.pluginSystemTable = context
           .getStoreProvider()

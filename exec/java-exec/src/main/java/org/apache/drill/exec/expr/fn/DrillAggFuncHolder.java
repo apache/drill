@@ -42,8 +42,6 @@ import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
 
-import java.util.Objects;
-
 class DrillAggFuncHolder extends DrillFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillAggFuncHolder.class);
 
@@ -234,7 +232,7 @@ class DrillAggFuncHolder extends DrillFuncHolder {
       internalVars[i] = sub.decl(g.getHolderType(getWorkspaceVars()[i].getMajorType()),  getWorkspaceVars()[i].getName(), workspaceJVars[i]);
     }
 
-    Objects.requireNonNull(body);
+    Preconditions.checkNotNull(body);
     sub.directStatement(body);
 
     // reassign workspace variables back.

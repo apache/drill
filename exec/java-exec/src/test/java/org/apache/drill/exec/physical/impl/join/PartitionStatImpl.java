@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * This class represents the memory size statistics for an entire partition.
@@ -35,7 +34,7 @@ public class PartitionStatImpl implements HashJoinMemoryCalculator.PartitionStat
 
   public void add(HashJoinMemoryCalculator.BatchStat batchStat) {
     Preconditions.checkState(!spilled);
-    Objects.requireNonNull(batchStat);
+    Preconditions.checkNotNull(batchStat);
     partitionSize += batchStat.getBatchSize();
     numRecords += batchStat.getNumRecords();
     batchStats.addLast(batchStat);

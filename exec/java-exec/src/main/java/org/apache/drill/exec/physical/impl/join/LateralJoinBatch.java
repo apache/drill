@@ -46,7 +46,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
@@ -111,8 +110,8 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
   public LateralJoinBatch(LateralJoinPOP popConfig, FragmentContext context,
                           RecordBatch left, RecordBatch right) throws OutOfMemoryException {
     super(popConfig, context, left, right);
-    Objects.requireNonNull(left);
-    Objects.requireNonNull(right);
+    Preconditions.checkNotNull(left);
+    Preconditions.checkNotNull(right);
     int configOutputBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
     implicitColumn = popConfig.getImplicitRIDColumn();
     populateExcludedField(popConfig);

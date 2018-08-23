@@ -17,6 +17,8 @@
  */
 package org.apache.drill.jdbc;
 
+import com.google.common.base.Preconditions;
+
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -33,7 +35,6 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -46,7 +47,7 @@ public final class NonClosableConnection implements Connection {
   private final Connection delegate;
 
   public NonClosableConnection(final Connection delegate) {
-    this.delegate = Objects.requireNonNull(delegate, "delegate cannot be null");
+    this.delegate = Preconditions.checkNotNull(delegate, "delegate cannot be null");
   }
 
   public static NonClosableConnection of(final Connection inner) {

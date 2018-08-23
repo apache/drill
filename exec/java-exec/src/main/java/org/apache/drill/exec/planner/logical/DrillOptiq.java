@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -131,7 +131,7 @@ public class DrillOptiq {
     public LogicalExpression visitInputRef(RexInputRef inputRef) {
       int index = inputRef.getIndex();
       RelDataTypeField field = fieldList.get(index);
-      Objects.requireNonNull(field, "Unable to find field using input reference");
+      Preconditions.checkNotNull(field, "Unable to find field using input reference");
       return FieldReference.getWithQuotedRef(field.getName());
     }
 

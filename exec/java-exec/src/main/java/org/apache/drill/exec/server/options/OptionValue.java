@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
 import java.util.EnumSet;
-import java.util.Objects;
 
 /**
  * <p>
@@ -69,7 +68,7 @@ public class OptionValue implements Comparable<OptionValue> {
     private EnumSet<OptionScope> scopes;
 
     AccessibleScopes(EnumSet<OptionScope> scopes) {
-      this.scopes = Objects.requireNonNull(scopes);
+      this.scopes = Preconditions.checkNotNull(scopes);
     }
 
     public boolean inScopeOf(OptionScope scope) {

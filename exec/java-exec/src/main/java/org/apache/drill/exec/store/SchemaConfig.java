@@ -24,8 +24,6 @@ import org.apache.drill.exec.server.options.OptionValue;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-import java.util.Objects;
-
 /**
  * Contains information needed by {@link org.apache.drill.exec.store.AbstractSchema} implementations.
  */
@@ -48,7 +46,7 @@ public class SchemaConfig {
    */
   public static Builder newBuilder(final String userName, final SchemaConfigInfoProvider provider) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(userName), "A valid userName is expected");
-    Objects.requireNonNull(provider, "Non-null SchemaConfigInfoProvider is expected");
+    Preconditions.checkNotNull(provider, "Non-null SchemaConfigInfoProvider is expected");
     return new Builder(userName, provider);
   }
 

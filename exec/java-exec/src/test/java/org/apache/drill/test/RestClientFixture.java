@@ -18,6 +18,7 @@
 package org.apache.drill.test;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.server.rest.StatusResources;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.JerseyClientBuilder;
@@ -29,7 +30,6 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Represents a client for the Drill Rest API.
@@ -42,7 +42,7 @@ public class RestClientFixture implements AutoCloseable {
     private ClusterFixture cluster;
 
     public Builder(ClusterFixture cluster) {
-      this.cluster = Objects.requireNonNull(cluster);
+      this.cluster = Preconditions.checkNotNull(cluster);
     }
 
     public RestClientFixture build() {

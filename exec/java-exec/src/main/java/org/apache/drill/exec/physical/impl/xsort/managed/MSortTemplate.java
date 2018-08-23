@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Named;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -59,7 +59,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
   public void setup(final FragmentContext context, final BufferAllocator allocator, final SelectionVector4 vector4,
                     final VectorContainer hyperBatch, int outputBatchSize, int desiredBatchSize) throws SchemaChangeException{
     // we pass in the local hyperBatch since that is where we'll be reading data.
-    Objects.requireNonNull(vector4);
+    Preconditions.checkNotNull(vector4);
     this.vector4 = vector4.createNewWrapperCurrent();
     this.context = context;
     vector4.clear();

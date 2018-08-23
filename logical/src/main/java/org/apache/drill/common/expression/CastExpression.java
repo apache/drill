@@ -19,8 +19,8 @@ package org.apache.drill.common.expression;
 
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
@@ -34,7 +34,7 @@ public class CastExpression extends LogicalExpressionBase implements Iterable<Lo
   public CastExpression(LogicalExpression input, MajorType type, ExpressionPosition pos) {
     super(pos);
     this.input = input;
-    this.type = Objects.requireNonNull(type, "Major type cannot be null");
+    this.type = Preconditions.checkNotNull(type, "Major type cannot be null");
   }
 
   @Override

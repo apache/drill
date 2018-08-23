@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex.fn;
 
+import com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
@@ -24,7 +25,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -148,7 +148,7 @@ public class JsonReader extends BaseJsonProcessor {
       if (columns == null) {
         throw new IllegalStateException("You need to set SchemaPath columns in order to build JsonReader");
       }
-      assert Objects.requireNonNull(columns).size() > 0 : "JSON record reader requires at least one column";
+      assert Preconditions.checkNotNull(columns).size() > 0 : "JSON record reader requires at least one column";
       return new JsonReader(this);
     }
   }

@@ -22,7 +22,7 @@ import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 
 public abstract class AbstractBase implements PhysicalOperator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBase.class);
@@ -46,7 +46,7 @@ public abstract class AbstractBase implements PhysicalOperator {
   }
 
   public AbstractBase(AbstractBase that) {
-    Objects.requireNonNull(that, "Unable to clone: source is null.");
+    Preconditions.checkNotNull(that, "Unable to clone: source is null.");
     this.userName = that.userName;
   }
 
@@ -57,7 +57,7 @@ public abstract class AbstractBase implements PhysicalOperator {
       throw new IllegalArgumentException("Null iterator for pop." + this);
     }
     for (PhysicalOperator o : this) {
-      Objects.requireNonNull(o, String.format("Null in iterator for pop %s.", this));
+      Preconditions.checkNotNull(o, String.format("Null in iterator for pop %s.", this));
       o.accept(visitor);
     }
     visitor.leave(this);

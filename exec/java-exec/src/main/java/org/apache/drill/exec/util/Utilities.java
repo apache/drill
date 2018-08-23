@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.util;
 
+import com.google.common.base.Preconditions;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.drill.common.expression.PathSegment;
@@ -30,7 +31,6 @@ import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
 import java.util.Collection;
-import java.util.Objects;
 
 public class Utilities {
 
@@ -86,8 +86,8 @@ public class Utilities {
    * @return True if the list of {@link org.apache.drill.common.expression.SchemaPath}s has star column.
    */
   public static boolean isStarQuery(Collection<SchemaPath> projected) {
-    return Objects.requireNonNull(projected, COL_NULL_ERROR).stream()
-        .anyMatch(path -> Objects.requireNonNull(path).equals(SchemaPath.STAR_COLUMN));
+    return Preconditions.checkNotNull(projected, COL_NULL_ERROR).stream()
+        .anyMatch(path -> Preconditions.checkNotNull(path).equals(SchemaPath.STAR_COLUMN));
   }
 
   /**

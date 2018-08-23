@@ -18,6 +18,7 @@
 package org.apache.drill.exec.client;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
@@ -27,7 +28,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -195,7 +195,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     if (connected) {
       throw new IllegalStateException("Attempted to modify client connection property after connection has been established.");
     }
-    this.clientName = Objects.requireNonNull(name, "client name should not be null");
+    this.clientName = checkNotNull(name, "client name should not be null");
   }
 
   /**

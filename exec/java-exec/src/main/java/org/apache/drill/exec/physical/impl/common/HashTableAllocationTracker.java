@@ -19,8 +19,6 @@ package org.apache.drill.exec.physical.impl.common;
 
 import com.google.common.base.Preconditions;
 
-import java.util.Objects;
-
 /**
  * A helper class used by {@link HashTableTemplate} in order to pre-allocate {@link HashTableTemplate.BatchHolder}s of the appropriate size.
  *
@@ -39,7 +37,7 @@ class HashTableAllocationTracker
 
   protected HashTableAllocationTracker(final HashTableConfig config)
   {
-    this.config = Objects.requireNonNull(config);
+    this.config = Preconditions.checkNotNull(config);
     remainingCapacity = config.getInitialCapacity();
   }
 

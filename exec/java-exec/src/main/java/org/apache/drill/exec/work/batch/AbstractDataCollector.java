@@ -18,7 +18,6 @@
 package org.apache.drill.exec.work.batch;
 
 import java.io.IOException;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
@@ -50,8 +49,8 @@ public abstract class AbstractDataCollector implements DataCollector {
    */
   public AbstractDataCollector(AtomicInteger parentAccounter,
       int numBuffers, Collector collector, int bufferCapacity, FragmentContext context) {
-    Objects.requireNonNull(collector);
-    Objects.requireNonNull(parentAccounter);
+    Preconditions.checkNotNull(collector);
+    Preconditions.checkNotNull(parentAccounter);
 
     this.incomingStreams = collector.getIncomingMinorFragmentCount();
     this.parentAccounter = parentAccounter;

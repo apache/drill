@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -98,8 +97,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       String selectionRoot
       ) throws IOException{
     super(userName);
-    this.selection = Objects.requireNonNull(selection);
-    this.formatPlugin = Objects.requireNonNull(formatPlugin, "Unable to load format plugin for provided format config.");
+    this.selection = Preconditions.checkNotNull(selection);
+    this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
     initFromSelection(selection, formatPlugin);

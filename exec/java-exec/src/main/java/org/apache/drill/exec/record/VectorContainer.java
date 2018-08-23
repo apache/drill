@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -347,7 +346,8 @@ public class VectorContainer implements VectorAccessible {
 
   @Override
   public BatchSchema getSchema() {
-    Objects.requireNonNull(schema,
+    Preconditions
+        .checkNotNull(schema,
             "Schema is currently null.  You must call buildSchema(SelectionVectorMode) before this container can return a schema.");
     return schema;
   }

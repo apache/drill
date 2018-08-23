@@ -29,9 +29,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
-import java.util.Objects;
 
 /**
  * <p>
@@ -100,7 +100,7 @@ public class PersistedOptionValue {
   private Double float_val;
 
   public PersistedOptionValue(String value) {
-    this.value = Objects.requireNonNull(value);
+    this.value = Preconditions.checkNotNull(value);
   }
 
   public PersistedOptionValue(OptionValue.Kind kind, String name,
@@ -115,16 +115,20 @@ public class PersistedOptionValue {
 
     switch (kind) {
       case BOOLEAN:
-        value = Objects.requireNonNull(bool_val).toString();
+        Preconditions.checkNotNull(bool_val);
+        value = bool_val.toString();
         break;
       case STRING:
-        value = Objects.requireNonNull(string_val);
+        Preconditions.checkNotNull(string_val);
+        value = string_val;
         break;
       case DOUBLE:
-        value = Objects.requireNonNull(float_val).toString();
+        Preconditions.checkNotNull(float_val);
+        value = float_val.toString();
         break;
       case LONG:
-        value = Objects.requireNonNull(num_val).toString();
+        Preconditions.checkNotNull(num_val);
+        value = num_val.toString();
         break;
       default:
         throw new UnsupportedOperationException(String.format("Unsupported type %s", kind));
@@ -196,7 +200,7 @@ public class PersistedOptionValue {
   }
 
   public OptionValue toOptionValue(OptionDefinition optionDefinition, OptionValue.OptionScope optionScope) {
-    Objects.requireNonNull(value, "The value must be defined in order for this to be converted to an " +
+    Preconditions.checkNotNull(value, "The value must be defined in order for this to be converted to an " +
         "option value");
     OptionValidator validator = optionDefinition.getValidator();
     OptionValue.Kind kind = validator.getKind();

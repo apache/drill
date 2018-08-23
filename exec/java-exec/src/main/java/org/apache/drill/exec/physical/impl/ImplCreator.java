@@ -22,10 +22,10 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
@@ -67,8 +67,8 @@ public class ImplCreator {
    * @throws ExecutionSetupException
    */
   public static RootExec getExec(ExecutorFragmentContext context, FragmentRoot root) throws ExecutionSetupException {
-    Objects.requireNonNull(root);
-    Objects.requireNonNull(context);
+    Preconditions.checkNotNull(root);
+    Preconditions.checkNotNull(context);
 
     // Enable iterator (operator) validation if assertions are enabled (debug mode)
     // or if in production mode and the ENABLE_ITERATOR_VALIDATION option is set
@@ -128,7 +128,7 @@ public class ImplCreator {
   /** Create a RecordBatch and its children for given PhysicalOperator */
   @VisibleForTesting
   public RecordBatch getRecordBatch(PhysicalOperator op, ExecutorFragmentContext context) throws ExecutionSetupException {
-    Objects.requireNonNull(op);
+    Preconditions.checkNotNull(op);
 
     List<RecordBatch> childRecordBatches = getChildren(op, context);
 

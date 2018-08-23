@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.AutoCloseables;
 
 public class CachingTransientStoreFactory implements TransientStoreFactory {
@@ -30,12 +30,12 @@ public class CachingTransientStoreFactory implements TransientStoreFactory {
   private final Map<TransientStoreConfig, TransientStore> cache = new HashMap<>();
 
   public CachingTransientStoreFactory(TransientStoreFactory delegate) {
-    this.delegate = Objects.requireNonNull(delegate, "delegate factory is required");
+    this.delegate = Preconditions.checkNotNull(delegate, "delegate factory is required");
   }
 
   @Override
   public <V> TransientStore<V> getOrCreateStore(TransientStoreConfig<V> config) {
-    TransientStore<V> store = cache.get(Objects.requireNonNull(config, "config is required"));
+    TransientStore<V> store = cache.get(Preconditions.checkNotNull(config, "config is required"));
     if (store != null) {
       return store;
     }

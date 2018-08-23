@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.coord.zk;
 
+import com.google.common.base.Preconditions;
 import org.apache.parquet.Strings;
 
 import java.net.URL;
-import java.util.Objects;
 
 /**
  * A convenience class used to expedite zookeeper paths manipulations.
@@ -36,7 +36,7 @@ public final class PathUtils {
   public static String join(String... parts) {
     final StringBuilder sb = new StringBuilder();
     for (String part : parts) {
-      Objects.requireNonNull(part, "parts cannot contain null");
+      Preconditions.checkNotNull(part, "parts cannot contain null");
       if (!Strings.isNullOrEmpty(part)) {
         sb.append(part).append("/");
       }
@@ -54,7 +54,7 @@ public final class PathUtils {
    * @return  normalized path
    */
   public static String normalize(String path) {
-    if (Strings.isNullOrEmpty(Objects.requireNonNull(path))) {
+    if (Strings.isNullOrEmpty(Preconditions.checkNotNull(path))) {
       return path;
     }
 

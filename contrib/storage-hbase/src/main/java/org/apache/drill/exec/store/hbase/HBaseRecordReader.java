@@ -26,10 +26,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
@@ -87,7 +87,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   public HBaseRecordReader(Connection connection, HBaseSubScan.HBaseSubScanSpec subScanSpec, List<SchemaPath> projectedColumns) {
     this.connection = connection;
     hbaseTableName = TableName.valueOf(
-        Objects.requireNonNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName());
+      Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName());
     hbaseScan = new Scan(subScanSpec.getStartRow(), subScanSpec.getStopRow());
     hbaseScanColumnsOnly = new Scan();
     hbaseScan

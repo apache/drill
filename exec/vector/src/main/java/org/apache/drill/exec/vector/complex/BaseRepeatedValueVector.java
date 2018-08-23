@@ -21,7 +21,6 @@ import io.netty.buffer.DrillBuf;
 
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.drill.common.types.TypeProtos;
@@ -39,6 +38,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
 import org.apache.drill.exec.vector.ZeroVector;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ObjectArrays;
 
 public abstract class BaseRepeatedValueVector extends BaseValueVector implements RepeatedValueVector {
@@ -60,7 +60,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
   protected BaseRepeatedValueVector(MaterializedField field, BufferAllocator allocator, ValueVector vector) {
     super(field, allocator);
     this.offsets = new UInt4Vector(OFFSETS_FIELD, allocator);
-    this.vector = Objects.requireNonNull(vector, "data vector cannot be null");
+    this.vector = Preconditions.checkNotNull(vector, "data vector cannot be null");
   }
 
   @Override

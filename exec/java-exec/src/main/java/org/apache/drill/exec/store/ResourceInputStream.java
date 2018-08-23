@@ -20,7 +20,6 @@ package org.apache.drill.exec.store;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.util.Objects;
 
 import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
@@ -43,7 +42,7 @@ public class ResourceInputStream extends ByteArrayInputStream implements Seekabl
   }
 
   public int read(long position, byte b[], int off, int len) {
-    Objects.requireNonNull(b);
+    Preconditions.checkNotNull(b);
     Preconditions.checkPositionIndexes(off, off + len, b.length);
 
     int start = (int) position;

@@ -22,7 +22,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Preconditions;
@@ -107,7 +106,7 @@ public class FileSelection {
    * Copy constructor for convenience.
    */
   protected FileSelection(FileSelection selection) {
-    Objects.requireNonNull(selection, "selection cannot be null");
+    Preconditions.checkNotNull(selection, "selection cannot be null");
     this.statuses = selection.statuses;
     this.files = selection.files;
     this.selectionRoot = selection.selectionRoot;

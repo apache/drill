@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCall;
@@ -27,7 +28,6 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.drill.common.types.TypeProtos;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class DrillSqlOperatorWithoutInference extends DrillSqlOperator {
   private static final TypeProtos.MajorType NONE = TypeProtos.MajorType.getDefaultInstance();
@@ -41,7 +41,7 @@ public class DrillSqlOperatorWithoutInference extends DrillSqlOperator {
         isDeterminisitic,
         DynamicReturnType.INSTANCE,
         isNiladic);
-    this.returnType = Objects.requireNonNull(returnType);
+    this.returnType = Preconditions.checkNotNull(returnType);
   }
 
   protected RelDataType getReturnDataType(final RelDataTypeFactory factory) {

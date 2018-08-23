@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.sys;
 
 import com.dyuproject.protostuff.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import org.apache.drill.exec.serialization.InstanceSerializer;
@@ -118,7 +119,7 @@ public class PersistentStoreConfig<V> {
     }
 
     public PersistentStoreConfig<V> build(){
-      Objects.requireNonNull(name);
+      Preconditions.checkNotNull(name);
       return new PersistentStoreConfig<>(name, serializer, mode, capacity);
     }
   }

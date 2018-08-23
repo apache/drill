@@ -22,7 +22,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.Closeable;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -45,8 +44,9 @@ public abstract class ReconnectingConnection<C extends ClientConnection, HS exte
   private final HS handshake;
 
   public ReconnectingConnection(HS handshake, String host, int port) {
+    Preconditions.checkNotNull(host);
     Preconditions.checkArgument(port > 0);
-    this.host = Objects.requireNonNull(host);
+    this.host = host;
     this.port = port;
     this.handshake = handshake;
   }

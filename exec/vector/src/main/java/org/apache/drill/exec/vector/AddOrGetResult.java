@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.vector;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 
 public class AddOrGetResult<V extends ValueVector> {
   private final V vector;
   private final boolean created;
 
   public AddOrGetResult(V vector, boolean created) {
-    this.vector = Objects.requireNonNull(vector);
+    this.vector = Preconditions.checkNotNull(vector);
     this.created = created;
   }
 

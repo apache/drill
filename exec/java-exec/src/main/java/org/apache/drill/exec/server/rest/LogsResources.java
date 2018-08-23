@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.work.WorkManager;
@@ -46,7 +47,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -137,7 +137,7 @@ public class LogsResources {
   }
 
   private File getLogFolder() {
-    return new File(Objects.requireNonNull(System.getenv("DRILL_LOG_DIR"), "DRILL_LOG_DIR variable is not set"));
+    return new File(Preconditions.checkNotNull(System.getenv("DRILL_LOG_DIR"), "DRILL_LOG_DIR variable is not set"));
   }
 
   private File getFileByName(File folder, final String name) {

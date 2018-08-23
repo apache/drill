@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * This holds all the information about an option.
@@ -27,13 +27,13 @@ public class OptionDefinition {
   private final OptionMetaData metaData;
 
   public OptionDefinition(OptionValidator validator) {
-    this.validator = Objects.requireNonNull(validator);
+    this.validator = Preconditions.checkNotNull(validator);
     this.metaData = OptionMetaData.DEFAULT;
   }
 
   public OptionDefinition(OptionValidator validator, OptionMetaData metaData) {
-    this.validator = Objects.requireNonNull(validator);
-    this.metaData = Objects.requireNonNull(metaData);
+    this.validator = Preconditions.checkNotNull(validator);
+    this.metaData = Preconditions.checkNotNull(metaData);
   }
 
   public OptionValidator getValidator() {

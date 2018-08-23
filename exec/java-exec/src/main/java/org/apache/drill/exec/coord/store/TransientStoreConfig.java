@@ -35,7 +35,7 @@ public class TransientStoreConfig<V> {
   protected TransientStoreConfig(String name, InstanceSerializer<V> serializer) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "name is required");
     this.name = name;
-    this.serializer = Objects.requireNonNull(serializer, "serializer cannot be null");
+    this.serializer = Preconditions.checkNotNull(serializer, "serializer cannot be null");
   }
 
   public String getName() {

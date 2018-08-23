@@ -19,8 +19,8 @@ package org.apache.drill.exec.work;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Wrapper;
@@ -79,10 +79,10 @@ public class QueryWorkUnit {
   private final Wrapper rootWrapper;
 
   public QueryWorkUnit(FragmentRoot rootOperator, MinorFragmentDefn rootFragmentDefn,
-      List<MinorFragmentDefn> minorFragmentDefns, final Wrapper rootWrapper) {
-    this.rootFragmentDefn = Objects.requireNonNull(rootFragmentDefn);
-    this.rootOperator = Objects.requireNonNull(rootOperator);
-    this.minorFragmentDefns = Objects.requireNonNull(minorFragmentDefns);
+      List<MinorFragmentDefn> minorFragmentDefns, Wrapper rootWrapper) {
+    this.rootFragmentDefn = Preconditions.checkNotNull(rootFragmentDefn);
+    this.rootOperator = Preconditions.checkNotNull(rootOperator);
+    this.minorFragmentDefns = Preconditions.checkNotNull(minorFragmentDefns);
     this.rootWrapper = rootWrapper;
   }
 

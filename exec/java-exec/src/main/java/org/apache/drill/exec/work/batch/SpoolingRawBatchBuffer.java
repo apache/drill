@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.batch;
 
+import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
@@ -24,7 +25,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadLocalRandom;
@@ -339,7 +339,8 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     private long check;
 
     public RawFragmentBatchWrapper(RawFragmentBatch batch, boolean available) {
-      this.batch = Objects.requireNonNull(batch);
+      Preconditions.checkNotNull(batch);
+      this.batch = batch;
       this.available = available;
       this.latch = new CountDownLatch(available ? 0 : 1);
       if (available) {

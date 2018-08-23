@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.sun.codemodel.JOp;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FieldReference;
@@ -35,8 +37,6 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
 
-import java.util.Objects;
-
 public class DrillSimpleFuncHolder extends DrillFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSimpleFuncHolder.class);
 
@@ -47,8 +47,8 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
 
   public DrillSimpleFuncHolder(FunctionAttributes functionAttributes, FunctionInitializer initializer) {
     super(functionAttributes, initializer);
-    drillFuncClass = Objects.requireNonNull(initializer.getClassName());
-    classLoader = Objects.requireNonNull(initializer.getClassLoader());
+    drillFuncClass = checkNotNull(initializer.getClassName());
+    classLoader = checkNotNull(initializer.getClassLoader());
   }
 
   private String setupBody() {

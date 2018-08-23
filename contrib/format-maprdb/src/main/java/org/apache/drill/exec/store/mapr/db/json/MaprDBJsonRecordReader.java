@@ -25,13 +25,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Collections;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
@@ -103,7 +103,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       List<SchemaPath> projectedColumns, FragmentContext context) {
     buffer = context.getManagedBuffer();
     projectedFields = null;
-    tableName = Objects.requireNonNull(subScanSpec, "MapRDB reader needs a sub-scan spec").getTableName();
+    tableName = Preconditions.checkNotNull(subScanSpec, "MapRDB reader needs a sub-scan spec").getTableName();
     documentReaderIterators = null;
     includeId = false;
     idOnly    = false;

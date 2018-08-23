@@ -21,10 +21,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import com.google.common.base.Preconditions;
 
 public class Collectors {
   private Collectors() {
@@ -59,18 +60,18 @@ public class Collectors {
   }
 
   public static <T, K, V> List<T> collect(List<T> list, Map<K, V> map, BiFunction<K, V, T> mapper) {
-    Objects.requireNonNull(list);
-    Objects.requireNonNull(map);
-    Objects.requireNonNull(mapper);
+    Preconditions.checkNotNull(list);
+    Preconditions.checkNotNull(map);
+    Preconditions.checkNotNull(mapper);
     map.forEach((k, v) -> list.add(mapper.apply(k, v)));
     return list;
   }
 
   public static <T, K, V> List<T> collect(List<T> list, Map<K, V> map, BiFunction<K, V, T> mapper, Predicate<T> predicate) {
-    Objects.requireNonNull(list);
-    Objects.requireNonNull(map);
-    Objects.requireNonNull(mapper);
-    Objects.requireNonNull(predicate);
+    Preconditions.checkNotNull(list);
+    Preconditions.checkNotNull(map);
+    Preconditions.checkNotNull(mapper);
+    Preconditions.checkNotNull(predicate);
     map.forEach((k, v) -> {
       T t = mapper.apply(k, v);
       if (predicate.test(t)) {
@@ -90,8 +91,8 @@ public class Collectors {
    *   to the input {@code Collection}
    */
   public static <T, E> List<T> toList(Collection<E> collection, Function<E, T> mapper) {
-    Objects.requireNonNull(collection);
-    Objects.requireNonNull(mapper);
+    Preconditions.checkNotNull(collection);
+    Preconditions.checkNotNull(mapper);
     ArrayList<T> list = new ArrayList<>(collection.size());
     collection.forEach(e -> list.add(mapper.apply(e)));
     return list;
@@ -107,9 +108,9 @@ public class Collectors {
    * @return new {@code List} that contains elements after applying mapper {@code Function} to the input {@code Collection}
    */
   public static <T, E> List<T> toList(Collection<E> collection, Function<E, T> mapper, Predicate<T> predicate) {
-    Objects.requireNonNull(collection);
-    Objects.requireNonNull(mapper);
-    Objects.requireNonNull(predicate);
+    Preconditions.checkNotNull(collection);
+    Preconditions.checkNotNull(mapper);
+    Preconditions.checkNotNull(predicate);
     ArrayList<T> list = new ArrayList<>(collection.size());
     collection.forEach(e -> {
       T t = mapper.apply(e);

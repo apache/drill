@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -137,7 +136,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   private final ClusterFixtureBuilder builder;
 
   ClusterFixture(ClusterFixtureBuilder builder) {
-    this.builder = Objects.requireNonNull(builder);
+    this.builder = Preconditions.checkNotNull(builder);
 
     setClientProps();
     configureZk();

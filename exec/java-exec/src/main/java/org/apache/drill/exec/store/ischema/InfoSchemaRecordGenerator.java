@@ -37,7 +37,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
@@ -364,8 +363,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
 
     @Override
     public boolean visitTable(String schemaName, String tableName, Table table) {
-      Objects.requireNonNull(table,
-          String.format("Error. Table %s.%s provided is null.", schemaName, tableName));
+      Preconditions.checkNotNull(table, "Error. Table %s.%s provided is null.", schemaName, tableName);
 
       // skip over unknown table types
       if (table.getJdbcTableType() != null) {

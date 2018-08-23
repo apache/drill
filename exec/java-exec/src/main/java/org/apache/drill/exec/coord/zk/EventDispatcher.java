@@ -18,8 +18,8 @@
 package org.apache.drill.exec.coord.zk;
 
 import java.util.Map;
-import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
@@ -43,7 +43,7 @@ public class EventDispatcher<V> implements PathChildrenCacheListener {
   private final ZkEphemeralStore<V> store;
 
   protected EventDispatcher(ZkEphemeralStore<V> store) {
-    this.store = Objects.requireNonNull(store, "store is required");
+    this.store = Preconditions.checkNotNull(store, "store is required");
   }
 
   @Override

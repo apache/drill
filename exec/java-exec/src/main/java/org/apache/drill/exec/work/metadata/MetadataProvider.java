@@ -31,7 +31,6 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.TABLES;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import org.apache.calcite.schema.SchemaPlus;
@@ -74,6 +73,7 @@ import org.apache.drill.exec.store.ischema.Records.Schema;
 import org.apache.drill.exec.store.ischema.Records.Table;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -131,9 +131,9 @@ public class MetadataProvider {
 
     private MetadataRunnable(UserSession session, DrillbitContext dContext,
         ResponseSender responseSender) {
-      this.session = Objects.requireNonNull(session);
-      this.dContext = Objects.requireNonNull(dContext);
-      this.responseSender = Objects.requireNonNull(responseSender);
+      this.session = Preconditions.checkNotNull(session);
+      this.dContext = Preconditions.checkNotNull(dContext);
+      this.responseSender = Preconditions.checkNotNull(responseSender);
     }
 
     @Override
@@ -171,7 +171,7 @@ public class MetadataProvider {
     public CatalogsProvider(UserSession session, DrillbitContext dContext,
         GetCatalogsReq req, ResponseSender responseSender) {
       super(session, dContext, responseSender);
-      this.req = Objects.requireNonNull(req);
+      this.req = Preconditions.checkNotNull(req);
     }
 
     @Override
@@ -224,7 +224,7 @@ public class MetadataProvider {
     private SchemasProvider(UserSession session, DrillbitContext dContext,
         GetSchemasReq req, ResponseSender responseSender) {
       super(session, dContext, responseSender);
-      this.req = Objects.requireNonNull(req);
+      this.req = Preconditions.checkNotNull(req);
     }
 
     @Override
@@ -282,7 +282,7 @@ public class MetadataProvider {
     private TablesProvider(final UserSession session, final DrillbitContext dContext,
         final GetTablesReq req, final ResponseSender responseSender) {
       super(session, dContext, responseSender);
-      this.req = Objects.requireNonNull(req);
+      this.req = Preconditions.checkNotNull(req);
     }
 
     @Override
@@ -343,7 +343,7 @@ public class MetadataProvider {
     private ColumnsProvider(final UserSession session, final DrillbitContext dContext,
         final GetColumnsReq req, final ResponseSender responseSender) {
       super(session, dContext, responseSender);
-      this.req = Objects.requireNonNull(req);
+      this.req = Preconditions.checkNotNull(req);
     }
 
     @Override

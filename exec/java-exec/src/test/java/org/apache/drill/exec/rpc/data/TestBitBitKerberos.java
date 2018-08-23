@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
@@ -73,7 +74,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -478,7 +478,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
 
     public MockFragmentManager(final FragmentContextImpl fragmentContext)
     {
-      this.fragmentContext = Objects.requireNonNull(fragmentContext);
+      this.fragmentContext = Preconditions.checkNotNull(fragmentContext);
     }
 
     @Override

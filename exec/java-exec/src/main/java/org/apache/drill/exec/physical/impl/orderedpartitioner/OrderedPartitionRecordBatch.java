@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl.orderedpartitioner;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -145,7 +144,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // Clearly, this code is not used!
     this.mmap = cache.getMultiMap(MULTI_CACHE_CONFIG);
     this.tableMap = cache.getMap(SINGLE_CACHE_CONFIG);
-    Objects.requireNonNull(tableMap);
+    Preconditions.checkNotNull(tableMap);
 
     this.mapKey = String.format("%s_%d", context.getHandle().getQueryId(), context.getHandle().getMajorFragmentId());
     this.minorFragmentSampleCount = cache.getCounter(mapKey);

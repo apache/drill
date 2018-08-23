@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * Maintains state while traversing a finite state machine described by
@@ -45,8 +45,8 @@ public class FsmCursor {
    * @param token the name of the transition
    */
   public void transition(final String token) {
-    Objects.requireNonNull(token);
-    char c = fsmDescriptor.getChar(token);
+    Preconditions.checkNotNull(token);
+    final char c = fsmDescriptor.getChar(token);
     stringBuilder.append(c);
 
     if (fsmDescriptor.isLastTransition(c)) {

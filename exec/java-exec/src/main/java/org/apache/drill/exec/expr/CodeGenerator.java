@@ -18,12 +18,12 @@
 package org.apache.drill.exec.expr;
 
 import java.io.IOException;
-import java.util.Objects;
 
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.server.options.OptionSet;
 
+import com.google.common.base.Preconditions;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
@@ -93,8 +93,8 @@ public class CodeGenerator<T> {
   }
 
   CodeGenerator(MappingSet mappingSet, TemplateClassDefinition<T> definition, OptionSet optionManager) {
-    Objects.requireNonNull(definition.getSignature(),
-        String.format("The signature for defintion %s was incorrectly initialized.", definition));
+    Preconditions.checkNotNull(definition.getSignature(),
+        "The signature for defintion %s was incorrectly initialized.", definition);
     this.definition = definition;
     this.className = definition.getExternalInterface().getSimpleName() + "Gen" + definition.getNextClassNumber();
     this.fqcn = PACKAGE_NAME + "." + className;

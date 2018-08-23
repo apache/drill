@@ -19,7 +19,7 @@ package org.apache.drill.exec.compile.sig;
 
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * The code generator works with four conceptual methods which can
@@ -81,13 +81,17 @@ public class GeneratorMapping {
   public String getMethodName(final BlockType type) {
     switch(type) {
     case CLEANUP:
-      return Objects.requireNonNull(cleanup, "The current mapping does not have a cleanup method defined.");
+      Preconditions.checkNotNull(cleanup, "The current mapping does not have a cleanup method defined.");
+      return cleanup;
     case EVAL:
-      return Objects.requireNonNull(eval, "The current mapping does not have an eval method defined.");
+      Preconditions.checkNotNull(eval, "The current mapping does not have an eval method defined.");
+      return eval;
     case RESET:
-      return Objects.requireNonNull(reset, "The current mapping does not have a reset method defined.");
+      Preconditions.checkNotNull(reset, "The current mapping does not have a reset method defined.");
+      return reset;
     case SETUP:
-      return Objects.requireNonNull(setup, "The current mapping does not have a setup method defined.");
+      Preconditions.checkNotNull(setup, "The current mapping does not have a setup method defined.");
+      return setup;
     default:
       throw new IllegalStateException();
     }

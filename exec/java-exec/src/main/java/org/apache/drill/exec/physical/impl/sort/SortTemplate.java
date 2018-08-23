@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
@@ -30,6 +29,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
 public abstract class SortTemplate implements Sorter, IndexedSortable{
@@ -40,7 +40,8 @@ public abstract class SortTemplate implements Sorter, IndexedSortable{
 
   public void setup(FragmentContext context, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException{
     // we pass in the local hyperBatch since that is where we'll be reading data.
-    this.vector4 = Objects.requireNonNull(vector4);
+    Preconditions.checkNotNull(vector4);
+    this.vector4 = vector4;
     doSetup(context, hyperBatch, null);
   }
 

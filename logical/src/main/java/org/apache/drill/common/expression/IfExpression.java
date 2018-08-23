@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
@@ -31,6 +30,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 public class IfExpression extends LogicalExpressionBase {
   static final Logger logger = LoggerFactory.getLogger(IfExpression.class);
@@ -90,9 +91,9 @@ public class IfExpression extends LogicalExpressionBase {
       return this;
     }
 
-    public IfExpression build() {
-      Objects.requireNonNull(pos);
-      Objects.requireNonNull(conditions);
+    public IfExpression build(){
+      Preconditions.checkNotNull(pos);
+      Preconditions.checkNotNull(conditions);
       return new IfExpression(pos, conditions, elseExpression, outputType);
     }
 

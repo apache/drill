@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -45,6 +44,7 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 
@@ -245,8 +245,8 @@ public class MapVector extends AbstractMapVector {
       @Override
       public int compare(@Nullable ValueVector left, @Nullable ValueVector right) {
         return Ints.compare(
-            Objects.requireNonNull(left).getValueCapacity(),
-            Objects.requireNonNull(right).getValueCapacity()
+            Preconditions.checkNotNull(left).getValueCapacity(),
+            Preconditions.checkNotNull(right).getValueCapacity()
         );
       }
     };

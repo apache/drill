@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.vector.complex;
 
+import com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -125,7 +125,7 @@ public class RepeatedListVector extends AbstractContainerVector
       private final TransferPair[] children;
 
       public DelegateTransferPair(DelegateRepeatedVector target) {
-        this.target = Objects.requireNonNull(target);
+        this.target = Preconditions.checkNotNull(target);
         if (target.getDataVector() == DEFAULT_DATA_VECTOR) {
           target.addOrGetVector(VectorDescriptor.create(getDataVector().getField()));
           target.getDataVector().allocateNew();
@@ -260,7 +260,7 @@ public class RepeatedListVector extends AbstractContainerVector
 
   protected RepeatedListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack, DelegateRepeatedVector delegate) {
     super(field, allocator, callBack);
-    this.delegate = Objects.requireNonNull(delegate);
+    this.delegate = Preconditions.checkNotNull(delegate);
 
     List<MaterializedField> children = new ArrayList<>(field.getChildren());
     int childSize = children.size();

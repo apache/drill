@@ -19,9 +19,9 @@ package org.apache.drill.exec.vector.complex;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -44,7 +44,7 @@ public abstract class AbstractContainerVector implements ValueVector {
   protected final CallBack callBack;
 
   protected AbstractContainerVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
-    this.field = Objects.requireNonNull(field);
+    this.field = Preconditions.checkNotNull(field);
     this.allocator = allocator;
     this.callBack = callBack;
   }
@@ -81,7 +81,7 @@ public abstract class AbstractContainerVector implements ValueVector {
    */
   protected Collection<String> getChildFieldNames() {
     return field.getChildren().stream()
-        .map(field -> Objects.requireNonNull(field).getName())
+        .map(field -> Preconditions.checkNotNull(field).getName())
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 

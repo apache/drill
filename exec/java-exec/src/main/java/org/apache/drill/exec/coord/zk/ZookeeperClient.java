@@ -19,7 +19,6 @@ package org.apache.drill.exec.coord.zk;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
@@ -50,11 +49,11 @@ public class ZookeeperClient implements AutoCloseable {
   private final CreateMode mode;
 
   public ZookeeperClient(CuratorFramework curator, String root, CreateMode mode) {
-    this.curator = Objects.requireNonNull(curator, "curator is required");
+    this.curator = Preconditions.checkNotNull(curator, "curator is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(root), "root path is required");
     Preconditions.checkArgument(root.charAt(0) == '/', "root path must be absolute");
     this.root = root;
-    this.mode = Objects.requireNonNull(mode, "mode is required");
+    this.mode = Preconditions.checkNotNull(mode, "mode is required");
     this.cache = new PathChildrenCache(curator, root, true);
   }
 
@@ -120,7 +119,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @return true if path exists, false otherwise
    */
   public boolean hasPath(String path, boolean consistent, DataChangeVersion version) {
-    Objects.requireNonNull(path, "path is required");
+    Preconditions.checkNotNull(path, "path is required");
 
     String target = PathUtils.join(root, path);
     try {
@@ -191,7 +190,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @param version version holder
    */
   public byte[] get(String path, boolean consistent, DataChangeVersion version) {
-    Objects.requireNonNull(path, "path is required");
+    Preconditions.checkNotNull(path, "path is required");
 
     String target = PathUtils.join(root, path);
     if (consistent) {
@@ -221,7 +220,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @param path  target path
    */
   public void create(String path) {
-    Objects.requireNonNull(path, "path is required");
+    Preconditions.checkNotNull(path, "path is required");
 
     String target = PathUtils.join(root, path);
     try {
@@ -261,8 +260,8 @@ public class ZookeeperClient implements AutoCloseable {
    * @param version version holder
    */
   public void put(String path, byte[] data, DataChangeVersion version) {
-    Objects.requireNonNull(path, "path is required");
-    Objects.requireNonNull(data, "data is required");
+    Preconditions.checkNotNull(path, "path is required");
+    Preconditions.checkNotNull(data, "data is required");
 
     String target = PathUtils.join(root, path);
     try {
@@ -307,8 +306,8 @@ public class ZookeeperClient implements AutoCloseable {
    * @return null if path was created, else data stored for the given path
    */
   public byte[] putIfAbsent(String path, byte[] data) {
-    Objects.requireNonNull(path, "path is required");
-    Objects.requireNonNull(data, "data is required");
+    Preconditions.checkNotNull(path, "path is required");
+    Preconditions.checkNotNull(data, "data is required");
 
     String target = PathUtils.join(root, path);
     try {
@@ -331,7 +330,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @param path  target path to delete
    */
   public void delete(String path) {
-    Objects.requireNonNull(path, "path is required");
+    Preconditions.checkNotNull(path, "path is required");
 
     String target = PathUtils.join(root, path);
     try {

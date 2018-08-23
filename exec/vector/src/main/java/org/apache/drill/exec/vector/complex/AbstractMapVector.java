@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.vector.complex;
 
+import com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.drill.common.collections.MapWithOrdinal;
@@ -191,8 +191,8 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    */
   protected void putVector(String name, ValueVector vector) {
     ValueVector old = vectors.put(
-        Objects.requireNonNull(name, "field name cannot be null").toLowerCase(),
-        Objects.requireNonNull(vector, "vector cannot be null")
+        Preconditions.checkNotNull(name, "field name cannot be null").toLowerCase(),
+        Preconditions.checkNotNull(vector, "vector cannot be null")
     );
     if (old != null && old != vector) {
       logger.debug("Field [{}] mutated from [{}] to [{}]", name, old.getClass().getSimpleName(),
