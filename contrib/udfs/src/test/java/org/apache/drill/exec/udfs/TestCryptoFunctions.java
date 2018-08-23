@@ -17,14 +17,23 @@
  */
 package org.apache.drill.exec.udfs;
 
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
-public class TestCryptoFunctions extends BaseTestQuery {
+public class TestCryptoFunctions extends ClusterTest {
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
+    startCluster(builder);
+  }
 
   @Test
   public void testMD5() throws Exception {
@@ -74,23 +83,48 @@ public class TestCryptoFunctions extends BaseTestQuery {
 
   @Test
   public void testAESEncrypt() throws Exception {
-    final String query = "select aes_encrypt('testing', 'secret_key') as encrypted FROM (VALUES(1))";
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("select aes_encrypt('testing', 'secret_key') as encrypted from (values(1))")
       .ordered()
       .baselineColumns("encrypted")
       .baselineValues("ICf+zdOrLitogB8HUDru0w==")
       .go();
+
+    testBuilder()
+        .sqlQuery("select aes_encrypt(cast(null as varchar), 'secret_key') as encrypted from (values(1))")
+        .ordered()
+        .baselineColumns("encrypted")
+        .baselineValues((String) null)
+        .go();
+    testBuilder()
+        .sqlQuery("select aes_encrypt('testing', cast (null as varchar)) as encrypted from (values(1))")
+        .ordered()
+        .baselineColumns("encrypted")
+        .baselineValues((String) null)
+        .go();
   }
 
   @Test
   public void testAESDecrypt() throws Exception {
-    final String query = "select aes_decrypt('ICf+zdOrLitogB8HUDru0w==', 'secret_key') as decrypt from (values(1))";
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("select aes_decrypt('ICf+zdOrLitogB8HUDru0w==', 'secret_key') as decrypt from (values(1))")
       .ordered()
       .baselineColumns("decrypt")
       .baselineValues("testing")
       .go();
+
+    testBuilder()
+        .sqlQuery("select aes_decrypt(cast(null as varchar), 'secret_key') as decrypt from (values(1))")
+        .ordered()
+        .baselineColumns("decrypt")
+        .baselineValues((String) null)
+        .go();
+
+    testBuilder()
+        .sqlQuery("select aes_decrypt('ICf+zdOrLitogB8HUDru0w==', cast(null as varchar)) as decrypt from (values(1))")
+        .ordered()
+        .baselineColumns("decrypt")
+        .baselineValues((String) null)
+        .go();
   }
 }

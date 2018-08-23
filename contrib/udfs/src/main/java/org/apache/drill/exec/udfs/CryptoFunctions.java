@@ -22,10 +22,8 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
-import javax.crypto.Cipher;
 import javax.inject.Inject;
 
 public class CryptoFunctions {
@@ -271,34 +269,25 @@ public class CryptoFunctions {
     @Inject
     DrillBuf buffer;
 
-    @Workspace
-    Cipher cipher;
-
     @Override
     public void setup() {
-      String key = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawKey.start, rawKey.end, rawKey.buffer);
+    }
 
+    @Override
+    public void eval() {
+      String key = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawKey.start, rawKey.end, rawKey.buffer);
+      String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
+      String encryptedText = "";
       try {
-        byte[] keyByteArray = key.getBytes("UTF-8");
+        byte[] keyByteArray = key.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         java.security.MessageDigest sha = java.security.MessageDigest.getInstance("SHA-1");
         keyByteArray = sha.digest(keyByteArray);
         keyByteArray = java.util.Arrays.copyOf(keyByteArray, 16);
         javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(keyByteArray, "AES");
 
-        cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-      } catch (Exception e) {
-        //Exceptions are ignored
-      }
-    }
-
-    @Override
-    public void eval() {
-
-      String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
-      String encryptedText = "";
-      try {
-        encryptedText = javax.xml.bind.DatatypeConverter.printBase64Binary(cipher.doFinal(input.getBytes("UTF-8")));
+        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, secretKey);
+        encryptedText = javax.xml.bind.DatatypeConverter.printBase64Binary(cipher.doFinal(input.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
       } catch (Exception e) {
         //Exceptions are ignored
       }
@@ -331,33 +320,24 @@ public class CryptoFunctions {
     @Inject
     DrillBuf buffer;
 
-    @Workspace
-    Cipher cipher;
-
     @Override
     public void setup() {
-      String key = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawKey.start, rawKey.end, rawKey.buffer);
+    }
 
+    @Override
+    public void eval() {
+      String key = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawKey.start, rawKey.end, rawKey.buffer);
+      String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
+      String decryptedText = "";
       try {
-        byte[] keyByteArray = key.getBytes("UTF-8");
+        byte[] keyByteArray = key.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         java.security.MessageDigest sha = java.security.MessageDigest.getInstance("SHA-1");
         keyByteArray = sha.digest(keyByteArray);
         keyByteArray = java.util.Arrays.copyOf(keyByteArray, 16);
         javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(keyByteArray, "AES");
 
-        cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
-      } catch (Exception e) {
-        //Exceptions are ignored
-      }
-    }
-
-    @Override
-    public void eval() {
-
-      String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
-      String decryptedText = "";
-      try {
+        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(javax.crypto.Cipher.DECRYPT_MODE, secretKey);
         decryptedText = new String(cipher.doFinal(javax.xml.bind.DatatypeConverter.parseBase64Binary(input)));
       } catch (Exception e) {
         //Exceptions are ignored
