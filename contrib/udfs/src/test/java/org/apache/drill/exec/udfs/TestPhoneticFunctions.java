@@ -19,12 +19,10 @@ package org.apache.drill.exec.udfs;
 
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
-import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -32,9 +30,6 @@ import static org.junit.Assert.assertEquals;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestPhoneticFunctions extends ClusterTest {
-
-  @Rule
-  public final BaseDirTestWatcher baseDirTestWatcher = new BaseDirTestWatcher();
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -112,5 +107,10 @@ public class TestPhoneticFunctions extends ClusterTest {
         .sql("SELECT double_metaphone('Phoenix') AS meta FROM (VALUES(1))")
         .singletonString();
     assertEquals("FNKS", result);
+
+    result = queryBuilder()
+        .sql("SELECT double_metaphone('') AS meta FROM (VALUES(1))")
+        .singletonString();
+    assertEquals("", result);
   }
 }
