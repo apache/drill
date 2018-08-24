@@ -38,6 +38,8 @@ import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.util.record.RecordBatchStats;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
@@ -121,10 +123,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       // Limit to lower bound of total number of rows possible for this batch
       // i.e. all rows fit within memory budget.
       setOutputRowCount(Math.min(columnSize.getElementCount(), getOutputRowCount()));
-
-      if (logger.isDebugEnabled()) {
-        logger.debug("BATCH_STATS, incoming:\n {}", getRecordBatchSizer());
-      }
+      RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT, getRecordBatchSizer(), getRecordBatchStatsContext());
 
       updateIncomingStats();
     }
@@ -306,9 +305,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     // entire incoming recods has been unnested. If the entire records has been
     // unnested, we return EMIT and any blocking operators in the pipeline will
     // unblock.
-    if (logger.isDebugEnabled()) {
-      logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
-    }
+    RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, this, getRecordBatchStatsContext());
     return hasRemainder ? IterOutcome.OK : IterOutcome.EMIT;
   }
 
@@ -420,14 +417,15 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     stats.setLongStat(Metric.AVG_OUTPUT_ROW_BYTES, memoryManager.getAvgOutputRowWidth());
     stats.setLongStat(Metric.OUTPUT_RECORD_COUNT, memoryManager.getTotalOutputRecords());
 
-    logger.debug("BATCH_STATS, incoming aggregate: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
-        memoryManager.getNumIncomingBatches(), memoryManager.getAvgInputBatchSize(),
-        memoryManager.getAvgInputRowWidth(), memoryManager.getTotalInputRecords());
+    RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
+      "incoming aggregate: batch count : %d, avg batch bytes : %d,  avg row bytes : %d, record count : %d",
+      memoryManager.getNumIncomingBatches(), memoryManager.getAvgInputBatchSize(),
+      memoryManager.getAvgInputRowWidth(), memoryManager.getTotalInputRecords());
 
-    logger.debug("BATCH_STATS, outgoing aggregate: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
-        memoryManager.getNumOutgoingBatches(), memoryManager.getAvgOutputBatchSize(),
-        memoryManager.getAvgOutputRowWidth(), memoryManager.getTotalOutputRecords());
-
+    RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
+      "outgoing aggregate: batch count : %d, avg batch bytes : %d,  avg row bytes : %d, record count : %d",
+      memoryManager.getNumOutgoingBatches(), memoryManager.getAvgOutputBatchSize(),
+      memoryManager.getAvgOutputRowWidth(), memoryManager.getTotalOutputRecords());
   }
 
   private TypedFieldId checkAndGetUnnestFieldId() throws SchemaChangeException {

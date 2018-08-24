@@ -85,10 +85,8 @@ final class OverflowSerDeUtil {
     // Allocate the required memory to serialize the overflow fields
     final DrillBuf buffer = allocator.buffer(bufferLength);
 
-    if (batchStatsContext.isEnableBatchSzLogging()) {
-      final String msg = String.format("Allocated a buffer of length [%d] to handle overflow", bufferLength);
-      RecordBatchStats.logRecordBatchStats(msg, batchStatsContext);
-    }
+    RecordBatchStats.logRecordBatchStats(batchStatsContext,
+      "Allocated a buffer of length [%d] to handle overflow", bufferLength);
 
     // Create the result object
     final RecordOverflowContainer recordOverflowContainer = new RecordOverflowContainer();

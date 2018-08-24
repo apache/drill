@@ -70,7 +70,8 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
-
+import org.apache.drill.exec.util.record.RecordBatchStats;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.AllocationHelper;
 
 import org.apache.drill.exec.vector.FixedWidthVector;
@@ -1223,10 +1224,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
 
     outgoing.getRecordBatchMemoryManager().updateOutgoingStats(numOutputRecords);
-
-    if (logger.isDebugEnabled()) {
-      logger.debug("BATCH_STATS, outgoing: {}", new RecordBatchSizer(outgoing));
-    }
+    RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, outgoing, outgoing.getRecordBatchStatsContext());
 
     this.outcome = IterOutcome.OK;
 
