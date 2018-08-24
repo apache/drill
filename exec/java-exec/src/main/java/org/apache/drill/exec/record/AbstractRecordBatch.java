@@ -33,6 +33,7 @@ import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordbatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchStatsContext;
 
 public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements CloseableRecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
@@ -41,6 +42,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected final T popConfig;
   protected final FragmentContext context;
   protected final OperatorContext oContext;
+  protected final RecordBatchStatsContext batchStatsContext;
   protected final OperatorStats stats;
   protected final boolean unionTypeEnabled;
   protected BatchState state;
@@ -58,6 +60,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     this.context = context;
     this.popConfig = popConfig;
     this.oContext = oContext;
+    this.batchStatsContext = new RecordBatchStatsContext(context, oContext);
     stats = oContext.getStats();
     container = new VectorContainer(this.oContext.getAllocator());
     if (buildSchema) {
@@ -240,5 +243,13 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   @Override
   public VectorContainer getContainer() {
     return  container;
+  }
+
+  public RecordBatchStatsContext getRecordBatchStatsContext() {
+    return batchStatsContext;
+  }
+
+  public boolean isRecordBatchStatsLoggingEnabled() {
+    return batchStatsContext.isEnableBatchSzLogging();
   }
 }

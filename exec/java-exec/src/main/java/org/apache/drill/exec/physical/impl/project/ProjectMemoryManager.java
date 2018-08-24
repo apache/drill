@@ -28,6 +28,8 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatchMemoryManager;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.util.record.RecordBatchStats;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -136,7 +138,6 @@ public class ProjectMemoryManager extends RecordBatchMemoryManager {
     public ProjectMemoryManager(int configuredOutputSize) {
         super(configuredOutputSize);
         outputColumnSizes = new HashMap<>();
-        logger.debug("BATCH_STATS, configuredOutputSize: {}", configuredOutputSize);
     }
 
     public boolean isComplex(MajorType majorType) {
@@ -253,6 +254,9 @@ public class ProjectMemoryManager extends RecordBatchMemoryManager {
         setIncomingBatch(incomingBatch);
         setOutgoingBatch(outgoingBatch);
         reset();
+
+        RecordBatchStats.logRecordBatchStats(outgoingBatch.getRecordBatchStatsContext(),
+          "configuredOutputSize: %d", getOutputBatchSize());
     }
 
     private void reset() {
@@ -321,7 +325,7 @@ public class ProjectMemoryManager extends RecordBatchMemoryManager {
                     rowWidth, totalFixedWidthColumnWidth, totalVariableColumnWidth, totalComplexColumnWidth,
                     (batchSizerEndTime - updateStartTime),(updateEndTime - updateStartTime), this, incomingBatch);
 
-        logger.debug("BATCH_STATS, incoming: {}", getRecordBatchSizer());
+        RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT, getRecordBatchSizer(), outgoingBatch.getRecordBatchStatsContext());
         updateIncomingStats();
     }
 

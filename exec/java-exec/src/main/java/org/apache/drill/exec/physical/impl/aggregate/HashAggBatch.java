@@ -60,6 +60,8 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.util.record.RecordBatchStats;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -159,9 +161,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       }
 
       updateIncomingStats();
-      if (logger.isDebugEnabled()) {
-        logger.debug("BATCH_STATS, incoming: {}", getRecordBatchSizer());
-      }
+      RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT, getRecordBatchSizer(), getRecordBatchStatsContext());
     }
   }
 
@@ -204,7 +204,9 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     }
 
     hashAggMemoryManager = new HashAggMemoryManager(configuredBatchSize);
-    logger.debug("BATCH_STATS, configured output batch size: {}", configuredBatchSize);
+
+      RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
+        "configured output batch size: %d", configuredBatchSize);
 
     columnMapping = CaseInsensitiveMap.newHashMap();
   }
@@ -474,15 +476,15 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     stats.setLongStat(HashAggTemplate.Metric.AVG_OUTPUT_ROW_BYTES, hashAggMemoryManager.getAvgOutputRowWidth());
     stats.setLongStat(HashAggTemplate.Metric.OUTPUT_RECORD_COUNT, hashAggMemoryManager.getTotalOutputRecords());
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("BATCH_STATS, incoming aggregate: count : {}, avg bytes : {},  avg row bytes : {}, record count : {}",
-        hashAggMemoryManager.getNumIncomingBatches(), hashAggMemoryManager.getAvgInputBatchSize(),
-        hashAggMemoryManager.getAvgInputRowWidth(), hashAggMemoryManager.getTotalInputRecords());
+    RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
+      "incoming aggregate: count : %d, avg bytes : %d,  avg row bytes : %d, record count : %d",
+      hashAggMemoryManager.getNumIncomingBatches(), hashAggMemoryManager.getAvgInputBatchSize(),
+      hashAggMemoryManager.getAvgInputRowWidth(), hashAggMemoryManager.getTotalInputRecords());
 
-      logger.debug("BATCH_STATS, outgoing aggregate: count : {}, avg bytes : {},  avg row bytes : {}, record count : {}",
-        hashAggMemoryManager.getNumOutgoingBatches(), hashAggMemoryManager.getAvgOutputBatchSize(),
-        hashAggMemoryManager.getAvgOutputRowWidth(), hashAggMemoryManager.getTotalOutputRecords());
-    }
+    RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
+      "outgoing aggregate: count : %d, avg bytes : %d,  avg row bytes : %d, record count : %d",
+      hashAggMemoryManager.getNumOutgoingBatches(), hashAggMemoryManager.getAvgOutputBatchSize(),
+      hashAggMemoryManager.getAvgOutputRowWidth(), hashAggMemoryManager.getTotalOutputRecords());
   }
   @Override
   public void close() {

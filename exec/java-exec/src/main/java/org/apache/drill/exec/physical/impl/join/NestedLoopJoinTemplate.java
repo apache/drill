@@ -24,7 +24,8 @@ import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-
+import org.apache.drill.exec.util.record.RecordBatchStats;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import javax.inject.Named;
 import java.util.LinkedList;
 import java.util.List;
@@ -192,7 +193,9 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
         break;
       case OK:
         setTargetOutputCount(outgoing.getBatchMemoryManager().update(left, LEFT_INDEX,outputIndex));
-        logger.debug("BATCH_STATS, incoming left: {}", outgoing.getBatchMemoryManager().getRecordBatchSizer(LEFT_INDEX));
+        RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT_LEFT,
+          outgoing.getBatchMemoryManager().getRecordBatchSizer(LEFT_INDEX),
+          outgoing.getRecordBatchStatsContext());
         leftRecordCount = left.getRecordCount();
         break;
     }
