@@ -212,7 +212,7 @@ public class OutputWidthVisitor extends AbstractExecExprVisitor<OutputWidthExpre
         }
         final RecordBatchSizer.ColumnSize columnSize = state.manager.getColumnSize(columnName);
 
-        int columnWidth = columnSize.getNetSizePerEntry();
+        int columnWidth = columnSize.getDataSizePerEntry();
         return new FixedLenExpr(columnWidth);
     }
 
@@ -256,12 +256,12 @@ public class OutputWidthVisitor extends AbstractExecExprVisitor<OutputWidthExpre
                                                         throws RuntimeException {
         OutputWidthExpression ifReducedExpr = ifElseWidthExpr.expressions[0].accept(this, state);
         assert ifReducedExpr instanceof FixedLenExpr;
-        int ifWidth = ((FixedLenExpr)ifReducedExpr).getWidth();
+        int ifWidth = ((FixedLenExpr)ifReducedExpr).getDataWidth();
         int elseWidth = -1;
         if (ifElseWidthExpr.expressions[1] != null) {
             OutputWidthExpression elseReducedExpr = ifElseWidthExpr.expressions[1].accept(this, state);
             assert elseReducedExpr instanceof FixedLenExpr;
-            elseWidth = ((FixedLenExpr)elseReducedExpr).getWidth();
+            elseWidth = ((FixedLenExpr)elseReducedExpr).getDataWidth();
         }
         int outputWidth = Math.max(ifWidth, elseWidth);
         return new FixedLenExpr(outputWidth);
@@ -270,8 +270,10 @@ public class OutputWidthVisitor extends AbstractExecExprVisitor<OutputWidthExpre
     private OutputWidthExpression getFixedLenExpr(MajorType majorType) {
         MajorType type = majorType;
         if (Types.isFixedWidthType(type)) {
-            int fixedWidth = ProjectMemoryManager.getWidthOfFixedWidthType(type);
-            return new OutputWidthExpression.FixedLenExpr(fixedWidth);
+            // Use only the width of the data. Metadata width will be accounted for at the end
+            // This is to avoid using metadata size in intermediate calculations
+            int fixedDataWidth = ProjectMemoryManager.getDataWidthOfFixedWidthType(type);
+            return new OutputWidthExpression.FixedLenExpr(fixedDataWidth);
         }
         return null;
     }

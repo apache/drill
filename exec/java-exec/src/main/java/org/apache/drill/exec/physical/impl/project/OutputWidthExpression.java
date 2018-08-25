@@ -133,11 +133,18 @@ public abstract class OutputWidthExpression {
      */
 
     public static class FixedLenExpr extends OutputWidthExpression {
-        int fixedWidth;
+        /**
+         * Only the width of the payload is saved in fixedDataWidth.
+         * Metadata width is added when the final output row size is calculated.
+         * This is to avoid function {@link OutputWidthCalculator} from using
+         * metadata width in the calculations.
+         */
+        private int fixedDataWidth;
+
         public FixedLenExpr(int fixedWidth) {
-            this.fixedWidth = fixedWidth;
+            this.fixedDataWidth = fixedWidth;
         }
-        public int getWidth() { return fixedWidth;}
+        public int getDataWidth() { return fixedDataWidth;}
 
         @Override
         public <T, V, E extends Exception> T accept(AbstractExecExprVisitor<T, V, E> visitor, V value) throws E {
