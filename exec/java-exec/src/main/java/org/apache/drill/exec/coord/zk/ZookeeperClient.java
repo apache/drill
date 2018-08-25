@@ -68,7 +68,7 @@ public class ZookeeperClient implements AutoCloseable {
    */
   public void start() throws Exception {
     curator.newNamespaceAwareEnsurePath(root).ensure(curator.getZookeeperClient()); // ensure root is created
-    getCache().start();
+    getCache().start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE); //build cache at start up, to ensure we get correct results right away
   }
 
   public PathChildrenCache getCache() {

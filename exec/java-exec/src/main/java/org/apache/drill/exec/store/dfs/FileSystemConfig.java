@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,6 +26,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 
 @JsonTypeName(FileSystemConfig.NAME)
 public class FileSystemConfig extends StoragePluginConfig {
@@ -43,7 +45,9 @@ public class FileSystemConfig extends StoragePluginConfig {
                           @JsonProperty("formats") Map<String, FormatPluginConfig> formats) {
     this.connection = connection;
     this.config = config;
-    this.workspaces = workspaces;
+    Map<String, WorkspaceConfig> caseInsensitiveWorkspaces = CaseInsensitiveMap.newHashMap();
+    Optional.ofNullable(workspaces).ifPresent(caseInsensitiveWorkspaces::putAll);
+    this.workspaces = caseInsensitiveWorkspaces;
     this.formats = formats;
   }
 

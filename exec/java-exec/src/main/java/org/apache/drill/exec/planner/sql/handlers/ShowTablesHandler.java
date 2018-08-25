@@ -21,10 +21,12 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -34,6 +36,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
+import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
@@ -45,9 +48,6 @@ import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.ischema.InfoSchemaTableType;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
 public class ShowTablesHandler extends DefaultSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ShowTablesHandler.class);
 
@@ -57,48 +57,56 @@ public class ShowTablesHandler extends DefaultSqlHandler {
   @Override
   public SqlNode rewrite(SqlNode sqlNode) throws ForemanSetupException {
     SqlShowTables node = unwrap(sqlNode, SqlShowTables.class);
-    List<SqlNode> selectList = Lists.newArrayList();
-    SqlNode fromClause;
-    SqlNode where;
+    List<SqlNode> selectList = Arrays.asList(
+        new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),
+        new SqlIdentifier(SHRD_COL_TABLE_NAME, SqlParserPos.ZERO));
 
-    // create select columns
-    selectList.add(new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO));
-    selectList.add(new SqlIdentifier(SHRD_COL_TABLE_NAME, SqlParserPos.ZERO));
+    SqlNode fromClause = new SqlIdentifier(Arrays.asList(IS_SCHEMA_NAME, InfoSchemaTableType.TABLES.name()), SqlParserPos.ZERO);
 
-    fromClause = new SqlIdentifier(ImmutableList.of(IS_SCHEMA_NAME, InfoSchemaTableType.TABLES.name()), SqlParserPos.ZERO);
+    SchemaPlus schemaPlus;
+    if (node.getDb() != null) {
+      List<String> schemaNames = node.getDb().names;
+      schemaPlus = SchemaUtilites.findSchema(config.getConverter().getDefaultSchema(), schemaNames);
 
-    final SqlIdentifier db = node.getDb();
-    String tableSchema;
-    if (db != null) {
-      tableSchema = db.toString();
-    } else {
-      // If no schema is given in SHOW TABLES command, list tables from current schema
-      SchemaPlus schema = config.getConverter().getDefaultSchema();
-
-      if (SchemaUtilites.isRootSchema(schema)) {
-        // If the default schema is a root schema, throw an error to select a default schema
+      if (schemaPlus == null) {
         throw UserException.validationError()
-            .message("No default schema selected. Select a schema using 'USE schema' command")
+            .message(String.format("Invalid schema name [%s]", SchemaUtilites.getSchemaPath(schemaNames)))
             .build(logger);
       }
 
-      final AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schema);
-      tableSchema = drillSchema.getFullSchemaName();
+    } else {
+      // If no schema is given in SHOW TABLES command, list tables from current schema
+      schemaPlus = config.getConverter().getDefaultSchema();
     }
 
-    final String charset = Util.getDefaultCharset().name();
-    where = DrillParserUtil.createCondition(
+    if (SchemaUtilites.isRootSchema(schemaPlus)) {
+      // If the default schema is a root schema, throw an error to select a default schema
+      throw UserException.validationError()
+          .message("No default schema selected. Select a schema using 'USE schema' command")
+          .build(logger);
+    }
+
+    AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schemaPlus);
+
+    SqlNode where = DrillParserUtil.createCondition(
         new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),
         SqlStdOperatorTable.EQUALS,
-        SqlLiteral.createCharString(tableSchema, charset, SqlParserPos.ZERO));
+        SqlLiteral.createCharString(drillSchema.getFullSchemaName(), Util.getDefaultCharset().name(), SqlParserPos.ZERO));
 
     SqlNode filter = null;
-    final SqlNode likePattern = node.getLikePattern();
-    if (likePattern != null) {
-      filter = DrillParserUtil.createCondition(
-          new SqlIdentifier(SHRD_COL_TABLE_NAME, SqlParserPos.ZERO),
-          SqlStdOperatorTable.LIKE,
-          likePattern);
+    if (node.getLikePattern() != null) {
+      SqlNode likePattern = node.getLikePattern();
+      SqlNode column = new SqlIdentifier(SHRD_COL_TABLE_NAME, SqlParserPos.ZERO);
+      // wrap columns name values and condition in lower function if case insensitive
+      if (!drillSchema.areTableNamesCaseSensitive() && likePattern instanceof SqlCharStringLiteral) {
+        NlsString conditionString = ((SqlCharStringLiteral) likePattern).getNlsString();
+        likePattern = SqlCharStringLiteral.createCharString(
+            conditionString.getValue().toLowerCase(),
+            conditionString.getCharsetName(),
+            likePattern.getParserPosition());
+        column = SqlStdOperatorTable.LOWER.createCall(SqlParserPos.ZERO, column);
+      }
+      filter = DrillParserUtil.createCondition(column, SqlStdOperatorTable.LIKE, likePattern);
     } else if (node.getWhereClause() != null) {
       filter = node.getWhereClause();
     }

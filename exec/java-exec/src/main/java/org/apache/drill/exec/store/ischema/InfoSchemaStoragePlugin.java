@@ -17,34 +17,40 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
+
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.exec.store.SystemPlugin;
 
+@SystemPlugin
 public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaStoragePlugin.class);
 
   private final InfoSchemaConfig config;
+
+  @SuppressWarnings("unused") // used in StoragePluginRegistryImpl to dynamically init system plugins
+  public InfoSchemaStoragePlugin(DrillbitContext context) {
+    this(InfoSchemaConfig.INSTANCE, context, InfoSchemaConstants.IS_SCHEMA_NAME);
+  }
 
   public InfoSchemaStoragePlugin(InfoSchemaConfig config, DrillbitContext context, String name){
     super(context, name);
@@ -57,8 +63,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public InfoSchemaGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
-      throws IOException {
+  public InfoSchemaGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns) {
     InfoSchemaTableType table = selection.getWith(getContext().getLpPersistence(),  InfoSchemaTableType.class);
     return new InfoSchemaGroupScan(table);
   }
@@ -69,23 +74,35 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    ISchema s = new ISchema(parent, this);
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
+    ISchema s = new ISchema(this);
     parent.add(s.getName(), s);
   }
 
   /**
    * Representation of the INFORMATION_SCHEMA schema.
    */
-  private class ISchema extends AbstractSchema{
-    private Map<String, InfoSchemaDrillTable> tables;
-    public ISchema(SchemaPlus parent, InfoSchemaStoragePlugin plugin){
-      super(ImmutableList.<String>of(), IS_SCHEMA_NAME);
-      Map<String, InfoSchemaDrillTable> tbls = Maps.newHashMap();
-      for(InfoSchemaTableType tbl : InfoSchemaTableType.values()){
-        tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, IS_SCHEMA_NAME, tbl, config));
-      }
-      this.tables = ImmutableMap.copyOf(tbls);
+  private class ISchema extends AbstractSchema {
+
+    private final Map<String, InfoSchemaDrillTable> tables;
+    // for backward compatibility keep IS schema table names in upper case
+    // the way they used to appear in INFORMATION_SCHEMA.TABLES table
+    // though user can query them in any case
+    private final Set<String> originalTableNames;
+
+    ISchema(InfoSchemaStoragePlugin plugin) {
+
+      super(Collections.emptyList(), IS_SCHEMA_NAME);
+
+      this.tables = CaseInsensitiveMap.newHashMap();
+      this.originalTableNames = new HashSet<>();
+
+      Arrays.stream(InfoSchemaTableType.values()).forEach(
+          table -> {
+            tables.put(table.name(), new InfoSchemaDrillTable(plugin, getName(), table, config));
+            originalTableNames.add(table.name());
+          }
+      );
     }
 
     @Override
@@ -95,12 +112,17 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
 
     @Override
     public Set<String> getTableNames() {
-      return tables.keySet();
+      return originalTableNames;
     }
 
     @Override
     public String getTypeName() {
       return InfoSchemaConfig.NAME;
+    }
+
+    @Override
+    public boolean areTableNamesCaseSensitive() {
+      return false;
     }
   }
 

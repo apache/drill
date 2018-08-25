@@ -38,7 +38,8 @@ import org.apache.thrift.TException;
 import java.util.List;
 import java.util.Set;
 
-public class HiveDatabaseSchema extends AbstractSchema{
+public class HiveDatabaseSchema extends AbstractSchema {
+
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveDatabaseSchema.class);
 
   private final HiveSchema hiveSchema;
@@ -105,10 +106,16 @@ public class HiveDatabaseSchema extends AbstractSchema{
     return tableNameToTable;
   }
 
+  @Override
+  public boolean areTableNamesCaseSensitive() {
+    return false;
+  }
+
   private static class HiveTableWithoutStatisticAndRowType implements Table {
+
     private final TableType tableType;
 
-    public HiveTableWithoutStatisticAndRowType(final TableType tableType) {
+    HiveTableWithoutStatisticAndRowType(final TableType tableType) {
       this.tableType = tableType;
     }
 

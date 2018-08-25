@@ -435,6 +435,11 @@ public class TestHiveStorage extends HiveTestBase {
     test(query);
   }
 
+  @Test
+  public void testSchemaCaseInsensitive() throws Exception {
+    test("select * from Hive.`Default`.Kv");
+  }
+
   private void verifyColumnsMetadata(List<UserProtos.ResultColumnMetadata> columnsList, Map<String, Integer> expectedResult) {
     for (UserProtos.ResultColumnMetadata columnMetadata : columnsList) {
       assertTrue("Column should be present in result set", expectedResult.containsKey(columnMetadata.getColumnName()));

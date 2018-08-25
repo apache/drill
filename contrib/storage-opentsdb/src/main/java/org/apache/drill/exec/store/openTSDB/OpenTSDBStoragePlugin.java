@@ -36,10 +36,9 @@ public class OpenTSDBStoragePlugin extends AbstractStoragePlugin {
 
   private final ServiceImpl db;
 
-  public OpenTSDBStoragePlugin(OpenTSDBStoragePluginConfig configuration, DrillbitContext context, String name)
-      throws IOException {
+  public OpenTSDBStoragePlugin(OpenTSDBStoragePluginConfig configuration, DrillbitContext context, String name) throws IOException {
     super(context, name);
-    this.schemaFactory = new OpenTSDBSchemaFactory(this, name);
+    this.schemaFactory = new OpenTSDBSchemaFactory(this, getName());
     this.engineConfig = configuration;
     this.db = new ServiceImpl(configuration.getConnection());
   }

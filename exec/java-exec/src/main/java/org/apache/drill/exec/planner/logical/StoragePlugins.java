@@ -28,6 +28,7 @@ import java.util.Optional;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 
@@ -38,11 +39,13 @@ import com.google.common.io.Resources;
 
 public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginConfig>> {
 
-  private Map<String, StoragePluginConfig> storage;
+  private final Map<String, StoragePluginConfig> storage;
 
   @JsonCreator
   public StoragePlugins(@JsonProperty("storage") Map<String, StoragePluginConfig> storage) {
-    this.storage = storage;
+    Map<String, StoragePluginConfig> caseInsensitiveStorage = CaseInsensitiveMap.newHashMap();
+    Optional.ofNullable(storage).ifPresent(caseInsensitiveStorage::putAll);
+    this.storage = caseInsensitiveStorage;
   }
 
   public static void main(String[] args) throws Exception{

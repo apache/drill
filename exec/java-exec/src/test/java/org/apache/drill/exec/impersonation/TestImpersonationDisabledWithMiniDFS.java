@@ -45,8 +45,7 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
 
   private static void createTestData() throws Exception {
     // Create test table in minidfs.tmp schema for use in test queries
-    test(String.format("CREATE TABLE %s.tmp.dfsRegion AS SELECT * FROM cp.`region.json`",
-        MINIDFS_STORAGE_PLUGIN_NAME));
+    test(String.format("CREATE TABLE %s.tmp.dfsRegion AS SELECT * FROM cp.`region.json`", MINI_DFS_STORAGE_PLUGIN_NAME));
 
     // generate a large enough file that the DFS will not fulfill requests to read a
     // page of data all at once, see notes above testReadLargeParquetFileFromDFS()
@@ -59,8 +58,7 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
             "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
             "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
             "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
-        "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)",
-        MINIDFS_STORAGE_PLUGIN_NAME));
+        "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)", MINI_DFS_STORAGE_PLUGIN_NAME));
   }
 
   /**
@@ -77,7 +75,7 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
    */
   @Test
   public void testReadLargeParquetFileFromDFS() throws Exception {
-    test(String.format("USE %s", MINIDFS_STORAGE_PLUGIN_NAME));
+    test(String.format("USE %s", MINI_DFS_STORAGE_PLUGIN_NAME));
     test("SELECT * FROM tmp.`large_employee`");
   }
 
@@ -87,7 +85,7 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
         String.format("SELECT sales_city, sales_country FROM tmp.dfsRegion ORDER BY region_id DESC LIMIT 2");
 
     testBuilder()
-        .optionSettingQueriesForTestQuery(String.format("USE %s", MINIDFS_STORAGE_PLUGIN_NAME))
+        .optionSettingQueriesForTestQuery(String.format("USE %s", MINI_DFS_STORAGE_PLUGIN_NAME))
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("sales_city", "sales_country")
@@ -98,7 +96,7 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
 
   @AfterClass
   public static void removeMiniDfsBasedStorage() throws Exception {
-    getDrillbitContext().getStorage().deletePlugin(MINIDFS_STORAGE_PLUGIN_NAME);
+    getDrillbitContext().getStorage().deletePlugin(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }

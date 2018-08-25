@@ -17,21 +17,19 @@
  */
 package org.apache.drill.common.scanner;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.sort;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -43,26 +41,27 @@ import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.fn.impl.testing.GeneratorFunctions.RandomBigIntGauss;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.store.SystemPlugin;
+import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
+import org.apache.drill.exec.store.sys.SystemTablePlugin;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class})
 public class TestClassPathScanner {
 
-  @SafeVarargs
-  final private <T extends Comparable<? super T>> void assertListEqualsUnordered(Collection<T> list, T... expected) {
-    List<T> expectedList = asList(expected);
-    sort(expectedList);
-    List<T> gotList = new ArrayList<>(list);
-    sort(gotList);
-    assertEquals(expectedList.toString(), gotList.toString());
+  private static ScanResult result;
+
+  @BeforeClass
+  public static void init() {
+    result = ClassPathScanner.fromPrescan(DrillConfig.create());
   }
 
   @Test
-  public void test() throws Exception {
-    ScanResult result = ClassPathScanner.fromPrescan(DrillConfig.create());
-    List<AnnotatedClassDescriptor> functions = result.getAnnotatedClasses();
+  public void testFunctionTemplates() throws Exception {
+    List<AnnotatedClassDescriptor> functions = result.getAnnotatedClasses(FunctionTemplate.class.getName());
     Set<String> scanned = new HashSet<>();
     AnnotatedClassDescriptor functionRandomBigIntGauss = null;
     for (AnnotatedClassDescriptor function : functions) {
@@ -94,6 +93,7 @@ public class TestClassPathScanner {
       List<AnnotationDescriptor> scannedAnnotations = function.getAnnotations();
       verifyAnnotations(annotations, scannedAnnotations);
       FunctionTemplate bytecodeAnnotation = function.getAnnotationProxy(FunctionTemplate.class);
+      assertNotNull(bytecodeAnnotation);
       FunctionTemplate reflectionAnnotation = c.getAnnotation(FunctionTemplate.class);
       assertEquals(reflectionAnnotation.name(), bytecodeAnnotation.name());
       assertArrayEquals(reflectionAnnotation.names(), bytecodeAnnotation.names());
@@ -108,6 +108,17 @@ public class TestClassPathScanner {
     }
     assertTrue(result.getImplementations(PhysicalOperator.class).size() > 0);
     assertTrue(result.getImplementations(DrillFunc.class).size() > 0);
+  }
+
+  @Test
+  public void testSystemPlugins() {
+    List<AnnotatedClassDescriptor> annotatedClasses = result.getAnnotatedClasses(SystemPlugin.class.getName());
+    List<AnnotatedClassDescriptor> foundPlugins =
+        annotatedClasses.stream()
+            .filter(a -> InfoSchemaStoragePlugin.class.getName().equals(a.getClassName())
+                || SystemTablePlugin.class.getName().equals(a.getClassName()))
+            .collect(Collectors.toList());
+    assertEquals(2, foundPlugins.size());
   }
 
   private <T> void validateType(ScanResult result, String baseType) throws ClassNotFoundException {
@@ -132,8 +143,8 @@ public class TestClassPathScanner {
       Class<? extends Annotation> annotationType = annotation.annotationType();
       assertEquals(annotationType.getName(), scannedAnnotation.getAnnotationType());
       if (annotation instanceof FunctionTemplate) {
-        FunctionTemplate ft = (FunctionTemplate)annotation;
-        if (ft.name() != null && !ft.name().equals("")) {
+        FunctionTemplate ft = (FunctionTemplate) annotation;
+        if (!"".equals(ft.name())) {
           assertEquals(ft.name(), scannedAnnotation.getSingleValue("name"));
         }
       }

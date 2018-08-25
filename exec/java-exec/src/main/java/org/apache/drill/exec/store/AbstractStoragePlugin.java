@@ -34,7 +34,8 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 
-/** Abstract class for StorePlugin implementations.
+/**
+ * Abstract class for StorePlugin implementations.
  * See StoragePlugin for description of the interface intent and its methods.
  */
 public abstract class AbstractStoragePlugin implements StoragePlugin {
@@ -44,7 +45,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   protected AbstractStoragePlugin(DrillbitContext inContext, String inName) {
     this.context = inContext;
-    this.name = inName;
+    this.name = inName == null ? null : inName.toLowerCase();
   }
 
   @Override
@@ -137,12 +138,13 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     throw new UnsupportedOperationException(String.format("%s doesn't support format plugins", getClass().getName()));
   }
 
-  public DrillbitContext getContext() {
-    return context;
-  }
-
+  @Override
   public String getName() {
     return name;
+  }
+
+  public DrillbitContext getContext() {
+    return context;
   }
 
 }

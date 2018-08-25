@@ -205,8 +205,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     assertNotNull("UserRemoteException is expected", ex);
     assertThat(ex.getMessage(), containsString("PERMISSION ERROR: " +
-      String.format("Not authorized to read table [lineitem] in schema [%s.user0_1]",
-        MINIDFS_STORAGE_PLUGIN_NAME)));
+      String.format("Not authorized to read table [lineitem] in schema [%s.user0_1]", MINI_DFS_STORAGE_PLUGIN_NAME)));
   }
 
   @Test
@@ -261,19 +260,19 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   public void sequenceFileChainedImpersonationWithView() throws Exception {
     // create a view named "simple_seq_view" on "simple.seq". View is owned by user0:group0 and has permissions 750
     createView(org1Users[0], org1Groups[0], "simple_seq_view",
-      String.format("SELECT convert_from(t.binary_key, 'UTF8') as k FROM %s.`%s` t", MINIDFS_STORAGE_PLUGIN_NAME,
+      String.format("SELECT convert_from(t.binary_key, 'UTF8') as k FROM %s.`%s` t", MINI_DFS_STORAGE_PLUGIN_NAME,
         new Path(getUserHome(org1Users[0]), "simple.seq")));
     try {
       updateClient(org1Users[1]);
-      test("SELECT k FROM %s.%s.%s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view");
+      test("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view");
     } catch (UserRemoteException e) {
       assertNull("This test should pass.", e);
     }
     createView(org1Users[1], org1Groups[1], "simple_seq_view_2",
-      String.format("SELECT k FROM %s.%s.%s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view"));
+      String.format("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view"));
     try {
       updateClient(org1Users[2]);
-      test("SELECT k FROM %s.%s.%s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view_2");
+      test("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view_2");
     } catch (UserRemoteException e) {
       assertNull("This test should pass.", e);
     }
@@ -282,11 +281,11 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   @Test
   public void avroChainedImpersonationWithView() throws Exception {
     createView(org1Users[0], org1Groups[0], "simple_avro_view",
-      String.format("SELECT h_boolean, e_double FROM %s.`%s` t", MINIDFS_STORAGE_PLUGIN_NAME,
+      String.format("SELECT h_boolean, e_double FROM %s.`%s` t", MINI_DFS_STORAGE_PLUGIN_NAME,
         new Path(getUserHome(org1Users[0]), "simple.avro")));
     try {
       updateClient(org1Users[1]);
-      test("SELECT h_boolean FROM %s.%s.%s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", "simple_avro_view");
+      test("SELECT h_boolean FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_avro_view");
     } catch (UserRemoteException e) {
       assertNull("This test should pass.", e);
     }
@@ -294,7 +293,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
   @AfterClass
   public static void removeMiniDfsBasedStorage() throws Exception {
-    getDrillbitContext().getStorage().deletePlugin(MINIDFS_STORAGE_PLUGIN_NAME);
+    getDrillbitContext().getStorage().deletePlugin(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }
