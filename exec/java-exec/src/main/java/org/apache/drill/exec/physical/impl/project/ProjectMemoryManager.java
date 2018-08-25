@@ -33,6 +33,7 @@ import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.physical.impl.project.OutputWidthExpression.FixedLenExpr;
 import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 import java.util.HashMap;
@@ -288,7 +289,6 @@ public class ProjectMemoryManager extends RecordBatchMemoryManager {
                 width = ((FixedLenExpr)reducedExpr).getDataWidth();
                 Preconditions.checkState(width >= 0);
                 int metadataWidth = getMetadataWidth(columnWidthInfo.outputVV);
-                Preconditions.checkState(metadataWidth >= 0);
                 logger.trace("update(): fieldName {} width: {} metadataWidth: {}",
                         columnWidthInfo.outputVV.getField().getName(), width, metadataWidth);
                 width += metadataWidth;
@@ -335,9 +335,9 @@ public class ProjectMemoryManager extends RecordBatchMemoryManager {
             width += ((VariableWidthVector)vv).getOffsetVector().getPayloadByteCount(1);
         }
 
-        if (vv instanceof RepeatedValueVector) {
-            width += ((RepeatedValueVector)vv).getOffsetVector().getPayloadByteCount(1);
-            width += (getMetadataWidth(((RepeatedValueVector)vv).getDataVector()) * RepeatedValueVector.DEFAULT_REPEAT_PER_RECORD);
+        if (vv instanceof BaseRepeatedValueVector) {
+            width += ((BaseRepeatedValueVector)vv).getOffsetVector().getPayloadByteCount(1);
+            width += (getMetadataWidth(((BaseRepeatedValueVector)vv).getDataVector()) * RepeatedValueVector.DEFAULT_REPEAT_PER_RECORD);
         }
         return width;
     }
