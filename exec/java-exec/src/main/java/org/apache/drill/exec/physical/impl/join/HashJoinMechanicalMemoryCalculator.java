@@ -73,7 +73,6 @@ public class HashJoinMechanicalMemoryCalculator implements HashJoinMemoryCalcula
                            Set<String> joinColumns,
                            boolean probeEmpty,
                            long memoryAvailable,
-                           long maxIncomingBatchSize,
                            int initialPartitions,
                            int recordsPerPartitionBatchBuild,
                            int recordsPerPartitionBatchProbe,

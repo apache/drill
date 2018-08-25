@@ -316,7 +316,7 @@ public class TestNullInputMiniPlan extends MiniPlanUnitTestBase{
         .build();
 
     RecordBatch joinBatch = new PopBuilder()
-        .physicalOperator(new HashJoinPOP(null, null, Lists.newArrayList(joinCond("a", "EQUALS", "a2")), JoinRelType.INNER, null))
+        .physicalOperator(new HashJoinPOP(null, null, Lists.newArrayList(joinCond("a2", "EQUALS", "a")), JoinRelType.INNER, null))
         .addInput(left)
         .addInput(rightScan)
         .build();
@@ -379,7 +379,7 @@ public class TestNullInputMiniPlan extends MiniPlanUnitTestBase{
         .build();
 
     RecordBatch joinBatch = new PopBuilder()
-        .physicalOperator(new HashJoinPOP(null, null, Lists.newArrayList(joinCond("a", "EQUALS", "a2")), JoinRelType.LEFT, null))
+        .physicalOperator(new HashJoinPOP(null, null, Lists.newArrayList(joinCond("a2", "EQUALS", "a")), JoinRelType.LEFT, null))
         .addInput(left)
         .addInput(rightScan)
         .build();
