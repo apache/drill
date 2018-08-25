@@ -377,7 +377,7 @@ public class SqlConverter {
      * during creating new projects since it may cause changing data mode
      * which causes to assertion errors during type validation
      */
-    Hook.REL_BUILDER_SIMPLIFY.add(Hook.property(false));
+    Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
 
     //To avoid unexpected column errors set a value of top to false
     final RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, false);

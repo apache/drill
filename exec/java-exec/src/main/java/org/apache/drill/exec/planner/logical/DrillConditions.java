@@ -19,24 +19,14 @@ package org.apache.drill.exec.planner.logical;
 
 import org.apache.calcite.rel.rules.PushProjector;
 import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexNode;
 
 public final class DrillConditions {
 
-  public static PushProjector.ExprCondition PRESERVE_ITEM = new PushProjector.ExprCondition() {
-
-    @Override
-    public boolean apply(RexNode rexNode) {
-      return false;
+  public static final PushProjector.ExprCondition PRESERVE_ITEM = expr -> {
+    if (expr instanceof RexCall) {
+      RexCall call = (RexCall) expr;
+      return "item".equals(call.getOperator().getName().toLowerCase());
     }
-
-    @Override
-    public boolean test(RexNode expr) {
-      if (expr instanceof RexCall) {
-        RexCall call = (RexCall)expr;
-        return "item".equals(call.getOperator().getName().toLowerCase());
-      }
-      return false;
-    }
+    return false;
   };
 }

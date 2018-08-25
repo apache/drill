@@ -34,12 +34,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import org.apache.calcite.linq4j.Ord;
+import org.apache.drill.categories.JdbcTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.LogicalOperator;
@@ -48,7 +47,6 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.jdbc.test.Hook;
-import org.apache.drill.categories.JdbcTest;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -85,18 +83,14 @@ public class JdbcTestBase extends ExecTest {
 
   @BeforeClass
   public static void setUpTestCase() {
-    factory = new SingleConnectionCachingFactory(new ConnectionFactory() {
-      @Override
-      public Connection getConnection(ConnectionInfo info) throws SQLException {
-        return DriverManager.getConnection(info.getUrl(), info.getParamsAsProperties());
-      }
-    });
+    factory = new SingleConnectionCachingFactory(
+        info -> DriverManager.getConnection(info.getUrl(), info.getParamsAsProperties()));
   }
 
   /**
    * Creates a {@link java.sql.Connection connection} using default parameters.
    * @param url connection URL
-   * @throws Exception if connection fails
+   * @throws SQLException if connection fails
    */
   protected static Connection connect(String url) throws SQLException {
     return connect(url, getDefaultProperties());
@@ -110,7 +104,7 @@ public class JdbcTestBase extends ExecTest {
    * Creates a {@link java.sql.Connection connection} using the given parameters.
    * @param url connection URL
    * @param info connection info
-   * @throws Exception if connection fails
+   * @throws SQLException if connection fails
    */
   protected static Connection connect(String url, Properties info) throws SQLException {
     final Connection conn = factory.getConnection(new ConnectionInfo(url, info));
@@ -278,12 +272,8 @@ public class JdbcTestBase extends ExecTest {
 
     public ModelAndSchema(final Properties info, final ConnectionFactory factory) {
       this.info = info;
-      this.adapter = new ConnectionFactoryAdapter() {
-        @Override
-        public Connection createConnection() throws SQLException {
-          return factory.getConnection(new ConnectionInfo("jdbc:drill:zk=local", ModelAndSchema.this.info));
-        }
-      };
+      this.adapter = () -> factory.getConnection(
+          new ConnectionInfo("jdbc:drill:zk=local", ModelAndSchema.this.info));
     }
 
     public TestDataConnection sql(String sql) {
@@ -291,14 +281,8 @@ public class JdbcTestBase extends ExecTest {
     }
 
     public <T> T withConnection(Function<Connection, T> function) throws Exception {
-      Connection connection = null;
-      try {
-        connection = adapter.createConnection();
+      try (Connection connection = adapter.createConnection()) {
         return function.apply(connection);
-      } finally {
-        if (connection != null) {
-          connection.close();
-        }
       }
     }
   }
@@ -316,11 +300,8 @@ public class JdbcTestBase extends ExecTest {
      * Checks that the current SQL statement returns the expected result.
      */
     public TestDataConnection returns(String expected) throws Exception {
-      Connection connection = null;
-      Statement statement = null;
-      try {
-        connection = adapter.createConnection();
-        statement = connection.createStatement();
+      try (Connection connection = adapter.createConnection();
+           Statement statement = connection.createStatement()) {
         ResultSet resultSet = statement.executeQuery(sql);
         expected = expected.trim();
         String result = JdbcTestBase.toString(resultSet).trim();
@@ -330,22 +311,12 @@ public class JdbcTestBase extends ExecTest {
           Assert.fail(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected));
         }
         return this;
-      } finally {
-        if (statement != null) {
-          statement.close();
-        }
-        if (connection != null) {
-          connection.close();
-        }
       }
     }
 
     public TestDataConnection returnsSet(Set<String> expected) throws Exception {
-      Connection connection = null;
-      Statement statement = null;
-      try {
-        connection = adapter.createConnection();
-        statement = connection.createStatement();
+      try (Connection connection = adapter.createConnection();
+           Statement statement = connection.createStatement()) {
         ResultSet resultSet = statement.executeQuery(sql);
         Set<String> result = JdbcTestBase.toStringSet(resultSet);
         resultSet.close();
@@ -354,13 +325,6 @@ public class JdbcTestBase extends ExecTest {
           Assert.fail(String.format("Generated set:\n%s\ndoes not match:\n%s", result, expected));
         }
         return this;
-      } finally {
-        if (statement != null) {
-          statement.close();
-        }
-        if (connection != null) {
-          connection.close();
-        }
       }
     }
 
@@ -369,44 +333,24 @@ public class JdbcTestBase extends ExecTest {
      * succeeds if the query returns these lines in any order.
      */
     public TestDataConnection returnsUnordered(String... expecteds) throws Exception {
-      Connection connection = null;
-      Statement statement = null;
-      try {
-        connection = adapter.createConnection();
-        statement = connection.createStatement();
+      try (Connection connection = adapter.createConnection();
+           Statement statement = connection.createStatement()) {
         ResultSet resultSet = statement.executeQuery(sql);
         Assert.assertEquals(unsortedList(Arrays.asList(expecteds)), unsortedList(JdbcTestBase.toStrings(resultSet)));
         resultSet.close();
         return this;
-      } finally {
-        if (statement != null) {
-          statement.close();
-        }
-        if (connection != null) {
-          connection.close();
-        }
       }
     }
 
     public TestDataConnection displayResults(int recordCount) throws Exception {
       // record count check is done in toString method
 
-      Connection connection = null;
-      Statement statement = null;
-      try {
-        connection = adapter.createConnection();
-        statement = connection.createStatement();
+      try (Connection connection = adapter.createConnection();
+           Statement statement = connection.createStatement()) {
         ResultSet resultSet = statement.executeQuery(sql);
         logger.debug(JdbcTestBase.toString(resultSet, recordCount));
         resultSet.close();
         return this;
-      } finally {
-        if (statement != null) {
-          statement.close();
-        }
-        if (connection != null) {
-          connection.close();
-        }
       }
     }
 
@@ -420,49 +364,26 @@ public class JdbcTestBase extends ExecTest {
 
     public LogicalPlan logicalPlan() {
       final String[] plan0 = {null};
-      Connection connection = null;
-      Statement statement = null;
-      final Hook.Closeable x = Hook.LOGICAL_PLAN.add(new Function<String, Void>() {
-        @Override
-        public Void apply(String o) {
+      try (Connection connection = adapter.createConnection();
+           Statement statement = connection.prepareStatement(sql);
+           Hook.Closeable x = Hook.LOGICAL_PLAN.add(
+        (Function<String, Void>) o -> {
           plan0[0] = o;
           return null;
-        }
-      });
-      try {
-        connection = adapter.createConnection();
-        statement = connection.prepareStatement(sql);
+        })) {
         statement.close();
         final String plan = plan0[0].trim();
         return LogicalPlan.parse(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(DrillConfig.create()), plan);
       } catch (Exception e) {
         throw new RuntimeException(e);
-      } finally {
-        if (statement != null) {
-          try {
-            statement.close();
-          } catch (SQLException e) {
-            // ignore
-          }
-        }
-        if (connection != null) {
-          try {
-            connection.close();
-          } catch (SQLException e) {
-            // ignore
-          }
-        }
-        x.close();
       }
     }
 
     public <T extends LogicalOperator> T planContains(final Class<T> operatorClazz) {
-      return (T) Iterables.find(logicalPlan().getSortedOperators(), new Predicate<LogicalOperator>() {
-        @Override
-        public boolean apply(LogicalOperator input) {
-          return input.getClass().equals(operatorClazz);
-        }
-      });
+      return (T) logicalPlan().getSortedOperators().stream()
+          .filter(input -> input.getClass().equals(operatorClazz))
+          .findFirst()
+          .get();
     }
   }
 

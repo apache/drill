@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlBasicCall;
@@ -25,7 +27,6 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql2rel.SqlRexContext;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
@@ -36,19 +37,37 @@ public class DrillConvertletTable implements SqlRexConvertletTable{
   public static HashMap<SqlOperator, SqlRexConvertlet> map = new HashMap<>();
 
   public static SqlRexConvertletTable INSTANCE = new DrillConvertletTable();
-  private static SqlRexConvertlet sqrtConvertlet = new SqlRexConvertlet() {
-    public RexNode convertCall(SqlRexContext cx, SqlCall call) {
-      RexNode operand = cx.convertExpression(call.operand(0));
-      return cx.getRexBuilder().makeCall(SqlStdOperatorTable.SQRT, operand);
+
+  private static final SqlRexConvertlet SQRT_CONVERTLET = (cx, call) -> {
+    RexNode operand = cx.convertExpression(call.operand(0));
+    return cx.getRexBuilder().makeCall(SqlStdOperatorTable.SQRT, operand);
+  };
+
+  // Rewrites COALESCE function into CASE WHEN IS NOT NULL operand1 THEN operand1...
+  private static final SqlRexConvertlet COALESCE_CONVERTLET = (cx, call) -> {
+    int operandsCount = call.operandCount();
+    if (operandsCount == 1) {
+      return cx.convertExpression(call.operand(0));
+    } else {
+      List<RexNode> caseOperands = new ArrayList<>();
+      for (int i = 0; i < operandsCount - 1; i++) {
+        RexNode caseOperand = cx.convertExpression(call.operand(i));
+        caseOperands.add(cx.getRexBuilder().makeCall(
+            SqlStdOperatorTable.IS_NOT_NULL, caseOperand));
+        caseOperands.add(caseOperand);
+      }
+      caseOperands.add(cx.convertExpression(call.operand(operandsCount - 1)));
+      return cx.getRexBuilder().makeCall(SqlStdOperatorTable.CASE, caseOperands);
     }
   };
 
   static {
-    // Use custom convertlet for extract function
+    // Use custom convertlet for EXTRACT function
     map.put(SqlStdOperatorTable.EXTRACT, DrillExtractConvertlet.INSTANCE);
-    // sqrt needs it's own convertlet because calcite overrides it to power(x,0.5)
+    // SQRT needs it's own convertlet because calcite overrides it to POWER(x, 0.5)
     // which is not suitable for Infinity value case
-    map.put(SqlStdOperatorTable.SQRT, sqrtConvertlet);
+    map.put(SqlStdOperatorTable.SQRT, SQRT_CONVERTLET);
+    map.put(SqlStdOperatorTable.COALESCE, COALESCE_CONVERTLET);
     map.put(SqlStdOperatorTable.AVG, new DrillAvgVarianceConvertlet(SqlKind.AVG));
     map.put(SqlStdOperatorTable.STDDEV_POP, new DrillAvgVarianceConvertlet(SqlKind.STDDEV_POP));
     map.put(SqlStdOperatorTable.STDDEV_SAMP, new DrillAvgVarianceConvertlet(SqlKind.STDDEV_SAMP));
