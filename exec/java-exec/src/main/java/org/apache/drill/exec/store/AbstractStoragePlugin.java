@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -29,7 +30,6 @@ import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
@@ -64,7 +64,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
   @Override
   @Deprecated
   public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext) {
-    return ImmutableSet.of();
+    return Collections.emptySet();
   }
 
   /**
@@ -73,7 +73,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
    */
   @Deprecated
   public Set<? extends RelOptRule> getLogicalOptimizerRules(OptimizerRulesContext optimizerContext) {
-    return ImmutableSet.of();
+    return Collections.emptySet();
   }
 
   /**
@@ -101,7 +101,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     case LOGICAL:
     case JOIN_PLANNING:
     default:
-      return ImmutableSet.of();
+      return Collections.emptySet();
     }
   }
 

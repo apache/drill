@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.physical.config;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
@@ -74,8 +74,8 @@ public abstract class AbstractDeMuxExchange extends AbstractExchange {
     // Identify the number of unique Drillbit endpoints in receiver fragment endpoints.
     List<DrillbitEndpoint> drillbitEndpoints = ImmutableSet.copyOf(receiverFragmentEndpoints).asList();
 
-    List<EndpointAffinity> affinities = Lists.newArrayList();
-    for(DrillbitEndpoint ep : drillbitEndpoints) {
+    List<EndpointAffinity> affinities = new ArrayList<>();
+    for (DrillbitEndpoint ep : drillbitEndpoints) {
       affinities.add(new EndpointAffinity(ep, Double.POSITIVE_INFINITY));
     }
 
@@ -114,22 +114,22 @@ public abstract class AbstractDeMuxExchange extends AbstractExchange {
     }
 
     senderToReceiversMapping = ArrayListMultimap.create();
-    receiverToSenderMapping = Maps.newHashMap();
+    receiverToSenderMapping = new HashMap<>();
 
     // Find the list of receiver fragment ids assigned to each Drillbit endpoint
     ArrayListMultimap<DrillbitEndpoint, Integer> endpointReceiverList = ArrayListMultimap.create();
 
     int receiverFragmentId = 0;
-    for(DrillbitEndpoint receiverLocation : receiverLocations) {
+    for (DrillbitEndpoint receiverLocation : receiverLocations) {
       endpointReceiverList.put(receiverLocation, receiverFragmentId);
       receiverFragmentId++;
     }
 
     int senderFragmentId = 0;
-    for(DrillbitEndpoint senderLocation : senderLocations) {
+    for (DrillbitEndpoint senderLocation : senderLocations) {
       final List<Integer> receiverMinorFragmentIds = endpointReceiverList.get(senderLocation);
 
-      for(Integer receiverId : receiverMinorFragmentIds) {
+      for (Integer receiverId : receiverMinorFragmentIds) {
         receiverToSenderMapping.put(receiverId, new MinorFragmentEndpoint(senderFragmentId, senderLocation));
 
         senderToReceiversMapping.put(senderFragmentId,

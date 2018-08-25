@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -49,7 +50,7 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
 
   @Test
   public void testEmptyTopSchema() {
-    List<SchemaPath> selection = Lists.newArrayList();
+    List<SchemaPath> selection = new ArrayList<>();
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
@@ -164,7 +165,7 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
 
   @Test
   public void testEmptyMapProjection() {
-    List<SchemaPath> selection = Lists.newArrayList();
+    List<SchemaPath> selection = new ArrayList<>();
     TupleMetadata schema = new SchemaBuilder()
         .addMap("map")
           .add("a", MinorType.INT)

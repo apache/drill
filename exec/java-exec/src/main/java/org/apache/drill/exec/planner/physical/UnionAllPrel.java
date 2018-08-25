@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -34,8 +35,6 @@ import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.core.Union;
-
-import com.google.common.collect.Lists;
 
 public class UnionAllPrel extends UnionPrel {
 
@@ -73,7 +72,7 @@ public class UnionAllPrel extends UnionPrel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    List<PhysicalOperator> inputPops = Lists.newArrayList();
+    List<PhysicalOperator> inputPops = new ArrayList<>();
 
     for (int i = 0; i < this.getInputs().size(); i++) {
       inputPops.add( ((Prel)this.getInputs().get(i)).getPhysicalOperator(creator));

@@ -17,19 +17,18 @@
  */
 package org.apache.drill.exec.schema;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class ObjectSchema implements RecordSchema {
     private final Map<String, Field> fields;
 
     public ObjectSchema() {
-        fields = Maps.newHashMap();
+      fields = new HashMap<>();
     }
 
     @Override
@@ -71,19 +70,16 @@ public class ObjectSchema implements RecordSchema {
 
     @Override
     public Iterable<? extends Field> removeUnreadFields() {
-        final List<Field> removedFields = Lists.newArrayList();
-        Iterables.removeIf(fields.values(), new Predicate<Field>() {
-            @Override
-            public boolean apply(Field field) {
-                if (!field.isRead()) {
-                    removedFields.add(field);
-                    return true;
-                } else if (field.hasSchema()) {
-                    Iterables.addAll(removedFields, field.getAssignedSchema().removeUnreadFields());
-                }
-
-                return false;
+        List<Field> removedFields = new ArrayList<>();
+        fields.values().removeIf(field -> {
+            if (!field.isRead()) {
+                removedFields.add(field);
+                return true;
+            } else if (field.hasSchema()) {
+                Iterables.addAll(removedFields, field.getAssignedSchema().removeUnreadFields());
             }
+
+            return false;
         });
         return removedFields;
     }

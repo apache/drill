@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.rel.InvalidRelException;
@@ -35,7 +36,6 @@ import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.trace.CalciteTrace;
 
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 
 /**
@@ -61,9 +61,9 @@ public class DrillJoinRule extends RelOptRule {
     final RelNode convertedLeft = convert(left, left.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
     final RelNode convertedRight = convert(right, right.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
 
-    List<Integer> leftKeys = Lists.newArrayList();
-    List<Integer> rightKeys = Lists.newArrayList();
-    List<Boolean> filterNulls = Lists.newArrayList();
+    List<Integer> leftKeys = new ArrayList<>();
+    List<Integer> rightKeys = new ArrayList<>();
+    List<Boolean> filterNulls = new ArrayList<>();
 
     boolean addFilter = false;
     RexNode origJoinCondition = join.getCondition();
@@ -102,7 +102,7 @@ public class DrillJoinRule extends RelOptRule {
 
   private RexNode buildJoinCondition(RelNode convertedLeft, RelNode convertedRight, List<Integer> leftKeys,
       List<Integer> rightKeys, List<Boolean> filterNulls, RexBuilder builder) {
-    List<RexNode> equijoinList = Lists.newArrayList();
+    List<RexNode> equijoinList = new ArrayList<>();
     final int numLeftFields = convertedLeft.getRowType().getFieldCount();
     List<RelDataTypeField> leftTypes = convertedLeft.getRowType().getFieldList();
     List<RelDataTypeField> rightTypes = convertedRight.getRowType().getFieldList();

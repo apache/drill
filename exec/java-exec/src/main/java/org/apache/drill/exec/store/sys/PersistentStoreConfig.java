@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.sys;
 
 import com.dyuproject.protostuff.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
@@ -27,6 +26,7 @@ import org.apache.drill.exec.serialization.InstanceSerializer;
 import org.apache.drill.exec.serialization.JacksonSerializer;
 import org.apache.drill.exec.serialization.ProtoSerializer;
 
+import java.util.Objects;
 
 /**
  * An abstraction for configurations that are used to create a {@link PersistentStore store}.
@@ -65,16 +65,16 @@ public class PersistentStoreConfig<V> {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(name, valueSerializer, mode);
+    return Objects.hash(name, valueSerializer, mode);
   }
 
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof PersistentStoreConfig) {
-      final PersistentStoreConfig<?> other = PersistentStoreConfig.class.cast(obj);
-      return Objects.equal(name, other.name)
-          && Objects.equal(valueSerializer, other.valueSerializer)
-          && Objects.equal(mode, other.mode);
+      PersistentStoreConfig<?> other = PersistentStoreConfig.class.cast(obj);
+      return Objects.equals(name, other.name)
+          && Objects.equals(valueSerializer, other.valueSerializer)
+          && Objects.equals(mode, other.mode);
     }
     return false;
   }

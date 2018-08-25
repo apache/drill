@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.sql.SqlKind;
@@ -29,8 +30,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 
-import com.google.common.collect.Lists;
-
 // abstract base class for the aggregation physical rules
 public abstract class AggPruleBase extends Prule {
 
@@ -39,7 +38,7 @@ public abstract class AggPruleBase extends Prule {
   }
 
   protected List<DistributionField> getDistributionField(DrillAggregateRel rel, boolean allFields) {
-    List<DistributionField> groupByFields = Lists.newArrayList();
+    List<DistributionField> groupByFields = new ArrayList<>();
 
     for (int group : remapGroupSet(rel.getGroupSet())) {
       DistributionField field = new DistributionField(group);
@@ -90,7 +89,7 @@ public abstract class AggPruleBase extends Prule {
    * @return {@link ImmutableBitSet} instance with remapped keys.
    */
   public static ImmutableBitSet remapGroupSet(ImmutableBitSet groupSet) {
-    List<Integer> newGroupSet = Lists.newArrayList();
+    List<Integer> newGroupSet = new ArrayList<>();
     int groupSetToAdd = 0;
     for (int ignored : groupSet) {
       newGroupSet.add(groupSetToAdd++);

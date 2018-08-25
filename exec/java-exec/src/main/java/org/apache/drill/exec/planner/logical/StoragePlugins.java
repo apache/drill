@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.logical;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -33,7 +34,6 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginConfig>> {
@@ -49,7 +49,7 @@ public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginC
     DrillConfig config = DrillConfig.create();
     ScanResult scanResult = ClassPathScanner.fromPrescan(config);
     LogicalPlanPersistence lpp = new LogicalPlanPersistence(config, scanResult);
-    String data = Resources.toString(Resources.getResource("storage-engines.json"), Charsets.UTF_8);
+    String data = Resources.toString(Resources.getResource("storage-engines.json"), StandardCharsets.UTF_8);
     StoragePlugins se = lpp.getMapper().readValue(data,  StoragePlugins.class);
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     lpp.getMapper().writeValue(System.out, se);

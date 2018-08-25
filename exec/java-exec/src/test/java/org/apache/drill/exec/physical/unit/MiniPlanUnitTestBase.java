@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.unit;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.drill.test.DrillTestWrapper;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -38,6 +37,7 @@ import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import static org.apache.drill.exec.physical.base.AbstractBase.INIT_ALLOCATION;
 import static org.apache.drill.exec.physical.base.AbstractBase.MAX_ALLOCATION;
@@ -229,7 +230,8 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
     protected long initReservation = INIT_ALLOCATION;
     protected long maxAllocation = MAX_ALLOCATION;
 
-    final private List<RecordBatch> inputs = Lists.newArrayList();
+    final private List<RecordBatch> inputs = new ArrayList<>();
+
     final PopBuilder parent;
 
     public PopBuilder() {
@@ -335,18 +337,15 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
 
     @SuppressWarnings("unchecked")
     public T columnsToRead(SchemaPath... columnsToRead) {
-      this.columnsToRead = Lists.newArrayList(columnsToRead);
+      this.columnsToRead = Arrays.asList(columnsToRead);
       return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T columnsToRead(String... columnsToRead) {
-      this.columnsToRead = Lists.newArrayList();
-
-      for (String column : columnsToRead) {
-
-        this.columnsToRead.add(SchemaPath.getSimplePath(column));
-      }
+      this.columnsToRead = Arrays.stream(columnsToRead)
+          .map(SchemaPath::getSimplePath)
+          .collect(Collectors.toList());
       return (T) this;
     }
 

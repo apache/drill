@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import com.google.common.collect.Maps;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlOperandCountRange;
 import org.apache.calcite.sql.SqlOperator;
@@ -25,13 +24,14 @@ import org.apache.calcite.sql.type.SqlOperandCountRanges;
 import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.HashMap;
 import java.util.Map;
 
 class Checker implements SqlOperandTypeChecker {
   private SqlOperandCountRange range;
 
   public static final Checker ANY_CHECKER = new Checker();
-  private static final Map<Pair<Integer, Integer>, Checker> checkerMap = Maps.newHashMap();
+  private static final Map<Pair<Integer, Integer>, Checker> checkerMap = new HashMap<>();
 
   public static Checker getChecker(int min, int max) {
     final Pair<Integer, Integer> range = Pair.of(min, max);

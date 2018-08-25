@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -47,7 +48,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.collect.Lists;
 
 public class TestOpSerialization {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOpSerialization.class);
@@ -116,14 +116,14 @@ public class TestOpSerialization {
     boolean reversed = false;
     while (true) {
 
-      List<PhysicalOperator> pops = Lists.newArrayList();
+      List<PhysicalOperator> pops = new ArrayList<>();
       pops.add(s);
       pops.add(e);
       pops.add(f);
       pops.add(screen);
 
       if (reversed) {
-        pops = Lists.reverse(pops);
+        Collections.reverse(pops);
       }
       PhysicalPlan plan1 = new PhysicalPlan(PlanProperties.builder().build(), pops);
       String json = plan1.unparse(writer);

@@ -19,8 +19,6 @@ package org.apache.drill.exec.work;
 
 import com.codahale.metrics.Gauge;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.SelfCleaningRunnable;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -49,9 +47,11 @@ import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.user.UserWorker;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -73,9 +73,9 @@ public class WorkManager implements AutoCloseable {
    * {@see java.util.ConcurrentModificationException}; we need that because the statusThread may
    * iterate over the map while other threads add FragmentExecutors via the {@see #WorkerBee}.
    */
-  private final ConcurrentMap<FragmentHandle, FragmentExecutor> runningFragments = Maps.newConcurrentMap();
+  private final ConcurrentMap<FragmentHandle, FragmentExecutor> runningFragments = new ConcurrentHashMap<>();
 
-  private final ConcurrentMap<QueryId, Foreman> queries = Maps.newConcurrentMap();
+  private final ConcurrentMap<QueryId, Foreman> queries = new ConcurrentHashMap<>();
 
   private final BootStrapContext bContext;
   private DrillbitContext dContext;
@@ -260,19 +260,19 @@ public class WorkManager implements AutoCloseable {
      * Add a self contained runnable work to executor service.
      * @param runnable
      */
-    public void addNewWork(final Runnable runnable) {
+    public void addNewWork(Runnable runnable) {
       executor.execute(runnable);
     }
 
-    public boolean cancelForeman(final QueryId queryId, DrillUserPrincipal principal) {
+    public boolean cancelForeman(QueryId queryId, DrillUserPrincipal principal) {
       Preconditions.checkNotNull(queryId);
 
-      final Foreman foreman = queries.get(queryId);
+      Foreman foreman = queries.get(queryId);
       if (foreman == null) {
         return false;
       }
 
-      final String queryIdString = QueryIdHelper.getQueryId(queryId);
+      String queryIdString = QueryIdHelper.getQueryId(queryId);
 
       if (principal != null && !principal.canManageQueryOf(foreman.getQueryContext().getQueryUserName())) {
         throw UserException.permissionError()
@@ -280,22 +280,17 @@ public class WorkManager implements AutoCloseable {
             .build(logger);
       }
 
-      executor.execute(new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          final Thread currentThread = Thread.currentThread();
-          final String originalName = currentThread.getName();
-          try {
-            currentThread.setName(queryIdString + ":foreman:cancel");
-            logger.debug("Canceling foreman");
-            foreman.cancel();
-          } catch (Throwable t) {
-            logger.warn("Exception while canceling foreman", t);
-          } finally {
-            currentThread.setName(originalName);
-          }
+      executor.execute(() -> {
+        Thread currentThread = Thread.currentThread();
+        String originalName = currentThread.getName();
+        try {
+          currentThread.setName(queryIdString + ":foreman:cancel");
+          logger.debug("Canceling foreman");
+          foreman.cancel();
+        } catch (Throwable t) {
+          logger.warn("Exception while canceling foreman", t);
+        } finally {
+          currentThread.setName(originalName);
         }
       });
       return true;
@@ -312,11 +307,11 @@ public class WorkManager implements AutoCloseable {
      *
      * @param foreman the Foreman to retire
      */
-    public void retireForeman(final Foreman foreman) {
+    public void retireForeman(Foreman foreman) {
       Preconditions.checkNotNull(foreman);
 
-      final QueryId queryId = foreman.getQueryId();
-      final boolean wasRemoved = queries.remove(queryId, foreman);
+      QueryId queryId = foreman.getQueryId();
+      boolean wasRemoved = queries.remove(queryId, foreman);
 
       if (!wasRemoved) {
         logger.warn("Couldn't find retiring Foreman for query " + queryId);
@@ -325,7 +320,7 @@ public class WorkManager implements AutoCloseable {
       indicateIfSafeToExit();
     }
 
-    public Foreman getForemanForQueryId(final QueryId queryId) {
+    public Foreman getForemanForQueryId(QueryId queryId) {
       return queries.get(queryId);
     }
 
@@ -337,8 +332,8 @@ public class WorkManager implements AutoCloseable {
      * Currently used to start a root fragment that is not blocked on data, and leaf fragments.
      * @param fragmentExecutor the executor to run
      */
-    public void addFragmentRunner(final FragmentExecutor fragmentExecutor) {
-      final FragmentHandle fragmentHandle = fragmentExecutor.getContext().getHandle();
+    public void addFragmentRunner(FragmentExecutor fragmentExecutor) {
+      FragmentHandle fragmentHandle = fragmentExecutor.getContext().getHandle();
       runningFragments.put(fragmentHandle, fragmentExecutor);
       executor.execute(new SelfCleaningRunnable(fragmentExecutor) {
         @Override
@@ -355,9 +350,9 @@ public class WorkManager implements AutoCloseable {
      *
      * @param fragmentManager the manager for the fragment
      */
-    public void startFragmentPendingRemote(final FragmentManager fragmentManager) {
-      final FragmentHandle fragmentHandle = fragmentManager.getHandle();
-      final FragmentExecutor fragmentExecutor = fragmentManager.getRunnable();
+    public void startFragmentPendingRemote(FragmentManager fragmentManager) {
+      FragmentHandle fragmentHandle = fragmentManager.getHandle();
+      FragmentExecutor fragmentExecutor = fragmentManager.getRunnable();
       if (fragmentExecutor == null) {
         // the fragment was most likely cancelled
         return;
@@ -375,7 +370,7 @@ public class WorkManager implements AutoCloseable {
       });
     }
 
-    public FragmentExecutor getFragmentRunner(final FragmentHandle handle) {
+    public FragmentExecutor getFragmentRunner(FragmentHandle handle) {
       return runningFragments.get(handle);
     }
 
@@ -440,18 +435,18 @@ public class WorkManager implements AutoCloseable {
 
       // Get the controller and localBitEndPoint outside the loop since these will not change once a Drillbit and
       // StatusThread is started
-      final Controller controller = dContext.getController();
-      final DrillbitEndpoint localBitEndPoint = dContext.getEndpoint();
+      Controller controller = dContext.getController();
+      DrillbitEndpoint localBitEndPoint = dContext.getEndpoint();
 
       while (true) {
-        final List<DrillRpcFuture<Ack>> futures = Lists.newArrayList();
-        for (final FragmentExecutor fragmentExecutor : runningFragments.values()) {
-          final FragmentStatus status = fragmentExecutor.getStatus();
+        List<DrillRpcFuture<Ack>> futures = new ArrayList<>();
+        for (FragmentExecutor fragmentExecutor : runningFragments.values()) {
+          FragmentStatus status = fragmentExecutor.getStatus();
           if (status == null) {
             continue;
           }
 
-          final DrillbitEndpoint foremanEndpoint = fragmentExecutor.getContext().getForemanEndpoint();
+          DrillbitEndpoint foremanEndpoint = fragmentExecutor.getContext().getForemanEndpoint();
 
           // If local endpoint is the Foreman for this running fragment, then submit the status locally bypassing the
           // Control Tunnel
@@ -462,17 +457,17 @@ public class WorkManager implements AutoCloseable {
           }
         }
 
-        for (final DrillRpcFuture<Ack> future : futures) {
+        for (DrillRpcFuture<Ack> future : futures) {
           try {
             future.checkedGet();
-          } catch (final RpcException ex) {
+          } catch (RpcException ex) {
             logger.info("Failure while sending intermediate fragment status to Foreman", ex);
           }
         }
 
         try {
           Thread.sleep(STATUS_PERIOD_SECONDS * 1000);
-        } catch (final InterruptedException e) {
+        } catch (InterruptedException e) {
           // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
           // interruption and respond to it if it wants to.
           Thread.currentThread().interrupt();

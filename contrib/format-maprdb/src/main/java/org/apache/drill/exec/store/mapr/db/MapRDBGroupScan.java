@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,9 +44,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public abstract class MapRDBGroupScan extends AbstractGroupScan {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBGroupScan.class);
@@ -65,12 +64,7 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
 
   private Stopwatch watch = Stopwatch.createUnstarted();
 
-  private static final Comparator<List<MapRDBSubScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<MapRDBSubScanSpec>>() {
-    @Override
-    public int compare(List<MapRDBSubScanSpec> list1, List<MapRDBSubScanSpec> list2) {
-      return list1.size() - list2.size();
-    }
-  };
+  private static final Comparator<List<MapRDBSubScanSpec>> LIST_SIZE_COMPARATOR = Comparator.comparingInt(List::size);
 
   private static final Comparator<List<MapRDBSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
 
@@ -97,12 +91,12 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
   public List<EndpointAffinity> getOperatorAffinity() {
     watch.reset();
     watch.start();
-    Map<String, DrillbitEndpoint> endpointMap = new HashMap<String, DrillbitEndpoint>();
+    Map<String, DrillbitEndpoint> endpointMap = new HashMap<>();
     for (DrillbitEndpoint ep : formatPlugin.getContext().getBits()) {
       endpointMap.put(ep.getAddress(), ep);
     }
 
-    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
     for (String serverName : regionsToScan.values()) {
       DrillbitEndpoint ep = endpointMap.get(serverName);
       if (ep != null) {
@@ -115,7 +109,7 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
       }
     }
     logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS)/1000);
-    return Lists.newArrayList(affinityMap.values());
+    return new ArrayList<>(affinityMap.values());
   }
 
   /**
@@ -140,28 +134,28 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
     /*
      * initialize (endpoint index => HBaseSubScanSpec list) map
      */
-    endpointFragmentMapping = Maps.newHashMapWithExpectedSize(numSlots);
+    endpointFragmentMapping = new HashMap<>(numSlots);
 
     /*
      * another map with endpoint (hostname => corresponding index list) in 'incomingEndpoints' list
      */
-    Map<String, Queue<Integer>> endpointHostIndexListMap = Maps.newHashMap();
+    Map<String, Queue<Integer>> endpointHostIndexListMap = new HashMap<>();
 
     /*
      * Initialize these two maps
      */
     for (int i = 0; i < numSlots; ++i) {
-      endpointFragmentMapping.put(i, new ArrayList<MapRDBSubScanSpec>(maxPerEndpointSlot));
+      endpointFragmentMapping.put(i, new ArrayList<>(maxPerEndpointSlot));
       String hostname = incomingEndpoints.get(i).getAddress();
       Queue<Integer> hostIndexQueue = endpointHostIndexListMap.get(hostname);
       if (hostIndexQueue == null) {
-        hostIndexQueue = Lists.newLinkedList();
+        hostIndexQueue = new LinkedList<>();
         endpointHostIndexListMap.put(hostname, hostIndexQueue);
       }
       hostIndexQueue.add(i);
     }
 
-    Set<Entry<TabletFragmentInfo, String>> regionsToAssignSet = Sets.newHashSet(regionsToScan.entrySet());
+    Set<Entry<TabletFragmentInfo, String>> regionsToAssignSet = new HashSet<>(regionsToScan.entrySet());
 
     /*
      * First, we assign regions which are hosted on region servers running on drillbit endpoints

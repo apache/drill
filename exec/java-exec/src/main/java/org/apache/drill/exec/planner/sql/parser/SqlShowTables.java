@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ShowTablesHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
@@ -31,6 +30,7 @@ import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -65,7 +65,7 @@ public class SqlShowTables extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    List<SqlNode> opList = Lists.newArrayList();
+    List<SqlNode> opList = new ArrayList<>();
     opList.add(db);
     opList.add(likePattern);
     opList.add(whereClause);

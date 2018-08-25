@@ -17,16 +17,17 @@
  */
 package org.apache.drill.exec.physical.impl.common;
 
-import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.ArrayList;
 
 import static org.apache.drill.exec.physical.impl.common.HashTable.BATCH_SIZE;
 
 public class HashTableAllocationTrackerTest {
   @Test
   public void testDoubleGetNextCall() {
-    final HashTableConfig config = new HashTableConfig(100, true, .5f, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+    final HashTableConfig config = new HashTableConfig(100, true, .5f, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     final HashTableAllocationTracker tracker = new HashTableAllocationTracker(config);
 
     for (int counter = 0; counter < 100; counter++) {
@@ -36,7 +37,7 @@ public class HashTableAllocationTrackerTest {
 
   @Test(expected = IllegalStateException.class)
   public void testPrematureCommit() {
-    final HashTableConfig config = new HashTableConfig(100, .5f, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+    final HashTableConfig config = new HashTableConfig(100, .5f, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     final HashTableAllocationTracker tracker = new HashTableAllocationTracker(config);
 
     tracker.commit(30);
@@ -44,7 +45,7 @@ public class HashTableAllocationTrackerTest {
 
   @Test(expected = IllegalStateException.class)
   public void testDoubleCommit() {
-    final HashTableConfig config = new HashTableConfig(100, .5f, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+    final HashTableConfig config = new HashTableConfig(100, .5f, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     final HashTableAllocationTracker tracker = new HashTableAllocationTracker(config);
 
     tracker.commit(30);
@@ -53,7 +54,7 @@ public class HashTableAllocationTrackerTest {
 
   @Test
   public void testOverAsking() {
-    final HashTableConfig config = new HashTableConfig(100, .5f, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+    final HashTableConfig config = new HashTableConfig(100, .5f, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     final HashTableAllocationTracker tracker = new HashTableAllocationTracker(config);
 
     tracker.getNextBatchHolderSize(30);
@@ -64,7 +65,7 @@ public class HashTableAllocationTrackerTest {
    */
   @Test
   public void testLifecycle1() {
-    final HashTableConfig config = new HashTableConfig(100, .5f, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+    final HashTableConfig config = new HashTableConfig(100, .5f, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     final HashTableAllocationTracker tracker = new HashTableAllocationTracker(config);
 
     for (int counter = 0; counter < 100; counter++) {
@@ -78,7 +79,7 @@ public class HashTableAllocationTrackerTest {
    */
   @Test
   public void testLifecycle() {
-    final HashTableConfig config = new HashTableConfig(100, true, .5f, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+    final HashTableConfig config = new HashTableConfig(100, true, .5f, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     final HashTableAllocationTracker tracker = new HashTableAllocationTracker(config);
 
     Assert.assertEquals(30, tracker.getNextBatchHolderSize(30));

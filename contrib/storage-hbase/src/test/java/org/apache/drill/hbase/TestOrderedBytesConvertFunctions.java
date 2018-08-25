@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +36,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import org.junit.experimental.categories.Category;
 
@@ -54,14 +54,14 @@ public class TestOrderedBytesConvertFunctions extends BaseTestQuery {
 
   @Test
   public void testOrderedBytesDoubleConvertFrom() throws Throwable {
-    verifyPhysicalPlan("convert_from(binary_string('\\x31\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x01'), 'DOUBLE_OB')", Double.valueOf(4.9e-324));
+    verifyPhysicalPlan("convert_from(binary_string('\\x31\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x01'), 'DOUBLE_OB')", 4.9e-324);
   }
 
   protected <T> void verifyPhysicalPlan(String expression, T expectedResults) throws Throwable {
     expression = expression.replace("\\", "\\\\\\\\"); // "\\\\\\\\" => Java => "\\\\" => JsonParser => "\\" => AntlrParser "\"
 
     if (textFileContent == null) {
-      textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), Charsets.UTF_8);
+      textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), StandardCharsets.UTF_8);
     }
     String planString = textFileContent.replace("__CONVERT_EXPRESSION__", expression);
 

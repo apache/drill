@@ -27,16 +27,16 @@ public class ZkTransientStoreFactory implements TransientStoreFactory {
 
   private final CuratorFramework curator;
 
-  public ZkTransientStoreFactory(final CuratorFramework curator) {
+  public ZkTransientStoreFactory(CuratorFramework curator) {
     this.curator = Preconditions.checkNotNull(curator, "curator is required");
   }
 
   @Override
   public <V> ZkEphemeralStore<V> getOrCreateStore(TransientStoreConfig<V> config) {
-    final ZkEphemeralStore<V> store = new ZkEphemeralStore<>(config, curator);
+    ZkEphemeralStore<V> store = new ZkEphemeralStore<>(config, curator);
     try {
       store.start();
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throw new DrillRuntimeException("unable to start zookeeper transient store", e);
     }
     return store;

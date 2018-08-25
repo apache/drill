@@ -22,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +58,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 
 import io.netty.buffer.DrillBuf;
@@ -270,12 +270,12 @@ public class AvroRecordReader extends AbstractRecordReader {
     switch (schema.getType()) {
       case STRING:
         byte[] binary;
-        final int length;
+        int length;
         if (value instanceof Utf8) {
           binary = ((Utf8) value).getBytes();
           length = ((Utf8) value).getByteLength();
         } else {
-          binary = value.toString().getBytes(Charsets.UTF_8);
+          binary = value.toString().getBytes(StandardCharsets.UTF_8);
           length = binary.length;
         }
         ensure(length);
@@ -322,7 +322,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         writer.bit(fieldName).writeBit((Boolean) value ? 1 : 0);
         break;
       case BYTES:
-        final ByteBuffer buf = (ByteBuffer) value;
+        ByteBuffer buf = (ByteBuffer) value;
         length = buf.remaining();
         ensure(length);
         buffer.setBytes(0, buf);
@@ -341,10 +341,10 @@ public class AvroRecordReader extends AbstractRecordReader {
         // Nothing to do for null type
         break;
       case ENUM:
-        final String symbol = value.toString();
-        final byte[] b;
+        String symbol = value.toString();
+        byte[] b;
         try {
-          b = symbol.getBytes(Charsets.UTF_8.name());
+          b = symbol.getBytes(StandardCharsets.UTF_8.name());
         } catch (UnsupportedEncodingException e) {
           throw new DrillRuntimeException("Unable to read enum value for field: " + fieldName, e);
         }

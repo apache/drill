@@ -18,10 +18,8 @@
 package org.apache.drill.exec.impersonation.hive;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.security.SessionStateConfigUserAuthenticator;
@@ -34,6 +32,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
@@ -82,7 +81,7 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     startHiveMetaStore();
     startDrillCluster(true);
     addHiveStoragePlugin(getHivePluginConfig());
-    addMiniDfsBasedStorage(Maps.<String, WorkspaceConfig>newHashMap());
+    addMiniDfsBasedStorage(new HashMap<>());
     generateTestData();
   }
 
@@ -96,7 +95,7 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   }
 
   private static Map<String, String> getHivePluginConfig() {
-    final Map<String, String> hiveConfig = Maps.newHashMap();
+    final Map<String, String> hiveConfig = new HashMap<>();
     hiveConfig.put(METASTOREURIS.varname, hiveConf.get(METASTOREURIS.varname));
     hiveConfig.put(FS_DEFAULT_NAME_KEY, dfsConf.get(FS_DEFAULT_NAME_KEY));
     hiveConfig.put(HIVE_SERVER2_ENABLE_DOAS.varname, hiveConf.get(HIVE_SERVER2_ENABLE_DOAS.varname));

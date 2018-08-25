@@ -19,19 +19,18 @@ package org.apache.drill.exec.schema;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public class ListSchema implements RecordSchema {
     private List<Field> fields;
 
     public ListSchema() {
-        this.fields = Lists.newArrayList();
+      this.fields = new ArrayList<>();
     }
 
     @Override
@@ -89,19 +88,16 @@ public class ListSchema implements RecordSchema {
 
     @Override
     public Iterable<? extends Field> removeUnreadFields() {
-        final List<Field> removedFields = Lists.newArrayList();
-        Iterables.removeIf(fields, new Predicate<Field>() {
-            @Override
-            public boolean apply(Field field) {
-                if (!field.isRead()) {
-                    removedFields.add(field);
-                    return true;
-                } else if (field.hasSchema()) {
-                    Iterables.addAll(removedFields, field.getAssignedSchema().removeUnreadFields());
-                }
-
-                return false;
+        List<Field> removedFields = new ArrayList<>();
+        fields.removeIf(field -> {
+            if (!field.isRead()) {
+                removedFields.add(field);
+                return true;
+            } else if (field.hasSchema()) {
+                Iterables.addAll(removedFields, field.getAssignedSchema().removeUnreadFields());
             }
+
+            return false;
         });
         return removedFields;
     }

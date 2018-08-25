@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
@@ -33,8 +34,6 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
-
-import com.google.common.collect.Lists;
 
 public class ProjectAllowDupPrel extends ProjectPrel {
 
@@ -60,7 +59,7 @@ public class ProjectAllowDupPrel extends ProjectPrel {
 
   @Override
   protected List<NamedExpression> getProjectExpressions(DrillParseContext context) {
-    List<NamedExpression> expressions = Lists.newArrayList();
+    List<NamedExpression> expressions = new ArrayList<>();
     for (Pair<RexNode, String> pair : Pair.zip(exps, getRowType().getFieldNames())) {
       LogicalExpression expr = DrillOptiq.toDrill(context, getInput(), pair.left);
       expressions.add(new NamedExpression(expr, FieldReference.getWithQuotedRef(pair.right)));

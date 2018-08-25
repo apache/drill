@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.sys;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
@@ -144,10 +144,10 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     if (table.isDistributed()) {
-      final List<EndpointAffinity> affinities = Lists.newArrayList();
-      final Collection<DrillbitEndpoint> bits = plugin.getContext().getBits();
-      final double affinityPerNode = 1d / bits.size();
-      for (final DrillbitEndpoint endpoint : bits) {
+      List<EndpointAffinity> affinities = new ArrayList<>();
+      Collection<DrillbitEndpoint> bits = plugin.getContext().getBits();
+      double affinityPerNode = 1d / bits.size();
+      for (DrillbitEndpoint endpoint : bits) {
         affinities.add(new EndpointAffinity(endpoint, affinityPerNode, true, /* maxWidth = */ 1));
       }
       return affinities;

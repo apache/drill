@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.rpc.security;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
@@ -31,6 +30,7 @@ import org.apache.drill.exec.rpc.user.security.UserAuthenticatorFactory;
 import javax.security.sasl.SaslException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +45,7 @@ public class AuthenticatorProviderImpl implements AuthenticatorProvider {
 
   @SuppressWarnings("unchecked")
   public AuthenticatorProviderImpl(final DrillConfig config, final ScanResult scan) throws DrillbitStartupException {
-    List<String> configuredFactories = Lists.newArrayList();
+    List<String> configuredFactories = new ArrayList<>();
     if (config.hasPath(ExecConstants.AUTHENTICATION_MECHANISMS)) {
       configuredFactories = config.getStringList(ExecConstants.AUTHENTICATION_MECHANISMS);
     }

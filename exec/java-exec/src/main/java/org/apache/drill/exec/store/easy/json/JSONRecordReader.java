@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.easy.json;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -158,7 +159,7 @@ public class JSONRecordReader extends AbstractRecordReader {
 
   @Override
   protected List<SchemaPath> getDefaultColumnsToRead() {
-    return ImmutableList.of();
+    return Collections.emptyList();
   }
 
   private void setupParser() throws IOException {

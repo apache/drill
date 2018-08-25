@@ -17,11 +17,10 @@
  */
 package org.apache.drill.exec.testing;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
-import com.google.common.collect.Lists;
 
 public class Controls {
 
@@ -52,7 +51,7 @@ public class Controls {
    */
   public static class Builder {
 
-    private final List<String> injections = Lists.newArrayList();
+    private final List<String> injections = new ArrayList<>();
 
     public Builder() {
     }

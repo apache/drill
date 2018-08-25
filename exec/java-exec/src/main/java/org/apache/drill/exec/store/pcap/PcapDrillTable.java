@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.pcap;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -28,6 +27,7 @@ import org.apache.drill.exec.store.pcap.dto.ColumnDto;
 import org.apache.drill.exec.store.pcap.schema.PcapTypes;
 import org.apache.drill.exec.store.pcap.schema.Schema;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PcapDrillTable extends DrillTable {
@@ -42,8 +42,8 @@ public class PcapDrillTable extends DrillTable {
 
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    List<RelDataType> typeList = Lists.newArrayList();
-    List<String> fieldNameList = Lists.newArrayList();
+    List<RelDataType> typeList = new ArrayList<>();
+    List<String> fieldNameList = new ArrayList<>();
     convertToRelDataType(typeFactory, fieldNameList, typeList);
     return typeFactory.createStructType(typeList, fieldNameList);
   }

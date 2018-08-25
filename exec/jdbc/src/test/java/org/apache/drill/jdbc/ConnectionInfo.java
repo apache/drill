@@ -18,9 +18,9 @@
 package org.apache.drill.jdbc;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
@@ -67,14 +67,14 @@ public class ConnectionInfo {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(url, params);
+    return Objects.hash(url, params);
   }
 
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof ConnectionInfo) {
       final ConnectionInfo info = ConnectionInfo.class.cast(obj);
-      return Objects.equal(url, info.getUrl()) && Objects.equal(params, info.getParameters());
+      return Objects.equals(url, info.getUrl()) && Objects.equals(params, info.getParameters());
     }
     return false;
   }

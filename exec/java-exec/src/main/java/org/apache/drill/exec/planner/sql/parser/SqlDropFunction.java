@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
@@ -30,6 +29,7 @@ import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DropFunctionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SqlDropFunction extends DrillSqlCall {
@@ -55,7 +55,7 @@ public class SqlDropFunction extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    List<SqlNode> opList = Lists.newArrayList();
+    List<SqlNode> opList = new ArrayList<>();
     opList.add(jar);
     return opList;
   }

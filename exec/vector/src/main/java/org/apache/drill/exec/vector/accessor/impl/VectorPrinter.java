@@ -21,7 +21,7 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Handy tool to visualize string and offset vectors for
@@ -66,7 +66,7 @@ public class VectorPrinter {
   }
 
   public static String stringAt(VarCharVector vector, int i) {
-    return new String(vector.getAccessor().get(i), Charsets.UTF_8);
+    return new String(vector.getAccessor().get(i), StandardCharsets.UTF_8);
   }
 
 }

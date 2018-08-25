@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.server.rest.spnego;
 
-import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -37,6 +36,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
@@ -87,7 +87,7 @@ public class TestSpnegoConfig {
           .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
               ConfigValueFactory.fromAnyRef(true))
           .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-              ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
+              ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
           .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
               ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
 
@@ -101,14 +101,18 @@ public class TestSpnegoConfig {
 
   /**
    * Invalid configuration with keytab only and missing principal
-   * @throws Exception
    */
   @Test
-  public void testSpnegoConfigOnlyKeytab() throws Exception {
+  public void testSpnegoConfigOnlyKeytab() {
     try {
-      final DrillConfig newConfig = new DrillConfig(DrillConfig.create().withValue(ExecConstants.USER_AUTHENTICATION_ENABLED, ConfigValueFactory.fromAnyRef(true)).withValue(ExecConstants.AUTHENTICATION_MECHANISMS, ConfigValueFactory.fromIterable(Lists.newArrayList("plain"))).withValue(ExecConstants.HTTP_SPNEGO_KEYTAB, ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())).withValue(ExecConstants.USER_AUTHENTICATOR_IMPL, ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
+      DrillConfig newConfig = new DrillConfig(
+          DrillConfig.create()
+              .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED, ConfigValueFactory.fromAnyRef(true))
+              .withValue(ExecConstants.AUTHENTICATION_MECHANISMS, ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
+              .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB, ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString()))
+              .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL, ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
 
-      final SpnegoConfig spnegoConfig = new SpnegoConfig(newConfig);
+      SpnegoConfig spnegoConfig = new SpnegoConfig(newConfig);
       spnegoConfig.validateSpnegoConfig();
       fail();
     } catch (Exception ex) {
@@ -118,14 +122,18 @@ public class TestSpnegoConfig {
 
   /**
    * Invalid configuration with principal only and missing keytab
-   * @throws Exception
    */
   @Test
-  public void testSpnegoConfigOnlyPrincipal() throws Exception {
+  public void testSpnegoConfigOnlyPrincipal() {
     try {
-      final DrillConfig newConfig = new DrillConfig(DrillConfig.create().withValue(ExecConstants.USER_AUTHENTICATION_ENABLED, ConfigValueFactory.fromAnyRef(true)).withValue(ExecConstants.AUTHENTICATION_MECHANISMS, ConfigValueFactory.fromIterable(Lists.newArrayList("plain"))).withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL, ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL)).withValue(ExecConstants.USER_AUTHENTICATOR_IMPL, ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
+      DrillConfig newConfig = new DrillConfig(
+          DrillConfig.create()
+              .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED, ConfigValueFactory.fromAnyRef(true))
+              .withValue(ExecConstants.AUTHENTICATION_MECHANISMS, ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
+              .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL, ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
+              .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL, ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
 
-      final SpnegoConfig spnegoConfig = new SpnegoConfig(newConfig);
+      SpnegoConfig spnegoConfig = new SpnegoConfig(newConfig);
       spnegoConfig.validateSpnegoConfig();
       fail();
     } catch (Exception ex) {
@@ -145,7 +153,7 @@ public class TestSpnegoConfig {
           .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
               ConfigValueFactory.fromAnyRef(true))
           .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-              ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
+              ConfigValueFactory.fromIterable(Collections.singletonList("plain")))
           .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
               ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
           .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,

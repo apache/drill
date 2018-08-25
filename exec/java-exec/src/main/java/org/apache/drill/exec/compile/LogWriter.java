@@ -41,7 +41,7 @@ public class LogWriter extends Writer {
    * @param logger the logger this Writer should write to
    * @param level the debug level to write to the logger with
    */
-  public LogWriter(final Logger logger, final Level level) {
+  public LogWriter(Logger logger, Level level) {
     Preconditions.checkNotNull(logger);
     Preconditions.checkArgument((level == Level.DEBUG) || (level == Level.ERROR) ||
         (level == Level.INFO) || (level == Level.TRACE) || (level == Level.WARN),

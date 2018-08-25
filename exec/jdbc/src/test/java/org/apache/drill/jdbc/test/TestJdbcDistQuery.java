@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -39,7 +40,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 
 @Category(JdbcTest.class)
 public class TestJdbcDistQuery extends JdbcTestBase {
@@ -239,7 +239,7 @@ public class TestJdbcDistQuery extends JdbcTestBase {
       Statement s = c.createStatement();
       ResultSet r = s.executeQuery(query);
       ResultSetMetaData md = r.getMetaData();
-      List<String> columns = Lists.newArrayList();
+      List<String> columns = new ArrayList<>();
       for (int i = 1; i <= md.getColumnCount(); i++) {
         columns.add(md.getColumnName(i));
       }

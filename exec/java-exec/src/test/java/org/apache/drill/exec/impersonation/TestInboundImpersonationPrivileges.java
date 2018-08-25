@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
@@ -43,8 +41,7 @@ public class TestInboundImpersonationPrivileges extends BaseTestImpersonation {
 
   static {
     try {
-      IMPERSONATION_POLICIES = Files.toString(DrillFileUtils.getResourceAsFile("/inbound_impersonation_policies.json"),
-          Charsets.UTF_8);
+      IMPERSONATION_POLICIES = DrillFileUtils.getResourceAsString("/inbound_impersonation_policies.json");
     } catch (final IOException e) {
       throw new RuntimeException("Cannot load impersonation policies.", e);
     }

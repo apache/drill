@@ -42,18 +42,18 @@ public class EventDispatcher<V> implements PathChildrenCacheListener {
 
   private final ZkEphemeralStore<V> store;
 
-  protected EventDispatcher(final ZkEphemeralStore<V> store) {
+  protected EventDispatcher(ZkEphemeralStore<V> store) {
     this.store = Preconditions.checkNotNull(store, "store is required");
   }
 
   @Override
-  public void childEvent(final CuratorFramework client, final PathChildrenCacheEvent event) throws Exception {
-    final PathChildrenCacheEvent.Type original = event.getType();
-    final TransientStoreEventType mapped = MAPPINGS.get(original);
+  public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) throws Exception {
+    PathChildrenCacheEvent.Type original = event.getType();
+    TransientStoreEventType mapped = MAPPINGS.get(original);
     if (mapped != null) { // dispatch the event to listeners only if it can be mapped
-      final String path = event.getData().getPath();
-      final byte[] bytes = event.getData().getData();
-      final V value = store.getConfig().getSerializer().deserialize(bytes);
+      String path = event.getData().getPath();
+      byte[] bytes = event.getData().getData();
+      V value = store.getConfig().getSerializer().deserialize(bytes);
       store.fireListeners(TransientStoreEvent.of(mapped, path, value));
     }
   }

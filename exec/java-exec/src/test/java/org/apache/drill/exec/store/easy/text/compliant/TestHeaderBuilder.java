@@ -24,7 +24,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 public class TestHeaderBuilder extends DrillTest {
 
@@ -194,7 +194,7 @@ public class TestHeaderBuilder extends DrillTest {
     if (input == null) {
       return;
     }
-    byte bytes[] = input.getBytes(Charsets.UTF_8);
+    byte bytes[] = input.getBytes(StandardCharsets.UTF_8);
     if (bytes.length == 0) {
       return;
     }

@@ -63,7 +63,7 @@ public class G${type}ToChar implements DrillSimpleFunc {
         // Get the desired output format and create a DateTimeFormatter
         byte[] buf = new byte[right.end - right.start];
         right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
-        String input = new String(buf, com.google.common.base.Charsets.UTF_8);
+        String input = new String(buf, java.nio.charset.StandardCharsets.UTF_8);
         format = org.joda.time.format.DateTimeFormat.forPattern(input);
     }
 

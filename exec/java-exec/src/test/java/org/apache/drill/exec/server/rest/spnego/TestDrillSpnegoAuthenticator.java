@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.server.rest.spnego;
 
-import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.categories.SecurityTest;
@@ -57,6 +56,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -94,7 +94,7 @@ public class TestDrillSpnegoAuthenticator {
     // Create a DrillbitContext with service principal and keytab for DrillSpnegoLoginService
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create()
         .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("spnego")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("spnego")))
         .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
         .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.fragment;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
@@ -31,7 +32,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.physical.base.SubScan;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.config.LateralJoinPOP;
 import org.apache.drill.exec.physical.config.UnnestPOP;
 
@@ -100,8 +100,8 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
   public PhysicalOperator visitOp(PhysicalOperator op, IndexedFragmentNode iNode) throws ExecutionSetupException {
     iNode.addAllocation(op);
 //    logger.debug("Visiting catch all: {}", op);
-    List<PhysicalOperator> children = Lists.newArrayList();
-    for(PhysicalOperator child : op){
+    List<PhysicalOperator> children = new ArrayList<>();
+    for (PhysicalOperator child : op) {
       children.add(child.accept(this, iNode));
     }
     PhysicalOperator newOp = op.getNewWithChildren(children);
@@ -114,7 +114,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
   @Override
   public PhysicalOperator visitLateralJoin(LateralJoinPOP op, IndexedFragmentNode iNode) throws ExecutionSetupException {
     iNode.addAllocation(op);
-    List<PhysicalOperator> children = Lists.newArrayList();
+    List<PhysicalOperator> children = new ArrayList<>();
 
     children.add(op.getLeft().accept(this, iNode));
     children.add(op.getRight().accept(this, iNode));

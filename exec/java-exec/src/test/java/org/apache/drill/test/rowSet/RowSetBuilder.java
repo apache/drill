@@ -17,7 +17,6 @@
  */
 package org.apache.drill.test.rowSet;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
@@ -25,6 +24,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -43,7 +43,7 @@ public final class RowSetBuilder {
   private DirectRowSet rowSet;
   private RowSetWriter writer;
   private boolean withSv2;
-  private Set<Integer> skipIndices = Sets.newHashSet();
+  private Set<Integer> skipIndices = new HashSet<>();
 
   /**
    * Creates a {@link RowSetBuilder}. Since {@link BatchSchema} does not handle complex types well, this has been deprecated in favor of the other constructors.

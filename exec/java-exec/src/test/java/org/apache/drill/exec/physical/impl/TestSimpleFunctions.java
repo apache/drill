@@ -53,8 +53,6 @@ import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import com.sun.codemodel.JClassAlreadyExistsException;
 
 import org.mockito.Mockito;
@@ -64,7 +62,7 @@ public class TestSimpleFunctions extends ExecTest {
   @Test
   public void testHashFunctionResolution() throws JClassAlreadyExistsException, IOException {
     @SuppressWarnings("resource")
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     // test required vs nullable Int input
     resolveHash(new TypedNullConstant(Types.optional(TypeProtos.MinorType.INT)),
         TypeProtos.DataMode.OPTIONAL,
@@ -104,39 +102,39 @@ public class TestSimpleFunctions extends ExecTest {
 
   public void resolveHash(LogicalExpression arg, TypeProtos.DataMode expectedBestInputMode,
                           FunctionImplementationRegistry registry) throws JClassAlreadyExistsException, IOException {
-    final List<LogicalExpression> args = new ArrayList<>();
+    List<LogicalExpression> args = new ArrayList<>();
     args.add(arg);
     FunctionCall call = new FunctionCall(
         "hash",
         args,
         ExpressionPosition.UNKNOWN
     );
-    final FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
-    final DrillFuncHolder matchedFuncHolder = registry.findDrillFunction(resolver, call);
+    FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
+    DrillFuncHolder matchedFuncHolder = registry.findDrillFunction(resolver, call);
     assertEquals( expectedBestInputMode, matchedFuncHolder.getParmMajorType(0).getMode());
   }
 
   @Test
   public void testSubstring() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/functions/testSubstring.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/functions/testSubstring.json"));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-    while(exec.next()) {
-      final NullableVarCharVector c1 = exec.getValueVectorById(new SchemaPath("col3", ExpressionPosition.UNKNOWN), NullableVarCharVector.class);
-      final NullableVarCharVector.Accessor a1 = c1.getAccessor();
+    while (exec.next()) {
+      NullableVarCharVector c1 = exec.getValueVectorById(new SchemaPath("col3", ExpressionPosition.UNKNOWN), NullableVarCharVector.class);
+      NullableVarCharVector.Accessor a1 = c1.getAccessor();
 
       int count = 0;
-      for(int i = 0; i < c1.getAccessor().getValueCount(); i++) {
+      for (int i = 0; i < c1.getAccessor().getValueCount(); i++) {
         if (!a1.isNull(i)) {
-          final NullableVarCharHolder holder = new NullableVarCharHolder();
+          NullableVarCharHolder holder = new NullableVarCharHolder();
           a1.get(i, holder);
-          assertEquals("aaaa", StringFunctionHelpers.toStringFromUTF8(holder.start,  holder.end,  holder.buffer));
+          assertEquals("aaaa", StringFunctionHelpers.toStringFromUTF8(holder.start, holder.end, holder.buffer));
           ++count;
         }
       }
@@ -151,33 +149,33 @@ public class TestSimpleFunctions extends ExecTest {
 
   @Test
   public void testSubstringNegative() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/functions/testSubstringNegative.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/functions/testSubstringNegative.json"));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-    while(exec.next()) {
-      final NullableVarCharVector c1 = exec.getValueVectorById(new SchemaPath("col3", ExpressionPosition.UNKNOWN), NullableVarCharVector.class);
-      final NullableVarCharVector.Accessor a1 = c1.getAccessor();
+    while (exec.next()) {
+      NullableVarCharVector c1 = exec.getValueVectorById(new SchemaPath("col3", ExpressionPosition.UNKNOWN), NullableVarCharVector.class);
+      NullableVarCharVector.Accessor a1 = c1.getAccessor();
 
       int count = 0;
-      for(int i = 0; i < c1.getAccessor().getValueCount(); i++) {
+      for (int i = 0; i < c1.getAccessor().getValueCount(); i++) {
         if (!a1.isNull(i)) {
-          final NullableVarCharHolder holder = new NullableVarCharHolder();
+          NullableVarCharHolder holder = new NullableVarCharHolder();
           a1.get(i, holder);
           //when offset is negative, substring return empty string.
-          assertEquals("", StringFunctionHelpers.toStringFromUTF8(holder.start,  holder.end,  holder.buffer));
+          assertEquals("", StringFunctionHelpers.toStringFromUTF8(holder.start, holder.end, holder.buffer));
           ++count;
         }
       }
       assertEquals(50, count);
     }
 
-    if(context.getExecutorState().getFailureCause() != null) {
+    if (context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
     assertTrue(!context.getExecutorState().isFailed());
@@ -185,32 +183,32 @@ public class TestSimpleFunctions extends ExecTest {
 
   @Test
   public void testByteSubstring() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/functions/testByteSubstring.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/functions/testByteSubstring.json"));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-    while(exec.next()) {
-      final NullableVarBinaryVector c1 = exec.getValueVectorById(new SchemaPath("col3", ExpressionPosition.UNKNOWN), NullableVarBinaryVector.class);
-      final NullableVarBinaryVector.Accessor a1 = c1.getAccessor();
+    while (exec.next()) {
+      NullableVarBinaryVector c1 = exec.getValueVectorById(new SchemaPath("col3", ExpressionPosition.UNKNOWN), NullableVarBinaryVector.class);
+      NullableVarBinaryVector.Accessor a1 = c1.getAccessor();
 
       int count = 0;
-      for(int i = 0; i < c1.getAccessor().getValueCount(); i++) {
+      for (int i = 0; i < c1.getAccessor().getValueCount(); i++) {
         if (!a1.isNull(i)) {
-          final NullableVarBinaryHolder holder = new NullableVarBinaryHolder();
+          NullableVarBinaryHolder holder = new NullableVarBinaryHolder();
           a1.get(i, holder);
-          assertEquals("aa", StringFunctionHelpers.toStringFromUTF8(holder.start,  holder.end,  holder.buffer));
+          assertEquals("aa", StringFunctionHelpers.toStringFromUTF8(holder.start, holder.end, holder.buffer));
           ++count;
         }
       }
       assertEquals(50, count);
     }
 
-    if(context.getExecutorState().getFailureCause() != null) {
+    if (context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
     assertTrue(!context.getExecutorState().isFailed());

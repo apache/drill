@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -35,9 +36,6 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-
 public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
 
@@ -46,7 +44,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   private static final Expression EXPRESSION = new DefaultExpression(Object.class);
 
   public AbstractSchema(List<String> parentSchemaPath, String name) {
-    schemaPath = Lists.newArrayList();
+    schemaPath = new ArrayList<>();
     schemaPath.addAll(parentSchemaPath);
     schemaPath.add(name);
     this.name = name;
@@ -72,7 +70,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   public String getFullSchemaName() {
-    return Joiner.on(".").join(schemaPath);
+    return String.join(".", schemaPath);
   }
 
   public abstract String getTypeName();
@@ -233,10 +231,10 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
    * @param  tableNames the requested tables, specified by the table names
    * @return the collection of requested tables
    */
-  public List<Pair<String, ? extends Table>> getTablesByNames(final List<String> tableNames) {
-    final List<Pair<String, ? extends Table>> tables = Lists.newArrayList();
+  public List<Pair<String, ? extends Table>> getTablesByNames(List<String> tableNames) {
+    List<Pair<String, ? extends Table>> tables = new ArrayList<>();
     for (String tableName : tableNames) {
-      final Table table = getTable(tableName);
+      Table table = getTable(tableName);
       if (table == null) {
         // Schema may return NULL for table if the query user doesn't have permissions to load the table. Ignore such
         // tables as INFO SCHEMA is about showing tables which the use has access to query.
@@ -248,9 +246,9 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   public List<Pair<String, Schema.TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
-    final List<String> tableNames = Lists.newArrayList(getTableNames());
-    final List<Pair<String, Schema.TableType>> tableNamesAndTypes = Lists.newArrayList();
-    final List<Pair<String, ? extends Table>> tables;
+    List<String> tableNames = new ArrayList<>(getTableNames());
+    List<Pair<String, Schema.TableType>> tableNamesAndTypes = new ArrayList<>();
+    List<Pair<String, ? extends Table>> tables;
     if (bulkLoad) {
       tables = getTablesByNamesByBulkLoad(tableNames, bulkSize);
     } else {

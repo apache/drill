@@ -39,6 +39,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -57,8 +59,6 @@ import org.apache.drill.test.TestBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import com.google.common.collect.Lists;
 
 import mockit.integration.junit4.JMockit;
 
@@ -161,7 +161,7 @@ public class AvroFormatTest extends BaseTestQuery {
   private List<Map<String, Object>> project(
       List<Map<String,Object>> incomingRecords,
       List<String> projectCols) {
-    List<Map<String,Object>> output = Lists.newArrayList();
+    List<Map<String,Object>> output = new ArrayList<>();
     for (Map<String, Object> incomingRecord : incomingRecords) {
       final JsonStringHashMap<String, Object> newRecord = new JsonStringHashMap<>();
       for (String s : incomingRecord.keySet()) {
@@ -178,7 +178,7 @@ public class AvroFormatTest extends BaseTestQuery {
   public void testSimplePrimitiveSchema_SelectColumnSubset() throws Exception {
     final AvroTestUtil.AvroTestRecordWriter testSetup = generateSimplePrimitiveSchema_NoNullValues();
     final String file = testSetup.getFileName();
-    List<String> projectList = Lists.newArrayList("`h_boolean`", "`e_double`");
+    List<String> projectList = Arrays.asList("`h_boolean`", "`e_double`");
     testBuilder()
         .sqlQuery("select h_boolean, e_double from dfs.`%s`", file)
         .unOrdered()
@@ -444,7 +444,7 @@ public class AvroFormatTest extends BaseTestQuery {
     final AvroTestUtil.AvroTestRecordWriter testSetup = generateSimpleEnumSchema_NoNullValues();
     final String file = testSetup.getFileName();
     final String sql = "select a_string, b_enum from dfs.`%s`";
-    List<String> projectList = Lists.newArrayList("`a_string`", "`b_enum`");
+    List<String> projectList = Arrays.asList("`a_string`", "`b_enum`");
     testBuilder()
         .sqlQuery(sql, file)
         .unOrdered()
@@ -561,7 +561,7 @@ public class AvroFormatTest extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("nested_key1", "nested_key2");
 
-    final List<Object> expectedList = Lists.newArrayList();
+    final List<Object> expectedList = new ArrayList<>();
     for (int i = 0; i < AvroTestUtil.ARRAY_SIZE; i++) {
       expectedList.add((double)i);
     }

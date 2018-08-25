@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.pop;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.categories.PlannerTest;
@@ -34,7 +35,6 @@ import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
 import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
@@ -53,7 +53,7 @@ public class TestFragmentChecker extends PopUnitTestBase{
     PhysicalPlanReader ppr = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     Fragment fragmentRoot = getRootFragment(ppr, fragmentFile);
     SimpleParallelizer par = new SimpleParallelizer(1000*1000, 5, 10, 1.2);
-    List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    List<DrillbitEndpoint> endpoints = new ArrayList<>();
     DrillbitEndpoint localBit = null;
     for(int i =0; i < bitCount; i++) {
       DrillbitEndpoint b1 = DrillbitEndpoint.newBuilder().setAddress("localhost").setControlPort(1234+i).build();

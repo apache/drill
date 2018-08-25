@@ -17,11 +17,9 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.exec.ops.FragmentContext;
@@ -30,8 +28,6 @@ import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.store.pojo.NonNullable;
-
-import com.google.common.collect.Lists;
 
 /*
  * Extends the original Option iterator. The idea is to hide the implementation details and present the
@@ -60,7 +56,6 @@ public class ExtendedOptionIterator implements Iterator<Object> {
 
   public ExtendedOptionIterator(FragmentContext context, boolean internal) {
     fragmentOptions = context.getOptions();
-    final Iterator<OptionValue> optionList;
 
     if (!internal) {
       mergedOptions = sortOptions(fragmentOptions.getPublicOptionList().iterator());
@@ -74,38 +69,26 @@ public class ExtendedOptionIterator implements Iterator<Object> {
     * scope takes precedence over system and boot and etc.,
     */
   public Iterator<OptionValue> sortOptions(Iterator<OptionValue> options) {
-    List<OptionValue> optionslist = Lists.newArrayList(options);
-    HashMap<String, OptionValue> optionsmap = new HashMap<>();
-    final Map<OptionScope, Integer> preference = new HashMap<OptionScope, Integer>() {{
-      put(OptionScope.SESSION, 0);
-      put(OptionScope.SYSTEM, 1);
-      put(OptionScope.BOOT, 2);
-    }};
+    Iterable<OptionValue> optionsToSort = () -> options;
+    HashMap<String, OptionValue> optionsMap = new HashMap<>();
+    Map<OptionScope, Integer> preference = new HashMap<>();
+    preference.put(OptionScope.SESSION, 0);
+    preference.put(OptionScope.SYSTEM, 1);
+    preference.put(OptionScope.BOOT, 2);
 
-    for (OptionValue option : optionslist) {
-      if (optionsmap.containsKey(option.getName())) {
-
-        if (preference.get(option.scope) < preference.get(optionsmap.get(option.getName()).scope)) {
-          optionsmap.put(option.getName(), option);
+    for (OptionValue option : optionsToSort) {
+      if (optionsMap.containsKey(option.getName())) {
+        if (preference.get(option.scope) < preference.get(optionsMap.get(option.getName()).scope)) {
+          optionsMap.put(option.getName(), option);
         }
-
       } else {
-        optionsmap.put(option.getName(), option);
+        optionsMap.put(option.getName(), option);
       }
     }
-    optionslist.clear();
-    for (String name : optionsmap.keySet()) {
-      optionslist.add(optionsmap.get(name));
-    }
 
-    Collections.sort(optionslist, new Comparator<OptionValue>() {
-      @Override
-      public int compare(OptionValue v1, OptionValue v2) {
-        return v1.name.compareTo(v2.name);
-      }
-    });
-
-    return optionslist.iterator();
+    return optionsMap.values().stream()
+        .sorted(Comparator.comparing(v -> v.name))
+        .iterator();
   }
 
   @Override
@@ -116,13 +99,12 @@ public class ExtendedOptionIterator implements Iterator<Object> {
   @Override
   public ExtendedOptionValueWrapper next() {
     final OptionValue value = mergedOptions.next();
-    final HashMap<OptionValue.Kind,String> typeMapping = new HashMap() {{
-      put(Kind.STRING,"VARCHAR");
-      put(Kind.DOUBLE,"FLOAT");
-      put(Kind.LONG,"BIGINT");
-      put(Kind.BOOLEAN,"BIT");
+    final HashMap<OptionValue.Kind, String> typeMapping = new HashMap<>();
+    typeMapping.put(Kind.STRING, "VARCHAR");
+    typeMapping.put(Kind.DOUBLE, "FLOAT");
+    typeMapping.put(Kind.LONG, "BIGINT");
+    typeMapping.put(Kind.BOOLEAN, "BIT");
 
-    }};
     return new ExtendedOptionValueWrapper(value.name, typeMapping.get(value.kind), value.accessibleScopes,value.getValue().toString(), value.scope);
   }
 

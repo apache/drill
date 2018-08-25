@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.planner.logical.partition;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -69,9 +71,6 @@ import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.tuple.Pair;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -170,11 +169,11 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     RewriteAsBinaryOperators visitor = new RewriteAsBinaryOperators(true, filterRel.getCluster().getRexBuilder());
     condition = condition.accept(visitor);
 
-    Map<Integer, String> fieldNameMap = Maps.newHashMap();
+    Map<Integer, String> fieldNameMap = new HashMap<>();
     List<String> fieldNames = scanRel.getRowType().getFieldNames();
     BitSet columnBitset = new BitSet();
     BitSet partitionColumnBitSet = new BitSet();
-    Map<Integer, Integer> partitionMap = Maps.newHashMap();
+    Map<Integer, Integer> partitionMap = new HashMap<>();
 
     int relColIndex = 0;
     for (String field : fieldNames) {
@@ -222,7 +221,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     }
 
     // set up the partitions
-    List<PartitionLocation> newPartitions = Lists.newArrayList();
+    List<PartitionLocation> newPartitions = new ArrayList<>();
     long numTotal = 0; // total number of partitions
     int batchIndex = 0;
     PartitionLocation firstLocation = null;

@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Predicates;
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
 import org.apache.calcite.plan.Convention;
@@ -52,7 +51,7 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
   protected final JdbcConvention out;
 
   private DrillJdbcRuleBase(Class<? extends RelNode> clazz, RelTrait in, JdbcConvention out, String description) {
-    super(clazz, Predicates.<RelNode>alwaysTrue(), in, out, DrillRelFactories.LOGICAL_BUILDER, description);
+    super(clazz, input -> true, in, out, DrillRelFactories.LOGICAL_BUILDER, description);
     this.out = out;
   }
 

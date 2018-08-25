@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.partitionsender;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -50,8 +51,6 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.collect.Lists;
-
 public abstract class PartitionerTemplate implements Partitioner {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionerTemplate.class);
 
@@ -64,7 +63,7 @@ public abstract class PartitionerTemplate implements Partitioner {
   private OperatorStats stats;
   private int start;
   private int end;
-  private List<OutgoingRecordBatch> outgoingBatches = Lists.newArrayList();
+  private List<OutgoingRecordBatch> outgoingBatches = new ArrayList<>();
 
   private int outgoingRecordBatchSize = DEFAULT_RECORD_BATCH_SIZE;
 

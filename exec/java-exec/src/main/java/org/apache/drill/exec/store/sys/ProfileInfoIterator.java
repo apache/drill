@@ -17,19 +17,17 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import java.sql.Timestamp;
-import java.util.Iterator;
-import java.util.Map.Entry;
-
-import javax.annotation.Nullable;
-
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.store.pojo.NonNullable;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
+import java.sql.Timestamp;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
 /**
  * System table listing completed profiles
@@ -58,7 +56,7 @@ public class ProfileInfoIterator extends ProfileIterator {
       return transform(getAuthorizedProfiles(queryingUsername, isAdmin));
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      return Iterators.singletonIterator(ProfileInfo.getDefault());
+      return Collections.singleton(ProfileInfo.getDefault()).iterator();
     }
   }
 
@@ -66,34 +64,34 @@ public class ProfileInfoIterator extends ProfileIterator {
    * Iterating persistentStore as a iterator of {@link org.apache.drill.exec.store.sys.ProfileInfoIterator.ProfileInfo}.
    */
   private Iterator<ProfileInfo> transform(Iterator<Entry<String, UserBitShared.QueryProfile>> all) {
-    return Iterators.transform(all, new Function<Entry<String, UserBitShared.QueryProfile>, ProfileInfo>() {
-      @Nullable
-      @Override
-      public ProfileInfo apply(@Nullable Entry<String, UserBitShared.QueryProfile> input) {
-        if (input == null || input.getValue() == null) {
-          return ProfileInfo.getDefault();
-        }
-
-        //Constructing ProfileInfo
-        final String queryID = input.getKey();
-        final QueryProfile profile = input.getValue();
-        //For cases where query was never queued
-        final long assumedQueueEndTime = profile.getQueueWaitEnd()> 0 ? profile.getQueueWaitEnd() : profile.getPlanEnd();
-        return new ProfileInfo(
-            queryID,
-            new Timestamp(profile.getStart()),
-            profile.getForeman().getAddress(),
-            profile.getTotalFragments(),
-            profile.getUser(),
-            profile.getQueueName(),
-            computeDuration(profile.getStart(), profile.getPlanEnd()),
-            computeDuration(profile.getPlanEnd(), assumedQueueEndTime),
-            computeDuration(assumedQueueEndTime, profile.getEnd()),
-            profile.getState().name(),
-            profile.getQuery()
-         );
+    Iterable<Entry<String, UserBitShared.QueryProfile>> iterable = () -> all;
+    Function<Entry<String, QueryProfile>, ProfileInfo> profileInfoCreator = input -> {
+      if (input == null || input.getValue() == null) {
+        return ProfileInfo.getDefault();
       }
-    });
+
+      //Constructing ProfileInfo
+      String queryID = input.getKey();
+      QueryProfile profile = input.getValue();
+      //For cases where query was never queued
+      long assumedQueueEndTime = profile.getQueueWaitEnd() > 0 ? profile.getQueueWaitEnd() : profile.getPlanEnd();
+      return new ProfileInfo(
+          queryID,
+          new Timestamp(profile.getStart()),
+          profile.getForeman().getAddress(),
+          profile.getTotalFragments(),
+          profile.getUser(),
+          profile.getQueueName(),
+          computeDuration(profile.getStart(), profile.getPlanEnd()),
+          computeDuration(profile.getPlanEnd(), assumedQueueEndTime),
+          computeDuration(assumedQueueEndTime, profile.getEnd()),
+          profile.getState().name(),
+          profile.getQuery()
+      );
+    };
+    return StreamSupport.stream(iterable.spliterator(), false)
+        .map(profileInfoCreator)
+        .iterator();
   }
 
   @Override

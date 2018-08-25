@@ -53,7 +53,7 @@ public class GTo${type} implements DrillSimpleFunc {
         // Get the desired output format
         byte[] buf = new byte[right.end - right.start];
         right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
-        String formatString = new String(buf, com.google.common.base.Charsets.UTF_8);
+        String formatString = new String(buf, java.nio.charset.StandardCharsets.UTF_8);
         format = org.joda.time.format.DateTimeFormat.forPattern(formatString);
     }
 
@@ -62,7 +62,7 @@ public class GTo${type} implements DrillSimpleFunc {
         // Get the input
         byte[] buf1 = new byte[left.end - left.start];
         left.buffer.getBytes(left.start, buf1, 0, left.end - left.start);
-        String input = new String(buf1, com.google.common.base.Charsets.UTF_8);
+        String input = new String(buf1, java.nio.charset.StandardCharsets.UTF_8);
 
         <#if type == "Date">
         out.value = (org.joda.time.DateMidnight.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC)).getMillis();

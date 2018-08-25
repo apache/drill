@@ -19,8 +19,6 @@ package org.apache.drill.exec.store.store;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
@@ -30,6 +28,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -44,7 +44,7 @@ public class TestAssignment {
 
   @BeforeClass
   public static void setup() {
-    endpoints = Lists.newArrayList();
+    endpoints = new ArrayList<>();
     final String pattern = "node%d";
     for (int i = 0; i < numEndPoints; i++) {
       String host = String.format(pattern, i);
@@ -57,9 +57,9 @@ public class TestAssignment {
     int numChunks = widthPerNode * numEndPoints + 100;
     List<CompleteFileWork> chunks = generateChunks(numChunks);
     Iterator<DrillbitEndpoint> incomingEndpointsIterator = Iterators.cycle(endpoints);
-    List<DrillbitEndpoint> incomingEndpoints = Lists.newArrayList();
-    List<Integer> expectedAssignments = Lists.newArrayList();
-    List<Integer> actualAssignments = Lists.newArrayList();
+    List<DrillbitEndpoint> incomingEndpoints = new ArrayList<>();
+    List<Integer> expectedAssignments = new ArrayList<>();
+    List<Integer> actualAssignments = new ArrayList<>();
 
     final int width = widthPerNode * numEndPoints;
     for (int i = 0; i < width; i++) {
@@ -109,7 +109,7 @@ public class TestAssignment {
 
     Iterator<DrillbitEndpoint> incomingEndpointsIterator = Iterators.cycle(endpoints);
 
-    List<DrillbitEndpoint> incomingEndpoints = Lists.newArrayList();
+    List<DrillbitEndpoint> incomingEndpoints = new ArrayList<>();
 
     final int width = widthPerNode * numEndPoints;
     for (int i = 0; i < width; i++) {
@@ -123,7 +123,7 @@ public class TestAssignment {
   }
 
   private List<CompleteFileWork> generateChunks(int chunks) {
-    List<CompleteFileWork> chunkList = Lists.newArrayList();
+    List<CompleteFileWork> chunkList = new ArrayList<>();
     for (int i = 0; i < chunks; i++) {
       CompleteFileWork chunk = new CompleteFileWork(createByteMap(), 0, FILE_SIZE, "file" + i);
       chunkList.add(chunk);
@@ -133,7 +133,7 @@ public class TestAssignment {
 
   private EndpointByteMap createByteMap() {
     EndpointByteMap endpointByteMap = new EndpointByteMapImpl();
-    Set<DrillbitEndpoint> usedEndpoints = Sets.newHashSet();
+    Set<DrillbitEndpoint> usedEndpoints = new HashSet<>();
     while (usedEndpoints.size() < 3) {
       usedEndpoints.add(getRandom(endpoints));
     }

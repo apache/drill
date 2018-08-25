@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.fn.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -34,8 +35,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
 @Category(OperatorTest.class)
@@ -51,7 +50,7 @@ public class TestMultiInputAdd extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-        Files.toString(DrillFileUtils.getResourceAsFile("/functions/multi_input_add_test.json"), Charsets.UTF_8));
+        DrillFileUtils.getResourceAsString("/functions/multi_input_add_test.json"));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
@@ -62,7 +61,7 @@ public class TestMultiInputAdd extends PopUnitTestBase {
 
         ValueVector.Accessor accessor = v.getValueVector().getAccessor();
 
-        assertTrue((accessor.getObject(0)).equals(10));
+        assertEquals(10, (accessor.getObject(0)));
       }
 
       batchLoader.clear();

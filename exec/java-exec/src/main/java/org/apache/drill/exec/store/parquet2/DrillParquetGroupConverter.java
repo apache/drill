@@ -72,8 +72,6 @@ import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Type.Repetition;
 import org.joda.time.DateTimeConstants;
 
-import com.google.common.collect.Lists;
-
 import io.netty.buffer.DrillBuf;
 
 public class DrillParquetGroupConverter extends GroupConverter {
@@ -99,7 +97,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
     this.mapWriter = mapWriter;
     this.mutator = mutator;
     this.containsCorruptedDates = containsCorruptedDates;
-    converters = Lists.newArrayList();
+    converters = new ArrayList<>();
     this.options = options;
 
     Iterator<SchemaPath> colIterator=columns.iterator();

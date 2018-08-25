@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +45,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCredential;
@@ -114,7 +114,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
 
   public MongoClient getClient() {
     List<String> hosts = clientURI.getHosts();
-    List<ServerAddress> addresses = Lists.newArrayList();
+    List<ServerAddress> addresses = new ArrayList<>();
     for (String host : hosts) {
       addresses.add(new ServerAddress(host));
     }

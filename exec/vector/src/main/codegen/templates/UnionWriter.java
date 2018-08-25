@@ -35,7 +35,7 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   protected UnionVector data;
   private MapWriter mapWriter;
   private UnionListWriter listWriter;
-  private List<BaseWriter> writers = Lists.newArrayList();
+  private List<BaseWriter> writers = new ArrayList<>();
 
   public UnionWriter(BufferAllocator allocator) {
     super(null);

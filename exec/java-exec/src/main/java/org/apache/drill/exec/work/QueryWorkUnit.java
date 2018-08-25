@@ -20,6 +20,7 @@ package org.apache.drill.exec.work;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Wrapper;
@@ -30,7 +31,6 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Preconditions;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class QueryWorkUnit {
@@ -46,7 +46,7 @@ public class QueryWorkUnit {
     private final FragmentRoot root;
     private final OptionList options;
 
-    public MinorFragmentDefn(final PlanFragment fragment, final FragmentRoot root, OptionList options) {
+    public MinorFragmentDefn(PlanFragment fragment, FragmentRoot root, OptionList options) {
       this.fragment = fragment;
       this.root = root;
       this.options = options;
@@ -78,15 +78,11 @@ public class QueryWorkUnit {
   private final List<MinorFragmentDefn> minorFragmentDefns;
   private final Wrapper rootWrapper;
 
-  public QueryWorkUnit(final FragmentRoot rootOperator, final MinorFragmentDefn rootFragmentDefn,
-      final List<MinorFragmentDefn> minorFragmentDefns, final Wrapper rootWrapper) {
-    Preconditions.checkNotNull(rootOperator);
-    Preconditions.checkNotNull(rootFragmentDefn);
-    Preconditions.checkNotNull(minorFragmentDefns);
-
-    this.rootFragmentDefn = rootFragmentDefn;
-    this.rootOperator = rootOperator;
-    this.minorFragmentDefns = minorFragmentDefns;
+  public QueryWorkUnit(FragmentRoot rootOperator, MinorFragmentDefn rootFragmentDefn,
+      List<MinorFragmentDefn> minorFragmentDefns, Wrapper rootWrapper) {
+    this.rootFragmentDefn = Preconditions.checkNotNull(rootFragmentDefn);
+    this.rootOperator = Preconditions.checkNotNull(rootOperator);
+    this.minorFragmentDefns = Preconditions.checkNotNull(minorFragmentDefns);
     this.rootWrapper = rootWrapper;
   }
 

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.rel.RelCollations;
@@ -36,7 +37,6 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 
 public class StreamAggPrule extends AggPruleBase {
@@ -95,7 +95,7 @@ public class StreamAggPrule extends AggPruleBase {
                   new UnionExchangePrel(phase1Agg.getCluster(), singleDistTrait, phase1Agg);
 
               ImmutableBitSet newGroupSet = remapGroupSet(aggregate.getGroupSet());
-              List<ImmutableBitSet> newGroupSets = Lists.newArrayList();
+              List<ImmutableBitSet> newGroupSets = new ArrayList<>();
               for (ImmutableBitSet groupSet : aggregate.getGroupSets()) {
                 newGroupSets.add(remapGroupSet(groupSet));
               }
@@ -168,7 +168,7 @@ public class StreamAggPrule extends AggPruleBase {
                       numEndPoints);
 
               ImmutableBitSet newGroupSet = remapGroupSet(aggregate.getGroupSet());
-              List<ImmutableBitSet> newGroupSets = Lists.newArrayList();
+              List<ImmutableBitSet> newGroupSets = new ArrayList<>();
               for (ImmutableBitSet groupSet : aggregate.getGroupSets()) {
                 newGroupSets.add(remapGroupSet(groupSet));
               }
@@ -212,7 +212,7 @@ public class StreamAggPrule extends AggPruleBase {
 
   private RelCollation getCollation(DrillAggregateRel rel) {
 
-    List<RelFieldCollation> fields = Lists.newArrayList();
+    List<RelFieldCollation> fields = new ArrayList<>();
     for (int group : BitSets.toIter(rel.getGroupSet())) {
       fields.add(new RelFieldCollation(group));
     }

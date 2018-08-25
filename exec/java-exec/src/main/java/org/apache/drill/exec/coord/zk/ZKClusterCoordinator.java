@@ -18,7 +18,6 @@
 package org.apache.drill.exec.coord.zk;
 
 import static com.google.common.base.Throwables.propagate;
-import static com.google.common.collect.Collections2.transform;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -31,6 +30,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.apache.curator.RetryPolicy;
@@ -57,8 +57,6 @@ import org.apache.drill.exec.coord.store.TransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
 
-import com.google.common.base.Function;
-
 /**
  * Manages cluster coordination utilizing zookeeper. *
  */
@@ -75,7 +73,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   private DrillbitEndpoint endpoint;
 
   // endpointsMap maps Multikey( comprises of endoint address and port) to Drillbit endpoints
-  private ConcurrentHashMap<MultiKey, DrillbitEndpoint> endpointsMap = new ConcurrentHashMap<MultiKey,DrillbitEndpoint>();
+  private ConcurrentHashMap<MultiKey, DrillbitEndpoint> endpointsMap = new ConcurrentHashMap<>();
   private static final Pattern ZK_COMPLEX_STRING = Pattern.compile("(^.*?)/(.*)/([^/]*)$");
 
   public ZKClusterCoordinator(DrillConfig config) throws IOException{
@@ -266,13 +264,9 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     try {
       // All active bits in the Zookeeper
       Collection<DrillbitEndpoint> newDrillbitSet =
-      transform(discovery.queryForInstances(serviceName),
-        new Function<ServiceInstance<DrillbitEndpoint>, DrillbitEndpoint>() {
-          @Override
-          public DrillbitEndpoint apply(ServiceInstance<DrillbitEndpoint> input) {
-            return input.getPayload();
-          }
-        });
+          discovery.queryForInstances(serviceName).stream()
+              .map(ServiceInstance::getPayload)
+              .collect(Collectors.toSet());
 
       // set of newly dead bits : original bits - new set of active bits.
       Set<DrillbitEndpoint> unregisteredBits = new HashSet<>();

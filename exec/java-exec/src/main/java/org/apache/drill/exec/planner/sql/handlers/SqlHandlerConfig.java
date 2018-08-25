@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map.Entry;
 
@@ -25,8 +26,6 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.sql.SqlConverter;
 import org.apache.drill.exec.store.StoragePlugin;
-
-import com.google.common.collect.Lists;
 
 public class SqlHandlerConfig {
 
@@ -44,7 +43,7 @@ public class SqlHandlerConfig {
   }
 
   public RuleSet getRules(PlannerPhase phase) {
-    Collection<StoragePlugin> plugins = Lists.newArrayList();
+    Collection<StoragePlugin> plugins = new ArrayList<>();
     for (Entry<String, StoragePlugin> k : context.getStorage()) {
       plugins.add(k.getValue());
     }

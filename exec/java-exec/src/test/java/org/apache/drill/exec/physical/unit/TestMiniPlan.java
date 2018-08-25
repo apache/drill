@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.physical.unit;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillFileUtils;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.record.BatchSchema;
@@ -35,8 +35,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import com.google.common.collect.Lists;
 
 /**
  * This class contains examples to show how to use MiniPlanTestBuilder to test a
@@ -63,7 +61,7 @@ public class TestMiniPlan extends MiniPlanUnitTestBase {
     RecordBatch scanBatch = new ParquetScanBuilder()
         .fileSystem(fs)
         .columnsToRead("R_REGIONKEY")
-        .inputPaths(Lists.newArrayList(file))
+        .inputPaths(Collections.singletonList(file))
         .build();
 
     BatchSchema expectedSchema = new SchemaBuilder()
@@ -80,7 +78,7 @@ public class TestMiniPlan extends MiniPlanUnitTestBase {
 
   @Test
   public void testSimpleJson() throws Exception {
-    List<String> jsonBatches = Lists.newArrayList(
+    List<String> jsonBatches = Collections.singletonList(
         "{\"a\":100}"
     );
 
@@ -101,17 +99,17 @@ public class TestMiniPlan extends MiniPlanUnitTestBase {
 
   @Test
   public void testUnionFilter() throws Exception {
-    List<String> leftJsonBatches = Lists.newArrayList(
+    List<String> leftJsonBatches = Arrays.asList(
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]",
         "[{\"a\": 40, \"b\" : 3},{\"a\": 13, \"b\" : 100}]");
 
-    List<String> rightJsonBatches = Lists.newArrayList(
+    List<String> rightJsonBatches = Arrays.asList(
         "[{\"a\": 5, \"b\" : 10 }]",
         "[{\"a\": 50, \"b\" : 100}]");
 
     RecordBatch batch = new PopBuilder()
-        .physicalOperator(new UnionAll(Collections.<PhysicalOperator> emptyList())) // Children list is provided through RecordBatch
+        .physicalOperator(new UnionAll(Collections.emptyList())) // Children list is provided through RecordBatch
         .addInputAsChild()
           .physicalOperator(new Filter(null, parseExpr("a=5"), 1.0f))
           .addJsonScanAsChild()

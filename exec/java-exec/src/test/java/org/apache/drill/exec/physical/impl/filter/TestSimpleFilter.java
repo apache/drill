@@ -38,9 +38,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
@@ -50,45 +47,45 @@ public class TestSimpleFilter extends ExecTest {
 
   @Test
   public void testFilter() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/filter/test1.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    while(exec.next()) {
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/filter/test1.json"));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    while (exec.next()) {
       assertEquals(50, exec.getRecordCount());
     }
 
     exec.close();
 
-    if(context.getExecutorState().getFailureCause() != null) {
+    if (context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
     assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test
-  @Ignore ("Filter does not support SV4")
+  @Ignore("Filter does not support SV4")
   public void testSV4Filter() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/filter/test_sv4.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/filter/test_sv4.json"));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     int recordCount = 0;
-    while(exec.next()) {
+    while (exec.next()) {
       recordCount += exec.getSelectionVector4().getCount();
     }
     exec.close();
     assertEquals(50, recordCount);
 
-    if(context.getExecutorState().getFailureCause() != null) {
+    if (context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
     assertTrue(!context.getExecutorState().isFailed());

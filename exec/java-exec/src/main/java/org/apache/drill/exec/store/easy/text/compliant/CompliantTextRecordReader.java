@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -33,9 +31,7 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.mapred.FileSplit;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.univocity.parsers.common.TextParsingException;
 
 import io.netty.buffer.DrillBuf;
@@ -76,13 +72,10 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   // checks to see if we are querying all columns(star) or individual columns
   @Override
   public boolean isStarQuery() {
-    if(settings.isUseRepeatedVarChar()) {
-      return super.isStarQuery() || Iterables.tryFind(getColumns(), new Predicate<SchemaPath>() {
-        @Override
-        public boolean apply(@Nullable SchemaPath path) {
-          return path.equals(RepeatedVarCharOutput.COLUMNS);
-        }
-      }).isPresent();
+    if (settings.isUseRepeatedVarChar()) {
+      return super.isStarQuery()
+          || getColumns().stream()
+              .anyMatch(path -> path.equals(RepeatedVarCharOutput.COLUMNS));
     }
     return super.isStarQuery();
   }
@@ -129,9 +122,9 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
 
     // setup Output, Input, and Reader
     try {
-      TextOutput output = null;
-      TextInput input = null;
-      InputStream stream = null;
+      TextOutput output;
+      TextInput input;
+      InputStream stream;
 
       // setup Output using OutputMutator
       if (settings.isHeaderExtractionEnabled()){

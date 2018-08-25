@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
@@ -31,7 +32,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
@@ -778,11 +778,9 @@ public class TypeCastRules {
      * the function can fit the precision that we need based on the input types.
      */
     if (holder.checkPrecisionRange()) {
-      List<LogicalExpression> logicalExpressions = Lists.newArrayList();
-      for(MajorType majorType : argumentTypes) {
-        logicalExpressions.add(
-            new MajorTypeInLogicalExpression(majorType));
-      }
+      List<LogicalExpression> logicalExpressions = argumentTypes.stream()
+          .map(MajorTypeInLogicalExpression::new)
+          .collect(Collectors.toList());
 
       if (DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision() <
           holder.getReturnType(logicalExpressions).getPrecision()) {

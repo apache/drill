@@ -18,6 +18,9 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,7 +60,6 @@ import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.NlsString;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
@@ -79,7 +81,7 @@ public class DrillOptiq {
    * @return converted expression
    */
   public static LogicalExpression toDrill(DrillParseContext context, RelNode input, RexNode expr) {
-    return toDrill(context, Lists.newArrayList(input), expr);
+    return toDrill(context, Collections.singletonList(input), expr);
   }
 
   /**
@@ -104,7 +106,7 @@ public class DrillOptiq {
       super(true);
       this.context = context;
       this.inputs = inputs;
-      this.fieldList = Lists.newArrayList();
+      this.fieldList = new ArrayList<>();
       /*
          Fields are enumerated by their presence order in input. Details {@link org.apache.calcite.rex.RexInputRef}.
          Thus we can merge field list from several inputs by adding them into the list in order of appearance.
@@ -127,8 +129,8 @@ public class DrillOptiq {
 
     @Override
     public LogicalExpression visitInputRef(RexInputRef inputRef) {
-      final int index = inputRef.getIndex();
-      final RelDataTypeField field = fieldList.get(index);
+      int index = inputRef.getIndex();
+      RelDataTypeField field = fieldList.get(index);
       Preconditions.checkNotNull(field, "Unable to find field using input reference");
       return FieldReference.getWithQuotedRef(field.getName());
     }
@@ -168,7 +170,7 @@ public class DrillOptiq {
             return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(),
                 ExpressionPosition.UNKNOWN, arg);
           case MINUS_PREFIX:
-            List<LogicalExpression> operands = Lists.newArrayList();
+            List<LogicalExpression> operands = new ArrayList<>();
             operands.add(call.getOperands().get(0).accept(this));
             return FunctionCallFactory.createExpression("u-", operands);
         }
@@ -182,12 +184,12 @@ public class DrillOptiq {
         case SIMILAR:
           return getDrillFunctionFromOptiqCall(call);
         case CASE:
-          List<LogicalExpression> caseArgs = Lists.newArrayList();
+          List<LogicalExpression> caseArgs = new ArrayList<>();
           for(RexNode r : call.getOperands()){
             caseArgs.add(r.accept(this));
           }
 
-          caseArgs = Lists.reverse(caseArgs);
+          Collections.reverse(caseArgs);
           // number of arguements are always going to be odd, because
           // Optiq adds "null" for the missing else expression at the end
           assert caseArgs.size()%2 == 1;
@@ -238,19 +240,18 @@ public class DrillOptiq {
     }
 
     private LogicalExpression doFunction(RexCall call, String funcName) {
-      List<LogicalExpression> args = Lists.newArrayList();
+      List<LogicalExpression> args = new ArrayList<>();
       for(RexNode r : call.getOperands()){
         args.add(r.accept(this));
       }
 
       if (FunctionCallFactory.isBooleanOperator(funcName)) {
-        LogicalExpression func = FunctionCallFactory.createBooleanOperator(funcName, args);
-        return func;
+        return FunctionCallFactory.createBooleanOperator(funcName, args);
       } else {
-        args = Lists.reverse(args);
+        Collections.reverse(args);
         LogicalExpression lastArg = args.get(0);
         for(int i = 1; i < args.size(); i++){
-          lastArg = FunctionCallFactory.createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
+          lastArg = FunctionCallFactory.createExpression(funcName, Arrays.asList(args.get(i), lastArg));
         }
 
         return lastArg;
@@ -362,7 +363,7 @@ public class DrillOptiq {
     }
 
     private LogicalExpression getDrillFunctionFromOptiqCall(RexCall call) {
-      List<LogicalExpression> args = Lists.newArrayList();
+      List<LogicalExpression> args = new ArrayList<>();
 
       for(RexNode n : call.getOperands()){
         args.add(n.accept(this));
@@ -398,7 +399,7 @@ public class DrillOptiq {
         }
       } else if (functionName.equals("trim")) {
         String trimFunc = null;
-        List<LogicalExpression> trimArgs = Lists.newArrayList();
+        List<LogicalExpression> trimArgs = new ArrayList<>();
 
         assert args.get(0) instanceof ValueExpressions.QuotedString;
         switch (((ValueExpressions.QuotedString)args.get(0)).value.toUpperCase()) {
@@ -447,7 +448,7 @@ public class DrillOptiq {
           return FunctionCallFactory.createExpression(functionName, concatArgs);
 
         } else if (argsSize > 2) {
-          List<LogicalExpression> concatArgs = Lists.newArrayList();
+          List<LogicalExpression> concatArgs = new ArrayList<>();
 
           /* stack concat functions on top of each other if we have more than two arguments
            * Eg: concat(col1, col2, col3) => concat(concat(col1, col2), col3)
@@ -458,7 +459,7 @@ public class DrillOptiq {
           LogicalExpression first = FunctionCallFactory.createExpression(functionName, concatArgs);
 
           for (int i = 2; i < argsSize; i++) {
-            concatArgs = Lists.newArrayList();
+            concatArgs = new ArrayList<>();
             concatArgs.add(first);
             concatArgs.add(args.get(i));
             first = FunctionCallFactory.createExpression(functionName, concatArgs);

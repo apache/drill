@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.physical;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -106,7 +105,7 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
   }
 
   private RelNode rename(RelNode input, List<RelDataTypeField> inputFields, List<String> outputFieldNames) {
-    List<RexNode> exprs = Lists.newArrayList();
+    List<RexNode> exprs = new ArrayList<>();
 
     for (RelDataTypeField field : inputFields) {
       RexNode expr = input.getCluster().getRexBuilder().makeInputRef(field.getType(), field.getIndex());

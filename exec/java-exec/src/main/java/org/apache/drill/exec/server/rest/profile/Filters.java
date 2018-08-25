@@ -19,23 +19,14 @@ package org.apache.drill.exec.server.rest.profile;
 
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
+import java.util.function.Predicate;
 
 interface Filters {
-  final static Predicate<MinorFragmentProfile> hasOperators = new Predicate<MinorFragmentProfile>() {
-    public boolean apply(MinorFragmentProfile arg0) {
-      return arg0.getOperatorProfileCount() != 0;
-    }
-  };
+  Predicate<MinorFragmentProfile> HAS_OPERATORS = fragmentProfile -> fragmentProfile.getOperatorProfileCount() != 0;
 
-  final static Predicate<MinorFragmentProfile> hasTimes = new Predicate<MinorFragmentProfile>() {
-    public boolean apply(MinorFragmentProfile arg0) {
-      return arg0.hasStartTime() && arg0.hasEndTime();
-    }
-  };
+  Predicate<MinorFragmentProfile> HAS_TIMES = fragmentProfile -> fragmentProfile.hasStartTime() && fragmentProfile.hasEndTime();
 
-  final static Predicate<MinorFragmentProfile> hasOperatorsAndTimes = Predicates.and(Filters.hasOperators, Filters.hasTimes);
+  Predicate<MinorFragmentProfile> HAS_OPERATORS_AND_TIMES = Filters.HAS_OPERATORS.and(Filters.HAS_TIMES);
 
-  final static Predicate<MinorFragmentProfile> missingOperatorsOrTimes = Predicates.not(hasOperatorsAndTimes);
+  Predicate<MinorFragmentProfile> MISSING_OPERATORS_OR_TIMES = HAS_OPERATORS_AND_TIMES.negate();
 }

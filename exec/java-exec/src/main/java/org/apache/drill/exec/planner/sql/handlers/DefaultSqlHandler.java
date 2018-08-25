@@ -20,17 +20,15 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import org.apache.calcite.plan.RelOptCostImpl;
-import org.apache.calcite.plan.RelOptLattice;
-import org.apache.calcite.plan.RelOptMaterialization;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptUtil;
@@ -114,7 +112,6 @@ import org.slf4j.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 
 public class DefaultSqlHandler extends AbstractSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSqlHandler.class);
@@ -429,7 +426,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
           "Cluster is expected to be constructed using VolcanoPlanner. Was actually of type %s.", planner.getClass()
               .getName());
       output = program.run(planner, input, toTraits,
-          ImmutableList.<RelOptMaterialization>of(), ImmutableList.<RelOptLattice>of());
+          Collections.emptyList(), Collections.emptyList());
 
       break;
     }
@@ -639,7 +636,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   public static List<PhysicalOperator> getPops(PhysicalOperator root) {
-    List<PhysicalOperator> ops = Lists.newArrayList();
+    List<PhysicalOperator> ops = new ArrayList<>();
     PopCollector c = new PopCollector();
     root.accept(c, ops);
     return ops;
@@ -717,7 +714,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     RelDataType t = rel.getRowType();
 
     RexBuilder b = rel.getCluster().getRexBuilder();
-    List<RexNode> projections = Lists.newArrayList();
+    List<RexNode> projections = new ArrayList<>();
     int projectCount = t.getFieldList().size();
 
     for (int i =0; i < projectCount; i++) {

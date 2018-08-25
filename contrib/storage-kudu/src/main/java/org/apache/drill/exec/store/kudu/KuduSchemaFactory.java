@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.kudu;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -34,9 +35,6 @@ import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.kudu.Schema;
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.ListTablesResponse;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 
 public class KuduSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduSchemaFactory.class);
@@ -59,7 +57,7 @@ public class KuduSchemaFactory implements SchemaFactory {
   class KuduTables extends AbstractSchema {
 
     public KuduTables(String name) {
-      super(ImmutableList.<String>of(), name);
+      super(Collections.emptyList(), name);
     }
 
     public void setHolder(SchemaPlus plusOfThis) {
@@ -93,7 +91,7 @@ public class KuduSchemaFactory implements SchemaFactory {
     public Set<String> getTableNames() {
       try {
         ListTablesResponse tablesList = plugin.getClient().getTablesList();
-        return Sets.newHashSet(tablesList.getTablesList());
+        return new HashSet<>(tablesList.getTablesList());
       } catch (Exception e) {
         logger.warn("Failure reading kudu tables.", e);
         return Collections.emptySet();

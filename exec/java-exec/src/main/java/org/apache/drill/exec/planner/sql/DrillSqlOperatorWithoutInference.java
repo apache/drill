@@ -26,7 +26,6 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.ArrayList;
 
@@ -36,7 +35,7 @@ public class DrillSqlOperatorWithoutInference extends DrillSqlOperator {
 
   public DrillSqlOperatorWithoutInference(String name, int argCount, TypeProtos.MajorType returnType, boolean isDeterminisitic, boolean isNiladic) {
     super(name,
-        new ArrayList< DrillFuncHolder>(),
+        new ArrayList<>(),
         argCount,
         argCount,
         isDeterminisitic,

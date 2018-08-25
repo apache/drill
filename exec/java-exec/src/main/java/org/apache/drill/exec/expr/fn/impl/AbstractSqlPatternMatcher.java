@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import com.google.common.base.Charsets;
 import org.apache.drill.common.exceptions.UserException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
+
 import static org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.logger;
 
 /**
@@ -49,7 +50,7 @@ public abstract class AbstractSqlPatternMatcher implements SqlPatternMatcher {
   public AbstractSqlPatternMatcher(String patternString) {
     this.patternString = patternString;
 
-    final CharsetEncoder charsetEncoder = Charsets.UTF_8.newEncoder();
+    final CharsetEncoder charsetEncoder = StandardCharsets.UTF_8.newEncoder();
     final CharBuffer patternCharBuffer = CharBuffer.wrap(patternString);
 
     try {

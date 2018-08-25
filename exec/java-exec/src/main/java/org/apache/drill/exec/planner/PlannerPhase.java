@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
-import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.rules.JoinToMultiJoinRule;
@@ -138,7 +137,7 @@ public enum PlannerPhase {
 
   JOIN_PLANNING("LOPT Join Planning") {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
-      List<RelOptRule> rules = Lists.newArrayList();
+      List<RelOptRule> rules = new ArrayList<>();
       if (context.getPlannerSettings().isJoinOptimizationEnabled()) {
         rules.add(DRILL_JOIN_TO_MULTIJOIN_RULE);
         rules.add(DRILL_LOPT_OPTIMIZE_JOIN_RULE);

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.compile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -28,7 +29,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
 
 /**
  * Global code compiler mechanism shared by all threads and operators.
@@ -188,7 +188,7 @@ public class CodeCompiler {
       } else {
         ce = makeClass(cg);
       }
-      List<T> tList = Lists.newArrayList();
+      List<T> tList = new ArrayList<>();
       for (int i = 0; i < count; i++) {
         tList.add((T) ce.clazz.newInstance());
       }

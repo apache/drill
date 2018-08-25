@@ -125,7 +125,7 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
   }
 
   @Override
-  public void changeHandlerTo(final RequestHandler<S> handler) {
+  public void changeHandlerTo(RequestHandler<S> handler) {
     checkNotNull(handler);
     this.currentHandler = handler;
   }

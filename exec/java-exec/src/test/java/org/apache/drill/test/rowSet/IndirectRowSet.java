@@ -17,7 +17,6 @@
  */
 package org.apache.drill.test.rowSet;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
@@ -27,6 +26,7 @@ import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -69,11 +69,11 @@ public class IndirectRowSet extends AbstractSingleRowSet {
   }
 
   public IndirectRowSet(VectorContainer container) {
-    this(container, makeSv2(container.getAllocator(), container, Sets.<Integer>newHashSet()));
+    this(container, makeSv2(container.getAllocator(), container, new HashSet<>()));
   }
 
   public static IndirectRowSet fromContainer(VectorContainer container) {
-    return new IndirectRowSet(container, makeSv2(container.getAllocator(), container, Sets.<Integer>newHashSet()));
+    return new IndirectRowSet(container, makeSv2(container.getAllocator(), container, new HashSet<>()));
   }
 
   public static IndirectRowSet fromSv2(VectorContainer container, SelectionVector2 sv2) {

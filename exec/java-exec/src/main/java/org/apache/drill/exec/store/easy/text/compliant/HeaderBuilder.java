@@ -19,14 +19,13 @@ package org.apache.drill.exec.store.easy.text.compliant;
 
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.exceptions.UserException;
-
-import com.google.common.base.Charsets;
 
 /**
  * Text output that implements a header reader/parser.
@@ -79,7 +78,7 @@ public class HeaderBuilder extends TextOutput {
 
   @Override
   public boolean endField() {
-    String header = new String(currentField.array(), 0, currentField.position(), Charsets.UTF_8);
+    String header = new String(currentField.array(), 0, currentField.position(), StandardCharsets.UTF_8);
     header = validateSymbol(header);
     headers.add(header);
     return true;

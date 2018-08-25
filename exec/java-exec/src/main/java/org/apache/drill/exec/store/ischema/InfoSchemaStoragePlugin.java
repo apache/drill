@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.ischema;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,9 +37,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 
@@ -80,9 +80,9 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   private class ISchema extends AbstractSchema{
     private Map<String, InfoSchemaDrillTable> tables;
     public ISchema(SchemaPlus parent, InfoSchemaStoragePlugin plugin){
-      super(ImmutableList.<String>of(), IS_SCHEMA_NAME);
-      Map<String, InfoSchemaDrillTable> tbls = Maps.newHashMap();
-      for(InfoSchemaTableType tbl : InfoSchemaTableType.values()){
+      super(Collections.emptyList(), IS_SCHEMA_NAME);
+      Map<String, InfoSchemaDrillTable> tbls = new HashMap<>();
+      for (InfoSchemaTableType tbl : InfoSchemaTableType.values()){
         tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, IS_SCHEMA_NAME, tbl, config));
       }
       this.tables = ImmutableMap.copyOf(tbls);

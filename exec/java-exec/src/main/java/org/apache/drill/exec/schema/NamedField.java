@@ -17,10 +17,9 @@
  */
 package org.apache.drill.exec.schema;
 
+import com.google.common.base.MoreObjects;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
-
-import com.google.common.base.Objects;
 
 public class NamedField extends Field {
     final MajorType keyType;
@@ -46,7 +45,7 @@ public class NamedField extends Field {
     }
 
     @Override
-    protected Objects.ToStringHelper addAttributesToHelper(Objects.ToStringHelper helper) {
+    protected MoreObjects.ToStringHelper addAttributesToHelper(MoreObjects.ToStringHelper helper) {
         return helper.add("keyType", keyType);
     }
 }

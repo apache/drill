@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.sql;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
@@ -32,6 +31,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +78,7 @@ public class TestCTTAS extends BaseTestQuery {
 
   @Test
   public void testCreateTableWithDifferentStorageFormats() throws Exception {
-    List<String> storageFormats = Lists.newArrayList("parquet", "json", "csvh");
+    List<String> storageFormats = Arrays.asList("parquet", "json", "csvh");
 
     try {
       for (String storageFormat : storageFormats) {
@@ -107,7 +107,7 @@ public class TestCTTAS extends BaseTestQuery {
   @Test
   public void testTemporaryTablesCaseInsensitivity() throws Exception {
     String temporaryTableName = "tEmP_InSeNSiTiVe";
-    List<String> temporaryTableNames = Lists.newArrayList(
+    List<String> temporaryTableNames = Arrays.asList(
         temporaryTableName,
         temporaryTableName.toLowerCase(),
         temporaryTableName.toUpperCase());

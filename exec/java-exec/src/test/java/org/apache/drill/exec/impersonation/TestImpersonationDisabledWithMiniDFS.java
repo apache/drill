@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.categories.SecurityTest;
-import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.categories.SlowTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.HashMap;
 
 /**
  * Note to future devs, please do not put random tests here. Make sure that they actually require
@@ -39,7 +39,7 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
   public static void setup() throws Exception {
     startMiniDfsCluster(TestImpersonationDisabledWithMiniDFS.class.getSimpleName(), false);
     startDrillCluster(false);
-    addMiniDfsBasedStorage(Maps.<String, WorkspaceConfig>newHashMap());
+    addMiniDfsBasedStorage(new HashMap<>());
     createTestData();
   }
 

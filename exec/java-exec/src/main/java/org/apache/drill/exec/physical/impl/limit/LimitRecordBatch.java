@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
@@ -31,8 +32,6 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 
-import com.google.common.collect.Lists;
-
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 
@@ -46,7 +45,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   private int recordStartOffset;
   private int numberOfRecords;
   private boolean first = true;
-  private final List<TransferPair> transfers = Lists.newArrayList();
+  private final List<TransferPair> transfers = new ArrayList<>();
 
   public LimitRecordBatch(Limit popConfig, FragmentContext context, RecordBatch incoming)
       throws OutOfMemoryException {

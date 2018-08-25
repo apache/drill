@@ -19,7 +19,6 @@ package org.apache.drill.exec.rpc.security;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.sasl.Sasl;
@@ -28,6 +27,7 @@ import javax.security.sasl.SaslServer;
 import javax.security.sasl.SaslServerFactory;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,16 +68,16 @@ public final class FastSaslServerFactory implements SaslServerFactory {
 
   // used in initialization, and for testing
   private void refresh() {
-    final Enumeration<SaslServerFactory> factories = Sasl.getSaslServerFactories();
-    final Map<String, List<SaslServerFactory>> map = Maps.newHashMap();
+    Enumeration<SaslServerFactory> factories = Sasl.getSaslServerFactories();
+    Map<String, List<SaslServerFactory>> map = new HashMap<>();
 
     while (factories.hasMoreElements()) {
-      final SaslServerFactory factory = factories.nextElement();
+      SaslServerFactory factory = factories.nextElement();
       // Passing null so factory is populated with all possibilities.  Properties passed when
       // instantiating a server are what really matter. See createSaslServer.
-      for (final String mechanismName : factory.getMechanismNames(null)) {
+      for (String mechanismName : factory.getMechanismNames(null)) {
         if (!map.containsKey(mechanismName)) {
-          map.put(mechanismName, new ArrayList<SaslServerFactory>());
+          map.put(mechanismName, new ArrayList<>());
         }
         map.get(mechanismName).add(factory);
       }
@@ -92,10 +92,10 @@ public final class FastSaslServerFactory implements SaslServerFactory {
   @Override
   public SaslServer createSaslServer(String mechanism, String protocol, String serverName, Map<String, ?> props,
                                      CallbackHandler cbh) throws SaslException {
-    final List<SaslServerFactory> factories = serverFactories.get(mechanism);
+    List<SaslServerFactory> factories = serverFactories.get(mechanism);
     if (factories != null) {
-      for (final SaslServerFactory factory : factories) {
-        final SaslServer saslServer = factory.createSaslServer(mechanism, protocol, serverName, props, cbh);
+      for (SaslServerFactory factory : factories) {
+        SaslServer saslServer = factory.createSaslServer(mechanism, protocol, serverName, props, cbh);
         if (saslServer != null) {
           return saslServer;
         }

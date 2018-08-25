@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.planner.physical.HashJoinPrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;
@@ -25,6 +24,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.RelNode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -50,8 +50,8 @@ public class SwapHashJoinVisitor extends BasePrelVisitor<Prel, Double, RuntimeEx
 
   @Override
   public Prel visitPrel(Prel prel, Double value) throws RuntimeException {
-    List<RelNode> children = Lists.newArrayList();
-    for(Prel child : prel){
+    List<RelNode> children = new ArrayList<>();
+    for (Prel child : prel) {
       child = child.accept(this, value);
       children.add(child);
     }

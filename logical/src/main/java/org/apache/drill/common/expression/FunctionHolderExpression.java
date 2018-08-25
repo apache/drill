@@ -17,13 +17,13 @@
  */
 package org.apache.drill.common.expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   public final ImmutableList<LogicalExpression> args;
@@ -38,7 +38,7 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   public FunctionHolderExpression(String nameUsed, ExpressionPosition pos, List<LogicalExpression> args) {
     super(pos);
     if (args == null) {
-      args = Lists.newArrayList();
+      args = new ArrayList<>();
     }
 
     if (!(args instanceof ImmutableList)) {

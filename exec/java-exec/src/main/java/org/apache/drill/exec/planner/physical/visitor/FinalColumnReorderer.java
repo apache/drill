@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,8 +30,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
-
-import com.google.common.collect.Lists;
 
 public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeException>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FinalColumnReorderer.class);
@@ -51,7 +50,7 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
     RelDataType t = prel.getRowType();
 
     RexBuilder b = prel.getCluster().getRexBuilder();
-    List<RexNode> projections = Lists.newArrayList();
+    List<RexNode> projections = new ArrayList<>();
     int projectCount = t.getFieldList().size();
 
     // no point in reordering if we only have one column
@@ -85,7 +84,7 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
       return addColumnOrderingBelowUnion(prel);
     }
 
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     boolean changed = false;
     for (Prel p : prel) {
       Prel newP = p.accept(this, null);
@@ -102,7 +101,7 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
   }
 
   private Prel addColumnOrderingBelowUnion(Prel prel) {
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     for (Prel p : prel) {
       Prel child = p.accept(this, null);
 

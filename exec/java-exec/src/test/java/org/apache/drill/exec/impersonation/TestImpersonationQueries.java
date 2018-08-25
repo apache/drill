@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -32,6 +31,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.core.StringContains.containsString;
@@ -75,7 +75,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     fs.delete(tmpPath, true);
     FileSystem.mkdirs(fs, tmpPath, new FsPermission((short)0777));
 
-    Map<String, WorkspaceConfig> workspaces = Maps.newHashMap();
+    Map<String, WorkspaceConfig> workspaces = new HashMap<>();
 
     // create user directory (ex. "/user/user0_1", with ownership "user0_1:group0_1" and perms 755) for every user.
     for (int i = 0; i < org1Users.length; i++) {

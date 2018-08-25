@@ -26,8 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
 
-import com.google.common.collect.Iterables;
-
 public class InMemoryStore<V> extends BasePersistentStore<V> {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InMemoryPersistentStore.class);
 
@@ -72,13 +70,16 @@ public class InMemoryStore<V> extends BasePersistentStore<V> {
   }
 
   @Override
-  public boolean putIfAbsent(final String key, final V value) {
+  public boolean putIfAbsent(String key, V value) {
     return (value != store.putIfAbsent(key, value));
   }
 
   @Override
-  public Iterator<Map.Entry<String, V>> getRange(final int skip, final int take) {
-    return Iterables.limit(Iterables.skip(store.entrySet(), skip), take).iterator();
+  public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
+    return store.entrySet().stream()
+        .skip(skip)
+        .limit(take)
+        .iterator();
   }
 
   @Override

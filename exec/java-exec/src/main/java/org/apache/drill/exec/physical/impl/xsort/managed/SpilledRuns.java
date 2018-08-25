@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,8 +31,6 @@ import org.apache.drill.exec.physical.impl.xsort.managed.SortImpl.SortResults;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorInitializer;
-
-import com.google.common.collect.Lists;
 
 /**
  * Represents the set of spilled batches, including methods to spill and/or
@@ -46,7 +45,7 @@ public class SpilledRuns {
    */
 
   private final SpillSet spillSet;
-  private final LinkedList<BatchGroup.SpilledRun> spilledRuns = Lists.newLinkedList();
+  private final LinkedList<BatchGroup.SpilledRun> spilledRuns = new LinkedList<>();
 
   /**
    * Manages the copier used to merge a collection of batches into
@@ -78,7 +77,7 @@ public class SpilledRuns {
   public long getWriteBytes() { return spillSet.getWriteBytes(); }
 
   public static List<BatchGroup> prepareSpillBatches(LinkedList<? extends BatchGroup> source, int spillCount) {
-    List<BatchGroup> batchesToSpill = Lists.newArrayList();
+    List<BatchGroup> batchesToSpill = new ArrayList<>();
     spillCount = Math.min(source.size(), spillCount);
     assert spillCount > 0 : "Spill count to mergeAndSpill must not be zero";
     for (int i = 0; i < spillCount; i++) {

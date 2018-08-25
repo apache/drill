@@ -17,9 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
@@ -27,13 +25,20 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class SchemaUtilites {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaUtilites.class);
-  public static final Joiner SCHEMA_PATH_JOINER = Joiner.on(".").skipNulls();
+  public static final Function<List<String>, String> SCHEMA_PATH_JOINER =
+      strings -> strings.stream()
+          .filter(Objects::nonNull)
+          .collect(Collectors.joining("."));
 
   /**
    * Search and return schema with given schemaPath. First search in schema tree starting from defaultSchema,
@@ -137,12 +142,12 @@ public class SchemaUtilites {
 
   /** Utility method to get the schema path for given schema instance. */
   public static String getSchemaPath(SchemaPlus schema) {
-    return SCHEMA_PATH_JOINER.join(getSchemaPathAsList(schema));
+    return SCHEMA_PATH_JOINER.apply(getSchemaPathAsList(schema));
   }
 
   /** Utility method to get the schema path for given list of schema path. */
   public static String getSchemaPath(List<String> schemaPath) {
-    return SCHEMA_PATH_JOINER.join(schemaPath);
+    return SCHEMA_PATH_JOINER.apply(schemaPath);
   }
 
   /** Utility method to get the list with schema path components for given schema path string. */
@@ -156,7 +161,7 @@ public class SchemaUtilites {
       return Collections.emptyList();
     }
 
-    List<String> path = Lists.newArrayListWithCapacity(5);
+    List<String> path = new ArrayList<>(5);
     while(schema != null) {
       final String name = schema.getName();
       if (!Strings.isNullOrEmpty(name)) {
@@ -164,8 +169,8 @@ public class SchemaUtilites {
       }
       schema = schema.getParentSchema();
     }
-
-    return Lists.reverse(path);
+    Collections.reverse(path);
+    return path;
   }
 
   /** Utility method to throw {@link UserException} with context information */
@@ -203,7 +208,7 @@ public class SchemaUtilites {
     final SchemaPlus schema = findSchema(defaultSchema, schemaPath);
 
     if (schema == null) {
-      throwSchemaNotFoundException(defaultSchema, SCHEMA_PATH_JOINER.join(schemaPath));
+      throwSchemaNotFoundException(defaultSchema, SCHEMA_PATH_JOINER.apply(schemaPath));
     }
 
     if (isRootSchema(schema)) {
@@ -232,7 +237,7 @@ public class SchemaUtilites {
    */
   public static AbstractSchema getTemporaryWorkspace(SchemaPlus defaultSchema, DrillConfig config) {
     String temporarySchema = config.getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
-    List<String> temporarySchemaPath = Lists.newArrayList(temporarySchema);
+    List<String> temporarySchemaPath = Collections.singletonList(temporarySchema);
     SchemaPlus schema = findSchema(defaultSchema, temporarySchemaPath);
     return schema == null ? null : unwrapAsDrillSchemaInstance(schema);
   }

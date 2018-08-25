@@ -37,8 +37,9 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
 import org.junit.experimental.categories.Category;
+
+import java.util.Collections;
 
 @Category(OperatorTest.class)
 public class TestExternalSortExec extends DrillTest {
@@ -170,7 +171,7 @@ public class TestExternalSortExec extends DrillTest {
 
     // Basics
 
-    ExternalSort popConfig = new ExternalSort(null, Lists.newArrayList(ordering), false);
+    ExternalSort popConfig = new ExternalSort(null, Collections.singletonList(ordering), false);
     assertSame(ordering, popConfig.getOrderings().get(0));
     assertFalse(popConfig.getReverse());
     assertEquals(SelectionVectorMode.FOUR_BYTE, popConfig.getSVMode());
@@ -181,7 +182,7 @@ public class TestExternalSortExec extends DrillTest {
 
     // Non-default settings
 
-    popConfig = new ExternalSort(null, Lists.newArrayList(ordering), true);
+    popConfig = new ExternalSort(null, Collections.singletonList(ordering), true);
     assertTrue(popConfig.getReverse());
     long maxAlloc = 50_000_000;
     popConfig.setMaxAllocation(maxAlloc);

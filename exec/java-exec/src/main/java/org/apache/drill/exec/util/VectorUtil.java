@@ -18,6 +18,7 @@
 package org.apache.drill.exec.util;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -32,9 +33,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-
 public class VectorUtil {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorUtil.class);
   public static final int DEFAULT_COLUMN_WIDTH = 15;
@@ -43,7 +41,7 @@ public class VectorUtil {
     final StringBuilder sb = new StringBuilder();
     int rows = va.getRecordCount();
     sb.append(rows).append(" row(s):\n");
-    List<String> columns = Lists.newArrayList();
+    List<String> columns = new ArrayList<>();
     for (VectorWrapper<?> vw : va) {
       columns.add(formatFieldSchema(vw.getValueVector().getField()));
     }
@@ -96,18 +94,18 @@ public class VectorUtil {
   public static void appendVectorAccessibleContent(VectorAccessible va, StringBuilder formattedResults,
       final String delimiter, boolean includeHeader) {
     if (includeHeader) {
-      List<String> columns = Lists.newArrayList();
+      List<String> columns = new ArrayList<>();
       for (VectorWrapper<?> vw : va) {
         columns.add(vw.getValueVector().getField().getName());
       }
 
-      formattedResults.append(Joiner.on(delimiter).join(columns));
+      formattedResults.append(String.join(delimiter, columns));
       formattedResults.append("\n");
     }
 
     int rows = va.getRecordCount();
     for (int row = 0; row < rows; row++) {
-      List<String> rowValues = Lists.newArrayList();
+      List<String> rowValues = new ArrayList<>();
       for (VectorWrapper<?> vw : va) {
         Object o = vw.getValueVector().getAccessor().getObject(row);
         if (o == null) {
@@ -124,7 +122,7 @@ public class VectorUtil {
           rowValues.add(o.toString());
         }
       }
-      formattedResults.append(Joiner.on(delimiter).join(rowValues));
+      formattedResults.append(String.join(delimiter, rowValues));
       formattedResults.append("\n");
     }
 
@@ -142,11 +140,11 @@ public class VectorUtil {
   }
 
   public static void logVectorAccessibleContent(VectorAccessible va, int[] columnWidths) {
-    final StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
     int width = 0;
     int columnIndex = 0;
-    List<String> columns = Lists.newArrayList();
-    List<String> formats = Lists.newArrayList();
+    List<String> columns = new ArrayList<>();
+    List<String> formats = new ArrayList<>();
     for (VectorWrapper<?> vw : va) {
       int columnWidth = getColumnWidth(columnWidths, columnIndex);
       width += columnWidth + 2;

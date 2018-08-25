@@ -19,6 +19,7 @@ package org.apache.drill.exec.work.batch;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -35,7 +36,6 @@ import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.data.IncomingDataBatch;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 /**
  * Determines when a particular fragment has enough data for each of its receiving exchanges to commence execution.  Also monitors whether we've collected all incoming data.
@@ -61,9 +61,9 @@ public class IncomingBuffers implements AutoCloseable {
 
   public IncomingBuffers(PlanFragment fragment, FragmentContext context) {
     this.context = context;
-    Map<Integer, DataCollector> collectors = Maps.newHashMap();
+    Map<Integer, DataCollector> collectors = new HashMap<>();
     remainingRequired = new AtomicInteger(fragment.getCollectorCount());
-    for(int i =0; i < fragment.getCollectorCount(); i++){
+    for (int i =0; i < fragment.getCollectorCount(); i++) {
       Collector collector = fragment.getCollector(i);
       DataCollector newCollector = collector.getSupportsOutOfOrder() ?
           new MergingCollector(remainingRequired, collector, context) :

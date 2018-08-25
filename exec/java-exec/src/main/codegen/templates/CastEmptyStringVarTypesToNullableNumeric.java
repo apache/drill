@@ -21,7 +21,7 @@
     {
     byte[] buf = new byte[in.end - in.start];
     in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
+    throw new NumberFormatException(new String(buf, java.nio.charset.StandardCharsets.UTF_8));
     }
 </#macro>
 
@@ -65,7 +65,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc{
             out.isSet = 1;
             byte[]buf=new byte[in.end-in.start];
             in.buffer.getBytes(in.start,buf,0,in.end-in.start);
-            out.value=${type.javaType}.parse${type.parse}(new String(buf,com.google.common.base.Charsets.UTF_8));
+            out.value=${type.javaType}.parse${type.parse}(new String(buf, java.nio.charset.StandardCharsets.UTF_8));
         }
     <#elseif type.to=="NullableInt">
         if(<#if type.from == "NullableVarChar" || type.from == "NullableVar16Char" ||

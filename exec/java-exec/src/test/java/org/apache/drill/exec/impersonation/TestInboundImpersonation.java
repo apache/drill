@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.collect.Maps;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.categories.SlowTest;
@@ -38,6 +37,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -77,7 +77,7 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
   }
 
   private static Map<String, WorkspaceConfig> createTestWorkspaces() throws Exception {
-    Map<String, WorkspaceConfig> workspaces = Maps.newHashMap();
+    Map<String, WorkspaceConfig> workspaces = new HashMap<>();
     createAndAddWorkspace(OWNER, getUserHome(OWNER), (short) 0755, OWNER, DATA_GROUP, workspaces);
     createAndAddWorkspace(PROXY_NAME, getUserHome(PROXY_NAME), (short) 0755, PROXY_NAME, DATA_GROUP,
         workspaces);

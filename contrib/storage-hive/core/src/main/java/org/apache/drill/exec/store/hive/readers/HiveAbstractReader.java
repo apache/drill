@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive.readers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -25,8 +26,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -64,7 +65,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.security.UserGroupInformation;
 
 
@@ -77,13 +77,13 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
   protected HivePartition partition;
   protected Iterator<InputSplit> inputSplitsIterator;
   protected List<String> selectedColumnNames;
-  protected List<StructField> selectedStructFieldRefs = Lists.newArrayList();
-  protected List<TypeInfo> selectedColumnTypes = Lists.newArrayList();
-  protected List<ObjectInspector> selectedColumnObjInspectors = Lists.newArrayList();
-  protected List<HiveFieldConverter> selectedColumnFieldConverters = Lists.newArrayList();
-  protected List<String> selectedPartitionNames = Lists.newArrayList();
-  protected List<TypeInfo> selectedPartitionTypes = Lists.newArrayList();
-  protected List<Object> selectedPartitionValues = Lists.newArrayList();
+  protected List<StructField> selectedStructFieldRefs = new ArrayList<>();
+  protected List<TypeInfo> selectedColumnTypes = new ArrayList<>();
+  protected List<ObjectInspector> selectedColumnObjInspectors = new ArrayList<>();
+  protected List<HiveFieldConverter> selectedColumnFieldConverters = new ArrayList<>();
+  protected List<String> selectedPartitionNames = new ArrayList<>();
+  protected List<TypeInfo> selectedPartitionTypes = new ArrayList<>();
+  protected List<Object> selectedPartitionValues = new ArrayList<>();
 
   // Deserializer of the reading partition (or table if the table is non-partitioned)
   protected Deserializer partitionDeserializer;
@@ -101,8 +101,8 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
 
   protected Object key;
   protected RecordReader<Object, Object> reader;
-  protected List<ValueVector> vectors = Lists.newArrayList();
-  protected List<ValueVector> pVectors = Lists.newArrayList();
+  protected List<ValueVector> vectors = new ArrayList<>();
+  protected List<ValueVector> pVectors = new ArrayList<>();
   protected boolean empty;
   protected HiveConf hiveConf;
   protected FragmentContext fragmentContext;
@@ -171,7 +171,7 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
         logger.trace("partitionDeserializer class is {} {}", partitionDeserializer.getClass().getName());
       }
       // Get list of partition column names
-      final List<String> partitionNames = Lists.newArrayList();
+      final List<String> partitionNames = new ArrayList<>();
       for (FieldSchema field : table.getPartitionKeys()) {
         partitionNames.add(field.getName());
       }
@@ -184,7 +184,7 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
       final List<String> tableColumnNames = sTypeInfo.getAllStructFieldNames();
 
       // Select list of columns for project pushdown into Hive SerDe readers.
-      final List<Integer> columnIds = Lists.newArrayList();
+      final List<Integer> columnIds = new ArrayList<>();
       if (isStarQuery()) {
         selectedColumnNames = tableColumnNames;
         for(int i=0; i<selectedColumnNames.size(); i++) {
@@ -192,7 +192,7 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
         }
         selectedPartitionNames = partitionNames;
       } else {
-        selectedColumnNames = Lists.newArrayList();
+        selectedColumnNames = new ArrayList<>();
         for (SchemaPath field : getColumns()) {
           String columnName = field.getRootSegment().getPath();
           if (partitionNames.contains(columnName)) {
@@ -315,7 +315,7 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
       }
     };
 
-    final ListenableFuture<Void> result = context.runCallableAs(proxyUgi, readerInitializer);
+    final Future<Void> result = context.runCallableAs(proxyUgi, readerInitializer);
     try {
       result.get();
     } catch (InterruptedException e) {

@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector;
 import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
@@ -40,9 +41,6 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.util.DecimalUtility;
-
-import com.google.common.base.Charsets;
-
 
 public class ValueHolderHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderHelper.class);
@@ -113,7 +111,7 @@ public class ValueHolderHelper {
   public static VarCharHolder getVarCharHolder(DrillBuf buf, String s){
     VarCharHolder vch = new VarCharHolder();
 
-    byte[] b = s.getBytes(Charsets.UTF_8);
+    byte[] b = s.getBytes(StandardCharsets.UTF_8);
     vch.start = 0;
     vch.end = b.length;
     vch.buffer = buf.reallocIfNeeded(b.length);
@@ -124,7 +122,7 @@ public class ValueHolderHelper {
   public static VarCharHolder getVarCharHolder(BufferAllocator a, String s){
     VarCharHolder vch = new VarCharHolder();
 
-    byte[] b = s.getBytes(Charsets.UTF_8);
+    byte[] b = s.getBytes(StandardCharsets.UTF_8);
     vch.start = 0;
     vch.end = b.length;
     vch.buffer = a.buffer(b.length);

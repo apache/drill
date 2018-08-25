@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.store.schedule;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +35,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * The AssignmentCreator is responsible for assigning a set of work units to the available slices.
@@ -136,7 +135,7 @@ public class AssignmentCreator<T extends CompleteWork> {
   private LinkedList<WorkEndpointListPair<T>> assign(List<WorkEndpointListPair<T>> workList,
                                                      Map<DrillbitEndpoint,FragIteratorWrapper> endpointIterators,
                                                      boolean assignMaxLeftOvers) {
-    LinkedList<WorkEndpointListPair<T>> currentUnassignedList = Lists.newLinkedList();
+    LinkedList<WorkEndpointListPair<T>> currentUnassignedList = new LinkedList<>();
     outer: for (WorkEndpointListPair<T> workPair : workList) {
       List<DrillbitEndpoint> endpoints = workPair.sortedEndpoints;
       for (DrillbitEndpoint endpoint : endpoints) {
@@ -184,9 +183,9 @@ public class AssignmentCreator<T extends CompleteWork> {
    */
   private LinkedList<WorkEndpointListPair<T>> getWorkList() {
     Stopwatch watch = Stopwatch.createStarted();
-    LinkedList<WorkEndpointListPair<T>> workList = Lists.newLinkedList();
+    LinkedList<WorkEndpointListPair<T>> workList = new LinkedList<>();
     for (T work : units) {
-      List<Map.Entry<DrillbitEndpoint,Long>> entries = Lists.newArrayList();
+      List<Map.Entry<DrillbitEndpoint,Long>> entries = new ArrayList<>();
       for (ObjectLongCursor<DrillbitEndpoint> cursor : work.getByteMap()) {
         final DrillbitEndpoint ep = cursor.key;
         final Long val = cursor.value;
@@ -209,8 +208,8 @@ public class AssignmentCreator<T extends CompleteWork> {
         };
         entries.add(entry);
       }
-      Collections.sort(entries, comparator);
-      List<DrillbitEndpoint> sortedEndpoints = Lists.newArrayList();
+      entries.sort(comparator);
+      List<DrillbitEndpoint> sortedEndpoints = new ArrayList<>();
       for (Entry<DrillbitEndpoint,Long> entry : entries) {
         sortedEndpoints.add(entry.getKey());
       }
@@ -240,15 +239,15 @@ public class AssignmentCreator<T extends CompleteWork> {
    */
   private Map<DrillbitEndpoint,FragIteratorWrapper> getEndpointIterators() {
     Stopwatch watch = Stopwatch.createStarted();
-    Map<DrillbitEndpoint,FragIteratorWrapper> map = Maps.newLinkedHashMap();
-    Map<DrillbitEndpoint,List<Integer>> mmap = Maps.newLinkedHashMap();
+    Map<DrillbitEndpoint,FragIteratorWrapper> map = new LinkedHashMap<>();
+    Map<DrillbitEndpoint,List<Integer>> mmap = new LinkedHashMap<>();
     for (int i = 0; i < incomingEndpoints.size(); i++) {
       DrillbitEndpoint endpoint = incomingEndpoints.get(i);
       List<Integer> intList = mmap.get(incomingEndpoints.get(i));
       if (intList == null) {
-        intList = Lists.newArrayList();
+        intList = new ArrayList<>();
       }
-      intList.add(Integer.valueOf(i));
+      intList.add(i);
       mmap.put(endpoint, intList);
     }
 

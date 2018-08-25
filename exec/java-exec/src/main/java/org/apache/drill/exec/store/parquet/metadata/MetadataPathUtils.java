@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.store.parquet.metadata;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.hadoop.fs.Path;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Constants.SUPPORTED_VERSIONS;
@@ -41,7 +41,7 @@ public class MetadataPathUtils {
    */
   public static List<String> convertToAbsolutePaths(List<String> paths, String baseDir) {
     if (!paths.isEmpty()) {
-      List<String> absolutePaths = Lists.newArrayList();
+      List<String> absolutePaths = new ArrayList<>();
       for (String relativePath : paths) {
         String absolutePath = (new Path(relativePath).isAbsolute()) ? relativePath
             : new Path(baseDir, relativePath).toUri().getPath();
@@ -62,7 +62,7 @@ public class MetadataPathUtils {
   public static List<ParquetFileMetadata_v3> convertToFilesWithAbsolutePaths(
       List<ParquetFileMetadata_v3> files, String baseDir) {
     if (!files.isEmpty()) {
-      List<ParquetFileMetadata_v3> filesWithAbsolutePaths = Lists.newArrayList();
+      List<ParquetFileMetadata_v3> filesWithAbsolutePaths = new ArrayList<>();
       for (ParquetFileMetadata_v3 file : files) {
         Path relativePath = new Path(file.getPath());
         // create a new file if old one contains a relative path, otherwise use an old file
@@ -85,11 +85,11 @@ public class MetadataPathUtils {
    */
   public static ParquetTableMetadata_v3 createMetadataWithRelativePaths(
       ParquetTableMetadata_v3 tableMetadataWithAbsolutePaths, String baseDir) {
-    List<String> directoriesWithRelativePaths = Lists.newArrayList();
+    List<String> directoriesWithRelativePaths = new ArrayList<>();
     for (String directory : tableMetadataWithAbsolutePaths.getDirectories()) {
       directoriesWithRelativePaths.add(relativize(baseDir, directory));
     }
-    List<ParquetFileMetadata_v3> filesWithRelativePaths = Lists.newArrayList();
+    List<ParquetFileMetadata_v3> filesWithRelativePaths = new ArrayList<>();
     for (ParquetFileMetadata_v3 file : tableMetadataWithAbsolutePaths.files) {
       filesWithRelativePaths.add(new ParquetFileMetadata_v3(
           relativize(baseDir, file.getPath()), file.length, file.rowGroups));

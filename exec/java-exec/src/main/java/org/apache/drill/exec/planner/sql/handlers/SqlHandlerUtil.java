@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexInputRef;
@@ -41,6 +39,7 @@ import org.apache.calcite.rel.type.RelDataType;
 
 import java.io.IOException;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -115,8 +114,8 @@ public class SqlHandlerUtil {
   }
 
   private static void ensureNoDuplicateColumnNames(List<String> fieldNames) throws ValidationException {
-    final HashSet<String> fieldHashSet = Sets.newHashSetWithExpectedSize(fieldNames.size());
-    for(String field : fieldNames) {
+    HashSet<String> fieldHashSet = new HashSet<>(fieldNames.size());
+    for (String field : fieldNames) {
       if (fieldHashSet.contains(field.toLowerCase())) {
         throw new ValidationException(String.format("Duplicate column name [%s]", field));
       }
@@ -141,15 +140,15 @@ public class SqlHandlerUtil {
    */
   public static RelNode qualifyPartitionCol(RelNode input, List<String> partitionColumns) {
 
-    final RelDataType inputRowType = input.getRowType();
+    RelDataType inputRowType = input.getRowType();
 
-    final List<RexNode> colRefStarExprs = Lists.newArrayList();
-    final List<String> colRefStarNames = Lists.newArrayList();
-    final RexBuilder builder = input.getCluster().getRexBuilder();
-    final int originalFieldSize = inputRowType.getFieldCount();
+    List<RexNode> colRefStarExprs = new ArrayList<>();
+    List<String> colRefStarNames = new ArrayList<>();
+    RexBuilder builder = input.getCluster().getRexBuilder();
+    int originalFieldSize = inputRowType.getFieldCount();
 
-    for (final String col : partitionColumns) {
-      final RelDataTypeField field = inputRowType.getField(col, false, false);
+    for (String col : partitionColumns) {
+      RelDataTypeField field = inputRowType.getField(col, false, false);
 
       if (field == null) {
         throw UserException.validationError()
@@ -159,10 +158,10 @@ public class SqlHandlerUtil {
         if (SchemaPath.DYNAMIC_STAR.equals(field.getName())) {
           colRefStarNames.add(col);
 
-          final List<RexNode> operands = Lists.newArrayList();
+          List<RexNode> operands = new ArrayList<>();
           operands.add(new RexInputRef(field.getIndex(), field.getType()));
           operands.add(builder.makeLiteral(col));
-          final RexNode item = builder.makeCall(SqlStdOperatorTable.ITEM, operands);
+          RexNode item = builder.makeCall(SqlStdOperatorTable.ITEM, operands);
           colRefStarExprs.add(item);
         }
       }

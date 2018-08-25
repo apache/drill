@@ -49,10 +49,6 @@ import org.apache.drill.categories.SlowTest;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
-
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
@@ -62,36 +58,37 @@ public class TestMergeJoin extends PopUnitTestBase {
   private final DrillConfig c = DrillConfig.create();
 
   @Test
-  @Ignore // this doesn't have a sort.  it also causes an infinite loop.  these may or may not be related.
+  @Ignore
+  // this doesn't have a sort.  it also causes an infinite loop.  these may or may not be related.
   public void simpleEqualityJoin() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/join/merge_join.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/join/merge_join.json"));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int totalRecordCount = 0;
-    final StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
-      for (final ValueVector v : exec) {
+      for (ValueVector v : exec) {
         sb.append("[" + v.getField().getName() + "]        ");
       }
       sb.append("\n\n");
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
-        final List<Object> row = new ArrayList<>();
-        for (final ValueVector v : exec) {
-           row.add(v.getAccessor().getObject(valueIdx));
+        List<Object> row = new ArrayList<>();
+        for (ValueVector v : exec) {
+          row.add(v.getAccessor().getObject(valueIdx));
         }
-        for (final Object cell : row) {
+        for (Object cell : row) {
           if (cell == null) {
             sb.append("<null>          ");
             continue;
           }
-          final int len = cell.toString().length();
+          int len = cell.toString().length();
           sb.append(cell);
           for (int i = 0; i < (14 - len); ++i) {
             sb.append(" ");
@@ -113,22 +110,21 @@ public class TestMergeJoin extends PopUnitTestBase {
   @Test
   @Ignore
   public void orderedEqualityLeftJoin() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
-        new StoragePluginRegistryImpl(bitContext));
-    final PhysicalPlan plan = reader.readPhysicalPlan(
-        Files.toString(
-            DrillFileUtils.getResourceAsFile("/join/merge_single_batch.json"), Charsets.UTF_8)
-            .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.left.json").toURI().toString())
-            .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.right.json").toURI().toString()));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
+      new StoragePluginRegistryImpl(bitContext));
+    PhysicalPlan plan = reader.readPhysicalPlan(
+      DrillFileUtils.getResourceAsString("/join/merge_single_batch.json")
+        .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.left.json").toURI().toString())
+        .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.right.json").toURI().toString()));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int totalRecordCount = 0;
-    final StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
 
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
@@ -136,17 +132,17 @@ public class TestMergeJoin extends PopUnitTestBase {
       sb.append("       t1                 t2\n");
 
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
-        final List<Object> row = Lists.newArrayList();
-        for (final ValueVector v : exec) {
+        List<Object> row = new ArrayList<>();
+        for (ValueVector v : exec) {
           row.add(v.getField().getName() + ":" + v.getAccessor().getObject(valueIdx));
         }
-        for (final Object cell : row) {
+        for (Object cell : row) {
           if (cell == null) {
             sb.append("<null>    ");
             continue;
           }
-          final int len = cell.toString().length();
-          sb.append(cell + " ");
+          int len = cell.toString().length();
+          sb.append(cell).append(" ");
           for (int i = 0; i < (10 - len); ++i) {
             sb.append(" ");
           }
@@ -167,22 +163,21 @@ public class TestMergeJoin extends PopUnitTestBase {
   @Test
   @Ignore
   public void orderedEqualityInnerJoin() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
-        new StoragePluginRegistryImpl(bitContext));
-    final PhysicalPlan plan = reader.readPhysicalPlan(
-        Files.toString(
-            DrillFileUtils.getResourceAsFile("/join/merge_inner_single_batch.json"), Charsets.UTF_8)
-            .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.left.json").toURI().toString())
-            .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.right.json").toURI().toString()));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
+      new StoragePluginRegistryImpl(bitContext));
+    PhysicalPlan plan = reader.readPhysicalPlan(
+      DrillFileUtils.getResourceAsString("/join/merge_inner_single_batch.json")
+        .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.left.json").toURI().toString())
+        .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.right.json").toURI().toString()));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int totalRecordCount = 0;
-    final StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
 
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
@@ -190,17 +185,17 @@ public class TestMergeJoin extends PopUnitTestBase {
       sb.append("       t1                 t2\n");
 
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
-        final List<Object> row = Lists.newArrayList();
-        for (final ValueVector v : exec) {
+        List<Object> row = new ArrayList<>();
+        for (ValueVector v : exec) {
           row.add(v.getField().getName() + ":" + v.getAccessor().getObject(valueIdx));
         }
-        for (final Object cell : row) {
+        for (Object cell : row) {
           if (cell == null) {
             sb.append("<null>    ");
             continue;
           }
-          final int len = cell.toString().length();
-          sb.append(cell + " ");
+          int len = cell.toString().length();
+          sb.append(cell).append(" ");
           for (int i = 0; i < (10 - len); ++i) {
             sb.append(" ");
           }
@@ -219,39 +214,38 @@ public class TestMergeJoin extends PopUnitTestBase {
   @Test
   @Ignore
   public void orderedEqualityMultiBatchJoin() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
-        new StoragePluginRegistryImpl(bitContext));
-    final PhysicalPlan plan = reader.readPhysicalPlan(
-        Files.toString(
-            DrillFileUtils.getResourceAsFile("/join/merge_multi_batch.json"), Charsets.UTF_8)
-            .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_multi_batch.left.json").toURI().toString())
-            .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_multi_batch.right.json").toURI().toString()));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
+      new StoragePluginRegistryImpl(bitContext));
+    PhysicalPlan plan = reader.readPhysicalPlan(
+      DrillFileUtils.getResourceAsString("/join/merge_multi_batch.json")
+        .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_multi_batch.left.json").toURI().toString())
+        .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_multi_batch.right.json").toURI().toString()));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int totalRecordCount = 0;
-    final StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
 
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
       sb.append(String.format("got next with record count: %d (total: %d):\n", exec.getRecordCount(), totalRecordCount));
 
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
-        final List<Object> row = Lists.newArrayList();
-        for (final ValueVector v : exec) {
+        List<Object> row = new ArrayList<>();
+        for (ValueVector v : exec) {
           row.add(v.getField().getName() + ":" + v.getAccessor().getObject(valueIdx));
         }
-        for (final Object cell : row) {
+        for (Object cell : row) {
           if (cell == null) {
             sb.append("<null>    ");
             continue;
           }
           int len = cell.toString().length();
-          sb.append(cell + " ");
+          sb.append(cell).append(" ");
           for (int i = 0; i < (10 - len); ++i) {
             sb.append(" ");
           }
@@ -269,14 +263,14 @@ public class TestMergeJoin extends PopUnitTestBase {
 
   @Test
   public void testJoinBatchSize() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/join/join_batchsize.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/join/join_batchsize.json"));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     exec.next(); // skip schema batch
     while (exec.next()) {
       assertEquals(100, exec.getRecordCount());
@@ -290,19 +284,18 @@ public class TestMergeJoin extends PopUnitTestBase {
 
   @Test
   public void testMergeJoinInnerEmptyBatch() throws Exception {
-    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
       client.connect();
-      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(DrillFileUtils.getResourceAsFile("/join/merge_join_empty_batch.json"),
-                      Charsets.UTF_8)
-                      .replace("${JOIN_TYPE}", "INNER"));
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+          DrillFileUtils.getResourceAsString("/join/merge_join_empty_batch.json")
+              .replace("${JOIN_TYPE}", "INNER"));
       int count = 0;
-      for (final QueryDataBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }
@@ -314,19 +307,18 @@ public class TestMergeJoin extends PopUnitTestBase {
 
   @Test
   public void testMergeJoinLeftEmptyBatch() throws Exception {
-    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
       client.connect();
-      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/join/merge_join_empty_batch.json"),
-              Charsets.UTF_8)
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+          DrillFileUtils.getResourceAsString("/join/merge_join_empty_batch.json")
               .replace("${JOIN_TYPE}", "LEFT"));
       int count = 0;
-      for (final QueryDataBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }
@@ -338,19 +330,18 @@ public class TestMergeJoin extends PopUnitTestBase {
 
   @Test
   public void testMergeJoinRightEmptyBatch() throws Exception {
-    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
       client.connect();
-      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(DrillFileUtils.getResourceAsFile("/join/merge_join_empty_batch.json"),
-                      Charsets.UTF_8)
-                      .replace("${JOIN_TYPE}", "RIGHT"));
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+          DrillFileUtils.getResourceAsString("/join/merge_join_empty_batch.json")
+              .replace("${JOIN_TYPE}", "RIGHT"));
       int count = 0;
-      for (final QueryDataBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }
@@ -362,17 +353,17 @@ public class TestMergeJoin extends PopUnitTestBase {
 
   @Test
   public void testMergeJoinExprInCondition() throws Exception {
-    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
       client.connect();
-      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(DrillFileUtils.getResourceAsFile("/join/mergeJoinExpr.json"), Charsets.UTF_8));
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+        DrillFileUtils.getResourceAsString("/join/mergeJoinExpr.json"));
       int count = 0;
-      for (final QueryDataBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }

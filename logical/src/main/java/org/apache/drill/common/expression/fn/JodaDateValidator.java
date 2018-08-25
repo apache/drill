@@ -17,11 +17,11 @@
  */
 package org.apache.drill.common.expression.fn;
 
-import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static org.apache.drill.common.expression.fn.JodaDateValidator.PostgresDateTimeConstant.POSTGRES_ABR_NAME_OF_MONTH;
 import static org.apache.drill.common.expression.fn.JodaDateValidator.PostgresDateTimeConstant.POSTGRES_DAY_OF_MONTH;
@@ -103,7 +103,7 @@ public class JodaDateValidator {
     }
   }
 
-  private static final Map<PostgresDateTimeConstant, String> postgresToJodaMap = Maps.newTreeMap(new LengthDescComparator());
+  private static final Map<PostgresDateTimeConstant, String> postgresToJodaMap = new TreeMap<>(new LengthDescComparator());
 
   public static final String POSTGRES_ESCAPE_CHARACTER = "\"";
 

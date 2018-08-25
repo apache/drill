@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.coord.zk;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -208,7 +208,7 @@ public class TestZookeeperClient {
         .when(child.getData())
         .thenReturn(data);
 
-    final List<ChildData> children = Lists.newArrayList(child);
+    final List<ChildData> children = Collections.singletonList(child);
     Mockito
         .when(client.getCache().getCurrentData())
         .thenReturn(children);

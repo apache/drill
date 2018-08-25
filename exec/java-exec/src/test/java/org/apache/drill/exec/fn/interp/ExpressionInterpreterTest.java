@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.categories.SlowTest;
@@ -54,8 +55,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import com.google.common.collect.Lists;
 
 @Category({SlowTest.class, SqlTest.class})
 public class ExpressionInterpreterTest  extends PopUnitTestBase {
@@ -196,7 +195,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
 
   @SuppressWarnings("resource")
   private ScanBatch createMockScanBatch(Drillbit bit, MockSubScanPOP scanPOP, BitControl.PlanFragment planFragment) {
-    final List<RecordBatch> children = Lists.newArrayList();
+    final List<RecordBatch> children = new ArrayList<>();
     final MockScanBatchCreator creator = new MockScanBatchCreator();
 
     try {

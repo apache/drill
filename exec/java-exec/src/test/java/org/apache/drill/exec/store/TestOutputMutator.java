@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -35,13 +36,11 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.collect.Maps;
-
 public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<?>> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOutputMutator.class);
 
   private final VectorContainer container = new VectorContainer();
-  private final Map<MaterializedField, ValueVector> fieldVectorMap = Maps.newHashMap();
+  private final Map<MaterializedField, ValueVector> fieldVectorMap = new HashMap<>();
   private final BufferAllocator allocator;
 
   public TestOutputMutator(BufferAllocator allocator) {
@@ -63,7 +62,7 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
   }
 
   private void replace(ValueVector newVector, SchemaPath schemaPath) {
-    List<ValueVector> vectors = Lists.newArrayList();
+    List<ValueVector> vectors = new ArrayList<>();
     for (VectorWrapper w : container) {
       ValueVector vector = w.getValueVector();
       if (vector.getField().getName().equals(schemaPath.getRootSegmentPath())) {

@@ -201,25 +201,25 @@ public abstract class TimedCallable<V> implements Callable<V> {
    * @return The list of outcome objects.
    * @throws IOException All exceptions are coerced to IOException since this was build for storage system tasks initially.
    */
-  public static <V> List<V> run(final String activity, final Logger logger, final List<TimedCallable<V>> tasks, int parallelism) throws IOException {
+  public static <V> List<V> run(String activity, Logger logger, List<TimedCallable<V>> tasks, int parallelism) throws IOException {
     Preconditions.checkArgument(!Preconditions.checkNotNull(tasks).isEmpty(), "list of tasks is empty");
     Preconditions.checkArgument(parallelism > 0);
     parallelism = Math.min(parallelism, tasks.size());
-    final ExecutorService threadPool = parallelism == 1 ? MoreExecutors.newDirectExecutorService()
+    ExecutorService threadPool = parallelism == 1 ? MoreExecutors.newDirectExecutorService()
         : Executors.newFixedThreadPool(parallelism, new ThreadFactoryBuilder().setNameFormat(activity + "-%d").build());
-    final long timeout = TIMEOUT_PER_RUNNABLE_IN_MSECS * ((tasks.size() - 1)/parallelism + 1);
-    final FutureMapper<V> futureMapper = new FutureMapper<>();
-    final Statistics<V> statistics = logger.isDebugEnabled() ? new Statistics<>() : null;
+    long timeout = TIMEOUT_PER_RUNNABLE_IN_MSECS * ((tasks.size() - 1)/parallelism + 1);
+    FutureMapper<V> futureMapper = new FutureMapper<>();
+    Statistics<V> statistics = logger.isDebugEnabled() ? new Statistics<>() : null;
     try {
       return Collectors.toList(threadPool.invokeAll(tasks, timeout, TimeUnit.MILLISECONDS), futureMapper);
     } catch (InterruptedException e) {
-      final String errMsg = String.format("Interrupted while waiting for activity '%s' tasks to be done.", activity);
+      String errMsg = String.format("Interrupted while waiting for activity '%s' tasks to be done.", activity);
       logger.error(errMsg, e);
       throw UserException.resourceError(e)
           .message(errMsg)
           .build(logger);
     } catch (RejectedExecutionException e) {
-      final String errMsg = String.format("Failure while submitting activity '%s' tasks for execution.", activity);
+      String errMsg = String.format("Failure while submitting activity '%s' tasks for execution.", activity);
       logger.error(errMsg, e);
       throw UserException.internalError(e)
           .message(errMsg)
@@ -245,7 +245,7 @@ public abstract class TimedCallable<V> implements Callable<V> {
         statistics.collect(tasks).log(activity, logger, parallelism);
       }
       if (futureMapper.count != tasks.size()) {
-        final String errMsg = String.format("Waited for %d ms, but only %d tasks for '%s' are complete." +
+        String errMsg = String.format("Waited for %d ms, but only %d tasks for '%s' are complete." +
             " Total number of tasks %d, parallelism %d.", timeout, futureMapper.count, activity, tasks.size(), parallelism);
         logger.error(errMsg, futureMapper.throwable);
         throw UserException.resourceError(futureMapper.throwable)

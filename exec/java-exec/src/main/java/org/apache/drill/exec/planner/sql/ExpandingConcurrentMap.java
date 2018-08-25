@@ -21,9 +21,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import com.google.common.collect.Maps;
 
 /**
  * A special type of concurrent map which attempts to create an object before returning that it does not exist.  It will also provide the same functionality on it's keyset.
@@ -33,7 +32,7 @@ import com.google.common.collect.Maps;
 public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VALUE> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpandingConcurrentMap.class);
 
-  private final ConcurrentMap<KEY, VALUE> internalMap = Maps.newConcurrentMap();
+  private final ConcurrentMap<KEY, VALUE> internalMap = new ConcurrentHashMap<>();
   private final DelegatingKeySet keySet = new DelegatingKeySet();
   private final MapValueFactory<KEY, VALUE> fac;
 

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.graph.Graph;
@@ -34,35 +35,32 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.collect.Lists;
 
 @JsonPropertyOrder({ "head", "graph" })
 public class PhysicalPlan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlan.class);
 
   PlanProperties properties;
 
   Graph<PhysicalOperator, Root, Leaf> graph;
 
   @JsonCreator
-  public PhysicalPlan(@JsonProperty("head") PlanProperties properties, @JsonProperty("graph") List<PhysicalOperator> operators){
+  public PhysicalPlan(@JsonProperty("head") PlanProperties properties, @JsonProperty("graph") List<PhysicalOperator> operators) {
     this.properties = properties;
     this.graph = Graph.newGraph(operators, Root.class, Leaf.class);
   }
 
   @JsonProperty("graph")
-  public List<PhysicalOperator> getSortedOperators(){
+  public List<PhysicalOperator> getSortedOperators() {
     // reverse the list so that nested references are flattened rather than nested.
     return getSortedOperators(true);
   }
 
-  public List<PhysicalOperator> getSortedOperators(boolean reverse){
+  public List<PhysicalOperator> getSortedOperators(boolean reverse) {
     List<PhysicalOperator> list = GraphAlgos.TopoSorter.sort(graph);
-    if(reverse){
-      return Lists.reverse(list);
-    }else{
-      return list;
+    if (reverse) {
+      Collections.reverse(list);
     }
+    return list;
   }
 
   @JsonProperty("head")

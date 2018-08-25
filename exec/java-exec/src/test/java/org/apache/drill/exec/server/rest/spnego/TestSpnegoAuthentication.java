@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.server.rest.spnego;
 
-
-import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.categories.SecurityTest;
@@ -54,6 +52,8 @@ import sun.security.jgss.GSSUtil;
 import javax.security.auth.Subject;
 import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertTrue;
@@ -97,7 +97,7 @@ public class TestSpnegoAuthentication {
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
             ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("form", "spnego")))
+            ConfigValueFactory.fromIterable(Arrays.asList("form", "spnego")))
         .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
         .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
@@ -126,7 +126,7 @@ public class TestSpnegoAuthentication {
 
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create()
         .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("form")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("form")))
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
             ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
@@ -160,7 +160,7 @@ public class TestSpnegoAuthentication {
           .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
               ConfigValueFactory.fromAnyRef(true))
           .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-              ConfigValueFactory.fromIterable(Lists.newArrayList("form")))
+              ConfigValueFactory.fromIterable(Collections.singletonList("form")))
           .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
               ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
           .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
@@ -192,7 +192,7 @@ public class TestSpnegoAuthentication {
 
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create()
         .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("spnego")))
+            ConfigValueFactory.fromIterable(Collections.singletonList("spnego")))
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
             ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
@@ -285,7 +285,7 @@ public class TestSpnegoAuthentication {
     // Create a DrillbitContext with service principal and keytab for DrillSpnegoLoginService
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create()
       .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("spnego")))
+        ConfigValueFactory.fromIterable(Collections.singletonList("spnego")))
       .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
         ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
       .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,

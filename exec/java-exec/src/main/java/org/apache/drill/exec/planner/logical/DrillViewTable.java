@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
@@ -34,6 +33,8 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.drill.exec.ops.ViewExpansionContext;
+
+import java.util.Collections;
 
 public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillViewTable.class);
@@ -69,7 +70,7 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
         token = viewExpansionContext.reserveViewExpansionToken(viewOwner);
         rel = context.expandView(rowType, view.getSql(), token.getSchemaTree(), view.getWorkspaceSchemaPath()).rel;
       } else {
-        rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath(), ImmutableList.<String>of()).rel;
+        rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath(), Collections.emptyList()).rel;
       }
 
       // If the View's field list is not "*", create a cast.

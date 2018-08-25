@@ -18,17 +18,17 @@
 package org.apache.drill.exec.rpc.control;
 
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.exec.rpc.BitRpcUtility;
 
 public class ConnectionManagerRegistry implements Iterable<ControlConnectionManager> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConnectionManagerRegistry.class);
 
-  private final ConcurrentMap<DrillbitEndpoint, ControlConnectionManager> registry = Maps.newConcurrentMap();
+  private final ConcurrentMap<DrillbitEndpoint, ControlConnectionManager> registry = new ConcurrentHashMap<>();
 
   private final ControlConnectionConfig config;
 

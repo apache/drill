@@ -21,8 +21,7 @@
 package org.apache.drill.exec.planner;
 
 
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -52,7 +51,7 @@ public class DFSDirPartitionLocation implements PartitionLocation {
 
   @Override
   public List<SimplePartitionLocation> getPartitionLocationRecursive() {
-    List<SimplePartitionLocation> results = Lists.newArrayList();
+    List<SimplePartitionLocation> results = new ArrayList<>();
 
     for (final PartitionLocation partitionLocation : subPartitions) {
       results.addAll(partitionLocation.getPartitionLocationRecursive());

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -29,6 +28,9 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.mockito.Mockito.when;
@@ -90,7 +92,7 @@ public class TestMainLoginPageModel {
       .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("form"))));
+        ConfigValueFactory.fromIterable(Collections.singletonList("form"))));
     when(context.getConfig()).thenReturn(config);
     final MainLoginPageModel model = logInLogOutResources.new MainLoginPageModel(null);
     assertTrue(model.isFormEnabled());
@@ -107,7 +109,7 @@ public class TestMainLoginPageModel {
       .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("spnego"))));
+        ConfigValueFactory.fromIterable(Collections.singletonList("spnego"))));
     when(context.getConfig()).thenReturn(config);
     final MainLoginPageModel model = logInLogOutResources.new MainLoginPageModel(null);
     assertTrue(!model.isFormEnabled());
@@ -124,7 +126,7 @@ public class TestMainLoginPageModel {
       .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("form", "spnego"))));
+        ConfigValueFactory.fromIterable(Arrays.asList("form", "spnego"))));
     when(context.getConfig()).thenReturn(config);
     final MainLoginPageModel model = logInLogOutResources.new MainLoginPageModel(null);
     assertTrue(model.isFormEnabled());

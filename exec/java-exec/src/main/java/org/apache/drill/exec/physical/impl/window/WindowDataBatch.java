@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.window;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
@@ -30,6 +29,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class WindowDataBatch implements VectorAccessible {
     this.oContext = oContext;
     recordCount = batch.getRecordCount();
 
-    List<ValueVector> vectors = Lists.newArrayList();
+    List<ValueVector> vectors = new ArrayList<>();
 
     for (VectorWrapper<?> v : batch) {
       if (v.isHyper()) {

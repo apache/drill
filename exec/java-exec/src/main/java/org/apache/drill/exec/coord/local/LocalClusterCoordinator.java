@@ -35,8 +35,6 @@ import org.apache.drill.exec.coord.store.TransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
 
-import com.google.common.collect.Maps;
-
 public class LocalClusterCoordinator extends ClusterCoordinator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalClusterCoordinator.class);
 
@@ -46,7 +44,7 @@ public class LocalClusterCoordinator extends ClusterCoordinator {
    * ConcurrentModificationException.
    */
   private final Map<RegistrationHandle, DrillbitEndpoint> endpoints = new ConcurrentHashMap<>();
-  private final ConcurrentMap<String, DistributedSemaphore> semaphores = Maps.newConcurrentMap();
+  private final ConcurrentMap<String, DistributedSemaphore> semaphores = new ConcurrentHashMap<>();
 
   private final TransientStoreFactory factory = CachingTransientStoreFactory.of(new TransientStoreFactory() {
     @Override

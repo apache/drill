@@ -17,6 +17,8 @@
  */
 package org.apache.drill.common.logical.data;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,8 +35,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
 @JsonTypeName("order")
 public class Order extends SingleInputOperator {
@@ -63,7 +63,7 @@ public class Order extends SingleInputOperator {
 
   @Override
   public Iterator<LogicalOperator> iterator() {
-      return Iterators.singletonIterator(getInput());
+    return Collections.singleton(getInput()).iterator();
   }
 
 
@@ -297,7 +297,7 @@ public class Order extends SingleInputOperator {
   }
 
   public static class Builder extends AbstractSingleBuilder<Order, Builder>{
-    private List<Ordering> orderings = Lists.newArrayList();
+    private List<Ordering> orderings = new ArrayList<>();
     private FieldReference within;
 
     public Builder setWithin(FieldReference within){

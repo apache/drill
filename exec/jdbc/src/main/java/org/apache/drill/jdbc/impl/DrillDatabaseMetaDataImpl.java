@@ -49,7 +49,6 @@ import org.apache.drill.exec.proto.UserProtos.UnionSupport;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillDatabaseMetaData;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
@@ -412,7 +411,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     if (!getServerMetaSupported()) {
       return super.getSQLKeywords();
     }
-    return Joiner.on(",").join(getServerMeta().getSqlKeywordsList());
+    return String.join(",", getServerMeta().getSqlKeywordsList());
   }
 
   @Override
@@ -421,7 +420,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     if (!getServerMetaSupported()) {
       return super.getNumericFunctions();
     }
-    return Joiner.on(",").join(getServerMeta().getNumericFunctionsList());
+    return String.join(",", getServerMeta().getNumericFunctionsList());
   }
 
   @Override
@@ -430,7 +429,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     if (!getServerMetaSupported()) {
       return super.getStringFunctions();
     }
-    return Joiner.on(",").join(getServerMeta().getStringFunctionsList());
+    return String.join(",", getServerMeta().getStringFunctionsList());
   }
 
   @Override
@@ -439,7 +438,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     if (!getServerMetaSupported()) {
       return super.getSystemFunctions();
     }
-    return Joiner.on(",").join(getServerMeta().getSystemFunctionsList());
+    return String.join(",", getServerMeta().getSystemFunctionsList());
   }
 
   @Override
@@ -448,7 +447,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     if (!getServerMetaSupported()) {
       return super.getTimeDateFunctions();
     }
-    return Joiner.on(",").join(getServerMeta().getDateTimeFunctionsList());
+    return String.join(",", getServerMeta().getDateTimeFunctionsList());
   }
 
   @Override

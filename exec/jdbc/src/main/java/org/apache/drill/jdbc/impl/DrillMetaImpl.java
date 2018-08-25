@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
 
@@ -60,11 +61,7 @@ import org.apache.drill.exec.proto.UserProtos.TableMetadata;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RpcException;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-
-
 
 class DrillMetaImpl extends MetaImpl {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillMetaImpl.class);
@@ -317,18 +314,15 @@ class DrillMetaImpl extends MetaImpl {
       }
 
       try {
-        List<Object> tables = Lists.transform(getResult(response), new Function<ResponseValue, Object>() {
-          @Override
-          public Object apply(ResponseValue input) {
-            return adapt(input);
-          }
-        });
+        List<Object> tables = getResult(response).stream()
+            .map(this::adapt)
+            .collect(Collectors.toList());
 
         Meta.Frame frame = Meta.Frame.create(0, true, tables);
         StructType fieldMetaData = drillFieldMetaData(clazz);
         Meta.Signature signature = Meta.Signature.create(
             fieldMetaData.columns, "",
-            Collections.<AvaticaParameter>emptyList(), CursorFactory.record(clazz), Meta.StatementType.SELECT);
+            Collections.emptyList(), CursorFactory.record(clazz), Meta.StatementType.SELECT);
 
         AvaticaStatement statement = connection.createStatement();
         return MetaResultSet.create(connection.id, statement.getId(), true,

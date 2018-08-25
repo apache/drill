@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
@@ -88,7 +89,7 @@ public class SqlDropTable extends DrillSqlCall {
 
   public List<String> getSchema() {
     if (tableName.isSimple()) {
-      return ImmutableList.of();
+      return Collections.emptyList();
     }
 
     return tableName.names.subList(0, tableName.names.size()-1);

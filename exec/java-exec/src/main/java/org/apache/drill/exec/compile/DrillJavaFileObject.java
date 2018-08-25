@@ -25,11 +25,10 @@ import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.tools.SimpleJavaFileObject;
-
-import com.google.common.collect.Maps;
 
 /* package */
 final class DrillJavaFileObject extends SimpleJavaFileObject {
@@ -90,7 +89,7 @@ final class DrillJavaFileObject extends SimpleJavaFileObject {
 
   public DrillJavaFileObject addOutputJavaFile(String className) {
     if (outputFiles == null) {
-      outputFiles = Maps.newLinkedHashMap();
+      outputFiles = new LinkedHashMap<>();
     }
     DrillJavaFileObject outputFile = new DrillJavaFileObject(className, Kind.CLASS);
     outputFiles.put(className, outputFile);

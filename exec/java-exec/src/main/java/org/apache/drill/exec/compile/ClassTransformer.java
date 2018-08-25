@@ -18,6 +18,8 @@
 package org.apache.drill.exec.compile;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -37,9 +39,6 @@ import org.objectweb.asm.tree.ClassNode;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * Compiles generated code, merges the resulting class with the
@@ -230,44 +229,44 @@ public class ClassTransformer {
   }
 
   public Class<?> getImplementationClass(
-      final QueryClassLoader classLoader,
-      final TemplateClassDefinition<?> templateDefinition,
-      final String entireClass,
-      final String materializedClassName) throws ClassTransformationException {
+      QueryClassLoader classLoader,
+      TemplateClassDefinition<?> templateDefinition,
+      String entireClass,
+      String materializedClassName) throws ClassTransformationException {
     // unfortunately, this hasn't been set up at construction time, so we have to do it here
     final ScalarReplacementOption scalarReplacementOption = ScalarReplacementOption.fromString(optionManager.getOption(SCALAR_REPLACEMENT_VALIDATOR));
 
     try {
-      final long t1 = System.nanoTime();
-      final ClassSet set = new ClassSet(null, templateDefinition.getTemplateClassName(), materializedClassName);
-      final byte[][] implementationClasses = classLoader.getClassByteCode(set.generated, entireClass);
+      long t1 = System.nanoTime();
+      ClassSet set = new ClassSet(null, templateDefinition.getTemplateClassName(), materializedClassName);
+      byte[][] implementationClasses = classLoader.getClassByteCode(set.generated, entireClass);
 
       long totalBytecodeSize = 0;
-      Map<String, Pair<byte[], ClassNode>> classesToMerge = Maps.newHashMap();
+      Map<String, Pair<byte[], ClassNode>> classesToMerge = new HashMap<>();
       for (byte[] clazz : implementationClasses) {
         totalBytecodeSize += clazz.length;
-        final ClassNode node = AsmUtil.classFromBytes(clazz, ClassReader.EXPAND_FRAMES);
+        ClassNode node = AsmUtil.classFromBytes(clazz, ClassReader.EXPAND_FRAMES);
         if (!AsmUtil.isClassOk(logger, "implementationClasses", node)) {
           throw new IllegalStateException("Problem found with implementationClasses");
         }
         classesToMerge.put(node.name, Pair.of(clazz, node));
       }
 
-      final LinkedList<ClassSet> names = Lists.newLinkedList();
-      final Set<ClassSet> namesCompleted = Sets.newHashSet();
+      LinkedList<ClassSet> names = new LinkedList<>();
+      Set<ClassSet> namesCompleted = new HashSet<>();
       names.add(set);
 
-      while ( !names.isEmpty() ) {
-        final ClassSet nextSet = names.removeFirst();
+      while (!names.isEmpty()) {
+        ClassSet nextSet = names.removeFirst();
         if (namesCompleted.contains(nextSet)) {
           continue;
         }
-        final ClassNames nextPrecompiled = nextSet.precompiled;
-        final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
-        final ClassNames nextGenerated = nextSet.generated;
+        ClassNames nextPrecompiled = nextSet.precompiled;
+        byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
+        ClassNames nextGenerated = nextSet.generated;
         // keeps only classes that have not be merged
         Pair<byte[], ClassNode> classNodePair = classesToMerge.remove(nextGenerated.slash);
-        final ClassNode generatedNode;
+        ClassNode generatedNode;
         if (classNodePair != null) {
           generatedNode = classNodePair.getValue();
         } else {

@@ -19,12 +19,14 @@ package org.apache.drill.exec.physical.unit;
 
 import static org.apache.drill.test.TestBuilder.mapOf;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ComplexToJson;
 import org.apache.drill.exec.physical.config.ExternalSort;
@@ -41,14 +43,12 @@ import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
 public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
 
   @Test
   public void testSimpleProject() {
     Project projectConf = new Project(parseExprs("x+5", "x"), null);
-    List<String> jsonBatches = Lists.newArrayList(
+    List<String> jsonBatches = Arrays.asList(
         "[{\"x\": 5 },{\"x\": 10 }]",
         "[{\"x\": 20 },{\"x\": 30 },{\"x\": 40 }]");
     opTestBuilder()
@@ -66,7 +66,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @Test
   public void testProjectComplexOutput() {
     Project projectConf = new Project(parseExprs("convert_from(json_col, 'JSON')", "complex_col"), null);
-    List<String> jsonBatches = Lists.newArrayList(
+    List<String> jsonBatches = Arrays.asList(
         "[{\"json_col\": \"{ \\\"a\\\" : 1 }\"}]",
         "[{\"json_col\": \"{ \\\"a\\\" : 5 }\"}]");
     opTestBuilder()
@@ -81,19 +81,19 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @SuppressWarnings("unchecked")
   @Test
   public void testSimpleHashJoin() {
-    HashJoinPOP joinConf = new HashJoinPOP(null, null, Lists.newArrayList(joinCond("x", "EQUALS", "x1")), JoinRelType.LEFT, null);
+    HashJoinPOP joinConf = new HashJoinPOP(null, null, Collections.singletonList(joinCond("x", "EQUALS", "x1")), JoinRelType.LEFT, null);
     // TODO - figure out where to add validation, column names must be unique, even between the two batches,
     // for all columns, not just the one in the join condition
     // TODO - if any are common between the two, it is failing in the generated setup method in HashJoinProbeGen
-    List<String> leftJsonBatches = Lists.newArrayList(
+    List<String> leftJsonBatches = Arrays.asList(
         "[{\"x\": 5, \"a\" : \"a string\"}]",
         "[{\"x\": 5, \"a\" : \"a different string\"},{\"x\": 5, \"a\" : \"meh\"}]");
-    List<String> rightJsonBatches = Lists.newArrayList(
+    List<String> rightJsonBatches = Arrays.asList(
         "[{\"x1\": 5, \"a2\" : \"asdf\"}]",
         "[{\"x1\": 6, \"a2\" : \"qwerty\"},{\"x1\": 5, \"a2\" : \"12345\"}]");
     opTestBuilder()
         .physicalOperator(joinConf)
-        .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches))
+        .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches))
         .baselineColumns("x", "a", "a2", "x1")
         .baselineValues(5l, "a string", "asdf", 5l)
         .baselineValues(5l, "a string", "12345", 5l)
@@ -107,18 +107,18 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @SuppressWarnings("unchecked")
   @Test
   public void testSimpleMergeJoin() {
-    MergeJoinPOP joinConf = new MergeJoinPOP(null, null, Lists.newArrayList(joinCond("x", "EQUALS", "x1")), JoinRelType.LEFT);
+    MergeJoinPOP joinConf = new MergeJoinPOP(null, null, Collections.singletonList(joinCond("x", "EQUALS", "x1")), JoinRelType.LEFT);
     // TODO - figure out where to add validation, column names must be unique, even between the two batches,
     // for all columns, not just the one in the join condition
-    List<String> leftJsonBatches = Lists.newArrayList(
+    List<String> leftJsonBatches = Arrays.asList(
         "[{\"x\": 5, \"a\" : \"a string\"}]",
         "[{\"x\": 5, \"a\" : \"a different string\"},{\"x\": 5, \"a\" : \"meh\"}]");
-    List<String> rightJsonBatches = Lists.newArrayList(
+    List<String> rightJsonBatches = Arrays.asList(
         "[{\"x1\": 5, \"a2\" : \"asdf\"}]",
         "[{\"x1\": 5, \"a2\" : \"12345\"}, {\"x1\": 6, \"a2\" : \"qwerty\"}]");
     opTestBuilder()
         .physicalOperator(joinConf)
-        .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches))
+        .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches))
         .baselineColumns("x", "a", "a2", "x1")
         .baselineValues(5l, "a string", "asdf", 5l)
         .baselineValues(5l, "a string", "12345", 5l)
@@ -132,7 +132,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @Test
   public void testSimpleHashAgg() {
     HashAggregate aggConf = new HashAggregate(null, AggPrelBase.OperatorPhase.PHASE_1of1, parseExprs("a", "a"), parseExprs("sum(b)", "b_sum"), 1.0f);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
     opTestBuilder()
@@ -147,7 +147,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @Test
   public void testSimpleStreamAgg() {
     StreamingAggregate aggConf = new StreamingAggregate(null, parseExprs("a", "a"), parseExprs("sum(b)", "b_sum"), 1.0f);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
     opTestBuilder()
@@ -162,7 +162,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @Test
   public void testComplexToJson() {
     ComplexToJson complexToJson = new ComplexToJson(null);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
         "[{\"a\": {\"b\" : 1 }}]",
         "[{\"a\": {\"b\" : 5}},{\"a\": {\"b\" : 8}}]");
     opTestBuilder()
@@ -178,7 +178,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @Test
   public void testFilter() {
     Filter filterConf = new Filter(null, parseExpr("a=5"), 1.0f);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]",
         "[{\"a\": 40, \"b\" : 3},{\"a\": 13, \"b\" : 100}]");
@@ -194,7 +194,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @Test
   public void testFlatten() {
     final PhysicalOperator flatten = new FlattenPOP(null, SchemaPath.getSimplePath("b"));
-    List<String> inputJsonBatches = Lists.newArrayList();
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
 
     for (int j = 0; j < 1; j++) {
@@ -220,8 +220,8 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @Test
   public void testExternalSort() {
     ExternalSort sortConf = new ExternalSort(null,
-        Lists.newArrayList(ordering("b", RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST)), false);
-    List<String> inputJsonBatches = Lists.newArrayList(
+        Collections.singletonList(ordering("b", RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST)), false);
+    List<String> inputJsonBatches = Arrays.asList(
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]",
         "[{\"a\": 40, \"b\" : 3},{\"a\": 13, \"b\" : 100}]");
@@ -240,8 +240,8 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
 
   private void externalSortLowMemoryHelper(int batchSize, int numberOfBatches, long initReservation, long maxAllocation) {
     ExternalSort sortConf = new ExternalSort(null,
-        Lists.newArrayList(ordering("b", RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST)), false);
-    List<String> inputJsonBatches = Lists.newArrayList();
+        Collections.singletonList(ordering("b", RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST)), false);
+    List<String> inputJsonBatches = new ArrayList<>();
     StringBuilder batchString = new StringBuilder();
     for (int j = 0; j < numberOfBatches; j++) {
       batchString.append("[");
@@ -307,8 +307,8 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @Test
   public void testTopN() {
     TopN sortConf = new TopN(null,
-        Lists.newArrayList(ordering("b", RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST)), false, 3);
-    List<String> inputJsonBatches = Lists.newArrayList(
+        Collections.singletonList(ordering("b", RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST)), false, 3);
+    List<String> inputJsonBatches = Arrays.asList(
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]",
         "[{\"a\": 40, \"b\" : 3},{\"a\": 13, \"b\" : 100}]");
@@ -328,17 +328,17 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @Ignore
   @Test
   public void testSimpleMergingReceiver() {
-    MergingReceiverPOP mergeConf = new MergingReceiverPOP(-1, Lists.<MinorFragmentEndpoint>newArrayList(),
-        Lists.newArrayList(ordering("x", RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST)), false);
-    List<String> leftJsonBatches = Lists.newArrayList(
+    MergingReceiverPOP mergeConf = new MergingReceiverPOP(-1, new ArrayList<>(),
+        Collections.singletonList(ordering("x", RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST)), false);
+    List<String> leftJsonBatches = Arrays.asList(
         "[{\"x\": 5, \"a\" : \"a string\"}]",
         "[{\"x\": 5, \"a\" : \"a different string\"},{\"x\": 5, \"a\" : \"meh\"}]");
-    List<String> rightJsonBatches = Lists.newArrayList(
+    List<String> rightJsonBatches = Arrays.asList(
         "[{\"x\": 5, \"a\" : \"asdf\"}]",
         "[{\"x\": 5, \"a\" : \"12345\"}, {\"x\": 6, \"a\" : \"qwerty\"}]");
     opTestBuilder()
         .physicalOperator(mergeConf)
-        .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches))
+        .inputDataStreamsJson(Arrays.asList(leftJsonBatches, rightJsonBatches))
         .baselineColumns("x", "a")
         .baselineValues(5l, "a string")
         .baselineValues(5l, "a different string")

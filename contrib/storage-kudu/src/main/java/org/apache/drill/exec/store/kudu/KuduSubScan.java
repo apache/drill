@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.store.kudu;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -100,7 +100,7 @@ public class KuduSubScan extends AbstractBase implements SubScan {
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return ImmutableSet.<PhysicalOperator>of().iterator();
+    return Collections.emptyIterator();
   }
 
   public static class KuduSubScanSpec {

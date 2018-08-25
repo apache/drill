@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Joiner;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -76,7 +75,7 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
 
     if (schemaPlus == null) {
       throw UserException.validationError()
-        .message("Invalid schema name [%s]", Joiner.on(".").join(schema.names))
+        .message("Invalid schema name [%s]", String.join(".", schema.names))
         .build(logger);
     }
 
@@ -98,7 +97,7 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
         transformWorkspaces(schema.names, configMap);
       }
       String properties = mapper.writeValueAsString(configMap);
-      return DirectPlan.createDirectPlan(context, new DescribeSchemaResult(Joiner.on(".").join(schema.names), properties));
+      return DirectPlan.createDirectPlan(context, new DescribeSchemaResult(String.join(".", schema.names), properties));
     } catch (JsonProcessingException e) {
       throw new DrillRuntimeException("Error while trying to convert storage config to json string", e);
     }

@@ -70,7 +70,7 @@ public class CustomHandlerRegistry {
             messageTypeId));
       }
 
-      parsingHandler = new ParsingHandler<REQUEST, RESPONSE>(handler, requestSerde, responseSerde);
+      parsingHandler = new ParsingHandler<>(handler, requestSerde, responseSerde);
       handlers.put(messageTypeId, parsingHandler);
     }
   }

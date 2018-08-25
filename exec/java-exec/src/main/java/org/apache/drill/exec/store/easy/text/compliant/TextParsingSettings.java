@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.easy.text.compliant;
 
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 public class TextParsingSettings {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TextParsingSettings.class);
@@ -48,7 +48,7 @@ public class TextParsingSettings {
   public void set(TextFormatConfig config){
     this.quote = bSafe(config.getQuote(), "quote");
     this.quoteEscape = bSafe(config.getEscape(), "escape");
-    this.newLineDelimiter = config.getLineDelimiter().getBytes(Charsets.UTF_8);
+    this.newLineDelimiter = config.getLineDelimiter().getBytes(StandardCharsets.UTF_8);
     this.delimiter = bSafe(config.getFieldDelimiter(), "fieldDelimiter");
     this.comment = bSafe(config.getComment(), "comment");
     this.skipFirstLine = config.isSkipFirstLine();

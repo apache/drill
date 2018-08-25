@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.validate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -25,8 +26,6 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.IteratorValidator;
-
-import com.google.common.collect.Lists;
 
 public class IteratorValidatorInjector extends
     AbstractPhysicalVisitor<PhysicalOperator, FragmentContext, ExecutionSetupException> {
@@ -57,7 +56,7 @@ public class IteratorValidatorInjector extends
   @Override
   public PhysicalOperator visitOp(PhysicalOperator op, FragmentContext context) throws ExecutionSetupException {
 
-    List<PhysicalOperator> newChildren = Lists.newArrayList();
+    List<PhysicalOperator> newChildren = new ArrayList<>();
     PhysicalOperator newOp = op;
 
     /* Get the list of child operators */

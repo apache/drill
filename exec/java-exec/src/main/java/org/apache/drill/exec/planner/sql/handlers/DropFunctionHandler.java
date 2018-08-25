@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -37,6 +36,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DropFunctionHandler extends DefaultSqlHandler {
@@ -126,7 +126,7 @@ public class DropFunctionHandler extends DefaultSqlHandler {
       DataChangeVersion version = new DataChangeVersion();
       Registry registry = remoteFunctionRegistry.getRegistry(version);
       Jar jarToBeDeleted = null;
-      List<Jar> jars = Lists.newArrayList();
+      List<Jar> jars = new ArrayList<>();
       for (Jar j : registry.getJarList()) {
         if (j.getName().equals(jarName)) {
           jarToBeDeleted = j;

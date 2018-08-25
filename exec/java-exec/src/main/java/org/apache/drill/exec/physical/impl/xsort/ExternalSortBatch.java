@@ -18,14 +18,15 @@
 package org.apache.drill.exec.physical.impl.xsort;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Sets;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
@@ -76,10 +77,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
@@ -110,8 +109,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
    * 2. Merge sorted batches when all incoming data fits in memory
    */
   private PriorityQueueCopier copier;
-  private LinkedList<BatchGroup> batchGroups = Lists.newLinkedList();
-  private LinkedList<BatchGroup> spilledBatchGroups = Lists.newLinkedList();
+  private LinkedList<BatchGroup> batchGroups = new LinkedList<>();
+
+  private LinkedList<BatchGroup> spilledBatchGroups = new LinkedList<>();
+
   private SelectionVector4 sv4;
   private FileSystem fs;
   private int spillCount = 0;
@@ -119,7 +120,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private boolean first = true;
   private int targetRecordCount;
   private final String fileName;
-  private Set<Path> currSpillDirs = Sets.newTreeSet();
+  private Set<Path> currSpillDirs = new TreeSet<>();
   private int firstSpillBatchCount = 0;
   private int peakNumBatches = -1;
 
@@ -547,7 +548,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     logger.debug("Copier allocator current allocation {}", copierAllocator.getAllocatedMemory());
     logger.debug("mergeAndSpill: starting total size in memory = {}", oAllocator.getAllocatedMemory());
     VectorContainer outputContainer = new VectorContainer();
-    List<BatchGroup> batchGroupList = Lists.newArrayList();
+    List<BatchGroup> batchGroupList = new ArrayList<>();
     int batchCount = batchGroups.size();
     for (int i = 0; i < batchCount / 2; i++) {
       if (batchGroups.size() == 0) {
@@ -586,9 +587,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     c1.setRecordCount(count);
 
     String spillDir = dirs.next();
-    Path currSpillPath = new Path(Joiner.on("/").join(spillDir, fileName));
+    Path currSpillPath = new Path(spillDir, fileName);
     currSpillDirs.add(currSpillPath);
-    String outputFile = Joiner.on("/").join(currSpillPath, spillCount++);
+    String outputFile = currSpillPath + "/" + spillCount++;
     try {
         fs.deleteOnExit(currSpillPath);
     } catch (IOException e) {

@@ -22,6 +22,7 @@ import static com.mapr.fs.jni.MapRConstants.MAPRFS_PREFIX;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -33,13 +34,10 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.hadoop.conf.Configuration;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.ImmutableSet;
 import com.mapr.fs.MapRFileSystem;
 
 public abstract class TableFormatPlugin implements FormatPlugin {
@@ -91,7 +89,7 @@ public abstract class TableFormatPlugin implements FormatPlugin {
 
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-    return ImmutableSet.of();
+    return Collections.emptySet();
   }
 
   @Override

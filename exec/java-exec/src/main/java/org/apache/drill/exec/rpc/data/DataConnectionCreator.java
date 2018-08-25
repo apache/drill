@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.common.AutoCloseables;
@@ -28,8 +29,6 @@ import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 
-import com.google.common.collect.Maps;
-
 /**
  * Manages a connection for each endpoint.
  */
@@ -37,7 +36,7 @@ public class DataConnectionCreator implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataConnectionCreator.class);
 
   private volatile DataServer server;
-  private final ConcurrentMap<DrillbitEndpoint, DataConnectionManager> connectionManager = Maps.newConcurrentMap();
+  private final ConcurrentMap<DrillbitEndpoint, DataConnectionManager> connectionManager = new ConcurrentHashMap<>();
 
   private final DataConnectionConfig config;
 

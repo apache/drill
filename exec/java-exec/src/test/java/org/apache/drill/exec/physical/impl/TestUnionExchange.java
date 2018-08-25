@@ -30,8 +30,6 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
 @Category(OperatorTest.class)
@@ -50,8 +48,7 @@ public class TestUnionExchange extends PopUnitTestBase {
       bit2.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/sender/union_exchange.json"),
-              Charsets.UTF_8));
+          DrillFileUtils.getResourceAsString("/sender/union_exchange.json"));
       int count = 0;
       for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {

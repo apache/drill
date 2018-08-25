@@ -18,13 +18,13 @@
 package org.apache.drill.test;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -135,7 +135,7 @@ public class SubDirTestWatcher extends TestWatcher {
     private File baseDir;
     private boolean createAtBeginning = true;
     private boolean deleteAtEnd = true;
-    private List<Path> subDirs = Lists.newArrayList();
+    private List<Path> subDirs = new ArrayList<>();
 
     /**
      * Initializes a builder for a {@link SubDirTestWatcher} with the given baseDir.

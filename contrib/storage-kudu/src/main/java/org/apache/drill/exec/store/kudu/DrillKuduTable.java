@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kudu;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.rel.type.RelDataType;
@@ -26,8 +27,6 @@ import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
-
-import com.google.common.collect.Lists;
 
 public class DrillKuduTable extends DynamicDrillTable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillKuduTable.class);
@@ -42,8 +41,8 @@ public class DrillKuduTable extends DynamicDrillTable {
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
 
-    List<String> names = Lists.newArrayList();
-    List<RelDataType> types = Lists.newArrayList();
+    List<String> names = new ArrayList<>();
+    List<RelDataType> types = new ArrayList<>();
     for (ColumnSchema column : schema.getColumns()) {
       names.add(column.getName());
       RelDataType type = getSqlTypeFromKuduType(typeFactory, column.getType());

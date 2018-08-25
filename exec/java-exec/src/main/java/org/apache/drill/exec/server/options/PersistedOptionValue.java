@@ -199,13 +199,13 @@ public class PersistedOptionValue {
     return float_val;
   }
 
-  public OptionValue toOptionValue(final OptionDefinition optionDefinition, final OptionValue.OptionScope optionScope) {
+  public OptionValue toOptionValue(OptionDefinition optionDefinition, OptionValue.OptionScope optionScope) {
     Preconditions.checkNotNull(value, "The value must be defined in order for this to be converted to an " +
-    "option value");
-    final OptionValidator validator = optionDefinition.getValidator();
-    final OptionValue.Kind kind = validator.getKind();
-    final String name = validator.getOptionName();
-    final OptionValue.AccessibleScopes accessibleScopes = optionDefinition.getMetaData().getAccessibleScopes();
+        "option value");
+    OptionValidator validator = optionDefinition.getValidator();
+    OptionValue.Kind kind = validator.getKind();
+    String name = validator.getOptionName();
+    OptionValue.AccessibleScopes accessibleScopes = optionDefinition.getMetaData().getAccessibleScopes();
     return OptionValue.create(kind, accessibleScopes, name, value, optionScope);
   }
 

@@ -17,10 +17,9 @@
  */
 package org.apache.drill.exec.server.options;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
@@ -197,7 +196,7 @@ public class TypeValidators {
    * Validator that checks if the given value is included in a list of acceptable values. Case insensitive.
    */
   public static class EnumeratedStringValidator extends StringValidator {
-    private final Set<String> valuesSet = Sets.newLinkedHashSet();
+    private final Set<String> valuesSet = new LinkedHashSet<>();
 
     public EnumeratedStringValidator(String name, String... values) {
       super(name);
@@ -258,7 +257,7 @@ public class TypeValidators {
       // if this option has not been changed by the user then return the
       // process user groups
       if (adminUserGroups.equals(DEFAULT_ADMIN_USER_GROUPS)) {
-        adminUserGroups = Joiner.on(",").join(ImpersonationUtil.getProcessUserGroupNames());
+        adminUserGroups = String.join(",", ImpersonationUtil.getProcessUserGroupNames());
       }
       adminUserGroups = DrillStringUtils.sanitizeCSV(adminUserGroups);
       return adminUserGroups;

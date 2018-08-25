@@ -19,10 +19,10 @@ package org.apache.drill.exec.serialization;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 import com.dyuproject.protostuff.JsonIOUtil;
 import com.dyuproject.protostuff.Schema;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.Message;
 
@@ -30,20 +30,20 @@ public class ProtoSerializer<T, B extends Message.Builder> implements InstanceSe
   private final Schema<B> readSchema;
   private final Schema<T> writeSchema;
 
-  public ProtoSerializer(final Schema<B> readSchema, final Schema<T> writeSchema) {
+  public ProtoSerializer(Schema<B> readSchema, Schema<T> writeSchema) {
     this.readSchema = Preconditions.checkNotNull(readSchema);
     this.writeSchema = Preconditions.checkNotNull(writeSchema);
   }
 
   @Override
-  public T deserialize(final byte[] raw) throws IOException {
+  public T deserialize(byte[] raw) throws IOException {
     final B builder = readSchema.newMessage();
     JsonIOUtil.mergeFrom(raw, builder, readSchema, false);
     return (T)builder.build();
   }
 
   @Override
-  public byte[] serialize(final T instance) throws IOException {
+  public byte[] serialize(T instance) throws IOException {
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     JsonIOUtil.writeTo(out, instance, writeSchema, false);
     return out.toByteArray();
@@ -51,14 +51,14 @@ public class ProtoSerializer<T, B extends Message.Builder> implements InstanceSe
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(readSchema, writeSchema);
+    return Objects.hash(readSchema, writeSchema);
   }
 
   @Override
-  public boolean equals(final Object obj) {
+  public boolean equals(Object obj) {
     if (obj instanceof ProtoSerializer && obj.getClass().equals(getClass())) {
-      final ProtoSerializer<T, B> other = (ProtoSerializer<T, B>)obj;
-      return Objects.equal(readSchema, other.readSchema) && Objects.equal(writeSchema, other.writeSchema);
+      final ProtoSerializer<T, B> other = (ProtoSerializer<T, B>) obj;
+      return Objects.equals(readSchema, other.readSchema) && Objects.equals(writeSchema, other.writeSchema);
     }
     return false;
   }

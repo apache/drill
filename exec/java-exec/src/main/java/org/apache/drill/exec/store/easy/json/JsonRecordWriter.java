@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.easy.json;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,6 @@ import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.google.common.collect.Lists;
 
 public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWriter {
 
@@ -124,7 +124,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   }
 
   public class MapJsonConverter extends FieldConverter {
-    List<FieldConverter> converters = Lists.newArrayList();
+    List<FieldConverter> converters = new ArrayList<>();
 
     public MapJsonConverter(int fieldId, String fieldName, FieldReader reader) {
       super(fieldId, fieldName, reader);
@@ -180,7 +180,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   }
 
   public class RepeatedMapJsonConverter extends FieldConverter {
-    List<FieldConverter> converters = Lists.newArrayList();
+    List<FieldConverter> converters = new ArrayList<>();
 
     public RepeatedMapJsonConverter(int fieldId, String fieldName, FieldReader reader) {
       super(fieldId, fieldName, reader);

@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.kafka;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -40,8 +42,6 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -66,7 +66,7 @@ public class KafkaMessageGenerator {
   }
 
   public void populateAvroMsgIntoKafka(String topic, int numMsg) throws IOException {
-    KafkaProducer<String, GenericRecord> producer = new KafkaProducer<String, GenericRecord>(producerProperties);
+    KafkaProducer<String, GenericRecord> producer = new KafkaProducer<>(producerProperties);
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(Resources.getResource("drill-avro-test.avsc").openStream());
     GenericRecordBuilder builder = new GenericRecordBuilder(schema);
@@ -76,13 +76,13 @@ public class KafkaMessageGenerator {
       builder.set("key2", rand.nextInt());
       builder.set("key3", rand.nextBoolean());
 
-      List<Integer> list = Lists.newArrayList();
+      List<Integer> list = new ArrayList<>();
       list.add(rand.nextInt(100));
       list.add(rand.nextInt(100));
       list.add(rand.nextInt(100));
       builder.set("key5", list);
 
-      Map<String, Double> map = Maps.newHashMap();
+      Map<String, Double> map = new HashMap<>();
       map.put("key61", rand.nextDouble());
       map.put("key62", rand.nextDouble());
       builder.set("key6", map);

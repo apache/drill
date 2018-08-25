@@ -34,9 +34,6 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
 public class TestWriter extends BaseTestQuery {
   private static final String ROOT_DIR_REPLACEMENT = "%ROOT_DIR%";
   private static final String TMP_DIR_REPLACEMENT = "%TMP_DIR%";
@@ -48,7 +45,7 @@ public class TestWriter extends BaseTestQuery {
   public void simpleCsv() throws Exception {
     File testDir = dirTestWatcher.makeRootSubDir(Paths.get("csvtest"));
 
-    String plan = Files.toString(DrillFileUtils.getResourceAsFile("/writer/simple_csv_writer.json"), Charsets.UTF_8);
+    String plan = DrillFileUtils.getResourceAsString("/writer/simple_csv_writer.json");
     plan = plan
       .replace(ROOT_DIR_REPLACEMENT, dirTestWatcher.getRootDir().getAbsolutePath())
       .replace(TMP_DIR_REPLACEMENT, dirTestWatcher.getTmpDir().getAbsolutePath())

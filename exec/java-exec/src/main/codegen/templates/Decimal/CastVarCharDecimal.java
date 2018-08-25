@@ -92,7 +92,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
 
     byte[] buf = new byte[in.end - in.start];
     in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-    String s = new String(buf, com.google.common.base.Charsets.UTF_8);
+    String s = new String(buf, java.nio.charset.StandardCharsets.UTF_8);
     java.math.BigDecimal bd = new java.math.BigDecimal(s);
 
     org.apache.drill.exec.util.DecimalUtility.checkValueOverflow(bd, precision.value, scale.value);

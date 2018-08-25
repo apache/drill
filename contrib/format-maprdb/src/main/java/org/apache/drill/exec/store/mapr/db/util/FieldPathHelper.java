@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.store.mapr.db.util;
 
-import com.google.common.collect.Queues;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.ojai.FieldPath;
 import org.ojai.FieldSegment;
+
+import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class FieldPathHelper {
@@ -33,7 +34,7 @@ public class FieldPathHelper {
    * @return {@link FieldPath} equivalent of the specified {@link SchemaPath}.
    */
   public static FieldPath schemaPathToFieldPath(SchemaPath schemaPath) {
-    Deque<PathSegment> pathSegments = Queues.newArrayDeque();
+    Deque<PathSegment> pathSegments = new ArrayDeque<>();
     PathSegment pathSegment = schemaPath.getRootSegment();
     while (pathSegment != null) {
       pathSegments.push(pathSegment);

@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.log;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -33,6 +32,7 @@ import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
 
+import java.util.Collections;
 import java.util.List;
 
 public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
@@ -48,7 +48,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
         false, // writable
         true, // blockSplittable
         true,  // compressible
-        Lists.newArrayList(formatConfig.getExtension()),
+        Collections.singletonList(formatConfig.getExtension()),
         DEFAULT_NAME);
     this.formatConfig = formatConfig;
   }

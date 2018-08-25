@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.plan.RelOptRule;
@@ -32,7 +33,6 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTrait.Distributio
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 
 public class UnionAllPrule extends Prule {
@@ -51,14 +51,14 @@ public class UnionAllPrule extends Prule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillUnionRel union = call.rel(0);
-    final List<RelNode> inputs = union.getInputs();
-    List<RelNode> convertedInputList = Lists.newArrayList();
+    DrillUnionRel union = call.rel(0);
+    List<RelNode> inputs = union.getInputs();
+    List<RelNode> convertedInputList = new ArrayList<>();
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
     boolean allHashDistributed = true;
 
     for (RelNode child : inputs) {
-      List<DistributionField> childDistFields = Lists.newArrayList();
+      List<DistributionField> childDistFields = new ArrayList<>();
       RelNode convertedChild;
 
       for (RelDataTypeField f : child.getRowType().getFieldList()) {

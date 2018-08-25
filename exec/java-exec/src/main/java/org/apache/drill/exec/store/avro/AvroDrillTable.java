@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.avro;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.avro.LogicalType;
@@ -39,8 +40,6 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.hadoop.fs.Path;
-
-import com.google.common.collect.Lists;
 
 public class AvroDrillTable extends DrillTable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AvroDrillTable.class);
@@ -68,8 +67,8 @@ public class AvroDrillTable extends DrillTable {
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
     // ExtendableRelDataTypeHolder is reused to preserve previously added implicit columns
     if (holder == null) {
-      List<RelDataType> typeList = Lists.newArrayList();
-      List<String> fieldNameList = Lists.newArrayList();
+      List<RelDataType> typeList = new ArrayList<>();
+      List<String> fieldNameList = new ArrayList<>();
 
       // adds partition columns to RowType since they always present in star queries
       List<String> partitions =

@@ -19,13 +19,13 @@ package org.apache.parquet.hadoop;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.bytes.CapacityByteArrayOutputStream;
@@ -51,7 +51,7 @@ public class ParquetColumnChunkPageWriteStore implements PageWriteStore, Closeab
 
   private static ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
 
-  private final Map<ColumnDescriptor, ColumnChunkPageWriter> writers = Maps.newHashMap();
+  private final Map<ColumnDescriptor, ColumnChunkPageWriter> writers = new HashMap<>();
   private final MessageType schema;
 
   public ParquetColumnChunkPageWriteStore(BytesCompressor compressor,
@@ -103,9 +103,9 @@ public class ParquetColumnChunkPageWriteStore implements PageWriteStore, Closeab
     private int pageCount;
 
     // repetition and definition level encodings are used only for v1 pages and don't change
-    private Set<Encoding> rlEncodings = Sets.newHashSet();
-    private Set<Encoding> dlEncodings = Sets.newHashSet();
-    private List<Encoding> dataEncodings = Lists.newArrayList();
+    private Set<Encoding> rlEncodings = new HashSet<>();
+    private Set<Encoding> dlEncodings = new HashSet<>();
+    private List<Encoding> dataEncodings = new ArrayList<>();
 
     private Statistics totalStatistics;
 
@@ -229,7 +229,7 @@ public class ParquetColumnChunkPageWriteStore implements PageWriteStore, Closeab
       logger.debug(
           String.format(
               "written %,dB for %s: %,d values, %,dB raw, %,dB comp, %d pages, encodings: %s",
-              buf.size(), path, totalValueCount, uncompressedLength, compressedLength, pageCount, Sets.newHashSet(dataEncodings))
+              buf.size(), path, totalValueCount, uncompressedLength, compressedLength, pageCount,  new HashSet<>(dataEncodings))
               + (dictionaryPage != null ? String.format(
               ", dic { %,d entries, %,dB raw, %,dB comp}",
               dictionaryPage.getDictionarySize(), dictionaryPage.getUncompressedSize(), dictionaryPage.getDictionarySize())

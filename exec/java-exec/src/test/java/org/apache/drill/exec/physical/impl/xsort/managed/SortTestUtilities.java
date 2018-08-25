@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
@@ -40,8 +41,6 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-
-import com.google.common.collect.Lists;
 
 public class SortTestUtilities {
 
@@ -66,7 +65,7 @@ public class SortTestUtilities {
   public static Sort makeCopierConfig(String sortOrder, String nullOrder) {
     FieldReference expr = FieldReference.getWithQuotedRef("key");
     Ordering ordering = new Ordering(sortOrder, expr, nullOrder);
-    return new Sort(null, Lists.newArrayList(ordering), false);
+    return new Sort(null, Collections.singletonList(ordering), false);
   }
 
   public static class CopierTester {

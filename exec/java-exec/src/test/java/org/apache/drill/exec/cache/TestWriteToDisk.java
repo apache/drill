@@ -18,6 +18,7 @@
 package org.apache.drill.exec.cache;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.io.Files;
@@ -44,7 +45,6 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
 import org.junit.rules.TestRule;
 
 public class TestWriteToDisk extends ExecTest {
@@ -53,18 +53,18 @@ public class TestWriteToDisk extends ExecTest {
   @Test
   @SuppressWarnings("static-method")
   public void test() throws Exception {
-    final List<ValueVector> vectorList = Lists.newArrayList();
-    final DrillConfig config = DrillConfig.create();
-    try (final RemoteServiceSet serviceSet = RemoteServiceSet
+    List<ValueVector> vectorList = new ArrayList<>();
+    DrillConfig config = DrillConfig.create();
+    try (RemoteServiceSet serviceSet = RemoteServiceSet
         .getLocalServiceSet();
-        final Drillbit bit = new Drillbit(config, serviceSet)) {
+        Drillbit bit = new Drillbit(config, serviceSet)) {
       bit.run();
-      final DrillbitContext context = bit.getContext();
+      DrillbitContext context = bit.getContext();
 
-      final MaterializedField intField = MaterializedField.create("int", Types.required(TypeProtos.MinorType.INT));
-      final MaterializedField binField = MaterializedField.create("binary", Types.required(TypeProtos.MinorType.VARBINARY));
-      try (final IntVector intVector = (IntVector) TypeHelper.getNewVector(intField, context.getAllocator());
-          final VarBinaryVector binVector =
+      MaterializedField intField = MaterializedField.create("int", Types.required(TypeProtos.MinorType.INT));
+      MaterializedField binField = MaterializedField.create("binary", Types.required(TypeProtos.MinorType.VARBINARY));
+      try (IntVector intVector = (IntVector) TypeHelper.getNewVector(intField, context.getAllocator());
+          VarBinaryVector binVector =
               (VarBinaryVector) TypeHelper.getNewVector(binField, context.getAllocator())) {
         AllocationHelper.allocate(intVector, 4, 4);
         AllocationHelper.allocate(binVector, 4, 5);
@@ -91,17 +91,17 @@ public class TestWriteToDisk extends ExecTest {
         VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(
             batch, context.getAllocator());
 
-        final VectorAccessibleSerializable newWrap = new VectorAccessibleSerializable(
+        VectorAccessibleSerializable newWrap = new VectorAccessibleSerializable(
             context.getAllocator());
-        try (final FileSystem fs = getLocalFileSystem()) {
-          final File tempDir = Files.createTempDir();
+        try (FileSystem fs = getLocalFileSystem()) {
+          File tempDir = Files.createTempDir();
           tempDir.deleteOnExit();
-          final Path path = new Path(tempDir.getAbsolutePath(), "drillSerializable");
-          try (final FSDataOutputStream out = fs.create(path)) {
+          Path path = new Path(tempDir.getAbsolutePath(), "drillSerializable");
+          try (FSDataOutputStream out = fs.create(path)) {
             wrap.writeToStream(out);
           }
 
-          try (final FSDataInputStream in = fs.open(path)) {
+          try (FSDataInputStream in = fs.open(path)) {
             newWrap.readFromStream(in);
           }
         }

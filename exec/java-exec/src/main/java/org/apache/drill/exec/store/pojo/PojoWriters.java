@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.pojo;
 import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -37,7 +38,6 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 
-import com.google.common.base.Charsets;
 import org.apache.drill.exec.vector.VarDecimalVector;
 
 public class PojoWriters {
@@ -183,7 +183,7 @@ public class PojoWriters {
 
     public void writeString(String s, int outboundIndex) {
       holder.isSet = 1;
-      byte[] bytes = s.getBytes(Charsets.UTF_8);
+      byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
       ensureLength(bytes.length);
       data.clear();
       data.writeBytes(bytes);

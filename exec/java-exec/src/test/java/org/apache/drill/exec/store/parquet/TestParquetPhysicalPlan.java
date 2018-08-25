@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,7 +39,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Resources;
 
@@ -58,7 +58,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
          DrillClient client = new DrillClient(config, serviceSet.getCoordinator())) {
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8));
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName), StandardCharsets.UTF_8));
       RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
       int count = 0;
       for (QueryDataBatch b : results) {
@@ -129,7 +129,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
       client.connect();
       ParquetResultsListener listener = new ParquetResultsListener();
       Stopwatch watch = Stopwatch.createStarted();
-      client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8), listener);
+      client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),StandardCharsets.UTF_8), listener);
       client.close();
     }
   }

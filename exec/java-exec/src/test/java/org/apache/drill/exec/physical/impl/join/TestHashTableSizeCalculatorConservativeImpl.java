@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,7 +34,7 @@ public class TestHashTableSizeCalculatorConservativeImpl {
     final int maxNumRecords = 40;
     double loadFactor = .75;
 
-    final Map<String, Long> keySizes = Maps.newHashMap();
+    final Map<String, Long> keySizes = new HashMap<>();
     keySizes.put("a", 3L);
     keySizes.put("b", 8L);
 

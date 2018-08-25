@@ -17,17 +17,17 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StraightCopier implements Copier {
-    private List<TransferPair> pairs = Lists.newArrayList();
+    private List<TransferPair> pairs = new ArrayList<>();
     private RecordBatch incoming;
     private VectorContainer outputContainer;
     private SchemaChangeCallBack callBack;

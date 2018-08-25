@@ -17,13 +17,14 @@
  */
 package org.apache.drill.common.expression.fn;
 
-import com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import static org.apache.drill.common.expression.fn.JodaDateValidator.toJodaFormat;
@@ -32,7 +33,7 @@ import static org.joda.time.format.DateTimeFormat.forPattern;
 
 public class JodaDateValidatorTest {
 
-  private static final Map<String, String> TEST_CASES = Maps.newHashMap();
+  private static final Map<String, String> TEST_CASES = new HashMap<>();
 
   @BeforeClass
   public static void fillTestCases() {

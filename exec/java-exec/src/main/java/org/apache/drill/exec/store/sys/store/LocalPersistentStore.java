@@ -23,13 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javax.annotation.Nullable;
+import java.util.function.Function;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.collections.ImmutableEntry;
@@ -44,10 +44,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.PathFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,33 +108,25 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
     try {
       // list only files with sys file suffix
-      PathFilter sysFileSuffixFilter = new PathFilter() {
-        @Override
-        public boolean accept(Path path) {
-          return path.getName().endsWith(DRILL_SYS_FILE_SUFFIX);
-        }
-      };
+      PathFilter sysFileSuffixFilter = path -> path.getName().endsWith(DRILL_SYS_FILE_SUFFIX);
 
       List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false, sysFileSuffixFilter);
       if (fileStatuses.isEmpty()) {
         return Collections.emptyIterator();
       }
 
-      List<String> files = Lists.newArrayList();
+      List<String> files = new ArrayList<>();
       for (FileStatus stat : fileStatuses) {
         String s = stat.getPath().getName();
         files.add(s.substring(0, s.length() - DRILL_SYS_FILE_SUFFIX.length()));
       }
 
-      Collections.sort(files);
-
-      return Iterables.transform(Iterables.limit(Iterables.skip(files, skip), take), new Function<String, Entry<String, V>>() {
-        @Nullable
-        @Override
-        public Entry<String, V> apply(String key) {
-          return new ImmutableEntry<>(key, get(key));
-        }
-      }).iterator();
+      return files.stream()
+          .sorted()
+          .skip(skip)
+          .limit(take)
+          .map((Function<String, Entry<String, V>>) key -> new ImmutableEntry<>(key, get(key)))
+          .iterator();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

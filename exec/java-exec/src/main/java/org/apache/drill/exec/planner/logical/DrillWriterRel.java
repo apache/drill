@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.drill.common.logical.data.LogicalOperator;
@@ -55,14 +55,13 @@ public class DrillWriterRel extends DrillWriterRelBase implements DrillRel {
         .build();
   }
 
-
   private List<Integer> resolvePartitionKeys(){
-    final List<Integer> keys = Lists.newArrayList();
-    final RelDataType inputRowType = getInput().getRowType();
-    final List<String> partitionCol = getCreateTableEntry().getPartitionColumns();
+    List<Integer> keys = new ArrayList<>();
+    RelDataType inputRowType = getInput().getRowType();
+    List<String> partitionCol = getCreateTableEntry().getPartitionColumns();
 
-    for (final String col : partitionCol) {
-      final RelDataTypeField field = inputRowType.getField(col, false, false);
+    for (String col : partitionCol) {
+      RelDataTypeField field = inputRowType.getField(col, false, false);
       Preconditions.checkArgument(field != null,
           String.format("partition col %s could not be resolved in table's column lists!", col));
       keys.add(field.getIndex());

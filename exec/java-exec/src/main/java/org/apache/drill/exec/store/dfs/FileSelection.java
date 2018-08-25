@@ -19,13 +19,14 @@ package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
@@ -82,17 +83,17 @@ public class FileSelection {
    * @param files  list of files
    * @param selectionRoot  root path for selections
    */
-  public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot) {
+  public FileSelection(List<FileStatus> statuses, List<String> files, String selectionRoot) {
     this(statuses, files, selectionRoot, null, false, StatusType.NOT_CHECKED);
   }
 
-  public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot,
-      final String cacheFileRoot, final boolean wasAllPartitionsPruned) {
+  public FileSelection(List<FileStatus> statuses, List<String> files, String selectionRoot,
+      String cacheFileRoot, boolean wasAllPartitionsPruned) {
     this(statuses, files, selectionRoot, cacheFileRoot, wasAllPartitionsPruned, StatusType.NOT_CHECKED);
   }
 
-  public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot,
-      final String cacheFileRoot, final boolean wasAllPartitionsPruned, final StatusType dirStatus) {
+  public FileSelection(List<FileStatus> statuses, List<String> files, String selectionRoot,
+      String cacheFileRoot, boolean wasAllPartitionsPruned, StatusType dirStatus) {
     this.statuses = statuses;
     this.files = files;
     this.selectionRoot = selectionRoot;
@@ -104,7 +105,7 @@ public class FileSelection {
   /**
    * Copy constructor for convenience.
    */
-  protected FileSelection(final FileSelection selection) {
+  protected FileSelection(FileSelection selection) {
     Preconditions.checkNotNull(selection, "selection cannot be null");
     this.statuses = selection.statuses;
     this.files = selection.files;
@@ -120,12 +121,12 @@ public class FileSelection {
     return selectionRoot;
   }
 
-  public List<FileStatus> getStatuses(final DrillFileSystem fs) throws IOException {
+  public List<FileStatus> getStatuses(DrillFileSystem fs) throws IOException {
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
 
     if (statuses == null)  {
-      final List<FileStatus> newStatuses = Lists.newArrayList();
-      for (final String pathStr:files) {
+      List<FileStatus> newStatuses = new ArrayList<>();
+      for (String pathStr:files) {
         newStatuses.add(fs.getFileStatus(new Path(pathStr)));
       }
       statuses = newStatuses;
@@ -141,8 +142,8 @@ public class FileSelection {
 
   public List<String> getFiles() {
     if (files == null) {
-      final List<String> newFiles = Lists.newArrayList();
-      for (final FileStatus status:statuses) {
+      List<String> newFiles = new ArrayList<>();
+      for (FileStatus status:statuses) {
         newFiles.add(status.getPath().toString());
       }
       files = newFiles;
@@ -153,7 +154,7 @@ public class FileSelection {
   public boolean containsDirectories(DrillFileSystem fs) throws IOException {
     if (dirStatus == StatusType.NOT_CHECKED) {
       dirStatus = StatusType.NO_DIRS;
-      for (final FileStatus status : getStatuses(fs)) {
+      for (FileStatus status : getStatuses(fs)) {
         if (status.isDirectory()) {
           dirStatus = StatusType.HAS_DIRS;
           break;
@@ -170,12 +171,12 @@ public class FileSelection {
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     List<FileStatus> statuses = getStatuses(fs);
 
-    List<FileStatus> nonDirectories = Lists.newArrayList();
+    List<FileStatus> nonDirectories = new ArrayList<>();
     for (FileStatus status : statuses) {
       nonDirectories.addAll(DrillFileSystemUtil.listFiles(fs, status.getPath(), true));
     }
 
-    final FileSelection fileSel = create(nonDirectories, null, selectionRoot);
+    FileSelection fileSel = create(nonDirectories, null, selectionRoot);
     if (timer != null) {
       logger.debug("FileSelection.minusDirectories() took {} ms, numFiles: {}", timer.elapsed(TimeUnit.MILLISECONDS), statuses.size());
       timer.stop();
@@ -223,7 +224,7 @@ public class FileSelection {
    * @param files  list of files.
    * @return  longest common path
    */
-  private static String commonPathForFiles(final List<String> files) {
+  private static String commonPathForFiles(List<String> files) {
     if (files == null || files.isEmpty()) {
       return "";
     }
@@ -262,20 +263,20 @@ public class FileSelection {
     return builder.toString();
   }
 
-  public static FileSelection create(final DrillFileSystem fs, final String parent, final String path,
-      final boolean allowAccessOutsideWorkspace) throws IOException {
+  public static FileSelection create(DrillFileSystem fs, String parent, String path,
+      boolean allowAccessOutsideWorkspace) throws IOException {
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     boolean hasWildcard = path.contains(WILD_CARD);
 
-    final Path combined = new Path(parent, removeLeadingSlash(path));
+    Path combined = new Path(parent, removeLeadingSlash(path));
     if (!allowAccessOutsideWorkspace) {
       checkBackPaths(new Path(parent).toUri().getPath(), combined.toUri().getPath(), path);
     }
-    final FileStatus[] statuses = fs.globStatus(combined); // note: this would expand wildcards
+    FileStatus[] statuses = fs.globStatus(combined); // note: this would expand wildcards
     if (statuses == null) {
       return null;
     }
-    final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().getPath());
+    FileSelection fileSel = create(Arrays.asList(statuses), null, combined.toUri().getPath());
     if (timer != null) {
       logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
       timer.stop();
@@ -339,7 +340,7 @@ public class FileSelection {
       throw new DrillRuntimeException("List of directories is null or empty");
     }
 
-    List<String> dirs = Lists.newArrayList();
+    List<String> dirs = new ArrayList<>();
 
     if (selection.hadWildcard()) { // for wildcard the directory list should have already been expanded
       for (FileStatus status : selection.getFileStatuses()) {

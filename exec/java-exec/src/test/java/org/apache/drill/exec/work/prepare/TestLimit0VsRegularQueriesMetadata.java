@@ -18,11 +18,11 @@
 package org.apache.drill.exec.work.prepare;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class TestLimit0VsRegularQueriesMetadata extends PreparedStatementTestBase {
@@ -209,7 +209,7 @@ public class TestLimit0VsRegularQueriesMetadata extends PreparedStatementTestBas
         new ExpectedColumnResult("col_length_char", "CHARACTER VARYING", true, Types.MAX_VARCHAR_LENGTH, Types.MAX_VARCHAR_LENGTH, 0, false, String.class.getName())
     );
 
-    List<String> padFunctions = Lists.newArrayList("rpad", "lpad");
+    List<String> padFunctions = Arrays.asList("rpad", "lpad");
     for (String function : padFunctions) {
       verifyResults(String.format(query, function), expectedMetadata);
     }

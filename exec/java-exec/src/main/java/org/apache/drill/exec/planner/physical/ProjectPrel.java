@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
@@ -139,7 +138,7 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
   public Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
     RelDataTypeFactory typeFactory = this.getCluster().getTypeFactory();
     RexBuilder builder = this.getCluster().getRexBuilder();
-    List<RexNode> projects = Lists.newArrayList();
+    List<RexNode> projects = new ArrayList<>();
     projects.add(builder.makeInputRef(typeFactory.createSqlType(SqlTypeName.INTEGER), 0));
     // right shift the previous field indices.
     projects.addAll(DrillRelOptUtil.transformExprs(builder, this.getProjects(),

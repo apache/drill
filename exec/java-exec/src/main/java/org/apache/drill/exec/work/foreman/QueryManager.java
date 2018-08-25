@@ -20,6 +20,8 @@ package org.apache.drill.exec.work.foreman;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.buffer.ByteBuf;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,8 +58,6 @@ import org.apache.drill.exec.work.EndpointListener;
 import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.predicates.IntObjectPredicate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * Each Foreman holds its own QueryManager.  This manages the events associated with execution of a particular query across all fragments.
@@ -65,7 +65,7 @@ import com.google.common.collect.Maps;
 public class QueryManager implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryManager.class);
 
-  private final Map<DrillbitEndpoint, NodeTracker> nodeMap = Maps.newHashMap();
+  private final Map<DrillbitEndpoint, NodeTracker> nodeMap = new HashMap<>();
   private final QueryId queryId;
   private final String stringQueryId;
   private final RunQuery runQuery;
@@ -77,7 +77,7 @@ public class QueryManager implements AutoCloseable {
    */
   private final IntObjectHashMap<IntObjectHashMap<FragmentData>> fragmentDataMap =
       new IntObjectHashMap<>();
-  private final List<FragmentData> fragmentDataSet = Lists.newArrayList();
+  private final List<FragmentData> fragmentDataSet = new ArrayList<>();
 
   private final PersistentStore<QueryProfile> completedProfileStore;
   private final TransientStore<QueryInfo> runningProfileStore;

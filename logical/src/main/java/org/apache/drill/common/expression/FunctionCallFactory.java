@@ -18,14 +18,13 @@
 package org.apache.drill.common.expression;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-
-import com.google.common.collect.Lists;
 
 public class FunctionCallFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionCallFactory.class);
@@ -107,7 +106,7 @@ public class FunctionCallFactory {
   }
 
   public static LogicalExpression createExpression(String functionName, ExpressionPosition ep, LogicalExpression... e){
-    return createExpression(functionName, ep, Lists.newArrayList(e));
+    return createExpression(functionName, ep, Arrays.asList(e));
   }
 
   public static LogicalExpression createBooleanOperator(String functionName, List<LogicalExpression> args){

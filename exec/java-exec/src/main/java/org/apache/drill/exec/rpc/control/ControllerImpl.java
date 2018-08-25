@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.AutoCloseables;
@@ -27,7 +28,6 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
-import com.google.common.collect.Lists;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
@@ -92,7 +92,7 @@ public class ControllerImpl implements Controller {
 
   @Override
   public void close() throws Exception {
-    List<AutoCloseable> closeables = Lists.newArrayList();
+    List<AutoCloseable> closeables = new ArrayList<>();
     closeables.add(server);
 
     for (ControlConnectionManager bt : connectionRegistry) {

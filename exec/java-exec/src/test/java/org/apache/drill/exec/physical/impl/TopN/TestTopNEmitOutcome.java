@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.TopN;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.exec.physical.config.TopN;
@@ -29,6 +28,8 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.Collections;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
@@ -56,7 +57,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.ASCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.ASCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 10);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -98,7 +99,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 10);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -148,7 +149,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 10);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -201,7 +202,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 10);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -264,7 +265,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 10);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -318,7 +319,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 10);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -376,7 +377,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 1);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -429,7 +430,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 10);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -475,7 +476,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 10);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -536,7 +537,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 2);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -603,7 +604,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 4);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -631,7 +632,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 4);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 
@@ -648,7 +649,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final TopN topNConfig = new TopN(null,
-      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+      Collections.singletonList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
         RelFieldCollation.NullDirection.FIRST)), false, 4);
     final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
 

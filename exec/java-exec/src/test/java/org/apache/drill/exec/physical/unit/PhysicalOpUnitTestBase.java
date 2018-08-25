@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.unit;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -212,7 +211,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
         mockOpContext(popConfig, initReservation, maxAllocation);
 
         opCreator = (BatchCreator<PhysicalOperator>) opCreatorReg.getOperatorCreator(popConfig.getClass());
-        List<RecordBatch> incomingStreams = Lists.newArrayList();
+        List<RecordBatch> incomingStreams = new ArrayList<>();
         if (inputStreamsJSON != null) {
           for (List<String> batchesJson : inputStreamsJSON) {
             incomingStreams.add(new ScanBatch(popConfig, fragContext,

@@ -60,7 +60,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       <#if type.to != "Date">
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
+      String input = new String(buf, java.nio.charset.StandardCharsets.UTF_8);
       </#if>  
       
       <#if type.to == "Date">

@@ -39,9 +39,6 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
@@ -51,16 +48,16 @@ public class TestSimpleLimit extends ExecTest {
 
   @Test
   public void testLimit() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     verifyLimitCount(bitContext, connection, "test1.json", 5);
   }
 
   @Test
   public void testLimitNoEnd() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     verifyLimitCount(bitContext, connection, "test3.json", 95);
   }
@@ -72,31 +69,31 @@ public class TestSimpleLimit extends ExecTest {
   // next batch. But the value has already been increased by 1 in the prior failed try. Therefore, the sum of the generated number could be different,
   // depending on the size of each outgoing batch, and when the batch could not hold any more values.
   public void testLimitAcrossBatches() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     verifyLimitCount(bitContext, connection, "test2.json", 69999);
-    final long start = 30000;
-    final long end = 100000;
-    final long expectedSum = (end - start) * (end + start - 1) / 2; //Formula for sum of series
+    long start = 30000;
+    long end = 100000;
+    long expectedSum = (end - start) * (end + start - 1) / 2; //Formula for sum of series
 
     verifySum(bitContext, connection, "test4.json", 70000, expectedSum);
   }
 
   private void verifyLimitCount(DrillbitContext bitContext, UserClientConnection connection, String testPlan, int expectedCount) throws Throwable {
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/limit/" + testPlan), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/limit/" + testPlan));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     int recordCount = 0;
-    while(exec.next()) {
+    while (exec.next()) {
       recordCount += exec.getRecordCount();
     }
 
     assertEquals(expectedCount, recordCount);
 
-    if(context.getExecutorState().getFailureCause() != null) {
+    if (context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
 
@@ -104,16 +101,16 @@ public class TestSimpleLimit extends ExecTest {
   }
 
   private void verifySum(DrillbitContext bitContext, UserClientConnection connection, String testPlan, int expectedCount, long expectedSum) throws Throwable {
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/limit/" + testPlan), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/limit/" + testPlan));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     int recordCount = 0;
     long sum = 0;
-    while(exec.next()) {
+    while (exec.next()) {
       recordCount += exec.getRecordCount();
-      final BigIntVector v = (BigIntVector) exec.iterator().next();
+      BigIntVector v = (BigIntVector) exec.iterator().next();
       for (int i = 0; i < v.getAccessor().getValueCount(); i++) {
         sum += v.getAccessor().get(i);
       }
@@ -122,7 +119,7 @@ public class TestSimpleLimit extends ExecTest {
     assertEquals(expectedCount, recordCount);
     assertEquals(expectedSum, sum);
 
-    if(context.getExecutorState().getFailureCause() != null) {
+    if (context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
     assertTrue(!context.getExecutorState().isFailed());

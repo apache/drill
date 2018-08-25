@@ -18,10 +18,10 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.exec.ExecConstants;
@@ -125,7 +125,7 @@ public class SortPrel extends org.apache.calcite.rel.core.Sort implements Prel {
 
   @Override
   public Prel prepareForLateralUnnestPipeline(List<RelNode> children) {
-    List<RelFieldCollation> relFieldCollations = Lists.newArrayList();
+    List<RelFieldCollation> relFieldCollations = new ArrayList<>();
     relFieldCollations.add(new RelFieldCollation(0,
                             RelFieldCollation.Direction.ASCENDING, RelFieldCollation.NullDirection.FIRST));
     for (RelFieldCollation fieldCollation : this.collation.getFieldCollations()) {

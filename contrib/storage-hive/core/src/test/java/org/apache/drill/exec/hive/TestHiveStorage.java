@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +45,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveStorage extends HiveTestBase {
@@ -383,7 +383,7 @@ public class TestHiveStorage extends HiveTestBase {
   public void testStringColumnsMetadata() throws Exception {
     String query = "select varchar_field, char_field, string_field from hive.readtest";
 
-    Map<String, Integer> expectedResult = Maps.newHashMap();
+    Map<String, Integer> expectedResult = new HashMap<>();
     expectedResult.put("varchar_field", 50);
     expectedResult.put("char_field", 10);
     expectedResult.put("string_field", HiveVarchar.MAX_VARCHAR_LENGTH);

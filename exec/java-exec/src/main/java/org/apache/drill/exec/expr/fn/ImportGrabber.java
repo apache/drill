@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.janino.Java;
@@ -26,12 +27,9 @@ import org.codehaus.janino.Java.CompilationUnit.StaticImportOnDemandDeclaration;
 import org.codehaus.janino.Java.CompilationUnit.TypeImportOnDemandDeclaration;
 import org.codehaus.janino.util.Traverser;
 
-import com.google.common.collect.Lists;
-
-
 public class ImportGrabber {
 
-  private final List<String> imports = Lists.newArrayList();
+  private final List<String> imports = new ArrayList<>();
   private final ImportFinder finder = new ImportFinder();
 
   private ImportGrabber() {

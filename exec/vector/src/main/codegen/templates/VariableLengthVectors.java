@@ -507,7 +507,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     <#case "Var16Char">
     @Override
     public ${friendlyType} getObject(int index) {
-      return new String(get(index), Charsets.UTF_16);
+      return new String(get(index), StandardCharsets.UTF_16);
     }
     <#break>
     <#default>
@@ -843,11 +843,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       boolean even = true;
       <#switch minor.class>
       <#case "Var16Char">
-      final java.nio.charset.Charset charset = Charsets.UTF_16;
+      final java.nio.charset.Charset charset = StandardCharsets.UTF_16;
       <#break>
       <#case "VarChar">
       <#default>
-      final java.nio.charset.Charset charset = Charsets.UTF_8;
+      final java.nio.charset.Charset charset = StandardCharsets.UTF_8;
       </#switch>
       final byte[] evenValue = new String("aaaaa").getBytes(charset);
       final byte[] oddValue = new String("bbbbbbbbbb").getBytes(charset);

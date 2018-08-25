@@ -129,8 +129,8 @@ public class MetadataProvider {
     private final ResponseSender responseSender;
     private final DrillbitContext dContext;
 
-    private MetadataRunnable(final UserSession session, final DrillbitContext dContext,
-        final ResponseSender responseSender) {
+    private MetadataRunnable(UserSession session, DrillbitContext dContext,
+        ResponseSender responseSender) {
       this.session = Preconditions.checkNotNull(session);
       this.dContext = Preconditions.checkNotNull(dContext);
       this.responseSender = Preconditions.checkNotNull(responseSender);
@@ -168,8 +168,8 @@ public class MetadataProvider {
 
     private final GetCatalogsReq req;
 
-    public CatalogsProvider(final UserSession session, final DrillbitContext dContext,
-        final GetCatalogsReq req, final ResponseSender responseSender) {
+    public CatalogsProvider(UserSession session, DrillbitContext dContext,
+        GetCatalogsReq req, ResponseSender responseSender) {
       super(session, dContext, responseSender);
       this.req = Preconditions.checkNotNull(req);
     }
@@ -221,28 +221,28 @@ public class MetadataProvider {
 
     private final GetSchemasReq req;
 
-    private SchemasProvider(final UserSession session, final DrillbitContext dContext,
-        final GetSchemasReq req, final ResponseSender responseSender) {
+    private SchemasProvider(UserSession session, DrillbitContext dContext,
+        GetSchemasReq req, ResponseSender responseSender) {
       super(session, dContext, responseSender);
       this.req = Preconditions.checkNotNull(req);
     }
 
     @Override
-    protected Response runInternal(final UserSession session, final SchemaTreeProvider schemaProvider) {
+    protected Response runInternal(UserSession session, SchemaTreeProvider schemaProvider) {
       final GetSchemasResp.Builder respBuilder = GetSchemasResp.newBuilder();
 
-      final InfoSchemaFilter filter = createInfoSchemaFilter(
+      InfoSchemaFilter filter = createInfoSchemaFilter(
           req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null,
           req.hasSchemaNameFilter() ? req.getSchemaNameFilter() : null,
           null, null, null);
 
       try {
-        final PojoRecordReader<Schema> records =
+        PojoRecordReader<Schema> records =
             getPojoRecordReader(SCHEMATA, filter, getConfig(), schemaProvider, session);
 
         List<SchemaMetadata> metadata = new ArrayList<>();
-        for(Schema s : records) {
-          final SchemaMetadata.Builder schemaBuilder = SchemaMetadata.newBuilder();
+        for (Schema s : records) {
+          SchemaMetadata.Builder schemaBuilder = SchemaMetadata.newBuilder();
           schemaBuilder.setCatalogName(s.CATALOG_NAME);
           schemaBuilder.setSchemaName(s.SCHEMA_NAME);
           schemaBuilder.setOwner(s.SCHEMA_OWNER);

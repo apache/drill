@@ -18,8 +18,6 @@
 package org.apache.drill.exec.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.drill.common.expression.PathSegment;
@@ -88,12 +86,8 @@ public class Utilities {
    * @return True if the list of {@link org.apache.drill.common.expression.SchemaPath}s has star column.
    */
   public static boolean isStarQuery(Collection<SchemaPath> projected) {
-    return Iterables.tryFind(Preconditions.checkNotNull(projected, COL_NULL_ERROR), new Predicate<SchemaPath>() {
-      @Override
-      public boolean apply(SchemaPath path) {
-        return Preconditions.checkNotNull(path).equals(SchemaPath.STAR_COLUMN);
-      }
-    }).isPresent();
+    return Preconditions.checkNotNull(projected, COL_NULL_ERROR).stream()
+        .anyMatch(path -> Preconditions.checkNotNull(path).equals(SchemaPath.STAR_COLUMN));
   }
 
   /**

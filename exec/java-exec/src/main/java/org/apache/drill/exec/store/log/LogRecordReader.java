@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.log;
 
-import com.google.common.base.Charsets;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -48,6 +47,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -530,7 +530,7 @@ public class LogRecordReader extends AbstractRecordReader {
           .addContext("User name", userName)
           .build(logger);
     }
-    reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
+    reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
   }
 
   private void projectAll() {

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -31,10 +30,7 @@ public class PartitionStatImpl implements HashJoinMemoryCalculator.PartitionStat
   private boolean spilled;
   private long numRecords;
   private long partitionSize;
-  private LinkedList<HashJoinMemoryCalculator.BatchStat> batchStats = Lists.newLinkedList();
-
-  public PartitionStatImpl() {
-  }
+  private LinkedList<HashJoinMemoryCalculator.BatchStat> batchStats = new LinkedList<>();
 
   public void add(HashJoinMemoryCalculator.BatchStat batchStat) {
     Preconditions.checkState(!spilled);
@@ -52,28 +48,23 @@ public class PartitionStatImpl implements HashJoinMemoryCalculator.PartitionStat
     batchStats.clear();
   }
 
-  public List<HashJoinMemoryCalculator.BatchStat> getInMemoryBatches()
-  {
+  public List<HashJoinMemoryCalculator.BatchStat> getInMemoryBatches() {
     return Collections.unmodifiableList(batchStats);
   }
 
-  public int getNumInMemoryBatches()
-  {
+  public int getNumInMemoryBatches() {
     return batchStats.size();
   }
 
-  public boolean isSpilled()
-  {
+  public boolean isSpilled() {
     return spilled;
   }
 
-  public long getNumInMemoryRecords()
-  {
+  public long getNumInMemoryRecords() {
     return numRecords;
   }
 
-  public long getInMemorySize()
-  {
+  public long getInMemorySize() {
     return partitionSize;
   }
 }

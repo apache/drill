@@ -42,9 +42,6 @@ import org.apache.drill.exec.vector.IntVector;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
@@ -55,28 +52,28 @@ public class TestSimpleSort extends ExecTest {
 
   @Test
   public void sortOneKeyAscending() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/sort/one_key_sort.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/sort/one_key_sort.json"));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int previousInt = Integer.MIN_VALUE;
     int recordCount = 0;
     int batchCount = 0;
 
-    while(exec.next()) {
+    while (exec.next()) {
       batchCount++;
-      final IntVector c1 = exec.getValueVectorById(new SchemaPath("blue", ExpressionPosition.UNKNOWN), IntVector.class);
-      final IntVector c2 = exec.getValueVectorById(new SchemaPath("green", ExpressionPosition.UNKNOWN), IntVector.class);
+      IntVector c1 = exec.getValueVectorById(new SchemaPath("blue", ExpressionPosition.UNKNOWN), IntVector.class);
+      IntVector c2 = exec.getValueVectorById(new SchemaPath("green", ExpressionPosition.UNKNOWN), IntVector.class);
 
-      final IntVector.Accessor a1 = c1.getAccessor();
-      final IntVector.Accessor a2 = c2.getAccessor();
+      IntVector.Accessor a1 = c1.getAccessor();
+      IntVector.Accessor a2 = c2.getAccessor();
 
-      for(int i =0; i < c1.getAccessor().getValueCount(); i++) {
+      for (int i = 0; i < c1.getAccessor().getValueCount(); i++) {
         recordCount++;
         assertTrue(previousInt <= a1.get(i));
         previousInt = a1.get(i);
@@ -84,7 +81,7 @@ public class TestSimpleSort extends ExecTest {
       }
     }
 
-    if(context.getExecutorState().getFailureCause() != null) {
+    if (context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
     assertTrue(!context.getExecutorState().isFailed());
@@ -92,14 +89,14 @@ public class TestSimpleSort extends ExecTest {
 
   @Test
   public void sortTwoKeysOneAscendingOneDescending() throws Throwable {
-    final DrillbitContext bitContext = mockDrillbitContext();
-    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+    DrillbitContext bitContext = mockDrillbitContext();
+    UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/sort/two_key_sort.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    PhysicalPlan plan = reader.readPhysicalPlan(DrillFileUtils.getResourceAsString("/sort/two_key_sort.json"));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int previousInt = Integer.MIN_VALUE;
     long previousLong = Long.MAX_VALUE;
@@ -107,19 +104,19 @@ public class TestSimpleSort extends ExecTest {
     int recordCount = 0;
     int batchCount = 0;
 
-    while(exec.next()) {
+    while (exec.next()) {
       batchCount++;
-      final IntVector c1 = exec.getValueVectorById(new SchemaPath("blue", ExpressionPosition.UNKNOWN), IntVector.class);
-      final BigIntVector c2 = exec.getValueVectorById(new SchemaPath("alt", ExpressionPosition.UNKNOWN), BigIntVector.class);
+      IntVector c1 = exec.getValueVectorById(new SchemaPath("blue", ExpressionPosition.UNKNOWN), IntVector.class);
+      BigIntVector c2 = exec.getValueVectorById(new SchemaPath("alt", ExpressionPosition.UNKNOWN), BigIntVector.class);
 
-      final IntVector.Accessor a1 = c1.getAccessor();
-      final BigIntVector.Accessor a2 = c2.getAccessor();
+      IntVector.Accessor a1 = c1.getAccessor();
+      BigIntVector.Accessor a2 = c2.getAccessor();
 
-      for(int i =0; i < c1.getAccessor().getValueCount(); i++) {
+      for (int i = 0; i < c1.getAccessor().getValueCount(); i++) {
         recordCount++;
         assertTrue(previousInt <= a1.get(i));
 
-        if(previousInt != a1.get(i)) {
+        if (previousInt != a1.get(i)) {
           previousLong = Long.MAX_VALUE;
           previousInt = a1.get(i);
         }
@@ -128,7 +125,7 @@ public class TestSimpleSort extends ExecTest {
       }
     }
 
-    if(context.getExecutorState().getFailureCause() != null) {
+    if (context.getExecutorState().getFailureCause() != null) {
       throw context.getExecutorState().getFailureCause();
     }
     assertTrue(!context.getExecutorState().isFailed());

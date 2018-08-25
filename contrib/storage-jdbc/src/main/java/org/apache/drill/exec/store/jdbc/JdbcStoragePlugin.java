@@ -22,13 +22,14 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.sql.DataSource;
 
-import com.google.common.base.Predicates;
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
@@ -62,10 +63,7 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.jdbc.DrillJdbcRuleBase.DrillJdbcFilterRule;
 import org.apache.drill.exec.store.jdbc.DrillJdbcRuleBase.DrillJdbcProjectRule;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 
 public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcStoragePlugin.class);
@@ -157,10 +155,10 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   /**
-   * Returns whether a condition is supported by {@link JdbcJoin}.
+   * Returns whether a condition is supported by {@link JdbcRules.JdbcJoin}.
    *
    * <p>Corresponds to the capabilities of
-   * {@link SqlImplementor#convertConditionToSqlNode}.
+   * {@link org.apache.calcite.rel.rel2sql.SqlImplementor#convertConditionToSqlNode}.
    *
    * @param node Condition
    * @return Whether condition is supported
@@ -202,7 +200,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private static class JdbcPrule extends ConverterRule {
 
     private JdbcPrule() {
-      super(JdbcDrel.class, Predicates.<RelNode>alwaysTrue(), DrillRel.DRILL_LOGICAL,
+      super(JdbcDrel.class, input -> true, DrillRel.DRILL_LOGICAL,
           Prel.DRILL_PHYSICAL, DrillRelFactories.LOGICAL_BUILDER, "JDBC_PREL_Converter");
     }
 
@@ -220,7 +218,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private class JdbcDrelConverterRule extends ConverterRule {
 
     public JdbcDrelConverterRule(DrillJdbcConvention in) {
-      super(RelNode.class, Predicates.<RelNode>alwaysTrue(), in, DrillRel.DRILL_LOGICAL,
+      super(RelNode.class, input -> true, in, DrillRel.DRILL_LOGICAL,
           DrillRelFactories.LOGICAL_BUILDER, "JDBC_DREL_Converter" + in.getName());
     }
 
@@ -234,7 +232,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
   private class CapitalizingJdbcSchema extends AbstractSchema {
 
-    final Map<String, CapitalizingJdbcSchema> schemaMap = Maps.newHashMap();
+    final Map<String, CapitalizingJdbcSchema> schemaMap = new HashMap<>();
     private final JdbcSchema inner;
 
     public CapitalizingJdbcSchema(List<String> parentSchemaPath, String name, DataSource dataSource,
@@ -282,7 +280,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     }
 
     public String toString() {
-      return Joiner.on(".").join(getSchemaPath());
+      return String.join(".", getSchemaPath());
     }
 
     @Override
@@ -299,11 +297,11 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
   private class JdbcCatalogSchema extends AbstractSchema {
 
-    private final Map<String, CapitalizingJdbcSchema> schemaMap = Maps.newHashMap();
+    private final Map<String, CapitalizingJdbcSchema> schemaMap = new HashMap<>();
     private final CapitalizingJdbcSchema defaultSchema;
 
     public JdbcCatalogSchema(String name) {
-      super(ImmutableList.<String> of(), name);
+      super(Collections.emptyList(), name);
 
       try (Connection con = source.getConnection();
            ResultSet set = con.getMetaData().getCatalogs()) {
@@ -325,7 +323,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
         if (!schemasAdded) {
           // there were no schemas, just create a default one (the jdbc system doesn't support catalogs/schemas).
-          schemaMap.put("default", new CapitalizingJdbcSchema(ImmutableList.<String> of(), name, source, dialect,
+          schemaMap.put("default", new CapitalizingJdbcSchema(Collections.emptyList(), name, source, dialect,
               convention, null, null));
         }
       } else {

@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.dfs.easy;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -33,7 +34,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
 
 @JsonTypeName("fs-sub-scan")
 public class EasySubScan extends AbstractSubScan{
@@ -47,11 +47,11 @@ public class EasySubScan extends AbstractSubScan{
   @JsonCreator
   public EasySubScan(
       @JsonProperty("userName") String userName,
-      @JsonProperty("files") List<FileWorkImpl> files, //
-      @JsonProperty("storage") StoragePluginConfig storageConfig, //
-      @JsonProperty("format") FormatPluginConfig formatConfig, //
-      @JacksonInject StoragePluginRegistry engineRegistry, //
-      @JsonProperty("columns") List<SchemaPath> columns, //
+      @JsonProperty("files") List<FileWorkImpl> files,
+      @JsonProperty("storage") StoragePluginConfig storageConfig,
+      @JsonProperty("format") FormatPluginConfig formatConfig,
+      @JacksonInject StoragePluginRegistry engineRegistry,
+      @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
     super(userName);

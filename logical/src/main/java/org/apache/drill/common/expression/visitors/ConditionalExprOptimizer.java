@@ -17,7 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -31,8 +31,6 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 
-import com.google.common.collect.Lists;
-
 public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpression, Void, RuntimeException> {
 
   public static ConditionalExprOptimizer INSTANCE = new ConditionalExprOptimizer();
@@ -40,11 +38,9 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
   @Override
   public LogicalExpression visitBooleanOperator(BooleanOperator op, Void value) throws RuntimeException {
 
-    List<LogicalExpression> newArgs = Lists.newArrayList();
+    List<LogicalExpression> newArgs = new ArrayList<>(op.args);
 
-    newArgs.addAll(op.args);
-
-    Collections.sort(newArgs, costComparator);
+    newArgs.sort(costComparator);
 
     return new BooleanOperator(op.getName(), newArgs, op.getPosition());
   }
@@ -52,7 +48,7 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
 
   @Override
   public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression holder, Void value) throws RuntimeException {
-    List<LogicalExpression> args = Lists.newArrayList();
+    List<LogicalExpression> args = new ArrayList<>();
     for (int i = 0; i < holder.args.size(); ++i) {
       LogicalExpression newExpr = holder.args.get(i).accept(this, value);
       assert newExpr != null;

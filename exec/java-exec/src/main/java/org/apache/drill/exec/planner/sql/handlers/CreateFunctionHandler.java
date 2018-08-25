@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -44,6 +43,7 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -179,7 +179,7 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
           jarManager.copyToRegistryArea();
           copyJars = false;
         }
-        List<Jar> jars = Lists.newArrayList(remoteJars);
+        List<Jar> jars = new ArrayList<>(remoteJars);
         jars.add(Jar.newBuilder().setName(jarManager.getBinaryName()).addAllFunctionSignature(functions).build());
         Registry updatedRegistry = Registry.newBuilder().addAllJar(jars).build();
         try {

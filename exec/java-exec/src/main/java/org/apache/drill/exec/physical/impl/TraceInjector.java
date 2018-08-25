@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -25,9 +26,6 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Trace;
-
-import com.google.common.collect.Lists;
-
 
 public class TraceInjector extends AbstractPhysicalVisitor<PhysicalOperator, FragmentContext, ExecutionSetupException> {
 
@@ -55,7 +53,7 @@ public class TraceInjector extends AbstractPhysicalVisitor<PhysicalOperator, Fra
     @Override
     public PhysicalOperator visitOp(PhysicalOperator op, FragmentContext context) throws ExecutionSetupException{
 
-        List<PhysicalOperator> newChildren = Lists.newArrayList();
+        List<PhysicalOperator> newChildren = new ArrayList<>();
         List<PhysicalOperator> list = null;
         PhysicalOperator newOp = op;
 
@@ -65,7 +63,7 @@ public class TraceInjector extends AbstractPhysicalVisitor<PhysicalOperator, Fra
             newChildren.add(child.accept(this, context));
         }
 
-        list = Lists.newArrayList();
+        list = new ArrayList<>();
 
         /* For every child operator create a trace operator as its parent */
         for (int i = 0; i < newChildren.size(); i++)

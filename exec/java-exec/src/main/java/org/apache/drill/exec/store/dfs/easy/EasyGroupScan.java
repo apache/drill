@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -51,7 +52,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 
 @JsonTypeName("fs-scan")
 public class EasyGroupScan extends AbstractFileGroupScan {
@@ -200,7 +200,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   }
 
   private void createMappings(List<EndpointAffinity> affinities) {
-    List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    List<DrillbitEndpoint> endpoints = new ArrayList<>();
     for (EndpointAffinity e : affinities) {
       endpoints.add(e.getEndpoint());
     }
@@ -227,7 +227,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   }
 
   private List<FileWorkImpl> convert(List<CompleteFileWork> list) {
-    List<FileWorkImpl> newList = Lists.newArrayList();
+    List<FileWorkImpl> newList = new ArrayList<>();
     for (CompleteFileWork f : list) {
       newList.add(f.getAsFileWork());
     }

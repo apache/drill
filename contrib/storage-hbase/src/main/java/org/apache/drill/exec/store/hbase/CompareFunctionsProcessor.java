@@ -22,6 +22,7 @@ import io.netty.buffer.Unpooled;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,7 +49,6 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.PrefixFilter;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -510,7 +510,7 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
   @Override
   public Boolean visitSchemaPath(SchemaPath path, LogicalExpression valueArg) throws RuntimeException {
     if (valueArg instanceof QuotedString) {
-      this.value = ((QuotedString) valueArg).value.getBytes(Charsets.UTF_8);
+      this.value = ((QuotedString) valueArg).value.getBytes(StandardCharsets.UTF_8);
       this.path = path;
       return true;
     }

@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -39,8 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 public class KafkaRecordReader extends AbstractRecordReader {
   private static final Logger logger = LoggerFactory.getLogger(KafkaRecordReader.class);
@@ -76,11 +76,9 @@ public class KafkaRecordReader extends AbstractRecordReader {
 
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> projectedColumns) {
-    Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    Set<SchemaPath> transformed = new LinkedHashSet<>();
     if (!isStarQuery()) {
-      for (SchemaPath column : projectedColumns) {
-        transformed.add(column);
-      }
+      transformed.addAll(projectedColumns);
     } else {
       transformed.add(SchemaPath.STAR_COLUMN);
     }
@@ -91,7 +89,7 @@ public class KafkaRecordReader extends AbstractRecordReader {
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     this.writer = new VectorContainerWriter(output, unionEnabled);
     messageReader = MessageReaderFactory.getMessageReader(kafkaMsgReader);
-    messageReader.init(context.getManagedBuffer(), Lists.newArrayList(getColumns()), this.writer,
+    messageReader.init(context.getManagedBuffer(), new ArrayList<>(getColumns()), this.writer,
         this.enableAllTextMode, this.readNumbersAsDouble);
     msgItr = new MessageIterator(messageReader.getConsumer(plugin), subScanSpec, kafkaPollTimeOut);
   }

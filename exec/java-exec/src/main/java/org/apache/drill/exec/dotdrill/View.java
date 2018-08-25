@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.dotdrill;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.calcite.avatica.util.TimeUnit;
@@ -39,7 +41,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 @JsonTypeName("view")
 public class View {
@@ -213,12 +214,12 @@ public class View {
   public View(String name, String sql, RelDataType rowType, List<String> workspaceSchemaPath) {
     this.name = name;
     this.sql = sql;
-    fields = Lists.newArrayList();
+    fields = new ArrayList<>();
     for (RelDataTypeField f : rowType.getFieldList()) {
       fields.add(new FieldType(f.getName(), f.getType()));
     }
     this.workspaceSchemaPath =
-        workspaceSchemaPath == null ? ImmutableList.<String>of() : ImmutableList.copyOf(workspaceSchemaPath);
+        workspaceSchemaPath == null ? Collections.emptyList() : ImmutableList.copyOf(workspaceSchemaPath);
   }
 
   @JsonCreator
@@ -230,7 +231,7 @@ public class View {
     this.sql = sql;
     this.fields = fields;
     this.workspaceSchemaPath =
-        workspaceSchemaPath == null ? ImmutableList.<String>of() : ImmutableList.copyOf(workspaceSchemaPath);
+        workspaceSchemaPath == null ? Collections.emptyList() : ImmutableList.copyOf(workspaceSchemaPath);
   }
 
   public RelDataType getRowType(RelDataTypeFactory factory) {
@@ -240,8 +241,8 @@ public class View {
       return new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory);
     }
 
-    List<RelDataType> types = Lists.newArrayList();
-    List<String> names = Lists.newArrayList();
+    List<RelDataType> types = new ArrayList<>();
+    List<String> names = new ArrayList<>();
 
     for (FieldType field : fields) {
       names.add(field.getName());

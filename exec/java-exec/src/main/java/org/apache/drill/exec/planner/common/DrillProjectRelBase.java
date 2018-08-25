@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -53,8 +54,6 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
 
-import com.google.common.collect.Lists;
-
 /**
  *
  * Base class for logical and physical Project implemented in Drill
@@ -90,7 +89,7 @@ public abstract class DrillProjectRelBase extends Project implements DrillRelNod
   }
 
   protected List<NamedExpression> getProjectExpressions(DrillParseContext context) {
-    List<NamedExpression> expressions = Lists.newArrayList();
+    List<NamedExpression> expressions = new ArrayList<>();
 
     HashMap<String, String> starColPrefixes = new HashMap<>();
 

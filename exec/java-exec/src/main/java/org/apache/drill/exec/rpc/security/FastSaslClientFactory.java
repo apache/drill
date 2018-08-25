@@ -19,7 +19,6 @@ package org.apache.drill.exec.rpc.security;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.sasl.Sasl;
@@ -28,6 +27,7 @@ import javax.security.sasl.SaslClientFactory;
 import javax.security.sasl.SaslException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,16 +67,16 @@ public class FastSaslClientFactory implements SaslClientFactory {
 
   // used in initialization, and for testing
   private void refresh() {
-    final Enumeration<SaslClientFactory> factories = Sasl.getSaslClientFactories();
-    final Map<String, List<SaslClientFactory>> map = Maps.newHashMap();
+    Enumeration<SaslClientFactory> factories = Sasl.getSaslClientFactories();
+    Map<String, List<SaslClientFactory>> map = new HashMap<>();
 
     while (factories.hasMoreElements()) {
-      final SaslClientFactory factory = factories.nextElement();
+      SaslClientFactory factory = factories.nextElement();
       // Passing null so factory is populated with all possibilities.  Properties passed when
       // instantiating a client are what really matter. See createSaslClient.
-      for (final String mechanismName : factory.getMechanismNames(null)) {
+      for (String mechanismName : factory.getMechanismNames(null)) {
         if (!map.containsKey(mechanismName)) {
-          map.put(mechanismName, new ArrayList<SaslClientFactory>());
+          map.put(mechanismName, new ArrayList<>());
         }
         map.get(mechanismName).add(factory);
       }

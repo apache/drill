@@ -18,12 +18,12 @@
 package org.apache.drill.exec.physical.impl.common;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import javax.inject.Named;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -429,7 +429,7 @@ public abstract class HashTableTemplate implements HashTable {
     }
 
     public long getActualSize() {
-      Set<AllocationManager.BufferLedger> ledgers = Sets.newHashSet();
+      Set<AllocationManager.BufferLedger> ledgers = new HashSet<>();
       links.collectLedgers(ledgers);
       hashValues.collectLedgers(ledgers);
 
@@ -888,7 +888,7 @@ public abstract class HashTableTemplate implements HashTable {
 
   @Override
   public long getActualSize() {
-    Set<AllocationManager.BufferLedger> ledgers = Sets.newHashSet();
+    Set<AllocationManager.BufferLedger> ledgers = new HashSet<>();
     startIndices.collectLedgers(ledgers);
 
     long size = 0L;

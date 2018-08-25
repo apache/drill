@@ -28,7 +28,7 @@ public class InjectionSite {
   private final Class<?> clazz;
   private final String desc;
 
-  public InjectionSite(final Class<?> clazz, final String desc) {
+  public InjectionSite(Class<?> clazz, String desc) {
     Preconditions.checkNotNull(clazz);
     Preconditions.checkNotNull(desc);
 

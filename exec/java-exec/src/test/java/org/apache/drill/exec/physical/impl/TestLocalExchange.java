@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.PlanTestBase;
@@ -52,6 +51,8 @@ import org.junit.Test;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import static org.apache.drill.exec.planner.physical.HashPrelUtil.HASH_EXPR_NAME;
@@ -153,7 +154,7 @@ public class TestLocalExchange extends PlanTestBase {
 
     groupByQueryBaselineColumns = new String[] { "dept_id", "numEmployees" };
 
-    groupByQueryBaselineValues = Lists.newArrayList();
+    groupByQueryBaselineValues = new ArrayList<>();
     // group Id is generated based on expression 'recordIndex % NUM_DEPTS' above. 'recordIndex' runs from 0 to
     // NUM_EMPLOYEES, so we expect each number of occurrance of each dept_id to be NUM_EMPLOYEES/NUM_DEPTS (1000/40 =
     // 25)
@@ -164,7 +165,7 @@ public class TestLocalExchange extends PlanTestBase {
 
     joinQueryBaselineColumns = new String[] { "emp_name", "dept_name" };
 
-    joinQueryBaselineValues = Lists.newArrayList();
+    joinQueryBaselineValues = new ArrayList<>();
     for(int i = 0; i < NUM_EMPLOYEES; i++) {
       final String employee = String.format("Employee %d", i);
       final String dept = String.format("Department %d", i % NUM_DEPTS);
@@ -385,8 +386,8 @@ public class TestLocalExchange extends PlanTestBase {
     final PhysicalPlanReader planReader = drillbitContext.getPlanReader();
     final Fragment rootFragment = PopUnitTestBase.getRootFragmentFromPlanString(planReader, plan);
 
-    final List<Integer> deMuxFragments = Lists.newLinkedList();
-    final List<Integer> htrFragments = Lists.newLinkedList();
+    final List<Integer> deMuxFragments = new LinkedList<>();
+    final List<Integer> htrFragments = new LinkedList<>();
     final PlanningSet planningSet = new PlanningSet();
 
     // Create a planningSet to get the assignment of major fragment ids to fragments.

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.pcap;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -35,13 +34,13 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatSelection;
-import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -55,7 +54,7 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
   }
 
   public PcapFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, PcapFormatConfig formatPluginConfig) {
-    super(name, context, fsConf, config, formatPluginConfig, true, false, true, false, Lists.newArrayList("pcap"), "pcap");
+    super(name, context, fsConf, config, formatPluginConfig, true, false, true, false, Collections.singletonList("pcap"), "pcap");
     this.matcher = new PcapFormatMatcher(this);
   }
 
@@ -92,7 +91,7 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
   private static class PcapFormatMatcher extends BasicFormatMatcher {
 
     public PcapFormatMatcher(PcapFormatPlugin plugin) {
-      super(plugin, ImmutableList.of(Pattern.compile(".*\\.pcap$")), ImmutableList.<MagicString>of());
+      super(plugin, ImmutableList.of(Pattern.compile(".*\\.pcap$")), Collections.emptyList());
     }
 
     @Override

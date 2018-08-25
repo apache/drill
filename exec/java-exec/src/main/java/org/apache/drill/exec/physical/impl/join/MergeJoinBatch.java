@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
@@ -64,6 +63,7 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 
@@ -145,10 +145,9 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     this.status = new JoinStatus(leftIterator, rightIterator, this);
     this.conditions = popConfig.getConditions();
 
-    this.comparators = Lists.newArrayListWithExpectedSize(conditions.size());
-    for (JoinCondition condition : conditions) {
-      this.comparators.add(JoinUtils.checkAndReturnSupportedJoinComparator(condition));
-    }
+    this.comparators = conditions.stream()
+        .map(JoinUtils::checkAndReturnSupportedJoinComparator)
+        .collect(Collectors.toList());
   }
 
   public JoinRelType getJoinType() {

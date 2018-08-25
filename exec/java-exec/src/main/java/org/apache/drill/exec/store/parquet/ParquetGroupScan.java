@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -56,7 +57,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 
 @JsonTypeName("parquet-scan")
 public class ParquetGroupScan extends AbstractParquetGroupScan {
@@ -382,7 +382,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     List<FileStatus> fileStatuses = selection.getStatuses(fs);
 
     if (fileSet == null) {
-      fileSet = Sets.newHashSet();
+      fileSet = new HashSet<>();
     }
 
     final Path first = fileStatuses.get(0).getPath();

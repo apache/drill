@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.kafka;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,8 +35,6 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 
-import com.google.common.collect.Maps;
-
 public class KafkaTestBase extends PlanTestBase {
   protected static KafkaStoragePluginConfig storagePluginConfig;
 
@@ -49,7 +48,7 @@ public class KafkaTestBase extends PlanTestBase {
 
   public static void initKafkaStoragePlugin(EmbeddedKafkaCluster embeddedKafkaCluster) throws Exception {
     final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    Map<String, String> kafkaConsumerProps = Maps.newHashMap();
+    Map<String, String> kafkaConsumerProps = new HashMap<>();
     kafkaConsumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, embeddedKafkaCluster.getKafkaBrokerList());
     kafkaConsumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "drill-test-consumer");
     storagePluginConfig = new KafkaStoragePluginConfig(kafkaConsumerProps);

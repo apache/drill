@@ -27,14 +27,12 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 
-import com.google.common.collect.ImmutableList;
-
 public class SubSchemaWrapper extends AbstractSchema {
 
   private final AbstractSchema innerSchema;
 
   public SubSchemaWrapper(AbstractSchema innerSchema) {
-    super(ImmutableList.<String>of(), innerSchema.getFullSchemaName());
+    super(Collections.emptyList(), innerSchema.getFullSchemaName());
     this.innerSchema = innerSchema;
   }
 
@@ -52,7 +50,7 @@ public class SubSchemaWrapper extends AbstractSchema {
     if (defaultSchema instanceof AbstractSchema) {
       return ((AbstractSchema) defaultSchema).getSubPartitions(table, partitionColumns, partitionValues);
     } else {
-      return Collections.EMPTY_LIST;
+      return Collections.emptyList();
     }
 
   }

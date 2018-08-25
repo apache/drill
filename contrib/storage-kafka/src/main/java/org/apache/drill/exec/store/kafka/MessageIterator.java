@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 
 import kafka.common.KafkaException;
 
@@ -50,7 +50,7 @@ public class MessageIterator implements Iterator<ConsumerRecord<byte[], byte[]>>
     this.kafkaConsumer = kafkaConsumer;
     this.kafkaPollTimeOut = kafkaPollTimeOut;
 
-    List<TopicPartition> partitions = Lists.newArrayListWithCapacity(1);
+    List<TopicPartition> partitions = new ArrayList<>(1);
     topicPartition = new TopicPartition(subScanSpec.getTopicName(), subScanSpec.getPartitionId());
     partitions.add(topicPartition);
     this.kafkaConsumer.assign(partitions);

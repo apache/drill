@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 
 /**
  * Describes an operator that expects a single child operator as its input.
@@ -33,13 +33,12 @@ public abstract class AbstractSingle extends AbstractBase {
   protected final PhysicalOperator child;
 
   public AbstractSingle(PhysicalOperator child) {
-    super();
     this.child = child;
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.singletonIterator(child);
+    return Collections.singleton(child).iterator();
   }
 
   public PhysicalOperator getChild(){

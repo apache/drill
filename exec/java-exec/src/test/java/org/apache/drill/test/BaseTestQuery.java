@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,7 +66,6 @@ import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 
@@ -443,7 +443,7 @@ public class BaseTestQuery extends ExecTest {
     if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
-    return Resources.toString(url, Charsets.UTF_8);
+    return Resources.toString(url, StandardCharsets.UTF_8);
   }
 
   /**

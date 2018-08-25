@@ -20,9 +20,7 @@
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.ObjectArrays;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ObjectArrays;
 
 import com.google.common.base.Preconditions;
@@ -55,6 +53,7 @@ import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.List;
@@ -64,6 +63,7 @@ import java.io.Closeable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

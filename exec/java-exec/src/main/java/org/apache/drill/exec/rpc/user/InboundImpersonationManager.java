@@ -35,6 +35,7 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -72,8 +73,8 @@ public class InboundImpersonationManager {
   }
 
   private static class UserGroupDefinition {
-    public Set<String> users = Sets.newHashSet();
-    public Set<String> groups = Sets.newHashSet();
+    public Set<String> users = new HashSet<>();
+    public Set<String> groups = new HashSet<>();
   }
 
   private static List<ImpersonationPolicy> deserializeImpersonationPolicies(final String impersonationPolicies)

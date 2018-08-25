@@ -72,7 +72,7 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
 
   public BaseJsonProcessor(DrillBuf workBuf, boolean enableNanInf) {
     this.enableNanInf = enableNanInf;
-    workBuf = Preconditions.checkNotNull(workBuf);
+    this.workBuf = Preconditions.checkNotNull(workBuf);
   }
 
   @Override

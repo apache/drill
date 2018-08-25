@@ -18,11 +18,11 @@
 package org.apache.drill.exec.store.hive;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,8 +46,8 @@ public class ColumnListsCache {
   }
 
   public ColumnListsCache() {
-    this.fields = Lists.newArrayList();
-    this.keys = Maps.newHashMap();
+    this.fields = new ArrayList<>();
+    this.keys = new HashMap<>();
   }
 
   /**
@@ -91,6 +91,6 @@ public class ColumnListsCache {
   }
 
   public List<List<FieldSchema>> getFields() {
-    return Lists.newArrayList(fields);
+    return new ArrayList<>(fields);
   }
 }

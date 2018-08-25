@@ -23,7 +23,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 
 /**
  * Base strategy for reading a batch of Parquet records.
@@ -65,7 +64,7 @@ public abstract class BatchReader {
   }
 
   protected void readAllFixedFieldsParallel(long recordsToRead) throws Exception {
-    ArrayList<Future<Long>> futures = Lists.newArrayList();
+    ArrayList<Future<Long>> futures = new ArrayList<>();
     for (ColumnReader<?> crs : readState.getFixedLenColumnReaders()) {
       Future<Long> f = crs.processPagesAsync(recordsToRead);
       if (f != null) {
@@ -127,7 +126,7 @@ public abstract class BatchReader {
     protected int readRecords(ColumnReader<?> firstColumnStatus, long recordsToRead) throws Exception {
       readAllFixedFields(recordsToRead);
 
-      Preconditions.checkNotNull(firstColumnStatus != null);
+      Preconditions.checkNotNull(firstColumnStatus);
       readState.setValuesReadInCurrentPass(firstColumnStatus.getRecordsReadInCurrentPass()); // get the number of rows read
 
       readState.updateCounts((int) recordsToRead); // update the shared Reader State

@@ -18,11 +18,11 @@
 package org.apache.drill.exec.physical.rowSet.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
-
-import com.google.common.collect.Lists;
 
 public class RowSetTestUtils {
 
@@ -44,16 +44,12 @@ public class RowSetTestUtils {
   }
 
   public static List<SchemaPath> projectCols(SchemaPath... cols) {
-    List<SchemaPath> selected = new ArrayList<>();
-    for (SchemaPath col: cols) {
-      selected.add(col);
-    }
-    return selected;
+    return Arrays.asList(cols);
   }
 
   public static List<SchemaPath> projectAll() {
-    return Lists.newArrayList(
-        new SchemaPath[] {SchemaPath.getSimplePath(SchemaPath.DYNAMIC_STAR)});
+    return Collections.singletonList(
+        SchemaPath.getSimplePath(SchemaPath.DYNAMIC_STAR));
   }
 
 }

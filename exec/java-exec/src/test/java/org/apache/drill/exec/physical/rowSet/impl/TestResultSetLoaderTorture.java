@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.rowSet.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -40,8 +41,6 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
-
-import com.google.common.base.Charsets;
 
 /**
  * Runs a worst-case scenario test that combines aspects of all
@@ -84,7 +83,7 @@ public class TestResultSetLoaderTorture extends SubOperatorTest {
     public TestSetup() {
       byte s3Bytes[] = new byte[512];
       Arrays.fill(s3Bytes, (byte) 'X');
-      s3Value = new String(s3Bytes, Charsets.UTF_8);
+      s3Value = new String(s3Bytes, StandardCharsets.UTF_8);
     }
   }
 

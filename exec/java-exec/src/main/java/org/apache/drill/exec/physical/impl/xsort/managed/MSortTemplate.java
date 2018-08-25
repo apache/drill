@@ -18,9 +18,11 @@
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
 import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Named;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -29,9 +31,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.hadoop.util.IndexedSortable;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Queues;
 
 import io.netty.buffer.DrillBuf;
 
@@ -48,7 +47,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
    * (sorted run.)
    */
 
-  private Queue<Integer> runStarts = Queues.newLinkedBlockingQueue();
+  private Queue<Integer> runStarts = new LinkedBlockingQueue<>();
   private FragmentContext context;
 
   /**
@@ -166,7 +165,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
         return; }
 
       int outIndex = 0;
-      final Queue<Integer> newRunStarts = Queues.newLinkedBlockingQueue();
+      final Queue<Integer> newRunStarts = new LinkedBlockingQueue<>();
       newRunStarts.add(outIndex);
       final int size = runStarts.size();
       for (int i = 0; i < size / 2; i++) {

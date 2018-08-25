@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.physical.base;
 
-import com.google.common.collect.Iterators;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.JoinCondition;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -54,7 +54,7 @@ public abstract class AbstractJoinPop extends AbstractBase {
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.forArray(left, right);
+    return Arrays.asList(left, right).iterator();
   }
 
   public PhysicalOperator getLeft() {

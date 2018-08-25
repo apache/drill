@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.fragment.contrib;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -45,7 +46,6 @@ import org.apache.drill.exec.work.QueryWorkUnit.MinorFragmentDefn;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 /**
  * SimpleParallelizerMultiPlans class is an extension to SimpleParallelizer
@@ -111,7 +111,7 @@ public class SplittingParallelizer extends SimpleParallelizer {
     // now we generate all the individual plan fragments and associated assignments. Note, we need all endpoints
     // assigned before we can materialize, so we start a new loop here rather than utilizing the previous one.
 
-    List<QueryWorkUnit> workUnits = Lists.newArrayList();
+    List<QueryWorkUnit> workUnits = new ArrayList<>();
     int plansCount = 0;
     DrillbitEndpoint[] endPoints = null;
     long initialAllocation = 0;
@@ -169,7 +169,7 @@ public class SplittingParallelizer extends SimpleParallelizer {
       // Create a minorFragment for each major fragment.
       for (int minorFragmentId = 0; minorFragmentId < plansCount; minorFragmentId++) {
         // those fragments should be empty
-        List<MinorFragmentDefn> fragments = Lists.newArrayList();
+        List<MinorFragmentDefn> fragments = new ArrayList<>();
 
         MinorFragmentDefn rootFragment = null;
         FragmentRoot rootOperator = null;

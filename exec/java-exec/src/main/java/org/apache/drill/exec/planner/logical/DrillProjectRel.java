@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.LogicalOperator;
@@ -34,8 +35,6 @@ import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
-
-import com.google.common.collect.Lists;
 
 /**
  * Project implemented in Drill.
@@ -64,12 +63,13 @@ public class DrillProjectRel extends DrillProjectRelBase implements DrillRel {
     return builder.build();
   }
 
-  public static DrillProjectRel convert(Project project, ConversionContext context) throws InvalidRelException{
+  public static DrillProjectRel convert(Project project, ConversionContext context) throws InvalidRelException {
     RelNode input = context.toRel(project.getInput());
-    List<RelDataTypeField> fields = Lists.newArrayList();
-    List<RexNode> exps = Lists.newArrayList();
-    for(NamedExpression expr : project.getSelections()){
-      fields.add(new RelDataTypeFieldImpl(expr.getRef().getRootSegment().getPath(), fields.size(), context.getTypeFactory().createSqlType(SqlTypeName.ANY) ));
+    List<RelDataTypeField> fields = new ArrayList<>();
+    List<RexNode> exps = new ArrayList<>();
+    for (NamedExpression expr : project.getSelections()) {
+      fields.add(new RelDataTypeFieldImpl(expr.getRef().getRootSegment().getPath(),
+          fields.size(), context.getTypeFactory().createSqlType(SqlTypeName.ANY)));
       exps.add(context.toRex(expr.getExpr()));
     }
     return new DrillProjectRel(context.getCluster(), context.getLogicalTraits(), input, exps, new RelRecordType(fields));

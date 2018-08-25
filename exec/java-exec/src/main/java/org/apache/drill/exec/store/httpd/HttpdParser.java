@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.httpd;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import io.netty.buffer.DrillBuf;
 import nl.basjes.parse.core.Casts;
 import nl.basjes.parse.core.Parser;
@@ -224,26 +223,25 @@ public class HttpdParser {
     }
   }
 
-  private void setupParser(final MapWriter mapWriter, final String logFormat, final Map<String, String> fieldMapping)
+  private void setupParser(MapWriter mapWriter, String logFormat, Map<String, String> fieldMapping)
       throws NoSuchMethodException, MissingDissectorsException, InvalidDissectorException {
 
     /**
      * If the user has selected fields, then we will use them to configure the parser because this would be the most
      * efficient way to parse the log.
      */
-    final Map<String, String> requestedPaths;
-    final List<String> allParserPaths = parser.getPossiblePaths();
+    Map<String, String> requestedPaths;
+    List<String> allParserPaths = parser.getPossiblePaths();
     if (fieldMapping != null && !fieldMapping.isEmpty()) {
       LOG.debug("Using fields defined by user.");
       requestedPaths = fieldMapping;
-    }
-    else {
+    } else {
       /**
        * Use all possible paths that the parser has determined from the specified log format.
        */
       LOG.debug("No fields defined by user, defaulting to all possible fields.");
-      requestedPaths = Maps.newHashMap();
-      for (final String parserPath : allParserPaths) {
+      requestedPaths = new HashMap<>();
+      for (String parserPath : allParserPaths) {
         requestedPaths.put(drillFormattedFieldName(parserPath), parserPath);
       }
     }
@@ -256,8 +254,8 @@ public class HttpdParser {
     Parser<Object> dummy = new HttpdLoglineParser<>(Object.class, logFormat);
     dummy.addParseTarget(String.class.getMethod("indexOf", String.class), allParserPaths);
 
-    for (final Map.Entry<String, String> entry : requestedPaths.entrySet()) {
-      final EnumSet<Casts> casts;
+    for (Map.Entry<String, String> entry : requestedPaths.entrySet()) {
+      EnumSet<Casts> casts;
 
       /**
        * Check the field specified by the user to see if it is supposed to be remapped.
@@ -268,7 +266,7 @@ public class HttpdParser {
          */
         entry.setValue(entry.getValue().substring(REMAPPING_FLAG.length()));
 
-        final String[] pieces = entry.getValue().split(":");
+        String[] pieces = entry.getValue().split(":");
         addTypeRemapping(parser, pieces[1], pieces[0]);
 
         casts = Casts.STRING_ONLY;

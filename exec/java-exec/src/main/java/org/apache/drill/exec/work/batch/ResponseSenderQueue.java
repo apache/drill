@@ -18,16 +18,16 @@
 package org.apache.drill.exec.work.batch;
 
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.drill.exec.rpc.data.AckSender;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Queues;
 
 public class ResponseSenderQueue {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResponseSenderQueue.class);
 
-  private Queue<AckSender> q = Queues.newConcurrentLinkedQueue();
+  private Queue<AckSender> q = new ConcurrentLinkedQueue<>();
 
   public void enqueueResponse(AckSender sender){
     q.add(sender);

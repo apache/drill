@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.rules.ProjectCorrelateTransposeRule;
@@ -28,6 +27,7 @@ import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +57,7 @@ public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, Ru
   }
 
   private List<RelNode> getChildren(Prel prel, Boolean isRightOfLateral) {
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     for(Prel child : prel){
       child = child.accept(this, isRightOfLateral);
       children.add(child);
@@ -67,7 +67,7 @@ public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, Ru
 
   @Override
   public Prel visitLateral(LateralJoinPrel prel, Boolean isRightOfLateral) throws RuntimeException {
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     children.add(((Prel) prel.getInput(0)).accept(this, isRightOfLateral));
     children.add(((Prel) prel.getInput(1)).accept(this, true));
 

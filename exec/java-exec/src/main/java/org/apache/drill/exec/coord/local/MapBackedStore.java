@@ -19,16 +19,16 @@ package org.apache.drill.exec.coord.local;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.exec.coord.store.BaseTransientStore;
 import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.coord.store.TransientStoreEvent;
 import org.apache.drill.exec.coord.store.TransientStoreEventType;
 
 public class MapBackedStore<V> extends BaseTransientStore<V> {
-  private final ConcurrentMap<String, V> delegate = Maps.newConcurrentMap();
+  private final ConcurrentMap<String, V> delegate = new ConcurrentHashMap<>();
 
   public MapBackedStore(final TransientStoreConfig<V> config) {
     super(config);

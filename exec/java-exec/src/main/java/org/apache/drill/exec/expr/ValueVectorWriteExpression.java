@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr;
 
-import com.google.common.collect.Iterators;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
@@ -25,6 +24,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.TypedFieldId;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 public class ValueVectorWriteExpression implements LogicalExpression {
@@ -78,7 +78,7 @@ public class ValueVectorWriteExpression implements LogicalExpression {
 
   @Override
   public Iterator<LogicalExpression> iterator() {
-    return Iterators.singletonIterator(child);
+    return Collections.singleton(child).iterator();
   }
 
   @Override

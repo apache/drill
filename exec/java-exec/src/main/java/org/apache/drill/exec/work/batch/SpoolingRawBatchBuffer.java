@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.work.batch;
 
+import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -43,10 +45,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Queues;
 
 /**
  * This implementation of RawBatchBuffer starts writing incoming batches to disk once the buffer size reaches a threshold.
@@ -92,7 +91,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
 
   private class SpoolingBufferQueue implements BufferQueue<RawFragmentBatchWrapper> {
 
-    private final LinkedBlockingDeque<RawFragmentBatchWrapper> buffer = Queues.newLinkedBlockingDeque();
+    private final LinkedBlockingDeque<RawFragmentBatchWrapper> buffer = new LinkedBlockingDeque<>();
 
     @Override
     public void addOomBatch(RawFragmentBatch batch) {
@@ -281,7 +280,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     public Spooler(String name) {
       setDaemon(true);
       setName(name);
-      spoolingQueue = Queues.newLinkedBlockingDeque();
+      spoolingQueue = new LinkedBlockingDeque<>();
     }
 
     public void run() {
@@ -469,7 +468,9 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     int majorFragmentId = handle.getMajorFragmentId();
     int minorFragmentId = handle.getMinorFragmentId();
 
-    String fileName = Joiner.on(Path.SEPARATOR).join(getDir(), qid, majorFragmentId, minorFragmentId, oppositeId, bufferIndex);
+    String fileName = String.join(Path.SEPARATOR,
+        Arrays.asList(getDir(), qid, String.valueOf(majorFragmentId),
+            String.valueOf(minorFragmentId), String.valueOf(oppositeId), String.valueOf(bufferIndex)));
 
     return new Path(fileName);
   }

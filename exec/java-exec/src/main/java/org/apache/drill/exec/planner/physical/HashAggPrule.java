@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
@@ -34,6 +33,7 @@ import org.apache.calcite.util.trace.CalciteTrace;
 import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class HashAggPrule extends AggPruleBase {
@@ -142,7 +142,7 @@ public class HashAggPrule extends AggPruleBase {
               phase1Agg, ImmutableList.copyOf(getDistributionField(aggregate, true)));
 
       ImmutableBitSet newGroupSet = remapGroupSet(aggregate.getGroupSet());
-      List<ImmutableBitSet> newGroupSets = Lists.newArrayList();
+      List<ImmutableBitSet> newGroupSets = new ArrayList<>();
       for (ImmutableBitSet groupSet : aggregate.getGroupSets()) {
         newGroupSets.add(remapGroupSet(groupSet));
       }

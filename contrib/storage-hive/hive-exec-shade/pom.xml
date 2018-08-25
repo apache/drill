@@ -178,6 +178,13 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>de.thetaphi</groupId>
+        <artifactId>forbiddenapis</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

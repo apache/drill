@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import org.apache.drill.exec.ExecTest;
 import org.apache.hadoop.fs.FileSystem;
@@ -28,6 +27,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -164,7 +164,7 @@ public class StorageStrategyTest {
 
   @Test
   public void testInvalidUmask() throws Exception {
-    for (String invalid : Lists.newArrayList("ABC", "999", null)) {
+    for (String invalid : Arrays.asList("ABC", "999", null)) {
       StorageStrategy storageStrategy = new StorageStrategy(invalid, true);
       assertEquals("Umask value should match default", StorageStrategy.DEFAULT.getUmask(), storageStrategy.getUmask());
       assertTrue("deleteOnExit flag should be set to true", storageStrategy.isDeleteOnExit());

@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.planner.types;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.DynamicRecordType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -31,7 +31,7 @@ import org.apache.drill.common.expression.SchemaPath;
 public class RelDataTypeHolder extends AbstractRelDataTypeHolder {
 
   public RelDataTypeHolder() {
-    super(Lists.<RelDataTypeField>newArrayList());
+    super(new ArrayList<>());
   }
 
   public List<RelDataTypeField> getFieldList(RelDataTypeFactory typeFactory) {

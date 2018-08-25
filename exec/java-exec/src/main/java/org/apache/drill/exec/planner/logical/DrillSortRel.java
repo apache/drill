@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,9 +36,6 @@ import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexNode;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * Sort implemented in Drill.
@@ -73,23 +72,23 @@ public class DrillSortRel extends Sort implements DrillRel {
   }
 
 
-  public static RelNode convert(Order order, ConversionContext context) throws InvalidRelException{
+  public static RelNode convert(Order order, ConversionContext context) throws InvalidRelException {
 
     // if there are compound expressions in the order by, we need to convert into projects on either side.
     RelNode input = context.toRel(order.getInput());
     List<String> fields = input.getRowType().getFieldNames();
 
     // build a map of field names to indices.
-    Map<String, Integer> fieldMap = Maps.newHashMap();
-    int i =0;
-    for(String field : fields){
+    Map<String, Integer> fieldMap = new HashMap<>();
+    int i = 0;
+    for (String field : fields) {
       fieldMap.put(field, i);
       i++;
     }
 
-    List<RelFieldCollation> collations = Lists.newArrayList();
+    List<RelFieldCollation> collations = new ArrayList<>();
 
-    for(Ordering o : order.getOrderings()){
+    for (Ordering o : order.getOrderings()) {
       String fieldName = ExprHelper.getFieldName(o.getExpr());
       int fieldId = fieldMap.get(fieldName);
       RelFieldCollation c = new RelFieldCollation(fieldId, o.getDirection(), o.getNullDirection());

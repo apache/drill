@@ -19,7 +19,9 @@ package org.apache.drill.exec;
 
 import io.netty.buffer.DrillBuf;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,8 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
-
-import com.google.common.collect.Lists;
 
 public class TestMemoryRetention {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMemoryRetention.class);
@@ -48,7 +48,7 @@ public class TestMemoryRetention {
     final long maxPerThread = maxMemory / PARALLEL_THREADS;
     final double smallCount = (maxPerThread * SMALL_ALLOCATION_MEM) / SMALL_AVERAGE_BYTES;
     final double largeCount = (maxPerThread * (1 - SMALL_ALLOCATION_MEM - OVERHEAD_ALLOWANCE)) / LARGE_BYTES;
-    final List<Integer> allocations = Lists.newArrayList();
+    final List<Integer> allocations = new ArrayList<>();
 
     for (int i = 0; i < smallCount; i++) {
       allocations.add(SMALL_AVERAGE_BYTES / 2 + r.nextInt(SMALL_AVERAGE_BYTES));
@@ -93,7 +93,7 @@ public class TestMemoryRetention {
       }
 
       logger.info("Starting alloc.");
-      final List<DrillBuf> bufs = Lists.newLinkedList();
+      final List<DrillBuf> bufs = new LinkedList<>();
       for (final Integer i : ALLOCATIONS) {
         bufs.add(allocator.buffer(i));
       }

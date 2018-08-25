@@ -20,9 +20,8 @@ package org.apache.drill.exec.compile;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import com.google.common.collect.Maps;
 
 /**
  * Class loader for "plain-old Java" generated classes.
@@ -41,7 +40,7 @@ public class CachedClassLoader extends URLClassLoader {
    * the classes, many threads may access the classes.
    */
 
-  private ConcurrentMap<String, Class<?>> cache = Maps.newConcurrentMap();
+  private ConcurrentMap<String, Class<?>> cache = new ConcurrentHashMap<>();
 
   public CachedClassLoader() {
     super(new URL[0], Thread.currentThread().getContextClassLoader());

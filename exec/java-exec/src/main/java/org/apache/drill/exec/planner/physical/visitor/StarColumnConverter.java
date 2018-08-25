@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -38,8 +39,6 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.util.Pair;
-
-import com.google.common.collect.Lists;
 
 public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeException> {
 
@@ -107,9 +106,9 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
   private Prel insertProjUnderScreenOrWriter(Prel prel, RelDataType origRowType, Prel child) {
 
     ProjectPrel proj;
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
 
-    List<RexNode> exprs = Lists.newArrayList();
+    List<RexNode> exprs = new ArrayList<>();
     for (int i = 0; i < origRowType.getFieldCount(); i++) {
       RexNode expr = child.getCluster().getRexBuilder().makeInputRef(origRowType.getFieldList().get(i).getType(), i);
       exprs.add(expr);
@@ -146,7 +145,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
 
     RelNode child = ((Prel) prel.getInput(0)).accept(this, null);
 
-    List<String> fieldNames = Lists.newArrayList();
+    List<String> fieldNames = new ArrayList<>();
 
     for (Pair<String, RexNode> pair : Pair.zip(prel.getRowType().getFieldNames(), prel.getProjects())) {
       if (pair.right instanceof RexInputRef) {
@@ -181,7 +180,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
       prefixedForStar = true;
     }
 
-    List<RelNode> children = Lists.newArrayList();
+    List<RelNode> children = new ArrayList<>();
     for (Prel child : prel) {
       child = child.accept(this, null);
       children.add(child);
@@ -193,14 +192,14 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
   private Prel prefixTabNameToStar(Prel prel, Void value) throws RuntimeException {
     if (StarColumnHelper.containsStarColumn(prel.getRowType()) && prefixedForStar) {
 
-      List<RexNode> exprs = Lists.newArrayList();
+      List<RexNode> exprs = new ArrayList<>();
 
       for (RelDataTypeField field : prel.getRowType().getFieldList()) {
         RexNode expr = prel.getCluster().getRexBuilder().makeInputRef(field.getType(), field.getIndex());
         exprs.add(expr);
       }
 
-      List<String> fieldNames = Lists.newArrayList();
+      List<String> fieldNames = new ArrayList<>();
 
       long tableId = tableNumber.getAndIncrement();
 
@@ -244,7 +243,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     HashSet<String> uniqueNames = new HashSet<>();
     HashSet<String> origNames = new HashSet<>(names);
 
-    List<String> newNames = Lists.newArrayList();
+    List<String> newNames = new ArrayList<>();
 
     for (String s : names) {
       if (uniqueNames.contains(s)) {

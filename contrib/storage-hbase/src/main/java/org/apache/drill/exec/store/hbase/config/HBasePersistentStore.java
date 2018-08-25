@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
@@ -37,8 +38,6 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
-
-import com.google.common.collect.Iterators;
 
 public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePersistentStore.class);
@@ -138,9 +137,7 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public Iterator<Entry<String, V>> getRange(int skip, int take) {
-    final Iterator<Entry<String, V>> iter = new Iter(take);
-    Iterators.advance(iter, skip);
-    return Iterators.limit(iter, take);
+    return new Iter(skip, take);
   }
 
   private byte[] row(String key) {
@@ -175,12 +172,20 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   }
 
   private class Iter implements Iterator<Entry<String, V>> {
+    private final int skip;
+    private final int limitSize;
     private ResultScanner scanner;
     private Result current = null;
     private Result last = null;
     private boolean done = false;
+    private int count;
+    private boolean skipped = false;
 
-    Iter(int take) {
+    Iter(int skip, int take) {
+      Preconditions.checkArgument(skip >= 0, "number to skip must be non-negative");
+      Preconditions.checkArgument(take >= 0, "number to take must be non-negative");
+      this.skip = skip;
+      this.limitSize = take;
       try {
         Scan scan = new Scan(tableNameStartKey, tableNameStopKey);
         scan.addColumn(FAMILY, QUALIFIER);
@@ -196,6 +201,10 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
 
     @Override
     public boolean hasNext()  {
+      if (count >= limitSize) {
+        return false;
+      }
+
       if (!done && current == null) {
         try {
           if ((current = scanner.next()) == null) {
@@ -216,12 +225,23 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
 
     @Override
     public Entry<String, V> next() {
+      if (!skipped) {
+        for (int i = 0; i < skip && hasNext(); i++) {
+          innerNext();
+        }
+        skipped = true;
+      }
+      innerNext();
+      count++;
+      return new DeferredEntry(last);
+    }
+
+    private void innerNext() {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
       last = current;
       current = null;
-      return new DeferredEntry(last);
     }
 
     @Override

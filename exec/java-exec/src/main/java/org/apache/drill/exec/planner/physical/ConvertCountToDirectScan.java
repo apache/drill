@@ -95,12 +95,12 @@ public class ConvertCountToDirectScan extends Prule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillAggregateRel agg = (DrillAggregateRel) call.rel(0);
-    final DrillScanRel scan = (DrillScanRel) call.rel(call.rels.length - 1);
-    final DrillProjectRel project = call.rels.length == 3 ? (DrillProjectRel) call.rel(1) : null;
+    DrillAggregateRel agg = call.rel(0);
+    DrillScanRel scan = call.rel(call.rels.length - 1);
+    DrillProjectRel project = call.rels.length == 3 ? (DrillProjectRel) call.rel(1) : null;
 
-    final GroupScan oldGrpScan = scan.getGroupScan();
-    final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
+    GroupScan oldGrpScan = scan.getGroupScan();
+    PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
 
     // Only apply the rule when:
     //    1) scan knows the exact row count in getSize() call,
@@ -119,20 +119,20 @@ public class ConvertCountToDirectScan extends Prule {
       return;
     }
 
-    final RelDataType scanRowType = constructDataType(agg, result.keySet());
+    RelDataType scanRowType = constructDataType(agg, result.keySet());
 
-    final DynamicPojoRecordReader<Long> reader = new DynamicPojoRecordReader<>(
+    DynamicPojoRecordReader<Long> reader = new DynamicPojoRecordReader<>(
         buildSchema(scanRowType.getFieldNames()),
-        Collections.singletonList((List<Long>) new ArrayList<>(result.values())));
+        Collections.singletonList(new ArrayList<>(result.values())));
 
-    final ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, 1, 1, scanRowType.getFieldCount());
-    final GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getFiles(), scanStats);
+    ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, 1, 1, scanRowType.getFieldCount());
+    GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getFiles(), scanStats);
 
-    final ScanPrel newScan = ScanPrel.create(scan,
+    ScanPrel newScan = ScanPrel.create(scan,
         scan.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON), directScan,
         scanRowType);
 
-    final ProjectPrel newProject = new ProjectPrel(agg.getCluster(), agg.getTraitSet().plus(Prel.DRILL_PHYSICAL)
+    ProjectPrel newProject = new ProjectPrel(agg.getCluster(), agg.getTraitSet().plus(Prel.DRILL_PHYSICAL)
         .plus(DrillDistributionTrait.SINGLETON), newScan, prepareFieldExpressions(scanRowType), agg.getRowType());
 
     call.transformTo(newProject);
@@ -152,10 +152,10 @@ public class ConvertCountToDirectScan extends Prule {
    * @return result map where key is count column name, value is count value
    */
   private Map<String, Long> collectCounts(PlannerSettings settings, DrillAggregateRel agg, DrillScanRel scan, DrillProjectRel project) {
-    final Set<String> implicitColumnsNames = ColumnExplorer.initImplicitFileColumns(settings.getOptions()).keySet();
-    final GroupScan oldGrpScan = scan.getGroupScan();
-    final long totalRecordCount = (long)oldGrpScan.getScanStats(settings).getRecordCount();
-    final LinkedHashMap<String, Long> result = new LinkedHashMap<>();
+    Set<String> implicitColumnsNames = ColumnExplorer.initImplicitFileColumns(settings.getOptions()).keySet();
+    GroupScan oldGrpScan = scan.getGroupScan();
+    long totalRecordCount = (long) oldGrpScan.getScanStats(settings).getRecordCount();
+    LinkedHashMap<String, Long> result = new LinkedHashMap<>();
 
     for (int i = 0; i < agg.getAggCallList().size(); i++) {
       AggregateCall aggCall = agg.getAggCallList().get(i);
@@ -164,7 +164,7 @@ public class ConvertCountToDirectScan extends Prule {
 
       // rule can be applied only for count function, return empty counts
       if (!"count".equalsIgnoreCase(aggCall.getAggregation().getName()) ) {
-        return ImmutableMap.of();
+        return Collections.emptyMap();
       }
 
       if (containsStarOrNotNullInput(aggCall, agg)) {
@@ -184,7 +184,7 @@ public class ConvertCountToDirectScan extends Prule {
           //   Scan (col1, col2).
           // return count of "col2" in Scan's metadata, if found.
           if (!(project.getProjects().get(index) instanceof RexInputRef)) {
-            return ImmutableMap.of(); // do not apply for all other cases.
+            return Collections.emptyMap(); // do not apply for all other cases.
           }
 
           index = ((RexInputRef) project.getProjects().get(index)).getIndex();
@@ -199,17 +199,17 @@ public class ConvertCountToDirectScan extends Prule {
           SchemaPath simplePath = SchemaPath.getSimplePath(columnName);
 
           if (ColumnExplorer.isPartitionColumn(settings.getOptions(), simplePath)) {
-            return ImmutableMap.of();
+            return Collections.emptyMap();
           }
 
           cnt = oldGrpScan.getColumnValueCount(simplePath);
           if (cnt == GroupScan.NO_COLUMN_STATS) {
             // if column stats is not available don't apply this rule, return empty counts
-            return ImmutableMap.of();
+            return Collections.emptyMap();
           }
         }
       } else {
-        return ImmutableMap.of();
+        return Collections.emptyMap();
       }
 
       String name = "count" + i + "$" + (aggCall.getName() == null ? aggCall.toString() : aggCall.getName());

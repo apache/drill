@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.jasonclawson.jackson.dataformat.hocon.HoconFactory;
 import org.apache.drill.common.config.CommonConstants;
@@ -35,6 +34,7 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -138,7 +138,7 @@ public class StoragePluginsHandlerService implements StoragePluginsHandler {
       }
       pluginsOverrideFileUrl = urlSet.iterator().next();
       try {
-        String newPluginsData = Resources.toString(pluginsOverrideFileUrl, Charsets.UTF_8);
+        String newPluginsData = Resources.toString(pluginsOverrideFileUrl, StandardCharsets.UTF_8);
         return lpPersistence.getMapper().readValue(newPluginsData, StoragePlugins.class);
       } catch (IOException e) {
         logger.error("Failures are obtained while loading %s file. Proceed without update",

@@ -19,17 +19,17 @@ package org.apache.drill.exec.expr.fn.registry;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
 
 import org.apache.drill.common.AutoCloseables.Closeable;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -97,8 +97,8 @@ public class FunctionRegistryHolder {
   private final Map<String, Map<String, DrillFuncHolder>> functions;
 
   public FunctionRegistryHolder() {
-    this.functions = Maps.newConcurrentMap();
-    this.jars = Maps.newConcurrentMap();
+    this.functions = new ConcurrentHashMap<>();
+    this.jars = new ConcurrentHashMap<>();
   }
 
   /**
@@ -127,7 +127,7 @@ public class FunctionRegistryHolder {
       for (Map.Entry<String, List<FunctionHolder>> newJar : newJars.entrySet()) {
         String jarName = newJar.getKey();
         removeAllByJar(jarName);
-        Map<String, Queue<String>> jar = Maps.newConcurrentMap();
+        Map<String, Queue<String>> jar = new ConcurrentHashMap<>();
         jars.put(jarName, jar);
         addFunctions(jar, newJar.getValue());
       }
@@ -156,7 +156,7 @@ public class FunctionRegistryHolder {
    */
   public List<String> getAllJarNames() {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
-      return Lists.newArrayList(jars.keySet());
+      return new ArrayList<>(jars.keySet());
     }
   }
 
@@ -171,7 +171,7 @@ public class FunctionRegistryHolder {
   public List<String> getFunctionNamesByJar(String jarName) {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()){
       Map<String, Queue<String>> functions = jars.get(jarName);
-      return functions == null ? Lists.<String>newArrayList() : Lists.newArrayList(functions.keySet());
+      return functions == null ? new ArrayList<>() : new ArrayList<>(functions.keySet());
     }
   }
 
@@ -192,7 +192,7 @@ public class FunctionRegistryHolder {
       }
       ListMultimap<String, DrillFuncHolder> functionsWithHolders = ArrayListMultimap.create();
       for (Map.Entry<String, Map<String, DrillFuncHolder>> function : functions.entrySet()) {
-        functionsWithHolders.putAll(function.getKey(), Lists.newArrayList(function.getValue().values()));
+        functionsWithHolders.putAll(function.getKey(), new ArrayList<>(function.getValue().values()));
       }
       return functionsWithHolders;
     }
@@ -220,7 +220,7 @@ public class FunctionRegistryHolder {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       ListMultimap<String, String> functionsWithSignatures = ArrayListMultimap.create();
       for (Map.Entry<String, Map<String, DrillFuncHolder>> function : functions.entrySet()) {
-        functionsWithSignatures.putAll(function.getKey(), Lists.newArrayList(function.getValue().keySet()));
+        functionsWithSignatures.putAll(function.getKey(), new ArrayList<>(function.getValue().keySet()));
       }
       return functionsWithSignatures;
     }
@@ -242,7 +242,7 @@ public class FunctionRegistryHolder {
         version.set(this.version);
       }
       Map<String, DrillFuncHolder> holders = functions.get(functionName);
-      return holders == null ? Lists.<DrillFuncHolder>newArrayList() : Lists.newArrayList(holders.values());
+      return holders == null ? new ArrayList<>() : new ArrayList<>(holders.values());
     }
   }
 
@@ -316,7 +316,7 @@ public class FunctionRegistryHolder {
       final String functionName = function.getName();
       Queue<String> jarFunctions = jar.get(functionName);
       if (jarFunctions == null) {
-        jarFunctions = Queues.newConcurrentLinkedQueue();
+        jarFunctions = new ConcurrentLinkedQueue<>();
         jar.put(functionName, jarFunctions);
       }
       final String functionSignature = function.getSignature();
@@ -324,7 +324,7 @@ public class FunctionRegistryHolder {
 
       Map<String, DrillFuncHolder> signatures = functions.get(functionName);
       if (signatures == null) {
-        signatures = Maps.newConcurrentMap();
+        signatures = new ConcurrentHashMap<>();
         functions.put(functionName, signatures);
       }
       signatures.put(functionSignature, function.getHolder());

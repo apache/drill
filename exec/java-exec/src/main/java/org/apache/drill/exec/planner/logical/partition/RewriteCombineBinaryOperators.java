@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.logical.partition;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
@@ -37,6 +36,7 @@ import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -80,14 +80,14 @@ import java.util.List;
     SqlKind kind = op.getKind();
     RelDataType type = call.getType();
     if (kind == SqlKind.AND) {
-      List<RexNode> conjuncts = Lists.newArrayList();
+      List<RexNode> conjuncts = new ArrayList<>();
       for (RexNode child : call.getOperands()) {
         conjuncts.addAll(RelOptUtil.conjunctions(child.accept(this)));
       }
       return RexUtil.composeConjunction(builder, conjuncts, true);
     }
     if (kind == SqlKind.OR) {
-      List<RexNode> disjuncts = Lists.newArrayList();
+      List<RexNode> disjuncts = new ArrayList<>();
       for (RexNode child : call.getOperands()) {
         disjuncts.addAll(RelOptUtil.disjunctions(child.accept(this)));
       }
@@ -97,7 +97,7 @@ import java.util.List;
   }
 
   private List<RexNode> visitChildren(RexCall call) {
-    List<RexNode> children = Lists.newArrayList();
+    List<RexNode> children = new ArrayList<>();
     for (RexNode child : call.getOperands()) {
       children.add(child.accept(this));
     }

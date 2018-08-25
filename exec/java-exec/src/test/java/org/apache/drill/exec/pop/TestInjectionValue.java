@@ -34,8 +34,6 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
 @Category(PlannerTest.class)
@@ -52,7 +50,7 @@ public class TestInjectionValue extends ExecTest {
   @Test
   public void testInjected() throws Exception{
     PhysicalPlanReader r = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(config);
-    PhysicalPlan p = r.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/physical_screen.json"), Charsets.UTF_8));
+    PhysicalPlan p = r.readPhysicalPlan(DrillFileUtils.getResourceAsString("/physical_screen.json"));
 
     List<PhysicalOperator> o = p.getSortedOperators(false);
 

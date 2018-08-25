@@ -32,8 +32,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.google.common.base.Joiner;
-
 public class DrillTextRecordWriter extends StringOutputRecordWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordWriter.class);
 
@@ -103,12 +101,13 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
     }
     index++;
 
-    stream.println(Joiner.on(fieldDelimiter).join(columnNames));
+    stream.println(String.join(fieldDelimiter, columnNames));
   }
 
   @Override
   public void addField(int fieldId, String value) throws IOException {
-    currentRecord.append(value + fieldDelimiter);
+    currentRecord.append(value)
+        .append(fieldDelimiter);
   }
 
   @Override

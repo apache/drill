@@ -17,10 +17,12 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import com.google.common.base.Preconditions;
 import com.typesafe.config.ConfigException;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Named;
 
@@ -35,15 +37,12 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.util.IndexedSortable;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Queues;
-
 public abstract class MSortTemplate implements MSorter, IndexedSortable {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MSortTemplate.class);
 
   private SelectionVector4 vector4;
   private SelectionVector4 aux;
-  private Queue<Integer> runStarts = Queues.newLinkedBlockingQueue();
+  private Queue<Integer> runStarts = new LinkedBlockingQueue<>();
   private FragmentContext context;
 
   /**
@@ -52,7 +51,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
   private int desiredRecordBatchCount;
 
   @Override
-  public void setup(final FragmentContext context, final BufferAllocator allocator, final SelectionVector4 vector4, final VectorContainer hyperBatch) throws SchemaChangeException{
+  public void setup(FragmentContext context, BufferAllocator allocator, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException {
     // we pass in the local hyperBatch since that is where we'll be reading data.
     Preconditions.checkNotNull(vector4);
     this.vector4 = vector4.createNewWrapperCurrent();
@@ -61,9 +60,9 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
     doSetup(context, hyperBatch, null);
     runStarts.add(0);
     int batch = 0;
-    final int totalCount = this.vector4.getTotalCount();
+    int totalCount = this.vector4.getTotalCount();
     for (int i = 0; i < totalCount; i++) {
-      final int newBatch = this.vector4.get(i) >>> 16;
+      int newBatch = this.vector4.get(i) >>> 16;
       if (newBatch == batch) {
         continue;
       } else if (newBatch == batch + 1) {
@@ -74,7 +73,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
       }
     }
     @SuppressWarnings("resource")
-    final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
+    DrillBuf drillBuf = allocator.buffer(4 * totalCount);
 
     try {
       desiredRecordBatchCount = context.getConfig().getInt(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE);
@@ -92,13 +91,13 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
    * @param recordCount
    * @return The amount of memory MSorter needs for a given record count.
    */
-  public static long memoryNeeded(final int recordCount) {
+  public static long memoryNeeded(int recordCount) {
     // We need 4 bytes (SV4) for each record, power of 2 rounded.
 
     return BaseAllocator.nextPowerOfTwo(recordCount * 4);
   }
 
-  private int merge(final int leftStart, final int rightStart, final int rightEnd, final int outStart) {
+  private int merge(int leftStart, int rightStart, int rightEnd, int outStart) {
     int l = leftStart;
     int r = rightStart;
     int o = outStart;
@@ -125,7 +124,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
   }
 
   @Override
-  public void sort(final VectorContainer container) {
+  public void sort(VectorContainer container) {
     while (runStarts.size() > 1) {
 
       // check if we're cancelled/failed frequently
@@ -134,12 +133,12 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
       }
 
       int outIndex = 0;
-      final Queue<Integer> newRunStarts = Queues.newLinkedBlockingQueue();
+      Queue<Integer> newRunStarts = new LinkedBlockingQueue<>();
       newRunStarts.add(outIndex);
-      final int size = runStarts.size();
+      int size = runStarts.size();
       for (int i = 0; i < size / 2; i++) {
-        final int left = runStarts.poll();
-        final int right = runStarts.poll();
+        int left = runStarts.poll();
+        int right = runStarts.poll();
         Integer end = runStarts.peek();
         if (end == null) {
           end = vector4.getTotalCount();
@@ -153,7 +152,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
         copyRun(outIndex, vector4.getTotalCount());
       }
       @SuppressWarnings("resource")
-      final SelectionVector4 tmp = aux.createNewWrapperCurrent(desiredRecordBatchCount);
+      SelectionVector4 tmp = aux.createNewWrapperCurrent(desiredRecordBatchCount);
       aux.clear();
       aux = vector4.createNewWrapperCurrent(desiredRecordBatchCount);
       vector4.clear();
@@ -164,23 +163,23 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
     aux.clear();
   }
 
-  private void copyRun(final int start, final int end) {
+  private void copyRun(int start, int end) {
     for (int i = start; i < end; i++) {
       aux.set(i, vector4.get(i));
     }
   }
 
   @Override
-  public void swap(final int sv0, final int sv1) {
-    final int tmp = vector4.get(sv0);
+  public void swap(int sv0, int sv1) {
+    int tmp = vector4.get(sv0);
     vector4.set(sv0, vector4.get(sv1));
     vector4.set(sv1, tmp);
   }
 
   @Override
-  public int compare(final int leftIndex, final int rightIndex) {
-    final int sv1 = vector4.get(leftIndex);
-    final int sv2 = vector4.get(rightIndex);
+  public int compare(int leftIndex, int rightIndex) {
+    int sv1 = vector4.get(leftIndex);
+    int sv2 = vector4.get(rightIndex);
     try {
       return doEval(sv1, sv2);
     } catch (SchemaChangeException e) {

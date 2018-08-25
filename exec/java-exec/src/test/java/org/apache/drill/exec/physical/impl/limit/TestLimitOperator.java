@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
 import org.apache.drill.test.BaseDirTestWatcher;
@@ -27,6 +26,7 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class TestLimitOperator extends PhysicalOpUnitTestBase {
@@ -52,7 +52,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
   @Test
   public void testLimitMoreRecords() {
     Limit limitConf = new Limit(null, 0, 10);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
     opTestBuilder()
@@ -68,7 +68,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
   @Test
   public void testLimitLessRecords() {
     Limit limitConf = new Limit(null, 0, 1);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
     opTestBuilder()
@@ -82,7 +82,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
   @Test
   public void testLimitWithOffset() {
     Limit limitConf = new Limit(null, 2, 3);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
     opTestBuilder()
@@ -96,7 +96,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
   @Test
   public void testLimitWithNoLastRecord() {
     Limit limitConf = new Limit(null, 1, null);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
     opTestBuilder()
@@ -111,7 +111,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
   @Test
   public void testLimitWithNegativeOffset() {
     Limit limitConf = new Limit(null, -1, null);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
     opTestBuilder()
@@ -127,7 +127,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
   @Test
   public void testLimitWithNegativeFirstLast() {
     Limit limitConf = new Limit(null, -1, -1);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
     opTestBuilder()
@@ -141,7 +141,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
   @Test
   public void testLimitWithOffsetOutOfRange() {
     Limit limitConf = new Limit(null, 10, 20);
-    List<String> inputJsonBatches = Lists.newArrayList(
+    List<String> inputJsonBatches = Arrays.asList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
     opTestBuilder()

@@ -27,6 +27,8 @@ import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Category({SlowTest.class, OperatorTest.class})
@@ -37,7 +39,7 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
   // Should spill, including recursive spill
   public void testSimpleHashJoinSpill() {
     HashJoinPOP joinConf = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.INNER, null);
+      Collections.singletonList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.INNER, null);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 4);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_rows_in_batch", 64);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.max_batches_in_memory", 8);
@@ -54,7 +56,7 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
 
     opTestBuilder()
       .physicalOperator(joinConf)
-      .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
+      .inputDataStreamsJson(Arrays.asList(leftTable, rightTable))
       .baselineColumns("lft", "a", "b", "rgt")
       .expectedTotalRows( numRows + 9 )
       .go();
@@ -64,12 +66,12 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
   @Test
   public void testRightOuterHashJoinSpill() {
     HashJoinPOP joinConf = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.RIGHT, null);
+      Collections.singletonList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.RIGHT, null);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 4);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_rows_in_batch", 64);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.max_batches_in_memory", 8);
     // Put some duplicate values
-    List<String> leftTable = Lists.newArrayList("[{\"lft\": 0, \"a\" : \"a string\"}]",
+    List<String> leftTable = Arrays.asList("[{\"lft\": 0, \"a\" : \"a string\"}]",
       "[{\"lft\": 0, \"a\" : \"a different string\"},{\"lft\": 0, \"a\" : \"yet another\"}]");
     List<String> rightTable = Lists.newArrayList("[{\"rgt\": 0, \"b\" : \"a string\"}]",
       "[{\"rgt\": 0, \"b\" : \"a different string\"},{\"rgt\": 0, \"b\" : \"yet another\"}]");
@@ -91,7 +93,7 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
   @Test
   public void testLeftOuterHashJoinSpill() {
     HashJoinPOP joinConf = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.LEFT, null);
+      Collections.singletonList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.LEFT, null);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 8);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_rows_in_batch", 64);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.max_batches_in_memory", 12);
@@ -112,7 +114,7 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
 
     opTestBuilder()
       .physicalOperator(joinConf)
-      .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
+      .inputDataStreamsJson(Arrays.asList(leftTable,rightTable))
       .baselineColumns("lft", "a", "b", "rgt")
       .expectedTotalRows( numRows + 9 )
       .go();

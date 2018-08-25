@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.hive;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.schema.Schema.TableType;
@@ -26,7 +27,6 @@ import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
 
 public class HiveReadEntry {
 
@@ -36,7 +36,7 @@ public class HiveReadEntry {
   public List<HivePartitionWrapper> partitions;
 
   @JsonIgnore
-  private List<HivePartition> partitionsUnwrapped = Lists.newArrayList();
+  private List<HivePartition> partitionsUnwrapped = new ArrayList<>();
 
   @JsonCreator
   public HiveReadEntry(@JsonProperty("table") HiveTableWrapper table,

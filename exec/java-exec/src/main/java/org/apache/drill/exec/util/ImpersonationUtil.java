@@ -22,6 +22,8 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -34,7 +36,6 @@ import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Sets;
 
 /**
  * Utilities for impersonation purpose.
@@ -233,24 +234,27 @@ public class ImpersonationUtil {
    * @param adminGroups Comma separated list of admin usergroups
    * @return True if the user has admin priveleges. False otherwise.
    */
-  public static boolean hasAdminPrivileges(final String userName, final String adminUsers, final String adminGroups) {
+  public static boolean hasAdminPrivileges(String userName, String adminUsers, String adminGroups) {
     // Process user is by default an admin
     if (getProcessUserName().equals(userName)) {
       return true;
     }
 
-    final Set<String> adminUsersSet = Sets.newHashSet(SPLITTER.split(adminUsers));
+    Set<String> adminUsersSet =
+        StreamSupport.stream(SPLITTER.split(adminUsers).spliterator(), false)
+            .collect(Collectors.toSet());
     if (adminUsersSet.contains(userName)) {
       return true;
     }
 
-    final UserGroupInformation ugi = createProxyUgi(userName);
-    final String[] userGroups = ugi.getGroupNames();
+    UserGroupInformation ugi = createProxyUgi(userName);
+    String[] userGroups = ugi.getGroupNames();
     if (userGroups == null || userGroups.length == 0) {
       return false;
     }
 
-    final Set<String> adminUserGroupsSet = Sets.newHashSet(SPLITTER.split(adminGroups));
+    Set<String> adminUserGroupsSet = StreamSupport.stream(SPLITTER.split(adminGroups).spliterator(), false)
+        .collect(Collectors.toSet());
     for (String userGroup : userGroups) {
       if (adminUserGroupsSet.contains(userGroup)) {
         return true;

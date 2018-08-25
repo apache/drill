@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import static com.google.common.collect.Collections2.transform;
-import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.FileNotFoundException;
@@ -27,6 +25,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -75,10 +75,8 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class WorkspaceSchemaFactory {
@@ -112,8 +110,8 @@ public class WorkspaceSchemaFactory {
     this.plugin = plugin;
     this.config = config;
     this.mapper = logicalPlanPersistence.getMapper();
-    this.fileMatchers = Lists.newArrayList();
-    this.dirMatchers = Lists.newArrayList();
+    this.fileMatchers = new ArrayList<>();
+    this.dirMatchers = new ArrayList<>();
     this.storageEngineName = storageEngineName;
     this.schemaName = schemaName;
     this.wsPath = new Path(config.getLocation());
@@ -127,16 +125,16 @@ public class WorkspaceSchemaFactory {
     }
 
     // NOTE: Add fallback format matcher if given in the configuration. Make sure fileMatchers is an order-preserving list.
-    final String defaultInputFormat = config.getDefaultInputFormat();
+    String defaultInputFormat = config.getDefaultInputFormat();
     if (!Strings.isNullOrEmpty(defaultInputFormat)) {
-      final FormatPlugin formatPlugin = plugin.getFormatPlugin(defaultInputFormat);
+      FormatPlugin formatPlugin = plugin.getFormatPlugin(defaultInputFormat);
       if (formatPlugin == null) {
-        final String message = String.format("Unable to find default input format[%s] for workspace[%s.%s]",
+        String message = String.format("Unable to find default input format[%s] for workspace[%s.%s]",
             defaultInputFormat, storageEngineName, schemaName);
         throw new ExecutionSetupException(message);
       }
-      final FormatMatcher fallbackMatcher = new BasicFormatMatcher(formatPlugin,
-          ImmutableList.of(Pattern.compile(".*")), ImmutableList.<MagicString>of());
+      FormatMatcher fallbackMatcher = new BasicFormatMatcher(formatPlugin,
+          ImmutableList.of(Pattern.compile(".*")), Collections.emptyList());
       fileMatchers.add(fallbackMatcher);
       dropFileMatchers = fileMatchers.subList(0, fileMatchers.size() - 1);
     } else {
@@ -453,7 +451,7 @@ public class WorkspaceSchemaFactory {
     }
 
     private Set<String> getViews() {
-      Set<String> viewSet = Sets.newHashSet();
+      Set<String> viewSet = new HashSet<>();
       // Look for files with ".view.drill" extension.
       List<DotDrillFile> files;
       try {
@@ -479,13 +477,9 @@ public class WorkspaceSchemaFactory {
     }
 
     private Set<String> rawTableNames() {
-      return newHashSet(
-          transform(tables.keySet(), new com.google.common.base.Function<TableInstance, String>() {
-        @Override
-        public String apply(TableInstance input) {
-          return input.sig.name;
-        }
-      }));
+      return tables.keySet().stream()
+          .map(input -> input.sig.name)
+          .collect(Collectors.toSet());
     }
 
     @Override
@@ -501,12 +495,9 @@ public class WorkspaceSchemaFactory {
     @Override
     public List<Function> getFunctions(String name) {
       List<TableSignature> sigs = optionExtractor.getTableSignatures(name);
-      return Lists.transform(sigs, new com.google.common.base.Function<TableSignature, Function>() {
-        @Override
-        public Function apply(TableSignature input) {
-          return new WithOptionsTableMacro(input, WorkspaceSchema.this);
-        }
-      });
+      return sigs.stream()
+          .map(input -> new WithOptionsTableMacro(input, WorkspaceSchema.this))
+          .collect(Collectors.toList());
     }
 
     private View getView(DotDrillFile f) throws IOException {
@@ -516,7 +507,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public Table getTable(String tableName) {
-      TableInstance tableKey = new TableInstance(new TableSignature(tableName), ImmutableList.of());
+      TableInstance tableKey = new TableInstance(new TableSignature(tableName), Collections.emptyList());
       // first check existing tables.
       if (tables.alreadyContainsKey(tableKey)) {
         return tables.get(tableKey);
@@ -581,7 +572,7 @@ public class WorkspaceSchemaFactory {
       if (formatPlugin == null) {
         throw new UnsupportedOperationException(
           String.format("Unsupported format '%s' in workspace '%s'", config.getDefaultInputFormat(),
-              Joiner.on(".").join(getSchemaPath())));
+              String.join(".", getSchemaPath())));
       }
 
       return new FileSystemCreateTableEntry(
@@ -781,7 +772,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public List<Pair<String, TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
-      final List<Pair<String, TableType>> tableNamesAndTypes = Lists.newArrayList();
+      List<Pair<String, TableType>> tableNamesAndTypes = new ArrayList<>();
 
       // Look for raw tables first
       if (!tables.isEmpty()) {

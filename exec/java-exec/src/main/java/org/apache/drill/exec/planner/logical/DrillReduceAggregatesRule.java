@@ -18,8 +18,6 @@
 package org.apache.drill.exec.planner.logical;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptRule;
@@ -328,7 +326,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             iAvgInput);
     RelDataType sumType =
         TypeInferenceUtils.getDrillSqlReturnTypeInference(SqlKind.SUM.name(),
-            ImmutableList.of())
+            Collections.emptyList())
           .inferReturnType(oldCall.createBinding(oldAggRel));
     sumType =
         typeFactory.createTypeWithNullability(
@@ -518,7 +516,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
 
     RelDataType sumType =
         TypeInferenceUtils.getDrillSqlReturnTypeInference(SqlKind.SUM.name(),
-            ImmutableList.of())
+            Collections.emptyList())
           .inferReturnType(oldCall.createBinding(oldAggRel));
     sumType = typeFactory.createTypeWithNullability(sumType, true);
     final AggregateCall sumArgSquaredAggCall =
@@ -707,16 +705,16 @@ public class DrillReduceAggregatesRule extends RelOptRule {
 
     @Override
     public void onMatch(RelOptRuleCall call) {
-      final DrillAggregateRel oldAggRel = (DrillAggregateRel) call.rels[0];
+      DrillAggregateRel oldAggRel = (DrillAggregateRel) call.rels[0];
 
-      final Map<AggregateCall, RexNode> aggCallMapping = Maps.newHashMap();
-      final List<AggregateCall> newAggregateCalls = Lists.newArrayList();
+      Map<AggregateCall, RexNode> aggCallMapping = new HashMap<>();
+      List<AggregateCall> newAggregateCalls = new ArrayList<>();
       for (AggregateCall oldAggregateCall : oldAggRel.getAggCallList()) {
         if (isConversionToSumZeroNeeded(oldAggregateCall.getAggregation(), oldAggregateCall.getType())) {
-          final RelDataType argType = oldAggregateCall.getType();
-          final RelDataType sumType = oldAggRel.getCluster().getTypeFactory()
+          RelDataType argType = oldAggregateCall.getType();
+          RelDataType sumType = oldAggRel.getCluster().getTypeFactory()
               .createTypeWithNullability(argType, argType.isNullable());
-          final SqlAggFunction sumZeroAgg = new DrillCalciteSqlAggFunctionWrapper(
+          SqlAggFunction sumZeroAgg = new DrillCalciteSqlAggFunctionWrapper(
               new SqlSumEmptyIsZeroAggFunction(), sumType);
           AggregateCall sumZeroCall =
               AggregateCall.create(
@@ -757,7 +755,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
 
     @Override
     public boolean matches(RelOptRuleCall call) {
-      final DrillWindowRel oldWinRel = (DrillWindowRel) call.rels[0];
+      DrillWindowRel oldWinRel = (DrillWindowRel) call.rels[0];
       for (Window.Group group : oldWinRel.groups) {
         for (Window.RexWinAggCall rexWinAggCall : group.aggCalls) {
           if (isConversionToSumZeroNeeded(rexWinAggCall.getOperator(), rexWinAggCall.getType())) {
@@ -770,19 +768,19 @@ public class DrillReduceAggregatesRule extends RelOptRule {
 
     @Override
     public void onMatch(RelOptRuleCall call) {
-      final DrillWindowRel oldWinRel = (DrillWindowRel) call.rels[0];
-      final ImmutableList.Builder<Window.Group> builder = ImmutableList.builder();
+      DrillWindowRel oldWinRel = (DrillWindowRel) call.rels[0];
+      ImmutableList.Builder<Window.Group> builder = ImmutableList.builder();
 
       for (Window.Group group : oldWinRel.groups) {
-        final List<Window.RexWinAggCall> aggCalls = Lists.newArrayList();
+        List<Window.RexWinAggCall> aggCalls = new ArrayList<>();
         for (Window.RexWinAggCall rexWinAggCall : group.aggCalls) {
           if (isConversionToSumZeroNeeded(rexWinAggCall.getOperator(), rexWinAggCall.getType())) {
-            final RelDataType argType = rexWinAggCall.getType();
-            final RelDataType sumType = oldWinRel.getCluster().getTypeFactory()
+            RelDataType argType = rexWinAggCall.getType();
+            RelDataType sumType = oldWinRel.getCluster().getTypeFactory()
                 .createTypeWithNullability(argType, argType.isNullable());
-            final SqlAggFunction sumZeroAgg = new DrillCalciteSqlAggFunctionWrapper(
+            SqlAggFunction sumZeroAgg = new DrillCalciteSqlAggFunctionWrapper(
                 new SqlSumEmptyIsZeroAggFunction(), sumType);
-            final Window.RexWinAggCall sumZeroCall =
+            Window.RexWinAggCall sumZeroCall =
                 new Window.RexWinAggCall(
                     sumZeroAgg,
                     sumType,
@@ -795,7 +793,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
           }
         }
 
-        final Window.Group newGroup = new Window.Group(
+        Window.Group newGroup = new Window.Group(
             group.keys,
             group.isRows,
             group.lowerBound,

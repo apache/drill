@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -30,7 +31,6 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 /**
  *
@@ -70,7 +70,7 @@ public class SortPrule extends Prule{
   }
 
   private List<DistributionField> getDistributionField(DrillSortRel rel) {
-    List<DistributionField> distFields = Lists.newArrayList();
+    List<DistributionField> distFields = new ArrayList<>();
 
     for (RelFieldCollation relField : rel.getCollation().getFieldCollations()) {
       DistributionField field = new DistributionField(relField.getFieldIndex());

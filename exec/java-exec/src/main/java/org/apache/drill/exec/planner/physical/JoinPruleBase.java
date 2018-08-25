@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
@@ -36,7 +37,6 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 // abstract base class for the join physical rules
 public abstract class JoinPruleBase extends Prule {
@@ -49,15 +49,15 @@ public abstract class JoinPruleBase extends Prule {
 
   protected boolean checkPreconditions(DrillJoinRel join, RelNode left, RelNode right,
       PlannerSettings settings) {
-    List<Integer> leftKeys = Lists.newArrayList();
-    List<Integer> rightKeys = Lists.newArrayList();
-    List<Boolean> filterNulls = Lists.newArrayList();
+    List<Integer> leftKeys = new ArrayList<>();
+    List<Integer> rightKeys = new ArrayList<>();
+    List<Boolean> filterNulls = new ArrayList<>();
     JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(), leftKeys, rightKeys, filterNulls);
     return !(category == JoinCategory.CARTESIAN || category == JoinCategory.INEQUALITY);
   }
 
   protected List<DistributionField> getDistributionField(List<Integer> keys) {
-    List<DistributionField> distFields = Lists.newArrayList();
+    List<DistributionField> distFields = new ArrayList<>();
 
     for (int key : keys) {
       distFields.add(new DistributionField(key));

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -41,7 +42,6 @@ import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -142,8 +142,8 @@ public class UserSession implements AutoCloseable {
   private UserSession() {
     queryCount = new AtomicInteger(0);
     sessionId = UUID.randomUUID().toString();
-    temporaryTables = Maps.newConcurrentMap();
-    temporaryLocations = Maps.newConcurrentMap();
+    temporaryTables = new ConcurrentHashMap<>();
+    temporaryLocations = new ConcurrentHashMap<>();
     properties = DrillProperties.createEmpty();
   }
 
@@ -195,7 +195,7 @@ public class UserSession implements AutoCloseable {
    */
   public void setDefaultSchemaPath(String newDefaultSchemaPath, SchemaPlus currentDefaultSchema)
       throws ValidationException {
-    final List<String> newDefaultPathAsList = SchemaUtilites.getSchemaPathAsList(newDefaultSchemaPath);
+    List<String> newDefaultPathAsList = SchemaUtilites.getSchemaPathAsList(newDefaultSchemaPath);
     SchemaPlus newDefault;
 
     // First try to find the given schema relative to the current default schema.

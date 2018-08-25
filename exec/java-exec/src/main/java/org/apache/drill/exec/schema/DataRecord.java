@@ -17,31 +17,31 @@
  */
 package org.apache.drill.exec.schema;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class DataRecord {
     private final Map<Integer, Object> dataMap;
 
     public DataRecord() {
-        this.dataMap = Maps.newHashMap();
+      this.dataMap = new HashMap<>();
     }
 
     public void addData(int fieldId, Object data, boolean isList) {
         //TODO: Rethink lists vs object data handling
-        if(!dataMap.containsKey(fieldId)) {
-            if(isList) {
+        if (!dataMap.containsKey(fieldId)) {
+            if (isList) {
                 dataMap.put(fieldId, Lists.newArrayList(data));
             } else {
                 dataMap.put(fieldId, data);
             }
         } else {
-            if(isList) {
-                ((List<Object>)dataMap.get(fieldId)).add(data);
+            if (isList) {
+                ((List<Object>) dataMap.get(fieldId)).add(data);
             } else {
                 throw new IllegalStateException("Overriding field id existing data!");
             }

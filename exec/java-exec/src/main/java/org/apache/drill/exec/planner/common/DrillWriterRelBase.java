@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
@@ -29,7 +30,6 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 /** Base class for logical and physical Writer implemented in Drill. */
 public abstract class DrillWriterRelBase extends SingleRel implements DrillRelNode {
@@ -38,7 +38,7 @@ public abstract class DrillWriterRelBase extends SingleRel implements DrillRelNo
   private final CreateTableEntry createTableEntry;
 
   protected void setRowType(){
-    List<RelDataType> fields = Lists.newArrayList();
+    List<RelDataType> fields = new ArrayList<>();
     fields.add(this.getCluster().getTypeFactory().createSqlType(SqlTypeName.VARCHAR, 255));
     fields.add(this.getCluster().getTypeFactory().createSqlType(SqlTypeName.BIGINT));
     this.rowType = this.getCluster().getTypeFactory().createStructType(fields, FIELD_NAMES);

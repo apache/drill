@@ -19,16 +19,16 @@ package org.apache.drill.exec.store.easy.sequencefile;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.ImmutableList;
 
 import org.apache.drill.common.logical.FormatPluginConfig;
 
+import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("sequencefile") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class SequenceFileFormatConfig implements FormatPluginConfig {
 
-  public List<String> extensions = ImmutableList.of();
+  public List<String> extensions = Collections.emptyList();
 
   @Override
   public int hashCode() {

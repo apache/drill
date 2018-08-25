@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
@@ -31,7 +32,6 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.util.trace.CalciteTrace;
 
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 
 
@@ -53,9 +53,9 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
       return false;
     }
 
-    List<Integer> leftKeys = Lists.newArrayList();
-    List<Integer> rightKeys = Lists.newArrayList();
-    List<Boolean> filterNulls = Lists.newArrayList();
+    List<Integer> leftKeys = new ArrayList<>();
+    List<Integer> rightKeys = new ArrayList<>();
+    List<Boolean> filterNulls = new ArrayList<>();
     JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(), leftKeys, rightKeys, filterNulls);
     if (category == JoinCategory.EQUALITY
         && (settings.isHashJoinEnabled() || settings.isMergeJoinEnabled())) {

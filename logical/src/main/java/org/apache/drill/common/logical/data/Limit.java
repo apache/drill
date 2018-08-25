@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.logical.data;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
@@ -26,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Iterators;
 
 @JsonTypeName("limit")
 public class Limit extends SingleInputOperator {
@@ -61,7 +61,7 @@ public class Limit extends SingleInputOperator {
 
   @Override
   public Iterator<LogicalOperator> iterator() {
-    return Iterators.singletonIterator(getInput());
+    return Collections.singleton(getInput()).iterator();
   }
 
   public static class LimitNodeBuilder implements NodeBuilder<Limit> {

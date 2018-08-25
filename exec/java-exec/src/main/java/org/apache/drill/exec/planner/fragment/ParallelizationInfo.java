@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Captures parallelization parameters for a given operator/fragments. It consists of min and max width of
@@ -48,11 +48,11 @@ public class ParallelizationInfo {
   }
 
   public static ParallelizationInfo create(int minWidth, int maxWidth) {
-    return create(minWidth, maxWidth, ImmutableList.<EndpointAffinity>of());
+    return create(minWidth, maxWidth, Collections.emptyList());
   }
 
   public static ParallelizationInfo create(int minWidth, int maxWidth, List<EndpointAffinity> endpointAffinities) {
-    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = Maps.newHashMap();
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
 
     for(EndpointAffinity epAffinity : endpointAffinities) {
       affinityMap.put(epAffinity.getEndpoint(), epAffinity);
@@ -79,12 +79,12 @@ public class ParallelizationInfo {
   }
 
   private static String getDigest(int minWidth, int maxWidth, Map<DrillbitEndpoint, EndpointAffinity> affinityMap) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(String.format("[minWidth = %d, maxWidth=%d, epAff=[", minWidth, maxWidth));
-    sb.append(Joiner.on(",").join(affinityMap.values()));
-    sb.append("]]");
-
-    return sb.toString();
+    return affinityMap.values().stream()
+        .map(EndpointAffinity::toString)
+        .collect(Collectors.joining(
+            ",",
+            String.format("[minWidth = %d, maxWidth=%d, epAff=[", minWidth, maxWidth),
+            "]]"));
   }
 
   /**
@@ -93,7 +93,7 @@ public class ParallelizationInfo {
   public static class ParallelizationInfoCollector {
     private int minWidth = 1;
     private int maxWidth = Integer.MAX_VALUE;
-    private final Map<DrillbitEndpoint, EndpointAffinity> affinityMap = Maps.newHashMap();
+    private final Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
 
     public void add(ParallelizationInfo parallelizationInfo) {
       minWidth = Math.max(minWidth, parallelizationInfo.minWidth);

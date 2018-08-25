@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.text;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 
@@ -25,6 +24,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
@@ -171,7 +171,7 @@ public class TestCsvHeader extends BaseTestQuery{
   @Test
   public void testCountOnCsvWithHeader() throws Exception {
     final String query = "select count(%s) as cnt from cp.`%s`";
-    final List<Object> options = Lists.<Object>newArrayList("*", 1, "'A'");
+    final List<Object> options = Arrays.asList("*", 1, "'A'");
 
     for (Object option : options) {
       testBuilder()

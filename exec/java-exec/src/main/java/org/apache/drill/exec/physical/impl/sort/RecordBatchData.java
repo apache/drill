@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -29,8 +30,6 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.collect.Lists;
-
 /**
  * Holds the data for a particular record batch for later manipulation.
  */
@@ -42,7 +41,7 @@ public class RecordBatchData {
   VectorContainer container = new VectorContainer();
 
   public RecordBatchData(VectorAccessible batch, BufferAllocator allocator) {
-    List<ValueVector> vectors = Lists.newArrayList();
+    List<ValueVector> vectors = new ArrayList<>();
     recordCount = batch.getRecordCount();
 
     if (batch instanceof RecordBatch && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) {
@@ -71,7 +70,7 @@ public class RecordBatchData {
   }
 
   public List<ValueVector> getVectors() {
-    List<ValueVector> vectors = Lists.newArrayList();
+    List<ValueVector> vectors = new ArrayList<>();
     for (VectorWrapper w : container) {
       vectors.add(w.getValueVector());
     }

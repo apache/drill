@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -26,11 +27,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.prepare.RelOptTableImpl;
@@ -62,7 +61,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
   private final String partitionLabel;
   private final int partitionLabelLength;
-  private final Map<String, Integer> partitions = Maps.newHashMap();
+  private final Map<String, Integer> partitions = new HashMap<>();
   private final TableScan scanRel;
   private final DrillTable table;
 
@@ -119,7 +118,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
           // set null if dirX does not exist for the location.
           ((NullableVarCharVector) vectors[partitionColumnIndex]).getMutator().setNull(record);
         } else {
-          byte[] bytes = (partitionLocation.getPartitionValue(partitionColumnIndex)).getBytes(Charsets.UTF_8);
+          byte[] bytes = (partitionLocation.getPartitionValue(partitionColumnIndex)).getBytes(StandardCharsets.UTF_8);
           ((NullableVarCharVector) vectors[partitionColumnIndex]).getMutator().setSafe(record, bytes, 0, bytes.length);
         }
       }
@@ -214,7 +213,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   @Override
   public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot,
       boolean wasAllPartitionsPruned, MetadataContext metaContext) throws Exception {
-    List<String> newFiles = Lists.newArrayList();
+    List<String> newFiles = new ArrayList<>();
     for (final PartitionLocation location : newPartitionLocation) {
       if (!location.isCompositePartition()) {
         newFiles.add(location.getEntirePartitionLocation());
