@@ -656,4 +656,43 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         .go();
   }
 
+  @Test
+  public void testLateralWithComplexProject() throws Exception {
+    String sql = "select l.name from cp.`lateraljoin/nested-customer.parquet` c,\n" +
+        "lateral (select u.item.i_name as name from unnest(c.orders[0].items) as u(item)) l limit 1";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("name")
+        .baselineValues("paper towel")
+        .go();
+  }
+
+  @Test
+  public void testLateralWithAgg() throws Exception {
+    String sql = "select l.name from cp.`lateraljoin/nested-customer.parquet` c,\n" +
+        "lateral (select max(u.item.i_name) as name from unnest(c.orders[0].items) as u(item)) l limit 1";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("name")
+        .baselineValues("paper towel")
+        .go();
+  }
+
+  @Test
+  public void testMultiLateralWithComplexProject() throws Exception {
+    String sql = "select l1.name, l2.name as name2 from cp.`lateraljoin/nested-customer.parquet` c,\n" +
+      "lateral (select u.item.i_name as name from unnest(c.orders[0].items) as u(item)) l1," +
+      "lateral (select u.item.i_name as name from unnest(c.orders[0].items) as u(item)) l2 limit 1";
+
+    testBuilder()
+      .sqlQuery(sql)
+      .unOrdered()
+      .baselineColumns("name", "name2")
+      .baselineValues("paper towel", "paper towel")
+      .go();
+  }
 }
