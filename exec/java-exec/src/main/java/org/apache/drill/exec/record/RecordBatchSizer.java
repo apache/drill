@@ -18,8 +18,8 @@
 package org.apache.drill.exec.record;
 
 import java.util.Set;
+import java.util.Collection;
 import java.util.Map;
-
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -631,7 +631,7 @@ public class RecordBatchSizer {
 
   // This keeps information for only top level columns. Information for nested
   // columns can be obtained from children of topColumns.
-  private Map<String, ColumnSize> columnSizes = CaseInsensitiveMap.newHashMap();
+  private Map<String, ColumnSize> columnSizes = new QuoteInsensitiveMap(CaseInsensitiveMap.newHashMap());
 
   /**
    * Number of records (rows) in the batch.
@@ -945,5 +945,97 @@ public class RecordBatchSizer {
       ColumnSize colSize = columnSizes.get(w.getField().getName());
       colSize.allocateVector(w.getValueVector(), recordCount);
     }
+  }
+
+  /**
+   * A map that can handle quoted and unquoted column names; ideally this logic temporary and
+   * should be removed as soon as all readers standardize handling of missing columns. Quoted columns
+   * have been added in DRILL-4264.
+   */
+  private static final class QuoteInsensitiveMap implements Map<String, ColumnSize> {
+    /** Original Map */
+    private final Map<String, ColumnSize> originalMap;
+
+    private QuoteInsensitiveMap(Map<String, ColumnSize> originalMap) {
+      this.originalMap = originalMap;
+    }
+
+    @Override
+    public int size() {
+      return originalMap.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return originalMap.isEmpty();
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+      return originalMap.containsKey(key);
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+      return originalMap.containsValue(value);
+    }
+
+    @Override
+    public ColumnSize get(Object key) {
+      ColumnSize value = originalMap.get(key);
+
+      if (value == null) {
+        value = originalMap.get(quoteString(key));
+      }
+      return value;
+    }
+
+    @Override
+    public ColumnSize put(String key, ColumnSize value) {
+      return originalMap.put(key, value);
+    }
+
+    @Override
+    public ColumnSize remove(Object key) {
+      ColumnSize value = originalMap.remove(key);
+
+      if (value == null) {
+        value = originalMap.remove(quoteString(key));
+      }
+      return value;
+    }
+
+    @Override
+    public void putAll(Map<? extends String, ? extends ColumnSize> m) {
+      originalMap.putAll(m);
+    }
+
+    @Override
+    public void clear() {
+      originalMap.clear();
+    }
+
+    @Override
+    public Set<String> keySet() {
+      return originalMap.keySet();
+    }
+
+    @Override
+    public Collection<ColumnSize> values() {
+      return originalMap.values();
+    }
+
+    @Override
+    public Set<Entry<String, ColumnSize>> entrySet() {
+      return originalMap.entrySet();
+    }
+
+    private String quoteString(Object key) {
+      if (key instanceof String) {
+        return "`" + key + '`';
+      }
+      throw new IllegalArgumentException();
+    }
+
   }
 }
