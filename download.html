@@ -20,6 +20,16 @@ title: Download
 {% if site.data.version.blog_post %}<li><a href="{{ site.baseurl }}{{ site.data.version.blog_post }}">Blog post</a></li>{% endif %}
 {% if site.data.version.release_notes %}<li><a href="{{ site.data.version.release_notes }}">Release notes (JIRA)</a></li>{% endif %}
 <li><a href="https://github.com/apache/drill/tree/{{ site.data.version.full_version }}">Source code</a></li>
+    <li>Verification Links:
+        <ul>
+            <li>
+                <a href="http://www.apache.org/dyn/closer.cgi/drill/drill-{{ site.data.version.full_version }}/apache-drill-{{ site.data.version.full_version }}.tar.gz.sha512">SHA</a>
+            </li>
+            <li>
+                <a href="http://www.apache.org/dyn/closer.cgi/drill/drill-{{ site.data.version.full_version }}/apache-drill-{{ site.data.version.full_version }}.tar.gz.asc">ACS</a>
+            </li>
+        </ul>
+    </li>
 </ul>
 
 <p>If you're looking for an older release, see the <a href="{{ site.baseurl }}/docs/release-notes/">release notes</a>.
