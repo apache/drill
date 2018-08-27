@@ -29,7 +29,7 @@ import org.apache.drill.exec.store.RecordReader;
 
 import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP> {
   @Override

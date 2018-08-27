@@ -44,8 +44,8 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.QueryWorkUnit.MinorFragmentDefn;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * SimpleParallelizerMultiPlans class is an extension to SimpleParallelizer

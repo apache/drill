@@ -34,7 +34,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 public class KafkaTestBase extends PlanTestBase {
   protected static KafkaStoragePluginConfig storagePluginConfig;

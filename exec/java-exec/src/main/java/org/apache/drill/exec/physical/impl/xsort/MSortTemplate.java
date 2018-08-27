@@ -35,8 +35,8 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.util.IndexedSortable;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Queues;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 public abstract class MSortTemplate implements MSorter, IndexedSortable {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MSortTemplate.class);

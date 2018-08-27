@@ -29,7 +29,7 @@ import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import org.apache.drill.shaded.guava.com.google.common.util.concurrent.ListenableFuture;
 
 import io.netty.buffer.DrillBuf;
 

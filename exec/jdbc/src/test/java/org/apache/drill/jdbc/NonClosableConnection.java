@@ -17,7 +17,7 @@
  */
 package org.apache.drill.jdbc;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.sql.Array;
 import java.sql.Blob;

@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.planner;
 
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Longs;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.expression.SchemaPath;
@@ -51,7 +51,7 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.io.api.Binary;
 import org.joda.time.DateTimeConstants;

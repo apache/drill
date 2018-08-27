@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.decimal;
 
-import com.google.common.primitives.Longs;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Longs;
 import io.netty.buffer.DrillBuf;
 import org.apache.parquet.io.api.RecordConsumer;
 

@@ -26,8 +26,8 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import com.carrotsearch.hppc.ObjectFloatHashMap;
 import com.carrotsearch.hppc.cursors.ObjectFloatCursor;
 import com.carrotsearch.hppc.cursors.ObjectLongCursor;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class AffinityCreator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AffinityCreator.class);

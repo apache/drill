@@ -20,8 +20,8 @@ package org.apache.drill.exec.store.sys.store.provider;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.sys.PersistentStore;

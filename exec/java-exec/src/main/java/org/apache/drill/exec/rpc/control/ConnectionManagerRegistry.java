@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.exec.rpc.BitRpcUtility;
 
 public class ConnectionManagerRegistry implements Iterable<ControlConnectionManager> {

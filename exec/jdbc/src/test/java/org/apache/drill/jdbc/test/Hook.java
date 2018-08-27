@@ -20,7 +20,7 @@ package org.apache.drill.jdbc.test;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
 
 public enum Hook {
   /** Called with the logical plan. */

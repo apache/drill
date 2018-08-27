@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SecurityTest;

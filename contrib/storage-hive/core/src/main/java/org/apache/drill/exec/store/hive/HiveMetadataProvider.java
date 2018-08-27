@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Ordering;
+import org.apache.drill.shaded.guava.com.google.common.collect.TreeMultimap;
+import org.apache.drill.shaded.guava.com.google.common.io.ByteArrayDataOutput;
+import org.apache.drill.shaded.guava.com.google.common.io.ByteStreams;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.util.ImpersonationUtil;

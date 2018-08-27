@@ -25,7 +25,7 @@ import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 
 @JsonTypeName("filter")
 public class Filter extends SingleInputOperator {

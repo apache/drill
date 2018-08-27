@@ -29,8 +29,8 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkState;
 
 public abstract class AbstractServerConnection<S extends ServerConnection<S>>
     extends AbstractRemoteConnection

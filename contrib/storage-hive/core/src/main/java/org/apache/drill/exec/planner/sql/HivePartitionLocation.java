@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.planner.SimplePartitionLocation;
 
 import java.util.List;

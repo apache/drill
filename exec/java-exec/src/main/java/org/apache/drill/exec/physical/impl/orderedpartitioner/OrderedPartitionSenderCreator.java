@@ -28,7 +28,7 @@ import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec;
 import org.apache.drill.exec.record.RecordBatch;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * <br/>

@@ -47,7 +47,7 @@ import java.util.Map;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 // Partition descriptor for hive tables
 public class HivePartitionDescriptor extends AbstractPartitionDescriptor {

@@ -18,7 +18,7 @@
 package org.apache.drill.exec.util;
 
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.Arrays;
 

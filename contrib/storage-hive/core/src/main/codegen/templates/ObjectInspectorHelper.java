@@ -39,8 +39,8 @@ import java.lang.UnsupportedOperationException;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.ArrayListMultimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 
 public class ObjectInspectorHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ObjectInspectorHelper.class);

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.pcap.decoder;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.io.InputStream;

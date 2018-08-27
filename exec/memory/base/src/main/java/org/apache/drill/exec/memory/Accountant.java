@@ -24,8 +24,8 @@ import javax.annotation.concurrent.ThreadSafe;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.util.AssertionUtil;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * Provides a concurrent way to manage account for memory usage without locking. Used as basis for Allocators. All

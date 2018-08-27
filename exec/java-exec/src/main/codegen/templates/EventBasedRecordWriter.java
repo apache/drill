@@ -23,8 +23,8 @@ import org.apache.drill.exec.planner.physical.WriterPrel;
 
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.physical.WriterPrel;

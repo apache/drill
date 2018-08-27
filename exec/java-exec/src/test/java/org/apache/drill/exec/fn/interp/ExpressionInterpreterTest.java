@@ -55,7 +55,7 @@ import org.joda.time.DateTimeZone;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @Category({SlowTest.class, SqlTest.class})
 public class ExpressionInterpreterTest  extends PopUnitTestBase {

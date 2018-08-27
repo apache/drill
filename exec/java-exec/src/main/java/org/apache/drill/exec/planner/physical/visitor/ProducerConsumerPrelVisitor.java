@@ -24,7 +24,7 @@ import org.apache.drill.exec.planner.physical.ProducerConsumerPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.calcite.rel.RelNode;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 
 public class ProducerConsumerPrelVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{

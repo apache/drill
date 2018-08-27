@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.common;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 

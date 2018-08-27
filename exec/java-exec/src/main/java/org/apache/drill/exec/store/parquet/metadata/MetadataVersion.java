@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.store.parquet.metadata;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableSortedSet;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ComparisonChain;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSortedSet;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 
 import java.util.SortedSet;

@@ -20,8 +20,8 @@ package org.apache.drill.common;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkState;
 
 public final class KerberosUtil {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KerberosUtil.class);

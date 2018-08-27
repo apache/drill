@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.hive;
 
-import com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.test.TestBuilder;
 import org.apache.drill.categories.SlowTest;

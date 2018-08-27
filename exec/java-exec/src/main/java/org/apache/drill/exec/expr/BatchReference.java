@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * Holder class that contains batch naming, batch  and record index. Batch index is used when batch is hyper container.

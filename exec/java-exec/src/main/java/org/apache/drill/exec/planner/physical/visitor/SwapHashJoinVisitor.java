@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.planner.physical.HashJoinPrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;

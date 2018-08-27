@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.google.common.base.Functions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.base.Functions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;

@@ -39,8 +39,8 @@ import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Converts FunctionCalls to Java Expressions.

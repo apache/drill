@@ -22,7 +22,7 @@ import java.net.URLClassLoader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 /**
  * Class loader for "plain-old Java" generated classes.

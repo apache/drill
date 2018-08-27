@@ -17,7 +17,7 @@
  */
 package org.apache.drill.test;
 
-import com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.Description;
 

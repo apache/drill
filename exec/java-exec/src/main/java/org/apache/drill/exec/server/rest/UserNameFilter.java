@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;

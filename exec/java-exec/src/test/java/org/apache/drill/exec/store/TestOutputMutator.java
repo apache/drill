@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
@@ -35,7 +35,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<?>> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOutputMutator.class);

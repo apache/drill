@@ -26,7 +26,7 @@ import org.objectweb.asm.Type;
 
 import com.carrotsearch.hppc.ObjectIntHashMap;
 import com.carrotsearch.hppc.cursors.ObjectIntCursor;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 class ValueHolderIden {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderIden.class);

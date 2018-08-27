@@ -19,8 +19,8 @@ package org.apache.drill.exec.schema;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
 public abstract class Field {
   final String prefixFieldName;

@@ -29,7 +29,7 @@ import java.util.Map;
 
 import javax.tools.SimpleJavaFileObject;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 /* package */
 final class DrillJavaFileObject extends SimpleJavaFileObject {

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.common.util;
 
-import com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.commons.lang3.StringEscapeUtils;

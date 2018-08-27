@@ -19,8 +19,8 @@ package org.apache.drill.common.collections;
 
 import java.util.Map;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class ImmutableEntry<K, V> implements Map.Entry<K, V>  {
   private final K key;

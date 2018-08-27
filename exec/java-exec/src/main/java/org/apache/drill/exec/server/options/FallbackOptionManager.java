@@ -19,7 +19,7 @@ package org.apache.drill.exec.server.options;
 
 import java.util.Iterator;
 
-import com.google.common.collect.Iterables;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 
 /**
  * An {@link OptionManager} which allows for falling back onto another {@link OptionManager} when retrieving options.

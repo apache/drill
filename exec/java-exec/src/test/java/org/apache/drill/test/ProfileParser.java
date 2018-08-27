@@ -38,7 +38,7 @@ import javax.json.JsonValue;
 
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * Parses a query profile and provides access to various bits of the profile

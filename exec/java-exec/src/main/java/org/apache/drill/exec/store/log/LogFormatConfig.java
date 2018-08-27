@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Objects;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import java.util.ArrayList;

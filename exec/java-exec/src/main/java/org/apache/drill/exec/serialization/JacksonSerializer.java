@@ -22,7 +22,7 @@ import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Objects;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
 
 public class JacksonSerializer<T> implements InstanceSerializer<T> {
   private final ObjectReader reader;

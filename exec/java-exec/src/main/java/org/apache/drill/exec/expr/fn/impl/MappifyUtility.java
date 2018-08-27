@@ -27,7 +27,7 @@ import org.apache.drill.exec.vector.complex.MapUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
-import com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 import io.netty.buffer.DrillBuf;
 

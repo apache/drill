@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.openTSDB;
 
-import com.google.common.base.Splitter;
+import org.apache.drill.shaded.guava.com.google.common.base.Splitter;
 import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

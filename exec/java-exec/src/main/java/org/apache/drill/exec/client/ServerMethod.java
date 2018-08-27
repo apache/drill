@@ -25,10 +25,10 @@ import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.rpc.user.UserRpcUtils;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 /**
  * A enumeration of server methods, and the version they were introduced

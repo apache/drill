@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.record.RecordBatch;
 import org.slf4j.Logger;

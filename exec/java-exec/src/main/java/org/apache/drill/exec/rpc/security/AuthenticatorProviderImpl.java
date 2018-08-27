@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.security;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;

@@ -23,7 +23,7 @@ import org.apache.drill.common.Version;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * Utility class for User RPC

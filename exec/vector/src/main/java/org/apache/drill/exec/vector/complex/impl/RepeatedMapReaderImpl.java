@@ -26,7 +26,7 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 @SuppressWarnings("unused")
 public class RepeatedMapReaderImpl extends AbstractFieldReader{

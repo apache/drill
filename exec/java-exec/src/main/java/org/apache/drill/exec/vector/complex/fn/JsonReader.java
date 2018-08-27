@@ -36,9 +36,9 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class JsonReader extends BaseJsonProcessor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory

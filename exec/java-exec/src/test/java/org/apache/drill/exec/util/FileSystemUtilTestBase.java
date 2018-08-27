@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.util;
 
-import com.google.common.base.Strings;
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.hadoop.fs.FileSystem;

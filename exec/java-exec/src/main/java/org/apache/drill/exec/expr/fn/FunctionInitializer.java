@@ -23,7 +23,7 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.codehaus.commons.compiler.CompileException;

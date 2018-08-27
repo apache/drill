@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.glassfish.jersey.server.mvc.Viewable;

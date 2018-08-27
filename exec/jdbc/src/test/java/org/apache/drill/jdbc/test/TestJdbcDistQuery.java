@@ -38,8 +38,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @Category(JdbcTest.class)
 public class TestJdbcDistQuery extends JdbcTestBase {

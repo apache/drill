@@ -19,7 +19,7 @@ package org.apache.drill.exec.memory;
 
 import org.apache.drill.common.config.DrillConfig;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 public class RootAllocatorFactory {
 

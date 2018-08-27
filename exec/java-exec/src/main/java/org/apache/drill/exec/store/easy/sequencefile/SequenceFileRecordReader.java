@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.security.PrivilegedExceptionAction;
 
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;

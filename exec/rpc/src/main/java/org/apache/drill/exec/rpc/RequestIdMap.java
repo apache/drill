@@ -25,7 +25,7 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
 import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.procedures.IntObjectProcedure;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;

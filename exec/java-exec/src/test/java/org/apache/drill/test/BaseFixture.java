@@ -23,7 +23,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
 
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 
 /**
  * Base class for "fixtures." Provides the basics such as the Drill

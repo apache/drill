@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.options;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * This holds all the information about an option.

@@ -19,9 +19,9 @@ package org.apache.drill.exec.coord.store;
 
 import com.dyuproject.protostuff.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import com.google.protobuf.Message;
 import org.apache.drill.exec.serialization.JacksonSerializer;
 import org.apache.drill.exec.serialization.ProtoSerializer;

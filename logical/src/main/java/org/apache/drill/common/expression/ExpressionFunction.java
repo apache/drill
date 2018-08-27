@@ -25,8 +25,8 @@ import org.apache.drill.common.expression.visitors.ExpressionValidationException
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.reflect.TypeToken;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("unchecked")
 public class ExpressionFunction {

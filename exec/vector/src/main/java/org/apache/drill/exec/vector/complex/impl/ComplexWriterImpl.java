@@ -24,7 +24,7 @@ import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.StateTool;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWriter {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexWriterImpl.class);

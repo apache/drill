@@ -57,9 +57,9 @@ import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DEFAULT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;

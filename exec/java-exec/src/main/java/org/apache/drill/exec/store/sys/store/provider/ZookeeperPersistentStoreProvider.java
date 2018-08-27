@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.sys.store.provider;
 
 import java.io.IOException;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;

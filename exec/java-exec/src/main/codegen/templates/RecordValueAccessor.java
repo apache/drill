@@ -21,7 +21,7 @@
 
 package org.apache.drill.exec.record;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.TypeHelper;

@@ -25,7 +25,7 @@ import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
-import com.google.common.collect.Iterables;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 
 public class LimitBatchCreator implements BatchCreator<Limit> {
   @Override

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.exec.record.RecordBatch;
 
 import javax.annotation.Nullable;

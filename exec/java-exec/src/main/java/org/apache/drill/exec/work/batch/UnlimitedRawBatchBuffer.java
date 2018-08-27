@@ -23,7 +23,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RawFragmentBatch;
 
-import com.google.common.collect.Queues;
+import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 public class UnlimitedRawBatchBuffer extends BaseRawBatchBuffer<RawFragmentBatch> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnlimitedRawBatchBuffer.class);

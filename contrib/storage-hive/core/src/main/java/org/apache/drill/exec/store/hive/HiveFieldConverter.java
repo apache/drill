@@ -53,7 +53,7 @@ import org.apache.hadoop.io.Text;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 import static org.apache.drill.exec.store.hive.HiveUtilities.throwUnsupportedHiveDataTypeError;
 

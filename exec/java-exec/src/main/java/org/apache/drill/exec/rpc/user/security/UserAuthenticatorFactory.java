@@ -26,7 +26,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 
-import com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
 /**
  * Factory class which provides {@link UserAuthenticator} implementation based on the BOOT options.

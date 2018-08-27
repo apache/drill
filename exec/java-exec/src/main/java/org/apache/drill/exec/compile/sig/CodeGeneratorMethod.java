@@ -21,8 +21,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import com.thoughtworks.paranamer.AnnotationParanamer;
 import com.thoughtworks.paranamer.Paranamer;
 

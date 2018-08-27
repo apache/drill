@@ -30,8 +30,8 @@ import org.apache.drill.exec.planner.physical.visitor.BasePrelVisitor;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.sql.SqlExplainLevel;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, RuntimeException> {
 

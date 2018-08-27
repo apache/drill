@@ -26,7 +26,7 @@ import org.codehaus.janino.Java.CompilationUnit.StaticImportOnDemandDeclaration;
 import org.codehaus.janino.Java.CompilationUnit.TypeImportOnDemandDeclaration;
 import org.codehaus.janino.util.Traverser;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 
 public class ImportGrabber {

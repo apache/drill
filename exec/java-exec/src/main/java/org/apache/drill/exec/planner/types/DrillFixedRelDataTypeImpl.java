@@ -28,7 +28,7 @@ import org.apache.calcite.rel.type.RelDataTypePrecedenceList;
 import org.apache.calcite.sql.type.SqlTypeExplicitPrecedenceList;
 import org.apache.calcite.sql.type.SqlTypeName;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Implements RowType for fixed field list with ANY type.

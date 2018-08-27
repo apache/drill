@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.coord.zk;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.parquet.Strings;
 
 import java.net.URL;

@@ -32,8 +32,8 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class VectorUtil {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorUtil.class);

@@ -32,7 +32,7 @@ import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.WritableBatch;
 
-import com.google.common.collect.ArrayListMultimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 
 /**
  * Broadcast Sender broadcasts incoming batches to all receivers (one or more).

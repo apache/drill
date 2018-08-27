@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkArgument;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FieldReference;
@@ -31,8 +31,8 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.record.TypedFieldId;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JExpr;

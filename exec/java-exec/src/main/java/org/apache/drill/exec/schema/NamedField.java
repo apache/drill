@@ -20,7 +20,7 @@ package org.apache.drill.exec.schema;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
 
-import com.google.common.base.MoreObjects;
+import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
 
 public class NamedField extends Field {
   final MajorType keyType;

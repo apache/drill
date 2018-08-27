@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.jdbc;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
@@ -31,9 +32,9 @@ import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rex.RexNode;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 
 abstract class DrillJdbcRuleBase extends ConverterRule {
@@ -51,7 +52,7 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
   protected final JdbcConvention out;
 
   private DrillJdbcRuleBase(Class<? extends RelNode> clazz, RelTrait in, JdbcConvention out, String description) {
-    super(clazz, input -> true, in, out, DrillRelFactories.LOGICAL_BUILDER, description);
+    super(clazz, (Predicate<RelNode>) input -> true, in, out, DrillRelFactories.LOGICAL_BUILDER, description);
     this.out = out;
   }
 

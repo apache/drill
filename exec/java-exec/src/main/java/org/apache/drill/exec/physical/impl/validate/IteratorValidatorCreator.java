@@ -26,7 +26,7 @@ import org.apache.drill.exec.physical.config.IteratorValidator;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class IteratorValidatorCreator implements BatchCreator<IteratorValidator>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidatorCreator.class);

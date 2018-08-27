@@ -19,7 +19,7 @@ package org.apache.drill.exec.vector;
 
 import java.util.Collection;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.MaterializedField;
 

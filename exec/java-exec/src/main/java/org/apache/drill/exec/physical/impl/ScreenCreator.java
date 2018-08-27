@@ -36,7 +36,7 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class ScreenCreator implements RootCreator<Screen> {
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ScreenCreator.class);

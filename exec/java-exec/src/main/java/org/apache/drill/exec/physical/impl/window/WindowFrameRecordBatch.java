@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.window;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.collect.Iterables;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.exceptions.UserException;
@@ -47,7 +47,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.sun.codemodel.JExpr;
 import org.apache.drill.exec.vector.ValueVector;
 

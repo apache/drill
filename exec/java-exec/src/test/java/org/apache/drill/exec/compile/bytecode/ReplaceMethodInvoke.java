@@ -34,8 +34,8 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.util.Textifier;
 import org.objectweb.asm.util.TraceClassVisitor;
 
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
 public class ReplaceMethodInvoke {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReplaceMethodInvoke.class);

@@ -35,8 +35,8 @@ import org.apache.drill.exec.memory.BaseAllocator.Verbosity;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.BufferManager;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * Manages the relationship between one or more allocators and a particular

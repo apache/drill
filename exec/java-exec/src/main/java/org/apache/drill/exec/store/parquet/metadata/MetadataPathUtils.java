@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.metadata;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.hadoop.fs.Path;
 

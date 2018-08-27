@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 

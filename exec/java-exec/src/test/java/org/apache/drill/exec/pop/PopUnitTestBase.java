@@ -35,8 +35,8 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.junit.BeforeClass;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 
 public abstract class PopUnitTestBase  extends ExecTest{
 //  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PopUnitTestBase.class);

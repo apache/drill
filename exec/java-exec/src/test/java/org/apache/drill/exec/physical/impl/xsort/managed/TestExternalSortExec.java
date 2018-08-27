@@ -37,7 +37,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.junit.experimental.categories.Category;
 
 @Category(OperatorTest.class)

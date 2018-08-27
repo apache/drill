@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class RowSetTestUtils {
 

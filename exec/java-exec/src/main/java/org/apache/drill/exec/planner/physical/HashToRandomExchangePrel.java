@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 
 import org.apache.calcite.rel.type.RelDataType;

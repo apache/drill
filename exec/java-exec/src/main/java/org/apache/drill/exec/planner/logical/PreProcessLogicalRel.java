@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.logical;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rex.RexShuttle;

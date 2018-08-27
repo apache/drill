@@ -24,7 +24,7 @@ import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Fragment.class);

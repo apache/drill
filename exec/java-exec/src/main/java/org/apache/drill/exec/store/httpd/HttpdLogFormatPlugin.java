@@ -55,8 +55,8 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import java.util.Map;
 import org.apache.drill.exec.store.RecordReader;
 import org.slf4j.Logger;

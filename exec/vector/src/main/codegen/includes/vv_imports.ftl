@@ -17,15 +17,15 @@
     limitations under the License.
 
 -->
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkArgument;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.ObjectArrays;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ObjectArrays;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.ObjectArrays;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.collect.ObjectArrays;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import io.netty.buffer.*;
 
 import org.apache.commons.lang3.ArrayUtils;

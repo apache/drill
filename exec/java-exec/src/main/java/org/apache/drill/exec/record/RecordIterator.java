@@ -25,8 +25,8 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
-import com.google.common.collect.Range;
-import com.google.common.collect.TreeRangeMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Range;
+import org.apache.drill.shaded.guava.com.google.common.collect.TreeRangeMap;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 

@@ -18,8 +18,8 @@
 package org.apache.drill.exec.store;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import com.jasonclawson.jackson.dataformat.hocon.HoconFactory;
 import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.LogicalPlanPersistence;

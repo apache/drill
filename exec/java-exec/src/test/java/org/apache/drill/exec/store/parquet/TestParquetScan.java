@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;

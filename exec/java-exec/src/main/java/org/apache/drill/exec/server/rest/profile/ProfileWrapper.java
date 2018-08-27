@@ -39,8 +39,8 @@ import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.rest.WebServer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.CaseFormat;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.base.CaseFormat;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 /**
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.

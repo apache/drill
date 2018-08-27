@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class ResourceInputStream extends ByteArrayInputStream implements Seekable, PositionedReadable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResourceInputStream.class);

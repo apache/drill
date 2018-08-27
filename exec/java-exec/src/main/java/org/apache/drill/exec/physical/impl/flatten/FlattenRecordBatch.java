@@ -58,7 +58,7 @@ import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.carrotsearch.hppc.IntHashSet;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.sun.codemodel.JExpr;
 
 // TODO - handle the case where a user tries to flatten a scalar, should just act as a project all of the columns exactly

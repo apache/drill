@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.physical.impl.agg;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.apache.drill.exec.util.JsonStringArrayList;

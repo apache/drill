@@ -21,8 +21,8 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ComparisonChain;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ComparisonChain;
 
 /**
  * Encapsulates version information and provides ordering

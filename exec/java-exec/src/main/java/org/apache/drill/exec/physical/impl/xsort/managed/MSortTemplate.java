@@ -30,8 +30,8 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.hadoop.util.IndexedSortable;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Queues;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 import io.netty.buffer.DrillBuf;
 

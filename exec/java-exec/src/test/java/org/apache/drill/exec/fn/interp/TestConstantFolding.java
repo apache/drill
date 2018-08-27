@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.fn.interp;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import mockit.integration.junit4.JMockit;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.SqlTest;

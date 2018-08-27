@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.security;
 
-import com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 

@@ -38,8 +38,8 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.base.Strings;
-import com.google.common.util.concurrent.SettableFuture;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.util.concurrent.SettableFuture;
 
 public class ParquetResultListener implements UserResultsListener {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetResultListener.class);

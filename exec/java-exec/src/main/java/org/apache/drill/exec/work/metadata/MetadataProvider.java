@@ -73,10 +73,10 @@ import org.apache.drill.exec.store.ischema.Records.Schema;
 import org.apache.drill.exec.store.ischema.Records.Table;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ComparisonChain;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Ordering;
 
 /**
  * Contains worker {@link Runnable} classes for providing the metadata and related helper methods.

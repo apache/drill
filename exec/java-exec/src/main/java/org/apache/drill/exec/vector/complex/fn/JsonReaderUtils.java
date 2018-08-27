@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex.fn;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;

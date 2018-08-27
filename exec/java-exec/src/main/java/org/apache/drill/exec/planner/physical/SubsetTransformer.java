@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptRule;

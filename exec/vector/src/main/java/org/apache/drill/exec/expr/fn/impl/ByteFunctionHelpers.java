@@ -22,7 +22,7 @@ import io.netty.util.internal.PlatformDependent;
 
 import org.apache.drill.exec.util.DecimalUtility;
 
-import com.google.common.primitives.UnsignedLongs;
+import org.apache.drill.shaded.guava.com.google.common.primitives.UnsignedLongs;
 
 import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.categories.HbaseStorageTest;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.exec.exception.StoreException;

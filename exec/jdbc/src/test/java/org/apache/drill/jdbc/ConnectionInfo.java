@@ -20,9 +20,9 @@ package org.apache.drill.jdbc;
 import java.util.Map;
 import java.util.Properties;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
 /**
  * An immutable bag of parameters that describes a {@link java.sql.Connection}.

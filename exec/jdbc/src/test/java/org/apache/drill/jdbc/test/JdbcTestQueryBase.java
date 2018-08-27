@@ -30,7 +30,7 @@ import org.apache.drill.jdbc.JdbcTestBase;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 public class JdbcTestQueryBase extends JdbcTestBase {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTestQueryBase.class);

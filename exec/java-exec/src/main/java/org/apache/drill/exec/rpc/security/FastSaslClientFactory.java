@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.rpc.security;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.sasl.Sasl;

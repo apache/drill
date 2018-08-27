@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.dfs;
 
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 /**
  * A metadata context that holds state across multiple invocations of

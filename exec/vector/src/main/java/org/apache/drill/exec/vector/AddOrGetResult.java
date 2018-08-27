@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class AddOrGetResult<V extends ValueVector> {
   private final V vector;

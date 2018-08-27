@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.hbase;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -27,12 +27,12 @@ import org.apache.drill.exec.store.hbase.HBaseStoragePlugin.HBaseConnectionKey;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.util.concurrent.UncheckedExecutionException;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
+import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
+import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
+import org.apache.drill.shaded.guava.com.google.common.util.concurrent.UncheckedExecutionException;
 
 /**
  * <p>A singleton class which manages the lifecycle of HBase connections.</p>

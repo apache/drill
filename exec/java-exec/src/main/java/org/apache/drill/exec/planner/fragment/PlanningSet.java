@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.fragment;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 public class PlanningSet implements Iterable<Wrapper> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningSet.class);

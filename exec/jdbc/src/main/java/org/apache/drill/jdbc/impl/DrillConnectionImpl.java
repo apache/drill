@@ -63,7 +63,7 @@ import org.apache.drill.jdbc.InvalidParameterSqlException;
 import org.apache.drill.jdbc.JdbcApiSqlException;
 import org.slf4j.Logger;
 
-import com.google.common.base.Throwables;
+import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DEFAULT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;

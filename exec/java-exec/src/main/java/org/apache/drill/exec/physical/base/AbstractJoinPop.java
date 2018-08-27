@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.base;
 
-import com.google.common.collect.Iterators;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.JoinCondition;

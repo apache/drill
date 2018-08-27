@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 import java.util.List;
 

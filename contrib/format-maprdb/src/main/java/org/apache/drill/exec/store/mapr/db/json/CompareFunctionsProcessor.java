@@ -38,8 +38,8 @@ import org.ojai.Value;
 import org.ojai.types.ODate;
 import org.ojai.types.OTime;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import com.mapr.db.rowcol.KeyValueBuilder;
 
 class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpression, RuntimeException> {

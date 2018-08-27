@@ -22,8 +22,8 @@ import java.io.IOException;
 
 import com.dyuproject.protostuff.JsonIOUtil;
 import com.dyuproject.protostuff.Schema;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import com.google.protobuf.Message;
 
 public class ProtoSerializer<T, B extends Message.Builder> implements InstanceSerializer<T> {

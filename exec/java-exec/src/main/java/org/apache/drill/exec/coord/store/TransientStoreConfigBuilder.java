@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.coord.store;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.exec.serialization.InstanceSerializer;
 
 public class TransientStoreConfigBuilder<T> {

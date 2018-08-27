@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.common.types.TypeProtos;

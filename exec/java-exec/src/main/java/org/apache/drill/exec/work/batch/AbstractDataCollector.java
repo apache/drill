@@ -28,7 +28,7 @@ import org.apache.drill.exec.proto.BitControl.Collector;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.util.ArrayWrappedIntIntMap;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public abstract class AbstractDataCollector implements DataCollector {
   private final int oppositeMajorFragmentId;

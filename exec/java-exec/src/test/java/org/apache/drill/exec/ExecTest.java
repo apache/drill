@@ -18,7 +18,7 @@
 package org.apache.drill.exec;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import mockit.Mock;
 import mockit.MockUp;
 import org.antlr.runtime.ANTLRStringStream;

@@ -34,7 +34,7 @@ import org.apache.calcite.rex.RexNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
   private static final Logger logger = LoggerFactory
