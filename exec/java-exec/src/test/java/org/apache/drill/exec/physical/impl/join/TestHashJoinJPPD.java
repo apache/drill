@@ -22,10 +22,10 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
-import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
 import org.apache.drill.exec.work.filter.BloomFilter;
 import org.apache.drill.exec.work.filter.BloomFilterDef;
 import org.apache.drill.exec.work.filter.RuntimeFilterDef;
+import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -58,7 +58,7 @@ public class TestHashJoinJPPD extends PhysicalOpUnitTestBase {
     for ( int cnt = 1; cnt <= numRows; cnt++ ) {
       leftTable.add("[{\"lft\": " + cnt + ", \"a\" : \"a string\"}]");
     }
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(joinConf)
       .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
       .baselineColumns("lft", "a", "b", "rgt")
@@ -91,7 +91,7 @@ public class TestHashJoinJPPD extends PhysicalOpUnitTestBase {
     for ( int cnt = 1; cnt <= numRows; cnt++ ) {
       leftTable.add("[{\"lft\": " + cnt + ", \"a\" : \"a string\"}]");
     }
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(joinConf)
       .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
       .baselineColumns("lft", "a", "b", "rgt")

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -29,9 +30,17 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.test.rowSet.DirectRowSet;
+import org.apache.drill.test.rowSet.IndirectRowSet;
+import org.apache.drill.test.rowSet.RowSet;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class MockRecordBatch implements CloseableRecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordBatch.class);
@@ -39,41 +48,83 @@ public class MockRecordBatch implements CloseableRecordBatch {
   // These resources are owned by this RecordBatch
   protected VectorContainer container;
   protected SelectionVector2 sv2;
+  protected SelectionVector4 sv4;
   private int currentContainerIndex;
   private int currentOutcomeIndex;
   private boolean isDone;
   private boolean limitWithUnnest;
 
   // All the below resources are owned by caller
-  private final List<VectorContainer> allTestContainers;
-  private List<SelectionVector2> allTestContainersSv2;
+  private final List<RowSet> rowSets;
   private final List<IterOutcome> allOutcomes;
   private final FragmentContext context;
   protected final OperatorContext oContext;
   protected final BufferAllocator allocator;
 
-  public MockRecordBatch(FragmentContext context, OperatorContext oContext,
-                         List<VectorContainer> testContainers, List<IterOutcome> iterOutcomes,
-                         BatchSchema schema) {
+  private MockRecordBatch(@NotNull final FragmentContext context,
+                          @Nullable final OperatorContext oContext,
+                          @NotNull final List<RowSet> testRowSets,
+                          @NotNull final List<IterOutcome> iterOutcomes,
+                          @NotNull final BatchSchema schema,
+                          final boolean dummy) {
+    Preconditions.checkNotNull(testRowSets);
+    Preconditions.checkNotNull(iterOutcomes);
+    Preconditions.checkNotNull(schema);
+
     this.context = context;
     this.oContext = oContext;
-    this.allocator = oContext.getAllocator();
-    this.allTestContainers = testContainers;
+    this.rowSets = testRowSets;
+    this.allocator = context.getAllocator();
     this.container = new VectorContainer(allocator, schema);
     this.allOutcomes = iterOutcomes;
     this.currentContainerIndex = 0;
     this.currentOutcomeIndex = 0;
     this.isDone = false;
-    this.allTestContainersSv2 = null;
-    this.sv2 = null;
   }
 
-  public MockRecordBatch(FragmentContext context, OperatorContext oContext,
-                         List<VectorContainer> testContainers, List<IterOutcome> iterOutcomes,
-                         List<SelectionVector2> testContainersSv2, BatchSchema schema) {
-    this(context, oContext, testContainers, iterOutcomes, schema);
-    allTestContainersSv2 = testContainersSv2;
-    sv2 = (allTestContainersSv2 != null && allTestContainersSv2.size() > 0) ? new SelectionVector2(allocator) : null;
+  @Deprecated
+  public MockRecordBatch(@Nullable final FragmentContext context,
+                         @Nullable final OperatorContext oContext,
+                         @NotNull final List<VectorContainer> testContainers,
+                         @NotNull final List<IterOutcome> iterOutcomes,
+                         final BatchSchema schema) {
+    this(context,
+         oContext,
+         testContainers.stream().
+           map(container -> DirectRowSet.fromContainer(container)).
+           collect(Collectors.toList()),
+         iterOutcomes,
+         schema,
+         true);
+  }
+
+  @Deprecated
+  public MockRecordBatch(@Nullable final FragmentContext context,
+                         @Nullable final OperatorContext oContext,
+                         @NotNull final List<VectorContainer> testContainers,
+                         @NotNull final List<IterOutcome> iterOutcomes,
+                         @NotNull final List<SelectionVector2> selectionVector2s,
+                         final BatchSchema schema) {
+    this(context,
+      oContext,
+      new Supplier<List<RowSet>>() {
+        @Override
+        public List<RowSet> get() {
+          List<RowSet> rowSets = new ArrayList<>();
+
+          for (int index = 0; index < testContainers.size(); index++) {
+            if (index >= selectionVector2s.size()) {
+              rowSets.add(IndirectRowSet.fromContainer(testContainers.get(index)));
+            } else {
+              rowSets.add(IndirectRowSet.fromSv2(testContainers.get(index), selectionVector2s.get(index)));
+            }
+          }
+          return rowSets;
+        }
+      }.get(),
+      iterOutcomes,
+      schema,
+      true);
   }
 
   @Override
@@ -94,7 +145,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
 
   @Override
   public SelectionVector4 getSelectionVector4() {
-    return null;
+    return sv4;
   }
 
   @Override
@@ -146,10 +197,11 @@ public class MockRecordBatch implements CloseableRecordBatch {
       return IterOutcome.NONE;
     }
 
-    IterOutcome currentOutcome = IterOutcome.OK;
+    IterOutcome currentOutcome;
 
-    if (currentContainerIndex < allTestContainers.size()) {
-      final VectorContainer input = allTestContainers.get(currentContainerIndex);
+    if (currentContainerIndex < rowSets.size()) {
+      final RowSet rowSet = rowSets.get(currentContainerIndex);
+      final VectorContainer input = rowSet.container();
       final int recordCount = input.getRecordCount();
       // We need to do this since the downstream operator expects vector reference to be same
       // after first next call in cases when schema is not changed
@@ -158,19 +210,34 @@ public class MockRecordBatch implements CloseableRecordBatch {
         container.clear();
         container = new VectorContainer(allocator, inputSchema);
       }
-      container.transferIn(input);
-      container.setRecordCount(recordCount);
 
-      // Transfer the sv2 as well
-      final SelectionVector2 inputSv2 =
-        (allTestContainersSv2 != null && allTestContainersSv2.size() > 0)
-          ? allTestContainersSv2.get(currentContainerIndex) : null;
-      if (inputSv2 != null) {
-        sv2.allocateNewSafe(inputSv2.getCount());
-        for (int i=0; i<inputSv2.getCount(); ++i) {
-          sv2.setIndex(i, inputSv2.getIndex(i));
-        }
-        sv2.setRecordCount(inputSv2.getCount());
+      switch (rowSet.indirectionType()) {
+        case NONE:
+        case TWO_BYTE:
+          container.transferIn(input);
+          container.setRecordCount(recordCount);
+          final SelectionVector2 inputSv2 = ((RowSet.SingleRowSet) rowSet).getSv2();
+
+          if (sv2 != null) {
+            // Operators assume that new values for an Sv2 are transferred in.
+            sv2.allocateNewSafe(inputSv2.getCount());
+            for (int i=0; i<inputSv2.getCount(); ++i) {
+              sv2.setIndex(i, inputSv2.getIndex(i));
+            }
+            sv2.setRecordCount(inputSv2.getCount());
+          } else {
+            sv2 = inputSv2;
+          }
+
+          break;
+        case FOUR_BYTE:
+          // TODO find a clean way to transfer in for this case.
+          container.clear();
+          container = input;
+          sv4 = ((RowSet.HyperRowSet) rowSet).getSv4();
+          break;
+        default:
+          throw new UnsupportedOperationException();
       }
     }
 
@@ -221,5 +288,70 @@ public class MockRecordBatch implements CloseableRecordBatch {
 
   public void useUnnestKillHandlingForLimit(boolean limitWithUnnest) {
     this.limitWithUnnest = limitWithUnnest;
+  }
+
+  public static class Builder {
+    private final List<RowSet> rowSets = new ArrayList<>();
+    private final List<IterOutcome> iterOutcomes = new ArrayList<>();
+
+    private BatchSchema batchSchema;
+    private OperatorContext oContext;
+
+    public Builder() {
+    }
+
+    private Builder sendData(final RowSet rowSet, final IterOutcome outcome) {
+      Preconditions.checkState(batchSchema == null);
+      rowSets.add(rowSet);
+      iterOutcomes.add(outcome);
+      return this;
+    }
+
+    public Builder sendData(final RowSet rowSet) {
+      final IterOutcome outcome = rowSets.isEmpty()? IterOutcome.OK_NEW_SCHEMA: IterOutcome.OK;
+      return sendData(rowSet, outcome);
+    }
+
+    public Builder sendDataWithNewSchema(final RowSet rowSet) {
+      return sendData(rowSet, IterOutcome.OK_NEW_SCHEMA);
+    }
+
+    public Builder sendDataAndEmit(final RowSet rowSet) {
+      return sendData(rowSet, IterOutcome.EMIT);
+    }
+
+    public Builder terminateWithError(IterOutcome errorOutcome) {
+      Preconditions.checkArgument(errorOutcome != IterOutcome.STOP);
+      Preconditions.checkArgument(errorOutcome != IterOutcome.OUT_OF_MEMORY);
+
+      iterOutcomes.add(errorOutcome);
+      return this;
+    }
+
+    public Builder setSchema(final BatchSchema batchSchema) {
+      Preconditions.checkState(!rowSets.isEmpty());
+      this.batchSchema = Preconditions.checkNotNull(batchSchema);
+      return this;
+    }
+
+    public Builder withOperatorContext(final OperatorContext oContext) {
+      this.oContext = Preconditions.checkNotNull(oContext);
+      return this;
+    }
+
+    public MockRecordBatch build(final FragmentContext context) {
+      BatchSchema tempSchema = batchSchema;
+
+      if (tempSchema == null && !rowSets.isEmpty()) {
+        tempSchema = rowSets.get(0).batchSchema();
+      }
+
+      return new MockRecordBatch(context,
+        oContext,
+        rowSets,
+        iterOutcomes,
+        tempSchema,
+        true);
+    }
   }
 }

@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.limit;
 
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.config.Limit;
-import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
+import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
@@ -55,7 +55,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(limitConf)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b")
@@ -71,7 +71,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(limitConf)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b")
@@ -85,7 +85,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(limitConf)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b")
@@ -99,7 +99,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(limitConf)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b")
@@ -114,7 +114,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(limitConf)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b")
@@ -130,7 +130,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(limitConf)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b")
@@ -144,7 +144,7 @@ public class TestLimitOperator extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
       "[{\"a\": 5, \"b\" : 1 }]",
       "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(limitConf)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b")

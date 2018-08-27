@@ -15,12 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.unit;
+package org.apache.drill.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -40,9 +38,7 @@ import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
-import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
-import org.apache.drill.test.DrillTestWrapper;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -55,27 +51,22 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
-import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
-import org.apache.drill.test.OperatorFixture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -83,7 +74,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.TreeMap;
 
 public class PhysicalOpUnitTestBase extends ExecTest {
   protected MockExecutorFragmentContext fragContext;
@@ -96,9 +86,9 @@ public class PhysicalOpUnitTestBase extends ExecTest {
   @Rule
   public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
-  private final DrillConfig drillConf = DrillConfig.create();
-  private final ScanResult classpathScan = ClassPathScanner.fromPrescan(drillConf);
-  private final OperatorCreatorRegistry opCreatorReg = new OperatorCreatorRegistry(classpathScan);
+  protected final DrillConfig drillConf = DrillConfig.create();
+  protected final ScanResult classpathScan = ClassPathScanner.fromPrescan(drillConf);
+  protected final OperatorCreatorRegistry opCreatorReg = new OperatorCreatorRegistry(classpathScan);
 
   @Before
   public void setup() throws Exception {
@@ -186,141 +176,22 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     }
   }
 
-  protected OperatorTestBuilder opTestBuilder() {
-    return new OperatorTestBuilder();
+  /**
+   * Gets a {@link LegacyOperatorTestBuilder}.
+   * @deprecated Use {@link #opTestBuilder()} instead.
+   * @return A {@link LegacyOperatorTestBuilder}.
+   */
+  @Deprecated
+  protected LegacyOperatorTestBuilder legacyOpTestBuilder() {
+    return new LegacyOperatorTestBuilder(this);
   }
 
-  protected class OperatorTestBuilder {
-
-    private PhysicalOperator popConfig;
-    private String[] baselineColumns;
-    private List<Map<String, Object>> baselineRecords;
-    private List<List<String>> inputStreamsJSON;
-    private long initReservation = AbstractBase.INIT_ALLOCATION;
-    private long maxAllocation = AbstractBase.MAX_ALLOCATION;
-    private boolean checkBatchMemory;
-    private boolean expectNoRows;
-    private Long expectedBatchSize;
-    private Integer expectedNumBatches;
-    private Integer expectedTotalRows;
-
-    @SuppressWarnings({"unchecked", "resource"})
-    public void go() {
-      BatchCreator<PhysicalOperator> opCreator;
-      RecordBatch testOperator;
-      try {
-        mockOpContext(popConfig, initReservation, maxAllocation);
-
-        opCreator = (BatchCreator<PhysicalOperator>) opCreatorReg.getOperatorCreator(popConfig.getClass());
-        List<RecordBatch> incomingStreams = Lists.newArrayList();
-        if (inputStreamsJSON != null) {
-          for (List<String> batchesJson : inputStreamsJSON) {
-            incomingStreams.add(new ScanBatch(popConfig, fragContext,
-                getReaderListForJsonBatches(batchesJson, fragContext)));
-          }
-        }
-
-        testOperator = opCreator.getBatch(fragContext, popConfig, incomingStreams);
-
-        Map<String, List<Object>> actualSuperVectors = DrillTestWrapper.addToCombinedVectorResults(new BatchIterator(testOperator), expectedBatchSize, expectedNumBatches, expectedTotalRows);
-        if ( expectedTotalRows != null ) { return; } // when checking total rows, don't compare actual results
-
-        Map<String, List<Object>> expectedSuperVectors;
-
-        if (expectNoRows) {
-          expectedSuperVectors = new TreeMap<>();
-          for (String column : baselineColumns) {
-            expectedSuperVectors.put(column, new ArrayList<>());
-          }
-        } else {
-          expectedSuperVectors = DrillTestWrapper.translateRecordListToHeapVectors(baselineRecords);
-        }
-
-        DrillTestWrapper.compareMergedVectors(expectedSuperVectors, actualSuperVectors);
-
-      } catch (ExecutionSetupException e) {
-        throw new RuntimeException(e);
-      } catch (UnsupportedEncodingException e) {
-        throw new RuntimeException(e);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    public OperatorTestBuilder physicalOperator(PhysicalOperator batch) {
-      this.popConfig = batch;
-      return this;
-    }
-
-    public OperatorTestBuilder initReservation(long initReservation) {
-      this.initReservation = initReservation;
-      return this;
-    }
-
-    public OperatorTestBuilder maxAllocation(long maxAllocation) {
-      this.maxAllocation = maxAllocation;
-      return this;
-    }
-
-    public OperatorTestBuilder inputDataStreamJson(List<String> jsonBatches) {
-      this.inputStreamsJSON = new ArrayList<>();
-      this.inputStreamsJSON.add(jsonBatches);
-      return this;
-    }
-
-    public OperatorTestBuilder inputDataStreamsJson(List<List<String>> childStreams) {
-      this.inputStreamsJSON = childStreams;
-      return this;
-    }
-
-    public OperatorTestBuilder baselineColumns(String... columns) {
-      for (int i = 0; i < columns.length; i++) {
-        LogicalExpression ex = parseExpr(columns[i]);
-        if (ex instanceof SchemaPath) {
-          columns[i] = ((SchemaPath)ex).toExpr();
-        } else {
-          throw new IllegalStateException("Schema path is not a valid format.");
-        }
-      }
-      this.baselineColumns = columns;
-      return this;
-    }
-
-    public OperatorTestBuilder baselineValues(Object... baselineValues) {
-      if (baselineRecords == null) {
-        baselineRecords = new ArrayList<>();
-      }
-      Map<String, Object> ret = new HashMap<>();
-      int i = 0;
-      Preconditions.checkArgument(baselineValues.length == baselineColumns.length,
-          "Must supply the same number of baseline values as columns.");
-      for (String s : baselineColumns) {
-        ret.put(s, baselineValues[i]);
-        i++;
-      }
-      this.baselineRecords.add(ret);
-      return this;
-    }
-
-    public OperatorTestBuilder expectZeroRows() {
-      this.expectNoRows = true;
-      return this;
-    }
-
-    public OperatorTestBuilder expectedNumBatches(Integer expectedNumBatches) {
-      this.expectedNumBatches = expectedNumBatches;
-      return this;
-    }
-
-    public OperatorTestBuilder expectedBatchSize(Long batchSize) {
-      this.expectedBatchSize = batchSize;
-      return this;
-    }
-
-    public OperatorTestBuilder expectedTotalRows(Integer expectedTotalRows) {
-      this.expectedTotalRows = expectedTotalRows;
-      return this;
-    }
+  /**
+   * Gets an {@link OperatorTestBuilder}.
+   * @return An {@link OperatorTestBuilder}.
+   */
+  protected OperatorTestBuilder opTestBuilder() {
+    return new OperatorTestBuilder(this);
   }
 
   /**
@@ -446,11 +317,11 @@ public class PhysicalOpUnitTestBase extends ExecTest {
   /**
    * <h2>Note</h2>
    * <p>
-   *   The {@link MockPhysicalOperator} should only be used in {@link PhysicalOpUnitTestBase} because {@link PhysicalOpUnitTestBase}
+   *   The {@link MockPhysicalOperator} should only be used in {@link PhysicalOpUnitTestBase} and its ancestors because {@link PhysicalOpUnitTestBase}
    *   needs a dummy {@link MockPhysicalOperator} to be passed to Scanners.
    * </p>
    */
-  protected static class MockPhysicalOperator extends AbstractBase
+  public static class MockPhysicalOperator extends AbstractBase
   {
     @Override
     public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {

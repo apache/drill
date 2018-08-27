@@ -23,7 +23,7 @@ import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SlowTest;
 
 import org.apache.drill.exec.physical.config.HashJoinPOP;
-import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
+import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -52,7 +52,7 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
       rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
     }
 
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(joinConf)
       .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
       .baselineColumns("lft", "a", "b", "rgt")
@@ -79,7 +79,7 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
       rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
     }
 
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(joinConf)
       .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
       .baselineColumns("lft", "a", "b", "rgt")
@@ -110,7 +110,7 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
       // rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
     }
 
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(joinConf)
       .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
       .baselineColumns("lft", "a", "b", "rgt")

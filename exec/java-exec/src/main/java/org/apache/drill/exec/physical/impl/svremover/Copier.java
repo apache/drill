@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorAccessible;
 
 public interface Copier {
-  void setup(RecordBatch incoming, VectorContainer outgoing);
+  void setup(VectorAccessible incoming, VectorContainer outgoing);
   int copyRecords(int index, int recordCount);
   int appendRecord(int index);
   int appendRecords(int index, int recordCount);
