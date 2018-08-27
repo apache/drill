@@ -62,16 +62,15 @@ $(document).ready(function() {
   <div class="bookRelease">
     <div><i class="fa fa-book fa-lg"></i>
       <a href="https://urldefense.proofpoint.com/v2/url?u=https-3A__amzn.to_2N6FvPy&d=DwMFaQ&c=cskdkSMqhcnjZxdQVpwTXg&r=JHIio7I3eUbbe91YRxcNOw&m=FVOxmSwXwRbEACbYa-aH38YvJ5_op8yng62tr8g-dOQ&s=gKK9ct8VGg0pm2BRRpLzx2sXXxhW0r3i32wugQwJwdI&e=">&nbsp;Learning
-        Apache Drill</a></div>
+        Apache Drill</a>
+		</div>
   </div>
   <div class="news">News:
   </div>
   {% assign post = site.categories.blog[0] %}
-  <div><a href="{{ post.url | prepend: site.baseurl }}">{% if post.news_title %}{{ post.news_title }}{% else %}{{
-    post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
+  <div><a href="{{ post.url | prepend: site.baseurl }}">{% if post.news_title %}{{ post.news_title }}{% else %}{{ post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
   {% assign post = site.categories.blog[1] %}
-  <div><a href="{{ post.url | prepend: site.baseurl }}">{% if post.news_title %}{{ post.news_title }}{% else %}{{
-    post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
+  <div><a href="{{ post.url | prepend: site.baseurl }}">{% if post.news_title %}{{ post.news_title }}{% else %}{{ post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
 </div>
 
 <div class="mw introWrapper">
