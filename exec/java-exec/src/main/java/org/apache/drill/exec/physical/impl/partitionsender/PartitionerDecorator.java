@@ -18,15 +18,12 @@
 package org.apache.drill.exec.physical.impl.partitionsender;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.LockSupport;
 
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -34,9 +31,9 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.testing.CountDownLatchInjection;
+import org.apache.drill.exec.util.ExecutableTasksLatch;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.MoreExecutors;
 
 /**
@@ -53,9 +50,7 @@ public final class PartitionerDecorator {
 
   private List<Partitioner> partitioners;
   private final OperatorStats stats;
-  private final ExecutorService executor;
   private final FragmentContext context;
-  private final Thread thread;
   private final boolean enableParallelTaskExecution;
 
   PartitionerDecorator(List<Partitioner> partitioners, OperatorStats stats, FragmentContext context) {
@@ -67,8 +62,6 @@ public final class PartitionerDecorator {
     this.stats = stats;
     this.context = context;
     this.enableParallelTaskExecution = enableParallelTaskExecution;
-    executor =  enableParallelTaskExecution ?  context.getExecutor() : MoreExecutors.newDirectExecutorService();
-    thread = Thread.currentThread();
   }
 
   /**
@@ -95,7 +88,7 @@ public final class PartitionerDecorator {
    * decorator method to call multiple Partitioners initialize()
    */
   public void initialize() {
-    for (Partitioner part : partitioners ) {
+    for (Partitioner part : partitioners) {
       part.initialize();
     }
   }
@@ -104,7 +97,7 @@ public final class PartitionerDecorator {
    * decorator method to call multiple Partitioners clear()
    */
   public void clear() {
-    for (Partitioner part : partitioners ) {
+    for (Partitioner part : partitioners) {
       part.clear();
     }
   }
@@ -118,9 +111,9 @@ public final class PartitionerDecorator {
    * @return PartitionOutgoingBatch
    */
   public PartitionOutgoingBatch getOutgoingBatches(int index) {
-    for (Partitioner part : partitioners ) {
+    for (Partitioner part : partitioners) {
       PartitionOutgoingBatch outBatch = part.getOutgoingBatch(index);
-      if ( outBatch != null ) {
+      if (outBatch != null) {
         return outBatch;
       }
     }
@@ -143,13 +136,13 @@ public final class PartitionerDecorator {
     // interrupts waiting threads. This makes sure that we are actually interrupting the blocked partitioner threads.
     try (CountDownLatchInjection testCountDownLatch = injector.getLatch(context.getExecutionControls(), "partitioner-sender-latch")) {
       testCountDownLatch.initialize(1);
-      final AtomicInteger count = new AtomicInteger();
-      List<PartitionerTask> partitionerTasks = new ArrayList<>(partitioners.size());
+      final ExecutorService executor = enableParallelTaskExecution ? context.getExecutor() : MoreExecutors.newDirectExecutorService();
+      ExecutableTasksLatch<PartitionerTask> executableTasksLatch = new ExecutableTasksLatch<>(executor, testCountDownLatch);
       ExecutionException executionException = null;
       // start waiting on main stats to adjust by sum(max(processing)) at the end
       startWait();
       try {
-        partitioners.forEach(partitioner -> createAndExecute(iface, testCountDownLatch, count, partitionerTasks, partitioner));
+        partitioners.forEach(partitioner -> executableTasksLatch.execute(new PartitionerTask(iface, partitioner)));
         // Wait for main fragment interruption.
         injector.injectInterruptiblePause(context.getExecutionControls(), "wait-for-fragment-interrupt", logger);
         testCountDownLatch.countDown();
@@ -159,35 +152,17 @@ public final class PartitionerDecorator {
         logger.warn("Failed to execute partitioner tasks. Execution service down?", e);
         executionException = new ExecutionException(e);
       } finally {
-        await(count, partitionerTasks);
+        executableTasksLatch.await(() -> {
+          boolean cancel = !context.getExecutorState().shouldContinue();
+          if (cancel) {
+            logger.warn("Cancelling fragment {} tasks...", context.getFragIdString());
+          } else {
+            logger.debug("Waiting for fragment {} tasks to complete...", context.getFragIdString());
+          }
+          return cancel;
+        });
         stopWait();
-        processPartitionerTasks(partitionerTasks, executionException);
-      }
-    }
-  }
-
-  private void createAndExecute(GeneralExecuteIface iface, CountDownLatchInjection testCountDownLatch, AtomicInteger count,
-      List<PartitionerTask> partitionerTasks, Partitioner partitioner) {
-    PartitionerTask partitionerTask = new PartitionerTask(this, iface, partitioner, count, testCountDownLatch);
-    executor.execute(partitionerTask);
-    partitionerTasks.add(partitionerTask);
-    count.incrementAndGet();
-  }
-
-  /**
-   * Wait for completion of all partitioner tasks.
-   * @param count current number of task not yet completed
-   * @param partitionerTasks list of partitioner tasks submitted for execution
-   */
-  private void await(AtomicInteger count, List<PartitionerTask> partitionerTasks) {
-    boolean cancelled = false;
-    while (count.get() > 0) {
-      if (context.getExecutorState().shouldContinue() || cancelled) {
-        LockSupport.park();
-      } else {
-        logger.warn("Cancelling fragment {} partitioner tasks...", context.getFragIdString());
-        partitionerTasks.forEach(partitionerTask -> partitionerTask.cancel(true));
-        cancelled = true;
+        processPartitionerTasks(executableTasksLatch.getExecutableTasks(), executionException);
       }
     }
   }
@@ -204,10 +179,10 @@ public final class PartitionerDecorator {
     }
   }
 
-  private void processPartitionerTasks(List<PartitionerTask> partitionerTasks, ExecutionException executionException) throws ExecutionException {
-    long maxProcessTime = 0l;
-    for (PartitionerTask partitionerTask : partitionerTasks) {
-      ExecutionException e = partitionerTask.getException();
+  private void processPartitionerTasks(Collection<ExecutableTasksLatch.ExecutableTask<PartitionerTask>> executableTasks, ExecutionException executionException) throws ExecutionException {
+    long maxProcessTime = 0L;
+    for (ExecutableTasksLatch.ExecutableTask<PartitionerTask> executableTask : executableTasks) {
+      ExecutionException e = executableTask.getException();
       if (e != null) {
         if (executionException == null) {
           executionException = e;
@@ -216,7 +191,7 @@ public final class PartitionerDecorator {
         }
       }
       if (executionException == null) {
-        final OperatorStats localStats = partitionerTask.getStats();
+        final OperatorStats localStats = executableTask.getCallable().getStats();
         // find out max Partitioner processing time
         if (enableParallelTaskExecution) {
           long currentProcessingNanos = localStats.getProcessingNanos();
@@ -275,7 +250,7 @@ public final class PartitionerDecorator {
     private final boolean isLastBatch;
     private final boolean schemaChanged;
 
-    public FlushBatchesHandlingClass(boolean isLastBatch, boolean schemaChanged) {
+    FlushBatchesHandlingClass(boolean isLastBatch, boolean schemaChanged) {
       this.isLastBatch = isLastBatch;
       this.schemaChanged = schemaChanged;
     }
@@ -290,109 +265,32 @@ public final class PartitionerDecorator {
    * Helper class to wrap Runnable with cancellation and waiting for completion support
    *
    */
-  private static class PartitionerTask implements Runnable {
-
-    private enum STATE {
-      NEW,
-      COMPLETING,
-      NORMAL,
-      EXCEPTIONAL,
-      CANCELLED,
-      INTERRUPTING,
-      INTERRUPTED
-    }
-
-    private final AtomicReference<STATE> state;
-    private final AtomicReference<Thread> runner;
-    private final PartitionerDecorator partitionerDecorator;
-    private final AtomicInteger count;
+  private static class PartitionerTask implements Callable<Void>, ExecutableTasksLatch.Notifiable {
 
     private final GeneralExecuteIface iface;
     private final Partitioner partitioner;
-    private CountDownLatchInjection testCountDownLatch;
 
-    private volatile ExecutionException exception;
-
-    public PartitionerTask(PartitionerDecorator partitionerDecorator, GeneralExecuteIface iface, Partitioner partitioner, AtomicInteger count, CountDownLatchInjection testCountDownLatch) {
-      state = new AtomicReference<>(STATE.NEW);
-      runner = new AtomicReference<>();
-      this.partitionerDecorator = partitionerDecorator;
+    PartitionerTask(GeneralExecuteIface iface, Partitioner partitioner) {
       this.iface = iface;
       this.partitioner = partitioner;
-      this.count = count;
-      this.testCountDownLatch = testCountDownLatch;
     }
 
     @Override
-    public void run() {
-      final Thread thread = Thread.currentThread();
-      if (runner.compareAndSet(null, thread)) {
-        final String name = thread.getName();
-        thread.setName(String.format("Partitioner-%s-%d", partitionerDecorator.thread.getName(), thread.getId()));
-        final OperatorStats localStats = partitioner.getStats();
-        localStats.clear();
-        localStats.startProcessing();
-        ExecutionException executionException = null;
-        try {
-          // Test only - Pause until interrupted by fragment thread
-          testCountDownLatch.await();
-          if (state.get() == STATE.NEW) {
-            iface.execute(partitioner);
-          }
-        } catch (InterruptedException e) {
-          if (state.compareAndSet(STATE.NEW, STATE.INTERRUPTED)) {
-            logger.warn("Partitioner Task interrupted during the run", e);
-          }
-        } catch (Throwable t) {
-          executionException = new ExecutionException(t);
-        } finally {
-          if (state.compareAndSet(STATE.NEW, STATE.COMPLETING)) {
-            if (executionException == null) {
-              localStats.stopProcessing();
-              state.lazySet(STATE.NORMAL);
-            } else {
-              exception = executionException;
-              state.lazySet(STATE.EXCEPTIONAL);
-            }
-          }
-          if (count.decrementAndGet() == 0) {
-            LockSupport.unpark(partitionerDecorator.thread);
-          }
-          thread.setName(name);
-          while (state.get() == STATE.INTERRUPTING) {
-            Thread.yield();
-          }
-          // Clear interrupt flag
-          Thread.interrupted();
-        }
-      }
+    public Void call() throws Exception {
+      iface.execute(partitioner);
+      return null;
     }
 
-    void cancel(boolean mayInterruptIfRunning) {
-      Preconditions.checkState(Thread.currentThread() == partitionerDecorator.thread,
-          String.format("PartitionerTask can be cancelled only from the main %s thread", partitionerDecorator.thread.getName()));
-      if (runner.compareAndSet(null, partitionerDecorator.thread)) {
-        if (partitionerDecorator.executor instanceof ThreadPoolExecutor) {
-          ((ThreadPoolExecutor)partitionerDecorator.executor).remove(this);
-        }
-        count.decrementAndGet();
-      } else {
-        if (mayInterruptIfRunning) {
-          if (state.compareAndSet(STATE.NEW, STATE.INTERRUPTING)) {
-            try {
-              runner.get().interrupt();
-            } finally {
-              state.lazySet(STATE.INTERRUPTED);
-            }
-          }
-        } else {
-          state.compareAndSet(STATE.NEW, STATE.CANCELLED);
-        }
-      }
+    @Override
+    public void started() {
+      final OperatorStats localStats = getStats();
+      localStats.clear();
+      localStats.startProcessing();
     }
 
-    public ExecutionException getException() {
-      return this.exception;
+    @Override
+    public void finished() {
+      getStats().stopProcessing();
     }
 
     public OperatorStats getStats() {

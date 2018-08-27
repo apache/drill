@@ -23,16 +23,13 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.util.ExecutableTasksLatch;
 import org.apache.drill.exec.util.filereader.DirectBufInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -52,52 +49,48 @@ import com.google.common.base.Stopwatch;
 
 import io.netty.buffer.DrillBuf;
 /**
- * The AyncPageReader reads one page of data at a time asynchronously from the provided InputStream. The
- * first request to the page reader creates a Future Task (AsyncPageReaderTask) and submits it to the
- * scan thread pool. The result of the Future task (a page) is put into a (blocking) queue and the scan
- * thread starts processing the data as soon as the Future task is complete.
- * This is a simple producer-consumer queue, the AsyncPageReaderTask is the producer and the ParquetScan is
- * the consumer.
- * The AsyncPageReaderTask submits another Future task for reading the next page as soon as it is done,
+ * The {@code AsyncPageReader} reads one page of data at a time asynchronously from parquet files in the provided
+ * {@linkplain Path}. The first request to the page reader creates a {@code AsyncPageReaderTask} and executes it using
+ * {@linkplain ExecutableTasksLatch} wrapper around the scan thread pool. The result of the {@code AsyncPageReaderTask}
+ * execution (a page) is put into a (blocking) queue and the scan thread starts processing the data as soon as the task
+ * is complete. This is a simple producer-consumer queue, the {@code AsyncPageReaderTask} is the producer and the
+ * {@linkplain org.apache.drill.exec.physical.impl.ScanBatch ScanBatch} is the consumer.
+ * The AsyncPageReaderTask re-schedules itself for reading the next page as soon as it is done,
  * while the results queue is not full. Until the queue is full, therefore, the scan thread pool keeps the
  * disk as busy as possible.
  * In case the disk is slower than the processing, the queue is never filled up after the processing of the
  * pages begins. In this case, the next disk read begins immediately after the previous read is completed
  * and the disk is never idle. The query in this case is effectively bounded by the disk.
  * If, however, the processing is slower than the disk (can happen with SSDs, data being cached by the
- * FileSystem, or if the processing requires complex processing that is necessarily slow) the queue fills
- * up. Once the queue is full, the AsyncPageReaderTask does not submit any new Future tasks. The next Future
- * task is submitted by the *processing* thread as soon as it pulls a page out of the queue. (Note that the
- * invariant here is that there is space for at least one more page in the queue before the Future read task
+ * file system, or if the processing requires complex processing that is necessarily slow) the queue fills
+ * up. Once the queue is full, the {@code AsyncPageReaderTask} does not reschedule itself. The next
+ * {@code AsyncPageReaderTask} is submitted by the *processing* thread as soon as it pulls a page out of the queue.
+ * (Note that the invariant here is that there is space for at least one more page in the queue before the read task
  * is submitted to the pool). This sequence is important. Not doing so can lead to deadlocks - producer
  * threads may block on putting data into the queue which is full while the consumer threads might be
  * blocked trying to read from a queue that has no data.
  * The first request to the page reader can be either to load a dictionary page or a data page; this leads
  * to the rather odd looking code in the constructor since the parent PageReader calls
  * loadDictionaryIfExists in the constructor.
- * The Future tasks created are kept in a non blocking queue and the Future object is checked for any
- * exceptions that might have occurred during the execution. The queue of Futures is also used to cancel
- * any pending Futures at close (this may happen as a result of a cancel).
- *
+ * {@code AsyncPageReader} uses {@linkplain ExecutableTasksLatch} to keep track of {@code AsyncPageReaderTask}
+ * scheduled for execution, to wait for {@code AsyncPageReaderTask} to complete and check the status of it's execution
+ * and to wait for all scheduled or executing {@code AsyncPageReaderTask} to finish when canceled.
  */
 class AsyncPageReader extends PageReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AsyncPageReader.class);
 
-  private ExecutorService threadPool;
-  private long queueSize;
-  private LinkedBlockingQueue<ReadStatus> pageQueue;
-  private ConcurrentLinkedQueue<Future<Void>> asyncPageRead;
-  private long totalPageValuesRead = 0;
-  private Object pageQueueSyncronize = new Object(); // Object to use to synchronize access to the page Queue.
-                                                     // FindBugs complains if we synchronize on a Concurrent Queue
+  private final ExecutableTasksLatch<AsyncPageReaderTask> executableTasksLatch;
+  private final LinkedBlockingQueue<ReadStatus> pageQueue;
+  private long totalPageValuesRead = 0L;
+  // Object to use to synchronize access to the page Queue.
+  // FindBugs complains if we synchronize on a Concurrent Queue
+  private final Object pageQueueSynchronize = new Object();
 
   AsyncPageReader(ColumnReader<?> parentStatus, FileSystem fs, Path path,
       ColumnChunkMetaData columnChunkMetaData) throws ExecutionSetupException {
     super(parentStatus, fs, path, columnChunkMetaData);
-    threadPool = parentColumnReader.parentReader.getOperatorContext().getScanExecutor();
-    queueSize = parentColumnReader.parentReader.readQueueSize;
-    pageQueue = new LinkedBlockingQueue<>((int) queueSize);
-    asyncPageRead = new ConcurrentLinkedQueue<>();
+    executableTasksLatch = new ExecutableTasksLatch<>(parentColumnReader.parentReader.getOperatorContext().getScanExecutor(), null);
+    pageQueue = new LinkedBlockingQueue<>(parentColumnReader.parentReader.readQueueSize);
   }
 
   @Override
@@ -133,7 +126,7 @@ class AsyncPageReader extends PageReader {
     super.init();
     //Avoid Init if a shutdown is already in progress even if init() is called once
     if (!parentColumnReader.isShuttingDown) {
-      asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
+      executableTasksLatch.execute(new AsyncPageReaderTask(debugName, pageQueue));
     }
   }
 
@@ -215,13 +208,13 @@ class AsyncPageReader extends PageReader {
 
   @Override
   protected void nextInternal() throws IOException {
-    ReadStatus readStatus = null;
+    ReadStatus readStatus;
     try {
       Stopwatch timer = Stopwatch.createStarted();
       parentColumnReader.parentReader.getOperatorContext().getStats().startWait();
       try {
-        waitForExecutionResult(); // get the result of execution
-        synchronized (pageQueueSyncronize) {
+        executableTasksLatch.take(); // get the result of execution
+        synchronized (pageQueueSynchronize) {
           boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
           readStatus = pageQueue.take(); // get the data if no exception has been thrown
           if (readStatus.pageData == null || readStatus == ReadStatus.EMPTY) {
@@ -230,7 +223,7 @@ class AsyncPageReader extends PageReader {
           //if the queue was full before we took a page out, then there would
           // have been no new read tasks scheduled. In that case, schedule a new read.
           if (!parentColumnReader.isShuttingDown && pageQueueFull) {
-            asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
+            executableTasksLatch.execute(new AsyncPageReaderTask(debugName, pageQueue));
           }
         }
       } finally {
@@ -254,8 +247,8 @@ class AsyncPageReader extends PageReader {
       do {
         if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
           readDictionaryPageData(readStatus, parentColumnReader);
-          waitForExecutionResult(); // get the result of execution
-          synchronized (pageQueueSyncronize) {
+          executableTasksLatch.take(); // get the result of execution
+          synchronized (pageQueueSynchronize) {
             boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
             readStatus = pageQueue.take(); // get the data if no exception has been thrown
             if (readStatus.pageData == null || readStatus == ReadStatus.EMPTY) {
@@ -264,7 +257,7 @@ class AsyncPageReader extends PageReader {
             //if the queue was full before we took a page out, then there would
             // have been no new read tasks scheduled. In that case, schedule a new read.
             if (!parentColumnReader.isShuttingDown && pageQueueFull) {
-              asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
+              executableTasksLatch.execute(new AsyncPageReaderTask(debugName, pageQueue));
             }
           }
           pageHeader = readStatus.getPageHeader();
@@ -284,30 +277,9 @@ class AsyncPageReader extends PageReader {
 
   }
 
-  private void waitForExecutionResult() throws InterruptedException, ExecutionException {
-    // Get the execution result but don't remove the Future object from the "asyncPageRead" queue yet;
-    // this will ensure that cleanup will happen properly in case of an exception being thrown
-    asyncPageRead.peek().get(); // get the result of execution
-    // Alright now remove the Future object
-    asyncPageRead.poll();
-  }
-
   @Override public void clear() {
     //Cancelling all existing AsyncPageReaderTasks
-    while (asyncPageRead != null && !asyncPageRead.isEmpty()) {
-      try {
-        Future<Void> f = asyncPageRead.poll();
-        if(!f.isDone() && !f.isCancelled()){
-          f.cancel(true);
-        } else {
-          f.get(1, TimeUnit.MILLISECONDS);
-        }
-      } catch (RuntimeException e) {
-        // Do Nothing
-      } catch (Exception e) {
-        // Do nothing.
-      }
-    }
+    executableTasksLatch.await(() -> true);
 
     //Empty the page queue
     ReadStatus r;
@@ -404,8 +376,8 @@ class AsyncPageReader extends PageReader {
     @Override
     public Void call() throws IOException {
       ReadStatus readStatus = new ReadStatus();
-      long bytesRead = 0;
-      long valuesRead = 0;
+      long bytesRead;
+      long valuesRead = 0L;
       final long totalValuesRead = parent.totalPageValuesRead;
       Stopwatch timer = Stopwatch.createStarted();
 
@@ -451,12 +423,12 @@ class AsyncPageReader extends PageReader {
         // You do need the synchronized block
         // because you want the check to see if there is remaining capacity in the queue, to be
         // synchronized
-        synchronized (parent.pageQueueSyncronize) {
+        synchronized (parent.pageQueueSynchronize) {
           queue.put(readStatus);
           // if the queue is not full, schedule another read task immediately. If it is then the consumer
           // will schedule a new read task as soon as it removes a page from the queue.
           if (!parentColumnReader.isShuttingDown && queue.remainingCapacity() > 0) {
-            asyncPageRead.offer(parent.threadPool.submit(new AsyncPageReaderTask(debugName, queue)));
+            parent.executableTasksLatch.execute(this);
           }
         }
         // Do nothing.

@@ -17,11 +17,10 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -31,6 +30,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.parquet.ParquetReaderStats;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
@@ -41,6 +41,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 
 public class ParquetRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
@@ -73,11 +76,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private final FragmentContext fragmentContext;
   ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus;
 
-  /** Parquet Schema */
   ParquetSchema schema;
-  /** Container object for holding Parquet columnar readers state */
   ReadState readState;
-  /** Responsible for managing record batch size constraints */
   RecordBatchSizerManager batchSizerMgr;
 
   public boolean useAsyncColReader;
@@ -86,7 +86,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   public int bufferedReadSize;
   public boolean useFadvise;
   public boolean enforceTotalSize;
-  public long readQueueSize;
+  public int readQueueSize;
   public boolean useBulkReader;
 
   @SuppressWarnings("unused")
@@ -168,14 +168,15 @@ public class ParquetRecordReader extends AbstractRecordReader {
     this.dateCorruptionStatus = dateCorruptionStatus;
     this.fragmentContext = fragmentContext;
     this.numRecordsToRead = initNumRecordsToRead(numRecordsToRead, rowGroupIndex, footer);
-    this.useAsyncColReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_COLUMNREADER_ASYNC).bool_val;
-    this.useAsyncPageReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
-    this.useBufferedReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_USE_BUFFERED_READ).bool_val;
-    this.bufferedReadSize = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_BUFFER_SIZE).num_val.intValue();
-    this.useFadvise = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_USE_FADVISE).bool_val;
-    this.readQueueSize = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_QUEUE_SIZE).num_val;
-    this.enforceTotalSize = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ENFORCETOTALSIZE).bool_val;
-    this.useBulkReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_FLAT_READER_BULK).bool_val;
+    final OptionManager options = fragmentContext.getOptions();
+    this.useAsyncColReader = options.getOption(ExecConstants.PARQUET_COLUMNREADER_ASYNC).bool_val;
+    this.useAsyncPageReader = options.getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
+    this.useBufferedReader = options.getOption(ExecConstants.PARQUET_PAGEREADER_USE_BUFFERED_READ).bool_val;
+    this.bufferedReadSize = options.getOption(ExecConstants.PARQUET_PAGEREADER_BUFFER_SIZE).num_val.intValue();
+    this.useFadvise = options.getOption(ExecConstants.PARQUET_PAGEREADER_USE_FADVISE).bool_val;
+    this.readQueueSize = options.getOption(ExecConstants.PARQUET_PAGEREADER_QUEUE_SIZE).num_val.intValue();
+    this.enforceTotalSize = options.getOption(ExecConstants.PARQUET_PAGEREADER_ENFORCETOTALSIZE).bool_val;
+    this.useBulkReader = options.getOption(ExecConstants.PARQUET_FLAT_READER_BULK).bool_val;
 
     setColumns(columns);
   }
