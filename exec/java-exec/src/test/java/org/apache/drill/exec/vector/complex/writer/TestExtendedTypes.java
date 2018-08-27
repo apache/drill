@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.vector.complex.writer;
 
-import mockit.integration.junit4.JMockit;
 import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Files;
@@ -30,9 +29,7 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JMockit.class)
 public class TestExtendedTypes extends BaseTestQuery {
   @BeforeClass
   public static void setupTestFiles() {
