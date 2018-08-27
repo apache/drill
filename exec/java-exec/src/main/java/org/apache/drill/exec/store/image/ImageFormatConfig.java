@@ -25,7 +25,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 @JsonTypeName("image") @JsonInclude(Include.NON_DEFAULT)
 public class ImageFormatConfig implements FormatPluginConfig {

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import com.google.common.collect.ObjectArrays;
+import org.apache.drill.shaded.guava.com.google.common.collect.ObjectArrays;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;

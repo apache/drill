@@ -28,7 +28,7 @@ import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
 import org.apache.calcite.rel.RelNode;
 
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 /**
  * Context for converting a tree of {@link DrillRel} nodes into a Drill logical plan.

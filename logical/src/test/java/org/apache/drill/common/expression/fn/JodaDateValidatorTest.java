@@ -17,7 +17,7 @@
  */
 package org.apache.drill.common.expression.fn;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;

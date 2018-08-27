@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.udf.dynamic.JarBuilder;
 import org.apache.drill.exec.util.JarUtil;

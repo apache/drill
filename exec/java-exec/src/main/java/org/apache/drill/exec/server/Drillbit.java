@@ -53,8 +53,8 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.zookeeper.Environment;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 /**
  * Starts, tracks and stops all the required services for a Drillbit daemon to work.

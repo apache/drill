@@ -22,10 +22,10 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;

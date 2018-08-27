@@ -35,7 +35,7 @@ import org.apache.drill.test.rowSet.test.TestFixedWidthWriter.TestIndex;
 import org.bouncycastle.util.Arrays;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 public class TestVariableWidthWriter extends SubOperatorTest {
 

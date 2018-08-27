@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 
-import static com.google.common.base.Preconditions.checkState;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkState;
 
 public abstract class AbstractClientConnection extends AbstractRemoteConnection implements ClientConnection {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractClientConnection.class);

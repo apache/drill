@@ -20,7 +20,7 @@ package org.apache.drill.exec.cache;
 import java.io.File;
 import java.util.List;
 
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -44,7 +44,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.junit.rules.TestRule;
 
 public class TestWriteToDisk extends ExecTest {

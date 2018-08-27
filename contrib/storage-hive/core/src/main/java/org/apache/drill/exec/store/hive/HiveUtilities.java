@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.drill.common.exceptions.DrillRuntimeException;

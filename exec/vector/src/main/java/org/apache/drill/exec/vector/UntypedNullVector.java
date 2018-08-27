@@ -18,7 +18,7 @@
 package org.apache.drill.exec.vector;
 
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;

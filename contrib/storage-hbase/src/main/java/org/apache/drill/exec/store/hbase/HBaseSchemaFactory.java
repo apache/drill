@@ -29,7 +29,7 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Admin;
 
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class HBaseSchemaFactory extends AbstractSchemaFactory {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSchemaFactory.class);

@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.sql.parser;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -28,8 +28,8 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class DrillCompoundIdentifier extends SqlIdentifier {
 

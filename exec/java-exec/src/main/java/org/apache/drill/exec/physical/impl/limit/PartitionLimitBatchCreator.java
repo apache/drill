@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
-import com.google.common.collect.Iterables;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.PartitionLimit;

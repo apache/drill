@@ -25,7 +25,7 @@ import org.codehaus.janino.Java.ClassDeclaration;
 import org.codehaus.janino.Java.MethodDeclarator;
 import org.codehaus.janino.util.Traverser;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 
 public class MethodGrabbingVisitor{

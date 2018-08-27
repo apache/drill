@@ -20,7 +20,7 @@ package org.apache.drill;
 import java.io.IOException;
 import java.net.URL;
 
-import com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.SchemaPlus;
@@ -56,9 +56,9 @@ import org.junit.Rule;
 import org.junit.rules.TestRule;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.mockito.Matchers;
 
 import static org.mockito.Matchers.eq;

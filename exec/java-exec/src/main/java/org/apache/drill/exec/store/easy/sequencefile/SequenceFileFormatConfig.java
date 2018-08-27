@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.easy.sequencefile;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 import org.apache.drill.common.logical.FormatPluginConfig;
 

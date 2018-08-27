@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;

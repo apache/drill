@@ -37,7 +37,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

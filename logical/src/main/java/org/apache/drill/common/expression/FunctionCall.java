@@ -23,8 +23,8 @@ import java.util.List;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class FunctionCall extends LogicalExpressionBase implements Iterable<LogicalExpression> {
   private final String name;

@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import mockit.integration.junit4.JMockit;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;

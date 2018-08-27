@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.sql;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;

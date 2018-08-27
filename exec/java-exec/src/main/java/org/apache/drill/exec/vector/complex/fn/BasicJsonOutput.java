@@ -28,7 +28,7 @@ import org.joda.time.Period;
 import org.joda.time.format.ISOPeriodFormat;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * A JSON output class that generates standard JSON. By default, literals are output such that they can be implicitly

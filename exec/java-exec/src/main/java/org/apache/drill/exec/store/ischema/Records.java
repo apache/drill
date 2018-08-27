@@ -29,7 +29,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 
-import com.google.common.base.MoreObjects;
+import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
 
 import java.time.Instant;
 import java.time.ZoneOffset;

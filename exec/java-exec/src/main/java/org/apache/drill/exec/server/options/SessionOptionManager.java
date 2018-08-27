@@ -24,8 +24,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.rpc.user.UserSession;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
+import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
+import org.apache.drill.shaded.guava.com.google.common.collect.Collections2;
 
 /**
  * {@link OptionManager} that holds options within {@link org.apache.drill.exec.rpc.user.UserSession} context. Options

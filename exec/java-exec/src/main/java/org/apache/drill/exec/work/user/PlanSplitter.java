@@ -40,7 +40,7 @@ import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceAllocator;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Helper class to return PlanFragments based on the query plan

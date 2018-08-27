@@ -42,7 +42,7 @@ import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.joda.time.DateTime;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import io.netty.buffer.DrillBuf;
 

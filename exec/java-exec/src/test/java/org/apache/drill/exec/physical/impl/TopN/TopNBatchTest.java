@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.TestBuilder;

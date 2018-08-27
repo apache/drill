@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.work.prepare;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import org.apache.drill.common.exceptions.ErrorHelper;

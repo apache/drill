@@ -17,7 +17,7 @@
  */
 package org.apache.drill.yarn.zk;
 
-import static com.google.common.collect.Collections2.transform;
+import static org.apache.drill.shaded.guava.com.google.common.collect.Collections2.transform;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Throwables;
+import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.curator.RetryPolicy;
@@ -56,7 +56,7 @@ import org.apache.drill.exec.coord.zk.ZkTransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
 
-import com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
 
 /**
  * Manages cluster coordination utilizing zookeeper.

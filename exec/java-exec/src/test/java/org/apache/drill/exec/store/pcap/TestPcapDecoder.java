@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.pcap;
 
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;

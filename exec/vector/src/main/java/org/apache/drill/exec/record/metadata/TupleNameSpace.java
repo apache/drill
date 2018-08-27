@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 /**
  * Implementation of a tuple name space. Tuples allow both indexed and

@@ -22,7 +22,7 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.Properties;
 
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.common.util.DrillVersionInfo;
 
 public class VersionIterator implements Iterator<Object>{

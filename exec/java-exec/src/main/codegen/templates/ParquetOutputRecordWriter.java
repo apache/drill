@@ -27,9 +27,9 @@ import java.util.Arrays;
 
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Longs;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.*;

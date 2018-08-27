@@ -19,8 +19,8 @@ package org.apache.drill.exec.server.options;
 
 import java.util.Set;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;

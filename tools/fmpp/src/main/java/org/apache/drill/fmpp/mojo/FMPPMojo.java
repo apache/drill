@@ -31,7 +31,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 import fmpp.Engine;
 import fmpp.ProgressListener;

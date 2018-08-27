@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;

@@ -30,8 +30,8 @@ import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.store.pojo.NonNullable;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class OptionIterator implements Iterator<Object> {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OptionIterator.class);

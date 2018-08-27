@@ -38,7 +38,7 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import com.google.common.collect.Iterators;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 
 public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePersistentStore.class);

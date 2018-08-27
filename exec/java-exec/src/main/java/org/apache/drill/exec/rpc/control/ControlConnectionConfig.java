@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.control;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.BitConnectionConfig;

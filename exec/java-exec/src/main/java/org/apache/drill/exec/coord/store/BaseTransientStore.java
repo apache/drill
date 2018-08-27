@@ -24,10 +24,10 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 public abstract class BaseTransientStore<V> implements TransientStore<V> {
   private final Set<TransientStoreListener> listeners = Collections.newSetFromMap(

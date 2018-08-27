@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;

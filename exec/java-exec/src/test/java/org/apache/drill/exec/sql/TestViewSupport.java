@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.sql;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;

@@ -23,7 +23,7 @@ import java.util.Iterator;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
 
 public class CastExpression extends LogicalExpressionBase implements Iterable<LogicalExpression>{
 

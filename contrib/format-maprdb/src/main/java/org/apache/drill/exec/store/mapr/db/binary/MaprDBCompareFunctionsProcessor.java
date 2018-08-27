@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.mapr.db.binary;
 
-import com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;

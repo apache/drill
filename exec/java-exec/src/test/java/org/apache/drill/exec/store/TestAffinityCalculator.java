@@ -21,8 +21,8 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.hadoop.fs.BlockLocation;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableRangeMap;
-import com.google.common.collect.Range;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableRangeMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Range;
 
 public class TestAffinityCalculator extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAffinityCalculator.class);

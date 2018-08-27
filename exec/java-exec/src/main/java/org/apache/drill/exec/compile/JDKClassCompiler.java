@@ -31,8 +31,8 @@ import javax.tools.ToolProvider;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.codehaus.commons.compiler.CompileException;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 class JDKClassCompiler extends AbstractClassCompiler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JDKClassCompiler.class);

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.compile;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;

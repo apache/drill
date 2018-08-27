@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.List;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractExchange;

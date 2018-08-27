@@ -21,8 +21,8 @@ import java.util.Queue;
 
 import org.apache.drill.exec.rpc.data.AckSender;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Queues;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 public class ResponseSenderQueue {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResponseSenderQueue.class);

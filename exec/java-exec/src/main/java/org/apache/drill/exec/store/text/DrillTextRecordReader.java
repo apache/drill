@@ -23,8 +23,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -48,8 +48,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class DrillTextRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordReader.class);

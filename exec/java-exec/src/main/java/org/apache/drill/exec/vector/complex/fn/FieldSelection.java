@@ -26,7 +26,7 @@ import java.util.TreeMap;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 
 /**

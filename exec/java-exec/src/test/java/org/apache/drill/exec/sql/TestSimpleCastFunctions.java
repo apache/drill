@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.sql;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserRemoteException;

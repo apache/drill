@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;

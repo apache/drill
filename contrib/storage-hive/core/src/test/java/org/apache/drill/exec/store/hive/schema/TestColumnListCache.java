@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.hive.schema;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.store.hive.ColumnListsCache;
 import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;

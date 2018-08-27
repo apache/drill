@@ -26,7 +26,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.DrillbitContext;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Query queue to be used in an embedded Drillbit. This queue has scope of only

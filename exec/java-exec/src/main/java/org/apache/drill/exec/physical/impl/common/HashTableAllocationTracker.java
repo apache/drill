@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.common;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * A helper class used by {@link HashTableTemplate} in order to pre-allocate {@link HashTableTemplate.BatchHolder}s of the appropriate size.

@@ -44,7 +44,7 @@ import org.apache.calcite.sql.SqlDataTypeSpec;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class UnsupportedOperatorsVisitor extends SqlShuttle {
   private QueryContext context;

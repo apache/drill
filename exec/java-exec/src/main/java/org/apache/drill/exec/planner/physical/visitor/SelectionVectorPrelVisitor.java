@@ -24,7 +24,7 @@ import org.apache.drill.exec.planner.physical.SelectionVectorRemoverPrel;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.calcite.rel.RelNode;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 
 public class SelectionVectorPrelVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{

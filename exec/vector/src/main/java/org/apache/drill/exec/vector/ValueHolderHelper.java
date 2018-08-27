@@ -41,7 +41,7 @@ import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.util.DecimalUtility;
 
-import com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 
 public class ValueHolderHelper {

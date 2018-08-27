@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -50,7 +50,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkState;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkState;
 
 public class WindowPrel extends DrillWindowRelBase implements Prel {
   public WindowPrel(RelOptCluster cluster,

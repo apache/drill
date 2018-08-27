@@ -41,8 +41,8 @@ import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.InMemoryStoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  *  <p> {@link OptionManager} that holds options within {@link org.apache.drill.exec.server.DrillbitContext}.

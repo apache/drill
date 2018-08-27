@@ -17,7 +17,7 @@
  */
 package org.apache.drill.test.rowSet;
 
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.MetadataRetrieval;
 import org.apache.drill.exec.physical.rowSet.model.single.BaseWriterBuilder;

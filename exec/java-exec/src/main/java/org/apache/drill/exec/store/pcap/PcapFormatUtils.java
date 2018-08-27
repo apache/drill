@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.pcap;
 
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Shorts;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Shorts;
 
 public class PcapFormatUtils {
 

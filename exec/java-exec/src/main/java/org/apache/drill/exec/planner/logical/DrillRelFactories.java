@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.Contexts;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
@@ -134,7 +133,7 @@ public class DrillRelFactories {
 
     @Override
     public RelNode createAggregate(RelNode input, boolean indicator, ImmutableBitSet groupSet,
-                                   ImmutableList<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
+                                   com.google.common.collect.ImmutableList<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
       return new DrillAggregateRel(input.getCluster(), input.getTraitSet(), input, indicator, groupSet, groupSets, aggCalls);
     }
   }

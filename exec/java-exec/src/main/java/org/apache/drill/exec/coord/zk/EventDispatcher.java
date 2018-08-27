@@ -19,8 +19,8 @@ package org.apache.drill.exec.coord.zk;
 
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order;

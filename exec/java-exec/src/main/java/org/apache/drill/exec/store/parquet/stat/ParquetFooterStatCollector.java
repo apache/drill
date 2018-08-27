@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.stat;
 
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;

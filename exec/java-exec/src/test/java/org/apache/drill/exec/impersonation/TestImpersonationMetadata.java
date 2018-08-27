@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;

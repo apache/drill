@@ -32,7 +32,7 @@ import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Class which creates new schema trees. It keeps track of newly created schema trees and closes them safely as

@@ -41,8 +41,8 @@ import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 /**
  * Encapsulates the future management of query submissions.  This entails a

@@ -38,7 +38,7 @@ import org.apache.drill.exec.proto.UserBitShared.NamePart.Type;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class SchemaPath extends LogicalExpressionBase {
 

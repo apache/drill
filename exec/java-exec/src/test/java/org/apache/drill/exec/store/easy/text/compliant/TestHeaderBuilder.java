@@ -24,7 +24,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 public class TestHeaderBuilder extends DrillTest {
 

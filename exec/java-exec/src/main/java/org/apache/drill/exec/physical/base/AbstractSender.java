@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.base;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 
 import java.util.List;

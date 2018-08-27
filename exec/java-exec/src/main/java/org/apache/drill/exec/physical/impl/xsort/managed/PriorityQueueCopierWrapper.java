@@ -45,7 +45,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 

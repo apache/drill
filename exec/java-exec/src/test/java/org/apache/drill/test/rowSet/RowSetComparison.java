@@ -27,9 +27,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
+import org.apache.drill.shaded.guava.com.google.common.base.Optional;
+import org.apache.drill.shaded.guava.com.google.common.collect.HashMultiset;
+import org.apache.drill.shaded.guava.com.google.common.collect.Multiset;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ScalarReader;

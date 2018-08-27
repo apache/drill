@@ -22,8 +22,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 
 public class DrillFileUtils {
   // These two seperators are intentionally used instead of Path.SEPERATPR or File.seperator

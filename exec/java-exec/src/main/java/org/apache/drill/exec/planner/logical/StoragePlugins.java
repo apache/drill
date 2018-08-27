@@ -34,8 +34,8 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
 public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginConfig>> {
 

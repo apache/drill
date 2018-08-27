@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;

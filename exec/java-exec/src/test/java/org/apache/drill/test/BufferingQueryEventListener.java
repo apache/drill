@@ -26,7 +26,7 @@ import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 
-import com.google.common.collect.Queues;
+import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 /**
  * Drill query event listener that buffers rows into a producer-consumer

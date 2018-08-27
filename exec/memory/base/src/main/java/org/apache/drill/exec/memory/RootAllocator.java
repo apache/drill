@@ -18,7 +18,7 @@
 package org.apache.drill.exec.memory;
 
 import com.codahale.metrics.Gauge;
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.exec.metrics.DrillMetrics;
 
 /**

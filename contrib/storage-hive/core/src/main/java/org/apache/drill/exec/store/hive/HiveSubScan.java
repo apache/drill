@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
-import com.google.common.collect.ImmutableSet;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -42,8 +42,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteStreams;
+import org.apache.drill.shaded.guava.com.google.common.io.ByteArrayDataInput;
+import org.apache.drill.shaded.guava.com.google.common.io.ByteStreams;
 
 @JsonTypeName("hive-sub-scan")
 public class HiveSubScan extends AbstractBase implements SubScan {

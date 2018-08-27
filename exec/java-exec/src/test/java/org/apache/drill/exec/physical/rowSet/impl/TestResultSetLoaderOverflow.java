@@ -41,7 +41,7 @@ import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 /**
  * Exercise the vector overflow functionality for the result set loader.

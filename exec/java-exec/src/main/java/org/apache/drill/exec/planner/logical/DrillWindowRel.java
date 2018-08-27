@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.expression.ExpressionPosition;

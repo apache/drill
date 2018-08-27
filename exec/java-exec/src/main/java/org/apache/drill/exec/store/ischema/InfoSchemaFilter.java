@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 
 @JsonTypeName("info-schema-filter")
 public class InfoSchemaFilter {

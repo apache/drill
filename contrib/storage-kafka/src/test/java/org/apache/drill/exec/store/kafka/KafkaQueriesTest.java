@@ -30,7 +30,7 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.junit.experimental.categories.Category;
 
 @Category({KafkaStorageTest.class, SlowTest.class})

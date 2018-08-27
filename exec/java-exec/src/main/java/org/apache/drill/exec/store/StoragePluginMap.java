@@ -26,9 +26,9 @@ import java.util.Set;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
+import org.apache.drill.shaded.guava.com.google.common.collect.LinkedListMultimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Multimaps;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
 /**

@@ -23,9 +23,9 @@ import java.util.List;
 import org.apache.drill.common.expression.visitors.ExpressionValidationError;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Range;
 
 public class ErrorCollectorImpl implements ErrorCollector {
     List<ExpressionValidationError> errors;

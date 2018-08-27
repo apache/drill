@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.hive.schema;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;

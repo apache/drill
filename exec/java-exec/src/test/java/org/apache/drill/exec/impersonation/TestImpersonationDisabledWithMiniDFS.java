@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.categories.SlowTest;

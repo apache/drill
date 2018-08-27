@@ -39,7 +39,7 @@ import org.apache.drill.test.TestBuilder;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 // TODO - update framework to remove any dependency on the Drill engine for reading baseline result sets
 // currently using it with the assumption that the csv and json readers are well tested, and handling diverse

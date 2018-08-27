@@ -26,7 +26,7 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.IteratorValidator;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class IteratorValidatorInjector extends
     AbstractPhysicalVisitor<PhysicalOperator, FragmentContext, ExecutionSetupException> {

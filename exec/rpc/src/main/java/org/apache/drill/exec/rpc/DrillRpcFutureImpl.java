@@ -19,8 +19,8 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
 
-import com.google.common.util.concurrent.AbstractCheckedFuture;
-import com.google.common.util.concurrent.AbstractFuture;
+import org.apache.drill.shaded.guava.com.google.common.util.concurrent.AbstractCheckedFuture;
+import org.apache.drill.shaded.guava.com.google.common.util.concurrent.AbstractFuture;
 
 class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> implements DrillRpcFuture<V>, RpcOutcomeListener<V>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRpcFutureImpl.class);

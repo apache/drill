@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.mapr.db.util;
 
-import com.google.common.collect.Queues;
+import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.ojai.FieldPath;

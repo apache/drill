@@ -33,8 +33,8 @@ import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
 import org.mockito.Mockito;
 

@@ -39,8 +39,8 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * A wrapper around a VectorAccessible. Will serialize a VectorAccessible and

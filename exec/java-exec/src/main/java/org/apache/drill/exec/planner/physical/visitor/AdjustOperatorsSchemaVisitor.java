@@ -19,7 +19,7 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
@@ -29,7 +29,7 @@ import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.calcite.rel.RelNode;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 
 /**

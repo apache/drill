@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;

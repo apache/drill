@@ -18,7 +18,7 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.common.util.GuavaUtils;
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;

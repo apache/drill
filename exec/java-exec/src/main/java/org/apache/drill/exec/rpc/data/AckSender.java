@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.rpc.ResponseSender;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Utility class that allows a group of receivers to confirm reception of a record batch as a single unit. Response

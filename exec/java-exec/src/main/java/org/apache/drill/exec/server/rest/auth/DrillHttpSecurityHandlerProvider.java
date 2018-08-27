@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.map.CaseInsensitiveMap;

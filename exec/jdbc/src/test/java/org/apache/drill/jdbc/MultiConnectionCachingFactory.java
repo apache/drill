@@ -21,7 +21,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

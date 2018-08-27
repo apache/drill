@@ -29,8 +29,8 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, IndexedSortable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleBatchSorterTemplate.class);

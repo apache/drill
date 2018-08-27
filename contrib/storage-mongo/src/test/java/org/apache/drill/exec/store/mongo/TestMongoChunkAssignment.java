@@ -34,9 +34,9 @@ import org.apache.drill.exec.store.mongo.common.ChunkInfo;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import com.mongodb.ServerAddress;
 import org.junit.experimental.categories.Category;
 

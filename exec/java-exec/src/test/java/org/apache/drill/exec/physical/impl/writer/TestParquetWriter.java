@@ -68,8 +68,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 @RunWith(Parameterized.class)
 @Category({SlowTest.class, ParquetTest.class})

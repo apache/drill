@@ -28,7 +28,7 @@ import org.apache.parquet.format.ConvertedType;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.schema.PrimitiveType;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkArgument;
 
 public class ParquetToDrillTypeConverter {
 

@@ -49,9 +49,9 @@ import org.apache.drill.exec.proto.UserProtos.UnionSupport;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillDatabaseMetaData;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableSet;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 /**
  * Drill's implementation of {@link java.sql.DatabaseMetaData}.

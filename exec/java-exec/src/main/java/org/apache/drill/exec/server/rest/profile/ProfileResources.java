@@ -58,7 +58,7 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.glassfish.jersey.server.mvc.Viewable;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)

@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.httpd;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import io.netty.buffer.DrillBuf;
 import java.util.EnumSet;
 import java.util.Map;

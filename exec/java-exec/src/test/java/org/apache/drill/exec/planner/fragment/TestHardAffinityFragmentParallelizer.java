@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.HashMultiset;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.PhysicalOperator;

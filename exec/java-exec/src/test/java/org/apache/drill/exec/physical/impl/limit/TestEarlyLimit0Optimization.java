@@ -37,7 +37,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @Category(PlannerTest.class)
 public class TestEarlyLimit0Optimization extends BaseTestQuery {

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.codemodel.JOp;
 import org.apache.drill.common.exceptions.DrillRuntimeException;

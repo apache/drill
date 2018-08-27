@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.util;
 
-import com.google.common.math.BigIntegerMath;
+import org.apache.drill.shaded.guava.com.google.common.math.BigIntegerMath;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;

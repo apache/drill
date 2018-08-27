@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Future;

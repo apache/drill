@@ -29,8 +29,8 @@ import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.serialization.InstanceSerializer;
 import org.apache.drill.exec.store.pojo.NonNullable;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 
 /**
  * System table listing completed profiles as JSON documents

@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
 
-import com.google.common.collect.Iterables;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 
 public class InMemoryStore<V> extends BasePersistentStore<V> {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InMemoryPersistentStore.class);

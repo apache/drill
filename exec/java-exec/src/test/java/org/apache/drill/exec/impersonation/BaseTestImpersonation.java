@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.config.DrillConfig;

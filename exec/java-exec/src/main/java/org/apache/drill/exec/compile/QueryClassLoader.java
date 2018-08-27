@@ -29,7 +29,7 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.codehaus.commons.compiler.CompileException;
 
-import com.google.common.collect.MapMaker;
+import org.apache.drill.shaded.guava.com.google.common.collect.MapMaker;
 
 /**
  * Per-compilation unit class loader that holds both caching and compilation

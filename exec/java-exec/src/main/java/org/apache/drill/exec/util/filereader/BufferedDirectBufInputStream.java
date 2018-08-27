@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.util.filereader;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.parquet.hadoop.util.HadoopStreams;

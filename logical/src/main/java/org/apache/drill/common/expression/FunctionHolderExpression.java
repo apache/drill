@@ -22,8 +22,8 @@ import java.util.List;
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   public final ImmutableList<LogicalExpression> args;

@@ -32,7 +32,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 
 public class DrillTextRecordWriter extends StringOutputRecordWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordWriter.class);

@@ -19,7 +19,7 @@ package org.apache.drill.exec.testing;
 
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 
 /**

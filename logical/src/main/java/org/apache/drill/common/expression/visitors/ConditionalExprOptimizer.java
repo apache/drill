@@ -31,7 +31,7 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpression, Void, RuntimeException> {
 

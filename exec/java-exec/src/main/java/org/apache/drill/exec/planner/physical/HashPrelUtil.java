@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;

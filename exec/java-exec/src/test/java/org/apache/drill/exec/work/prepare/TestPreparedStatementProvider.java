@@ -25,7 +25,7 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatement;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 /**
  * Tests for creating and executing prepared statements.

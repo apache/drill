@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.apache.drill.test.BaseDirTestWatcher;

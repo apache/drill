@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.junit.Assert;

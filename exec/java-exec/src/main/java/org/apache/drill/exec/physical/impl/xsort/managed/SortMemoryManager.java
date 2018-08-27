@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Computes the memory needs for input batches, spill batches and merge

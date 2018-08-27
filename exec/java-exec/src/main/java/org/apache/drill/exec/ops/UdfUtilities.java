@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.ops;
 
-import com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.store.PartitionExplorer;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
 import io.netty.buffer.DrillBuf;
 

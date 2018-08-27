@@ -80,7 +80,7 @@ import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
 import org.apache.drill.exec.vector.accessor.writer.AbstractFixedWidthWriter.BaseFixedWidthWriter;
 import org.apache.drill.exec.vector.accessor.writer.BaseVarWidthWriter;
 
-import com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 import io.netty.buffer.DrillBuf;
 

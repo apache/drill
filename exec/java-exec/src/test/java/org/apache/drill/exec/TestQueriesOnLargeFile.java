@@ -32,8 +32,8 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class})

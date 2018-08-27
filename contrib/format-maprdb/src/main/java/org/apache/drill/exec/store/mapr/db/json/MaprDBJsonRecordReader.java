@@ -55,9 +55,9 @@ import org.ojai.FieldSegment;
 import org.ojai.Value;
 import org.ojai.store.QueryCondition;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import com.mapr.db.MapRDB;
 import com.mapr.db.Table;
 import com.mapr.db.Table.TableOption;

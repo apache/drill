@@ -57,8 +57,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 import io.netty.buffer.DrillBuf;
 import org.joda.time.DateTimeConstants;

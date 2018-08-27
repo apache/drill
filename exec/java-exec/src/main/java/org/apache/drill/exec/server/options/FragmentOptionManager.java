@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.options;
 
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
 import java.util.Map;

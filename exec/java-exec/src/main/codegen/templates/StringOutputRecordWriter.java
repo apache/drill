@@ -26,7 +26,7 @@ import java.lang.UnsupportedOperationException;
 
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.memory.BufferAllocator;

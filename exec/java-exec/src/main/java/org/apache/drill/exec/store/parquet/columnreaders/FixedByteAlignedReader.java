@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Longs;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.vector.DateVector;

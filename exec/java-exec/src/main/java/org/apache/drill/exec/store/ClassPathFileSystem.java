@@ -31,7 +31,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
 
-import com.google.common.io.Resources;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
 
 public class ClassPathFileSystem extends FileSystem{

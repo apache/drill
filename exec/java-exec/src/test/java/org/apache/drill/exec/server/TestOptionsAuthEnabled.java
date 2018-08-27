@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server;
 
-import com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillProperties;
