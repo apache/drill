@@ -41,6 +41,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -413,6 +414,15 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     }
 
     @Override
+    protected boolean isOkayNonthrowingMethod(Method method) {
+      return
+          super.isOkayNonthrowingMethod(method)
+          // New Java 9 methods not implemented in Avatica.
+          || method.getName().equals("beginRequest")
+          || method.getName().equals("endRequest");
+    }
+
+    @Override
     protected boolean isOkaySpecialCaseException(Method method, Throwable cause) {
       final boolean result;
       if (super.isOkaySpecialCaseException(method, cause)) {
@@ -423,6 +433,12 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
                 && (method.getName().equals("setClientInfo")
                     || method.getName().equals("getClientInfo"))) {
         // Special good case--we had to use SQLClientInfoException from those.
+        result = true;
+      }
+      else if (SQLFeatureNotSupportedException.class == cause.getClass()
+                && (method.getName().equals("setShardingKeyIfValid")
+                    || method.getName().equals("setShardingKey"))) {
+        // New Java 9 methods not implemented in Avatica.
         result = true;
       } else {
         result = false;
@@ -453,6 +469,24 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     ClosedPlainStatementChecker(Class<Statement> intf, Statement jdbcObject) {
       super(intf, jdbcObject, PLAIN_STATEMENT_CLOSED_MESSAGE);
     }
+
+    @Override
+    protected boolean isOkaySpecialCaseException(Method method, Throwable cause) {
+      final boolean result;
+      if (super.isOkaySpecialCaseException(method, cause)) {
+        result = true;
+      } else if (NullPointerException.class == cause.getClass()
+              && (method.getName().equals("enquoteIdentifier")
+                  || method.getName().equals("enquoteLiteral")
+                  || method.getName().equals("enquoteNCharLiteral")
+                  || method.getName().equals("isSimpleIdentifier"))) {
+        result = true;
+      } else {
+        result = false;
+      }
+
+      return result;
+    }
   } // class ClosedPlainStatementChecker
 
   @Test
@@ -476,6 +510,24 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     ClosedPreparedStatementChecker(Class<PreparedStatement> intf,
                                    PreparedStatement jdbcObject) {
       super(intf, jdbcObject, PREPAREDSTATEMENT_CLOSED_MESSAGE);
+    }
+
+    @Override
+    protected boolean isOkaySpecialCaseException(Method method, Throwable cause) {
+      final boolean result;
+      if (super.isOkaySpecialCaseException(method, cause)) {
+        result = true;
+      } else if (NullPointerException.class == cause.getClass()
+                 && (method.getName().equals("enquoteIdentifier")
+                     || method.getName().equals("enquoteLiteral")
+                     || method.getName().equals("enquoteNCharLiteral")
+                     || method.getName().equals("isSimpleIdentifier"))) {
+        result = true;
+      } else {
+        result = false;
+      }
+
+      return result;
     }
   } // class closedPreparedStmtOfOpenConnChecker
 
@@ -587,7 +639,9 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
           || method.getName().equals("getConnection")
           // TODO: New Java 8 methods not implemented in Avatica.
           || method.getName().equals("getMaxLogicalLobSize")
-          || method.getName().equals("supportsRefCursors");
+          || method.getName().equals("supportsRefCursors")
+          // New Java 9 methods not implemented in Avatica.
+          || method.getName().equals("supportsSharding");
     }
 
     @Override

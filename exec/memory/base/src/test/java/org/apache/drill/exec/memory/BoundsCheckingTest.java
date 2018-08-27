@@ -46,6 +46,7 @@ public class BoundsCheckingTest
     modifiersField.setAccessible(true);
     modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
     boolean old = field.getBoolean(null);
+    field.setAccessible(true);
     field.set(null, enabled);
     return old;
   }

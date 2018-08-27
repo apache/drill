@@ -205,6 +205,18 @@ set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% -Dlog.path="%DRILL_LOG_DIR%\sq
 SET JAVA_CMD=%JAVA_HOME%\bin\%JAVA_EXE%
 if "%JAVA_HOME%" == "" (set JAVA_CMD=%JAVA_EXE%)
 set ERROR_CODE=0
+
+rem Check that java is newer than 1.8
+"%JAVA_CMD%" -version 2>&1 | findstr "1.8" > nul  2>&1
+if errorlevel 1 (
+  rem allow reflective access on Java 9+
+  set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% --add-opens java.base/java.lang=ALL-UNNAMED
+  set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% --add-opens java.base/sun.nio.ch=ALL-UNNAMED
+  set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% --add-opens java.base/java.nio=ALL-UNNAMED
+  set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED
+  set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% --illegal-access=permit
+)
+
 set SQLLINE_CALL=sqlline.SqlLine -ac org.apache.drill.exec.client.DrillSqlLineApplication -d org.apache.drill.jdbc.Driver
 if NOT "test%QUERY%"=="test" (
   echo %QUERY% | "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS%

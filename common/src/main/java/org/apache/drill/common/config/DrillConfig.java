@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import io.netty.util.internal.PlatformDependent;
 import org.apache.drill.common.exceptions.DrillConfigurationException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.scanner.ClassPathScanner;
@@ -46,7 +47,7 @@ public class DrillConfig extends NestedConfig {
   private final ImmutableList<String> startupArguments;
 
   @SuppressWarnings("restriction")
-  private static final long MAX_DIRECT_MEMORY = sun.misc.VM.maxDirectMemory();
+  private static final long MAX_DIRECT_MEMORY = PlatformDependent.maxDirectMemory();
 
   @VisibleForTesting
   public DrillConfig(Config config) {

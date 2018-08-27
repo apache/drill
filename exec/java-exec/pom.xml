@@ -64,16 +64,15 @@
       <version>${kerby.version}</version>
       <scope>test</scope>
     </dependency>
-    <!-- <dependency> -->
-    <!-- <groupId>org.ow2.asm</groupId> -->
-    <!-- <artifactId>asm-util</artifactId> -->
-    <!-- <version>5.0.3</version> -->
-    <!-- </dependency> -->
     <dependency>
       <groupId>org.ow2.asm</groupId>
-      <artifactId>asm-debug-all</artifactId>
-      <version>5.0.3</version>
-      <!-- <scope>test</scope> -->
+      <artifactId>asm-commons</artifactId>
+      <version>${asm.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-util</artifactId>
+      <version>${asm.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.contrib.data</groupId>
@@ -81,11 +80,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-    <!-- <dependency> -->
-    <!-- <groupId>org.ow2.asm</groupId> -->
-    <!-- <artifactId>asm-commons</artifactId> -->
-    <!-- <version>5.0.3</version> -->
-    <!-- </dependency> -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-pool2</artifactId>

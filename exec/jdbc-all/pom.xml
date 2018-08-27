@@ -241,7 +241,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.18.1</version>
+        <version>2.22.0</version>
         <executions>
           <execution>
             <goals>
@@ -268,6 +268,7 @@
             <app.class.path>${app.class.path}</app.class.path>
             <project.version>${project.version}</project.version>
           </systemPropertyVariables>
+          <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
       </plugin>
 
@@ -333,6 +334,7 @@
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
               <exclude>io.netty:netty-tcnative:jar:*</exclude>
+              <exclude>org.honton.chas.hocon:jackson-dataformat-hocon:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -648,6 +650,7 @@
                     <exclude>commons-io:commons-io</exclude>
                     <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
                     <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
+                    <exclude>org.honton.chas.hocon:jackson-dataformat-hocon:*</exclude>
                   </excludes>
                 </artifactSet>
                 <relocations>
