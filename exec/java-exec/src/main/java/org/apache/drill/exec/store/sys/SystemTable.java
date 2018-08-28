@@ -140,6 +140,4 @@ public enum SystemTable {
   public Class<?> getPojoClass() {
     return pojoClass;
   }
-
-
 }

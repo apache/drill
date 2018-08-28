@@ -28,6 +28,7 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.server.options.OptionMetaData;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.OptionValidator;
+import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
@@ -76,12 +77,15 @@ public class ClassCompilerSelector {
 
   public static final String JAVA_COMPILER_OPTION = "exec.java_compiler";
   public static final String JAVA_COMPILER_JANINO_MAXSIZE_OPTION = "exec.java_compiler_janino_maxsize";
-  public static final OptionValidator JAVA_COMPILER_JANINO_MAXSIZE = new LongValidator(JAVA_COMPILER_JANINO_MAXSIZE_OPTION);
+  public static final OptionValidator JAVA_COMPILER_JANINO_MAXSIZE = new LongValidator(JAVA_COMPILER_JANINO_MAXSIZE_OPTION,
+      new OptionDescription("See the exec.java_compiler option comment. Accepts inputs of type LONG."));
 
   public static final String JAVA_COMPILER_DEBUG_OPTION = "exec.java_compiler_debug";
-  public static final OptionValidator JAVA_COMPILER_DEBUG = new BooleanValidator(JAVA_COMPILER_DEBUG_OPTION);
+  public static final OptionValidator JAVA_COMPILER_DEBUG = new BooleanValidator(JAVA_COMPILER_DEBUG_OPTION,
+      new OptionDescription("Toggles the output of debug-level compiler error messages in runtime generated code."));
 
-  public static final StringValidator JAVA_COMPILER_VALIDATOR = new StringValidator(JAVA_COMPILER_OPTION) {
+  public static final StringValidator JAVA_COMPILER_VALIDATOR = new StringValidator(JAVA_COMPILER_OPTION,
+      new OptionDescription("Switches between DEFAULT, JDK, and JANINO mode for the current session. Uses Janino by default for generated source code of less than exec.java_compiler_janino_maxsize; otherwise, switches to the JDK compiler.")) {
     @Override
     public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
       super.validate(v, metaData, manager);

@@ -78,9 +78,10 @@ public final class ExecutionControls {
      * Constructor for controls option validator.
      *  @param name the name of the validator
      * @param ttl  the number of queries for which this option should be valid
+     * @param description Description of the option
      */
-    public ControlsOptionValidator(final String name, final int ttl) {
-      super(name, OptionValue.Kind.STRING);
+    public ControlsOptionValidator(final String name, final int ttl, OptionDescription description) {
+      super(name, OptionValue.Kind.STRING, description);
       assert ttl > 0;
       this.ttl = ttl;
     }

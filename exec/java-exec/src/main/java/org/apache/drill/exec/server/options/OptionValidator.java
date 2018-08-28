@@ -27,10 +27,12 @@ public abstract class OptionValidator {
   // Stored here as well as in the option static class to allow insertion of option optionName into
   // the error messages produced by the validator
   private final String optionName;
+  private final OptionDescription description;
 
   /** By default, if admin option value is not specified, it would be set to false.*/
-  public OptionValidator(String optionName) {
+  public OptionValidator(String optionName, OptionDescription description) {
     this.optionName = optionName;
+    this.description = description;
   }
 
   /**
@@ -40,6 +42,14 @@ public abstract class OptionValidator {
    */
   public String getOptionName() {
     return optionName;
+  }
+
+  /**
+   * Get the option description (long and short)
+   * @return the description
+   */
+  public OptionDescription getOptionDescription() {
+    return description;
   }
 
   /**
@@ -88,5 +98,53 @@ public abstract class OptionValidator {
 
   public String getConfigProperty() {
     return ExecConstants.bootDefaultFor(getOptionName());
+  }
+
+  public static class OptionDescription {
+    private String description;
+    private String shortDescription;
+
+    /**
+     * Constructor for option's description
+     * @param description verbose format
+     */
+    public OptionDescription(String description) {
+      this(description, null);
+    }
+
+    /**
+     * Constructor for option's description
+     * @param description verbose format
+     * @param shortDescription short format
+     */
+    public OptionDescription(String description, String shortDescription) {
+      this.description = description;
+      this.shortDescription = shortDescription;
+    }
+
+    /**
+     * Get verbose description
+     * @return verbose description
+     */
+    public String getDescription() {
+      return description;
+    }
+
+    /**
+     * Get short description (typically for system tables)
+     * @return short description
+     */
+    public String getShortDescription() {
+      return shortDescription;
+    }
+
+    /**
+     * Check for explicit short description
+     * @return true if a short description explicitly exists
+     */
+    public boolean hasShortDescription() {
+      return (shortDescription != null);
+    }
+
   }
 }

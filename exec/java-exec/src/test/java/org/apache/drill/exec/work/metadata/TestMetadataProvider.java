@@ -250,7 +250,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(130, columns.size());
+    assertEquals(134, columns.size());
     // too many records to verify the output.
   }
 

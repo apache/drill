@@ -20,7 +20,12 @@ package org.apache.drill.exec.server.rest;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillException;
@@ -29,6 +34,10 @@ import org.apache.drill.exec.ssl.SSLConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.rest.auth.DrillErrorHandler;
 import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
@@ -68,7 +77,11 @@ import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.BindException;
 import java.security.KeyPair;
@@ -76,14 +89,18 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.List;
 
 /**
  * Wrapper class around jetty based webserver.
  */
 public class WebServer implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebServer.class);
+  private static final String OPTIONS_DESCRIBE_JS = "options.describe.js";
+  private static final String OPTIONS_DESCRIBE_TEMPLATE_JS = "options.describe.template.js";
 
   private static final int PORT_HUNT_TRIES = 100;
   private static final String BASE_STATIC_PATH = "/rest/static/";
@@ -95,6 +112,22 @@ public class WebServer implements AutoCloseable {
   private final Drillbit drillbit;
 
   private Server embeddedJetty;
+
+  private File tmpJavaScriptDir;
+
+  public File getTmpJavaScriptDir() {
+    if (tmpJavaScriptDir == null) {
+      tmpJavaScriptDir = Files.createTempDir();
+      tmpJavaScriptDir.deleteOnExit();
+      //Perform All auto generated files at this point
+      try {
+        generateOptionsDescriptionJSFile();
+      } catch (IOException e) {
+        logger.error("Unable to create temp dir for JavaScripts. {}", e);
+      }
+    }
+    return tmpJavaScriptDir;
+  }
 
   /**
    * Create Jetty based web server.
@@ -194,6 +227,16 @@ public class WebServer implements AutoCloseable {
     staticHolder.setInitParameter("dirAllowed", "false");
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
+
+    //Add Local path resource (This will allow access to dynamically created files like JavaScript)
+    final ServletHolder dynamicHolder = new ServletHolder("dynamic", DefaultServlet.class);
+    //Skip if unable to get a temp directory (e.g. during Unit tests)
+    if (getTmpJavaScriptDir() != null) {
+      dynamicHolder.setInitParameter("resourceBase", getTmpJavaScriptDir().getAbsolutePath());
+      dynamicHolder.setInitParameter("dirAllowed", "true");
+      dynamicHolder.setInitParameter("pathInfoOnly", "true");
+      servletContextHandler.addServlet(dynamicHolder, "/dynamic/*");
+    }
 
     if (authEnabled) {
       //DrillSecurityHandler is used to support SPNEGO and FORM authentication together
@@ -408,6 +451,48 @@ public class WebServer implements AutoCloseable {
   public void close() throws Exception {
     if (embeddedJetty != null) {
       embeddedJetty.stop();
+    }
+    //Deleting temp directory
+    FileUtils.deleteDirectory(getTmpJavaScriptDir());
+  }
+
+  private static final String FILE_CONTENT_FOOTER = "};";
+
+  //Generate Options Description JavaScript
+  private void generateOptionsDescriptionJSFile() throws IOException {
+    //Obtain list of Options & their descriptions
+    OptionManager optionManager = this.drillbit.getContext().getOptionManager();
+    OptionList publicOptions = optionManager.getPublicOptionList();
+    List<OptionValue> options = Lists.newArrayList(publicOptions);
+    Collections.sort(options);
+    int numLeftToWrite = options.size();
+
+    //Template source Javascript file
+    InputStream optionsDescripTemplateStream = Resource.newClassPathResource(OPTIONS_DESCRIBE_TEMPLATE_JS).getInputStream();
+    //Generated file
+    File optionsDescriptionFile = new File(getTmpJavaScriptDir(), OPTIONS_DESCRIBE_JS);
+    optionsDescriptionFile.deleteOnExit();
+    //Create a copy of a template and write with that!
+    java.nio.file.Files.copy(optionsDescripTemplateStream, optionsDescriptionFile.toPath());
+    logger.info("Will write {} descriptions to {}", numLeftToWrite, optionsDescriptionFile.getAbsolutePath());
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(optionsDescriptionFile, true))) {
+      //Iterate through options
+      for (OptionValue option : options) {
+        numLeftToWrite--;
+        String optionName = option.getName();
+        OptionDescription optionDescription = optionManager.getOptionDefinition(optionName).getValidator().getOptionDescription();
+        if (optionDescription != null) {
+          //Note: We don't need to worry about short descriptions for WebUI, since they will never be explicitly accessed from the map
+          writer.append("  \"").append(optionName).append("\" : \"")
+          .append(StringEscapeUtils.escapeEcmaScript(optionDescription.getDescription()))
+          .append( numLeftToWrite > 0 ? "\"," : "\"");
+          writer.newLine();
+        }
+      }
+      writer.append(FILE_CONTENT_FOOTER);
+      writer.newLine();
+      writer.flush();
     }
   }
 }
