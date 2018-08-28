@@ -491,14 +491,13 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer = buffer.reallocIfNeeded(input.end- input.start);
-      out.start = 0;
-      out.end = input.end - input.start;
+      String str = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      byte[] result = str.toLowerCase().getBytes(com.google.common.base.Charsets.UTF_8);
 
-      for (int id = input.start; id < input.end; id++) {
-        byte  currentByte = input.buffer.getByte(id);
-        out.buffer.setByte(id - input.start, Character.toLowerCase(currentByte));
-      }
+      out.buffer = buffer = buffer.reallocIfNeeded(result.length);
+      out.start = 0;
+      out.end = result.length;
+      out.buffer.setBytes(0, result);
     }
   }
 
@@ -522,14 +521,13 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer = buffer.reallocIfNeeded(input.end- input.start);
-      out.start = 0;
-      out.end = input.end - input.start;
+      String str = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      byte[] result = str.toUpperCase().getBytes(com.google.common.base.Charsets.UTF_8);
 
-      for (int id = input.start; id < input.end; id++) {
-        byte currentByte = input.buffer.getByte(id);
-        out.buffer.setByte(id - input.start, Character.toUpperCase(currentByte));
-      }
+      out.buffer = buffer = buffer.reallocIfNeeded(result.length);
+      out.start = 0;
+      out.end = result.length;
+      out.buffer.setBytes(0, result);
     }
   }
 
@@ -785,10 +783,13 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer = buffer.reallocIfNeeded(input.end - input.start);
+      String source = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      String result = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.initCap(source);
+      byte[] bytes = result.getBytes(com.google.common.base.Charsets.UTF_8);
+      out.buffer = buffer = buffer.reallocIfNeeded(bytes.length);
       out.start = 0;
-      out.end = input.end - input.start;
-      org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.initCap(input.start, input.end, input.buffer, out.buffer);
+      out.end = bytes.length;
+      out.buffer.setBytes(0, bytes);
     }
 
   }

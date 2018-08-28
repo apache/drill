@@ -148,24 +148,22 @@ public class StringFunctionHelpers {
    * Capitalizes first letter in each word.
    * Any symbol except digits and letters is considered as word delimiter.
    *
-   * @param start start position in input buffer
-   * @param end end position in input buffer
-   * @param inBuf buffer with input characters
-   * @param outBuf buffer with output characters
+   * @param source input characters
    */
-  public static void initCap(int start, int end, DrillBuf inBuf, DrillBuf outBuf) {
+  public static String initCap(String source) {
     boolean capitalizeNext = true;
-    int out = 0;
-    for (int id = start; id < end; id++, out++) {
-      int currentByte = inBuf.getByte(id);
-      if (Character.isLetterOrDigit(currentByte)) {
-        currentByte = capitalizeNext ? Character.toUpperCase(currentByte) : Character.toLowerCase(currentByte);
+    StringBuilder str = new StringBuilder(source);
+    for (int i = 0; i < str.length(); i++) {
+      char c = str.charAt(i);
+      if (Character.isLetterOrDigit(c)) {
+        str.setCharAt(i, capitalizeNext ? Character.toUpperCase(c) : Character.toLowerCase(c));
         capitalizeNext = false;
       } else {
         capitalizeNext = true;
       }
-      outBuf.setByte(out, currentByte);
     }
+
+    return str.toString();
   }
 
   /**

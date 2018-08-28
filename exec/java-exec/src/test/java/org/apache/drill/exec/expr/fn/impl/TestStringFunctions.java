@@ -23,7 +23,6 @@ import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.util.Text;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
@@ -1494,7 +1493,6 @@ public class TestStringFunctions extends BaseTestQuery {
         .run();
   }
 
-  @Ignore("DRILL-5477")
   @Test
   public void testMultiByteEncoding() throws Exception {
     testBuilder()
