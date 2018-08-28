@@ -155,6 +155,7 @@ public class Decimal${aggrtype.className}Functions {
           result = result.setScale(out.scale, java.math.RoundingMode.HALF_UP);
           out.start  = 0;
           out.precision = org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+          org.apache.drill.exec.util.DecimalUtility.checkValueOverflow(result, out.precision, out.scale);
           byte[] bytes = result.unscaledValue().toByteArray();
           int len = bytes.length;
           out.buffer = buffer.reallocIfNeeded(len);

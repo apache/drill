@@ -34,5 +34,6 @@ public class DecimalScalePrecisionDivideFunction extends DrillBaseComputeScalePr
     outputScale = Math.min(outputScale, MAX_NUMERIC_PRECISION - maxResultIntegerDigits);
     outputScale = Math.min(outputScale, DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale());
     outputPrecision = maxResultIntegerDigits + outputScale;
+    adjustScaleAndPrecision();
   }
 }

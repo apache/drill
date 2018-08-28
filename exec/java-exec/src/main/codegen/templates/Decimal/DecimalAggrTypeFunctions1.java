@@ -92,6 +92,8 @@ public class Decimal${aggrtype.className}Functions {
       if (outputScale.value == Integer.MIN_VALUE) {
         outputScale.value = in.scale;
       }
+      org.apache.drill.exec.util.DecimalUtility.checkValueOverflow((java.math.BigDecimal) value.obj,
+          org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(), outputScale.value);
       <#if type.inputType?starts_with("Nullable")>
       } // end of sout block
       </#if>
@@ -102,8 +104,7 @@ public class Decimal${aggrtype.className}Functions {
       if (nonNullCount.value > 0) {
         out.isSet = 1;
         out.start  = 0;
-        out.scale = Math.min(outputScale.value,
-            org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale());
+        out.scale = outputScale.value;
         out.precision =
             org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
         value.obj = ((java.math.BigDecimal) value.obj).setScale(out.scale, java.math.BigDecimal.ROUND_HALF_UP);

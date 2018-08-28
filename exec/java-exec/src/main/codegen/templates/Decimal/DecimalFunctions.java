@@ -183,6 +183,8 @@ public class ${type.name}Functions {
               new java.math.MathContext(result.precision, java.math.RoundingMode.HALF_UP))
             .setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
+      org.apache.drill.exec.util.DecimalUtility.checkValueOverflow(opResult, result.precision, result.scale);
+
       byte[] bytes = opResult.unscaledValue().toByteArray();
       int len = bytes.length;
       result.buffer = buffer.reallocIfNeeded(len);
@@ -285,7 +287,7 @@ public class ${type.name}Functions {
 
     public void eval() {
       result.start = 0;
-      result.scale = right.value;
+      result.scale = Math.max(right.value, 0);
       result.precision = left.precision;
       java.math.BigDecimal opResult =
           org.apache.drill.exec.util.DecimalUtility
@@ -313,7 +315,7 @@ public class ${type.name}Functions {
     }
 
     public void eval() {
-      result.scale = right.value;
+      result.scale = Math.max(right.value, 0);
       result.precision = left.precision;
       result.start = 0;
       java.math.BigDecimal bd =
