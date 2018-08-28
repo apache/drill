@@ -82,6 +82,7 @@ import org.apache.drill.exec.work.filter.RuntimeFilterReporter;
 
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
 
 /**
@@ -449,7 +450,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
         prefetchFirstProbeBatch();
 
-        if (leftUpstream.isError()) {
+        if (leftUpstream.isError() ||
+            ( leftUpstream == NONE && joinType != JoinRelType.FULL && joinType != JoinRelType.RIGHT )) {
           // A termination condition was reached while prefetching the first probe side data holding batch.
           // We need to terminate.
           return leftUpstream;
@@ -496,9 +498,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
            * Either case build the output container's schema and return
            */
           if (outputRecords > 0 || state == BatchState.FIRST) {
-            if (state == BatchState.FIRST) {
-              state = BatchState.NOT_FIRST;
-            }
+            state = BatchState.NOT_FIRST;
 
             return IterOutcome.OK;
           }

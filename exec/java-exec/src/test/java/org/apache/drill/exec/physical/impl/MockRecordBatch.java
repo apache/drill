@@ -202,7 +202,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
     if (currentContainerIndex < rowSets.size()) {
       final RowSet rowSet = rowSets.get(currentContainerIndex);
       final VectorContainer input = rowSet.container();
-      final int recordCount = input.getRecordCount();
       // We need to do this since the downstream operator expects vector reference to be same
       // after first next call in cases when schema is not changed
       final BatchSchema inputSchema = input.getSchema();
@@ -215,7 +214,9 @@ public class MockRecordBatch implements CloseableRecordBatch {
         case NONE:
         case TWO_BYTE:
           container.transferIn(input);
-          container.setRecordCount(recordCount);
+          if ( input.hasRecordCount() ) { // in case special test of uninitialized input container
+            container.setRecordCount(input.getRecordCount());
+          }
           final SelectionVector2 inputSv2 = ((RowSet.SingleRowSet) rowSet).getSv2();
 
           if (sv2 != null) {
@@ -257,10 +258,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
       case NONE:
       case STOP:
       case OUT_OF_MEMORY:
-      //case OK_NEW_SCHEMA:
         isDone = true;
-        container.setRecordCount(0);
-        return currentOutcome;
       case NOT_YET:
         container.setRecordCount(0);
         return currentOutcome;
