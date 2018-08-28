@@ -28,6 +28,8 @@ import org.apache.drill.exec.planner.types.decimal.DecimalScalePrecisionMulFunct
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.FunctionAttributes;
 import org.apache.drill.exec.expr.fn.FunctionUtils;
+import org.apache.drill.exec.planner.types.decimal.DrillBaseComputeScalePrecision;
+import org.apache.drill.exec.planner.types.decimal.DrillUnaryComputeScalePrecision;
 import org.apache.drill.exec.util.DecimalUtility;
 
 import java.util.List;
@@ -61,7 +63,7 @@ public class DecimalReturnTypeInference {
       TypeProtos.MajorType leftMajorType = logicalExpressions.get(0).getMajorType();
       TypeProtos.MajorType rightMajorType = logicalExpressions.get(1).getMajorType();
 
-      DecimalScalePrecisionAddFunction outputScalePrec =
+      final DrillBaseComputeScalePrecision outputScalePrec =
           new DecimalScalePrecisionAddFunction(
               DecimalUtility.getDefaultPrecision(leftMajorType.getMinorType(), leftMajorType.getPrecision()),
               leftMajorType.getScale(),
@@ -95,10 +97,12 @@ public class DecimalReturnTypeInference {
         precision = Math.max(precision, e.getMajorType().getPrecision());
       }
 
+      final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, scale);
+
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(scale)
-          .setPrecision(precision)
+          .setScale(outputScalePrec.getOutputScale())
+          .setPrecision(outputScalePrec.getOutputPrecision())
           .setMode(TypeProtos.DataMode.OPTIONAL)
           .build();
     }
@@ -126,10 +130,12 @@ public class DecimalReturnTypeInference {
 
       int scale = ((ValueExpressions.IntExpression) logicalExpressions.get(logicalExpressions.size() - 1)).getInt();
       int precision = ((ValueExpressions.IntExpression) logicalExpressions.get(logicalExpressions.size() - 2)).getInt();
+
+      final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, scale);
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(scale)
-          .setPrecision(precision)
+          .setScale(outputScalePrec.getOutputScale())
+          .setPrecision(outputScalePrec.getOutputPrecision())
           .setMode(mode)
           .build();
     }
@@ -160,7 +166,7 @@ public class DecimalReturnTypeInference {
       TypeProtos.MajorType leftMajorType = logicalExpressions.get(0).getMajorType();
       TypeProtos.MajorType rightMajorType = logicalExpressions.get(1).getMajorType();
 
-      DecimalScalePrecisionDivideFunction outputScalePrec =
+      final DrillBaseComputeScalePrecision outputScalePrec =
           new DecimalScalePrecisionDivideFunction(
               DecimalUtility.getDefaultPrecision(leftMajorType.getMinorType(), leftMajorType.getPrecision()),
               leftMajorType.getScale(),
@@ -195,10 +201,12 @@ public class DecimalReturnTypeInference {
         precision = Math.max(precision, e.getMajorType().getPrecision());
       }
 
+      final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, scale);
+
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(scale)
-          .setPrecision(precision)
+          .setScale(outputScalePrec.getOutputScale())
+          .setPrecision(outputScalePrec.getOutputPrecision())
           .setMode(mode)
           .build();
     }
@@ -229,7 +237,7 @@ public class DecimalReturnTypeInference {
       TypeProtos.MajorType leftMajorType = logicalExpressions.get(0).getMajorType();
       TypeProtos.MajorType rightMajorType = logicalExpressions.get(1).getMajorType();
 
-      DecimalScalePrecisionModFunction outputScalePrec =
+      final DrillBaseComputeScalePrecision outputScalePrec =
           new DecimalScalePrecisionModFunction(
               DecimalUtility.getDefaultPrecision(leftMajorType.getMinorType(), leftMajorType.getPrecision()),
               leftMajorType.getScale(),
@@ -274,11 +282,12 @@ public class DecimalReturnTypeInference {
         // Get the scale from the second argument which should be a constant
         scale = ((ValueExpressions.IntExpression) logicalExpressions.get(1)).getInt();
       }
+      final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, scale);
 
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(scale)
-          .setPrecision(precision)
+          .setScale(outputScalePrec.getOutputScale())
+          .setPrecision(outputScalePrec.getOutputPrecision())
           .setMode(mode)
           .build();
     }
@@ -300,11 +309,13 @@ public class DecimalReturnTypeInference {
       for (LogicalExpression e : logicalExpressions) {
         scale = Math.max(scale, e.getMajorType().getScale());
       }
+      final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(
+        DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(), scale);
 
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(TypeProtos.MinorType.VARDECIMAL)
-          .setScale(scale)
-          .setPrecision(DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision())
+          .setScale(outputScalePrec.getOutputScale())
+          .setPrecision(outputScalePrec.getOutputPrecision())
           .setMode(TypeProtos.DataMode.OPTIONAL)
           .build();
     }
@@ -329,11 +340,13 @@ public class DecimalReturnTypeInference {
         scale = Math.max(scale, e.getMajorType().getScale());
       }
 
+      final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision
+        (DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(), scale);
+
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(TypeProtos.MinorType.VARDECIMAL)
-          .setScale(Math.min(Math.max(6, scale),
-              DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()))
-          .setPrecision(DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision())
+          .setScale(Math.max(6, outputScalePrec.getOutputScale()))
+          .setPrecision(outputScalePrec.getOutputPrecision())
           .setMode(TypeProtos.DataMode.OPTIONAL)
           .build();
     }
@@ -357,7 +370,7 @@ public class DecimalReturnTypeInference {
       TypeProtos.MajorType leftMajorType = logicalExpressions.get(0).getMajorType();
       TypeProtos.MajorType rightMajorType = logicalExpressions.get(1).getMajorType();
 
-      DecimalScalePrecisionMulFunction outputScalePrec =
+      final DrillBaseComputeScalePrecision outputScalePrec =
           new DecimalScalePrecisionMulFunction(
               DecimalUtility.getDefaultPrecision(leftMajorType.getMinorType(), leftMajorType.getPrecision()),
               leftMajorType.getScale(),
@@ -404,10 +417,11 @@ public class DecimalReturnTypeInference {
         }
       }
 
+      final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, 0);
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(0)
-          .setPrecision(precision)
+          .setScale(outputScalePrec.getOutputScale())
+          .setPrecision(outputScalePrec.getOutputPrecision())
           .setMode(mode)
           .build();
     }

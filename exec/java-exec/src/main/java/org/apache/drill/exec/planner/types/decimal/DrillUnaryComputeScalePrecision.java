@@ -17,23 +17,12 @@
  */
 package org.apache.drill.exec.planner.types.decimal;
 
-/*
- * Here we compute the output scale and precision of the multiply function.
- * We simply add the input scale and precision to determine the output's scale
- * and precision
- */
-public class DecimalScalePrecisionMulFunction extends DrillBinaryComputeScalePrecision {
+public class DrillUnaryComputeScalePrecision extends DrillBaseComputeScalePrecision {
 
-  public DecimalScalePrecisionMulFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
-    super(leftPrecision, leftScale, rightPrecision, rightScale);
-  }
-
-  @Override
-  public void computeScalePrecision(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
-    // compute the output scale and precision here
-    outputScale = leftScale + rightScale;
-    outputPrecision = leftPrecision + rightPrecision;
-    super.computeScalePrecision(leftPrecision, leftScale, rightPrecision, rightScale);
+  public DrillUnaryComputeScalePrecision(int precision, int scale) {
+    outputPrecision = precision;
+    outputScale = scale;
+    adjustPrecisionRange();
+    verifyScaleAndPrecision();
   }
 }
-

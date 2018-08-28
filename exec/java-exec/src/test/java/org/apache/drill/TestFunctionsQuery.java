@@ -17,7 +17,9 @@
  */
 package org.apache.drill;
 
+import static junit.framework.TestCase.fail;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -26,7 +28,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -394,17 +398,30 @@ public class TestFunctionsQuery extends BaseTestQuery {
 
 
   @Test
-  public void testDecimalMultiplicationOverflowHandling() throws Exception {
+  public void testDecimalMultiplicationOverflowNegativeScale() throws Exception {
+    String query = "select cast('1000000000000000001.000000000000000000' as decimal(38, 18)) * " +
+      "cast('0.999999999999999999' as decimal(38, 18)) as DEC38_1 from cp.`employee.json` where employee_id = 1";
+    try {
+      test(query);
+      fail();
+    } catch (Exception ex) {
+      // expected exception
+      assertTrue(ex instanceof UserRemoteException);
+      assertTrue(((UserRemoteException)ex).getErrorType().equals(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    }
+  }
+
+  @Test
+  public void testDecimalMultiplicationOverflowPrecision() throws Exception {
     String query = "select cast('1' as decimal(9, 5)) * cast ('999999999999999999999999999.999999999' as decimal(38, 9)) as DEC38_1, " +
-        "cast('1000000000000000001.000000000000000000' as decimal(38, 18)) * cast('0.999999999999999999' as decimal(38, 18)) as DEC38_2, " +
-        "cast('3' as decimal(9, 8)) * cast ('333333333.3333333333333333333' as decimal(38, 19)) as DEC38_3 " +
+        "cast('3' as decimal(9, 8)) * cast ('333333333.3333333333333333333' as decimal(38, 19)) as DEC38_2 " +
         "from cp.`employee.json` where employee_id = 1";
 
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
-        .baselineColumns("DEC38_1", "DEC38_2", "DEC38_3")
-        .baselineValues(new BigDecimal("1000000000000000000000000000.00000"), new BigDecimal("1.0000000000000000E+18"), new BigDecimal("1000000000.000000000000000000"))
+        .baselineColumns("DEC38_1", "DEC38_2")
+        .baselineValues(new BigDecimal("1000000000000000000000000000.00000"), new BigDecimal("1000000000.000000000000000000"))
         .go();
   }
 

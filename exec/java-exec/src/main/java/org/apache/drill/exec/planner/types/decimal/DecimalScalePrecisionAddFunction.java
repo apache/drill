@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.types.decimal;
 
-public class DecimalScalePrecisionAddFunction extends DrillBaseComputeScalePrecision {
+public class DecimalScalePrecisionAddFunction extends DrillBinaryComputeScalePrecision {
 
   public DecimalScalePrecisionAddFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
     super(leftPrecision, leftScale, rightPrecision, rightScale);
@@ -28,9 +28,8 @@ public class DecimalScalePrecisionAddFunction extends DrillBaseComputeScalePreci
     // compute the output scale and precision here
     outputScale = Math.max(leftScale, rightScale);
     int maxResultIntegerDigits = Math.max((leftPrecision - leftScale), (rightPrecision - rightScale)) + 1;
-
     outputPrecision = (outputScale + maxResultIntegerDigits);
 
-    checkPrecisionRange();
+    super.computeScalePrecision(leftPrecision, leftScale, rightPrecision, rightScale);
   }
 }

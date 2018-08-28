@@ -18,7 +18,9 @@
 package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -28,6 +30,9 @@ import org.junit.experimental.categories.Category;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @Category(SqlFunctionTest.class)
 public class TestVarDecimalFunctions extends BaseTestQuery {
@@ -59,9 +64,9 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "cast('15.02' as DECIMAL(4, 2)) - cast('12.93' as DECIMAL(4, 2)) as s4,\n" +
             "cast('11.02' as DECIMAL(4, 2)) - cast('12.93' as DECIMAL(4, 2)) as s5,\n" +
             "cast('0' as DECIMAL(36, 2)) - cast('12.93' as DECIMAL(36, 2)) as s6,\n" +
-            // check trimming (negative scale)
-            "cast('99999999999999999999999999992345678912' as DECIMAL(38, 0))\n" +
-            "+ cast('32345678912345678912345678912345678912' as DECIMAL(38, 0)) as s7";
+            // check trimming (digits after decimal point will be trimmed from result)
+            "cast('9999999999999999999999999999234567891.1' as DECIMAL(38, 1))\n" +
+            "+ cast('3234567891234567891234567891234567891.1' as DECIMAL(38, 1)) as s7";
     testBuilder()
         .sqlQuery(query)
         .ordered()
@@ -73,8 +78,24 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             new BigDecimal("1358024680358024680358024680358024.679"),
             new BigDecimal("1234567891234567891234567891234567.890"),
             new BigDecimal("2.09"), new BigDecimal("-1.91"), new BigDecimal("-12.93"),
-            new BigDecimal("1.3234567891234567891234567890469135782E+38"))
+            new BigDecimal("13234567891234567891234567890469135782"))
         .go();
+  }
+
+  @Test
+  public void testDecimalAdd_OverflowWithNegativeScale() {
+    String query =
+      "select\n" +
+        // check trimming (negative scale)
+        "cast('99999999999999999999999999992345678912' as DECIMAL(38, 0))\n" +
+        "+ cast('32345678912345678912345678912345678912' as DECIMAL(38, 0)) as s7";
+    try {
+      test(query);
+      fail();
+    } catch (Exception ex) {
+      assertTrue(ex instanceof UserRemoteException);
+      assertTrue(((UserRemoteException)ex).getErrorType().equals(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    }
   }
 
   @Test
