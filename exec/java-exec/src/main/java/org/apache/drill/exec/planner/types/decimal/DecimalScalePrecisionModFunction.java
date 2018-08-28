@@ -38,7 +38,7 @@ public class DecimalScalePrecisionModFunction extends DrillBaseComputeScalePreci
       outputScale = outputPrecision - leftIntegerDigits;
     }
 
-    // Output precision should atleast be greater or equal to the input precision
-    outputPrecision = Math.max(outputPrecision, Math.max(leftPrecision, rightPrecision));
+    // Output precision should at least be greater or equal to the input precision
+    outputPrecision = Math.min(outputPrecision, Math.max(leftPrecision, rightPrecision));
   }
 }

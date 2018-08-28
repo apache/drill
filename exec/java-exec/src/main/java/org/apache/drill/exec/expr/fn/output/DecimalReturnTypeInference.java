@@ -277,7 +277,7 @@ public class DecimalReturnTypeInference {
 
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(scale)
+          .setScale(Math.max(scale, 0))
           .setPrecision(precision)
           .setMode(mode)
           .build();

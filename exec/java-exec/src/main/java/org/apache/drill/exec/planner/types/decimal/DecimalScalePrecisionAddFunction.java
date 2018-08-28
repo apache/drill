@@ -31,6 +31,6 @@ public class DecimalScalePrecisionAddFunction extends DrillBaseComputeScalePreci
 
     outputPrecision = (outputScale + maxResultIntegerDigits);
 
-    checkPrecisionRange();
+    adjustScaleAndPrecision();
   }
 }

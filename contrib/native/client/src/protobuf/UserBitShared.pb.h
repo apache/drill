@@ -260,7 +260,7 @@ enum CoreOperatorType {
   SEQUENCE_SUB_SCAN = 53,
   PARTITION_LIMIT = 54,
   PCAPNG_SUB_SCAN = 55,
-   RUNTIME_FILTER = 56
+  RUNTIME_FILTER = 56
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;

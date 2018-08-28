@@ -18,12 +18,16 @@
 package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
+import org.hamcrest.CoreMatchers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -42,6 +46,9 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
     resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
   }
 
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
+
   // Tests for math functions
 
   @Test
@@ -59,9 +66,9 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             "cast('15.02' as DECIMAL(4, 2)) - cast('12.93' as DECIMAL(4, 2)) as s4,\n" +
             "cast('11.02' as DECIMAL(4, 2)) - cast('12.93' as DECIMAL(4, 2)) as s5,\n" +
             "cast('0' as DECIMAL(36, 2)) - cast('12.93' as DECIMAL(36, 2)) as s6,\n" +
-            // check trimming (negative scale)
-            "cast('99999999999999999999999999992345678912' as DECIMAL(38, 0))\n" +
-            "+ cast('32345678912345678912345678912345678912' as DECIMAL(38, 0)) as s7";
+            // check trimming (digits after decimal point will be trimmed from result)
+            "cast('9999999999999999999999999999234567891.1' as DECIMAL(38, 1))\n" +
+            "+ cast('3234567891234567891234567891234567891.1' as DECIMAL(38, 1)) as s7";
     testBuilder()
         .sqlQuery(query)
         .ordered()
@@ -73,8 +80,21 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
             new BigDecimal("1358024680358024680358024680358024.679"),
             new BigDecimal("1234567891234567891234567891234567.890"),
             new BigDecimal("2.09"), new BigDecimal("-1.91"), new BigDecimal("-12.93"),
-            new BigDecimal("1.3234567891234567891234567890469135782E+38"))
+            new BigDecimal("13234567891234567891234567890469135782"))
         .go();
+  }
+
+  @Test
+  public void testDecimalAddOverflow() throws Exception {
+    String query =
+      "select\n" +
+          "cast('99999999999999999999999999992345678912' as DECIMAL(38, 0))\n" +
+          "+ cast('32345678912345678912345678912345678912' as DECIMAL(38, 0)) as s7";
+    expectedException.expect(UserRemoteException.class);
+    expectedException.expectMessage(
+        CoreMatchers.containsString("VALIDATION ERROR: Value 132345678912345678912345678904691357820 " +
+            "overflows specified precision 38 with scale 0."));
+    test(query);
   }
 
   @Test
@@ -102,12 +122,24 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
   }
 
   @Test
+  public void testDecimalMultiplyOverflow() throws Exception {
+    String query = "select\n" +
+        "cast('999999999999999999999999999.92345678912' as DECIMAL(38, 11))\n" +
+        " * cast('323456789123.45678912345678912345678912' as DECIMAL(38, 26)) as s1";
+    expectedException.expect(UserRemoteException.class);
+    expectedException.expectMessage(
+        CoreMatchers.containsString("VALIDATION ERROR: Value 323456789123456789123456789098698367900 " +
+                "overflows specified precision 38 with scale 0."));
+    test(query);
+  }
+
+  @Test
   public void testDecimalDivide() throws Exception {
     String query =
         "select\n" +
             // checks trimming of scale
             "cast('1.9999999999999999999999999999234567891' as DECIMAL(38, 37))\n" +
-            "/ cast('0.00000000000000000000000000000000000001' as DECIMAL(38, 38)) as s1,\n" +
+            "/ cast('0.0000000000000000000000000000000000001' as DECIMAL(38, 37)) as s1,\n" +
             // sanitary checks
             "cast('1234567.89' as DECIMAL(9, 2))\n" +
             "/ cast('-1.789' as DECIMAL(4, 3)) as s2,\n" +
@@ -118,10 +150,22 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
         .sqlQuery(query)
         .ordered()
         .baselineColumns("s1", "s2", "s3", "s4", "s5")
-        .baselineValues(new BigDecimal("199999999999999999999999999992345678910"),
+        .baselineValues(new BigDecimal("19999999999999999999999999999234567891"),
             new BigDecimal("-690088.2560089"),
             new BigDecimal("1.0000000"), new BigDecimal("12.9312345678900"), new BigDecimal("0.000000"))
         .go();
+  }
+
+  @Test
+  public void testDecimalDivideOverflow() throws Exception {
+    String query = "select\n" +
+        "cast('1.9999999999999999999999999999234567891' as DECIMAL(38, 37))\n" +
+        " / cast('0.00000000000000000000000000000000000001' as DECIMAL(38, 38)) as s1";
+    expectedException.expect(UserRemoteException.class);
+    expectedException.expectMessage(
+        CoreMatchers.containsString("VALIDATION ERROR: Value 199999999999999999999999999992345678910 " +
+            "overflows specified precision 38 with scale 0"));
+    test(query);
   }
 
   @Test

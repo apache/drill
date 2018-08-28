@@ -17,9 +17,14 @@
  */
 package org.apache.drill.exec.planner.types.decimal;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
 
 public abstract class DrillBaseComputeScalePrecision {
+  private static final Logger logger = LoggerFactory.getLogger(DrillBaseComputeScalePrecision.class);
+
   protected final static int MAX_NUMERIC_PRECISION = DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
 
   protected int outputScale = 0;
@@ -43,10 +48,16 @@ public abstract class DrillBaseComputeScalePrecision {
    * Cuts down the fractional part if the current precision
    * exceeds the maximum precision range.
    */
-  protected void checkPrecisionRange() {
+  protected void adjustScaleAndPrecision() {
     if (outputPrecision > MAX_NUMERIC_PRECISION) {
       outputScale = outputScale - (outputPrecision - MAX_NUMERIC_PRECISION);
       outputPrecision = MAX_NUMERIC_PRECISION;
+    }
+    if (outputScale < 0) {
+      logger.warn("Resulting precision: {} may overflow max allowed precision: {}.\n" +
+          "Forced setting max allowed precision and 0 scale.",
+          MAX_NUMERIC_PRECISION - outputScale, MAX_NUMERIC_PRECISION);
+      outputScale = 0;
     }
   }
 }
