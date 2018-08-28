@@ -77,7 +77,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   private int currRightPartition = 0; // for returning RIGHT/FULL
   IntVector read_left_HV_vector; // HV vector that was read from the spilled batch
   private int cycleNum = 0; // 1-primary, 2-secondary, 3-tertiary, etc.
-  private HashJoinBatch.HJSpilledPartition spilledInners[]; // for the outer to find the partition
+  private HashJoinBatch.HashJoinSpilledPartition spilledInners[]; // for the outer to find the partition
   private boolean buildSideIsEmpty = true;
   private int numPartitions = 1; // must be 2 to the power of bitsInMask
   private int partitionMask = 0; // numPartitions - 1
@@ -110,7 +110,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
    * @param rightHVColPosition
    */
   @Override
-  public void setupHashJoinProbe(RecordBatch probeBatch, HashJoinBatch outgoing, JoinRelType joinRelType, IterOutcome leftStartState, HashPartition[] partitions, int cycleNum, VectorContainer container, HashJoinBatch.HJSpilledPartition[] spilledInners, boolean buildSideIsEmpty, int numPartitions, int rightHVColPosition) {
+  public void setupHashJoinProbe(RecordBatch probeBatch, HashJoinBatch outgoing, JoinRelType joinRelType, IterOutcome leftStartState, HashPartition[] partitions, int cycleNum, VectorContainer container, HashJoinBatch.HashJoinSpilledPartition[] spilledInners, boolean buildSideIsEmpty, int numPartitions, int rightHVColPosition) {
     this.container = container;
     this.spilledInners = spilledInners;
     this.probeBatch = probeBatch;
@@ -253,9 +253,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
               if ( ! partn.isSpilled() ) { continue; } // skip non-spilled
               partn.completeAnOuterBatch(false);
               // update the partition's spill record with the outer side
-              HashJoinBatch.HJSpilledPartition sp = spilledInners[partn.getPartitionNum()];
-              sp.outerSpillFile = partn.getSpillFile();
-              sp.outerSpilledBatches = partn.getPartitionBatchesCount();
+              HashJoinBatch.HashJoinSpilledPartition sp = spilledInners[partn.getPartitionNum()];
+              sp.updateOuter(partn.getPartitionBatchesCount(), partn.getSpillFile());
 
               partn.closeWriter();
             }

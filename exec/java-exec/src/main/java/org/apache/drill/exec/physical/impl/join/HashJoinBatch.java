@@ -23,9 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.drill.common.exceptions.UserException;
@@ -56,12 +55,14 @@ import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordbatch;
+import org.apache.drill.exec.physical.impl.common.AbstractSpilledPartitionMetadata;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.physical.impl.common.HashPartition;
+import org.apache.drill.exec.physical.impl.common.SpilledState;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
@@ -80,6 +81,7 @@ import org.apache.drill.exec.work.filter.BloomFilter;
 import org.apache.drill.exec.work.filter.BloomFilterDef;
 import org.apache.drill.exec.work.filter.RuntimeFilterDef;
 import org.apache.drill.exec.work.filter.RuntimeFilterReporter;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
@@ -137,8 +139,6 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
    * The number of {@link HashPartition}s. This is configured via a system option and set in {@link #partitionNumTuning(int, HashJoinMemoryCalculator.BuildSidePartitioning)}.
    */
   private int numPartitions = 1; // must be 2 to the power of bitsInMask
-  private int partitionMask = 0; // numPartitions - 1
-  private int bitsInMask = 0; // number of bits in the MASK
 
   /**
    * The master class used to generate {@link HashTable}s.
@@ -182,7 +182,6 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   private SpillSet spillSet;
   HashJoinPOP popConfig;
 
-  private int cycleNum = 0; // 1-primary, 2-secondary, 3-tertiary, etc.
   private int originalPartition = -1; // the partition a secondary reads from
   IntVector read_right_HV_vector; // HV vector that was read from the spilled batch
   private int maxBatchesInMemory;
@@ -195,21 +194,85 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   /**
    * This holds information about the spilled partitions for the build and probe side.
    */
-  public static class HJSpilledPartition {
-    public int innerSpilledBatches;
-    public String innerSpillFile;
-    public int outerSpilledBatches;
-    public String outerSpillFile;
-    int cycleNum;
-    int origPartn;
-    int prevOrigPartn;
+  public static class HashJoinSpilledPartition extends AbstractSpilledPartitionMetadata {
+    private final int innerSpilledBatches;
+    private final String innerSpillFile;
+    private int outerSpilledBatches;
+    private String outerSpillFile;
+    private boolean updatedOuter = false;
+
+    public HashJoinSpilledPartition(final int cycle,
+                                    final int originPartition,
+                                    final int prevOriginPartition,
+                                    final int innerSpilledBatches,
+                                    final String innerSpillFile) {
+      super(cycle, originPartition, prevOriginPartition);
+
+      this.innerSpilledBatches = innerSpilledBatches;
+      this.innerSpillFile = innerSpillFile;
+    }
+
+    public int getInnerSpilledBatches() {
+      return innerSpilledBatches;
+    }
+
+    public String getInnerSpillFile() {
+      return innerSpillFile;
+    }
+
+    public int getOuterSpilledBatches() {
+      Preconditions.checkState(updatedOuter);
+      return outerSpilledBatches;
+    }
+
+    public String getOuterSpillFile() {
+      Preconditions.checkState(updatedOuter);
+      return outerSpillFile;
+    }
+
+    public void updateOuter(final int outerSpilledBatches, final String outerSpillFile) {
+      Preconditions.checkState(!updatedOuter);
+      updatedOuter = true;
+
+      this.outerSpilledBatches = outerSpilledBatches;
+      this.outerSpillFile = outerSpillFile;
+    }
+
+    @Override
+    public String makeDebugString() {
+      return String.format("Start reading spilled partition %d (prev %d) from cycle %d (with %d-%d batches).",
+        this.getOriginPartition(), this.getPrevOriginPartition(), this.getCycle(), outerSpilledBatches, innerSpilledBatches);
+    }
+  }
+
+  public class HashJoinUpdater implements SpilledState.Updater {
+    @Override
+    public void cleanup() {
+      HashJoinBatch.this.cleanup();
+    }
+
+    @Override
+    public String getFailureMessage() {
+      return "Hash-Join can not partition the inner data any further (probably due to too many join-key duplicates).";
+    }
+
+    @Override
+    public long getMemLimit() {
+      return HashJoinBatch.this.allocator.getLimit();
+    }
+
+    @Override
+    public boolean hasPartitionLimit() {
+      return true;
+    }
   }
 
   /**
    * Queue of spilled partitions to process.
    */
-  private ArrayList<HJSpilledPartition> spilledPartitionsList = new ArrayList<>();
-  private HJSpilledPartition spilledInners[]; // for the outer to find the partition
+  private SpilledState<HashJoinSpilledPartition> spilledState = new SpilledState<>();
+  private HashJoinUpdater spilledStateUpdater = new HashJoinUpdater();
+  private HashJoinSpilledPartition spilledInners[]; // for the outer to find the partition
 
   public enum Metric implements MetricDef {
     NUM_BUCKETS,
@@ -352,7 +415,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       state = BatchState.STOP;
     } else {
       // Got our first batch(es)
-      if (cycleNum == 0) {
+      if (spilledState.isFirstCycle()) {
         // Only collect stats for the first cylce
         memoryManagerUpdate.run();
       }
@@ -470,7 +533,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
               joinType,
               leftUpstream,
               partitions,
-              cycleNum,
+              spilledState.getCycle(),
               container,
               spilledInners,
               buildSideIsEmpty.booleanValue(),
@@ -514,9 +577,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         //
         //  (recursively) Handle the spilled partitions, if any
         //
-        if (!buildSideIsEmpty.booleanValue() && !spilledPartitionsList.isEmpty()) {
+        if (!buildSideIsEmpty.booleanValue() && !spilledState.isEmpty()) {
           // Get the next (previously) spilled partition to handle as incoming
-          HJSpilledPartition currSp = spilledPartitionsList.remove(0);
+          HashJoinSpilledPartition currSp = spilledState.getNextSpilledPartition();
 
           // Create a BUILD-side "incoming" out of the inner spill file of that partition
           buildBatch = new SpilledRecordbatch(currSp.innerSpillFile, currSp.innerSpilledBatches, context, buildSchema, oContext, spillSet);
@@ -534,32 +597,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
             hashJoinProbe.changeToFinalProbeState();
           }
 
-          // update the cycle num if needed
-          // The current cycle num should always be one larger than in the spilled partition
-          if (cycleNum == currSp.cycleNum) {
-            cycleNum = 1 + currSp.cycleNum;
-            stats.setLongStat(Metric.SPILL_CYCLE, cycleNum); // update stats
-            // report first spill or memory stressful situations
-            if (cycleNum == 1) { logger.info("Started reading spilled records "); }
-            if (cycleNum == 2) { logger.info("SECONDARY SPILLING "); }
-            if (cycleNum == 3) { logger.warn("TERTIARY SPILLING ");  }
-            if (cycleNum == 4) { logger.warn("QUATERNARY SPILLING "); }
-            if (cycleNum == 5) { logger.warn("QUINARY SPILLING "); }
-            if ( cycleNum * bitsInMask > 20 ) {
-              spilledPartitionsList.add(currSp); // so cleanup() would delete the curr spill files
-              this.cleanup();
-              throw UserException
-                .unsupportedError()
-                .message("Hash-Join can not partition the inner data any further (probably due to too many join-key duplicates)\n"
-                + "On cycle num %d mem available %d num partitions %d", cycleNum, allocator.getLimit(), numPartitions)
-                .build(logger);
-            }
-          }
-          logger.debug("Start reading spilled partition {} (prev {}) from cycle {} (with {}-{} batches)." +
-              " More {} spilled partitions left.",
-            currSp.origPartn, currSp.prevOrigPartn, currSp.cycleNum, currSp.outerSpilledBatches,
-            currSp.innerSpilledBatches, spilledPartitionsList.size());
-
+          spilledState.updateCycle(stats, currSp, spilledStateUpdater);
           state = BatchState.FIRST;  // TODO need to determine if this is still necessary since prefetchFirstBatchFromBothSides sets this
 
           prefetchedBuild.setValue(false);
@@ -692,9 +730,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     //  See partitionNumTuning()
     //
 
-    partitionMask = numPartitions - 1; // e.g. 32 --> 0x1F
-    bitsInMask = Integer.bitCount(partitionMask); // e.g. 0x1F -> 5
-
+    spilledState.initialize(numPartitions);
     // Create array for the partitions
     partitions = new HashPartition[numPartitions];
   }
@@ -707,10 +743,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     // Recreate the partitions every time build is initialized
     for (int part = 0; part < numPartitions; part++ ) {
       partitions[part] = new HashPartition(context, allocator, baseHashTable, buildBatch, probeBatch,
-        RECORDS_PER_BATCH, spillSet, part, cycleNum, numPartitions);
+        RECORDS_PER_BATCH, spillSet, part, spilledState.getCycle(), numPartitions);
     }
 
-    spilledInners = new HJSpilledPartition[numPartitions];
+    spilledInners = new HashJoinSpilledPartition[numPartitions];
 
   }
 
@@ -836,19 +872,18 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     }
 
     HashJoinMemoryCalculator.BuildSidePartitioning buildCalc;
-    boolean firstCycle = cycleNum == 0;
 
     {
       // Initializing build calculator
       // Limit scope of these variables to this block
-      int maxBatchSize = firstCycle? RecordBatch.MAX_BATCH_ROW_COUNT: RECORDS_PER_BATCH;
+      int maxBatchSize = spilledState.isFirstCycle()? RecordBatch.MAX_BATCH_ROW_COUNT: RECORDS_PER_BATCH;
       boolean doMemoryCalculation = canSpill && !probeSideIsEmpty.booleanValue();
       HashJoinMemoryCalculator calc = getCalculatorImpl();
 
       calc.initialize(doMemoryCalculation);
       buildCalc = calc.next();
 
-      buildCalc.initialize(firstCycle, true, // TODO Fix after growing hash values bug fixed
+      buildCalc.initialize(spilledState.isFirstCycle(), true, // TODO Fix after growing hash values bug fixed
         buildBatch,
         probeBatch,
         buildJoinColumns,
@@ -862,13 +897,13 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         batchMemoryManager.getOutputBatchSize(),
         HashTable.DEFAULT_LOAD_FACTOR);
 
-      if (firstCycle && doMemoryCalculation) {
+      if (spilledState.isFirstCycle() && doMemoryCalculation) {
         // Do auto tuning
         buildCalc = partitionNumTuning(maxBatchSize, buildCalc);
       }
     }
 
-    if (firstCycle) {
+    if (spilledState.isFirstCycle()) {
       // Do initial setup only on the first cycle
       delayedSetup();
     }
@@ -906,11 +941,11 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         }
         final int currentRecordCount = buildBatch.getRecordCount();
 
-        if ( cycleNum > 0 ) {
+        if (!spilledState.isFirstCycle()) {
           read_right_HV_vector = (IntVector) buildBatch.getContainer().getLast();
         }
         //create runtime filter
-        if (cycleNum == 0 && enableRuntimeFilter) {
+        if (spilledState.isFirstCycle() && enableRuntimeFilter) {
           //create runtime filter and send out async
           int condFieldIndex = 0;
           for (BloomFilter bloomFilter : bloomFilters) {
@@ -924,10 +959,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
         // For every record in the build batch, hash the key columns and keep the result
         for (int ind = 0; ind < currentRecordCount; ind++) {
-          int hashCode = ( cycleNum == 0 ) ? partitions[0].getBuildHashCode(ind)
+          int hashCode = spilledState.isFirstCycle() ? partitions[0].getBuildHashCode(ind)
             : read_right_HV_vector.getAccessor().get(ind); // get the hash value from the HV column
-          int currPart = hashCode & partitionMask;
-          hashCode >>>= bitsInMask;
+          int currPart = hashCode & spilledState.getPartitionMask();
+          hashCode >>>= spilledState.getBitsInMask();
           // Append the new inner row to the appropriate partition; spill (that partition) if needed
           partitions[currPart].appendInnerRow(buildBatch.getContainer(), ind, hashCode, buildCalc); // may spill if needed
         }
@@ -942,7 +977,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       rightUpstream = next(HashJoinHelper.RIGHT_INPUT, buildBatch);
     }
 
-    if (cycleNum == 0 && enableRuntimeFilter) {
+    if (spilledState.isFirstCycle() && enableRuntimeFilter) {
       if (bloomFilters.size() > 0) {
         int hashJoinOpId = this.popConfig.getOperatorId();
         runtimeFilterReporter.sendOut(bloomFilters, probeFields, this.popConfig.getRuntimeFilterDef().isSendToForeman(), hashJoinOpId);
@@ -1004,14 +1039,13 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
     for (HashPartition partn : partitions) {
       if ( partn.isSpilled() ) {
-        HJSpilledPartition sp = new HJSpilledPartition();
-        sp.innerSpillFile = partn.getSpillFile();
-        sp.innerSpilledBatches = partn.getPartitionBatchesCount();
-        sp.cycleNum = cycleNum; // remember the current cycle
-        sp.origPartn = partn.getPartitionNum(); // for debugging / filename
-        sp.prevOrigPartn = originalPartition; // for debugging / filename
-        spilledPartitionsList.add(sp);
+        HashJoinSpilledPartition sp = new HashJoinSpilledPartition(spilledState.getCycle(),
+          partn.getPartitionNum(),
+          originalPartition,
+          partn.getPartitionBatchesCount(),
+          partn.getSpillFile());
 
+        spilledState.addPartition(sp);
         spilledInners[partn.getPartitionNum()] = sp; // for the outer to find the SP later
         partn.closeWriter();
 
@@ -1169,8 +1203,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     }
 
     // delete any spill file left in unread spilled partitions
-    while ( ! spilledPartitionsList.isEmpty() ) {
-      HJSpilledPartition sp = spilledPartitionsList.remove(0);
+    while (!spilledState.isEmpty()) {
+      HashJoinSpilledPartition sp = spilledState.getNextSpilledPartition();
       try {
         spillSet.delete(sp.innerSpillFile);
       } catch(IOException e) {
@@ -1210,7 +1244,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
    */
   private void updateStats() {
     if ( buildSideIsEmpty.booleanValue() ) { return; } // no stats when the right side is empty
-    if ( cycleNum > 0 ) { return; } // These stats are only for before processing spilled files
+    if (!spilledState.isFirstCycle()) { return; } // These stats are only for before processing spilled files
 
     final HashTableStats htStats = new HashTableStats();
     long numSpilled = 0;
@@ -1227,7 +1261,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     this.stats.setLongStat(Metric.NUM_RESIZING, htStats.numResizing);
     this.stats.setLongStat(Metric.RESIZING_TIME_MS, htStats.resizingTime);
     this.stats.setLongStat(Metric.NUM_PARTITIONS, numPartitions);
-    this.stats.setLongStat(Metric.SPILL_CYCLE, cycleNum); // Put 0 in case no spill
+    this.stats.setLongStat(Metric.SPILL_CYCLE, spilledState.getCycle()); // Put 0 in case no spill
     this.stats.setLongStat(Metric.SPILLED_PARTITIONS, numSpilled);
   }
 
@@ -1257,7 +1291,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
   @Override
   public void close() {
-    if ( cycleNum > 0 ) { // spilling happened
+    if (!spilledState.isFirstCycle()) { // spilling happened
       // In case closing due to cancellation, BaseRootExec.close() does not close the open
       // SpilledRecordBatch "scanners" as it only knows about the original left/right ops.
       killIncoming(false);
