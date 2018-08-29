@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec;
 
+import org.apache.drill.PlanTestBase;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -69,7 +70,6 @@ public class TestEmptyInputSql extends BaseTestQuery {
   /**
    * Test with query against an empty file. Select clause has one or more *
    * star column is expanded into an empty list.
-   * @throws Exception
    */
   @Test
   public void testQueryStarColEmptyJson() throws Exception {
@@ -92,7 +92,6 @@ public class TestEmptyInputSql extends BaseTestQuery {
   /**
    * Test with query against an empty file. Select clause has one or more qualified *
    * star column is expanded into an empty list.
-   * @throws Exception
    */
   @Test
   public void testQueryQualifiedStarColEmptyJson() throws Exception {
@@ -180,7 +179,6 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   /**
    * Test select * against empty csv with empty header. * is expanded into empty list of fields.
-   * @throws Exception
    */
   @Test
   public void testQueryEmptyCsvH() throws Exception {
@@ -195,9 +193,8 @@ public class TestEmptyInputSql extends BaseTestQuery {
   }
 
   /**
-   * Test select * against empty csv file. * is exapnede into "columns : repeated-varchar",
+   * Test select * against empty csv file. * is expanded into "columns : repeated-varchar",
    * which is the default column from reading a csv file.
-   * @throws Exception
    */
   @Test
   public void testQueryEmptyCsv() throws Exception {
@@ -239,6 +236,10 @@ public class TestEmptyInputSql extends BaseTestQuery {
         .run();
   }
 
-
+  @Test
+  public void testEmptyDirectoryPlanSerDe() throws Exception {
+    String query = String.format("select * from dfs.tmp.`%s`", EMPTY_DIR_NAME);
+    PlanTestBase.testPhysicalPlanExecutionBasedOnQuery(query);
+  }
 
 }

@@ -17,24 +17,26 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.List;
 
 /**
- *  The type of scan operator, which allows to scan schemaless tables ({@link DynamicDrillTable} with null selection)
+ *  The type of scan operator, which allows to scan schemaless tables ({@link org.apache.drill.exec.planner.logical.DynamicDrillTable} with null selection)
  */
 @JsonTypeName("schemaless-scan")
 public class SchemalessScan extends AbstractFileGroupScan implements SubScan {
 
   private final String selectionRoot;
 
-  public SchemalessScan(String userName, String selectionRoot) {
+  @JsonCreator
+  public SchemalessScan(@JsonProperty("userName") String userName,
+                        @JsonProperty("selectionRoot") String selectionRoot) {
     super(userName);
     this.selectionRoot = selectionRoot;
   }
@@ -44,12 +46,17 @@ public class SchemalessScan extends AbstractFileGroupScan implements SubScan {
     this.selectionRoot = that.selectionRoot;
   }
 
-  @Override
-  public void applyAssignments(List<CoordinationProtos.DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+  @JsonProperty
+  public String getSelectionRoot() {
+    return selectionRoot;
   }
 
   @Override
-  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
+  public void applyAssignments(List<CoordinationProtos.DrillbitEndpoint> endpoints) {
+  }
+
+  @Override
+  public SubScan getSpecificScan(int minorFragmentId) {
     return this;
   }
 
@@ -65,14 +72,13 @@ public class SchemalessScan extends AbstractFileGroupScan implements SubScan {
 
   @Override
   public String toString() {
-    final String pattern = "SchemalessScan [selectionRoot = %s]";
+    String pattern = "SchemalessScan [selectionRoot = %s]";
     return String.format(pattern, selectionRoot);
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    assert children == null || children.isEmpty();
     return new SchemalessScan(this);
   }
 
