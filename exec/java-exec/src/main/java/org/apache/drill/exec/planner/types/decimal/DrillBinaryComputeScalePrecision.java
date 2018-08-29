@@ -25,6 +25,5 @@ public abstract class DrillBinaryComputeScalePrecision extends DrillBaseComputeS
 
   public void computeScalePrecision(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
     adjustPrecisionRange();
-    verifyScaleAndPrecision();
   }
 }

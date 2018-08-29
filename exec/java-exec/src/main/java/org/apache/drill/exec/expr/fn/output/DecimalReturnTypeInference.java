@@ -21,13 +21,13 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.fn.FunctionAttributes;
+import org.apache.drill.exec.expr.fn.FunctionUtils;
 import org.apache.drill.exec.planner.types.decimal.DecimalScalePrecisionAddFunction;
 import org.apache.drill.exec.planner.types.decimal.DecimalScalePrecisionDivideFunction;
 import org.apache.drill.exec.planner.types.decimal.DecimalScalePrecisionModFunction;
 import org.apache.drill.exec.planner.types.decimal.DecimalScalePrecisionMulFunction;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.fn.FunctionAttributes;
-import org.apache.drill.exec.expr.fn.FunctionUtils;
 import org.apache.drill.exec.planner.types.decimal.DrillBaseComputeScalePrecision;
 import org.apache.drill.exec.planner.types.decimal.DrillUnaryComputeScalePrecision;
 import org.apache.drill.exec.util.DecimalUtility;
@@ -37,7 +37,10 @@ import java.util.List;
 import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
 
 public class DecimalReturnTypeInference {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DecimalReturnTypeInference.class);
 
+  private static final String debugString = "Adjusted scale for this query is negative but it's an estimation during " +
+    "planning time. Actual validation will happen during execution based on real data. Estimated output scale: %d";
   /**
    * Return type calculation implementation for functions with return type set as
    * {@link org.apache.drill.exec.expr.annotations.FunctionTemplate.ReturnType#DECIMAL_ADD_SCALE}.
@@ -69,12 +72,17 @@ public class DecimalReturnTypeInference {
               leftMajorType.getScale(),
               DecimalUtility.getDefaultPrecision(rightMajorType.getMinorType(), rightMajorType.getPrecision()),
               rightMajorType.getScale());
+
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(TypeProtos.MinorType.VARDECIMAL)
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(mode)
-          .build();
+        .setMinorType(TypeProtos.MinorType.VARDECIMAL)
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(mode)
+        .build();
     }
   }
 
@@ -99,12 +107,16 @@ public class DecimalReturnTypeInference {
 
       final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, scale);
 
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(TypeProtos.DataMode.OPTIONAL)
-          .build();
+        .setMinorType(attributes.getReturnValue().getType().getMinorType())
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
     }
   }
 
@@ -132,12 +144,17 @@ public class DecimalReturnTypeInference {
       int precision = ((ValueExpressions.IntExpression) logicalExpressions.get(logicalExpressions.size() - 2)).getInt();
 
       final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, scale);
+
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(mode)
-          .build();
+        .setMinorType(attributes.getReturnValue().getType().getMinorType())
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(mode)
+        .build();
     }
   }
 
@@ -172,12 +189,17 @@ public class DecimalReturnTypeInference {
               leftMajorType.getScale(),
               DecimalUtility.getDefaultPrecision(rightMajorType.getMinorType(), rightMajorType.getPrecision()),
               rightMajorType.getScale());
+
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(TypeProtos.MinorType.VARDECIMAL)
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(mode)
-          .build();
+        .setMinorType(TypeProtos.MinorType.VARDECIMAL)
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(mode)
+        .build();
     }
   }
 
@@ -203,12 +225,16 @@ public class DecimalReturnTypeInference {
 
       final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, scale);
 
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(mode)
-          .build();
+        .setMinorType(attributes.getReturnValue().getType().getMinorType())
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(mode)
+        .build();
     }
   }
 
@@ -243,12 +269,17 @@ public class DecimalReturnTypeInference {
               leftMajorType.getScale(),
               DecimalUtility.getDefaultPrecision(rightMajorType.getMinorType(), rightMajorType.getPrecision()),
               rightMajorType.getScale());
+
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(TypeProtos.MinorType.VARDECIMAL)
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(mode)
-          .build();
+        .setMinorType(TypeProtos.MinorType.VARDECIMAL)
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(mode)
+        .build();
     }
   }
 
@@ -284,12 +315,16 @@ public class DecimalReturnTypeInference {
       }
       final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, scale);
 
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(mode)
-          .build();
+        .setMinorType(attributes.getReturnValue().getType().getMinorType())
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(mode)
+        .build();
     }
   }
 
@@ -312,12 +347,16 @@ public class DecimalReturnTypeInference {
       final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(
         DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(), scale);
 
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(TypeProtos.MinorType.VARDECIMAL)
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(TypeProtos.DataMode.OPTIONAL)
-          .build();
+        .setMinorType(TypeProtos.MinorType.VARDECIMAL)
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
     }
   }
 
@@ -343,12 +382,16 @@ public class DecimalReturnTypeInference {
       final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision
         (DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(), scale);
 
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(TypeProtos.MinorType.VARDECIMAL)
-          .setScale(Math.max(6, outputScalePrec.getOutputScale()))
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(TypeProtos.DataMode.OPTIONAL)
-          .build();
+        .setMinorType(TypeProtos.MinorType.VARDECIMAL)
+        .setScale(Math.max(6, outputScalePrec.getOutputScale()))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
     }
   }
 
@@ -376,12 +419,17 @@ public class DecimalReturnTypeInference {
               leftMajorType.getScale(),
               DecimalUtility.getDefaultPrecision(rightMajorType.getMinorType(), rightMajorType.getPrecision()),
               rightMajorType.getScale());
+
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(TypeProtos.MinorType.VARDECIMAL)
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(mode)
-          .build();
+        .setMinorType(TypeProtos.MinorType.VARDECIMAL)
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(mode)
+        .build();
     }
   }
 
@@ -418,12 +466,17 @@ public class DecimalReturnTypeInference {
       }
 
       final DrillBaseComputeScalePrecision outputScalePrec = new DrillUnaryComputeScalePrecision(precision, 0);
+
+      if (outputScalePrec.getOutputScale() < 0) {
+        logger.debug(debugString, outputScalePrec.getOutputScale());
+      }
+
       return TypeProtos.MajorType.newBuilder()
-          .setMinorType(attributes.getReturnValue().getType().getMinorType())
-          .setScale(outputScalePrec.getOutputScale())
-          .setPrecision(outputScalePrec.getOutputPrecision())
-          .setMode(mode)
-          .build();
+        .setMinorType(attributes.getReturnValue().getType().getMinorType())
+        .setScale(Math.max(outputScalePrec.getOutputScale(), 0))
+        .setPrecision(outputScalePrec.getOutputPrecision())
+        .setMode(mode)
+        .build();
     }
   }
 }

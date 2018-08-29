@@ -20,19 +20,19 @@ package org.apache.drill.exec.fn.impl;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.containsString;
 
 @Category(SqlFunctionTest.class)
 public class TestVarDecimalFunctions extends BaseTestQuery {
@@ -46,6 +46,9 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
   public static void disableDecimalDataType() {
     resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
   }
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   // Tests for math functions
 
@@ -83,19 +86,16 @@ public class TestVarDecimalFunctions extends BaseTestQuery {
   }
 
   @Test
-  public void testDecimalAdd_OverflowWithNegativeScale() {
+  public void testDecimalAdd_OverflowWithNegativeScale() throws Exception {
     String query =
       "select\n" +
         // check trimming (negative scale)
         "cast('99999999999999999999999999992345678912' as DECIMAL(38, 0))\n" +
         "+ cast('32345678912345678912345678912345678912' as DECIMAL(38, 0)) as s7";
-    try {
-      test(query);
-      fail();
-    } catch (Exception ex) {
-      assertTrue(ex instanceof UserRemoteException);
-      assertTrue(((UserRemoteException)ex).getErrorType().equals(UserBitShared.DrillPBError.ErrorType.VALIDATION));
-    }
+    expectedException.expect(UserRemoteException.class);
+    expectedException.expectMessage(containsString("SYSTEM ERROR"));
+    expectedException.expectMessage(containsString("[Output expression precision: 38 and scale: -1]"));
+    test(query);
   }
 
   @Test

@@ -143,7 +143,7 @@ public class DrillSqlWorker {
 
     try {
       return handler.getPlan(sqlNode);
-    } catch(ValidationException e) {
+    } catch(ValidationException | IllegalArgumentException e) {
       String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
       throw UserException.validationError(e)
           .message(errorMessage)

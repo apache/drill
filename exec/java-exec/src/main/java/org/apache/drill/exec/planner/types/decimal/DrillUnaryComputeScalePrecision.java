@@ -23,6 +23,5 @@ public class DrillUnaryComputeScalePrecision extends DrillBaseComputeScalePrecis
     outputPrecision = precision;
     outputScale = scale;
     adjustPrecisionRange();
-    verifyScaleAndPrecision();
   }
 }
