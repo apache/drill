@@ -61,7 +61,7 @@ public class ClassTransformer {
   public final static String SCALAR_REPLACEMENT_OPTION =
       "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement";
   public final static EnumeratedStringValidator SCALAR_REPLACEMENT_VALIDATOR = new EnumeratedStringValidator(
-      SCALAR_REPLACEMENT_OPTION, "try", "off", "try", "on");
+      SCALAR_REPLACEMENT_OPTION, null, "try", "off", "try", "on");
 
   @VisibleForTesting // although we need it even if it weren't used in testing
   public enum ScalarReplacementOption {

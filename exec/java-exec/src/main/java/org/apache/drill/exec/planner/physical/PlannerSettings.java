@@ -23,6 +23,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValidator;
+import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
@@ -51,72 +52,102 @@ public class PlannerSettings implements Context{
   // max off heap memory for planning (16G)
   private static final long MAX_OFF_HEAP_ALLOCATION_IN_BYTES = 16l * 1024 * 1024 * 1024;
 
-  public static final OptionValidator CONSTANT_FOLDING = new BooleanValidator("planner.enable_constant_folding");
-  public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges");
-  public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg");
-  public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg");
-  public static final OptionValidator TOPN = new BooleanValidator("planner.enable_topn");
-  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin");
-  public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin");
-  public static final OptionValidator NESTEDLOOPJOIN = new BooleanValidator("planner.enable_nestedloopjoin");
-  public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg");
-  public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join");
-  public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD);
-  public static final OptionValidator BROADCAST_FACTOR = new RangeDoubleValidator("planner.broadcast_factor", 0, Double.MAX_VALUE);
-  public static final OptionValidator NESTEDLOOPJOIN_FACTOR = new RangeDoubleValidator("planner.nestedloopjoin_factor", 0, Double.MAX_VALUE);
-  public static final OptionValidator NLJOIN_FOR_SCALAR = new BooleanValidator("planner.enable_nljoin_for_scalar_only");
-  public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.join.row_count_estimate_factor", 0, Double.MAX_VALUE);
-  public static final OptionValidator MUX_EXCHANGE = new BooleanValidator("planner.enable_mux_exchange");
-  public static final OptionValidator ORDERED_MUX_EXCHANGE = new BooleanValidator("planner.enable_ordered_mux_exchange");
-  public static final OptionValidator DEMUX_EXCHANGE = new BooleanValidator("planner.enable_demux_exchange");
-  public static final OptionValidator PARTITION_SENDER_THREADS_FACTOR = new LongValidator("planner.partitioner_sender_threads_factor");
-  public static final OptionValidator PARTITION_SENDER_MAX_THREADS = new LongValidator("planner.partitioner_sender_max_threads");
-  public static final OptionValidator PARTITION_SENDER_SET_THREADS = new LongValidator("planner.partitioner_sender_set_threads");
-  public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer");
-  public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator("planner.producer_consumer_queue_size");
-  public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key");
-  public static final OptionValidator HASH_JOIN_SWAP = new BooleanValidator("planner.enable_hashjoin_swap");
-  public static final OptionValidator HASH_JOIN_SWAP_MARGIN_FACTOR = new RangeDoubleValidator("planner.join.hash_join_swap_margin_factor", 0, 100);
+  public static final OptionValidator CONSTANT_FOLDING = new BooleanValidator("planner.enable_constant_folding",
+      new OptionDescription("If one side of a filter condition is a constant expression, constant folding evaluates the expression in the planning phase and replaces the expression with the constant value. For example, Drill can rewrite WHERE age + 5 < 42 as WHERE age < 37."));
+  public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges",
+      new OptionDescription("Toggles the state of hashing to a random exchange."));
+  public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg",
+      new OptionDescription("Enable hash aggregation; otherwise, Drill does a sort-based aggregation. Writes to disk. Enable is recommended."));
+  public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg",
+      new OptionDescription("Sort-based operation. Writes to disk."));
+  public static final OptionValidator TOPN = new BooleanValidator("planner.enable_topn", null);
+  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin",
+      new OptionDescription("Enable the memory hungry hash join. Drill assumes that a query will have adequate memory to complete and tries to use the fastest operations possible to complete the planned inner, left, right, or full outer joins using a hash table. Does not write to disk. Disabling hash join allows Drill to manage arbitrarily large data in a small memory footprint."));
+  public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin",
+      new OptionDescription("Sort-based operation. A merge join is used for inner join, left and right outer joins. Inputs to the merge join must be sorted. It reads the sorted input streams from both sides and finds matching rows. Writes to disk."));
+  public static final OptionValidator NESTEDLOOPJOIN = new BooleanValidator("planner.enable_nestedloopjoin",
+      new OptionDescription("Sort-based operation. Writes to disk."));
+  public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg",
+      new OptionDescription("Each minor fragment does a local aggregation in phase 1, distributes on a hash basis using GROUP-BY keys partially aggregated results to other fragments, and all the fragments perform a total aggregation using this data."));
+  public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join",
+      new OptionDescription("Changes the state of aggregation and join operators. The broadcast join can be used for hash join, merge join and nested loop join. Use to join a large (fact) table to relatively smaller (dimension) tables. Do not disable."));
+  public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD,
+      new OptionDescription("The maximum number of records allowed to be broadcast as part of a query. After one million records, Drill reshuffles data rather than doing a broadcast to one side of the join. Range: 0-2147483647"));
+  public static final OptionValidator BROADCAST_FACTOR = new RangeDoubleValidator("planner.broadcast_factor", 0, Double.MAX_VALUE,
+      new OptionDescription("A heuristic parameter for influencing the broadcast of records as part of a query."));
+  public static final OptionValidator NESTEDLOOPJOIN_FACTOR = new RangeDoubleValidator("planner.nestedloopjoin_factor", 0, Double.MAX_VALUE,
+      new OptionDescription("A heuristic value for influencing the nested loop join."));
+  public static final OptionValidator NLJOIN_FOR_SCALAR = new BooleanValidator("planner.enable_nljoin_for_scalar_only",
+      new OptionDescription("Supports nested loop join planning where the right input is scalar in order to enable NOT-IN, Inequality, Cartesian, and uncorrelated EXISTS planning."));
+  public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.join.row_count_estimate_factor", 0, Double.MAX_VALUE,
+      new OptionDescription("The factor for adjusting the estimated row count when considering multiple join order sequences during the planning phase."));
+  public static final OptionValidator MUX_EXCHANGE = new BooleanValidator("planner.enable_mux_exchange",
+      new OptionDescription("Toggles the state of hashing to a multiplexed exchange."));
+  public static final OptionValidator ORDERED_MUX_EXCHANGE = new BooleanValidator("planner.enable_ordered_mux_exchange",
+      null);
+  public static final OptionValidator DEMUX_EXCHANGE = new BooleanValidator("planner.enable_demux_exchange",
+      new OptionDescription("Toggles the state of hashing to a demulitplexed exchange."));
+  public static final OptionValidator PARTITION_SENDER_THREADS_FACTOR = new LongValidator("planner.partitioner_sender_threads_factor",
+      new OptionDescription("A heuristic param to use to influence final number of threads. The higher the value the fewer the number of threads."));
+  public static final OptionValidator PARTITION_SENDER_MAX_THREADS = new LongValidator("planner.partitioner_sender_max_threads",
+      new OptionDescription("Upper limit of threads for outbound queuing."));
+  public static final OptionValidator PARTITION_SENDER_SET_THREADS = new LongValidator("planner.partitioner_sender_set_threads",
+      new OptionDescription("Overwrites the number of threads used to send out batches of records. Set to -1 to disable. Typically not changed."));
+  public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer",
+      new OptionDescription("Increase prefetching of data from disk. Disable for in-memory reads."));
+  public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator("planner.producer_consumer_queue_size",
+      new OptionDescription("How much data to prefetch from disk in record batches out-of-band of query execution. The larger the queue size, the greater the amount of memory that the queue and overall query execution consumes."));
+  public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key",
+      new OptionDescription("Each hash key is associated with a single value."));
+  public static final OptionValidator HASH_JOIN_SWAP = new BooleanValidator("planner.enable_hashjoin_swap",
+      new OptionDescription("Enables consideration of multiple join order sequences during the planning phase. Might negatively affect the performance of some queries due to inaccuracy of estimated row count especially after a filter, join, or aggregation."));
+  public static final OptionValidator HASH_JOIN_SWAP_MARGIN_FACTOR = new RangeDoubleValidator("planner.join.hash_join_swap_margin_factor", 0, 100,
+      new OptionDescription("The number of join order sequences to consider during the planning phase."));
   public static final String ENABLE_DECIMAL_DATA_TYPE_KEY = "planner.enable_decimal_data_type";
-  public static final BooleanValidator ENABLE_DECIMAL_DATA_TYPE = new BooleanValidator(ENABLE_DECIMAL_DATA_TYPE_KEY);
-  public static final OptionValidator HEP_OPT = new BooleanValidator("planner.enable_hep_opt");
-  public static final OptionValidator HEP_PARTITION_PRUNING = new BooleanValidator("planner.enable_hep_partition_pruning");
+  public static final BooleanValidator ENABLE_DECIMAL_DATA_TYPE = new BooleanValidator(ENABLE_DECIMAL_DATA_TYPE_KEY,
+      new OptionDescription("False disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive."));
+  public static final OptionValidator HEP_OPT = new BooleanValidator("planner.enable_hep_opt", null);
+  public static final OptionValidator HEP_PARTITION_PRUNING = new BooleanValidator("planner.enable_hep_partition_pruning", null);
   public static final OptionValidator PLANNER_MEMORY_LIMIT = new RangeLongValidator("planner.memory_limit",
-      INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES, MAX_OFF_HEAP_ALLOCATION_IN_BYTES);
+      INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES, MAX_OFF_HEAP_ALLOCATION_IN_BYTES,
+      new OptionDescription("Defines the maximum amount of direct memory allocated to a query for planning. When multiple queries run concurrently, each query is allocated the amount of memory set by this parameter.Increase the value of this parameter and rerun the query if partition pruning failed due to insufficient memory."));
   public static final String UNIONALL_DISTRIBUTE_KEY = "planner.enable_unionall_distribute";
-  public static final BooleanValidator UNIONALL_DISTRIBUTE = new BooleanValidator(UNIONALL_DISTRIBUTE_KEY);
+  public static final BooleanValidator UNIONALL_DISTRIBUTE = new BooleanValidator(UNIONALL_DISTRIBUTE_KEY, null);
 
   public static final OptionValidator IDENTIFIER_MAX_LENGTH =
       new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
-                              Integer.MAX_VALUE);
+                              Integer.MAX_VALUE,
+                              new OptionDescription("A minimum length is needed because option names are identifiers themselves."));
 
   public static final DoubleValidator FILTER_MIN_SELECTIVITY_ESTIMATE_FACTOR =
           new MinRangeDoubleValidator("planner.filter.min_selectivity_estimate_factor",
-          0.0, 1.0, "planner.filter.max_selectivity_estimate_factor");
+          0.0, 1.0, "planner.filter.max_selectivity_estimate_factor",
+          new OptionDescription("Available as of Drill 1.8. Sets the minimum filter selectivity estimate to increase the parallelization of the major fragment performing a join. This option is useful for deeply nested queries with complicated predicates and serves as a workaround when statistics are insufficient or unavailable. The selectivity can vary between 0 and 1. The value of this option caps the estimated SELECTIVITY. The estimated ROWCOUNT is derived by multiplying the estimated SELECTIVITY by the estimated ROWCOUNT of the upstream operator. The estimated ROWCOUNT displays when you use the EXPLAIN PLAN INCLUDING ALL ATTRIBUTES FOR command. This option does not control the estimated ROWCOUNT of downstream operators (post FILTER). However, estimated ROWCOUNTs may change because the operator ROWCOUNTs depend on their downstream operators. The FILTER operator relies on the input of its immediate upstream operator, for example SCAN, AGGREGATE. If two filters are present in a plan, each filter may have a different estimated ROWCOUNT based on the immediate upstream operator\'s estimated ROWCOUNT."));
   public static final DoubleValidator FILTER_MAX_SELECTIVITY_ESTIMATE_FACTOR =
           new MaxRangeDoubleValidator("planner.filter.max_selectivity_estimate_factor",
-          0.0, 1.0, "planner.filter.min_selectivity_estimate_factor");
+          0.0, 1.0, "planner.filter.min_selectivity_estimate_factor",
+          new OptionDescription("Available as of Drill 1.8. Sets the maximum filter selectivity estimate. The selectivity can vary between 0 and 1. For more details, see planner.filter.min_selectivity_estimate_factor."));
 
   public static final String TYPE_INFERENCE_KEY = "planner.enable_type_inference";
-  public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY);
+  public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY, null);
   public static final LongValidator IN_SUBQUERY_THRESHOLD =
-      new PositiveLongValidator("planner.in_subquery_threshold", Integer.MAX_VALUE); /* Same as Calcite's default IN List subquery size */
+      new PositiveLongValidator("planner.in_subquery_threshold", Integer.MAX_VALUE, null); /* Same as Calcite's default IN List subquery size */
 
   public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY = "planner.store.parquet.rowgroup.filter.pushdown.enabled";
-  public static final BooleanValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING = new BooleanValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY);
+  public static final BooleanValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING = new BooleanValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY, null);
   public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY = "planner.store.parquet.rowgroup.filter.pushdown.threshold";
   public static final PositiveLongValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD = new PositiveLongValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY,
-      Long.MAX_VALUE);
+      Long.MAX_VALUE, null);
 
   public static final String QUOTING_IDENTIFIERS_KEY = "planner.parser.quoting_identifiers";
   public static final EnumeratedStringValidator QUOTING_IDENTIFIERS = new EnumeratedStringValidator(
-      QUOTING_IDENTIFIERS_KEY, Quoting.BACK_TICK.string, Quoting.DOUBLE_QUOTE.string, Quoting.BRACKET.string);
+      QUOTING_IDENTIFIERS_KEY, null, Quoting.BACK_TICK.string, Quoting.DOUBLE_QUOTE.string, Quoting.BRACKET.string);
 
   /*
     "planner.enable_unnest_lateral" is to allow users to choose enable unnest+lateraljoin feature.
    */
   public static final String ENABLE_UNNEST_LATERAL_KEY = "planner.enable_unnest_lateral";
-  public static final BooleanValidator ENABLE_UNNEST_LATERAL = new BooleanValidator(ENABLE_UNNEST_LATERAL_KEY);
+  public static final BooleanValidator ENABLE_UNNEST_LATERAL = new BooleanValidator(ENABLE_UNNEST_LATERAL_KEY, null);
 
   /*
      Enables rules that re-write query joins in the most optimal way.
@@ -140,10 +171,10 @@ public class PlannerSettings implements Context{
      Note: once hash and merge joins will allow non-equi join conditions,
      the need to turn off join optimization may go away.
    */
-  public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization");
+  public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization", null);
   // for testing purpose
   public static final String FORCE_2PHASE_AGGR_KEY = "planner.force_2phase_aggr";
-  public static final BooleanValidator FORCE_2PHASE_AGGR = new BooleanValidator(FORCE_2PHASE_AGGR_KEY);
+  public static final BooleanValidator FORCE_2PHASE_AGGR = new BooleanValidator(FORCE_2PHASE_AGGR_KEY, null);
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;

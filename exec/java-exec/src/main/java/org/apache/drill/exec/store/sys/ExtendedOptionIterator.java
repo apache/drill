@@ -27,6 +27,8 @@ import java.util.Map;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
+import org.apache.drill.exec.server.options.OptionValue.AccessibleScopes;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.store.pojo.NonNullable;
@@ -53,14 +55,26 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  *  only the value set at SESSION level.
  */
 public class ExtendedOptionIterator implements Iterator<Object> {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OptionIterator.class);
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExtendedOptionIterator.class);
 
   private final OptionManager fragmentOptions;
   private final Iterator<OptionValue> mergedOptions;
+  private Map<OptionValue.Kind, String> typeMapping;
+  private Map<OptionScope, Integer> preference;
+  private static final int SHORT_DESCRIP_MAX_SIZE = 110;
 
   public ExtendedOptionIterator(FragmentContext context, boolean internal) {
     fragmentOptions = context.getOptions();
-    final Iterator<OptionValue> optionList;
+    preference = new HashMap<OptionScope, Integer>();
+    preference.put(OptionScope.SESSION, 0);
+    preference.put(OptionScope.SYSTEM, 1);
+    preference.put(OptionScope.BOOT, 2);
+
+    typeMapping = new HashMap<Kind, String>();
+    typeMapping.put(Kind.STRING, "VARCHAR");
+    typeMapping.put(Kind.DOUBLE, "FLOAT");
+    typeMapping.put(Kind.LONG, "BIGINT");
+    typeMapping.put(Kind.BOOLEAN, "BIT");
 
     if (!internal) {
       mergedOptions = sortOptions(fragmentOptions.getPublicOptionList().iterator());
@@ -76,11 +90,6 @@ public class ExtendedOptionIterator implements Iterator<Object> {
   public Iterator<OptionValue> sortOptions(Iterator<OptionValue> options) {
     List<OptionValue> optionslist = Lists.newArrayList(options);
     HashMap<String, OptionValue> optionsmap = new HashMap<>();
-    final Map<OptionScope, Integer> preference = new HashMap<OptionScope, Integer>() {{
-      put(OptionScope.SESSION, 0);
-      put(OptionScope.SYSTEM, 1);
-      put(OptionScope.BOOT, 2);
-    }};
 
     for (OptionValue option : optionslist) {
       if (optionsmap.containsKey(option.getName())) {
@@ -116,14 +125,17 @@ public class ExtendedOptionIterator implements Iterator<Object> {
   @Override
   public ExtendedOptionValueWrapper next() {
     final OptionValue value = mergedOptions.next();
-    final HashMap<OptionValue.Kind,String> typeMapping = new HashMap() {{
-      put(Kind.STRING,"VARCHAR");
-      put(Kind.DOUBLE,"FLOAT");
-      put(Kind.LONG,"BIGINT");
-      put(Kind.BOOLEAN,"BIT");
 
-    }};
-    return new ExtendedOptionValueWrapper(value.name, typeMapping.get(value.kind), value.accessibleScopes,value.getValue().toString(), value.scope);
+    final Status status;
+    if (value.accessibleScopes == AccessibleScopes.BOOT) {
+      status = Status.BOOT;
+    } else {
+      final OptionValue def = fragmentOptions.getDefault(value.name);
+      status = (value.equalsIgnoreType(def) ? Status.DEFAULT : Status.CHANGED);
+    }
+
+    return new ExtendedOptionValueWrapper(value.name, typeMapping.get(value.kind), value.accessibleScopes,value.getValue().toString(), status, value.scope,
+        getShortDescription(value.name));
   }
 
   public enum Status {
@@ -134,7 +146,6 @@ public class ExtendedOptionIterator implements Iterator<Object> {
    * Wrapper class for Extended Option Value
    */
   public static class ExtendedOptionValueWrapper {
-
     @NonNullable
     public final String name;
     @NonNullable
@@ -142,17 +153,39 @@ public class ExtendedOptionIterator implements Iterator<Object> {
     @NonNullable
     public final OptionValue.AccessibleScopes accessibleScopes;
     public final String val;
+    public final Status status;
     @NonNullable
     public final OptionScope optionScope;
+    public final String description;
 
-
-    public ExtendedOptionValueWrapper(final String name, final String kind, final OptionValue.AccessibleScopes type, final String value, final OptionScope scope) {
+    public ExtendedOptionValueWrapper(final String name, final String kind, final OptionValue.AccessibleScopes type, final String value, final Status status, final OptionScope scope,
+        final String description) {
       this.name = name;
       this.kind = kind;
       this.accessibleScopes = type;
       this.val = value;
+      this.status = status;
       this.optionScope = scope;
+      this.description = description;
     }
+  }
+
+  //Extract a limited length from the original description if not available
+  private String getShortDescription(String name) {
+    OptionDescription optionDescription = fragmentOptions.getOptionDefinition(name).getValidator().getOptionDescription();
+    if (optionDescription == null) {
+      return "";
+    }
+    String description = null;
+    if (optionDescription.hasShortDescription()) {
+      description = optionDescription.getShortDescription();
+    } else {
+      description = optionDescription.getDescription();
+      if (description.length() > SHORT_DESCRIP_MAX_SIZE) {
+        return description.substring(0, SHORT_DESCRIP_MAX_SIZE-3).concat("..."); //Append ellipsis (trailing dots)
+      }
+    }
+    return description;
   }
 
   @Override

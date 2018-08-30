@@ -48,7 +48,7 @@ public class TestConfigLinkage {
   public BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
   public static OptionDefinition createMockPropOptionDefinition() {
-    return new OptionDefinition(new TypeValidators.StringValidator(MOCK_PROPERTY), new OptionMetaData(OptionValue.AccessibleScopes.ALL, false, true));
+    return new OptionDefinition(new TypeValidators.StringValidator(MOCK_PROPERTY, null), new OptionMetaData(OptionValue.AccessibleScopes.ALL, false, true));
   }
 
   @Test
