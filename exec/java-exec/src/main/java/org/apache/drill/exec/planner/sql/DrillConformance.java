@@ -21,10 +21,7 @@ import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.validate.SqlDelegatingConformance;
 
 /**
- * Drill's SQL conformance is SqlConformanceEnum.DEFAULT except for method isApplyAllowed().
- * Since Drill is going to allow OUTER APPLY and CROSS APPLY to allow each row from left child of Join
- * to join with output of right side (sub-query or table function that will be invoked for each row).
- * Refer to DRILL-5999 for more information.
+ * Drill's SQL conformance is SqlConformanceEnum.DEFAULT with a couple of deviations.
  */
 public class DrillConformance extends SqlDelegatingConformance {
 
@@ -36,8 +33,28 @@ public class DrillConformance extends SqlDelegatingConformance {
     super(flavor);
   }
 
+  /**
+   * Drill allows OUTER APPLY and CROSS APPLY to allow each row from left child of Join
+   * to join with output of right side (sub-query or table function that will be invoked for each row).
+   * Refer to DRILL-5999 for more information.
+   */
   @Override
   public boolean isApplyAllowed() {
+    return true;
+  }
+
+  @Override
+  public boolean isGroupByOrdinal() {
+    return true;
+  }
+
+  @Override
+  public boolean isGroupByAlias() {
+    return true;
+  }
+
+  @Override
+  public boolean isHavingAlias() {
     return true;
   }
 }

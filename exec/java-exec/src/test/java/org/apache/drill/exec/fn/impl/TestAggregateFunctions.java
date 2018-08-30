@@ -447,7 +447,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
       alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
       testBuilder()
           .sqlQuery("select sum(cast(a as decimal(9,0))) as s,\n" +
-              "avg(cast(a as decimal(9,0))) as a,\n" +
+              "avg(cast(a as decimal(9,0))) as av,\n" +
               "var_samp(cast(a as decimal(9,0))) as varSamp,\n" +
               "var_pop(cast(a as decimal(9,0))) as varPop,\n" +
               "stddev_pop(cast(a as decimal(9,0))) as stddevPop,\n" +
@@ -455,7 +455,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
               "max(cast(a as decimal(9,0))) as mx," +
             "min(cast(a as decimal(9,0))) as mn from dfs.`%s` t group by a", fileName)
           .unOrdered()
-          .baselineColumns("s", "a", "varSamp", "varPop", "stddevPop", "stddevSamp", "mx", "mn")
+          .baselineColumns("s", "av", "varSamp", "varPop", "stddevPop", "stddevSamp", "mx", "mn")
           .baselineValues(BigDecimal.valueOf(1), new BigDecimal("1.000000"), new BigDecimal("0.000000"),
               new BigDecimal("0.000000"), new BigDecimal("0.000000"), new BigDecimal("0.000000"),
               BigDecimal.valueOf(1), BigDecimal.valueOf(1))
