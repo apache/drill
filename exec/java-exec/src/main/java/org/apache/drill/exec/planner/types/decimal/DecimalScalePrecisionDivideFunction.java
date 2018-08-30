@@ -19,7 +19,7 @@ package org.apache.drill.exec.planner.types.decimal;
 
 import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
 
-public class DecimalScalePrecisionDivideFunction extends DrillBaseComputeScalePrecision {
+public class DecimalScalePrecisionDivideFunction extends DrillBinaryComputeScalePrecision {
 
   public DecimalScalePrecisionDivideFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
     super(leftPrecision, leftScale, rightPrecision, rightScale);
@@ -34,5 +34,6 @@ public class DecimalScalePrecisionDivideFunction extends DrillBaseComputeScalePr
     outputScale = Math.min(outputScale, MAX_NUMERIC_PRECISION - maxResultIntegerDigits);
     outputScale = Math.min(outputScale, DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale());
     outputPrecision = maxResultIntegerDigits + outputScale;
+    super.computeScalePrecision(leftPrecision, leftScale, rightPrecision, rightScale);
   }
 }

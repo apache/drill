@@ -170,6 +170,8 @@ public class ${type.name}Functions {
               left.precision, left.scale,
               right.precision, right.scale);
 
+      // Do the verification of computed scale and precision here based on actual data
+      typeInference.verifyScaleAndPrecision();
       result.scale = typeInference.getOutputScale();
       result.precision = typeInference.getOutputPrecision();
 

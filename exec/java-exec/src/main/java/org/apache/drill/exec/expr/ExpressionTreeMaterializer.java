@@ -430,19 +430,25 @@ public class ExpressionTreeMaterializer {
           }
         }
 
-        FunctionHolderExpression funcExpr = matchedFuncHolder.getExpr(call.getName(), argsWithCast, call.getPosition());
-        MajorType funcExprMajorType = funcExpr.getMajorType();
-        if (DecimalUtility.isObsoleteDecimalType(funcExprMajorType.getMinorType())) {
-          MajorType majorType =
-              MajorType.newBuilder()
-                  .setMinorType(MinorType.VARDECIMAL)
-                  .setMode(funcExprMajorType.getMode())
-                  .setScale(funcExprMajorType.getScale())
-                  .setPrecision(funcExprMajorType.getPrecision())
-                  .build();
-          return addCastExpression(funcExpr, majorType, functionLookupContext, errorCollector);
+        try {
+          FunctionHolderExpression funcExpr = matchedFuncHolder.getExpr(call.getName(), argsWithCast, call.getPosition());
+          MajorType funcExprMajorType = funcExpr.getMajorType();
+          if (DecimalUtility.isObsoleteDecimalType(funcExprMajorType.getMinorType())) {
+            MajorType majorType = MajorType.newBuilder()
+              .setMinorType(MinorType.VARDECIMAL)
+              .setMode(funcExprMajorType.getMode())
+              .setScale(funcExprMajorType.getScale())
+              .setPrecision(funcExprMajorType.getPrecision())
+              .build();
+            return addCastExpression(funcExpr, majorType, functionLookupContext, errorCollector);
+          }
+          return funcExpr;
+        } catch (IllegalArgumentException ex) {
+          // this exception may be thrown while constructing FunctionHolderExpression when the return type has an
+          // invalid scale or precision
+          errorCollector.addGeneralError(call.getPosition(), ex.getMessage());
+          return NullExpression.INSTANCE;
         }
-        return funcExpr;
       }
 
       // as no drill func is found, search for a non-Drill function.
