@@ -24,5 +24,5 @@ package org.apache.drill.exec.vector.accessor;
  */
 
 public enum ObjectType {
-  SCALAR, TUPLE, ARRAY
+  SCALAR, TUPLE, ARRAY, VARIANT
 }

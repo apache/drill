@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.rowSet.model.AbstractReaderBuilder;
 import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
@@ -28,6 +29,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
@@ -35,6 +37,7 @@ import org.apache.drill.exec.vector.accessor.impl.AccessorUtilities;
 import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
 import org.apache.drill.exec.vector.accessor.reader.ArrayReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.MapReader;
+import org.apache.drill.exec.vector.accessor.reader.UnionReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessors;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessors.BaseHyperVectorAccessor;
@@ -147,6 +150,10 @@ public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
     switch(metadata.type()) {
     case MAP:
       return buildMap(va, metadata.mode(), metadata);
+    case UNION:
+      return buildUnion(va, metadata);
+    case LIST:
+      return buildList(va, metadata);
     default:
       return buildScalarReader(va, metadata);
     }
@@ -185,5 +192,38 @@ public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
           member));
     }
     return readers;
+  }
+
+  private AbstractObjectReader buildUnion(VectorAccessor unionAccessor, ColumnMetadata metadata) {
+    VariantMetadata unionSchema = metadata.variantSchema();
+    final AbstractObjectReader variants[] = new AbstractObjectReader[MinorType.values().length];
+    for (ColumnMetadata member : unionSchema.members()) {
+
+      // The following builds a synthetic field since we have no good way to
+      // access the real field at this point.
+
+      variants[member.type().ordinal()] = buildVectorReader(
+          new VectorAccessors.UnionMemberHyperVectorAccessor(unionAccessor, member.majorType()),
+          member);
+    }
+    return UnionReaderImpl.build(
+        metadata,
+        unionAccessor,
+        variants);
+  }
+
+  // Note: Does not yet handle 2D lists. See the "single" base reader builder
+  // for the needed code.
+
+  private AbstractObjectReader buildList(VectorAccessor listAccessor,
+      ColumnMetadata metadata) {
+    VariantMetadata listSchema = metadata.variantSchema();
+    ColumnMetadata dataMetadata = listSchema.listSubtype();
+    return ArrayReaderImpl.buildList(metadata,
+        listAccessor,
+        buildVectorReader(
+            new VectorAccessors.ListMemberHyperVectorAccessor(
+                listAccessor, dataMetadata.majorType()),
+            dataMetadata));
   }
 }

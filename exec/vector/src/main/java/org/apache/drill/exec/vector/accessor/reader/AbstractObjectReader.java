@@ -24,6 +24,7 @@ import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.TupleReader;
+import org.apache.drill.exec.vector.accessor.VariantReader;
 
 public abstract class AbstractObjectReader implements ObjectReader {
 
@@ -48,6 +49,11 @@ public abstract class AbstractObjectReader implements ObjectReader {
   public abstract ReaderEvents events();
 
   public abstract ColumnReader reader();
+
+  @Override
+  public VariantReader variant() {
+    throw new UnsupportedOperationException();
+  }
 
   @Override
   public boolean isNull() { return reader().isNull(); }

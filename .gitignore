@@ -20,5 +20,7 @@ CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
+.*.md.html
+*.swp
 # TODO - DRILL-4336
 exec/jdbc-all/dependency-reduced-pom.xml

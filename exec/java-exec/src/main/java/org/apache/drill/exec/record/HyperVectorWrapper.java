@@ -78,7 +78,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     if (!releasable) {
       return;
     }
-    for (T x : vectors) {
+    for (final T x : vectors) {
       x.clear();
     }
   }
@@ -90,10 +90,10 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
       return this;
     }
 
-    ValueVector[] vectors = new ValueVector[this.vectors.length];
+    final ValueVector[] vectors = new ValueVector[this.vectors.length];
     int index = 0;
 
-    for (ValueVector v : this.vectors) {
+    for (final ValueVector v : this.vectors) {
       ValueVector vector = v;
       for (int i = 1; i < ids.length; i++) {
         final AbstractMapVector mapLike = AbstractMapVector.class.cast(vector);
@@ -108,10 +108,9 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     return new HyperVectorWrapper<ValueVector>(vectors[0].getField(), vectors);
   }
 
-  @SuppressWarnings("resource")
   @Override
   public TypedFieldId getFieldIdIfMatches(int id, SchemaPath expectedPath) {
-    ValueVector v = vectors[0];
+    final ValueVector v = vectors[0];
     return FieldIdUtil.getFieldId(v, id, expectedPath, true);
   }
 
@@ -154,7 +153,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     Preconditions.checkArgument(getField().getType().equals(destination.getField().getType()));
     Preconditions.checkArgument(vectors.length == ((HyperVectorWrapper<?>)destination).vectors.length);
 
-    ValueVector[] destionationVectors = ((HyperVectorWrapper<?>)destination).vectors;
+    final ValueVector[] destionationVectors = ((HyperVectorWrapper<?>)destination).vectors;
     for (int i = 0; i < vectors.length; ++i) {
       vectors[i].makeTransferPair(destionationVectors[i]).transfer();
     }

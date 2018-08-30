@@ -63,14 +63,13 @@ public class VectorAllocator {
 
   public void allocate(int rowCount, MetadataProvider mdProvider) {
     for (int i = 0; i < container.getNumberOfColumns(); i++) {
-      @SuppressWarnings("resource")
-      ValueVector vector = container.getValueVector(i).getValueVector();
+      final ValueVector vector = container.getValueVector(i).getValueVector();
       allocateVector(vector, mdProvider.metadata(i, vector.getField()), rowCount, mdProvider);
     }
   }
 
   private void allocateVector(ValueVector vector, ColumnMetadata metadata, int valueCount, MetadataProvider mdProvider) {
-    MajorType type = vector.getField().getType();
+    final MajorType type = vector.getField().getType();
     assert vector.getField().getName().equals(metadata.name());
     assert type.getMinorType() == metadata.type();
     if (type.getMinorType() == MinorType.MAP) {
@@ -94,17 +93,17 @@ public class VectorAllocator {
 
   private void allocateMapArray(RepeatedMapVector vector,
       ColumnMetadata metadata, int valueCount, MetadataProvider mdProvider) {
-    ((RepeatedMapVector) vector).getOffsetVector().allocateNew(valueCount);
-    int expectedValueCount = valueCount * metadata.expectedElementCount();
+    vector.getOffsetVector().allocateNew(valueCount);
+    final int expectedValueCount = valueCount * metadata.expectedElementCount();
     allocateMap(vector, metadata, expectedValueCount, mdProvider);
   }
 
   private void allocateMap(AbstractMapVector vector, ColumnMetadata metadata, int valueCount, MetadataProvider mdProvider) {
-    MetadataProvider mapProvider = mdProvider.childProvider(metadata);
-    TupleMetadata mapSchema = metadata.mapSchema();
+    final MetadataProvider mapProvider = mdProvider.childProvider(metadata);
+    final TupleMetadata mapSchema = metadata.mapSchema();
     assert mapSchema != null;
     int i = 0;
-    for (ValueVector child : vector) {
+    for (final ValueVector child : vector) {
       allocateVector(child, mapProvider.metadata(i, child.getField()), valueCount, mapProvider);
       i++;
     }

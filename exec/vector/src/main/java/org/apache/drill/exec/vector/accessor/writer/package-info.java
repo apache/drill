@@ -153,6 +153,36 @@
  * (eventually) lists and repeated lists.</li>
  * </ul>
  *
+ * <h4>Lists</h4>
+ *
+ * As described in the API package, Lists and Unions in Drill are highly
+ * complex, and not well supported. This creates huge problems in the
+ * writer layer because we must support something which is broken and
+ * under-used, but which most people assume works (it is part of Drill's
+ * JSON-like, schema-free model.) Our goal here is to support Union and
+ * List well enough that nothing new is broken; though this layer cannot
+ * fix the issues elsewhere in Drill.
+ * <p>
+ * The most complex part is List support for the transition from a single
+ * type to a union of types. The API should be simple: the client should
+ * not have to be aware of the transition.
+ * <p>
+ * To make this work, the writers provide two options:
+ * <ol>
+ * <li>Use metadata to state that a List will have exactly one type and
+ * to specify that type. The List will present as an array of that type in
+ * which each array can be null.</li>
+ * <li>Otherwise, the list is repeated union (a array of variants), even
+ * if the list happens to have 0 or 1 types. In this case, the list presents
+ * as an array of variants.</li>
+ * </ol>
+ * The result is that client code assumes one or the other model, and never
+ * has to worry about transitioning from one to the other within a single
+ * operator.
+ * <p>
+ * The {@link PromotableListWriter} handles the complex details of providing
+ * the above simple API in the array-of-variant case.
+ *
  * <h4>Possible Improvements</h4>
  *
  * The code here works and has extensive unit tests. But, many improvements

@@ -87,11 +87,11 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testScalarStructure() {
-    TupleMetadata schema = new SchemaBuilder()
+    final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .buildSchema();
-    ExtendableRowSet rowSet = fixture.rowSet(schema);
-    RowSetWriter writer = rowSet.writer();
+    final ExtendableRowSet rowSet = fixture.rowSet(schema);
+    final RowSetWriter writer = rowSet.writer();
 
     // Required Int
     // Verify the invariants of the "full" and "simple" access paths
@@ -108,13 +108,13 @@ public class RowSetTest extends SubOperatorTest {
     try {
       writer.column(0).array();
       fail();
-    } catch (UnsupportedOperationException e) {
+    } catch (final UnsupportedOperationException e) {
       // Expected
     }
     try {
       writer.column(0).tuple();
       fail();
-    } catch (UnsupportedOperationException e) {
+    } catch (final UnsupportedOperationException e) {
       // Expected
     }
 
@@ -131,8 +131,8 @@ public class RowSetTest extends SubOperatorTest {
 
     // Finish the row set and get a reader.
 
-    SingleRowSet actual = writer.done();
-    RowSetReader reader = actual.reader();
+    final SingleRowSet actual = writer.done();
+    final RowSetReader reader = actual.reader();
 
     // Verify invariants
 
@@ -163,7 +163,7 @@ public class RowSetTest extends SubOperatorTest {
     // Test the above again via the writer and reader
     // utility classes.
 
-    SingleRowSet expected = fixture.rowSetBuilder(schema)
+    final SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addRow(10)
         .addRow(20)
         .addRow(30)
@@ -181,11 +181,11 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testScalarArrayStructure() {
-    TupleMetadata schema = new SchemaBuilder()
+    final TupleMetadata schema = new SchemaBuilder()
         .addArray("a", MinorType.INT)
         .buildSchema();
-    ExtendableRowSet rowSet = fixture.rowSet(schema);
-    RowSetWriter writer = rowSet.writer();
+    final ExtendableRowSet rowSet = fixture.rowSet(schema);
+    final RowSetWriter writer = rowSet.writer();
 
     // Repeated Int
     // Verify the invariants of the "full" and "simple" access paths
@@ -207,19 +207,19 @@ public class RowSetTest extends SubOperatorTest {
     try {
       writer.column(0).scalar();
       fail();
-    } catch (UnsupportedOperationException e) {
+    } catch (final UnsupportedOperationException e) {
       // Expected
     }
     try {
       writer.column(0).tuple();
       fail();
-    } catch (UnsupportedOperationException e) {
+    } catch (final UnsupportedOperationException e) {
       // Expected
     }
 
     // Write some data
 
-    ScalarWriter intWriter = writer.array("a").scalar();
+    final ScalarWriter intWriter = writer.array("a").scalar();
     intWriter.setInt(10);
     intWriter.setInt(11);
     writer.save();
@@ -235,8 +235,8 @@ public class RowSetTest extends SubOperatorTest {
 
     // Finish the row set and get a reader.
 
-    SingleRowSet actual = writer.done();
-    RowSetReader reader = actual.reader();
+    final SingleRowSet actual = writer.done();
+    final RowSetReader reader = actual.reader();
 
     // Verify the invariants of the "full" and "simple" access paths
 
@@ -252,8 +252,8 @@ public class RowSetTest extends SubOperatorTest {
 
     // Read and verify the rows
 
-    ArrayReader arrayReader = reader.array(0);
-    ScalarReader intReader = arrayReader.scalar();
+    final ArrayReader arrayReader = reader.array(0);
+    final ScalarReader intReader = arrayReader.scalar();
     assertTrue(reader.next());
     assertFalse(arrayReader.isNull());
     assertEquals(2, arrayReader.size());
@@ -297,7 +297,7 @@ public class RowSetTest extends SubOperatorTest {
     // Test the above again via the writer and reader
     // utility classes.
 
-    SingleRowSet expected = fixture.rowSetBuilder(schema)
+    final SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addSingleCol(intArray(10, 11))
         .addSingleCol(intArray(20, 21, 22))
         .addSingleCol(intArray(30))
@@ -315,14 +315,14 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testMapStructure() {
-    TupleMetadata schema = new SchemaBuilder()
+    final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addMap("m")
           .addArray("b", MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ExtendableRowSet rowSet = fixture.rowSet(schema);
-    RowSetWriter writer = rowSet.writer();
+    final ExtendableRowSet rowSet = fixture.rowSet(schema);
+    final RowSetWriter writer = rowSet.writer();
 
     // Map and Int
     // Test Invariants
@@ -333,12 +333,12 @@ public class RowSetTest extends SubOperatorTest {
     assertEquals(ObjectType.TUPLE, writer.column(1).type());
     assertSame(writer.column(1).tuple(), writer.tuple(1));
 
-    TupleWriter mapWriter = writer.column(1).tuple();
+    final TupleWriter mapWriter = writer.column(1).tuple();
     assertEquals(ObjectType.SCALAR, mapWriter.column("b").array().entry().type());
     assertEquals(ObjectType.SCALAR, mapWriter.column("b").array().entryType());
 
-    ScalarWriter aWriter = writer.column("a").scalar();
-    ScalarWriter bWriter = writer.column("m").tuple().column("b").array().entry().scalar();
+    final ScalarWriter aWriter = writer.column("a").scalar();
+    final ScalarWriter bWriter = writer.column("m").tuple().column("b").array().entry().scalar();
     assertSame(bWriter, writer.tuple(1).array(0).scalar());
     assertEquals(ValueType.INTEGER, bWriter.valueType());
 
@@ -347,13 +347,13 @@ public class RowSetTest extends SubOperatorTest {
     try {
       writer.column(1).scalar();
       fail();
-    } catch (UnsupportedOperationException e) {
+    } catch (final UnsupportedOperationException e) {
       // Expected
     }
     try {
       writer.column(1).array();
       fail();
-    } catch (UnsupportedOperationException e) {
+    } catch (final UnsupportedOperationException e) {
       // Expected
     }
 
@@ -374,8 +374,8 @@ public class RowSetTest extends SubOperatorTest {
 
     // Finish the row set and get a reader.
 
-    SingleRowSet actual = writer.done();
-    RowSetReader reader = actual.reader();
+    final SingleRowSet actual = writer.done();
+    final RowSetReader reader = actual.reader();
 
     assertEquals(ObjectType.SCALAR, reader.column("a").type());
     assertEquals(ObjectType.SCALAR, reader.column(0).type());
@@ -383,11 +383,11 @@ public class RowSetTest extends SubOperatorTest {
     assertEquals(ObjectType.TUPLE, reader.column(1).type());
     assertSame(reader.column(1).tuple(), reader.tuple(1));
 
-    ScalarReader aReader = reader.column(0).scalar();
-    TupleReader mReader = reader.column(1).tuple();
-    ArrayReader bArray = mReader.column("b").array();
+    final ScalarReader aReader = reader.column(0).scalar();
+    final TupleReader mReader = reader.column(1).tuple();
+    final ArrayReader bArray = mReader.column("b").array();
     assertEquals(ObjectType.SCALAR, bArray.entryType());
-    ScalarReader bReader = bArray.scalar();
+    final ScalarReader bReader = bArray.scalar();
     assertEquals(ValueType.INTEGER, bReader.valueType());
 
     // Row 1: (10, {[11, 12]})
@@ -430,10 +430,10 @@ public class RowSetTest extends SubOperatorTest {
 
     // Verify that the map accessor's value count was set.
 
-    MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
+    final MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
     assertEquals(actual.rowCount(), mapVector.getAccessor().getValueCount());
 
-    SingleRowSet expected = fixture.rowSetBuilder(schema)
+    final SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addRow(10, objArray(intArray(11, 12)))
         .addRow(20, objArray(intArray(21, 22)))
         .addRow(30, objArray(intArray(31, 32)))
@@ -444,15 +444,15 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testRepeatedMapStructure() {
-    TupleMetadata schema = new SchemaBuilder()
+    final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addMapArray("m")
           .add("b", MinorType.INT)
           .add("c", MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ExtendableRowSet rowSet = fixture.rowSet(schema);
-    RowSetWriter writer = rowSet.writer();
+    final ExtendableRowSet rowSet = fixture.rowSet(schema);
+    final RowSetWriter writer = rowSet.writer();
 
     // Map and Int
     // Pick out components and lightly test. (Assumes structure
@@ -462,16 +462,16 @@ public class RowSetTest extends SubOperatorTest {
     assertEquals(ObjectType.SCALAR, writer.column("a").type());
     assertEquals(ObjectType.ARRAY, writer.column("m").type());
 
-    ArrayWriter maWriter = writer.column(1).array();
+    final ArrayWriter maWriter = writer.column(1).array();
     assertEquals(ObjectType.TUPLE, maWriter.entryType());
 
-    TupleWriter mapWriter = maWriter.tuple();
+    final TupleWriter mapWriter = maWriter.tuple();
     assertEquals(ObjectType.SCALAR, mapWriter.column("b").type());
     assertEquals(ObjectType.SCALAR, mapWriter.column("c").type());
 
-    ScalarWriter aWriter = writer.column("a").scalar();
-    ScalarWriter bWriter = mapWriter.scalar("b");
-    ScalarWriter cWriter = mapWriter.scalar("c");
+    final ScalarWriter aWriter = writer.column("a").scalar();
+    final ScalarWriter bWriter = mapWriter.scalar("b");
+    final ScalarWriter cWriter = mapWriter.scalar("c");
     assertEquals(ValueType.INTEGER, aWriter.valueType());
     assertEquals(ValueType.INTEGER, bWriter.valueType());
     assertEquals(ValueType.INTEGER, cWriter.valueType());
@@ -507,24 +507,24 @@ public class RowSetTest extends SubOperatorTest {
 
     // Finish the row set and get a reader.
 
-    SingleRowSet actual = writer.done();
-    RowSetReader reader = actual.reader();
+    final SingleRowSet actual = writer.done();
+    final RowSetReader reader = actual.reader();
 
     // Verify reader structure
 
     assertEquals(ObjectType.SCALAR, reader.column("a").type());
     assertEquals(ObjectType.ARRAY, reader.column("m").type());
 
-    ArrayReader maReader = reader.column(1).array();
+    final ArrayReader maReader = reader.column(1).array();
     assertEquals(ObjectType.TUPLE, maReader.entryType());
 
-    TupleReader mapReader = maReader.tuple();
+    final TupleReader mapReader = maReader.tuple();
     assertEquals(ObjectType.SCALAR, mapReader.column("b").type());
     assertEquals(ObjectType.SCALAR, mapReader.column("c").type());
 
-    ScalarReader aReader = reader.column("a").scalar();
-    ScalarReader bReader = mapReader.scalar("b");
-    ScalarReader cReader = mapReader.scalar("c");
+    final ScalarReader aReader = reader.column("a").scalar();
+    final ScalarReader bReader = mapReader.scalar("b");
+    final ScalarReader cReader = mapReader.scalar("c");
     assertEquals(ValueType.INTEGER, aReader.valueType());
     assertEquals(ValueType.INTEGER, bReader.valueType());
     assertEquals(ValueType.INTEGER, cReader.valueType());
@@ -573,12 +573,12 @@ public class RowSetTest extends SubOperatorTest {
 
     // Verify that the map accessor's value count was set.
 
-    RepeatedMapVector mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
+    final RepeatedMapVector mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
     assertEquals(3, mapVector.getAccessor().getValueCount());
 
     // Verify the readers and writers again using the testing tools.
 
-    SingleRowSet expected = fixture.rowSetBuilder(schema)
+    final SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addRow(10, objArray(objArray(101, 102), objArray(111, 112)))
         .addRow(20, objArray(objArray(201, 202), objArray(211, 212)))
         .addRow(30, objArray(objArray(301, 302), objArray(311, 312)))
@@ -594,15 +594,15 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testTopFixedWidthArray() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    final BatchSchema batchSchema = new SchemaBuilder()
         .add("c", MinorType.INT)
         .addArray("a", MinorType.INT)
         .build();
 
-    ExtendableRowSet rs1 = fixture.rowSet(batchSchema);
-    RowSetWriter writer = rs1.writer();
+    final ExtendableRowSet rs1 = fixture.rowSet(batchSchema);
+    final RowSetWriter writer = rs1.writer();
     writer.scalar(0).setInt(10);
-    ScalarWriter array = writer.array(1).scalar();
+    final ScalarWriter array = writer.array(1).scalar();
     array.setInt(100);
     array.setInt(110);
     writer.save();
@@ -614,11 +614,11 @@ public class RowSetTest extends SubOperatorTest {
     writer.scalar(0).setInt(30);
     writer.save();
 
-    SingleRowSet result = writer.done();
+    final SingleRowSet result = writer.done();
 
-    RowSetReader reader = result.reader();
-    ArrayReader arrayReader = reader.array(1);
-    ScalarReader elementReader = arrayReader.scalar();
+    final RowSetReader reader = result.reader();
+    final ArrayReader arrayReader = reader.array(1);
+    final ScalarReader elementReader = arrayReader.scalar();
 
     assertTrue(reader.next());
     assertEquals(10, reader.scalar(0).getInt());
@@ -644,7 +644,7 @@ public class RowSetTest extends SubOperatorTest {
     assertEquals(0, arrayReader.size());
     assertFalse(reader.next());
 
-    SingleRowSet rs2 = fixture.rowSetBuilder(batchSchema)
+    final SingleRowSet rs2 = fixture.rowSetBuilder(batchSchema)
       .addRow(10, intArray(100, 110))
       .addRow(20, intArray(200, 120, 220))
       .addRow(30, null)
@@ -661,12 +661,12 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testRowBounds() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    final BatchSchema batchSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .build();
 
-    ExtendableRowSet rs = fixture.rowSet(batchSchema);
-    RowSetWriter writer = rs.writer();
+    final ExtendableRowSet rs = fixture.rowSet(batchSchema);
+    final RowSetWriter writer = rs.writer();
     int count = 0;
     while (! writer.isFull()) {
       writer.scalar(0).setInt(count++);
@@ -695,22 +695,22 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testBufferBounds() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    final BatchSchema batchSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .build();
 
     String varCharValue;
     try {
-      byte rawValue[] = new byte[512];
+      final byte rawValue[] = new byte[512];
       Arrays.fill(rawValue, (byte) 'X');
       varCharValue = new String(rawValue, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
+    } catch (final UnsupportedEncodingException e) {
       throw new IllegalStateException(e);
     }
 
-    ExtendableRowSet rs = fixture.rowSet(batchSchema);
-    RowSetWriter writer = rs.writer();
+    final ExtendableRowSet rs = fixture.rowSet(batchSchema);
+    final RowSetWriter writer = rs.writer();
     int count = 0;
     try {
 
@@ -727,7 +727,7 @@ public class RowSetTest extends SubOperatorTest {
         writer.save();
         count++;
       }
-    } catch (Exception e) {
+    } catch (final Exception e) {
       assertTrue(e.getMessage().contains("Overflow"));
     }
     writer.done();
@@ -751,7 +751,7 @@ public class RowSetTest extends SubOperatorTest {
     // will be provided by a reader, by an incoming batch,
     // etc.
 
-    BatchSchema schema = new SchemaBuilder()
+    final BatchSchema schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
         .addArray("b", MinorType.INT)
         .addMap("c")
@@ -764,11 +764,11 @@ public class RowSetTest extends SubOperatorTest {
     // a batch-oriented test. Done automatically in the
     // result set loader.
 
-    DirectRowSet drs = DirectRowSet.fromSchema(fixture.allocator(), schema);
+    final DirectRowSet drs = DirectRowSet.fromSchema(fixture.allocator(), schema);
 
     // Step 3: Create the writer.
 
-    RowSetWriter writer = drs.writer();
+    final RowSetWriter writer = drs.writer();
 
     // Step 4: Populate data. Here we do it the way an app would:
     // using the individual accessors. See tests above for the many
@@ -782,10 +782,10 @@ public class RowSetTest extends SubOperatorTest {
     // use byte arrays.
 
     writer.scalar("a").setString("fred");
-    ArrayWriter bWriter = writer.array("b");
+    final ArrayWriter bWriter = writer.array("b");
     bWriter.scalar().setInt(10);
     bWriter.scalar().setInt(11);
-    TupleWriter cWriter = writer.tuple("c");
+    final TupleWriter cWriter = writer.tuple("c");
     cWriter.scalar("c1").setInt(12);
     cWriter.scalar("c2").setString("wilma");
     writer.save();
@@ -800,11 +800,11 @@ public class RowSetTest extends SubOperatorTest {
     // Step 5: "Harvest" the batch. Done differently in the
     // result set loader.
 
-    SingleRowSet rowSet = writer.done();
+    final SingleRowSet rowSet = writer.done();
 
     // Step 5: Create a reader.
 
-    RowSetReader reader = rowSet.reader();
+    final RowSetReader reader = rowSet.reader();
 
     // Step 6: Retrieve the data. Here we just print the
     // values.
@@ -812,11 +812,11 @@ public class RowSetTest extends SubOperatorTest {
     while (reader.next()) {
       final StringBuilder sb = new StringBuilder();
       sb.append(print(reader.scalar("a").getString()));
-      ArrayReader bReader = reader.array("b");
+      final ArrayReader bReader = reader.array("b");
       while (bReader.next()) {
         sb.append(print(bReader.scalar().getInt()));
       }
-      TupleReader cReader = reader.tuple("c");
+      final TupleReader cReader = reader.tuple("c");
       sb.append(print(cReader.scalar("c1").getInt()));
       sb.append(print(cReader.scalar("c2").getString()));
       logger.debug(sb.toString());
