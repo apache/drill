@@ -17,30 +17,82 @@
  */
 package org.apache.drill.exec.sql;
 
-import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.SqlTest;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import static org.junit.Assert.assertTrue;
+
 @Category(SqlTest.class)
-public class TestConformance extends BaseTestQuery {
+public class TestConformance extends ClusterTest {
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
+    startCluster(builder);
+  }
 
   @Test
   public void testApply() throws Exception{
-
     //cross join is not support yet in Drill: DRILL-1921, so we are testing OUTER APPLY only
     String query = "SELECT c.c_nationkey, o.orderdate from " +
       "cp.`tpch/customer.parquet` c outer apply " +
       "cp.`tpch/orders.parquet` o " +
       "where c.c_custkey = o.o_custkey";
 
-    PlanTestBase.testPlanMatchingPatterns(query,
-        new String[] {"Join"}, new String[] {}
-    );
-
-    return;
+    String plan = queryBuilder().sql(query).explainText();
+    assertTrue(plan.contains("Join(condition="));
   }
 
+  @Test
+  public void testGroupByWithPositionalAlias() throws Exception {
+    testBuilder()
+        .sqlQuery("select length(n_name), n_regionkey from cp.`tpch/nation.parquet` group by 1, 2")
+        .unOrdered()
+        .sqlBaselineQuery("select length(n_name), n_regionkey from cp.`tpch/nation.parquet` group by length(n_name), n_regionkey")
+        .go();
+  }
+
+  @Test
+  public void testGroupByWithNamedAlias() throws Exception {
+    testBuilder()
+        .sqlQuery("select length(n_name) as len, n_regionkey as key from cp.`tpch/nation.parquet` group by len, key")
+        .unOrdered()
+        .sqlBaselineQuery("select length(n_name) as len, n_regionkey as key from cp.`tpch/nation.parquet` group by length(n_name), n_regionkey")
+        .go();
+  }
+
+  @Test
+  public void testHavingWithNamedAlias() throws Exception {
+    testBuilder()
+        .sqlQuery("select length(n_name) as len, count(*) as cnt from cp.`tpch/nation.parquet` " +
+            "group by length(n_name) having cnt > 1")
+        .unOrdered()
+        .sqlBaselineQuery("select length(n_name) as len, count(*) as cnt from cp.`tpch/nation.parquet` " +
+            "group by length(n_name) having count(*) > 1")
+        .go();
+  }
+
+  @Test
+  public void testOrderWithPositionalAlias() throws Exception {
+    testBuilder()
+        .sqlQuery("select n_regionkey, n_name from cp.`tpch/nation.parquet` order by 1, 2")
+        .unOrdered()
+        .sqlBaselineQuery("select n_regionkey, n_name from cp.`tpch/nation.parquet` order by n_regionkey, n_name")
+        .go();
+  }
+
+  @Test
+  public void testOrderWithNamedAlias() throws Exception {
+    testBuilder()
+        .sqlQuery("select n_regionkey as r, n_name as n from cp.`tpch/nation.parquet` order by r, n")
+        .unOrdered()
+        .sqlBaselineQuery("select n_regionkey as r, n_name as n from cp.`tpch/nation.parquet` order by n_regionkey, n_name")
+        .go();
+  }
 
 }
