@@ -34,7 +34,7 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Represents the internal state of a RepeatedList vector. The repeated list
@@ -182,8 +182,8 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
     // Add the child vector to the existing repeated list
     // vector.
 
-    RepeatedListVectorState vectorState = (RepeatedListVectorState) parentColumn.vectorState();
-    RepeatedListVector listVector = vectorState.vector;
+    final RepeatedListVectorState vectorState = (RepeatedListVectorState) parentColumn.vectorState();
+    final RepeatedListVector listVector = vectorState.vector;
     listVector.setChildVector(childState.vector());
 
     // The repeated list's offset vector state needs to know the offset

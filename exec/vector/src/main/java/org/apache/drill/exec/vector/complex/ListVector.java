@@ -45,10 +45,6 @@ import org.apache.drill.exec.vector.complex.impl.UnionListWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
-import com.google.common.collect.ObjectArrays;
-
-import io.netty.buffer.DrillBuf;
-
 /**
  * "Non-repeated" LIST vector. This vector holds some other vector as
  * its data element. Unlike a repeated vector, the child element can

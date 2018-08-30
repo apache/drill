@@ -24,7 +24,7 @@ import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.UInt1ColumnWriter;
 import org.apache.drill.exec.vector.complex.ListVector;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * List writer, which is basically an array writer, with the addition
@@ -122,9 +122,9 @@ public class ListWriterImpl extends ObjectArrayWriter {
     if (array == null) {
       return;
     }
-    int size = Array.getLength(array);
+    final int size = Array.getLength(array);
     for (int i = 0; i < size; i++) {
-      Object value = Array.get(array, i);
+      final Object value = Array.get(array, i);
       if (value != null) {
         elementObjWriter.setObject(value);
       } else if (elementObjWriter.nullable()) {
