@@ -547,4 +547,11 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     }
     return materializedExpr;
   }
+
+  @Override
+  public void dump() {
+    logger.error("MergeJoinBatch[container={}, left={}, right={}, leftOutcome={}, rightOutcome={}, joinType={}, leftIterator={}," +
+            " rightIterator={}, joinStatus={}, joinType={}]",
+        container, left, right, leftUpstream, rightUpstream, joinType, leftIterator, rightIterator, status, joinType);
+  }
 }

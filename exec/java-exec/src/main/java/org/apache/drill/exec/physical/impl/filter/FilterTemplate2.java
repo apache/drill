@@ -119,4 +119,11 @@ public abstract class FilterTemplate2 implements Filterer {
                                  @Named("outIndex") int outIndex)
                           throws SchemaChangeException;
 
+  @Override
+  public String toString() {
+    return "FilterTemplate2[outgoingSelectionVector=" + outgoingSelectionVector
+        + ", incomingSelectionVector=" + incomingSelectionVector
+        + ", svMode=" + svMode
+        + "]";
+  }
 }

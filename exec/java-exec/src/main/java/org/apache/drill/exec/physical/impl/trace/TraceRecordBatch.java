@@ -39,7 +39,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-/* TraceRecordBatch contains value vectors which are exactly the same
+/** TraceRecordBatch contains value vectors which are exactly the same
  * as the incoming record batch's value vectors. If the incoming
  * record batch has a selection vector (type 2) then TraceRecordBatch
  * will also contain a selection vector.
@@ -171,4 +171,8 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
     super.close();
   }
 
+  @Override
+  public void dump() {
+    logger.error("TraceRecordBatch[filename={}, logLocation={}, selectionVector={}]", getFileName(), logLocation, sv);
+  }
 }

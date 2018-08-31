@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -499,5 +500,13 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   protected void killIncoming(boolean sendUpstream) {
     wasKilled = true;
     incoming.kill(sendUpstream);
+  }
+
+  @Override
+  public void dump() {
+    logger.error("HashAggBatch[container={}, aggregator={}, groupByOutFieldIds={}, aggrOutFieldIds={}, " +
+            "incomingSchema={}, wasKilled={}, numGroupByExprs={}, numAggrExprs={}, popConfig={}]",
+        container, aggregator, Arrays.toString(groupByOutFieldIds), Arrays.toString(aggrOutFieldIds), incomingSchema,
+        wasKilled, numGroupByExprs, numAggrExprs, popConfig);
   }
 }

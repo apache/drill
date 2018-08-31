@@ -86,6 +86,7 @@ public class LogFixture implements AutoCloseable {
     private String consoleFormat = DEFAULT_CONSOLE_FORMAT;
     private boolean logToConsole;
     private List<LogSpec> loggers = new ArrayList<>();
+    private ConsoleAppender<ILoggingEvent> appender;
 
     /**
      * Send all enabled logging to the console (if not already configured.) Some
@@ -100,6 +101,11 @@ public class LogFixture implements AutoCloseable {
     public LogFixtureBuilder toConsole() {
       logToConsole = true;
       return this;
+    }
+
+    public LogFixtureBuilder toConsole(ConsoleAppender<ILoggingEvent> appender, String format) {
+      this.appender = appender;
+      return toConsole(format);
     }
 
     /**
@@ -195,7 +201,7 @@ public class LogFixture implements AutoCloseable {
 
   private void setupConsole(LogFixtureBuilder builder) {
     drillLogger = (Logger)LoggerFactory.getLogger(DRILL_PACKAGE_NAME);
-    if (drillLogger.getAppender("STDOUT") != null) {
+    if (builder.appender == null && drillLogger.getAppender("STDOUT") != null) {
       return;
     }
     LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -204,10 +210,10 @@ public class LogFixture implements AutoCloseable {
     ple.setContext(lc);
     ple.start();
 
-    appender = new ConsoleAppender<>( );
+    appender = builder.appender == null ? new ConsoleAppender<>() : builder.appender;
     appender.setContext(lc);
     appender.setName("Console");
-    appender.setEncoder( ple );
+    appender.setEncoder(ple);
     appender.start();
 
     Logger root = (Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);

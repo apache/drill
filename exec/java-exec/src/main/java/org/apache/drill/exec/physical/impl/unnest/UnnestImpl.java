@@ -191,4 +191,14 @@ public class UnnestImpl implements Unnest {
       transfers = null;
     }
   }
+
+  @Override
+  public String toString() {
+    return "UnnestImpl[svMode=" + svMode
+        + ", outputLimit=" + outputLimit
+        + ", valueIndex=" + valueIndex
+        + ", innerValueIndex=" + innerValueIndex
+        + ", runningInnerValueIndex=" + runningInnerValueIndex
+        + "]";
+  }
 }

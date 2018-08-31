@@ -396,4 +396,9 @@ public class PcapRecordReader extends AbstractRecordReader {
           .setSafe(count, value, 0, value.remaining());
     }
   }
+
+  @Override
+  public String toString() {
+    return "PcapRecordReader[File=" + pathToFile.toUri() + "]";
+  }
 }

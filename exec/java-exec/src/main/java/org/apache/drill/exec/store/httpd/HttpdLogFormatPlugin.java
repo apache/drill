@@ -242,6 +242,14 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
       }
     }
 
+    @Override
+    public String toString() {
+      return "HttpdLogRecordReader[Path=" + work.getPath()
+          + ", Start=" + work.getStart()
+          + ", Length=" + work.getLength()
+          + ", Line=" + lineNumber.get()
+          + "]";
+    }
   }
 
   /**

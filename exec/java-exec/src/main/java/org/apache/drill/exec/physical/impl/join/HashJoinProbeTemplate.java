@@ -432,4 +432,17 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
       (joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL) ? ProbeState.PROJECT_RIGHT :
         ProbeState.DONE; // else we're done
   }
+
+  @Override
+  public String toString() {
+    return "HashJoinProbeTemplate[container=" + container
+        + ", probeSchema=" + probeSchema
+        + ", joinType=" + joinType
+        + ", recordsToProcess=" + recordsToProcess
+        + ", recordsProcessed=" + recordsProcessed
+        + ", outputRecords=" + outputRecords
+        + ", probeState=" + probeState
+        + ", unmatchedBuildIndexes=" + unmatchedBuildIndexes
+        + "]";
+  }
 }

@@ -344,4 +344,9 @@ public class DrillParquetReader extends AbstractRecordReader {
       this.type = type;
     }
   }
+
+  @Override
+  public String toString() {
+    return "DrillParquetReader[pageReadStore=" + pageReadStore + "]";
+  }
 }

@@ -106,4 +106,12 @@ public class HashAggregate extends AbstractSingle {
     return queryContext == null ||
       1 < (int) queryContext.getOptions().getOption(ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR);
   }
+
+  @Override
+  public String toString() {
+    return "HashAggregate[groupByExprs=" + groupByExprs
+        + ", aggrExprs=" + aggrExprs
+        + ", cardinality=" + cardinality
+        + "]";
+  }
 }

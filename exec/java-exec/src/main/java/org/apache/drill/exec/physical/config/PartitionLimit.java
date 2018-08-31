@@ -59,4 +59,9 @@ public class PartitionLimit extends Limit {
   public int getOperatorType() {
     return CoreOperatorType.PARTITION_LIMIT_VALUE;
   }
+
+  @Override
+  public String toString() {
+    return "PartitionLimit[partitionColumn=" + partitionColumn + "]";
+  }
 }

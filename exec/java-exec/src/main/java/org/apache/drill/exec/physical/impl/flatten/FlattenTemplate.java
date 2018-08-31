@@ -175,4 +175,15 @@ public abstract class FlattenTemplate implements Flattener {
                                @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;
   public abstract boolean doEval(@Named("inIndex") int inIndex,
                                  @Named("outIndex") int outIndex) throws SchemaChangeException;
+
+  @Override
+  public String toString() {
+    return "FlattenTemplate[svMode=" + svMode
+        + ", fieldToFlatten=" + fieldToFlatten
+        + ", valueIndex=" + valueIndex
+        + ", outputLimit=" + outputLimit
+        + ", innerValueIndex=" + innerValueIndex
+        + ", currentInnerValueIndex=" + currentInnerValueIndex
+        + "]";
+  }
 }

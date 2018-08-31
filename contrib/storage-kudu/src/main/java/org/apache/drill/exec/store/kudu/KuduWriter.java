@@ -77,4 +77,9 @@ public class KuduWriter extends AbstractWriter {
   public KuduStoragePlugin getPlugin() {
     return plugin;
   }
+
+  @Override
+  public String toString() {
+    return "KuduWriter[name=" + name + ", storageStrategy=" + getStorageStrategy() + "]";
+  }
 }

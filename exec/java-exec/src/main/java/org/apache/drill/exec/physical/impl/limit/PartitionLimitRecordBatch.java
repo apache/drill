@@ -40,7 +40,7 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
  * implicit column for rowId for each row.
  */
 public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<PartitionLimit> {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
 
   private SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
@@ -249,5 +249,13 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
     recordStartOffset = Math.max(0, popConfig.getFirst());
     numberOfRecords = (popConfig.getLast() == null) ?
       Integer.MIN_VALUE : Math.max(0, popConfig.getLast()) - recordStartOffset;
+  }
+
+  @Override
+  public void dump() {
+    logger.error("PartitionLimitRecordBatch[container={}, popConfig={}, incomingSV={}, outgoingSV={},"
+            + " recordStartOffset={}, numberOfRecords={}, partitionId={}, unionTypeEnabled={}, state={}]",
+        container, popConfig, incomingSv, outgoingSv, recordStartOffset, numberOfRecords,
+        partitionId, unionTypeEnabled, state);
   }
 }

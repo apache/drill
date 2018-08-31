@@ -209,4 +209,10 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     closeWriter();
     super.close();
   }
+
+  @Override
+  public void dump() {
+    logger.error("WriterRecordBatch[container={}, popConfig={}, counter={}, fragmentUniqueId={}, schema={}]",
+        container, popConfig, counter, fragmentUniqueId, schema);
+  }
 }

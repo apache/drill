@@ -222,4 +222,9 @@ public class StorageStrategy {
       fs.deleteOnExit(path);
     }
   }
+
+  @Override
+  public String toString() {
+    return "StorageStrategy[umask=" + umask + ", deleteOnExist=" + deleteOnExit + "]";
+  }
 }

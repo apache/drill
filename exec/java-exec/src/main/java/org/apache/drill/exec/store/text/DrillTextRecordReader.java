@@ -232,4 +232,13 @@ public class DrillTextRecordReader extends AbstractRecordReader {
       logger.warn("Exception closing reader: {}", e);
     }
   }
+
+  @Override
+  public String toString() {
+    return "DrillTextRecordReader[File=" + split.getPath()
+        + ", Record=" + (totalRecordsRead + 1)
+        + ", Start=" + split.getStart()
+        + ", Length=" + split.getLength()
+        + "]";
+  }
 }

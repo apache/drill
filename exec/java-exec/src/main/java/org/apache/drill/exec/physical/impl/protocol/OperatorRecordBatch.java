@@ -55,6 +55,7 @@ public class OperatorRecordBatch implements CloseableRecordBatch {
 
   private final OperatorDriver driver;
   private final BatchAccessor batchAccessor;
+  private IterOutcome lastOutcome;
 
   public OperatorRecordBatch(FragmentContext context, PhysicalOperator config, OperatorExec opExec) {
     OperatorContext opContext = context.newOperatorContext(config);
@@ -143,7 +144,12 @@ public class OperatorRecordBatch implements CloseableRecordBatch {
   public IterOutcome next() {
     try {
       driver.operatorContext().getStats().startProcessing();
-      return driver.next();
+      lastOutcome = driver.next();
+      return lastOutcome;
+    } catch (Exception e) {
+      // mark batch as failed
+      lastOutcome = IterOutcome.STOP;
+      throw e;
     } finally {
       driver.operatorContext().getStats().stopProcessing();
     }
@@ -157,5 +163,15 @@ public class OperatorRecordBatch implements CloseableRecordBatch {
   @Override
   public VectorContainer getContainer() {
     return batchAccessor.getOutgoingContainer();
+  }
+
+  @Override
+  public boolean hasFailed() {
+    return lastOutcome == IterOutcome.STOP;
+  }
+
+  @Override
+  public void dump() {
+    logger.error("OperatorRecordBatch[batchAccessor={}, lastOutcome={}]", batchAccessor, lastOutcome);
   }
 }

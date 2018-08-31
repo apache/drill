@@ -83,6 +83,10 @@ public class ScanBatch implements CloseableRecordBatch {
   private final List<Map<String, String>> implicitColumnList;
   private String currentReaderClassName;
   private final RecordBatchStatsContext batchStatsContext;
+  // Represents last outcome of next(). If an Exception is thrown
+  // during the method's execution a value IterOutcome.STOP will be assigned.
+  private IterOutcome lastOutcome;
+
   /**
    *
    * @param context
@@ -160,7 +164,8 @@ public class ScanBatch implements CloseableRecordBatch {
   @Override
   public IterOutcome next() {
     if (done) {
-      return IterOutcome.NONE;
+      lastOutcome = IterOutcome.NONE;
+      return lastOutcome;
     }
     oContext.getStats().startProcessing();
     try {
@@ -168,7 +173,8 @@ public class ScanBatch implements CloseableRecordBatch {
         if (currentReader == null && !getNextReaderIfHas()) {
           releaseAssets(); // All data has been read. Release resource.
           done = true;
-          return IterOutcome.NONE;
+          lastOutcome = IterOutcome.NONE;
+          return lastOutcome;
         }
         injector.injectChecked(context.getExecutionControls(), "next-allocate", OutOfMemoryException.class);
         currentReader.allocate(mutator.fieldVectorMap());
@@ -191,7 +197,8 @@ public class ScanBatch implements CloseableRecordBatch {
           // This could happen when data sources have a non-trivial schema with 0 row.
           container.buildSchema(SelectionVectorMode.NONE);
           schema = container.getSchema();
-          return IterOutcome.OK_NEW_SCHEMA;
+          lastOutcome = IterOutcome.OK_NEW_SCHEMA;
+          return lastOutcome;
         }
 
         // Handle case of same schema.
@@ -199,11 +206,13 @@ public class ScanBatch implements CloseableRecordBatch {
             continue; // Skip to next loop iteration if reader returns 0 row and has same schema.
         } else {
           // return OK if recordCount > 0 && ! isNewSchema
-          return IterOutcome.OK;
+          lastOutcome = IterOutcome.OK;
+          return lastOutcome;
         }
       }
     } catch (OutOfMemoryException ex) {
       clearFieldVectorMap();
+      lastOutcome = IterOutcome.STOP;
       throw UserException.memoryError(ex).build(logger);
     } catch (ExecutionSetupException e) {
       if (currentReader != null) {
@@ -213,12 +222,15 @@ public class ScanBatch implements CloseableRecordBatch {
           logger.error("Close failed for reader " + currentReaderClassName, e2);
         }
       }
+      lastOutcome = IterOutcome.STOP;
       throw UserException.internalError(e)
           .addContext("Setup failed for", currentReaderClassName)
           .build(logger);
     } catch (UserException ex) {
+      lastOutcome = IterOutcome.STOP;
       throw ex;
     } catch (Exception ex) {
+      lastOutcome = IterOutcome.STOP;
       throw UserException.internalError(ex).build(logger);
     } finally {
       oContext.getStats().stopProcessing();
@@ -558,5 +570,15 @@ public class ScanBatch implements CloseableRecordBatch {
     }
 
     return true;
+  }
+
+  @Override
+  public boolean hasFailed() {
+    return lastOutcome == IterOutcome.STOP;
+  }
+
+  @Override
+  public void dump() {
+    logger.error("ScanBatch[container={}, currentReader={}, schema={}]", container, currentReader, schema);
   }
 }

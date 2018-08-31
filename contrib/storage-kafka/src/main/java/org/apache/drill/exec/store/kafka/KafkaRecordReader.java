@@ -60,6 +60,7 @@ public class KafkaRecordReader extends AbstractRecordReader {
   private final boolean enableAllTextMode;
   private final boolean readNumbersAsDouble;
   private final String kafkaMsgReader;
+  private int currentMessageCount;
 
   public KafkaRecordReader(KafkaPartitionScanSpec subScanSpec, List<SchemaPath> projectedColumns,
       FragmentContext context, KafkaStoragePlugin plugin) {
@@ -105,27 +106,27 @@ public class KafkaRecordReader extends AbstractRecordReader {
     writer.allocate();
     writer.reset();
     Stopwatch watch = Stopwatch.createStarted();
-    int messageCount = 0;
+    currentMessageCount = 0;
 
     try {
       while (currentOffset < subScanSpec.getEndOffset() - 1 && msgItr.hasNext()) {
         ConsumerRecord<byte[], byte[]> consumerRecord = msgItr.next();
         currentOffset = consumerRecord.offset();
-        writer.setPosition(messageCount);
+        writer.setPosition(currentMessageCount);
         messageReader.readMessage(consumerRecord);
-        if (++messageCount >= DEFAULT_MESSAGES_PER_BATCH) {
+        if (++currentMessageCount >= DEFAULT_MESSAGES_PER_BATCH) {
           break;
         }
       }
 
       messageReader.ensureAtLeastOneField();
-      writer.setValueCount(messageCount);
-      logger.debug("Took {} ms to process {} records.", watch.elapsed(TimeUnit.MILLISECONDS), messageCount);
+      writer.setValueCount(currentMessageCount);
+      logger.debug("Took {} ms to process {} records.", watch.elapsed(TimeUnit.MILLISECONDS), currentMessageCount);
       logger.debug("Last offset consumed for {}:{} is {}", subScanSpec.getTopicName(), subScanSpec.getPartitionId(),
           currentOffset);
-      return messageCount;
+      return currentMessageCount;
     } catch (Exception e) {
-      String msg = "Failure while reading messages from kafka. Recordreader was at record: " + (messageCount + 1);
+      String msg = "Failure while reading messages from kafka. Recordreader was at record: " + (currentMessageCount + 1);
       throw UserException.dataReadError(e).message(msg).addContext(e.getMessage()).build(logger);
     }
   }
@@ -139,4 +140,15 @@ public class KafkaRecordReader extends AbstractRecordReader {
     messageReader.close();
   }
 
+  @Override
+  public String toString() {
+    return "KafkaRecordReader[messageReader=" + messageReader
+        + ", kafkaPollTimeOut=" + kafkaPollTimeOut
+        + ", currentOffset=" + currentOffset
+        + ", enableAllTextMode=" + enableAllTextMode
+        + ", readNumbersAsDouble=" + readNumbersAsDouble
+        + ", kafkaMsgReader=" + kafkaMsgReader
+        + ", currentMessageCount=" + currentMessageCount
+        + "]";
+  }
 }

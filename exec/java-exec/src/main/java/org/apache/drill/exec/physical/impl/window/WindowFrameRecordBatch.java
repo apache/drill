@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.window;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
@@ -425,5 +426,11 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   @Override
   public int getRecordCount() {
     return framers[0].getOutputCount();
+  }
+
+  @Override
+  public void dump() {
+    logger.error("WindowFrameRecordBatch[container={}, popConfig={}, framers={}, schema={}]",
+        container, popConfig, Arrays.toString(framers), schema);
   }
 }
