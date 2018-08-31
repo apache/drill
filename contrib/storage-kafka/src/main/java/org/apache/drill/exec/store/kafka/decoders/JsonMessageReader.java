@@ -105,4 +105,8 @@ public class JsonMessageReader implements MessageReader {
     }
   }
 
+  @Override
+  public String toString() {
+    return "JsonMessageReader[jsonReader=" + jsonReader + "]";
+  }
 }

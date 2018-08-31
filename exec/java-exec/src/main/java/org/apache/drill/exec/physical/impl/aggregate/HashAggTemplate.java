@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
 
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.drill.common.exceptions.RetryAfterSpillException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -1601,6 +1602,14 @@ public abstract class HashAggTemplate implements HashAggregator {
       stats.setLongStat(Metric.SPILL_MB, // update stats - est. total MB returned early
           (int) Math.round( rowsReturnedEarly * estOutputRowWidth / 1024.0D / 1024.0));
     }
+  }
+
+  @Override
+  public String toString() {
+    // The fields are excluded because they are passed from HashAggBatch
+    String[] excludedFields = new String[] {
+        "baseHashTable", "incoming", "outgoing", "context", "oContext", "allocator", "htables", "newIncoming"};
+    return ReflectionToStringBuilder.toStringExclude(this, excludedFields);
   }
 
   // Code-generated methods (implemented in HashAggBatch)

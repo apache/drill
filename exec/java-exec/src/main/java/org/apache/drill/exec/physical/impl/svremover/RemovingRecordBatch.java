@@ -92,4 +92,9 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
   }
+
+  @Override
+  public void dump() {
+    logger.error("RemovingRecordBatch[container={}, state={}, copier={}]", container, state, copier);
+  }
 }

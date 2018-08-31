@@ -78,6 +78,9 @@ public class KuduRecordReader extends AbstractRecordReader {
   private OutputMutator output;
   private OperatorContext context;
 
+  private String lastColumnName;
+  private Type lastColumnType;
+
   private static class ProjectedColumnInfo {
     int index;
     ValueVector vv;
@@ -176,6 +179,8 @@ public class KuduRecordReader extends AbstractRecordReader {
 
       final String name = col.getName();
       final Type kuduType = col.getType();
+      lastColumnName = name;
+      lastColumnType = kuduType;
       MinorType minorType = TYPES.get(kuduType);
       if (minorType == null) {
         logger.warn("Ignoring column that is unsupported.", UserException
@@ -326,4 +331,10 @@ public class KuduRecordReader extends AbstractRecordReader {
   public void close() {
   }
 
+  @Override
+  public String toString() {
+    return "KuduRecordReader[Column=" + lastColumnName
+        + ", Type=" + lastColumnType
+        + "]";
+  }
 }

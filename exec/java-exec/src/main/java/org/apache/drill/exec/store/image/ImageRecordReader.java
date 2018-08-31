@@ -261,7 +261,7 @@ public class ImageRecordReader extends AbstractRecordReader {
   }
 
   private void processXmpDirectory(final MapWriter writer, final XmpDirectory directory) {
-    HashSet<String> listItems = new HashSet();
+    HashSet<String> listItems = new HashSet<>();
     XMPMeta xmpMeta = directory.getXMPMeta();
     if (xmpMeta != null) {
       try {
@@ -489,5 +489,10 @@ public class ImageRecordReader extends AbstractRecordReader {
     if (metadataStream != null) {
       metadataStream.close();
     }
+  }
+
+  @Override
+  public String toString() {
+    return "ImageRecordReader[Path=" + hadoopPath.toUri().getPath() + "]";
   }
 }

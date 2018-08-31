@@ -95,6 +95,17 @@ public class WindowPOP extends AbstractSingle {
     return frameUnitsRows;
   }
 
+  @Override
+  public String toString() {
+    return "WindowPOP[withins=" + withins
+        + ", aggregations=" + aggregations
+        + ", orderings=" + orderings
+        + ", frameUnitsRows=" + frameUnitsRows
+        + ", start=" + start
+        + ", end=" + end
+        + "]";
+  }
+
   @JsonTypeName("windowBound")
   public static class Bound {
     private final boolean unbounded;
@@ -116,6 +127,11 @@ public class WindowPOP extends AbstractSingle {
 
     public long getOffset() {
       return offset;
+    }
+
+    @Override
+    public String toString() {
+      return "Bound[unbounded=" + unbounded + ", offset=" + offset + "]";
     }
   }
 

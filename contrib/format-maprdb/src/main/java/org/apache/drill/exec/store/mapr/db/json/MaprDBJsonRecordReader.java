@@ -81,6 +81,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private final String tableName;
   private OperatorContext operatorContext;
   private VectorContainerWriter vectorWriter;
+  private DBDocumentReaderBase reader;
 
   private DrillBuf buffer;
 
@@ -195,7 +196,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     vectorWriter.reset();
 
     int recordCount = 0;
-    DBDocumentReaderBase reader = null;
+    reader = null;
 
     while(recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION) {
       vectorWriter.setPosition(recordCount);
@@ -525,5 +526,19 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (table != null) {
       table.close();
     }
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder("MaprDBJsonRecordReader[Table=")
+        .append(table.getPath());
+    if (reader != null) {
+      sb.append(", Document ID=")
+          .append(IdCodec.asString(reader.getId()));
+    }
+    sb.append(", reader=")
+        .append(reader)
+        .append(']');
+    return sb.toString();
   }
 }

@@ -348,4 +348,14 @@ public class ParquetRecordReader extends AbstractRecordReader {
       return (int) Math.min(numRecordsToRead, footer.getBlocks().get(rowGroupIndex).getRowCount());
     }
   }
+
+  @Override
+  public String toString() {
+    return "ParquetRecordReader[File=" + hadoopPath.toUri()
+        + ", Row group index=" + rowGroupIndex
+        + ", Records in row group=" + footer.getBlocks().get(rowGroupIndex).getRowCount()
+        + ", Total records read=" + (readState != null ? readState.recordsRead() : -1)
+        + ", Metadata" + footer
+        + "]";
+  }
 }

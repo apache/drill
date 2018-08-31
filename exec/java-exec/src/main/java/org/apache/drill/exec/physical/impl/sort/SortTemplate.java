@@ -70,4 +70,8 @@ public abstract class SortTemplate implements Sorter, IndexedSortable{
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorContainer incoming, @Named("outgoing") RecordBatch outgoing);
   public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
 
+  @Override
+  public String toString() {
+    return "SortTemplate[vector4=" + vector4 + "]";
+  }
 }

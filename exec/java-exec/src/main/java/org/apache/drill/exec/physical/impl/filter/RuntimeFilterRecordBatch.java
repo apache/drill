@@ -247,4 +247,11 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
       }
     }
   }
+
+  @Override
+  public void dump() {
+    logger.error("RuntimeFilterRecordBatch[container={}, selectionVector={}, toFilterFields={}, "
+        + "originalRecordCount={}, batchSchema={}]",
+        container, sv2, toFilterFields, originalRecordCount, incoming.getSchema());
+  }
 }

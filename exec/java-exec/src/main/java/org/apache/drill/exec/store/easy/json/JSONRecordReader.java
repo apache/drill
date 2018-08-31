@@ -104,7 +104,7 @@ public class JSONRecordReader extends AbstractRecordReader {
         "One of inputPath or embeddedContent must be set but not both."
         );
 
-    if(inputPath != null) {
+    if (inputPath != null) {
       this.hadoopPath = new Path(inputPath);
     } else {
       this.embeddedContent = embeddedContent;
@@ -126,9 +126,11 @@ public class JSONRecordReader extends AbstractRecordReader {
   public String toString() {
     return super.toString()
         + "[hadoopPath = " + hadoopPath
+        + ", currentRecord=" + currentRecordNumberInFile()
+        + ", jsonReader=" + jsonReader
         + ", recordCount = " + recordCount
         + ", parseErrorCount = " + parseErrorCount
-         + ", runningRecordCount = " + runningRecordCount + ", ...]";
+        + ", runningRecordCount = " + runningRecordCount + ", ...]";
   }
 
   @Override
@@ -162,9 +164,9 @@ public class JSONRecordReader extends AbstractRecordReader {
   }
 
   private void setupParser() throws IOException {
-    if(hadoopPath != null){
+    if (hadoopPath != null) {
       jsonReader.setSource(stream);
-    }else{
+    } else {
       jsonReader.setSource(embeddedContent);
     }
     jsonReader.setIgnoreJSONParseErrors(skipMalformedJSONRecords);
@@ -182,7 +184,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     }
 
     UserException.Builder exceptionBuilder = UserException.dataReadError(e)
-            .message("%s - %s", suffix, message);
+        .message("%s - %s", suffix, message);
     if (columnNr > 0) {
       exceptionBuilder.pushContext("Column ", columnNr);
     }
@@ -205,36 +207,32 @@ public class JSONRecordReader extends AbstractRecordReader {
     writer.reset();
     recordCount = 0;
     parseErrorCount = 0;
-    if(write == ReadState.JSON_RECORD_PARSE_EOF_ERROR){
+    if (write == ReadState.JSON_RECORD_PARSE_EOF_ERROR) {
       return recordCount;
     }
-    outside: while(recordCount < DEFAULT_ROWS_PER_BATCH){
-      try{
+    while (recordCount < DEFAULT_ROWS_PER_BATCH) {
+      try {
         writer.setPosition(recordCount);
         write = jsonReader.write(writer);
-        if(write == ReadState.WRITE_SUCCEED){
+        if (write == ReadState.WRITE_SUCCEED) {
           recordCount++;
-        }
-        else if(write == ReadState.JSON_RECORD_PARSE_ERROR || write == ReadState.JSON_RECORD_PARSE_EOF_ERROR){
-          if(skipMalformedJSONRecords == false){
-            handleAndRaise("Error parsing JSON", new Exception(hadoopPath.getName() + " : line nos :" + (recordCount+1)));
+        } else if (write == ReadState.JSON_RECORD_PARSE_ERROR || write == ReadState.JSON_RECORD_PARSE_EOF_ERROR) {
+          if (!skipMalformedJSONRecords) {
+            handleAndRaise("Error parsing JSON", new Exception());
           }
           ++parseErrorCount;
-          if(printSkippedMalformedJSONRecordLineNumber){
-            logger.debug("Error parsing JSON in " + hadoopPath.getName() + " : line nos :" + (recordCount+parseErrorCount));
+          if (printSkippedMalformedJSONRecordLineNumber) {
+            logger.debug("Error parsing JSON in " + hadoopPath.getName() + " : line nos :" + (recordCount + parseErrorCount));
           }
-          if(write == ReadState.JSON_RECORD_PARSE_EOF_ERROR){
-            break outside;
+          if (write == ReadState.JSON_RECORD_PARSE_EOF_ERROR) {
+            break;
           }
+        } else {
+          break;
         }
-        else{
-          break outside;
-        }
+      } catch (IOException ex) {
+        handleAndRaise("Error parsing JSON", ex);
       }
-      catch(IOException ex)
-        {
-           handleAndRaise("Error parsing JSON", ex);
-        }
     }
     // Skip empty json file with 0 row.
     // Only when data source has > 0 row, ensure the batch has one field.

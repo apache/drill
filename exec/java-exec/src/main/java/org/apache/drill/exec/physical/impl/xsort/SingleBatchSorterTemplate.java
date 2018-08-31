@@ -83,4 +83,9 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
   public abstract int doEval(@Named("leftIndex") char leftIndex,
                              @Named("rightIndex") char rightIndex)
                       throws SchemaChangeException;
+
+  @Override
+  public String toString() {
+    return "SinglebatchSorterTemplate[vector2=" + vector2 + "]";
+  }
 }

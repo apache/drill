@@ -71,4 +71,11 @@ public class Sort extends AbstractSingle{
   public int getOperatorType() {
     return CoreOperatorType.OLD_SORT_VALUE;
   }
+
+  @Override
+  public String toString() {
+    return "Sort[orderings=" + orderings
+        + ", reverse=" + reverse
+        + "]";
+  }
 }

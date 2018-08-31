@@ -26,8 +26,8 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.vector.ValueVector;
 
 public interface RecordReader extends AutoCloseable {
-  public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
-  public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+  long ALLOCATOR_INITIAL_RESERVATION = 1 * 1024 * 1024;
+  long ALLOCATOR_MAX_RESERVATION = 20L * 1000 * 1000 * 1000;
 
   /**
    * Configure the RecordReader with the provided schema and the record batch that should be written to.

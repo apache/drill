@@ -298,6 +298,17 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
     internal.clear();
   }
 
+  @Override
+  public String toString() {
+    return "FrameSupportTemplate[internal=" + internal
+        + ", outputCount=" + outputCount
+        + ", current=" + current
+        + ", requireFullPartition=" + requireFullPartition
+        + ", partition=" + partition
+        + "]";
+  }
+
+
   /**
    * called once for each row after we evaluate all peer rows. Used to write a value in the row
    *

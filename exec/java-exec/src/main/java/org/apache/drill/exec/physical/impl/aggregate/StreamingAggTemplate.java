@@ -498,6 +498,16 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   public void cleanup() {
   }
 
+  @Override
+  public String toString() {
+    return "StreamingAggTemplate[underlyingIndex=" + underlyingIndex
+        + ", previousIndex=" + previousIndex
+        + ", currentIndex=" + currentIndex
+        + ", addedRecordCount=" + addedRecordCount
+        + ", outputCount=" + outputCount
+        + "]";
+  }
+
   public abstract void setupInterior(@Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;
   public abstract boolean isSame(@Named("index1") int index1, @Named("index2") int index2);
   public abstract boolean isSamePrev(@Named("b1Index") int b1Index, @Named("b1") InternalBatch b1, @Named("b2Index") int b2Index);

@@ -74,6 +74,7 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 /**
  * Operator Batch which implements the TopN functionality. It is more efficient than (sort + limit) since unlike sort
@@ -185,7 +186,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     // Reset the TopN state for next iteration
     resetTopNState();
 
-    try{
+    try {
       boolean incomingHasSv2 = false;
       switch (incoming.getSchema().getSelectionVectorMode()) {
         case NONE: {
@@ -692,5 +693,11 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     public SelectionVector4 getSelectionVector4() {
       return sv4;
     }
+  }
+
+  @Override
+  public void dump() {
+    logger.error("TopNBatch[container={}, config={}, schema={}, sv4={}, countSincePurge={}, " +
+        "batchCount={}, recordCount={}]", container, config, schema, sv4, countSincePurge, batchCount, recordCount);
   }
 }

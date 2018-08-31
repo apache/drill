@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
@@ -54,6 +53,8 @@ public class BsonRecordReader {
   private final boolean readNumbersAsDouble;
   protected DrillBuf workBuf;
   private String currentFieldName;
+  // Used for error context
+  private BsonReader reader;
 
   public BsonRecordReader(DrillBuf managedBuf, boolean allTextMode, boolean readNumbersAsDouble) {
     this(managedBuf, GroupScan.ALL_COLUMNS, readNumbersAsDouble);
@@ -67,6 +68,7 @@ public class BsonRecordReader {
   }
 
   public void write(ComplexWriter writer, BsonReader reader) throws IOException {
+    this.reader = reader;
     reader.readStartDocument();
     BsonType readBsonType = reader.getCurrentBsonType();
     switch (readBsonType) {
@@ -364,17 +366,20 @@ public class BsonRecordReader {
     }
   }
 
-  public UserException.Builder getExceptionWithContext(UserException.Builder exceptionBuilder, String field,
-      String msg, Object... args) {
-    return null;
-  }
-
-  public UserException.Builder getExceptionWithContext(Throwable exception, String field, String msg, Object... args) {
-    return null;
-  }
-
   private void ensure(final int length) {
     workBuf = workBuf.reallocIfNeeded(length);
   }
 
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder("BsonRecordReader[");
+    if (reader != null) {
+      sb.append("Name=")
+          .append(reader.getCurrentName())
+          .append(", Type=")
+          .append(reader.getCurrentBsonType());
+    }
+    sb.append(']');
+    return sb.toString();
+  }
 }

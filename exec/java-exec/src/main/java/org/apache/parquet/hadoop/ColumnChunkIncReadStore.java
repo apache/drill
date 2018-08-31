@@ -269,4 +269,9 @@ public class ColumnChunkIncReadStore implements PageReadStore {
   public long getRowCount() {
     return rowCount;
   }
+
+  @Override
+  public String toString() {
+    return "ColumnChunkIncReadStore[File=" + path.toUri() + "]";
+  }
 }

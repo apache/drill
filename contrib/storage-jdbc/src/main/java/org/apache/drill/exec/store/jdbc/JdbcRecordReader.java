@@ -279,6 +279,13 @@ class JdbcRecordReader extends AbstractRecordReader {
     AutoCloseables.close(resultSet, statement, connection);
   }
 
+  @Override
+  public String toString() {
+    return "JdbcRecordReader[sql=" + sql
+        + ", Plugin=" + storagePluginName
+        + "]";
+  }
+
   private abstract class Copier<T extends ValueVector.Mutator> {
     protected final int columnIndex;
     protected final ResultSet result;
@@ -478,5 +485,4 @@ class JdbcRecordReader extends AbstractRecordReader {
     }
 
   }
-
 }

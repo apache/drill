@@ -216,7 +216,7 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     } catch (IOException | TextParsingException e) {
       throw UserException.dataReadError(e)
           .addContext("Failure while reading file %s. Happened at or shortly before byte position %d.",
-            split.getPath(), reader.getPos())
+              split.getPath(), reader.getPos())
           .build(logger);
     }
   }
@@ -247,5 +247,12 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     } catch (IOException e) {
       logger.warn("Exception while closing stream.", e);
     }
+  }
+
+  @Override
+  public String toString() {
+    return "CompliantTextRecordReader[File=" + split.getPath()
+        + ", reader=" + reader
+        + "]";
   }
 }

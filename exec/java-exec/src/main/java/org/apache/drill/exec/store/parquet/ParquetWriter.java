@@ -121,4 +121,11 @@ public class ParquetWriter extends AbstractWriter {
     return CoreOperatorType.PARQUET_WRITER_VALUE;
   }
 
+  @Override
+  public String toString() {
+    return "ParquetWriter[location=" + location
+        + ", storageStrategy=" + getStorageStrategy()
+        + ", partitionColumns=" + partitionColumns
+        + "]";
+  }
 }
