@@ -98,6 +98,7 @@ public class ITTestShadedJar {
       super.failed(e, description);
       done();
       runMethod("failed", description);
+      logger.error("Check whether this test was running within 'integration-test' Maven phase");
     }
 
     private void done() {
@@ -216,8 +217,8 @@ public class ITTestShadedJar {
 
   private static void runWithLoader(String name, ClassLoader loader) throws Exception {
     Class<?> clazz = loader.loadClass(ITTestShadedJar.class.getName() + "$" + name);
-    Object o = clazz.getDeclaredConstructors()[0].newInstance(loader);
-    clazz.getMethod("go").invoke(o);
+    Object instance = clazz.getDeclaredConstructors()[0].newInstance(loader);
+    clazz.getMethod("go").invoke(instance);
   }
 
   public abstract static class AbstractLoaderThread extends Thread {
@@ -264,7 +265,7 @@ public class ITTestShadedJar {
       // loader.loadClass("org.apache.drill.exec.exception.SchemaChangeException");
 
       // execute a single query to make sure the drillbit is fully up
-      clazz.getMethod("testNoResult", String.class, new Object[] {}.getClass())
+      clazz.getMethod("testNoResult", String.class, Object[].class)
           .invoke(null, "select * from (VALUES 1)", new Object[] {});
 
       SEM.release();

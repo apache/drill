@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.directory.api.util.Strings;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
@@ -37,6 +36,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumns;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.hadoop.fs.Path;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
@@ -58,7 +58,7 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  * On each file (on each reader), the columns are "resolved." Here, that means
  * that the columns are filled in with actual values based on the present file.
  * <p>
- * This is the successor to {@link ColumnExplorer}.
+ * This is the successor to {@link org.apache.drill.exec.store.ColumnExplorer}.
  */
 
 public class FileMetadataManager implements MetadataManager, ReaderProjectionResolver, VectorSource {
@@ -167,8 +167,6 @@ public class FileMetadataManager implements MetadataManager, ReaderProjectionRes
    * one file, rather than a directory
    * @param files the set of files to scan. Used to compute the maximum partition
    * depth across all readers in this fragment
-   *
-   * @return this builder
    */
 
   public FileMetadataManager(OptionSet optionManager,
@@ -178,7 +176,7 @@ public class FileMetadataManager implements MetadataManager, ReaderProjectionRes
     partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
     for (ImplicitFileColumns e : ImplicitFileColumns.values()) {
       String colName = optionManager.getString(e.optionName());
-      if (! Strings.isEmpty(colName)) {
+      if (!Strings.isNullOrEmpty(colName)) {
         FileMetadataColumnDefn defn = new FileMetadataColumnDefn(colName, e);
         implicitColDefns.add(defn);
         fileMetadataColIndex.put(defn.colName, defn);
