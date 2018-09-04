@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.lateraljoin;
 
 import org.apache.drill.categories.OperatorTest;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
@@ -46,7 +45,7 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_1));
     dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_2));
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-        .sessionOption(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+        .sessionOption(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
         .maxParallelization(1);
     startCluster(builder);
   }
