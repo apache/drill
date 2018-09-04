@@ -249,6 +249,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.0.0-M3</version>
         <executions>
           <execution>
             <goals>
@@ -341,6 +342,7 @@
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
               <exclude>io.netty:netty-tcnative:jar:*</exclude>
+              <exclude>com.fasterxml.woodstox:woodstox-core:jar:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -403,6 +405,7 @@
             <relocation><pattern>org.apache.xpath.</pattern><shadedPattern>oadd.org.apache.xpath.</shadedPattern></relocation>
             <relocation><pattern>org.apache.zookeeper.</pattern><shadedPattern>oadd.org.apache.zookeeper.</shadedPattern></relocation>
             <relocation><pattern>org.apache.hadoop.</pattern><shadedPattern>oadd.org.apache.hadoop.</shadedPattern></relocation>
+            <relocation><pattern>com.fasterxml.woodstox.</pattern><shadedPattern>oadd.com.fasterxml.woodstox.</shadedPattern></relocation>
           </relocations>
           <transformers>
             <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
@@ -528,7 +531,7 @@
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                   </message>
-                  <maxsize>41000000</maxsize>
+                  <maxsize>42600000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
