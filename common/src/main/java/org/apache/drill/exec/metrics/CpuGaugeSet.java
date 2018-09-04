@@ -55,7 +55,7 @@ public class CpuGaugeSet implements MetricSet {
   private static OperatingSystemMXBean getOSMXBeanForCpuMetrics() {
     try {
       return (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-    } catch (Exception ex) {
+    } catch (ClassCastException ex) {
       logger.warn("{}. Detected non-Supported JVM [{}]. CPU Metrics in the WebUI will not be available!", ex.getMessage(), System.getProperty("java.vm.name"));
     }
     return null;
