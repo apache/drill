@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.dotdrill;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.sql.SqlIntervalQualifier;
@@ -29,7 +31,6 @@ import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -38,7 +39,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @JsonTypeName("view")
@@ -211,26 +211,28 @@ public class View {
 
 
   public View(String name, String sql, RelDataType rowType, List<String> workspaceSchemaPath) {
-    this.name = name;
-    this.sql = sql;
-    fields = Lists.newArrayList();
-    for (RelDataTypeField f : rowType.getFieldList()) {
-      fields.add(new FieldType(f.getName(), f.getType()));
-    }
-    this.workspaceSchemaPath =
-        workspaceSchemaPath == null ? ImmutableList.<String>of() : ImmutableList.copyOf(workspaceSchemaPath);
+    this(name,
+        sql,
+        rowType.getFieldList().stream()
+            .map(f -> new FieldType(f.getName(), f.getType()))
+            .collect(Collectors.toList()),
+        workspaceSchemaPath);
   }
 
   @JsonCreator
   public View(@JsonProperty("name") String name,
               @JsonProperty("sql") String sql,
               @JsonProperty("fields") List<FieldType> fields,
-              @JsonProperty("workspaceSchemaPath") List<String> workspaceSchemaPath){
+              @JsonProperty("workspaceSchemaPath") List<String> workspaceSchemaPath) {
     this.name = name;
     this.sql = sql;
     this.fields = fields;
-    this.workspaceSchemaPath =
-        workspaceSchemaPath == null ? ImmutableList.<String>of() : ImmutableList.copyOf(workspaceSchemaPath);
+    // for backward compatibility since now all schemas and workspaces are case insensitive and stored in lower case
+    // make sure that given workspace schema path is also in lower case
+    this.workspaceSchemaPath = workspaceSchemaPath == null ? Collections.EMPTY_LIST :
+        workspaceSchemaPath.stream()
+            .map(String::toLowerCase)
+            .collect(Collectors.toList());
   }
 
   public RelDataType getRowType(RelDataTypeFactory factory) {
