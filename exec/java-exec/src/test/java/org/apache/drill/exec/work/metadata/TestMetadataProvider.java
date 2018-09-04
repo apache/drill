@@ -160,12 +160,12 @@ public class TestMetadataProvider extends BaseTestQuery {
     verifyTable("sys", "boot", tables);
     verifyTable("sys", "drillbits", tables);
     verifyTable("sys", "memory", tables);
-    verifyTable("sys", SystemTable.OPTION.getTableName(), tables);
-    verifyTable("sys", SystemTable.OPTION_VAL.getTableName(), tables);
+    verifyTable("sys", SystemTable.OPTIONS_OLD.getTableName(), tables);
+    verifyTable("sys", SystemTable.OPTIONS.getTableName(), tables);
     verifyTable("sys", "threads", tables);
     verifyTable("sys", "version", tables);
+    verifyTable("sys", SystemTable.INTERNAL_OPTIONS_OLD.getTableName(), tables);
     verifyTable("sys", SystemTable.INTERNAL_OPTIONS.getTableName(), tables);
-    verifyTable("sys", SystemTable.INTERNAL_OPTIONS_VAL.getTableName(), tables);
   }
 
   @Test
@@ -198,12 +198,12 @@ public class TestMetadataProvider extends BaseTestQuery {
     verifyTable("sys", "boot", tables);
     verifyTable("sys", "drillbits", tables);
     verifyTable("sys", "memory", tables);
-    verifyTable("sys", SystemTable.OPTION.getTableName(), tables);
-    verifyTable("sys", SystemTable.OPTION_VAL.getTableName(), tables);
+    verifyTable("sys", SystemTable.OPTIONS_OLD.getTableName(), tables);
+    verifyTable("sys", SystemTable.OPTIONS.getTableName(), tables);
     verifyTable("sys", "threads", tables);
     verifyTable("sys", "version", tables);
+    verifyTable("sys", SystemTable.INTERNAL_OPTIONS_OLD.getTableName(), tables);
     verifyTable("sys", SystemTable.INTERNAL_OPTIONS.getTableName(), tables);
-    verifyTable("sys", SystemTable.INTERNAL_OPTIONS_VAL.getTableName(), tables);
   }
 
   @Test
@@ -220,11 +220,11 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     verifyTable("sys", "boot", tables);
     verifyTable("sys", "memory", tables);
-    verifyTable("sys", SystemTable.OPTION.getTableName(), tables);
-    verifyTable("sys", SystemTable.OPTION_VAL.getTableName(), tables);
+    verifyTable("sys", SystemTable.OPTIONS_OLD.getTableName(), tables);
+    verifyTable("sys", SystemTable.OPTIONS.getTableName(), tables);
     verifyTable("sys", "version", tables);
+    verifyTable("sys", SystemTable.INTERNAL_OPTIONS_OLD.getTableName(), tables);
     verifyTable("sys", SystemTable.INTERNAL_OPTIONS.getTableName(), tables);
-    verifyTable("sys", SystemTable.INTERNAL_OPTIONS_VAL.getTableName(), tables);
   }
 
   @Test

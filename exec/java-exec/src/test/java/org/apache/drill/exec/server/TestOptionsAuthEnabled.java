@@ -113,11 +113,11 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
     try {
       test(setSysOptionQuery);
       testBuilder()
-          .sqlQuery(String.format("SELECT num_val FROM sys.options WHERE name = '%s' AND optionScope = 'SYSTEM'",
+          .sqlQuery(String.format("SELECT val FROM sys.options WHERE name = '%s' AND optionScope = 'SYSTEM'",
               ExecConstants.SLICE_TARGET))
           .unOrdered()
-          .baselineColumns("num_val")
-          .baselineValues(200L)
+          .baselineColumns("val")
+          .baselineValues(String.valueOf(200L))
           .go();
     } finally {
       test(String.format("ALTER SYSTEM SET `%s` = %d;", ExecConstants.SLICE_TARGET, ExecConstants.SLICE_TARGET_DEFAULT));
