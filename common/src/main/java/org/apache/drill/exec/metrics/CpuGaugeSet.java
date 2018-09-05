@@ -32,13 +32,15 @@ import com.sun.management.OperatingSystemMXBean;
  */
 @SuppressWarnings("restriction")
 public class CpuGaugeSet implements MetricSet {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CpuGaugeSet.class);
 
-  private OperatingSystemMXBean osMXBean;
-  private RuntimeMXBean rtMXBean;
+  private final OperatingSystemMXBean osMXBean;
+  private final RuntimeMXBean rtMXBean;
 
   public CpuGaugeSet() {
-    this.osMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     this.rtMXBean = ManagementFactory.getRuntimeMXBean();
+    //DRILL-6702: Instead of worrying about compiling with IBM JDK, for now, we shall provide no CPU metrics for non-HotSpot JVMs
+    this.osMXBean = getOSMXBeanForCpuMetrics();
   }
 
   @Override
@@ -48,6 +50,15 @@ public class CpuGaugeSet implements MetricSet {
     metric.put("drillbit.load.avg", new DrillbitProcessLoad(osMXBean));
     metric.put("drillbit.uptime", new DrillbitUptime(rtMXBean));
     return metric;
+  }
+
+  private static OperatingSystemMXBean getOSMXBeanForCpuMetrics() {
+    try {
+      return (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    } catch (ClassCastException ex) {
+      logger.warn("{}. Detected non-Supported JVM [{}]. CPU Metrics in the WebUI will not be available!", ex.getMessage(), System.getProperty("java.vm.name"));
+    }
+    return null;
   }
 }
 
@@ -63,7 +74,7 @@ final class OperatingSystemLoad implements Gauge<Double> {
 
   @Override
   public Double getValue() {
-    return osMXBean.getSystemLoadAverage();
+    return (osMXBean != null) ? osMXBean.getSystemLoadAverage() : null;
   }
 
 }
@@ -80,7 +91,7 @@ final class DrillbitProcessLoad implements Gauge<Double> {
 
   @Override
   public Double getValue() {
-    return osMXBean.getProcessCpuLoad();
+    return (osMXBean != null) ? osMXBean.getProcessCpuLoad() : null;
   }
 
 }
