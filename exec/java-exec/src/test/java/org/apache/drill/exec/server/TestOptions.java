@@ -82,10 +82,10 @@ public class TestOptions extends BaseTestQuery {
     // check changed
     test("SELECT status, accessibleScopes, name FROM sys.options WHERE optionScope = 'SESSION';");
     testBuilder()
-      .sqlQuery("SELECT num_val FROM sys.options WHERE name = '%s' AND optionScope = 'SESSION'", SLICE_TARGET)
+      .sqlQuery("SELECT val FROM sys.options WHERE name = '%s' AND optionScope = 'SESSION'", SLICE_TARGET)
       .unOrdered()
-      .baselineColumns("num_val")
-      .baselineValues((long) 10)
+      .baselineColumns("val")
+      .baselineValues(String.valueOf(10L))
       .build()
       .run();
 
@@ -115,10 +115,10 @@ public class TestOptions extends BaseTestQuery {
     test("ALTER system SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE name = '%s' AND optionScope = 'SYSTEM'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT val FROM sys.options WHERE name = '%s' AND optionScope = 'SYSTEM'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
-      .baselineColumns("bool_val")
-      .baselineValues(true)
+      .baselineColumns("val")
+      .baselineValues(String.valueOf(true))
       .build()
       .run();
 
@@ -140,10 +140,10 @@ public class TestOptions extends BaseTestQuery {
     test("SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
-      .baselineColumns("bool_val")
-      .baselineValues(true)
+      .baselineColumns("val")
+      .baselineValues(String.valueOf(true))
       .build()
       .run();
 
@@ -165,7 +165,7 @@ public class TestOptions extends BaseTestQuery {
     test("ALTER SYSTEM SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT bool_val FROM sys.options_old WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
       .baselineColumns("bool_val")
       .baselineValues(true)
@@ -173,12 +173,21 @@ public class TestOptions extends BaseTestQuery {
       .run();
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT bool_val FROM sys.options_old WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
       .baselineColumns("bool_val")
       .baselineValues(true)
       .build()
       .run();
+    // check changed new table
+    testBuilder()
+      .sqlQuery("SELECT val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .unOrdered()
+      .baselineColumns("val")
+      .baselineValues(String.valueOf(true))
+      .build()
+      .run();
+
 
     // reset session option
     test("RESET `%s`;", ENABLE_VERBOSE_ERRORS_KEY);
@@ -191,10 +200,10 @@ public class TestOptions extends BaseTestQuery {
       .run();
     // check unchanged
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT val FROM sys.options WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
-      .baselineColumns("bool_val")
-      .baselineValues(true)
+      .baselineColumns("val")
+      .baselineValues(String.valueOf(true))
       .build()
       .run();
     // reset system option
@@ -208,7 +217,7 @@ public class TestOptions extends BaseTestQuery {
     test("ALTER SYSTEM SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT bool_val FROM sys.options_old WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
       .baselineColumns("bool_val")
       .baselineValues(true)
@@ -216,10 +225,18 @@ public class TestOptions extends BaseTestQuery {
       .run();
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT bool_val FROM sys.options_old WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
       .baselineColumns("bool_val")
       .baselineValues(true)
+      .build()
+      .run();
+    // check changed for new table
+    testBuilder()
+      .sqlQuery("SELECT val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .unOrdered()
+      .baselineColumns("val")
+      .baselineValues(String.valueOf(true))
       .build()
       .run();
 
@@ -234,10 +251,10 @@ public class TestOptions extends BaseTestQuery {
       .run();
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT val FROM sys.options WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
-      .baselineColumns("bool_val")
-      .baselineValues(true)
+      .baselineColumns("val")
+      .baselineValues(String.valueOf(true))
       .build()
       .run();
   }
@@ -249,7 +266,7 @@ public class TestOptions extends BaseTestQuery {
     test("ALTER SYSTEM SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT bool_val FROM sys.options_old WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
       .baselineColumns("bool_val")
       .baselineValues(true)
@@ -257,10 +274,18 @@ public class TestOptions extends BaseTestQuery {
       .run();
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT bool_val FROM sys.options_old WHERE optionScope = 'SYSTEM' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
       .baselineColumns("bool_val")
       .baselineValues(true)
+      .build()
+      .run();
+    // check changed in new table
+    testBuilder()
+      .sqlQuery("SELECT val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .unOrdered()
+      .baselineColumns("val")
+      .baselineValues(String.valueOf(true))
       .build()
       .run();
 
@@ -268,7 +293,7 @@ public class TestOptions extends BaseTestQuery {
     test("ALTER system RESET `%s`;", ENABLE_VERBOSE_ERRORS_KEY);
     // check reverted
     testBuilder()
-      .sqlQuery("SELECT status FROM sys.options WHERE name = '%s' AND optionScope = 'BOOT'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT status FROM sys.options_old WHERE optionScope = 'BOOT' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
       .baselineColumns("status")
       .baselineValues("DEFAULT")
@@ -276,10 +301,10 @@ public class TestOptions extends BaseTestQuery {
       .run();
     // check changed
     testBuilder()
-      .sqlQuery("SELECT bool_val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
+      .sqlQuery("SELECT val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
       .unOrdered()
-      .baselineColumns("bool_val")
-      .baselineValues(true)
+      .baselineColumns("val")
+      .baselineValues(String.valueOf(true))
       .build()
       .run();
   }

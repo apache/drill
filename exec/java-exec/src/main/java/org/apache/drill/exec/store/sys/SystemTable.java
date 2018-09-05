@@ -31,28 +31,30 @@ import org.apache.drill.exec.store.sys.OptionIterator.OptionValueWrapper;
  * </p>
  */
 public enum SystemTable {
-  OPTION("options", false, OptionValueWrapper.class) {
+  OPTIONS_OLD("options_old", false, OptionValueWrapper.class) {
+    @Deprecated
     @Override
     public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new OptionIterator(context, OptionIterator.Mode.SYS_SESS_PUBLIC);
     }
   },
 
-  OPTION_VAL("options_val", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
+  OPTIONS("options", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
     @Override
     public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new ExtendedOptionIterator(context, false);
     }
   },
 
-  INTERNAL_OPTIONS("internal_options", false, OptionValueWrapper.class) {
+  INTERNAL_OPTIONS_OLD("internal_options_old", false, OptionValueWrapper.class) {
+    @Deprecated
     @Override
     public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new OptionIterator(context, OptionIterator.Mode.SYS_SESS_INTERNAL);
     }
   },
 
-  INTERNAL_OPTIONS_VAL("internal_options_val", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
+  INTERNAL_OPTIONS("internal_options", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
     @Override
     public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new ExtendedOptionIterator(context, true);

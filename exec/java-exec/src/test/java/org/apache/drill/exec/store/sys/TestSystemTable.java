@@ -37,16 +37,16 @@ public class TestSystemTable extends PlanTestBase {
   public void alterSessionOption() throws Exception {
 
     newTest() //
-      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by accessibleScopes desc", ExecConstants.JSON_ALL_TEXT_MODE)
+      .sqlQuery("select val as bool from sys.options where name = '%s' order by accessibleScopes desc", ExecConstants.JSON_ALL_TEXT_MODE)
       .baselineColumns("bool")
       .ordered()
-      .baselineValues(false)
+      .baselineValues(String.valueOf(false))
       .go();
 
     test("alter session set `%s` = true", ExecConstants.JSON_ALL_TEXT_MODE);
 
-    newTest() //
-      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by accessibleScopes desc ", ExecConstants.JSON_ALL_TEXT_MODE)
+    newTest() //Using old table to detect both optionScopes: BOOT & SESSION
+      .sqlQuery("select bool_val as bool from sys.options_old where name = '%s' order by accessibleScopes desc ", ExecConstants.JSON_ALL_TEXT_MODE)
       .baselineColumns("bool")
       .ordered()
       .baselineValues(false)

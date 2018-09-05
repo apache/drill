@@ -94,13 +94,13 @@ public class TestPStoreProviders extends TestWithZookeeper {
          ClientFixture client = cluster.clientFixture()) {
       String parquetPushdown = client.queryBuilder().
         sql("SELECT val FROM sys.%s where name='%s'",
-          SystemTable.OPTION_VAL.getTableName(),
+          SystemTable.OPTIONS.getTableName(),
           PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY).
         singletonString();
 
       String plannerWidth = client.queryBuilder().
         sql("SELECT val FROM sys.%s where name='%s'",
-          SystemTable.OPTION_VAL.getTableName(),
+          SystemTable.OPTIONS.getTableName(),
           ExecConstants.MAX_WIDTH_GLOBAL_KEY).
         singletonString();
 
