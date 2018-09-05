@@ -161,7 +161,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     this.incoming = incoming;
     DrillConfig config = context.getConfig();
     Configuration conf = new Configuration();
-    conf.set("fs.default.name", config.getString(ExecConstants.EXTERNAL_SORT_SPILL_FILESYSTEM));
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.getString(ExecConstants.EXTERNAL_SORT_SPILL_FILESYSTEM));
     try {
       this.fs = FileSystem.get(conf);
     } catch (IOException e) {
