@@ -1,39 +1,46 @@
 ---
 title: "Sort-Based and Hash-Based Memory-Constrained Operators"
-date: 2018-06-20 01:48:01 UTC
+date: 2018-09-06 01:31:07 UTC
 parent: "Query Plans and Tuning"
---- 
+---  
 
-Drill uses operators to sort, join, and aggregate data when executing queries. Drill uses the Sort operator to sort data. Drill can use the Hash Aggregate or Hash Join operators to aggregate data, or Drill can sort the data and then use the Merge Join or Streaming Aggregate operators to aggregate the data. 
+Drill supports the following memory-intensive operators, which can temporarily spill data to disk if they run out of memory:  
 
-The Hash operators typically perform better, however they are more memory intensive than the Merge Join and Streaming Aggregate operators. The Sort operator may use as much or even more memory than the Hash operators. If you want to see the difference in memory consumption between the operators, you can run a query and view the query profile in the Drill Web Console. Optionally, you can disable the Hash operators to force Drill to use the Merge Join and Streaming Aggregate operators. 
+- External Sort
+- Hash-Join
+- Hash-Aggregate
 
-When a query requires sorting, joining, and aggregation, Drill equally divides the memory available among each instance of these memory intensive operators in a query. The number of instances is equivalent to the number of these operators in the query plan, each multiplied by its degree of parallelism. The degree of parallelism is the number of minor fragments required to perform the work for each instance of an operator. When an instance of an operator must process more data than it can hold, the operator temporarily spills some of the data to a directory on disk to complete its work.  
+Drill only uses the External Sort operator to sort data. Drill uses the Hash-Aggregate operator to aggregate data. Alternatively, Drill can sort the data and then use the (lightweight) Streaming-Aggregate operator to aggregate data.
+Drill uses the Hash-Join operator to join data. Alternatively, Drill can use the Nested-Loop-Join or sort the data and then use the (lightweight) Merge-Join. Drill typically uses Hash operators for joining and aggregation, as they perform better than the Sort operator (Hash - O(N) vs. Sort - O(N * log(N))). However, if the Hash operators are disabled, or the data is already sorted, Drill uses the alternative methods previously described.
+
+The memory configuration in Drill is specified as the memory limit per-query, per-node. The allocated memory is equally divided among all instances of the spillable operators (per query on each node). The number of instances is the number of spillable operators in the query plan multiplied by the maximal degree of parallelism. The maximal degree of parallelism is the number of minor fragments required to perform the work for each instance of a spillable operator. When an instance of a spillable operator must process more data than it can hold, the operator temporarily spills some of the data to a directory on disk to complete its work.
+
+To see the difference in memory consumption between the operators, run a query and then view the query profile in the Drill Web UI. Optionally, you can disable the Hash operators, which forces Drill to use the Merge-Join and Streaming-Aggregate operators.   
 
 
 ##Spill to Disk  
 
-Spilling to disk prevents queries that use memory intensive operations from failing with out-of-memory errors. The Spill to Disk feature enables the Sort, Hash Aggregate, and Hash Join operators to automatically write excess data (as files) to a temporary directory on disk when the memory requirements for the operators exceed the set memory limit. Queries run uninterrupted while the operators perform the spill operations in the background.
+Spilling to disk prevents queries that use memory intensive operations from failing with out-of-memory errors. The Spill to Disk feature enables the spillable operators to automatically spill (write) excess data (as files) to a temporary directory on disk when the memory requirements for the operators exceed the set memory limit. Queries run uninterrupted while the operators perform the spill operations in the background.
 
-When the Sort, Hash Aggregate, and Hash Join operators finish processing the data in memory, they read the spilled data back from disk and then finish processing the data. The operators clean up their data (files) from the temporary spill location after they finish processing the data. 
+When the spillable operators finish processing data in memory, they read the spilled data back from disk and then finish processing the data. The operators clean up their data (files) from the temporary spill location after they finish processing the data. 
 
-Ideally, you want to allocate enough memory for Drill to perform all operations in memory. When data spills to disk, you will not see any difference in terms of how queries run, however spilling to disk can impact performance due to the additional I/O required to write data to disk and read the data back. See Memory Allocation (page 4) for more information. 
+Ideally, you want to allocate enough memory for Drill to perform all operations in memory. When data spills to disk, you will not see any difference in terms of how queries run; however, spilling to disk can impact performance due to the additional I/O required to write data to disk and read the data back. For more information, see [Memory Allocation]({{site.baseurl}}/docs/sort-based-and-hash-based-memory-constrained-operators/#memory-allocation). 
 
 **Note:** Drill 1.14 and later supports spilling to disk for the Hash Join, Hash Aggregate, and Sort operators. Drill 1.11, 1.12, and 1.13 supports spilling to disk for the Hash Aggregate and Sort operators. Releases of Drill prior to 1.11 only support spilling to disk for the Sort operator.  
 
 **Spill Locations** 
 
-The Sort, Hash Aggregate, and Hash Join operators write data to a temporary work area on disk when they cannot process all of the data in memory. The default location of the temporary work area is /tmp/drill/spill on the local file system. 
+Spillable operators write data to a temporary work area on disk when they cannot process all of the data in memory. The default location of the temporary work area is `/tmp/drill/spill` on the local file system. 
 
-The /tmp/drill/spill directory should suffice for small workloads or examples, however it is highly recommended that you redirect the default spill location to a location with enough disk space to support spilling for large workloads.
+The `/tmp/drill/spill` directory should suffice for small workloads or examples, however it is highly recommended that you redirect the default spill location to a location with enough disk space to support spilling for large workloads.
 
-**Note:** Spilled data may require more space than the table referenced in the query that is spilling the data. For example, if a table is 100 GB per node, the spill directory should have the capacity to hold more than 100 GB.
+**Note:** Spilled data may require more space than the table referenced in the query that is spilling the data. For example, when the underlying table is compressed (Parquet), or when the operator received data joined from multiple tables.
 
-When you configure the spill location, you can specify a single directory or a list of directories into which the Sort, Hash Aggregate, and Hash Join operators spill data. For more information, see the Spill to Disk Configuration Options section below.  
+When you configure the spill location, you can specify a single directory or a list of directories into which the spillable operators spill data.  
 
-**Spill to Disk Configuration Options**  
+**Configuring Spill to Disk**  
 
-The drill-override.conf file, located in the /conf directory, contains options that set the spill locations for the Hash and Sort operators. An administrator can change the file system and directories into which the operators spill data. Refer to the drill-override-example.conf file for examples. 
+The `drill-override.conf` file, located in the `/conf` directory, contains options that set the spill locations for the Hash and Sort operators. An administrator can change the file system and directories into which the operators spill data. Refer to the `drill-override-example.conf` file included in the `/conf` directory for examples. 
 
 The following list describes the spill to disk configuration options:  
 
@@ -51,28 +58,28 @@ Introduced in Drill 1.11. The list of directories into which the Sort, Hash Aggr
 
 ##Memory Allocation  
 
-Drill evenly splits the available memory among all instances of the Sort, Hash Aggregate, and Hash Join operators. When a query is parallelized, the number of operators is multiplied, which reduces the amount of memory given to each instance of the operators during a query.  
+Drill evenly splits the available memory among all instances of the spillable operators. When a query is parallelized, the number of operators is multiplied, which reduces the amount of memory given to each instance of the operators during a query.  
 
 **Memory Allocation Configuration Options**  
 
 The `planner.memory.max_query_memory_per_node` and `planner.memory.percent_per_query` options set the amount of memory that Drill can allocate to a query on a node. Both options are enabled by default. Of these two options, Drill picks the setting that provides the most memory.  
 
-- **planner.memory.max_query_memory_per_node**  
-The `planner.memory.max_query_memory_per_node` option, set at 2 GB by default, is the minimum amount of memory available to Drill per query on a node. The default of 2 GB typically allows between two and three concurrent queries to run when the JVM is configured to use 8 GB of direct memory (default). When the memory requirement for Drill increases, the default of 2GB is constraining. You must increase the amount of memory for queries to complete, unless the setting for the planner.memory.percent_per_query option allows for Drill to use more memory.
-- **planner.memory.percent_per_query**  
-Alternatively, the `planner.memory.percent_per_query` option sets the memory as a percentage of the total direct memory. For example, if the allocation is set to 10%, and the total direct memory is 128 GB, each query gets approximately 13 GB.  
+- **planner.memory.max\_query\_memory\_per_node**  
+The `planner.memory.max_query_memory_per_node` option is the minimum amount of memory available to Drill per query on a node. The default of 2 GB typically allows between two and three concurrent queries to run when the JVM is configured to use 8 GB of direct memory (default). When the memory requirement for Drill increases, the default of 2 GB is constraining. You must increase the amount of memory for queries to complete, unless the setting for the `planner.memory.percent_per_query` option allows for Drill to use more memory.  
 
-The percentage is calculated using the following formula:  
+- **planner.memory.percent\_per_query**  
+Alternatively, the `planner.memory.percent_per_query` option sets the memory as a percentage of the total direct memory. The default is 5%. This value is only used when throttling is disabled. Setting the value to 0 disables the option. You can increase or decrease the value, however you should set the percentage well below the JVM direct memory to account for the cases where Drill does not manage memory, such as for the less memory intensive operators. 
 
-       (1 - non-managed allowance)/concurrency
+       - The percentage is calculated using the following formula:    
 
-The non-managed allowance is an assumed amount of system memory that non-managed operators will use. Non-managed operators do not spill to disk. The default non-managed allowance assumes 50% of the total system memory. And, the concurrency is the number of concurrent queries that may run. The default assumption is 10.
+              (1 - non-managed allowance)/concurrency  
 
-Based on the default assumptions, the default value of 5% is calculated as follows:  
+       - The non-managed allowance is an assumed amount of system memory that non-managed operators will use. Non-managed operators do not spill to disk. The conservative assumption for the non-managed allowance is 50% of the total system memory. Concurrency is the number of concurrent queries that may run. The default assumption is 10 concurrent queries.  
 
-       (1 - .50)/10 = 0.05  
+       - Based on the default assumptions, the default value of 5% is calculated, as shown:  
 
-This value is only used when throttling is disabled. Setting the value to 0 disables the option. You can increase or decrease the value, however you should set the percentage well below the JVM direct memory to account for the cases where Drill does not manage memory, such as for the less memory intensive operators.  
+            (1 - .50)/10 = 0.05  
+
 
 **Increasing the Available Memory**  
 
@@ -93,9 +100,10 @@ Use the ALTER SYSTEM|SESSION SET commands with the following options to disable 
 The following options control the hash-based operators:  
 
 - **planner.enable_hashagg**  
-Enables or disables hash aggregation; otherwise, Drill does a sort-based aggregation. This option is enabled by default. The default, and recommended, setting is true. Prior to Drill 1.11, the Hash Aggregate operator used an uncontrolled amount of memory (up to 10 GB), after which the operator ran out of memory. As of Drill 1.11, the Hash Aggregate operator can write to disk.
+Enables or disables hash aggregation; otherwise, Drill does a sort-based aggregation. This option is enabled by default. The default, and recommended, setting is true. Prior to Drill 1.11, the Hash Aggregate operator used an uncontrolled amount of memory (up to 10 GB), after which the operator ran out of memory. As of Drill 1.11, the Hash Aggregate operator can spill to disk.  
+
 - **planner.enable_hashjoin**  
-Enables or disables hash joins. This option is enabled by default. Drill assumes that a query will have adequate memory to complete and tries to use the fastest operations possible Drill 1.11, the Hash Join operator used an uncontrolled amount of memory (up to 10 GB), after which the operator ran out of memory. As of Drill 1.13, this operator can write to disk. This option is enabled by default.
+Enables or disables hash joins. This option is enabled by default. Drill assumes that a query will have adequate memory to complete and tries to use the fastest operations possible. Prior to Drill 1.14, the Hash-Join operator used an uncontrolled amount of memory (up to 10 GB), after which the operator ran out of memory. As of Drill 1.14, this operator can spill to disk. This option is enabled by default.
 
 
 
