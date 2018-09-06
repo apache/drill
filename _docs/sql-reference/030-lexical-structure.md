@@ -1,6 +1,6 @@
 ---
 title: "Lexical Structure"
-date: 2018-04-19 01:45:26 UTC
+date: 2018-09-06 17:58:43 UTC
 parent: "SQL Reference"
 ---
 
@@ -26,35 +26,59 @@ A SQL statement used in Drill can include one or more of the following parts:
 
         /* This is a comment. */
 
-The parts of a SQL statement differ with regard to upper/lowercase sensitivity.
 
-## Case-sensitivity
+## Case-Sensitivity
 
-SQL function and command names are case-insensitive. Storage plugin and workspace names are case-sensitive. Column and table names are case-insensitive unless enclosed in double quotation marks. The double-quotation mark character can be used as an escape character for the double quotation mark.
+Drill is case-insensitive; however, data sources may be case-sensitive. The data source determines the case-sensitivity of table and column names.  
 
-Although column names are case-insensitive in Drill, the names might be otherwise in the storage format:
+### Data Sources  
 
-* JSON: insensitive
-* Hive: insensitive
-* Parquet: insensitive
-* MapR-DB: case-sensitive
-* HBase: case-sensitive
+When writing queries that reference tables or columns in case-sensitive data sources, you must reference the table or column exactly as it is stored in the data source. For example, if you query a table named “customers” in HBase, you cannot write the table name as “CUSTOMERS” in a query against the table because the data source distinguishes between upper and lower case.  
 
-Keywords are case-insensitive. For example, the keywords SELECT and select are equivalent. This document shows keywords in uppercase.
+Table values referenced in a query are case-sensitive, for example:  
 
-The sys.options table name and values are case-sensitive. The following query works:
+       SELECT * FROM t WHERE col1='a';  
 
-    SELECT * FROM sys.options where NAME like '%parquet%';
+If values in col1 of table t are stored in uppercase, this query would not return any results because the query requested lowercase 'a'.
+  
 
-When using the ALTER command, specify the name in lower case. For example:
+The following lists provide the case sensitivity of some data sources that Drill supports.  
 
-    ALTER SESSION  set `store.parquet.compression`='snappy';
+**Case-Insensitive**  
 
-## Storage Plugin and Workspace References
+- JSON  
+- Hive  
+- Parquet    
 
-Storage plugin and workspace names are case-sensitive. The case of the name used in the query and the name in the storage plugin definition need to match. For example, defining a storage plugin named `dfs` and then referring to the plugin as `DFS` fails, but this query succeeds:
+**Case-Sensitive**  
 
-    SELECT * FROM dfs.`/Users/drilluser/ticket_sales.json`;
+- MapR Database (MapR-DB)
+- HBase  
+- Table values, irrelevant of data source  
+
+### Drill  
+
+Case-insensitivity in Drill applies to:  
+
+- SQL functions  
+- SQL command names  
+- Storage plugin names (as of Drill 1.15)  
+- Workspace (schema) names (as of Drill 1.15)  
+- Table names in the Drill system storage plugins, which includes `information_schema` tables and `sys` tables (as of Drill 1.15)  
+- Keywords, for example SELECT and select are equivalent, as shown in the following queries:  
+
+             SELECT * FROM dfs.`/Users/drilluser/ticket_sales.json`;
+             select * from DFS.`/Users/drilluser/ticket_sales.json`;  
+
+
+### Storage Plugin and Workspace References
+
+The case of the name used in a query and the name in the storage plugin definition do not have to match. For example, defining a storage plugin named `dfs` and then referring to the plugin as `DFS` or `dfs` in a query are both acceptable to Drill. For example, Drill can process both of the following queries:  
+
+       SELECT * FROM dfs.`/Users/drilluser/ticket_sales.json`;
+       SELECT * FROM DFS.`/Users/drilluser/ticket_sales.json`;  
+
+**Note:** Drill stores storage plugin and workspace names in lowercase, by default. If you upgrade to Drill 1.15, you can query storage plugin or schema names previously stored in uppercase using uppercase or lowercase text. If duplicate names exist, for example you have two storage plugins named DFS, one in uppercase and one in lowercase, Drill logs a warning and keeps only one storage plugin. Drill keeps the first storage plugin defined in the workspace configuration.   
 
 ## Literal Values
 
