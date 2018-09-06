@@ -395,7 +395,7 @@ public class WorkManager implements AutoCloseable {
               final String originalName = currentThread.getName();
               currentThread.setName(queryIdStr + ":foreman:registerRuntimeFilter");
               try {
-                foreman.getRuntimeFilterManager().registerRuntimeFilter(runtimeFilter);
+                foreman.getRuntimeFilterRouter().registerRuntimeFilter(runtimeFilter);
               } catch (Exception e) {
                 logger.warn("Exception while registering the RuntimeFilter", e);
               } finally {
@@ -413,7 +413,7 @@ public class WorkManager implements AutoCloseable {
           .setQueryId(queryId).build();
         FragmentExecutor fragmentExecutor = runningFragments.get(fragmentHandle);
         if (fragmentExecutor != null) {
-          fragmentExecutor.getContext().setRuntimeFilter(runtimeFilter);
+          fragmentExecutor.getContext().addRuntimeFilter(runtimeFilter);
         }
       }
     }

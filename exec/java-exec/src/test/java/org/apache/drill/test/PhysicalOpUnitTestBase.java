@@ -38,6 +38,7 @@ import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
+import org.apache.drill.exec.work.filter.RuntimeFilterSink;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -203,11 +204,12 @@ public class PhysicalOpUnitTestBase extends ExecTest {
    * </p>
    */
   protected static class MockExecutorFragmentContext extends OperatorFixture.MockFragmentContext implements ExecutorFragmentContext {
-    private RuntimeFilterWritable runtimeFilterWritable;
+    private RuntimeFilterSink runtimeFilterSink;
 
     public MockExecutorFragmentContext(final FragmentContext fragmentContext) {
       super(fragmentContext.getConfig(), fragmentContext.getOptions(), fragmentContext.getAllocator(),
         fragmentContext.getScanExecutor(), fragmentContext.getScanDecodeExecutor());
+      this.runtimeFilterSink = new RuntimeFilterSink(fragmentContext.getAllocator());
     }
 
     @Override
@@ -304,13 +306,13 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     }
 
     @Override
-    public void setRuntimeFilter(RuntimeFilterWritable runtimeFilter) {
-      this.runtimeFilterWritable = runtimeFilter;
+    public void addRuntimeFilter(RuntimeFilterWritable runtimeFilter) {
+      this.runtimeFilterSink.aggregate(runtimeFilter);
     }
 
     @Override
-    public RuntimeFilterWritable getRuntimeFilter() {
-      return runtimeFilterWritable;
+    public RuntimeFilterSink getRuntimeFilterSink() {
+      return runtimeFilterSink;
     }
   }
 

@@ -2518,6 +2518,24 @@ public final class BitData {
      */
     com.google.protobuf.ByteString
         getProbeFieldsBytes(int index);
+
+    // optional int32 hj_op_id = 7;
+    /**
+     * <code>optional int32 hj_op_id = 7;</code>
+     *
+     * <pre>
+     * the operator id of the HashJoin which generates this RuntimeFilter
+     * </pre>
+     */
+    boolean hasHjOpId();
+    /**
+     * <code>optional int32 hj_op_id = 7;</code>
+     *
+     * <pre>
+     * the operator id of the HashJoin which generates this RuntimeFilter
+     * </pre>
+     */
+    int getHjOpId();
   }
   /**
    * Protobuf type {@code exec.bit.data.RuntimeFilterBDef}
@@ -2625,6 +2643,11 @@ public final class BitData {
                 mutable_bitField0_ |= 0x00000020;
               }
               probeFields_.add(input.readBytes());
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000010;
+              hjOpId_ = input.readInt32();
               break;
             }
           }
@@ -2820,6 +2843,30 @@ public final class BitData {
       return probeFields_.getByteString(index);
     }
 
+    // optional int32 hj_op_id = 7;
+    public static final int HJ_OP_ID_FIELD_NUMBER = 7;
+    private int hjOpId_;
+    /**
+     * <code>optional int32 hj_op_id = 7;</code>
+     *
+     * <pre>
+     * the operator id of the HashJoin which generates this RuntimeFilter
+     * </pre>
+     */
+    public boolean hasHjOpId() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional int32 hj_op_id = 7;</code>
+     *
+     * <pre>
+     * the operator id of the HashJoin which generates this RuntimeFilter
+     * </pre>
+     */
+    public int getHjOpId() {
+      return hjOpId_;
+    }
+
     private void initFields() {
       queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
       majorFragmentId_ = 0;
@@ -2827,6 +2874,7 @@ public final class BitData {
       toForeman_ = false;
       bloomFilterSizeInBytes_ = java.util.Collections.emptyList();
       probeFields_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      hjOpId_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2857,6 +2905,9 @@ public final class BitData {
       }
       for (int i = 0; i < probeFields_.size(); i++) {
         output.writeBytes(6, probeFields_.getByteString(i));
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt32(7, hjOpId_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -2900,6 +2951,10 @@ public final class BitData {
         }
         size += dataSize;
         size += 1 * getProbeFieldsList().size();
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(7, hjOpId_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3034,6 +3089,8 @@ public final class BitData {
         bitField0_ = (bitField0_ & ~0x00000010);
         probeFields_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000020);
+        hjOpId_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -3093,6 +3150,10 @@ public final class BitData {
           bitField0_ = (bitField0_ & ~0x00000020);
         }
         result.probeFields_ = probeFields_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.hjOpId_ = hjOpId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3140,6 +3201,9 @@ public final class BitData {
             probeFields_.addAll(other.probeFields_);
           }
           onChanged();
+        }
+        if (other.hasHjOpId()) {
+          setHjOpId(other.getHjOpId());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -3595,6 +3659,55 @@ public final class BitData {
         return this;
       }
 
+      // optional int32 hj_op_id = 7;
+      private int hjOpId_ ;
+      /**
+       * <code>optional int32 hj_op_id = 7;</code>
+       *
+       * <pre>
+       * the operator id of the HashJoin which generates this RuntimeFilter
+       * </pre>
+       */
+      public boolean hasHjOpId() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional int32 hj_op_id = 7;</code>
+       *
+       * <pre>
+       * the operator id of the HashJoin which generates this RuntimeFilter
+       * </pre>
+       */
+      public int getHjOpId() {
+        return hjOpId_;
+      }
+      /**
+       * <code>optional int32 hj_op_id = 7;</code>
+       *
+       * <pre>
+       * the operator id of the HashJoin which generates this RuntimeFilter
+       * </pre>
+       */
+      public Builder setHjOpId(int value) {
+        bitField0_ |= 0x00000040;
+        hjOpId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 hj_op_id = 7;</code>
+       *
+       * <pre>
+       * the operator id of the HashJoin which generates this RuntimeFilter
+       * </pre>
+       */
+      public Builder clearHjOpId() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        hjOpId_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:exec.bit.data.RuntimeFilterBDef)
     }
 
@@ -3648,16 +3761,16 @@ public final class BitData {
       " \003(\005\022!\n\031sending_major_fragment_id\030\004 \001(\005\022" +
       "!\n\031sending_minor_fragment_id\030\005 \001(\005\022(\n\003de" +
       "f\030\006 \001(\0132\033.exec.shared.RecordBatchDef\022\023\n\013" +
-      "isLastBatch\030\007 \001(\010\"\277\001\n\021RuntimeFilterBDef\022" +
+      "isLastBatch\030\007 \001(\010\"\321\001\n\021RuntimeFilterBDef\022" +
       "&\n\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022" +
       "\031\n\021major_fragment_id\030\002 \001(\005\022\031\n\021minor_frag" +
       "ment_id\030\003 \001(\005\022\022\n\nto_foreman\030\004 \001(\010\022\"\n\032blo" +
       "om_filter_size_in_bytes\030\005 \003(\005\022\024\n\014probe_f" +
-      "ields\030\006 \003(\t*n\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n" +
-      "\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BATCH\020",
-      "\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n\022REQ_RUNTIME_FILTE" +
-      "R\020\005B(\n\033org.apache.drill.exec.protoB\007BitD" +
-      "ataH\001"
+      "ields\030\006 \003(\t\022\020\n\010hj_op_id\030\007 \001(\005*n\n\007RpcType" +
+      "\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n",
+      "\020REQ_RECORD_BATCH\020\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n" +
+      "\022REQ_RUNTIME_FILTER\020\005B(\n\033org.apache.dril" +
+      "l.exec.protoB\007BitDataH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3687,7 +3800,7 @@ public final class BitData {
           internal_static_exec_bit_data_RuntimeFilterBDef_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_data_RuntimeFilterBDef_descriptor,
-              new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", "ToForeman", "BloomFilterSizeInBytes", "ProbeFields", });
+              new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", "ToForeman", "BloomFilterSizeInBytes", "ProbeFields", "HjOpId", });
           return null;
         }
       };

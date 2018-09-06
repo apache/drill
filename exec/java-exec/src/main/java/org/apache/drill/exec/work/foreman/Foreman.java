@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import org.apache.drill.exec.work.filter.RuntimeFilterRouter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -61,7 +62,6 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
-import org.apache.drill.exec.work.filter.RuntimeFilterManager;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
@@ -122,7 +122,7 @@ public class Foreman implements Runnable {
 
   private String queryText;
 
-  private RuntimeFilterManager runtimeFilterManager;
+  private RuntimeFilterRouter runtimeFilterRouter;
   private boolean enableRuntimeFilter;
 
   /**
@@ -410,8 +410,8 @@ public class Foreman implements Runnable {
     queryRM.visitAbstractPlan(plan);
     final QueryWorkUnit work = getQueryWorkUnit(plan);
     if (enableRuntimeFilter) {
-      runtimeFilterManager = new RuntimeFilterManager(work, drillbitContext);
-      runtimeFilterManager.collectRuntimeFilterParallelAndControlInfo();
+      runtimeFilterRouter = new RuntimeFilterRouter(work, drillbitContext);
+      runtimeFilterRouter.collectRuntimeFilterParallelAndControlInfo();
     }
     if (textPlan != null) {
       queryManager.setPlanText(textPlan.value);
@@ -734,8 +734,8 @@ public class Foreman implements Runnable {
 
       logger.debug(queryIdString + ": cleaning up.");
       injector.injectPause(queryContext.getExecutionControls(), "foreman-cleanup", logger);
-      if (enableRuntimeFilter && runtimeFilterManager != null) {
-        runtimeFilterManager.waitForComplete();
+      if (enableRuntimeFilter && runtimeFilterRouter != null) {
+        runtimeFilterRouter.waitForComplete();
       }
       // remove the channel disconnected listener (doesn't throw)
       closeFuture.removeListener(closeListener);
@@ -866,8 +866,8 @@ public class Foreman implements Runnable {
   }
 
 
-  public RuntimeFilterManager getRuntimeFilterManager() {
-    return runtimeFilterManager;
+  public RuntimeFilterRouter getRuntimeFilterRouter() {
+    return runtimeFilterRouter;
   }
 
 }
