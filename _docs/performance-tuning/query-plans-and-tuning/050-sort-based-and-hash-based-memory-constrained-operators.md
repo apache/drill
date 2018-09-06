@@ -1,6 +1,6 @@
 ---
 title: "Sort-Based and Hash-Based Memory-Constrained Operators"
-date: 2018-09-06 01:31:07 UTC
+date: 2018-09-06 01:45:58 UTC
 parent: "Query Plans and Tuning"
 ---  
 
@@ -11,12 +11,9 @@ Drill supports the following memory-intensive operators, which can temporarily s
 - Hash-Aggregate
 
 Drill only uses the External Sort operator to sort data. Drill uses the Hash-Aggregate operator to aggregate data. Alternatively, Drill can sort the data and then use the (lightweight) Streaming-Aggregate operator to aggregate data.
-Drill uses the Hash-Join operator to join data. Alternatively, Drill can use the Nested-Loop-Join or sort the data and then use the (lightweight) Merge-Join. Drill typically uses Hash operators for joining and aggregation, as they perform better than the Sort operator (Hash - O(N) vs. Sort - O(N * log(N))). However, if the Hash operators are disabled, or the data is already sorted, Drill uses the alternative methods previously described.
+Drill uses the Hash-Join operator to join data. Alternatively, Drill can use the Nested-Loop-Join or sort the data and then use the (lightweight) Merge-Join. Drill typically uses Hash operators for joining and aggregation, as they perform better than the Sort operator (Hash - O(N) vs. Sort - O(N * log(N))). However, if you disable the Hash operators, or the data is already sorted, Drill uses the alternative methods previously described.
 
-The memory configuration in Drill is specified as the memory limit per-query, per-node. The allocated memory is equally divided among all instances of the spillable operators (per query on each node). The number of instances is the number of spillable operators in the query plan multiplied by the maximal degree of parallelism. The maximal degree of parallelism is the number of minor fragments required to perform the work for each instance of a spillable operator. When an instance of a spillable operator must process more data than it can hold, the operator temporarily spills some of the data to a directory on disk to complete its work.
-
-To see the difference in memory consumption between the operators, run a query and then view the query profile in the Drill Web UI. Optionally, you can disable the Hash operators, which forces Drill to use the Merge-Join and Streaming-Aggregate operators.   
-
+The memory configuration in Drill is specified as the memory limit per-query, per-node. The allocated memory is equally divided among all instances of the spillable operators (per query on each node). The number of instances is the number of spillable operators in the query plan multiplied by the maximal degree of parallelism. The maximal degree of parallelism is the number of minor fragments required to perform the work for each instance of a spillable operator. When an instance of a spillable operator must process more data than it can hold, the operator temporarily spills some of the data to a directory on disk to complete its work.  
 
 ##Spill to Disk  
 
@@ -32,7 +29,7 @@ Ideally, you want to allocate enough memory for Drill to perform all operations 
 
 Spillable operators write data to a temporary work area on disk when they cannot process all of the data in memory. The default location of the temporary work area is `/tmp/drill/spill` on the local file system. 
 
-The `/tmp/drill/spill` directory should suffice for small workloads or examples, however it is highly recommended that you redirect the default spill location to a location with enough disk space to support spilling for large workloads.
+The `/tmp/drill/spill` directory should suffice for small workloads or examples; however, you should redirect the default spill location to a location with enough disk space to support spilling for large workloads.
 
 **Note:** Spilled data may require more space than the table referenced in the query that is spilling the data. For example, when the underlying table is compressed (Parquet), or when the operator received data joined from multiple tables.
 
@@ -40,14 +37,15 @@ When you configure the spill location, you can specify a single directory or a l
 
 **Configuring Spill to Disk**  
 
-The `drill-override.conf` file, located in the `/conf` directory, contains options that set the spill locations for the Hash and Sort operators. An administrator can change the file system and directories into which the operators spill data. Refer to the `drill-override-example.conf` file included in the `/conf` directory for examples. 
+The `drill-override.conf` file, located in the `/conf` directory, contains options that set the spill locations for the spillable operators. An administrator can change the file system and directories into which the operators spill data. Refer to the `drill-override-example.conf` file included in the `/conf` directory for examples. 
 
 The following list describes the spill to disk configuration options:  
 
 - **drill.exec.spill.fs**  
-Introduced in Drill 1.11. The default file system on the local machine into which the Sort, Hash Aggregate, and Hash Join operators spill data. You can configure this option so that data spills into a distributed file system, such as hdfs. For example, "hdfs:///". The default setting is "file:///".
+Introduced in Drill 1.11. The default file system on the local machine into which the spillable operators spill data. You can configure this option so that data spills into a distributed file system, such as hdfs. For example, "hdfs:///". The default setting is "file:///".  
+
 - **drill.exec.spill.directories**  
-Introduced in Drill 1.11. The list of directories into which the Sort, Hash Aggregate, and Hash Join operators spill data. The list must be an array with directories separated by a comma, for example ["/fs1/drill/spill" , "/fs2/drill/spill" , "/fs3/drill/spill"]. The default setting is ["/tmp/drill/spill"].  
+Introduced in Drill 1.11. The list of directories into which the spillable operators spill data. The list must be an array with directories separated by a comma, for example ["/fs1/drill/spill" , "/fs2/drill/spill" , "/fs3/drill/spill"]. The default setting is ["/tmp/drill/spill"].  
 
 **Note:** The following options were available prior to Drill 1.11, but have since been deprecated and replaced with the options described above:  
 
@@ -58,7 +56,7 @@ Introduced in Drill 1.11. The list of directories into which the Sort, Hash Aggr
 
 ##Memory Allocation  
 
-Drill evenly splits the available memory among all instances of the spillable operators. When a query is parallelized, the number of operators is multiplied, which reduces the amount of memory given to each instance of the operators during a query.  
+Drill evenly splits the available memory among all instances of the spillable operators. When a query is parallelized, the number of operators is multiplied, which reduces the amount of memory given to each instance of the operators during a query. To see the difference in memory consumption between the operators, you can run a query and then view the query profile in the Drill Web UI. Optionally, you can disable the Hash operators, which forces Drill to use the Merge-Join and Streaming-Aggregate operators.  
 
 **Memory Allocation Configuration Options**  
 
@@ -68,7 +66,7 @@ The `planner.memory.max_query_memory_per_node` and `planner.memory.percent_per_q
 The `planner.memory.max_query_memory_per_node` option is the minimum amount of memory available to Drill per query on a node. The default of 2 GB typically allows between two and three concurrent queries to run when the JVM is configured to use 8 GB of direct memory (default). When the memory requirement for Drill increases, the default of 2 GB is constraining. You must increase the amount of memory for queries to complete, unless the setting for the `planner.memory.percent_per_query` option allows for Drill to use more memory.  
 
 - **planner.memory.percent\_per_query**  
-Alternatively, the `planner.memory.percent_per_query` option sets the memory as a percentage of the total direct memory. The default is 5%. This value is only used when throttling is disabled. Setting the value to 0 disables the option. You can increase or decrease the value, however you should set the percentage well below the JVM direct memory to account for the cases where Drill does not manage memory, such as for the less memory intensive operators. 
+Alternatively, the `planner.memory.percent_per_query` option sets the memory as a percentage of the total direct memory. The default is 5%. This value is only used when throttling is disabled. Setting the value to 0 disables the option. You can increase or decrease the value; however, you should set the percentage well below the JVM direct memory to account for the cases where Drill does not manage memory, such as for the less memory intensive operators. 
 
        - The percentage is calculated using the following formula:    
 
