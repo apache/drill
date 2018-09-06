@@ -18,7 +18,7 @@
 package org.apache.drill.exec.work.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import io.netty.buffer.DrillBuf;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.Consumer;
@@ -35,7 +35,6 @@ import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.GeneralRPCProtos;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.data.DataTunnel;
@@ -60,17 +59,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * The HashJoinRecordBatch is responsible to generate the RuntimeFilter.
  * To Partitioned case:
  * The generated RuntimeFilter will be sent to the Foreman node. The Foreman node receives the RuntimeFilter
- * async, aggregates them, broadcasts them the Scan nodes's MinorFragment. The RuntimeFilterRecordBatch which
- * steps over the Scan node will leverage the received RuntimeFilter to filter out the scanned rows to generate
- * the SV2.
+ * async, broadcasts them to the Scan nodes's MinorFragment. The RuntimeFilterRecordBatch which is downstream
+ * to the Scan node will aggregate all the received RuntimeFilter and will leverage it to filter out the
+ * scanned rows to generate the SV2.
  * To Broadcast case:
  * The generated RuntimeFilter will be sent to Scan node's RuntimeFilterRecordBatch directly. The working of the
  * RuntimeFilterRecordBath is the same as the Partitioned one.
- *
- *
- *
  */
-public class RuntimeFilterManager {
+public class RuntimeFilterRouter {
 
   private Wrapper rootWrapper;
   //HashJoin node's major fragment id to its corresponding probe side nodes's endpoints
@@ -79,14 +75,12 @@ public class RuntimeFilterManager {
   private Map<Integer, Integer> joinMjId2scanSize = new ConcurrentHashMap<>();
   //HashJoin node's major fragment id to its corresponding probe side scan node's belonging major fragment id
   private Map<Integer, Integer> joinMjId2ScanMjId = new HashMap<>();
-  //HashJoin node's major fragment id to its aggregated RuntimeFilterWritable
-  private Map<Integer, RuntimeFilterWritable> joinMjId2AggregatedRF = new ConcurrentHashMap<>();
 
   private DrillbitContext drillbitContext;
 
   private SendingAccountor sendingAccountor = new SendingAccountor();
 
-  private static final Logger logger = LoggerFactory.getLogger(RuntimeFilterManager.class);
+  private static final Logger logger = LoggerFactory.getLogger(RuntimeFilterRouter.class);
 
   /**
    * This class maintains context for the runtime join push down's filter management. It
@@ -95,7 +89,7 @@ public class RuntimeFilterManager {
    * @param workUnit
    * @param drillbitContext
    */
-  public RuntimeFilterManager(QueryWorkUnit workUnit, DrillbitContext drillbitContext) {
+  public RuntimeFilterRouter(QueryWorkUnit workUnit, DrillbitContext drillbitContext) {
     this.rootWrapper = workUnit.getRootWrapper();
     this.drillbitContext = drillbitContext;
   }
@@ -134,32 +128,16 @@ public class RuntimeFilterManager {
    * @param runtimeFilterWritable
    */
   public void registerRuntimeFilter(RuntimeFilterWritable runtimeFilterWritable) {
-    BitData.RuntimeFilterBDef runtimeFilterB = runtimeFilterWritable.getRuntimeFilterBDef();
-    int majorId = runtimeFilterB.getMajorFragmentId();
-    UserBitShared.QueryId queryId = runtimeFilterB.getQueryId();
-    List<String> probeFields = runtimeFilterB.getProbeFieldsList();
-    logger.info("RuntimeFilterManager receives a runtime filter , majorId:{}, queryId:{}", majorId, QueryIdHelper.getQueryId(queryId));
-    int size;
-    synchronized (this) {
-      size = joinMjId2scanSize.get(majorId);
-      Preconditions.checkState(size > 0);
-      RuntimeFilterWritable aggregatedRuntimeFilter = joinMjId2AggregatedRF.get(majorId);
-      if (aggregatedRuntimeFilter == null) {
-        aggregatedRuntimeFilter = runtimeFilterWritable;
-      } else {
-        aggregatedRuntimeFilter.aggregate(runtimeFilterWritable);
-      }
-      joinMjId2AggregatedRF.put(majorId, aggregatedRuntimeFilter);
-      size--;
-      joinMjId2scanSize.put(majorId, size);
-    }
-    if (size == 0) {
-      broadcastAggregatedRuntimeFilter(majorId, queryId, probeFields);
-    }
+    broadcastAggregatedRuntimeFilter(runtimeFilterWritable);
   }
 
 
-  private void broadcastAggregatedRuntimeFilter(int joinMajorId, UserBitShared.QueryId queryId, List<String> probeFields) {
+  private void broadcastAggregatedRuntimeFilter(RuntimeFilterWritable srcRuntimeFilterWritable) {
+    BitData.RuntimeFilterBDef runtimeFilterB = srcRuntimeFilterWritable.getRuntimeFilterBDef();
+    int joinMajorId = runtimeFilterB.getMajorFragmentId();
+    UserBitShared.QueryId queryId = runtimeFilterB.getQueryId();
+    List<String> probeFields = runtimeFilterB.getProbeFieldsList();
+    DrillBuf[] data = srcRuntimeFilterWritable.getData();
     List<CoordinationProtos.DrillbitEndpoint> scanNodeEps = joinMjId2probdeScanEps.get(joinMajorId);
     int scanNodeMjId = joinMjId2ScanMjId.get(joinMajorId);
     for (int minorId = 0; minorId < scanNodeEps.size(); minorId++) {
@@ -172,10 +150,8 @@ public class RuntimeFilterManager {
         .setMajorFragmentId(scanNodeMjId)
         .setMinorFragmentId(minorId)
         .build();
-      RuntimeFilterWritable aggregatedRuntimeFilter = joinMjId2AggregatedRF.get(joinMajorId);
-      RuntimeFilterWritable runtimeFilterWritable = new RuntimeFilterWritable(runtimeFilterBDef, aggregatedRuntimeFilter.getData());
+      RuntimeFilterWritable runtimeFilterWritable = new RuntimeFilterWritable(runtimeFilterBDef, data);
       CoordinationProtos.DrillbitEndpoint drillbitEndpoint = scanNodeEps.get(minorId);
-
       DataTunnel dataTunnel = drillbitContext.getDataConnectionsPool().getTunnel(drillbitEndpoint);
       Consumer<RpcException> exceptionConsumer = new Consumer<RpcException>() {
         @Override
@@ -235,8 +211,6 @@ public class RuntimeFilterManager {
 
   private class WrapperOperatorsVisitor extends AbstractPhysicalVisitor<Void, Void, RuntimeException> {
 
-    private PhysicalOperator targetOp;
-
     private Fragment fragment;
 
     private boolean contain = false;
@@ -251,7 +225,6 @@ public class RuntimeFilterManager {
 
 
     public WrapperOperatorsVisitor(PhysicalOperator targetOp, Fragment fragment) {
-      this.targetOp = targetOp;
       this.fragment = fragment;
       this.targetIsGroupScan = targetOp instanceof GroupScan;
       this.targetIsHashJoin = targetOp instanceof HashJoinPOP;
@@ -343,12 +316,9 @@ public class RuntimeFilterManager {
 
     private int probeSideScanMajorId;
 
-
-
     private List<CoordinationProtos.DrillbitEndpoint> probeSideScanEndpoints;
 
     private RuntimeFilterDef runtimeFilterDef;
-
 
     public List<CoordinationProtos.DrillbitEndpoint> getProbeSideScanEndpoints() {
       return probeSideScanEndpoints;

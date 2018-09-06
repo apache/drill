@@ -20,6 +20,7 @@ package org.apache.drill.exec.work.filter;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.List;
  * A binary wire transferable representation of the RuntimeFilter which contains
  * the runtime filter definition and its corresponding data.
  */
-public class RuntimeFilterWritable implements AutoCloseables.Closeable {
+public class RuntimeFilterWritable implements AutoCloseables.Closeable{
 
   private BitData.RuntimeFilterBDef runtimeFilterBDef;
 
@@ -79,6 +80,37 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable {
     for (BloomFilter bloomFilter : otherFilters) {
       bloomFilter.getContent().clear();
     }
+  }
+
+  public RuntimeFilterWritable duplicate(BufferAllocator bufferAllocator) {
+    int len = data.length;
+    DrillBuf[] cloned = new DrillBuf[len];
+    int i = 0;
+    for (DrillBuf src : data) {
+      int capacity = src.readableBytes();
+      DrillBuf duplicateOne = bufferAllocator.buffer(capacity);
+      int readerIndex = src.readerIndex();
+      src.readBytes(duplicateOne, 0, capacity);
+      src.readerIndex(readerIndex);
+      cloned[i] = duplicateOne;
+      i++;
+    }
+    return new RuntimeFilterWritable(runtimeFilterBDef, cloned);
+  }
+
+  public boolean same(RuntimeFilterWritable other) {
+    BitData.RuntimeFilterBDef runtimeFilterDef = other.getRuntimeFilterBDef();
+    int otherMajorId = runtimeFilterDef.getMajorFragmentId();
+    int otherMinorId = runtimeFilterDef.getMinorFragmentId();
+    int otherHashJoinOpId = runtimeFilterDef.getHjOpId();
+    int thisMajorId = this.runtimeFilterBDef.getMajorFragmentId();
+    int thisMinorId = this.runtimeFilterBDef.getMinorFragmentId();
+    int thisHashJoinOpId = this.runtimeFilterBDef.getHjOpId();
+    return otherMajorId == thisMajorId && otherMinorId == thisMinorId && otherHashJoinOpId == thisHashJoinOpId;
+  }
+
+  public String toString() {
+    return "majorFragmentId:" + runtimeFilterBDef.getMajorFragmentId() + ",minorFragmentId:" + runtimeFilterBDef.getMinorFragmentId() + ", operatorId:" + runtimeFilterBDef.getHjOpId();
   }
 
   @Override

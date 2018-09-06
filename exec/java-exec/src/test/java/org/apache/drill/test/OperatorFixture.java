@@ -17,6 +17,7 @@
  */
 package org.apache.drill.test;
 
+import org.apache.drill.exec.work.filter.RuntimeFilterSink;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -180,6 +181,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
     private ExecutorState executorState = new OperatorFixture.MockExecutorState();
     private ExecutionControls controls;
+    private RuntimeFilterSink runtimeFilterSink;
 
     public MockFragmentContext(final DrillConfig config,
                                final OptionManager options,
@@ -195,6 +197,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
       this.controls = new ExecutionControls(options);
       compiler = new CodeCompiler(config, options);
       bufferManager = new BufferManagerImpl(allocator);
+      this.runtimeFilterSink = new RuntimeFilterSink(allocator);
     }
 
     private static FunctionImplementationRegistry newFunctionRegistry(
@@ -315,13 +318,13 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
 
     @Override
-    public RuntimeFilterWritable getRuntimeFilter() {
-      return null;
+    public RuntimeFilterSink getRuntimeFilterSink() {
+      return runtimeFilterSink;
     }
 
     @Override
-    public void setRuntimeFilter(RuntimeFilterWritable runtimeFilter) {
-
+    public void addRuntimeFilter(RuntimeFilterWritable runtimeFilter) {
+      runtimeFilterSink.aggregate(runtimeFilter);
     }
 
     @Override

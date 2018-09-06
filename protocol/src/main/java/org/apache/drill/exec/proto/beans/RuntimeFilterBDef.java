@@ -55,6 +55,7 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
     private Boolean toForeman;
     private List<Integer> bloomFilterSizeInBytes;
     private List<String> probeFields;
+    private int hjOpId;
 
     public RuntimeFilterBDef()
     {
@@ -141,6 +142,19 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
         return this;
     }
 
+    // hjOpId
+
+    public int getHjOpId()
+    {
+        return hjOpId;
+    }
+
+    public RuntimeFilterBDef setHjOpId(int hjOpId)
+    {
+        this.hjOpId = hjOpId;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -218,6 +232,9 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
                         message.probeFields = new ArrayList<String>();
                     message.probeFields.add(input.readString());
                     break;
+                case 7:
+                    message.hjOpId = input.readInt32();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -257,6 +274,9 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
                     output.writeString(6, probeFields, true);
             }
         }
+
+        if(message.hjOpId != 0)
+            output.writeInt32(7, message.hjOpId, false);
     }
 
     public String getFieldName(int number)
@@ -269,6 +289,7 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
             case 4: return "toForeman";
             case 5: return "bloomFilterSizeInBytes";
             case 6: return "probeFields";
+            case 7: return "hjOpId";
             default: return null;
         }
     }
@@ -288,6 +309,7 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
         __fieldMap.put("toForeman", 4);
         __fieldMap.put("bloomFilterSizeInBytes", 5);
         __fieldMap.put("probeFields", 6);
+        __fieldMap.put("hjOpId", 7);
     }
     
 }
