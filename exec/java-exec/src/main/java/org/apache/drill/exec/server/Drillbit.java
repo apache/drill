@@ -55,6 +55,7 @@ import org.apache.zookeeper.Environment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
  * Starts, tracks and stops all the required services for a Drillbit daemon to work.
@@ -70,6 +71,9 @@ public class Drillbit implements AutoCloseable {
      */
     GuavaPatcher.patch();
     Environment.logEnv("Drillbit environment: ", logger);
+    // Jersey uses java.util.logging - create bridge: jul to slf4j
+    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    SLF4JBridgeHandler.install();
   }
 
   public final static String SYSTEM_OPTIONS_NAME = "org.apache.drill.exec.server.Drillbit.system_options";

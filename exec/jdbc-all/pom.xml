@@ -168,6 +168,10 @@
           <artifactId>metadata-extractor</artifactId>
           <groupId>com.drewnoakes</groupId>
         </exclusion>
+        <exclusion>
+          <groupId>sqlline</groupId>
+          <artifactId>sqlline</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
