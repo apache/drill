@@ -383,6 +383,7 @@ public class PhoneticFunctions {
 
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.DoubleMetaphone().doubleMetaphone(input);
+      outputString = outputString == null ? "" : outputString;
 
       out.buffer = buffer;
       out.start = 0;

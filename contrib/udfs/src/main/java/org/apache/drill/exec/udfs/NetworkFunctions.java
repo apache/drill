@@ -24,6 +24,8 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 import javax.inject.Inject;
@@ -50,18 +52,15 @@ public class NetworkFunctions {
 
 
     public void eval() {
-
       String ipString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputIP.start, inputIP.end, inputIP.buffer);
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
 
-      int result = 0;
-      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
-
-      if (utils.getInfo().isInRange(ipString)) {
-        result = 1;
+      try {
+        org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+        out.value = utils.getInfo().isInRange(ipString) ? 1 : 0;
+      } catch (IllegalArgumentException e) {
+        // return false in case of invalid input
       }
-
-      out.value = result;
     }
   }
 
@@ -76,17 +75,20 @@ public class NetworkFunctions {
     VarCharHolder inputCIDR;
 
     @Output
-    BigIntHolder out;
+    NullableBigIntHolder out;
 
     public void setup() {
     }
 
     public void eval() {
-
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
-
-      out.value = utils.getInfo().getAddressCountLong();
+      try {
+        org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+        out.value = utils.getInfo().getAddressCountLong();
+        out.isSet = 1;
+      } catch (IllegalArgumentException e) {
+        // return null in case of invalid input
+      }
     }
 
   }
@@ -101,7 +103,7 @@ public class NetworkFunctions {
     VarCharHolder inputCIDR;
 
     @Output
-    VarCharHolder out;
+    NullableVarCharHolder out;
 
     @Inject
     DrillBuf buffer;
@@ -110,16 +112,19 @@ public class NetworkFunctions {
     }
 
     public void eval() {
-
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      try {
+        org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+        String outputValue = utils.getInfo().getBroadcastAddress();
 
-      String outputValue = utils.getInfo().getBroadcastAddress();
-
-      out.buffer = buffer;
-      out.start = 0;
-      out.end = outputValue.getBytes().length;
-      buffer.setBytes(0, outputValue.getBytes());
+        out.buffer = buffer;
+        out.start = 0;
+        out.end = outputValue.getBytes().length;
+        buffer.setBytes(0, outputValue.getBytes());
+        out.isSet = 1;
+      } catch (IllegalArgumentException e) {
+        // return null is case of invalid input
+      }
     }
 
   }
@@ -134,7 +139,7 @@ public class NetworkFunctions {
     VarCharHolder inputCIDR;
 
     @Output
-    VarCharHolder out;
+    NullableVarCharHolder out;
 
     @Inject
     DrillBuf buffer;
@@ -143,16 +148,19 @@ public class NetworkFunctions {
     }
 
     public void eval() {
-
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      try {
+        org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+        String outputValue = utils.getInfo().getNetmask();
 
-      String outputValue = utils.getInfo().getNetmask();
-
-      out.buffer = buffer;
-      out.start = 0;
-      out.end = outputValue.getBytes().length;
-      buffer.setBytes(0, outputValue.getBytes());
+        out.buffer = buffer;
+        out.start = 0;
+        out.end = outputValue.getBytes().length;
+        buffer.setBytes(0, outputValue.getBytes());
+        out.isSet = 1;
+      } catch (IllegalArgumentException e) {
+        // return null is case of invalid input
+      }
     }
 
   }
@@ -167,7 +175,7 @@ public class NetworkFunctions {
     VarCharHolder inputCIDR;
 
     @Output
-    VarCharHolder out;
+    NullableVarCharHolder out;
 
     @Inject
     DrillBuf buffer;
@@ -176,16 +184,19 @@ public class NetworkFunctions {
     }
 
     public void eval() {
-
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      try {
+        org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+        String outputValue = utils.getInfo().getLowAddress();
 
-      String outputValue = utils.getInfo().getLowAddress();
-
-      out.buffer = buffer;
-      out.start = 0;
-      out.end = outputValue.getBytes().length;
-      buffer.setBytes(0, outputValue.getBytes());
+        out.buffer = buffer;
+        out.start = 0;
+        out.end = outputValue.getBytes().length;
+        buffer.setBytes(0, outputValue.getBytes());
+        out.isSet = 1;
+      } catch (IllegalArgumentException e) {
+        // return null is case of invalid input
+      }
     }
 
   }
@@ -200,7 +211,7 @@ public class NetworkFunctions {
     VarCharHolder inputCIDR;
 
     @Output
-    VarCharHolder out;
+    NullableVarCharHolder out;
 
     @Inject
     DrillBuf buffer;
@@ -209,16 +220,19 @@ public class NetworkFunctions {
     }
 
     public void eval() {
-
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      try {
+        org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+        String outputValue = utils.getInfo().getHighAddress();
 
-      String outputValue = utils.getInfo().getHighAddress();
-
-      out.buffer = buffer;
-      out.start = 0;
-      out.end = outputValue.getBytes().length;
-      buffer.setBytes(0, outputValue.getBytes());
+        out.buffer = buffer;
+        out.start = 0;
+        out.end = outputValue.getBytes().length;
+        buffer.setBytes(0, outputValue.getBytes());
+        out.isSet = 1;
+      } catch (IllegalArgumentException e) {
+        // return null is case of invalid input
+      }
     }
   }
 
@@ -226,7 +240,7 @@ public class NetworkFunctions {
    * This function encodes URL strings.
    */
   @FunctionTemplate(name = "url_encode", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class urlencodeFunction implements DrillSimpleFunc {
+  public static class UrlEncodeFunction implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputString;
@@ -261,7 +275,7 @@ public class NetworkFunctions {
    * This function decodes URL strings.
    */
   @FunctionTemplate(name = "url_decode", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class urldecodeFunction implements DrillSimpleFunc {
+  public static class UrlDecodeFunction implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputString;
@@ -308,27 +322,20 @@ public class NetworkFunctions {
     @Inject
     DrillBuf buffer;
 
-
     public void setup() {
     }
 
 
     public void eval() {
       StringBuilder result = new StringBuilder(15);
-
       long inputInt = in.value;
-
       for (int i = 0; i < 4; i++) {
-
         result.insert(0, Long.toString(inputInt & 0xff));
-
         if (i < 3) {
           result.insert(0, '.');
         }
-
         inputInt = inputInt >> 8;
       }
-
       String outputValue = result.toString();
 
       out.buffer = buffer;
@@ -356,13 +363,26 @@ public class NetworkFunctions {
 
     public void eval() {
       String ipString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputTextA.start, inputTextA.end, inputTextA.buffer);
+      org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+      if (!validator.isValidInet4Address(ipString)) {
+        return;
+      }
 
       String[] ipAddressInArray = ipString.split("\\.");
+      if (ipAddressInArray.length < 3) {
+        return;
+      }
 
-      int[] octets = new int[3];
-
-      for (int i = 0; i < 3; i++) {
-        octets[i] = Integer.parseInt(ipAddressInArray[i]);
+      // only first two octets are needed for the check
+      int[] octets = new int[2];
+      for (int i = 0; i < 2; i++) {
+        try {
+          octets[i] = Integer.parseInt(ipAddressInArray[i]);
+        } catch (NumberFormatException e) {
+          // should not happen since we validated the address
+          // but if does, return false
+          return;
+        }
       }
 
       int result = 0;
@@ -392,7 +412,7 @@ public class NetworkFunctions {
     VarCharHolder inputTextA;
 
     @Output
-    BigIntHolder out;
+    NullableBigIntHolder out;
 
     public void setup() {
     }
@@ -400,20 +420,26 @@ public class NetworkFunctions {
 
     public void eval() {
       String ipString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputTextA.start, inputTextA.end, inputTextA.buffer);
-      if (ipString == null || ipString.isEmpty()) {
-        out.value = 0;
-      } else {
-        String[] ipAddressInArray = ipString.split("\\.");
+      org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+      if (!validator.isValidInet4Address(ipString)) {
+        return;
+      }
 
-        long result = 0;
-        for (int i = 0; i < ipAddressInArray.length; i++) {
-          int power = 3 - i;
+      String[] ipAddressInArray = ipString.split("\\.");
+      long result = 0;
+      for (int i = 0; i < ipAddressInArray.length; i++) {
+        int power = 3 - i;
+        try {
           int ip = Integer.parseInt(ipAddressInArray[i]);
           result += ip * Math.pow(256, power);
+        } catch (NumberFormatException e) {
+          // should not happen since we validated the address
+          // but if does, return null
+          return;
         }
-
-        out.value = result;
       }
+      out.value = result;
+      out.isSet = 1;
     }
   }
 
@@ -435,18 +461,8 @@ public class NetworkFunctions {
 
     public void eval() {
       String ipString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputIP.start, inputIP.end, inputIP.buffer);
-      if (ipString == null || ipString.isEmpty()) {
-        out.value = 0;
-      } else {
-        org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
-
-        boolean valid = validator.isValid(ipString);
-        if (valid) {
-          out.value = 1;
-        } else {
-          out.value = 0;
-        }
-      }
+      org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+      out.value = validator.isValid(ipString) ? 1 : 0;
     }
   }
 
@@ -465,21 +481,10 @@ public class NetworkFunctions {
     public void setup() {
     }
 
-
     public void eval() {
       String ipString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputIP.start, inputIP.end, inputIP.buffer);
-      if (ipString == null || ipString.isEmpty()) {
-        out.value = 0;
-      } else {
-        org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
-
-        boolean valid = validator.isValidInet4Address(ipString);
-        if (valid) {
-          out.value = 1;
-        } else {
-          out.value = 0;
-        }
-      }
+      org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+      out.value = validator.isValidInet4Address(ipString) ? 1 : 0;
     }
   }
 
@@ -500,18 +505,8 @@ public class NetworkFunctions {
 
     public void eval() {
       String ipString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputIP.start, inputIP.end, inputIP.buffer);
-      if (ipString == null || ipString.isEmpty()) {
-        out.value = 0;
-      } else {
-        org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
-
-        boolean valid = validator.isValidInet6Address(ipString);
-        if (valid) {
-          out.value = 1;
-        } else {
-          out.value = 0;
-        }
-      }
+      org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+      out.value = validator.isValidInet6Address(ipString) ? 1 : 0;
     }
   }
 }
