@@ -373,6 +373,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
             logger.debug("Storage plugin name {} is not defined. Skipping plugin initialization.", annotatedClass.getClassName());
             continue;
           }
+          storagePlugin.getConfig().setEnabled(true);
           plugins.put(name, storagePlugin);
           isPluginInitialized = true;
 
