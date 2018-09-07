@@ -259,7 +259,7 @@ public class TestLateralPlans extends BaseTestQuery {
         "t3(name, orders, items) on t.c_name = t3.name where t.c_id > 1 group by t.c_name";
 
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-        .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
+        .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true);
 
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -296,7 +296,7 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testUnnestTableAndColumnAlias() throws Exception {
     String sql = "select t.c_name from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) ";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-        .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
+        .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true);
 
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -313,7 +313,7 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testUnnestColumnAlias() throws Exception {
     String sql = "select t.c_name, t2.orders from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) t2";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-        .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
+        .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true);
 
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -336,7 +336,7 @@ public class TestLateralPlans extends BaseTestQuery {
     String sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
             " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord)) d1";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
 
     try (ClusterFixture cluster = builder.build();
@@ -353,7 +353,7 @@ public class TestLateralPlans extends BaseTestQuery {
             " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord) group by t2.ord.o_orderkey) d1";
 
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
             .setOptionDefault(PlannerSettings.HASHAGG.getOptionName(), false)
             .setOptionDefault(PlannerSettings.STREAMAGG.getOptionName(), true);
@@ -371,7 +371,7 @@ public class TestLateralPlans extends BaseTestQuery {
     String sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
             " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord) group by t2.ord.o_orderkey) d1";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
             .setOptionDefault(PlannerSettings.HASHAGG.getOptionName(), true)
             .setOptionDefault(PlannerSettings.STREAMAGG.getOptionName(), false);
@@ -389,7 +389,7 @@ public class TestLateralPlans extends BaseTestQuery {
     String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
             " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey) d1";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
 
     try (ClusterFixture cluster = builder.build();
@@ -405,7 +405,7 @@ public class TestLateralPlans extends BaseTestQuery {
     String sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
             " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
 
     try (ClusterFixture cluster = builder.build();
@@ -423,7 +423,7 @@ public class TestLateralPlans extends BaseTestQuery {
             " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1" +
             " where t.c_name = t2.c_name";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
 
     try (ClusterFixture cluster = builder.build();
@@ -440,7 +440,7 @@ public class TestLateralPlans extends BaseTestQuery {
             " select t.c_name from dfs.`lateraljoin/multipleFiles` t, " +
                     " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
 
     try (ClusterFixture cluster = builder.build();
@@ -456,7 +456,7 @@ public class TestLateralPlans extends BaseTestQuery {
     String sql = "select sum(d1.totalprice) from dfs.`lateraljoin/multipleFiles` t, " +
             " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1 group by t.c_custkey";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
             .setOptionDefault(PlannerSettings.HASHAGG.getOptionName(), false)
             .setOptionDefault(PlannerSettings.STREAMAGG.getOptionName(), true);
@@ -482,7 +482,7 @@ public class TestLateralPlans extends BaseTestQuery {
   public void testLateralAndUnnestExplainPlan() throws Exception {
     String sql = "select c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord)";
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
 
     try (ClusterFixture cluster = builder.build();
@@ -512,7 +512,7 @@ public class TestLateralPlans extends BaseTestQuery {
         "limit 50";
 
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-        .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
+        .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true);
 
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -537,7 +537,7 @@ public class TestLateralPlans extends BaseTestQuery {
             "from (select flatten(c_orders) as orders from dfs.`lateraljoin/multipleFiles` t) dt)dt order by 1";
 
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-      .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+      .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true)
       .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
 
     try (ClusterFixture cluster = builder.build();
