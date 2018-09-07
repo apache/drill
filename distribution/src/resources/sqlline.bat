@@ -200,28 +200,19 @@ set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\jars\3rdparty\*
 set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\jars\classb\*
 if NOT "test%DRILL_CLASSPATH%"=="test" set DRILL_CP=!DRILL_CP!;%DRILL_CLASSPATH%
 
-rem Override SQLLine's default initial transaction isolation level.  (SQLLine
-rem sets an initial level instead of leaving it at whatever the Driver's default
-rem is.)
-rem Put our property specification before previous value of DRILL_SHELL_JAVA_OPTS
-rem so that it can still be overridden via DRILL_SHELL_JAVA_OPTS.
-rem 
-rem This is not currently needed as the new SQLLine we are using doesn't isolate.
-rem set DRILL_SHELL_JAVA_OPTS=-Dsqlline.isolation=TRANSACTION_NONE %DRILL_SHELL_JAVA_OPTS%
-
 set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% -Dlog.path="%DRILL_LOG_DIR%\sqlline.log" -Dlog.query.path="%DRILL_LOG_DIR%\sqlline_queries.log"
 
 SET JAVA_CMD=%JAVA_HOME%\bin\%JAVA_EXE%
 if "%JAVA_HOME%" == "" (set JAVA_CMD=%JAVA_EXE%)
 set ERROR_CODE=0
-
+set SQLLINE_CALL=sqlline.SqlLine -ac org.apache.drill.exec.client.DrillSqlLineApplication -d org.apache.drill.jdbc.Driver
 if NOT "test%QUERY%"=="test" (
-  echo %QUERY% | "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
+  echo %QUERY% | "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS%
 ) else (
   if NOT "test%FILE%"=="test" (
-    "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS% --run=%FILE%
+    "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS% --run=%FILE%
   ) else (
-    "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
+    "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS%
   )
 )
 if ERRORLEVEL 1 goto error
