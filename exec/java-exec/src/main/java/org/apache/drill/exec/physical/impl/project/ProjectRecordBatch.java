@@ -55,13 +55,14 @@ import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.SimpleRecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.store.ColumnExplorer;
+import org.apache.drill.exec.util.record.RecordBatchStats;
+import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.UntypedNullHolder;
@@ -252,7 +253,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     memoryManager.updateOutgoingStats(outputRecords);
-    logger.debug("BATCH_STATS, outgoing: {}", new RecordBatchSizer(this));
+    RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, this, getRecordBatchStatsContext());
 
     // Get the final outcome based on hasRemainder since that will determine if all the incoming records were
     // consumed in current output batch or not
@@ -298,7 +299,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     memoryManager.updateOutgoingStats(projRecords);
-    logger.debug("BATCH_STATS, outgoing: {}", new RecordBatchSizer(this));
+    RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, this, getRecordBatchStatsContext());
   }
 
   public void addComplexWriter(final ComplexWriter writer) {
