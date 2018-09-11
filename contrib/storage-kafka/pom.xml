@@ -32,6 +32,7 @@
 
   <properties>
     <kafka.version>0.11.0.1</kafka.version>
+    <kafka.TestSuite>**/TestKafkaSuit.class</kafka.TestSuite>
   </properties>
 
   <dependencies>
@@ -97,4 +98,29 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>${kafka.TestSuite}</include>
+          </includes>
+          <excludes>
+            <exclude>**/KafkaFilterPushdownTest.java</exclude>
+            <exclude>**/KafkaQueriesTest.java</exclude>
+            <exclude>**/MessageIteratorTest.java</exclude>
+          </excludes>
+          <systemProperties>
+            <property>
+              <name>logback.log.dir</name>
+              <value>${project.build.directory}/surefire-reports</value>
+            </property>
+          </systemProperties>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
