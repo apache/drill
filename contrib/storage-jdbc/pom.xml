@@ -213,7 +213,7 @@
       <plugin>
         <groupId>com.jcabi</groupId>
         <artifactId>jcabi-mysql-maven-plugin</artifactId>
-        <version>0.8.2</version>
+        <version>0.9</version>
         <executions>
           <execution>
             <id>mysql-test</id>

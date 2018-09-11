@@ -1,0 +1,51 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+version: 2
+general:
+jobs:
+  build:
+    machine:
+      enabled: true
+      image: circleci/classic:latest
+    parallelism: 1 # TODO: 1. Configuring Parallel Jobs for Running Tests https://circleci.com/docs/2.0/parallelism-faster-jobs/
+
+
+    working_directory: ~/drill
+
+    steps:
+    - checkout
+
+    - run:
+        name: Update maven version
+        # TODO: Could be removed, once Machine Executor image is updated https://github.com/circleci/image-builder/issues/140
+        # and the possibility of specifying Maven version is added https://github.com/circleci/image-builder/issues/143
+        command:
+          curl -fsSL https://git.io/vpDIf | bash -s -- 3.5.4
+    - run:
+        name: Update packages list
+        command:
+          sudo apt-get update
+    - run:
+        name: Install libaio1.so library for MySQL integration tests
+        command:
+          sudo apt-get install libaio1 libaio-dev
+    - run:
+        name: Drill project build
+        # TODO: 2. Optimizing Maven Builds on CircleCI - https://circleci.com/blog/optimizing-maven-builds-on-circleci/
+        # TODO: 3. Caching Dependencies - https://circleci.com/docs/2.0/caching/
+        # TODO: 4. Resolving memory issues without "SlowTest" and "UnlikelyTest" excludedGroups in the build
+        command:
+          mvn install -Drat.skip=false -Dlicense.skip=false -DmemoryMb=2560 -DdirectMemoryMb=4608 -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest"
