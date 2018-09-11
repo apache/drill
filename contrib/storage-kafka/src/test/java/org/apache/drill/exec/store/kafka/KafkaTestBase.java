@@ -86,7 +86,9 @@ public class KafkaTestBase extends PlanTestBase {
 
   @AfterClass
   public static void tearDownKafkaTestBase() throws Exception {
-    TestKafkaSuit.tearDownCluster();
+    if (TestKafkaSuit.isRunningSuite()) {
+      TestKafkaSuit.tearDownCluster();
+    }
   }
 
 }
