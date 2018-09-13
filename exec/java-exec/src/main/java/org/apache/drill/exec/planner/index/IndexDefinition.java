@@ -26,7 +26,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-// Interface used to define an index,
+/**
+ * Top level interface used to define an index.
+ */
 public interface IndexDefinition {
   /**
    * Types of an index: PRIMARY_KEY_INDEX, NATIVE_SECONDARY_INDEX, EXTERNAL_SECONDARY_INDEX
@@ -87,13 +89,25 @@ public interface IndexDefinition {
    */
   IndexType getIndexType();
 
-
+  /**
+   * Get the list of columns in the index key.
+   */
   List<LogicalExpression> getIndexColumns();
 
+  /**
+   * Get the list of columns that are in the 'included' or 'covered' fields.
+   */
   List<LogicalExpression> getNonIndexColumns();
 
+  /**
+   * Get the collation property (physical ordering) of the index.
+   */
   RelCollation getCollation();
 
+  /**
+   * Get a mapping of the LogicalExpresion/SchemaPath to its field collation
+   *  - e.g Ascending/Descending, Nulls First/Nulls Last
+   */
   Map<LogicalExpression, RelFieldCollation> getCollationMap();
 
   /**

@@ -58,11 +58,26 @@ public interface IndexDescriptor extends IndexDefinition {
    */
   boolean supportsFullTextSearch();
 
+  /**
+   * Get the functional index information associated with this index (Functional indexes are
+   * indexes involving expressions e.g CAST(a as INT).
+   */
   FunctionalIndexInfo getFunctionalInfo();
 
+  /**
+   * Get the total cost of index access (I/O, CPU) in the context of the current query
+   * @param indexProps properties (metrics) of a single index in the context of current query
+   * @param planner Planner instance
+   * @param numProjectedFields Number of projected fields
+   * @param primaryGroupScan Primary table's GroupScan instance
+   * @return a RelOptCost instance representing the total cost
+   */
   public RelOptCost getCost(IndexProperties indexProps, RelOptPlanner planner,
       int numProjectedFields, GroupScan primaryGroupScan);
 
+  /**
+   * Get the costing factors associated with the storage/format plugin
+   */
   public PluginCost getPluginCostModel();
 
 }
