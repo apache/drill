@@ -32,8 +32,8 @@ public interface DbSubScan extends SubScan {
   boolean isRestrictedSubScan();
 
   /**
-   * For a restricted sub-scan, this method allows associating a (hash)join instance.  A subscan within a minor
-   * fragment must have a corresponding (hash)join batch instance from which it will retrieve its set of
+   * For a restricted sub-scan, this method allows associating a rowkey join instance.  A subscan within a minor
+   * fragment must have a corresponding rowkey join batch instance from which it will retrieve its set of
    * rowkeys to perform the restricted scan.
    * @param batch
    */
