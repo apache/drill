@@ -21,7 +21,9 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.IndexGroupScan;
 
-// Interface used to describe an index collection
+/**
+ *  Interface used to describe an index collection
+ */
 public interface IndexCollection extends Iterable<IndexDescriptor> {
   /**
    * Types of an index collections: NATIVE_SECONDARY_INDEX_COLLECTION, EXTERNAL_SECONDARY_INDEX_COLLECTION
