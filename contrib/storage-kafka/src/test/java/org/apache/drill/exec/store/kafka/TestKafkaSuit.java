@@ -112,6 +112,7 @@ public class TestKafkaSuit {
 
     Properties topicProps = new Properties();
     topicProps.put(TopicConfig.MESSAGE_TIMESTAMP_TYPE_CONFIG, "CreateTime");
+    topicProps.put(TopicConfig.RETENTION_MS_CONFIG, "-1");
     ZkUtils zkUtils = new ZkUtils(zkClient,
         new ZkConnection(embeddedKafkaCluster.getZkServer().getConnectionString()), false);
     AdminUtils.createTopic(zkUtils, topicName, partitions, 1,
