@@ -222,10 +222,6 @@
       </activation>
       <dependencies>
         <dependency>
-          <groupId>sqlline</groupId>
-          <artifactId>sqlline</artifactId>
-        </dependency>
-        <dependency>
           <groupId>org.apache.drill.contrib.data</groupId>
           <artifactId>tpch-sample-data</artifactId>
           <version>${project.version}</version>
