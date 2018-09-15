@@ -27,6 +27,7 @@ import org.junit.experimental.categories.Category;
 
 import static org.apache.drill.exec.store.kafka.TestKafkaSuit.NUM_JSON_MSG;
 import static org.apache.drill.exec.store.kafka.TestKafkaSuit.embeddedKafkaCluster;
+import static org.junit.Assert.assertTrue;
 
 @Category({KafkaStorageTest.class, SlowTest.class})
 public class KafkaFilterPushdownTest extends KafkaTestBase {
@@ -42,6 +43,10 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
     KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(),
         StringSerializer.class);
     generator.populateJsonMsgWithTimestamps(TestQueryConstants.JSON_PUSHDOWN_TOPIC, NUM_JSON_MSG);
+    String query = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.JSON_PUSHDOWN_TOPIC);
+    //Ensure messages are present
+    assertTrue("Kafka server does not have expected number of messages",
+        testSql(query) == NUM_PARTITIONS * NUM_JSON_MSG);
   }
 
   /**
