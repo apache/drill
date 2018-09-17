@@ -102,14 +102,10 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     }
 
     @Override
-    public RawFragmentBatch poll() throws IOException {
+    public RawFragmentBatch poll() throws IOException, InterruptedException {
       RawFragmentBatchWrapper batchWrapper = buffer.poll();
       if (batchWrapper != null) {
-        try {
-          return batchWrapper.get();
-        } catch (InterruptedException e) {
-          return null;
-        }
+        return batchWrapper.get();
       }
       return null;
     }
@@ -117,6 +113,15 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     @Override
     public RawFragmentBatch take() throws IOException, InterruptedException {
       return buffer.take().get();
+    }
+
+    @Override
+    public RawFragmentBatch poll(long timeout, TimeUnit timeUnit) throws InterruptedException, IOException {
+      RawFragmentBatchWrapper batchWrapper = buffer.poll(timeout, timeUnit);
+      if (batchWrapper != null) {
+        return batchWrapper.get();
+      }
+      return null;
     }
 
     @Override

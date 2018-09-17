@@ -18,6 +18,7 @@
 package org.apache.drill.exec.work.batch;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -36,8 +37,9 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
 
   protected interface BufferQueue<T> {
     void addOomBatch(RawFragmentBatch batch);
-    RawFragmentBatch poll() throws IOException;
+    RawFragmentBatch poll() throws IOException, InterruptedException;
     RawFragmentBatch take() throws IOException, InterruptedException;
+    RawFragmentBatch poll(long timeout, TimeUnit timeUnit) throws InterruptedException, IOException;
     boolean checkForOutOfMemory();
     int size();
     boolean isEmpty();
@@ -127,17 +129,24 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
    * responses pending
    */
   private void clearBufferWithBody() {
+    RawFragmentBatch batch;
     while (!bufferQueue.isEmpty()) {
-      final RawFragmentBatch batch;
+      batch = null;
       try {
         batch = bufferQueue.poll();
         assertAckSent(batch);
       } catch (IOException e) {
         context.getExecutorState().fail(e);
         continue;
-      }
-      if (batch.getBody() != null) {
-        batch.getBody().release();
+      } catch (InterruptedException e) {
+        context.getExecutorState().fail(e);
+        // keep the state that the thread is interrupted
+        Thread.currentThread().interrupt();
+        continue;
+      } finally {
+        if (batch != null && batch.getBody() != null) {
+          batch.getBody().release();
+        }
       }
     }
   }
@@ -167,7 +176,25 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
 
       // if we didn't get a batch, block on waiting for queue.
       if (b == null && (!isTerminated() || !bufferQueue.isEmpty())) {
-        b = bufferQueue.take();
+        // We shouldn't block infinitely here. There can be a condition such that due to a failure FragmentExecutor
+        // state is changed to FAILED and queue is empty. Because of this the minor fragment main thread will block
+        // here waiting for next batch to arrive. Meanwhile when next batch arrived and was enqueued it sees
+        // FragmentExecutor failure state and doesn't enqueue the batch and cleans up the buffer queue. Hence this
+        // thread will stuck forever. So we pool for 5 seconds until we get a batch or FragmentExecutor state is in
+        // error condition.
+        while (b == null) {
+          b = bufferQueue.poll(5, TimeUnit.SECONDS);
+          if (!context.getExecutorState().shouldContinue()) {
+            kill(context);
+            if (b != null) {
+              assertAckSent(b);
+              if (b.getBody() != null) {
+                b.getBody().release();
+              }
+              b = null;
+            }
+          } // else b will be assigned a valid batch
+        }
       }
     } catch (final InterruptedException e) {
 
