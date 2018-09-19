@@ -115,6 +115,14 @@ public interface RecordBatch extends VectorAccessible {
      *   This value will be returned only after {@link #OK_NEW_SCHEMA} has been
      *   returned at least once (not necessarily <em>immediately</em> after).
      * </p>
+     * <p>
+     *   Also after a RecordBatch returns NONE a RecordBatch should:
+     *   <ul>
+     *     <li>Contain the last valid schema seen by the operator.</li>
+     *     <li>Contain a VectorContainer with empty columns corresponding to the last valid schema.</li>
+     *     <li>Return a record count of 0.</li>
+     *   </ul>
+     * </p>
      */
     NONE(false),
 
