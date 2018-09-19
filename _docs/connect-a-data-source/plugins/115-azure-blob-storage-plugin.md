@@ -59,12 +59,14 @@ To configure the Azure Blob Storage plugin, log in to the Drill Web UI and then 
 2\. To configure the Azure Blob Storage plugin in Drill, complete the following steps:  
 
    a\. Click on the **Storage** page.  
-   b\. Find the S3 option on the page and then click **Update** next to the option.  
-   c\. Configure the Azure Blob Storage plugin, specifying the bucket in the `"connection"` property, as shown in the following example:  
+   b\. Find the CP option on the page and then click **Update** next to the option.  
+   c\. Copy the entire content in the clipboard and the go **Back**.
+   d\. At the bottom of the page, "New storage Plugin" section, type `AZ` in the textbox and click on **Create**.
+   e\. Paste the text copied from the CP plugin.
+   f\. Configure the Azure Blob Storage plugin, specifying the container you want to access to in the `"connection"` property, as shown in the following example:  
 
-**Note:** The `"config"` block in the following Azure Blob Storage plugin configuration contains the access key and endpoint properties required if you want to define your AWS credentials here. Do not include the `"config"` block in your Azure Blob Storage plugin configuration if you defined your AWS credentials in the core-site.xml file.   
-
-       {
+**Note:** The `"config"` block in the following Azure Blob Storage plugin configuration contains the access key and endpoint properties required if you want to define your Azure Blob Storage credentials here. *Do not include* the `"config"` block in your Azure Blob Storage plugin configuration if you defined your Azure Blob Storage credentials in the `core-site.xml` file.   
+    
 	"type": "file",
 	"enabled": true,
 	"connection": "wasbs://CONTAINER@STORAGE_ACCOUNT_NAME.blob.core.windows.net",
@@ -82,28 +84,12 @@ To configure the Azure Blob Storage plugin, log in to the Drill Web UI and then 
 			"writable": true,
 			"defaultInputFormat": null
 		}
-	},
-	"formats": {
-		"psv": {
-			"type": "text",
-			"extensions": [
-				"tbl"
-			],
-			"delimiter": "|"
-		},
-		"csv": {
-			"type": "text",
-			"extensions": [
-				"csv"
-			],
-			"delimiter": ","
-		    }
-	    }
-    }
-          
-         
+	}
+                   
 4-Click **Update** to save the configuration.  
 5-Navigate back to the **Storage** page.  
-6-On the **Storage** page, click **Enable** next to the S3 option.  
+6-On the **Storage** page, the newly create AZ option should be automatically enabled.  
 	
-Drill should now be able to use the HDFS s3a library to access data in S3.
+Drill should now be able to use access data in your Azure Blob Storage container and query it.
+
+https://vimeo.com/286972298 
