@@ -47,7 +47,18 @@ To configure the access keys in Drill's core-site.xml file, navigate to the `$DR
                <name>fs.s3a.endpoint</name>
                <value>s3.REGION.amazonaws.com</value>
            </property>
-       </configuration>   
+       </configuration>  
+
+### Configuring Drill to use AWS IAM Roles for Accessing S3
+
+If you use IAM roles/Instance profiles, to access data in s3, use the following settings in your core-site.xml. Do not specify the secret key or access key properties. As an example:
+
+        <configuration>
+           <property>
+                 <name>fs.s3a.aws.credentials.provider</name>
+                <value>com.amazonaws.auth.InstanceProfileCredentialsProvider</value>
+	</property>
+       </configuration>  
 
 **Note:** When you rename the file, Hadoop support breaks if `$HADOOP_HOME` was in the path because Drill pulls in the Drill core-site.xml file instead of the Hadoop core-site.xml file. In this situation, make the changes in the Hadoop core-site.xml file. Do not create a core-site.xml file for Drill.  
 
