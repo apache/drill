@@ -912,6 +912,23 @@
             "title": "Asynchronous Parquet Reader", 
             "url": "/docs/asynchronous-parquet-reader/"
         }, 
+        "Azure Blob Storage Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "ODBC/JDBC Interfaces", 
+            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "Image Metadata Format Plugin", 
+            "previous_url": "/docs/image-metadata-format-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/115-azure-blob-storage-plugin.md", 
+            "title": "Azure Blob Storage Plugin", 
+            "url": "/docs/azure-blob-storage-plugin/"
+        }, 
         "Browsing Data and Defining Views": {
             "breadcrumbs": [
                 {
@@ -2814,14 +2831,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "Azure Blob Storage Plugin", 
+                    "next_url": "/docs/azure-blob-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Kafka Storage Plugin", 
                     "previous_url": "/docs/kafka-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/114-image-metadata-format-plugin.md", 
                     "title": "Image Metadata Format Plugin", 
                     "url": "/docs/image-metadata-format-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Image Metadata Format Plugin", 
+                    "previous_url": "/docs/image-metadata-format-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/115-azure-blob-storage-plugin.md", 
+                    "title": "Azure Blob Storage Plugin", 
+                    "url": "/docs/azure-blob-storage-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -5222,8 +5256,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ODBC/JDBC Interfaces", 
-            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "next_title": "Azure Blob Storage Plugin", 
+            "next_url": "/docs/azure-blob-storage-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "Kafka Storage Plugin", 
             "previous_url": "/docs/kafka-storage-plugin/", 
@@ -7534,8 +7568,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "Image Metadata Format Plugin", 
-            "previous_url": "/docs/image-metadata-format-plugin/", 
+            "previous_title": "Azure Blob Storage Plugin", 
+            "previous_url": "/docs/azure-blob-storage-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
@@ -17179,14 +17213,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "Azure Blob Storage Plugin", 
+                    "next_url": "/docs/azure-blob-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Kafka Storage Plugin", 
                     "previous_url": "/docs/kafka-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/114-image-metadata-format-plugin.md", 
                     "title": "Image Metadata Format Plugin", 
                     "url": "/docs/image-metadata-format-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Image Metadata Format Plugin", 
+                    "previous_url": "/docs/image-metadata-format-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/115-azure-blob-storage-plugin.md", 
+                    "title": "Azure Blob Storage Plugin", 
+                    "url": "/docs/azure-blob-storage-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -17811,8 +17862,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "Image Metadata Format Plugin", 
-            "previous_url": "/docs/image-metadata-format-plugin/", 
+            "previous_title": "Azure Blob Storage Plugin", 
+            "previous_url": "/docs/azure-blob-storage-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
