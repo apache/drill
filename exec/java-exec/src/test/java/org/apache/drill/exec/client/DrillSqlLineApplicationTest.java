@@ -43,14 +43,14 @@ public class DrillSqlLineApplicationTest {
   @BeforeClass
   public static void init() {
     application = new DrillSqlLineApplication(
-        "drill-sqlline-test.conf",
+        "drill-sqlline.conf",
         "drill-sqlline-test-override.conf");
   }
 
   @Test
   public void testInfoMessage() throws Exception {
     String infoMessage = application.getInfoMessage();
-    assertThat(infoMessage, containsString("all code is guilty until proven innocent"));
+    assertThat(infoMessage, containsString("\"All code is guilty until proven innocent.\""));
   }
 
   @Test
@@ -99,14 +99,14 @@ public class DrillSqlLineApplicationTest {
   @Test
   public void testEmptyConfig() {
     DrillSqlLineApplication application = new DrillSqlLineApplication(
-        "missing.conf", "missing_example.conf");
+        "missing.conf", "missing_override.conf");
     assertTrue(application.getConfig().isEmpty());
   }
 
   @Test
   public void testConfigWithoutOverride() {
     DrillSqlLineApplication application = new DrillSqlLineApplication(
-        "drill-sqlline-test.conf", "missing_example.conf");
+        "drill-sqlline.conf", "missing_override.conf");
     assertFalse(application.getConfig().isEmpty());
   }
 
