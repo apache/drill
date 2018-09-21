@@ -24,7 +24,7 @@ Parquet filter pushdown is similar to partition pruning in that it reduces the a
 The query planner looks at the minimum and maximum values in each row group for an intersection. If no intersection exists, the planner can prune the row group in the table. If the minimum and maximum value range is too large, Drill does not apply Parquet filter pushdown. The query planner can typically prune more data when the tables in the Parquet file are sorted by row groups.  
 
 ##Using Parquet Filter Pushdown
-Currently, Parquet filter pushdown only supports filters that reference columns from a single table (local filters). Parquet filter pushdown requires the minimum and maximum values in the Parquet file metadata. All Parquet files created in Drill using the CTAS statement contain the necessary metadata. If your Parquet files were created using another tool, you may need to use Drill to read and rewrite the files using the [CTAS command]({{site.baseurl}}/docs/create-table-as-ctas-command/).
+Currently, Parquet filter pushdown only supports filters that reference columns from a single table (local filters). Parquet filter pushdown requires the minimum and maximum values in the Parquet file metadata. All Parquet files created in Drill using the CTAS statement contain the necessary metadata. If your Parquet files were created using another tool, you may need to use Drill to read and rewrite the files using the [CTAS command]({{site.baseurl}}/docs/create-table-as-ctas/).
  
 Parquet filter pushdown works best if you presort the data. You do not have to sort the entire data set at once. You can sort a subset of the data set, sort another subset, and so on. 
 
@@ -39,7 +39,7 @@ The following table lists the Parquet filter pushdown options with their descrip
 | "planner.store.parquet.rowgroup.filter.pushdown.threshold" | Sets the number of row groups that a table can   have. You can increase the threshold if the filter can prune many row groups.   However, if this setting is too high, the filter evaluation overhead   increases. Base this setting on the data set. Reduce this setting if the   planning time is significant, or you do not see any benefit at runtime. | 10,000    |  
 
 ###Viewing the Query Plan
-Because Drill applies Parquet filter pushdown during the query planning phase, you can view the query execution plan to see if Drill pushes down the filter when a query on a Parquet file contains a filter expression. You can run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain-commands/) to see the execution plan for the query, as shown in the following example.
+Because Drill applies Parquet filter pushdown during the query planning phase, you can view the query execution plan to see if Drill pushes down the filter when a query on a Parquet file contains a filter expression. You can run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain/) to see the execution plan for the query, as shown in the following example.
 
 **Example**  
 
