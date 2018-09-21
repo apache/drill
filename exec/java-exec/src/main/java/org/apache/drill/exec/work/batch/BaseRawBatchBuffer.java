@@ -37,7 +37,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
 
   protected interface BufferQueue<T> {
     void addOomBatch(RawFragmentBatch batch);
-    RawFragmentBatch poll() throws IOException;
+    RawFragmentBatch poll() throws IOException, InterruptedException;
     RawFragmentBatch take() throws IOException, InterruptedException;
     RawFragmentBatch poll(long timeout, TimeUnit timeUnit) throws InterruptedException, IOException;
     boolean checkForOutOfMemory();
@@ -129,17 +129,24 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
    * responses pending
    */
   private void clearBufferWithBody() {
+    RawFragmentBatch batch;
     while (!bufferQueue.isEmpty()) {
-      final RawFragmentBatch batch;
+      batch = null;
       try {
         batch = bufferQueue.poll();
         assertAckSent(batch);
       } catch (IOException e) {
         context.getExecutorState().fail(e);
         continue;
-      }
-      if (batch.getBody() != null) {
-        batch.getBody().release();
+      } catch (InterruptedException e) {
+        context.getExecutorState().fail(e);
+        // keep the state that the thread is interrupted
+        Thread.currentThread().interrupt();
+        continue;
+      } finally {
+        if (batch != null && batch.getBody() != null) {
+          batch.getBody().release();
+        }
       }
     }
   }
