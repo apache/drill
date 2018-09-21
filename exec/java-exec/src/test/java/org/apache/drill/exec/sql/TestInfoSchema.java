@@ -49,7 +49,6 @@ import static org.junit.Assert.assertTrue;
  * -- InformationSchema
  * -- Queries on InformationSchema such as SHOW TABLES, SHOW SCHEMAS or DESCRIBE table
  * -- USE schema
- * -- SHOW FILES
  */
 @Category(SqlTest.class)
 public class TestInfoSchema extends BaseTestQuery {

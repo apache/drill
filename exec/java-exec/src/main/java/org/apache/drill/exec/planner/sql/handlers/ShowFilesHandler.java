@@ -19,53 +19,39 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
-import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowFiles;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
-import org.apache.drill.exec.store.ischema.InfoSchemaTableType;
+import org.apache.drill.exec.store.ischema.Records;
+import org.apache.drill.exec.util.FileSystemUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
+import org.apache.hadoop.fs.Path;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.List;
-
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_RELATIVE_PATH;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_SCHEMA_NAME;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
-
+import java.util.stream.Collectors;
 
 public class ShowFilesHandler extends DefaultSqlHandler {
+
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
 
   public ShowFilesHandler(SqlHandlerConfig config) {
     super(config);
   }
 
-  /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.FILES ... */
   @Override
-  public SqlNode rewrite(SqlNode sqlNode) throws ForemanSetupException {
-
-    List<SqlNode> selectList = Collections.singletonList(SqlIdentifier.star(SqlParserPos.ZERO));
-
-    SqlNode fromClause = new SqlIdentifier(Arrays.asList(IS_SCHEMA_NAME, InfoSchemaTableType.FILES.name()), SqlParserPos.ZERO);
-
+  public PhysicalPlan getPlan(SqlNode sqlNode) throws ForemanSetupException, IOException {
     SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
     SchemaPlus drillSchema = defaultSchema;
-
     SqlShowFiles showFiles = unwrap(sqlNode, SqlShowFiles.class);
     SqlIdentifier from = showFiles.getDb();
-    boolean addRelativePathLikeClause = false;
+    String fromDir = "./";
 
     // Show files can be used without from clause, in which case we display the files in the default schema
     if (from != null) {
@@ -75,7 +61,8 @@ public class ShowFilesHandler extends DefaultSqlHandler {
       if (drillSchema == null) {
         // Entire from clause is not a schema, try to obtain the schema without the last part of the specified clause.
         drillSchema = SchemaUtilites.findSchema(defaultSchema, from.names.subList(0, from.names.size() - 1));
-        addRelativePathLikeClause = true;
+        // Listing for specific directory: show files in dfs.tmp.specific_directory
+        fromDir = fromDir + from.names.get((from.names.size() - 1));
       }
 
       if (drillSchema == null) {
@@ -85,11 +72,9 @@ public class ShowFilesHandler extends DefaultSqlHandler {
       }
     }
 
-    String fullSchemaName;
-
+    WorkspaceSchema wsSchema;
     try {
-      WorkspaceSchema wsSchema = (WorkspaceSchema) drillSchema.unwrap(AbstractSchema.class).getDefaultSchema();
-      fullSchemaName = wsSchema.getFullSchemaName();
+      wsSchema = (WorkspaceSchema) drillSchema.unwrap(AbstractSchema.class).getDefaultSchema();
     } catch (ClassCastException e) {
       throw UserException.validationError()
           .message("SHOW FILES is supported in workspace type schema only. Schema [%s] is not a workspace schema.",
@@ -97,28 +82,43 @@ public class ShowFilesHandler extends DefaultSqlHandler {
           .build(logger);
     }
 
-    SqlNode whereClause = DrillParserUtil.createCondition(new SqlIdentifier(FILES_COL_SCHEMA_NAME, SqlParserPos.ZERO),
-        SqlStdOperatorTable.EQUALS, SqlLiteral.createCharString(fullSchemaName, SqlParserPos.ZERO));
+    Path path = new Path(wsSchema.getDefaultLocation(), fromDir);
+    List<ShowFilesCommandResult> records = FileSystemUtil.listAll(wsSchema.getFS(), path, false).stream()
+        // use ShowFilesCommandResult for backward compatibility
+        .map(fileStatus -> new ShowFilesCommandResult(new Records.File(wsSchema.getFullSchemaName(), wsSchema, fileStatus)))
+        .collect(Collectors.toList());
 
-    // listing for specific directory: show files in dfs.tmp.specific_directory
-    if (addRelativePathLikeClause) {
-      if (!context.getOptions().getBoolean(ExecConstants.LIST_FILES_RECURSIVELY)) {
-        throw UserException.validationError()
-            .message("To SHOW FILES in specific directory, enable option %s", ExecConstants.LIST_FILES_RECURSIVELY)
-            .build(logger);
-      }
+    return DirectPlan.createDirectPlan(context.getCurrentEndpoint(), records, ShowFilesCommandResult.class);
+  }
 
-      // like clause: relative_path like 'specific_directory/%'
-      String folderPath = from.names.get(from.names.size() - 1);
-      folderPath = folderPath.endsWith("/") ? folderPath : folderPath + "/";
-      SqlNode likeLiteral = SqlLiteral.createCharString(folderPath + "%", Util.getDefaultCharset().name(), SqlParserPos.ZERO);
-      SqlNode likeClause = DrillParserUtil.createCondition(new SqlIdentifier(FILES_COL_RELATIVE_PATH, SqlParserPos.ZERO),
-          SqlStdOperatorTable.LIKE, likeLiteral);
+  /**
+   * Original show files command result holder is used as wrapper over new {@link Records.File} holder
+   * to maintain backward compatibility with ODBC driver etc. in column names and types.
+   */
+  public static class ShowFilesCommandResult {
 
-      whereClause = DrillParserUtil.createCondition(whereClause, SqlStdOperatorTable.AND, likeClause);
+    public final String name;
+    public final boolean isDirectory;
+    public final boolean isFile;
+    public final long length;
+    public final String owner;
+    public final String group;
+    public final String permissions;
+    public final Timestamp accessTime;
+    public final Timestamp modificationTime;
+
+    public ShowFilesCommandResult(Records.File fileRecord) {
+      this.name = fileRecord.FILE_NAME;
+      this.isDirectory = fileRecord.IS_DIRECTORY;
+      this.isFile = fileRecord.IS_FILE;
+      this.length = fileRecord.LENGTH;
+      this.owner = fileRecord.OWNER;
+      this.group = fileRecord.GROUP;
+      this.permissions = fileRecord.PERMISSION;
+      this.accessTime = fileRecord.ACCESS_TIME;
+      this.modificationTime = fileRecord.MODIFICATION_TIME;
     }
 
-    return new SqlSelect(SqlParserPos.ZERO, null, new SqlNodeList(selectList, SqlParserPos.ZERO), fromClause, whereClause,
-        null, null, null, null, null, null);
   }
+
 }
