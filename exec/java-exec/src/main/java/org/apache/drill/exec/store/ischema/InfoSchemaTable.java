@@ -33,6 +33,7 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_N
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_NUMERIC_PRECISION_RADIX;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_NUMERIC_SCALE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_ORDINAL_POSITION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_ACCESS_TIME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_FILE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_GROUP;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_IS_DIRECTORY;
@@ -90,6 +91,7 @@ public abstract class InfoSchemaTable<S> {
   public static final MajorType BIGINT = Types.required(MinorType.BIGINT);
   public static final MajorType VARCHAR = Types.required(MinorType.VARCHAR);
   public static final MajorType BIT = Types.required(MinorType.BIT);
+  public static final MajorType TIMESTAMP = Types.required(MinorType.TIMESTAMP);
 
   private final List<Field> fields;
 
@@ -121,8 +123,11 @@ public abstract class InfoSchemaTable<S> {
         return typeFactory.createSqlType(SqlTypeName.VARCHAR, Integer.MAX_VALUE);
       case BIT:
         return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
+      case TIMESTAMP:
+        return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
       default:
-        throw new UnsupportedOperationException("Only INT, BIGINT, VARCHAR and BOOLEAN types are supported in " + InfoSchemaConstants.IS_SCHEMA_NAME);
+        throw new UnsupportedOperationException("Only INT, BIGINT, VARCHAR, BOOLEAN and TIMESTAMP types are supported in " +
+            InfoSchemaConstants.IS_SCHEMA_NAME);
     }
   }
 
@@ -275,7 +280,8 @@ public abstract class InfoSchemaTable<S> {
         Field.create(FILES_COL_OWNER, VARCHAR),
         Field.create(FILES_COL_GROUP, VARCHAR),
         Field.create(FILES_COL_PERMISSION, VARCHAR),
-        Field.create(FILES_COL_MODIFICATION_TIME, VARCHAR)
+        Field.create(FILES_COL_ACCESS_TIME, TIMESTAMP),
+        Field.create(FILES_COL_MODIFICATION_TIME, TIMESTAMP)
     );
 
     public Files() {

@@ -23,7 +23,6 @@ import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,15 +32,14 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import java.util.Map;
 
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -59,6 +57,9 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     UserGroupInformation.createUserForTesting(user1, new String[]{ group1, group0 });
     UserGroupInformation.createUserForTesting(user2, new String[]{ group1 });
   }
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -176,14 +177,11 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   public void testShowFilesInWSWithNoPermissionsForQueryUser() throws Exception {
     updateClient(user2);
 
-    try {
-      setSessionOption(ExecConstants.LIST_FILES_RECURSIVELY, true);
-      // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
-      int count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME));
-      assertEquals("Counts should match", 0, count);
-    } finally {
-      resetSessionOption(ExecConstants.LIST_FILES_RECURSIVELY);
-    }
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("Permission denied: user=drillTestUser2, " +
+        "access=READ_EXECUTE, inode=\"/drill_test_grp_1_700\":drillTestUser1:drill_test_grp_1:drwx------"));
+    // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
+    test("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME);
   }
 
   @Test
@@ -345,25 +343,18 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   @Test
   public void testCreateTableInWSWithNoPermissionsForQueryUser() throws Exception {
     // Workspace dir owned by "processUser", workspace group is "group0" and "user2" is not part of "group0"
-    final String tableWS = "drill_test_grp_0_755";
-    final String tableName = "table1";
+    String tableWS = "drill_test_grp_0_755";
+    String tableName = "table1";
 
-    UserRemoteException ex = null;
+    updateClient(user2);
+    test("use %s.`%s`", MINI_DFS_STORAGE_PLUGIN_NAME, tableWS);
 
-    try {
-      updateClient(user2);
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString("Permission denied: user=drillTestUser2, " +
+        "access=WRITE, inode=\"/drill_test_grp_0_755/"));
 
-      test("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
-
-      test("CREATE TABLE " + tableName + " AS SELECT " +
-          "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;");
-    } catch(UserRemoteException e) {
-      ex = e;
-    }
-
-    assertNotNull("UserRemoteException is expected", ex);
-    assertThat(ex.getMessage(),
-        containsString("SYSTEM ERROR: RemoteException: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/drill_test_grp_0_755/"));
+    test("CREATE TABLE %s AS SELECT c_custkey, c_nationkey " +
+        "FROM cp.`tpch/customer.parquet` ORDER BY c_custkey", tableName);
   }
 
   @Test

@@ -31,9 +31,10 @@ import org.slf4j.Logger;
 
 import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
 
+import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 
 public class Records {
 
@@ -565,7 +566,8 @@ public class Records {
     public final String OWNER;
     public final String GROUP;
     public final String PERMISSION;
-    public final String MODIFICATION_TIME;
+    public final Timestamp ACCESS_TIME;
+    public final Timestamp MODIFICATION_TIME;
 
     public File(String schemaName, WorkspaceSchemaFactory.WorkspaceSchema wsSchema, FileStatus fileStatus) {
       this.SCHEMA_NAME = schemaName;
@@ -580,9 +582,22 @@ public class Records {
       this.OWNER = fileStatus.getOwner();
       this.GROUP = fileStatus.getGroup();
       this.PERMISSION = fileStatus.getPermission().toString();
-      this.MODIFICATION_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
-          .withZone(ZoneOffset.UTC)
-          .format(Instant.ofEpochMilli(fileStatus.getModificationTime()));
+      this.ACCESS_TIME = getTimestampWithReplacedZone(fileStatus.getAccessTime());
+      this.MODIFICATION_TIME = getTimestampWithReplacedZone(fileStatus.getModificationTime());
+    }
+
+    /**
+     * Convert milliseconds into sql timestamp.
+     * Get the timestamp in UTC because Drill's internal TIMESTAMP stores time in UTC.
+     *
+     * @param ms milliseconds
+     * @return sql timestamp instance
+     */
+    private Timestamp getTimestampWithReplacedZone(long ms) {
+      return Timestamp.from(Instant.ofEpochMilli(ms)
+          .atZone(ZoneId.systemDefault())
+          .withZoneSameLocal(ZoneOffset.UTC)
+          .toInstant());
     }
   }
 }
