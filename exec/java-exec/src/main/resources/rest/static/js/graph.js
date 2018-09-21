@@ -19,10 +19,12 @@ $(window).on('load',(function () {
         return $.map(table, function (record, index) {
             var ra = [];
             var nested = faccess(record);
-            for (var i = 0; i < nested.length; i++) {
-                var newrec = $.extend({}, record);
-                newrec[dest] = nested[i];
-                ra.push(newrec);
+            if (nested !== undefined) {
+                for (var i = 0; i < nested.length; i++) {
+                    var newrec = $.extend({}, record);
+                    newrec[dest] = nested[i];
+                    ra.push(newrec);
+                }
             }
             return ra;
         });
@@ -350,9 +352,10 @@ $(window).on('load',(function () {
 
     function setupglobalconfig (profile) {
         globalconfig.profile = profile;
-        globalconfig.majorcolorscale = d3.scale.category20()
-            .domain([0, d3.max(profile.fragmentProfile, accessor("majorFragmentId"))]);
-
+        if (profile.fragmentProfile !== undefined) {
+            globalconfig.majorcolorscale = d3.scale.category20()
+                .domain([0, d3.max(profile.fragmentProfile, accessor("majorFragmentId"))]);
+        }
     }
 
     String.prototype.endsWith = function(suffix) {
@@ -368,7 +371,7 @@ $(window).on('load',(function () {
 
         // trigger svg drawing when visible
         $('#query-tabs').on('shown.bs.tab', function (e) {
-            if (queryvisualdrawn || !e.target.href.endsWith("#query-visual")) return;
+            if (profile.plan === undefined || queryvisualdrawn || !e.target.href.endsWith("#query-visual")) return;
             buildplangraph(d3.select("#query-visual-canvas"), profile.plan);
             queryvisualdrawn = true;
         })
