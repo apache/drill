@@ -364,6 +364,11 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
    public CallBack getCallBack() {
      return null;
    }
+
+   @Override
+   public void clear() {
+     // Nothing to do!
+   }
  }
 
   private void validateFooters(final List<Footer> metadata) {

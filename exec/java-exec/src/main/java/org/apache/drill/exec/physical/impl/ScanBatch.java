@@ -491,9 +491,11 @@ public class ScanBatch implements CloseableRecordBatch {
       return callBack;
     }
 
+    @Override
     public void clear() {
       regularFieldVectorMap.clear();
       implicitFieldVectorMap.clear();
+      container.clear();
       schemaChanged = false;
     }
 

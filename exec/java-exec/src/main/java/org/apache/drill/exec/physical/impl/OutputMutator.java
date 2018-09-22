@@ -68,4 +68,9 @@ public interface OutputMutator {
    * @return the CallBack object for this mutator
    */
   public CallBack getCallBack();
+
+  /**
+   * Clear this mutator i.e. reset it to pristine condition
+   */
+  public void clear();
 }
