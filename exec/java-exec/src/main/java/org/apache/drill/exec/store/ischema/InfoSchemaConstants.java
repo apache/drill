@@ -100,5 +100,6 @@ public interface InfoSchemaConstants {
    String FILES_COL_OWNER = "OWNER";
    String FILES_COL_GROUP = "GROUP";
    String FILES_COL_PERMISSION = "PERMISSION";
+   String FILES_COL_ACCESS_TIME = "ACCESS_TIME";
    String FILES_COL_MODIFICATION_TIME = "MODIFICATION_TIME";
 }
