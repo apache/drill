@@ -18,17 +18,17 @@ Several examples in the document use the donuts.json file. To download this file
 
 This documentation presents HTTP methods in the same order as functions appear in the Web Console:
 
-[**Query**]({{site.baseurl}}/docs/rest-api/#query)
+[**Query**]({{site.baseurl}}/docs/rest-api-introduction/#query)
 
 Submit a query and return results.
 
-[**Profiles**](({{site.baseurl}}/docs/rest-api/#profiles))
+[**Profiles**]({{site.baseurl}}/docs/rest-api-introduction/#profiles)
 
 * Get the profiles of running and completed queries.  
 * Get the profile of the query that has the given queryid.  
 * Cancel the query that has the given queryid.  
 
-[**Storage**]({{site.baseurl}}/docs/rest-api/#storage)
+[**Storage**]({{site.baseurl}}/docs/rest-api-introduction/#storage)
 
 * Get the list of storage plugin names and configurations.  
 * Get the definition of the named storage plugin.  
@@ -38,11 +38,11 @@ Submit a query and return results.
 * Get Drillbit information, such as ports numbers.  
 * Get the current memory metrics.  
 
-[**Threads**](({{site.baseurl}}/docs/rest-api/#threads))
+[**Threads**]({{site.baseurl}}/docs/rest-api-introduction/#threads)
 
 Get the status of threads.  
 
-[**Options**]({{site.baseurl}}/docs/rest-api/#options)
+[**Options**]({{site.baseurl}}/docs/rest-api-introduction/#options)
 
 List information about system/session options.  
 
