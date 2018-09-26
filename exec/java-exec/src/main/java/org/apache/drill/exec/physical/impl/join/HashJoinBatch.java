@@ -1415,8 +1415,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
     //  No real code generation !!
 
-    final HashJoinProbe hj = context.getImplementationClass(cg);
-    return hj;
+    return context.getImplementationClass(cg);
   }
 
   @Override

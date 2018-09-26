@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.compile;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestTools;
@@ -38,6 +40,8 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   private static final String LARGE_QUERY_ORDER_BY_WITH_LIMIT;
 
   private static final String LARGE_QUERY_FILTER;
+
+  private static final String HUGE_STRING_CONST_QUERY;
 
   private static final String LARGE_QUERY_WRITER;
 
@@ -107,6 +111,21 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       sb.append(" employee_id+").append(i).append(" < employee_id ").append(i%2==0?"OR":"AND");
     }
     LARGE_QUERY_FILTER = sb.append(" true") .toString();
+  }
+
+  static {
+    final char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+    int len = 1 << 18;
+    char[] longText = new char[len];
+    for (int j = 0; j < len; ++j) {
+      longText[j] = alphabet[ThreadLocalRandom.current().nextInt(0, alphabet.length)];
+    }
+    StringBuilder sb = new StringBuilder("select *\n")
+      .append("from cp.`employee.json`\n")
+      .append("where last_name ='")
+      .append(longText)
+      .append("'");
+    HUGE_STRING_CONST_QUERY = sb.toString();
   }
 
   static {
@@ -226,6 +245,26 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       testNoResult("alter session reset `planner.enable_mergejoin`");
       testNoResult("alter session reset `%s`", ClassCompilerSelector.JAVA_COMPILER_OPTION);
       testNoResult("drop table if exists %s", tableName);
+    }
+  }
+
+  @Test
+  public void testJDKHugeStringConstantCompilation() throws Exception {
+    try {
+      setSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION, "JDK");
+      testNoResult(ITERATION_COUNT, HUGE_STRING_CONST_QUERY);
+    } finally {
+      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
+    }
+  }
+
+  @Test
+  public void testJaninoHugeStringConstantCompilation() throws Exception {
+    try {
+      setSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION, "JANINO");
+      testNoResult(ITERATION_COUNT, HUGE_STRING_CONST_QUERY);
+    } finally {
+      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
     }
   }
 }

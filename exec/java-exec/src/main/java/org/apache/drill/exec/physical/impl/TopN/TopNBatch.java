@@ -379,8 +379,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   private PriorityQueue createNewPriorityQueue(VectorAccessible batch, int limit)
     throws SchemaChangeException, ClassTransformationException, IOException {
     return createNewPriorityQueue(
-      mainMapping, leftMapping, rightMapping, context.getOptions(), context.getFunctionRegistry(), context.getCompiler(),
-      config.getOrderings(), batch, unionTypeEnabled, codegenDump, limit, oContext.getAllocator(), schema.getSelectionVectorMode());
+      mainMapping, leftMapping, rightMapping, config.getOrderings(), batch, unionTypeEnabled,
+      codegenDump, limit, oContext.getAllocator(), schema.getSelectionVectorMode(), context);
   }
 
   public static MappingSet createMainMappingSet() {
@@ -397,10 +397,11 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
   public static PriorityQueue createNewPriorityQueue(
     MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping,
-    OptionSet optionSet, FunctionLookupContext functionLookupContext, CodeCompiler codeCompiler,
     List<Ordering> orderings, VectorAccessible batch, boolean unionTypeEnabled, boolean codegenDump,
-    int limit, BufferAllocator allocator, SelectionVectorMode mode)
+    int limit, BufferAllocator allocator, SelectionVectorMode mode, FragmentContext context)
           throws ClassTransformationException, IOException, SchemaChangeException {
+    OptionSet optionSet = context.getOptions();
+    FunctionLookupContext functionLookupContext = context.getFunctionRegistry();
     CodeGenerator<PriorityQueue> cg = CodeGenerator.get(PriorityQueue.TEMPLATE_DEFINITION, optionSet);
     cg.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
@@ -438,7 +439,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
 
-    PriorityQueue q = codeCompiler.createInstance(cg);
+    PriorityQueue q = context.getImplementationClass(cg);
     q.init(limit, allocator, mode == BatchSchema.SelectionVectorMode.TWO_BYTE);
     return q;
   }

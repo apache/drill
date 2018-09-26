@@ -24,6 +24,7 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.physical.impl.common.CodeGenMemberInjector;
 
 import io.netty.buffer.DrillBuf;
 
@@ -53,7 +54,9 @@ public abstract class BaseFragmentContext implements FragmentContext {
   @Override
   public <T> T getImplementationClass(final CodeGenerator<T> cg)
       throws ClassTransformationException, IOException {
-    return getCompiler().createInstance(cg);
+    T instance = getCompiler().createInstance(cg);
+    CodeGenMemberInjector.injectMembers(cg.getRoot(), instance, this);
+    return instance;
   }
 
   @Override
@@ -63,7 +66,9 @@ public abstract class BaseFragmentContext implements FragmentContext {
 
   @Override
   public <T> List<T> getImplementationClass(final CodeGenerator<T> cg, final int instanceCount) throws ClassTransformationException, IOException {
-    return getCompiler().createInstances(cg, instanceCount);
+    List<T> instances = getCompiler().createInstances(cg, instanceCount);
+    instances.forEach(instance -> CodeGenMemberInjector.injectMembers(cg.getRoot(), instance, this));
+    return instances;
   }
 
   protected abstract BufferManager getBufferManager();
