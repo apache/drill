@@ -16,6 +16,10 @@
         }
       },
       formats: {
+        "msgpack" : {
+          type: "msgpack",
+          extensions: [ "mp" ]
+        },
         "psv" : {
           type: "text",
           extensions: [ "tbl" ],
@@ -136,6 +140,10 @@
       type: "file",
       connection: "classpath:///",
       formats: {
+        "msgpack" : {
+          type: "msgpack",
+          extensions: [ "mp" ]
+        },
         "csv" : {
           type: "text",
           extensions: [ "csv" ],

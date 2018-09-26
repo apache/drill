@@ -21,40 +21,38 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>drill-root</artifactId>
-    <groupId>org.apache.drill</groupId>
+    <artifactId>drill-contrib-parent</artifactId>
+    <groupId>org.apache.drill.contrib</groupId>
     <version>1.15.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.apache.drill.contrib</groupId>
-  <artifactId>drill-contrib-parent</artifactId>
-  <name>contrib/Parent Pom</name>
-  <packaging>pom</packaging>
+  <artifactId>drill-codec-zstd</artifactId>
+
+  <name>contrib/zstd-codec-plugin</name>
+
+  <properties>
+     <mongo.TestSuite>**/MongoTestSuit.class</mongo.TestSuite>
+  </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-java-exec</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+	  <!-- https://mvnrepository.com/artifact/com.github.luben/zstd-jni -->
+	  <dependency>
+	    <groupId>com.github.luben</groupId>
+	    <artifactId>zstd-jni</artifactId>
+	    <version>1.3.5-4</version>
+	  </dependency>
+
   </dependencies>
 
-  <modules>
-    <module>storage-hbase</module>
-    <module>format-maprdb</module>
-    <module>storage-hive</module>
-    <module>storage-mongo</module>
-    <module>storage-jdbc</module>
-    <module>storage-kafka</module>
-    <module>storage-kudu</module>
-    <module>storage-opentsdb</module>
-    <module>data</module>
-    <module>udfs</module>
-    <module>storage-msgpack</module>
-    <module>codec-zstd</module>
-  </modules>
+  <build>
+    <plugins>
+    </plugins>
+  </build>
 
-  <profiles>
-    <profile>
-      <id>travis</id>
-      <properties>
-        <skipTests>true</skipTests>
-      </properties>
-    </profile>
-  </profiles>
 </project>
