@@ -117,6 +117,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   private final JoinRelType joinType;
   private boolean joinIsLeftOrFull;
   private boolean joinIsRightOrFull;
+  private boolean skipHashTableBuild; // when outer side is empty, and the join is inner or left (see DRILL-6755)
 
   // Join conditions
   private final List<JoinCondition> conditions;
@@ -263,6 +264,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         buildSchema = right.getSchema();
         // position of the new "column" for keeping the hash values (after the real columns)
         rightHVColPosition = right.getContainer().getNumberOfColumns();
+        // In special cases, when the probe side is empty, and inner/left join - no need for Hash Table
+        skipHashTableBuild = leftUpstream == IterOutcome.NONE && ! joinIsRightOrFull;
         // We only need the hash tables if we have data on the build side.
         setupHashTable();
       }
@@ -606,6 +609,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     final List<Comparator> comparators = Lists.newArrayListWithExpectedSize(conditions.size());
     conditions.forEach(cond->comparators.add(JoinUtils.checkAndReturnSupportedJoinComparator(cond)));
 
+    if ( skipHashTableBuild ) { return; }
+
     // Setup the hash table configuration object
     List<NamedExpression> leftExpr = new ArrayList<>(conditions.size());
 
@@ -822,6 +827,11 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   public IterOutcome executeBuildPhase() throws SchemaChangeException {
     if (buildSideIsEmpty.booleanValue()) {
       // empty right
+      return null;
+    }
+
+    if ( skipHashTableBuild ) { // No hash table needed - then consume all the right upstream
+      killAndDrainRightUpstream();
       return null;
     }
 
