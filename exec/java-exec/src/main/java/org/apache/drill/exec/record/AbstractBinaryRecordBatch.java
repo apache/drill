@@ -113,7 +113,7 @@ public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> exte
     return verifyOutcomeToSetBatchState(leftUpstream, rightUpstream);
   }
 
-  /*
+  /**
    * Checks for the operator specific early terminal condition.
    * @return true if the further processing can stop.
    *         false if the further processing is needed.
