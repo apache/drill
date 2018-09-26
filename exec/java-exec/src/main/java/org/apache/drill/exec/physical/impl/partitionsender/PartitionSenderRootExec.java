@@ -229,40 +229,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
 
   @VisibleForTesting
   protected void createPartitioner() throws SchemaChangeException {
-    final int divisor = Math.max(1, outGoingBatchCount/actualPartitions);
-    final int longTail = outGoingBatchCount % actualPartitions;
-
-    final List<Partitioner> subPartitioners = createClassInstances(actualPartitions);
-    int startIndex = 0;
-    int endIndex = 0;
-
-    boolean success = false;
-    try {
-      for (int i = 0; i < actualPartitions; i++) {
-        startIndex = endIndex;
-        endIndex = (i < actualPartitions - 1) ? startIndex + divisor : outGoingBatchCount;
-        if (i < longTail) {
-          endIndex++;
-        }
-        final OperatorStats partitionStats = new OperatorStats(stats, true);
-        subPartitioners.get(i).setup(context, incoming, popConfig, partitionStats, oContext,
-            startIndex, endIndex);
-      }
-
-      partitioner = new PartitionerDecorator(subPartitioners, stats, context);
-      for (int index = 0; index < terminations.size(); index++) {
-        partitioner.getOutgoingBatches(terminations.buffer[index]).terminate();
-      }
-      terminations.clear();
-
-      success = true;
-    } finally {
-      if (!success) {
-        for (Partitioner p : subPartitioners) {
-          p.clear();
-        }
-      }
-    }
+    createClassInstances(actualPartitions);
   }
 
   private List<Partitioner> createClassInstances(int actualPartitions) throws SchemaChangeException {
@@ -297,6 +264,39 @@ public class PartitionSenderRootExec extends BaseRootExec {
     try {
       // compile and setup generated code
       List<Partitioner> subPartitioners = context.getImplementationClass(cg, actualPartitions);
+
+      final int divisor = Math.max(1, outGoingBatchCount/actualPartitions);
+      final int longTail = outGoingBatchCount % actualPartitions;
+      int startIndex = 0;
+      int endIndex = 0;
+
+      boolean success = false;
+      try {
+        for (int i = 0; i < actualPartitions; i++) {
+          startIndex = endIndex;
+          endIndex = (i < actualPartitions - 1) ? startIndex + divisor : outGoingBatchCount;
+          if (i < longTail) {
+            endIndex++;
+          }
+          final OperatorStats partitionStats = new OperatorStats(stats, true);
+          subPartitioners.get(i).setup(context, incoming, popConfig, partitionStats, oContext,
+            cgInner, startIndex, endIndex);
+        }
+
+        partitioner = new PartitionerDecorator(subPartitioners, stats, context);
+        for (int index = 0; index < terminations.size(); index++) {
+          partitioner.getOutgoingBatches(terminations.buffer[index]).terminate();
+        }
+        terminations.clear();
+
+        success = true;
+      } finally {
+        if (!success) {
+          for (Partitioner p : subPartitioners) {
+            p.clear();
+          }
+        }
+      }
       return subPartitioners;
 
     } catch (ClassTransformationException | IOException e) {

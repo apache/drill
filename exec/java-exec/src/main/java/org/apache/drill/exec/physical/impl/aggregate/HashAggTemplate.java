@@ -38,6 +38,7 @@ import org.apache.drill.exec.compile.sig.RuntimeOverridden;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
 
 import org.apache.drill.exec.memory.BaseAllocator;
@@ -50,6 +51,7 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.common.AbstractSpilledPartitionMetadata;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
+import org.apache.drill.exec.physical.impl.common.CodeGenMemberInjector;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
@@ -139,7 +141,8 @@ public abstract class HashAggTemplate implements HashAggregator {
   private HashAggBatch outgoing;
   private VectorContainer outContainer;
 
-  private FragmentContext context;
+  protected FragmentContext context;
+  protected ClassGenerator<?> cg;
   private OperatorContext oContext;
   private BufferAllocator allocator;
 
@@ -362,7 +365,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   @Override
   public void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext,
                     RecordBatch incoming, HashAggBatch outgoing, LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds,
-                    TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException {
+                    ClassGenerator<?> cg, TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException {
 
     if (valueExprs == null || valueFieldIds == null) {
       throw new IllegalArgumentException("Invalid aggr value exprs or workspace variables.");
@@ -377,6 +380,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.oContext = oContext;
     this.incoming = incoming;
     this.outgoing = outgoing;
+    this.cg = cg;
     this.outContainer = outContainer;
     this.useMemoryPrediction = context.getOptions().getOption(ExecConstants.HASHAGG_USE_MEMORY_PREDICTION_VALIDATOR);
 
@@ -1102,7 +1106,12 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   // These methods are overridden in the generated class when created as plain Java code.
   protected BatchHolder newBatchHolder(int batchRowCount) {
-    return new BatchHolder(batchRowCount);
+    return this.injectMembers(new BatchHolder(batchRowCount));
+  }
+
+  protected BatchHolder injectMembers(BatchHolder batchHolder) {
+    CodeGenMemberInjector.injectMembers(cg, batchHolder, context);
+    return batchHolder;
   }
 
   /**

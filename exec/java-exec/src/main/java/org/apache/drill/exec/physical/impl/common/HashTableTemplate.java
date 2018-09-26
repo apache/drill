@@ -23,6 +23,8 @@ import java.util.Set;
 
 import javax.inject.Named;
 
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -108,6 +110,10 @@ public abstract class HashTableTemplate implements HashTable {
   private VectorContainer htContainerOrig;
 
   private MaterializedField dummyIntField;
+
+  protected FragmentContext context;
+
+  protected ClassGenerator<?> cg;
 
   private int numResizing = 0;
 
@@ -445,7 +451,9 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   @Override
-  public void setup(HashTableConfig htConfig, BufferAllocator allocator, VectorContainer incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing, VectorContainer htContainerOrig) {
+  public void setup(HashTableConfig htConfig, BufferAllocator allocator, VectorContainer incomingBuild,
+                    RecordBatch incomingProbe, RecordBatch outgoing, VectorContainer htContainerOrig,
+                    FragmentContext context, ClassGenerator<?> cg) {
     float loadf = htConfig.getLoadFactor();
     int initialCap = htConfig.getInitialCapacity();
 
@@ -469,6 +477,8 @@ public abstract class HashTableTemplate implements HashTable {
     this.incomingProbe = incomingProbe;
     this.outgoing = outgoing;
     this.htContainerOrig = htContainerOrig;
+    this.context = context;
+    this.cg = cg;
     this.allocationTracker = new HashTableAllocationTracker(htConfig);
 
     // round up the initial capacity to nearest highest power of 2
@@ -761,7 +771,12 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   protected BatchHolder newBatchHolder(int index, int newBatchHolderSize) { // special method to allow debugging of gen code
-    return new BatchHolder(index, newBatchHolderSize);
+    return this.injectMembers(new BatchHolder(index, newBatchHolderSize));
+  }
+
+  protected BatchHolder injectMembers(BatchHolder batchHolder) {
+    CodeGenMemberInjector.injectMembers(cg, batchHolder, context);
+    return batchHolder;
   }
 
   // Resize the hash table if needed by creating a new one with double the number of buckets.

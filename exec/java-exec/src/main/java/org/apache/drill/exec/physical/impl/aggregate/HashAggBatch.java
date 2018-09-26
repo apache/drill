@@ -432,6 +432,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     agg.setup(popConfig, htConfig, context, oContext, incoming, this,
         aggrExprs,
         cgInner.getWorkspaceTypes(),
+        cgInner,
         groupByOutFieldIds,
         this.container, extraNonNullColumns * 8 /* sizeof(BigInt) */);
 

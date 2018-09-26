@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.ops.ExchangeFragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -34,6 +35,7 @@ public interface Partitioner {
              HashPartitionSender popConfig,
              OperatorStats stats,
              OperatorContext oContext,
+             ClassGenerator<?> cg,
              int start, int count) throws SchemaChangeException;
 
   void partitionBatch(RecordBatch incoming) throws IOException;

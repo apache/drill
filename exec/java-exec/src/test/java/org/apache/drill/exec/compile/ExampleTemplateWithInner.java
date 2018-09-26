@@ -72,7 +72,11 @@ public abstract class ExampleTemplateWithInner implements ExampleInner{
     }
 
     protected DoubleInner newDoubleInner() {
-      return new DoubleInner();
+      return this.injectMembers(new DoubleInner());
+    }
+
+    protected DoubleInner injectMembers(DoubleInner doubleInner) {
+      return doubleInner;
     }
 
     public class DoubleInner {
@@ -101,6 +105,10 @@ public abstract class ExampleTemplateWithInner implements ExampleInner{
    * subclass (or replacement) of the template inner class
    */
   protected TheInnerClass newTheInnerClass( ) {
-    return new TheInnerClass();
+    return this.injectMembers(new TheInnerClass());
+  }
+
+  protected TheInnerClass injectMembers(TheInnerClass theInnerClass) {
+    return theInnerClass;
   }
 }

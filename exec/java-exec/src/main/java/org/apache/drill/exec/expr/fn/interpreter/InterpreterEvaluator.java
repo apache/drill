@@ -227,7 +227,7 @@ public class InterpreterEvaluator {
         @Nullable
         @Override
         public ValueHolder apply(DrillBuf buffer) {
-          return ValueHolderHelper.getDecimal28Holder(buffer, decExpr.getBigDecimal().toString());
+          return ValueHolderHelper.getDecimal28Holder(buffer, decExpr.getBigDecimal());
         }
       });
     }
@@ -238,7 +238,7 @@ public class InterpreterEvaluator {
         @Nullable
         @Override
         public ValueHolder apply(DrillBuf buffer) {
-          return ValueHolderHelper.getDecimal38Holder(buffer, decExpr.getBigDecimal().toString());
+          return ValueHolderHelper.getDecimal38Holder(buffer, decExpr.getBigDecimal());
         }
       });
     }
@@ -246,7 +246,7 @@ public class InterpreterEvaluator {
     @Override
     public ValueHolder visitVarDecimalConstant(final ValueExpressions.VarDecimalExpression decExpr, Integer value) throws RuntimeException {
       return getConstantValueHolder(decExpr.getBigDecimal().toString(), decExpr.getMajorType().getMinorType(),
-          buffer -> ValueHolderHelper.getVarDecimalHolder(Objects.requireNonNull(buffer), decExpr.getBigDecimal().toString()));
+          buffer -> ValueHolderHelper.getVarDecimalHolder(Objects.requireNonNull(buffer), decExpr.getBigDecimal()));
     }
 
     @Override
