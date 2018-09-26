@@ -103,7 +103,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
   @Override
   public void close() {
     if (!isTerminated() && context.getExecutorState().shouldContinue()) {
-      final String msg = String.format("Cleanup before finished. %d out of %d strams have finished", completedStreams(), fragmentCount);
+      final String msg = String.format("Cleanup before finished. %d out of %d streams have finished", completedStreams(), fragmentCount);
       throw  new IllegalStateException(msg);
     }
 
