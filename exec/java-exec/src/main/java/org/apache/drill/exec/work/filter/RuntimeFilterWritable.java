@@ -36,9 +36,14 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable{
 
   private DrillBuf[] data;
 
+  private String identifier;
+
   public RuntimeFilterWritable(BitData.RuntimeFilterBDef runtimeFilterBDef, DrillBuf... data) {
     this.runtimeFilterBDef = runtimeFilterBDef;
     this.data = data;
+    this.identifier = "majorFragmentId:" + runtimeFilterBDef.getMajorFragmentId()
+      + ",minorFragmentId:" + runtimeFilterBDef.getMinorFragmentId()
+      + ", srcOperatorId:" + runtimeFilterBDef.getHjOpId();
   }
 
 
@@ -90,7 +95,7 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable{
       int capacity = src.readableBytes();
       DrillBuf duplicateOne = bufferAllocator.buffer(capacity);
       int readerIndex = src.readerIndex();
-      src.readBytes(duplicateOne, 0, capacity);
+      duplicateOne.writeBytes(src);
       src.readerIndex(readerIndex);
       cloned[i] = duplicateOne;
       i++;
@@ -98,19 +103,25 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable{
     return new RuntimeFilterWritable(runtimeFilterBDef, cloned);
   }
 
-  public boolean same(RuntimeFilterWritable other) {
-    BitData.RuntimeFilterBDef runtimeFilterDef = other.getRuntimeFilterBDef();
-    int otherMajorId = runtimeFilterDef.getMajorFragmentId();
-    int otherMinorId = runtimeFilterDef.getMinorFragmentId();
-    int otherHashJoinOpId = runtimeFilterDef.getHjOpId();
-    int thisMajorId = this.runtimeFilterBDef.getMajorFragmentId();
-    int thisMinorId = this.runtimeFilterBDef.getMinorFragmentId();
-    int thisHashJoinOpId = this.runtimeFilterBDef.getHjOpId();
-    return otherMajorId == thisMajorId && otherMinorId == thisMinorId && otherHashJoinOpId == thisHashJoinOpId;
+  public String toString() {
+    return identifier;
   }
 
-  public String toString() {
-    return "majorFragmentId:" + runtimeFilterBDef.getMajorFragmentId() + ",minorFragmentId:" + runtimeFilterBDef.getMinorFragmentId() + ", operatorId:" + runtimeFilterBDef.getHjOpId();
+  @Override
+  public boolean equals(Object other) {
+    if (other == null) {
+      return false;
+    }
+    if (other instanceof RuntimeFilterWritable) {
+      RuntimeFilterWritable otherRFW = (RuntimeFilterWritable) other;
+      return this.identifier.equals(otherRFW.identifier);
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return identifier.hashCode();
   }
 
   @Override
@@ -119,5 +130,4 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable{
       buf.release();
     }
   }
-
 }

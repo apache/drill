@@ -25,6 +25,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -38,11 +39,27 @@ public class RuntimeFilterSink implements AutoCloseable {
 
   private int staleBookId = 0;
 
+  /**
+   * RuntimeFilterWritable holding the aggregated version of all the received filter
+   */
   private RuntimeFilterWritable aggregated = null;
 
   private BlockingQueue<RuntimeFilterWritable> rfQueue = new LinkedBlockingQueue<>();
 
+  /**
+   * Flag used by Minor Fragment thread to indicate it has encountered error
+   */
   private AtomicBoolean running = new AtomicBoolean(true);
+
+  /**
+   * Lock used to synchronize between producer (Netty Thread) and consumer (AsyncAggregateThread) of elements of this
+   * queue. This is needed because in error condition running flag can be consumed by producer and consumer thread at
+   * different times. Whoever sees it first will take this lock and clear all elements and set the queue to null to
+   * indicate producer not to put any new elements in it.
+   */
+  private ReentrantLock queueLock = new ReentrantLock();
+
+  private Condition notEmpty = queueLock.newCondition();
 
   private ReentrantLock aggregatedRFLock = new ReentrantLock();
 
@@ -62,24 +79,34 @@ public class RuntimeFilterSink implements AutoCloseable {
 
   public void aggregate(RuntimeFilterWritable runtimeFilterWritable) {
     if (running.get()) {
-      if (containOne()) {
-        boolean same = aggregated.same(runtimeFilterWritable);
-        if (!same) {
-          //This is to solve the only one fragment case that two RuntimeFilterRecordBatchs
-          //share the same FragmentContext.
-          try {
-            aggregatedRFLock.lock();
+      try {
+        aggregatedRFLock.lock();
+        if (containOne()) {
+          boolean same = aggregated.equals(runtimeFilterWritable);
+          if (!same) {
+            // This is to solve the only one fragment case that two RuntimeFilterRecordBatchs
+            // share the same FragmentContext.
             aggregated.close();
-            aggregated = null;
-          } finally {
-            aggregatedRFLock.unlock();
+            currentBookId.set(0);
+            staleBookId = 0;
+            clearQueued(false);
           }
-          currentBookId.set(0);
-          staleBookId = 0;
-          clearQueued();
         }
+      } finally {
+        aggregatedRFLock.unlock();
       }
-      rfQueue.add(runtimeFilterWritable);
+
+      try {
+        queueLock.lock();
+        if (rfQueue != null) {
+          rfQueue.add(runtimeFilterWritable);
+          notEmpty.signal();
+        } else {
+          runtimeFilterWritable.close();
+        }
+      } finally {
+        queueLock.unlock();
+      }
     } else {
       runtimeFilterWritable.close();
     }
@@ -116,53 +143,77 @@ public class RuntimeFilterSink implements AutoCloseable {
     return aggregated != null;
   }
 
+  private void doCleanup() {
+    running.compareAndSet(true, false);
+    try {
+      aggregatedRFLock.lock();
+      if (containOne()) {
+        aggregated.close();
+        aggregated = null;
+      }
+    } finally {
+      aggregatedRFLock.unlock();
+    }
+  }
+
   @Override
   public void close() throws Exception {
-    running.compareAndSet(true, false);
     asyncAggregateThread.interrupt();
-    if (containOne()) {
-      try {
-        aggregatedRFLock.lock();
-        aggregated.close();
-      } finally {
-        aggregatedRFLock.unlock();
-      }
-    }
-    clearQueued();
+    doCleanup();
   }
 
-  private void clearQueued() {
+  private void clearQueued(boolean setToNull) {
     RuntimeFilterWritable toClear;
-    while ((toClear = rfQueue.poll()) != null) {
-      toClear.close();
+    try {
+      queueLock.lock();
+      while (rfQueue != null && (toClear = rfQueue.poll()) != null) {
+        toClear.close();
+      }
+      rfQueue = (setToNull) ? null : rfQueue;
+    } finally {
+      queueLock.unlock();
     }
   }
 
-  class AsyncAggregateWorker implements Runnable {
+  private class AsyncAggregateWorker implements Runnable {
 
     @Override
     public void run() {
       try {
+        RuntimeFilterWritable toAggregate = null;
         while (running.get()) {
-          RuntimeFilterWritable toAggregate = rfQueue.take();
-          if (!running.get()) {
-            toAggregate.close();
-            return;
-          }
-          if (containOne()) {
-            try {
-              aggregatedRFLock.lock();
-              aggregated.aggregate(toAggregate);
-            } finally {
-              aggregatedRFLock.unlock();
+          try {
+            queueLock.lock();
+            toAggregate = (rfQueue != null) ? rfQueue.poll() :  null;
+            if (toAggregate == null) {
+              notEmpty.await();
+              continue;
             }
-          } else {
-            aggregated = toAggregate;
+          } finally {
+            queueLock.unlock();
+          }
+
+          try {
+            aggregatedRFLock.lock();
+            if (containOne()) {
+              aggregated.aggregate(toAggregate);
+
+              // Release the byteBuf referenced by toAggregate since aggregate will not do it
+              toAggregate.close();
+            } else {
+              aggregated = toAggregate;
+            }
+          } finally {
+            aggregatedRFLock.unlock();
           }
           currentBookId.incrementAndGet();
         }
       } catch (InterruptedException e) {
         logger.info("Thread : {} was interrupted.", asyncAggregateThread.getName(), e);
+        Thread.currentThread().interrupt();
+      } finally {
+        doCleanup();
+        clearQueued(true);
       }
     }
   }

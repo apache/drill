@@ -222,18 +222,10 @@ public class RuntimeFilterVisitor extends BasePrelVisitor<Prel, Void, RuntimeExc
           holder.setFromBuildSide(true);
           right.accept(this, holder);
           boolean routeToForeman = holder.needToRouteToForeman();
-          if (!routeToForeman) {
-            runtimeFilterDef.setSendToForeman(false);
-          } else {
-            runtimeFilterDef.setSendToForeman(true);
-          }
+          runtimeFilterDef.setSendToForeman(routeToForeman);
           List<BloomFilterDef> bloomFilterDefs = runtimeFilterDef.getBloomFilterDefs();
           for (BloomFilterDef bloomFilterDef : bloomFilterDefs) {
-            if (!routeToForeman) {
-              bloomFilterDef.setLocal(true);
-            } else {
-              bloomFilterDef.setLocal(false);
-            }
+            bloomFilterDef.setLocal(!routeToForeman);
           }
         }
       }
