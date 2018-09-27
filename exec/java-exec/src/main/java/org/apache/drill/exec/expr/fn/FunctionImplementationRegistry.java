@@ -408,7 +408,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * @return true is local registry should be refreshed, false otherwise
    */
   private boolean isRegistrySyncNeeded(long remoteVersion, long localVersion) {
-    return remoteVersion != -1 && remoteVersion != localVersion;
+    return remoteVersion != RemoteFunctionRegistry.UNREACHABLE && remoteVersion != localVersion;
   }
 
   /**

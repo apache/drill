@@ -84,6 +84,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
   private static final String registry_path = "registry";
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteFunctionRegistry.class);
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
+  public static final int UNREACHABLE = Integer.MIN_VALUE;
 
   private final TransientStoreListener unregistrationListener;
   private int retryAttempts;
@@ -108,9 +109,9 @@ public class RemoteFunctionRegistry implements AutoCloseable {
 
   /**
    * Returns current remote function registry version.
-   * If remote function registry is not found or unreachable, logs error and returns -1.
+   * If remote function registry is not found or unreachable, logs error and returns UNREACHABLE (Integer.MIN_VALUE) .
    *
-   * @return remote function registry version if any, -1 otherwise
+   * @return remote function registry version if any, RemoteFunctionRegistry.UNREACHABLE otherwise
    */
   public long getRegistryVersion() {
     DataChangeVersion version = new DataChangeVersion();
@@ -124,7 +125,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
       return version.getVersion();
     } else {
       logger.error("Remote function registry [{}] is unreachable", registry_path);
-      return -1;
+      return UNREACHABLE;
     }
   }
 
