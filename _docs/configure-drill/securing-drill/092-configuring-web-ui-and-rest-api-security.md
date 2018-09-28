@@ -1,6 +1,6 @@
 ---
 title: "Configuring Web Console and REST API Security"
-date: 2018-06-15 18:30:16 UTC
+date: 2018-09-28 23:05:25 UTC
 parent: "Securing Drill"
 ---
 Drill 1.5 extends [Drill user security]({{site.baseurl}}/docs/configuring-user-security/) to the Web Console and underlying REST API. As administrator, you can control the extent of access to the Web Console and REST API client applications. For example,
@@ -28,7 +28,9 @@ As cluster administrator, you can set the following SSL configuration parameters
 * javax.net.ssl.trustStore  
   Path to the trusted CA certificates in a keystore file.  
 * javax.net.ssl.trustStorePassword  
-  Password for accessing the trusted keystore file.
+  Password for accessing the trusted keystore file.   
+
+See [SSL Certificates in a Drill Cluster]({{site.baseurl}}/docs/configuring-ssl-tls-for-encryption/#ssl-certificates-in-a-drill-cluster) for more information. 
  
 ## Prerequisites for Web Console and REST API Security
 
