@@ -54,34 +54,36 @@ import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
  * Creates all remote registry areas at startup and validates them,
  * during init establishes connections with three udf related stores.
  * Provides tools to work with three udf related stores, gives access to remote registry areas.
- *
+ * <p/>
  * There are three udf stores:
- * REGISTRY - persistent store, stores remote function registry {@link Registry} under udf path
- * which contains information about all dynamically registered jars and their function signatures.
- * If connection is created for the first time, puts empty remote registry.
  *
- * UNREGISTRATION - transient store, stores information under udf/unregister path.
+ * <li><b>REGISTRY</b> - persistent store, stores remote function registry {@link Registry} under udf path
+ * which contains information about all dynamically registered jars and their function signatures.
+ * If connection is created for the first time, puts empty remote registry.</li>
+ *
+ * <li><b>UNREGISTRATION</b> - transient store, stores information under udf/unregister path.
  * udf/unregister path is persistent by itself but any child created will be transient.
  * Whenever user submits request to unregister jar, child path with jar name is created under this store.
  * This store also holds unregistration listener, which notifies all drill bits when child path is created,
- * so they can start local unregistration process.
+ * so they can start local unregistration process.</li>
  *
- * JARS - transient store, stores information under udf/jars path.
+ * <li><b>JARS</b> - transient store, stores information under udf/jars path.
  * udf/jars path is persistent by itself but any child created will be transient.
  * Servers as lock, not allowing to perform any action on the same time.
  * There two types of actions: {@link Action#REGISTRATION} and {@link Action#UNREGISTRATION}.
  * Before starting any action, users tries to create child path with jar name under this store
  * and if such path already exists, receives action being performed on that very jar.
- * When user finishes its action, he deletes child path with jar name.
- *
+ * When user finishes its action, he deletes child path with jar name.</li>
+ * <p/>
  * There are three udf areas:
- * STAGING - area where user copies binary and source jars before starting registration process.
- * REGISTRY - area where registered jars are stored.
- * TMP - area where source and binary jars are backed up in unique folder during registration process.
+ *
+ * <li><b>STAGING</b> - area where user copies binary and source jars before starting registration process.</li>
+ * <li><b>REGISTRY</b> - area where registered jars are stored.</li>
+ * <li><b>TMP</b> - area where source and binary jars are backed up in unique folder during registration process.</li>
  */
 public class RemoteFunctionRegistry implements AutoCloseable {
 
-  private static final String registry_path = "registry";
+  private static final String REGISTRY_PATH = "registry";
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteFunctionRegistry.class);
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
@@ -112,19 +114,19 @@ public class RemoteFunctionRegistry implements AutoCloseable {
    *
    * @return remote function registry version if any, -1 otherwise
    */
-  public long getRegistryVersion() {
+  public int getRegistryVersion() {
     DataChangeVersion version = new DataChangeVersion();
     boolean contains = false;
     try {
-      contains = registry.contains(registry_path, version);
+      contains = registry.contains(REGISTRY_PATH, version);
     } catch (Exception e) {
-      logger.error("Problem during trying to access remote function registry [{}]", registry_path, e);
+      logger.error("Problem during trying to access remote function registry [{}]", REGISTRY_PATH, e);
     }
     if (contains) {
       return version.getVersion();
     } else {
-      logger.error("Remote function registry [{}] is unreachable", registry_path);
-      return -1;
+      logger.error("Remote function registry [{}] is unreachable", REGISTRY_PATH);
+      return DataChangeVersion.NOT_AVAILABLE;
     }
   }
 
@@ -137,11 +139,11 @@ public class RemoteFunctionRegistry implements AutoCloseable {
   public boolean hasRegistry() { return registry != null; }
 
   public Registry getRegistry(DataChangeVersion version) {
-    return registry.get(registry_path, version);
+    return registry.get(REGISTRY_PATH, version);
   }
 
   public void updateRegistry(Registry registryContent, DataChangeVersion version) throws VersionMismatchException {
-    registry.put(registry_path, registryContent, version);
+    registry.put(REGISTRY_PATH, registryContent, version);
   }
 
   public void submitForUnregistration(String jar) {
@@ -193,7 +195,8 @@ public class RemoteFunctionRegistry implements AutoCloseable {
           .persist()
           .build();
       registry = storeProvider.getOrCreateVersionedStore(registrationConfig);
-      registry.putIfAbsent(registry_path, Registry.getDefaultInstance());
+      logger.trace("Remote function registry type: {}.", registry.getClass());
+      registry.putIfAbsent(REGISTRY_PATH, Registry.getDefaultInstance());
     } catch (StoreException e) {
       throw new DrillRuntimeException("Failure while loading remote registry.", e);
     }

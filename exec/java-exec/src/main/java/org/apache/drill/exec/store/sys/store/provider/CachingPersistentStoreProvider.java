@@ -17,21 +17,23 @@
  */
 package org.apache.drill.exec.store.sys.store.provider;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.exec.store.sys.VersionedPersistentStore;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
+import org.apache.drill.common.util.function.CheckedFunction;
 
 public class CachingPersistentStoreProvider extends BasePersistentStoreProvider {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CachingPersistentStoreProvider.class);
 
-  private final ConcurrentMap<PersistentStoreConfig<?>, PersistentStore<?>> storeCache = Maps.newConcurrentMap();
+  private final Map<PersistentStoreConfig<?>, PersistentStore<?>> storeCache = new ConcurrentHashMap<>();
+  private final Map<PersistentStoreConfig<?>, VersionedPersistentStore<?>> versionedStoreCache = new ConcurrentHashMap<>();
   private final PersistentStoreProvider provider;
 
   public CachingPersistentStoreProvider(PersistentStoreProvider provider) {
@@ -41,21 +43,15 @@ public class CachingPersistentStoreProvider extends BasePersistentStoreProvider 
   @Override
   @SuppressWarnings("unchecked")
   public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> config) throws StoreException {
-    final PersistentStore<?> store = storeCache.get(config);
-    if (store == null) {
-      final PersistentStore<?> newStore = provider.getOrCreateStore(config);
-      final PersistentStore<?> finalStore = storeCache.putIfAbsent(config, newStore);
-      if (finalStore == null) {
-        return (PersistentStore<V>)newStore;
-      }
-      try {
-        newStore.close();
-      } catch (Exception ex) {
-        throw new StoreException(ex);
-      }
-    }
+    CheckedFunction<PersistentStoreConfig<?>, PersistentStore<?>, StoreException> function = provider::getOrCreateStore;
+    return (PersistentStore<V>) storeCache.computeIfAbsent(config, function);
+  }
 
-    return (PersistentStore<V>) store;
+  @Override
+  @SuppressWarnings("unchecked")
+  public <V> VersionedPersistentStore<V> getOrCreateVersionedStore(PersistentStoreConfig<V> config) throws StoreException {
+    CheckedFunction<PersistentStoreConfig<?>, VersionedPersistentStore<?>, StoreException> function = provider::getOrCreateVersionedStore;
+    return (VersionedPersistentStore<V>) versionedStoreCache.computeIfAbsent(config, function);
   }
 
   @Override
@@ -65,12 +61,19 @@ public class CachingPersistentStoreProvider extends BasePersistentStoreProvider 
 
   @Override
   public void close() throws Exception {
-    final List<AutoCloseable> closeables = Lists.newArrayList();
-    for (final AutoCloseable store : storeCache.values()) {
-      closeables.add(store);
-    }
-    closeables.add(provider);
+    List<AutoCloseable> closeables = new ArrayList<>();
+
+    // add un-versioned stores
+    closeables.addAll(storeCache.values());
     storeCache.clear();
+
+    // add versioned stores
+    closeables.addAll(versionedStoreCache.values());
+    versionedStoreCache.clear();
+
+    // add provider
+    closeables.add(provider);
+
     AutoCloseables.close(closeables);
   }
 

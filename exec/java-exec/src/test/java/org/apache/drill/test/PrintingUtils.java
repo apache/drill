@@ -19,7 +19,7 @@ package org.apache.drill.test;
 
 import ch.qos.logback.classic.Level;
 import org.apache.drill.exec.client.LoggingResultsListener;
-import org.apache.drill.exec.util.CheckedSupplier;
+import org.apache.drill.common.util.function.CheckedSupplier;
 import org.apache.drill.exec.util.VectorUtil;
 
 import java.util.function.Supplier;

@@ -26,7 +26,9 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
+import org.apache.drill.exec.store.sys.VersionedPersistentStore;
 import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
+import org.apache.drill.exec.store.sys.store.VersionedDelegatingStore;
 import org.apache.drill.exec.testing.store.NoWriteLocalStore;
 import org.apache.hadoop.fs.Path;
 
@@ -70,6 +72,10 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
     }
   }
 
+  @Override
+  public <V> VersionedPersistentStore<V> getOrCreateVersionedStore(PersistentStoreConfig<V> config) {
+    return new VersionedDelegatingStore<>(getOrCreateStore(config));
+  }
 
   @Override
   public void close() throws Exception {

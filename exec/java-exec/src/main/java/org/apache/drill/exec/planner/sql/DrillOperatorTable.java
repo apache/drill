@@ -54,7 +54,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   private final ArrayListMultimap<String, SqlOperator> drillOperatorsWithInferenceMap = ArrayListMultimap.create();
   // indicates remote function registry version based on which drill operator were loaded
   // is used to define if we need to reload operator table in case remote function registry version has changed
-  private long functionRegistryVersion;
+  private int functionRegistryVersion;
 
   private final OptionManager systemOptionManager;
 
@@ -70,14 +70,14 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
    *
    * @param version registry version
    */
-  public void setFunctionRegistryVersion(long version) {
+  public void setFunctionRegistryVersion(int version) {
     functionRegistryVersion = version;
   }
 
   /**
    * @return function registry version based on which operator table was loaded
    */
-  public long getFunctionRegistryVersion() {
+  public int getFunctionRegistryVersion() {
     return functionRegistryVersion;
   }
 
