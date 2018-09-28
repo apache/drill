@@ -1,6 +1,6 @@
 ---
 title: "Plugin Configuration Basics"
-date: 2018-08-02 22:29:53 UTC
+date: 2018-09-28 21:35:20 UTC
 parent: "Storage Plugin Configuration"
 ---
 There are several ways you can configure storage plugins. For example, you can configure storage plugins in the Drill Web UI,  using REST API, or through configuration files. See [Configuring Storage Plugins]({{site.baseurl}}/docs/configuring-storage-plugins/) for more information.
@@ -151,9 +151,21 @@ For more information about format plugin configuration see ["Text Files: CSV, TS
 
 The configuration of other attributes, such as `size.calculator.enabled` in the `hbase` plugin and `configProps` in the `hive` plugin, are implementation-dependent and beyond the scope of this document.
 
-## Case-sensitive Names
-As previously mentioned, workspace and storage plugin names are case-sensitive. For example, the following query uses a storage plugin name `dfs` and a workspace name `clicks`. When you refer to `dfs.clicks` in an SQL statement, use the defined case:
+## Case-Sensitivity  
 
-    0: jdbc:drill:> USE dfs.clicks;
+Starting in Drill 1.15, storage plugin names and workspaces (schemas) are case-insensitive. For example, the following query uses a storage plugin named `dfs` and a workspace named `clicks`. You can reference `dfs.clicks` in an SQL statement in uppercase or lowercase, as shown:
 
-For example, using uppercase letters in the query after defining the storage plugin and workspace names using lowercase letters does not work.  
+       USE dfs.clicks;  
+       USE DFS.CLICKs;
+       USE dfs.CLICKS; 
+
+Refer to [Case-Sensitivity]({{site.baseurl}}/docs/lexical-structure/#case-sensitivity) for more information about case-sensitivity in Drill.
+  
+
+
+
+
+
+
+ 
+ 
