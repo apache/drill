@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.util;
+package org.apache.drill.common.util.function;
 
 /**
- * The java standard library does not provide a lambda function interface for funtions that take no arguments,
+ * The java standard library does not provide a lambda function interface for functions that take no arguments,
  * but that throw an exception. So, we have to define our own here.
  * @param <T> The return type of the lambda function.
  * @param <E> The type of exception thrown by the lambda function.

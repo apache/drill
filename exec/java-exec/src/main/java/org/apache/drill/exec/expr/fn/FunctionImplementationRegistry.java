@@ -25,11 +25,12 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -64,7 +65,6 @@ import org.apache.drill.exec.server.options.OptionSet;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.exec.util.JarUtil;
 import org.apache.hadoop.fs.FileSystem;
@@ -83,7 +83,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   private final Path localUdfDir;
   private boolean deleteTmpDir = false;
   private File tmpDir;
-  private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
+  private List<PluggableFunctionRegistry> pluggableFuncRegistries = new ArrayList<>();
   private OptionSet optionManager;
   private final boolean useDynamicUdfs;
 
@@ -168,7 +168,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    */
   @Override
   public DrillFuncHolder findDrillFunction(FunctionResolver functionResolver, FunctionCall functionCall) {
-    AtomicLong version = new AtomicLong();
+    AtomicInteger version = new AtomicInteger();
     String newFunctionName = functionReplacement(functionCall);
 
     // Dynamic UDFS: First try with exact match. If not found, we may need to
@@ -246,7 +246,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
                                                          List<MajorType> argTypes,
                                                          MajorType returnType,
                                                          boolean retry) {
-    AtomicLong version = new AtomicLong();
+    AtomicInteger version = new AtomicInteger();
     for (DrillFuncHolder h : localFunctionRegistry.getMethods(name, version)) {
       if (h.matches(returnType, argTypes)) {
         return h;
@@ -321,19 +321,19 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   /**
    * Purpose of this method is to synchronize remote and local function registries if needed
    * and to inform if function registry was changed after given version.
-   *
+   * <p/>
    * To make synchronization as much light-weigh as possible, first only versions of both registries are checked
    * without any locking. If synchronization is needed, enters synchronized block to prevent others loading the same jars.
    * The need of synchronization is checked again (double-check lock) before comparing jars.
    * If any missing jars are found, they are downloaded to local udf area, each is wrapped into {@link JarScan}.
    * Once jar download is finished, all missing jars are registered in one batch.
    * In case if any errors during jars download / registration, these errors are logged.
-   *
+   * <p/>
    * During registration local function registry is updated with remote function registry version it is synced with.
    * When at least one jar of the missing jars failed to download / register,
    * local function registry version are not updated but jars that where successfully downloaded / registered
    * are added to local function registry.
-   *
+   * <p/>
    * If synchronization between remote and local function registry was not needed,
    * checks if given registry version matches latest sync version
    * to inform if function registry was changed after given version.
@@ -342,16 +342,16 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * @return true if remote and local function registries were synchronized after given version
    */
   @SuppressWarnings("resource")
-  public boolean syncWithRemoteRegistry(long version) {
+  public boolean syncWithRemoteRegistry(int version) {
     // Do the version check only if a remote registry exists. It does
     // not exist for some JMockit-based unit tests.
     if (isRegistrySyncNeeded()) {
       synchronized (this) {
-        long localRegistryVersion = localFunctionRegistry.getVersion();
+        int localRegistryVersion = localFunctionRegistry.getVersion();
         if (isRegistrySyncNeeded(remoteFunctionRegistry.getRegistryVersion(), localRegistryVersion))  {
           DataChangeVersion remoteVersion = new DataChangeVersion();
           List<String> missingJars = getMissingJars(this.remoteFunctionRegistry, localFunctionRegistry, remoteVersion);
-          List<JarScan> jars = Lists.newArrayList();
+          List<JarScan> jars = new ArrayList<>();
           if (!missingJars.isEmpty()) {
             logger.info("Starting dynamic UDFs lazy-init process.\n" +
                 "The following jars are going to be downloaded and registered locally: " + missingJars);
@@ -381,7 +381,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
               }
             }
           }
-          long latestRegistryVersion = jars.size() != missingJars.size() ?
+          int latestRegistryVersion = jars.size() != missingJars.size() ?
               localRegistryVersion : remoteVersion.getVersion();
           localFunctionRegistry.register(jars, latestRegistryVersion);
           return true;
@@ -392,23 +392,38 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     return version != localFunctionRegistry.getVersion();
   }
 
+  /**
+   * Checks if remote and local registries should be synchronized.
+   * Before comparing versions, checks if remote function registry is actually exists.
+   *
+   * @return true is local registry should be refreshed, false otherwise
+   */
   private boolean isRegistrySyncNeeded() {
+    logger.trace("Has remote function registry: {}", remoteFunctionRegistry.hasRegistry());
     return remoteFunctionRegistry.hasRegistry() &&
            isRegistrySyncNeeded(remoteFunctionRegistry.getRegistryVersion(), localFunctionRegistry.getVersion());
   }
 
   /**
    * Checks if local function registry should be synchronized with remote function registry.
-   * If remote function registry version is -1, it means that remote function registry is unreachable
-   * or is not configured thus we skip synchronization and return false.
-   * In all other cases synchronization is needed if remote and local function registries versions do not match.
+   *
+   * <ul>If remote function registry version is {@link DataChangeVersion#UNDEFINED},
+   * it means that remote function registry does not support versioning
+   * thus we need to synchronize both registries.</ul>
+   * <ul>If remote function registry version is {@link DataChangeVersion#NOT_AVAILABLE},
+   * it means that remote function registry is unreachable
+   * or is not configured thus we skip synchronization and return false.</ul>
+   * <ul>For all other cases synchronization is needed if remote
+   * and local function registries versions do not match.</ul>
    *
    * @param remoteVersion remote function registry version
    * @param localVersion local function registry version
    * @return true is local registry should be refreshed, false otherwise
    */
-  private boolean isRegistrySyncNeeded(long remoteVersion, long localVersion) {
-    return remoteVersion != -1 && remoteVersion != localVersion;
+  private boolean isRegistrySyncNeeded(int remoteVersion, int localVersion) {
+    logger.trace("Compare remote [{}] and local [{}] registry versions.", remoteVersion, localVersion);
+    return remoteVersion == DataChangeVersion.UNDEFINED ||
+        (remoteVersion != DataChangeVersion.NOT_AVAILABLE && remoteVersion != localVersion);
   }
 
   /**
@@ -459,7 +474,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
                                       DataChangeVersion version) {
     List<Jar> remoteJars = remoteFunctionRegistry.getRegistry(version).getJarList();
     List<String> localJars = localFunctionRegistry.getAllJarNames();
-    List<String> missingJars = Lists.newArrayList();
+    List<String> missingJars = new ArrayList<>();
     for (Jar jar : remoteJars) {
       if (!localJars.contains(jar.getName())) {
         missingJars.add(jar.getName());

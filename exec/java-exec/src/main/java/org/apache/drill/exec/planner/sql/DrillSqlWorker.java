@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
@@ -58,8 +57,7 @@ public class DrillSqlWorker {
    * @param sql sql query
    * @return query physical plan
    */
-  public static PhysicalPlan getPlan(QueryContext context, String sql) throws SqlParseException, ValidationException,
-      ForemanSetupException {
+  public static PhysicalPlan getPlan(QueryContext context, String sql) throws ForemanSetupException {
     return getPlan(context, sql, null);
   }
 
@@ -76,15 +74,18 @@ public class DrillSqlWorker {
    * @param textPlan text plan
    * @return query physical plan
    */
-  public static PhysicalPlan getPlan(QueryContext context, String sql, Pointer<String> textPlan)
-      throws ForemanSetupException {
+  public static PhysicalPlan getPlan(QueryContext context, String sql, Pointer<String> textPlan) throws ForemanSetupException {
     Pointer<String> textPlanCopy = textPlan == null ? null : new Pointer<>(textPlan.value);
     try {
       return getQueryPlan(context, sql, textPlan);
     } catch (Exception e) {
+      logger.trace("There was an error during conversion into physical plan. " +
+          "Will sync remote and local function registries if needed and retry " +
+          "in case if issue was due to missing function implementation.");
       if (context.getFunctionRegistry().syncWithRemoteRegistry(
           context.getDrillOperatorTable().getFunctionRegistryVersion())) {
         context.reloadDrillOperatorTable();
+        logger.trace("Local function registry was synchronized with remote. Trying to find function one more time.");
         return getQueryPlan(context, sql, textPlanCopy);
       }
       throw e;

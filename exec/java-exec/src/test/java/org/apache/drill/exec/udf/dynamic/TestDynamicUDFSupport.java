@@ -64,7 +64,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -762,7 +762,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
     DataChangeVersion version = new DataChangeVersion();
     Registry registry = remoteFunctionRegistry.getRegistry(version);
-    assertEquals("Remote registry version should match", 1, version.getVersion());
+    assertEquals("Remote registry version should match", 2, version.getVersion());
     List<Jar> jarList = registry.getJarList();
     assertEquals("Only one jar should be registered", 1, jarList.size());
     assertEquals("Jar name should match", jar1, jarList.get(0).getName());
@@ -823,7 +823,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
     DataChangeVersion version = new DataChangeVersion();
     Registry registry = remoteFunctionRegistry.getRegistry(version);
-    assertEquals("Remote registry version should match", 2, version.getVersion());
+    assertEquals("Remote registry version should match", 3, version.getVersion());
 
     List<Jar> actualJars = registry.getJarList();
     List<String> expectedJars = Lists.newArrayList(jar1, jar2);
@@ -861,7 +861,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
           assertTrue("syncWithRemoteRegistry() should return true", result);
           return true;
         })
-        .when(functionImplementationRegistry).syncWithRemoteRegistry(anyLong());
+        .when(functionImplementationRegistry).syncWithRemoteRegistry(anyInt());
 
     SimpleQueryRunner simpleQueryRunner = new SimpleQueryRunner(query);
     Thread thread1 = new Thread(simpleQueryRunner);
@@ -873,10 +873,10 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     thread1.join();
     thread2.join();
 
-    verify(functionImplementationRegistry, times(2)).syncWithRemoteRegistry(anyLong());
+    verify(functionImplementationRegistry, times(2)).syncWithRemoteRegistry(anyInt());
     LocalFunctionRegistry localFunctionRegistry = (LocalFunctionRegistry)FieldUtils.readField(
         functionImplementationRegistry, "localFunctionRegistry", true);
-    assertEquals("Sync function registry version should match", 1L, localFunctionRegistry.getVersion());
+    assertEquals("Sync function registry version should match", 2, localFunctionRegistry.getVersion());
   }
 
   @Test
@@ -895,7 +895,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
           assertFalse("syncWithRemoteRegistry() should return false", result);
           return false;
         })
-        .when(functionImplementationRegistry).syncWithRemoteRegistry(anyLong());
+        .when(functionImplementationRegistry).syncWithRemoteRegistry(anyInt());
 
     test("select custom_lower('A') from (values(1))");
 
@@ -906,10 +906,10 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
       assertThat(e.getMessage(), containsString("No match found for function signature unknown_lower(<CHARACTER>)"));
     }
 
-    verify(functionImplementationRegistry, times(2)).syncWithRemoteRegistry(anyLong());
+    verify(functionImplementationRegistry, times(2)).syncWithRemoteRegistry(anyInt());
     LocalFunctionRegistry localFunctionRegistry = (LocalFunctionRegistry)FieldUtils.readField(
         functionImplementationRegistry, "localFunctionRegistry", true);
-    assertEquals("Sync function registry version should match", 1L, localFunctionRegistry.getVersion());
+    assertEquals("Sync function registry version should match", 2, localFunctionRegistry.getVersion());
   }
 
   private static String buildJars(String jarName, String includeFiles, String includeResources) {

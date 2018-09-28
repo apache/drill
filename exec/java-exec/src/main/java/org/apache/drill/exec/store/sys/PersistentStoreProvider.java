@@ -18,24 +18,37 @@
 package org.apache.drill.exec.store.sys;
 
 import org.apache.drill.exec.exception.StoreException;
-import org.apache.drill.exec.store.sys.store.VersionedDelegatingStore;
+import org.apache.drill.exec.store.sys.store.UndefinedVersionDelegatingStore;
 
 /**
  * A factory used to create {@link PersistentStore store} instances.
- *
  */
 public interface PersistentStoreProvider extends AutoCloseable {
+
   /**
    * Gets or creates a {@link PersistentStore persistent store} for the given configuration.
    *
    * Note that implementors have liberty to cache previous {@link PersistentStore store} instances.
    *
-   * @param config  store configuration
-   * @param <V>  store value type
+   * @param config store configuration
+   * @param <V> store value type
+   * @return persistent store instance
+   * @throws StoreException in case when unable to create store
    */
   <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> config) throws StoreException;
+
+  /**
+   * Override this method if store supports versioning and return versioning instance.
+   * By default, undefined version wrapper will be used.
+   *
+   * @param config store configuration
+   * @param <V> store value type
+   * @return versioned persistent store instance
+   * @throws StoreException in case when unable to create store
+   */
   default <V> VersionedPersistentStore<V> getOrCreateVersionedStore(PersistentStoreConfig<V> config) throws StoreException {
-    return new VersionedDelegatingStore<>(getOrCreateStore(config));
+    // for those stores that do not support versioning
+    return new UndefinedVersionDelegatingStore<>(getOrCreateStore(config));
   }
 
   /**
