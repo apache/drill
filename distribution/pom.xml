@@ -259,7 +259,7 @@
         </dependency>
         <dependency>
           <groupId>org.apache.drill.contrib</groupId>
-          <artifactId>drill-storage-msgpack</artifactId>
+          <artifactId>drill-format-msgpack</artifactId>
           <version>${project.version}</version>
         </dependency>
         <dependency>
