@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.msgpack;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,8 @@ import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.TimeStampHolder;
+import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
@@ -39,6 +42,7 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.msgpack.value.ArrayValue;
+import org.msgpack.value.ExtensionValue;
 import org.msgpack.value.FloatValue;
 import org.msgpack.value.IntegerValue;
 import org.msgpack.value.MapValue;
@@ -52,42 +56,27 @@ public class MsgpackReader extends BaseMsgpackReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackReader.class);
   private final List<SchemaPath> columns;
   private boolean atLeastOneWrite = false;
-  private final boolean readNumbersAsDouble;
   private DrillBuf workBuf;
   private FieldSelection rootSelection;
 
-  public MsgpackReader(DrillBuf managedBuf, boolean allTextMode, boolean readNumbersAsDouble) {
-    this(managedBuf, GroupScan.ALL_COLUMNS, readNumbersAsDouble);
+  public MsgpackReader(DrillBuf managedBuf) {
+    this(managedBuf, GroupScan.ALL_COLUMNS);
   }
 
-  public MsgpackReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean readNumbersAsDouble) {
-    assert Preconditions.checkNotNull(columns).size() > 0 : "bson record reader requires at least a column";
-    this.readNumbersAsDouble = readNumbersAsDouble;
+  public MsgpackReader(DrillBuf managedBuf, List<SchemaPath> columns) {
+    assert Preconditions.checkNotNull(columns).size() > 0 : "msgpack record reader requires at least a column";
     this.workBuf = managedBuf;
     this.columns = columns;
     rootSelection = FieldSelection.getFieldSelection(columns);
   }
 
   @Override
-  public ReadState write(ComplexWriter writer) throws IOException {
-    if (!unpacker.hasNext()) {
-      return ReadState.END_OF_STREAM;
-    }
-
-    Value v = unpacker.unpackValue();
-    ValueType type = v.getValueType();
-    switch (type) {
-    case MAP:
-      writeToMap(v, new MapOrListWriterImpl(writer.rootAsMap()), this.rootSelection);
-      break;
-    default:
-      throw new DrillRuntimeException("Root objects must be of MAP type. Found: " + type);
-    }
-
-    return ReadState.WRITE_SUCCEED;
+  protected void writeRecord(Value mapValue, ComplexWriter writer) throws IOException {
+    writeToMap(mapValue, new MapOrListWriterImpl(writer.rootAsMap()), this.rootSelection);
   }
 
-  private void writeToList(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection) throws IOException {
+  private void writeToList(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection)
+      throws IOException {
     writer.start();
     try {
       ArrayValue arrayValue = listOrMapValue.asArrayValue();
@@ -100,53 +89,71 @@ public class MsgpackReader extends BaseMsgpackReader {
     }
   }
 
-  private void writeToMap(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection) throws IOException {
+  private void writeToMap(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection)
+      throws IOException {
     writer.start();
     try {
       MapValue mapValue = listOrMapValue.asMapValue();
       Set<Map.Entry<Value, Value>> entries = mapValue.entrySet();
       for (Map.Entry<Value, Value> entry : entries) {
         Value key = entry.getKey();
-        String fieldName = key.asStringValue().asString();
-        FieldSelection childSelection = selection.getChild(fieldName);
-        if (childSelection.isNeverValid()) {
-          // consume entire value by simply not writing it.
-          continue;
+        String fieldName = getFieldName(key);
+        if (fieldName != null) {
+          FieldSelection childSelection = selection.getChild(fieldName);
+          if (!childSelection.isNeverValid()) {
+            Value value = entry.getValue();
+            writeElement(value, writer, false, fieldName, childSelection);
+          }
         }
-        Value value = entry.getValue();
-        writeElement(value, writer, false, fieldName, childSelection);
       }
-
     } finally {
       writer.end();
     }
   }
 
-  private void writeElement(Value v, final MapOrListWriterImpl writer, boolean isList, String fieldName, FieldSelection selection)
-      throws IOException {
+  private String getFieldName(Value v) {
+
+    String fieldName = null;
+
+    ValueType valueType = v.getValueType();
+    switch (valueType) {
+    case STRING:
+      fieldName = v.asStringValue().asString();
+      break;
+    case BINARY:
+      byte[] bytes = v.asBinaryValue().asByteArray();
+      fieldName = new String(bytes);
+      break;
+    case INTEGER:
+      IntegerValue iv = v.asIntegerValue();
+      fieldName = iv.toString();
+      break;
+    case ARRAY:
+    case BOOLEAN:
+    case MAP:
+    case FLOAT:
+    case EXTENSION:
+    case NIL:
+      break;
+    default:
+      throw new DrillRuntimeException("UnSupported messagepack type: " + valueType);
+    }
+    return fieldName;
+  }
+
+  private void writeElement(Value v, final MapOrListWriterImpl writer, boolean isList, String fieldName,
+      FieldSelection selection) throws IOException {
 
     ValueType valueType = v.getValueType();
     switch (valueType) {
     case INTEGER:
       IntegerValue iv = v.asIntegerValue();
-      if (iv.isInIntRange()) {
-        int i = iv.toInt();
-        if (readNumbersAsDouble) {
-          writeDouble(i, writer, fieldName, isList);
-        } else {
-          writeInt32(i, writer, fieldName, isList);
-        }
-      } else if (iv.isInLongRange()) {
-        long l = iv.toLong();
-        if (readNumbersAsDouble) {
-          writeDouble(l, writer, fieldName, isList);
-        } else {
-          writeInt64(l, writer, fieldName, isList);
-        }
+      if (iv.isInIntRange() || iv.isInLongRange()) {
+        long longVal = iv.toLong();
+        writeInt64(longVal, writer, fieldName, isList);
       } else {
-        @SuppressWarnings("unused")
         BigInteger i = iv.toBigInteger();
-        throw new DrillRuntimeException("UnSupported messagepack type: " + valueType + " with BigInteger value");
+        throw new DrillRuntimeException("UnSupported messagepack type: " + valueType + " with BigInteger value: " + i);
       }
       atLeastOneWrite = true;
       break;
@@ -177,6 +184,15 @@ public class MsgpackReader extends BaseMsgpackReader {
       atLeastOneWrite = true;
       break;
     case EXTENSION:
+      ExtensionValue ev = v.asExtensionValue();
+      byte extType = ev.getType();
+      if (extType == -1) {
+        writeTimestamp(ev, writer, fieldName, isList);
+      } else {
+        byte[] bytes = ev.getData();
+        writeBinary(bytes, writer, fieldName, isList);
+      }
+      atLeastOneWrite = true;
       break;
     case NIL:
       // just read and ignore.
@@ -187,9 +203,113 @@ public class MsgpackReader extends BaseMsgpackReader {
       writeString(buff, writer, fieldName, isList);
       atLeastOneWrite = true;
       break;
+    case BINARY:
+      byte[] bytes = v.asBinaryValue().asByteArray();
+      writeBinary(bytes, writer, fieldName, isList);
+      atLeastOneWrite = true;
+      break;
     default:
-      // BINARY not supported yet
       throw new DrillRuntimeException("UnSupported messagepack type: " + valueType);
+    }
+  }
+
+  /**
+   * <code>
+   * <pre>
+   * timestamp 32 stores the number of seconds that have elapsed since 1970-01-01 00:00:00 UTC
+   * in an 32-bit unsigned integer:
+   * +--------+--------+--------+--------+--------+--------+
+   * |  0xd6  |   -1   |   seconds in 32-bit unsigned int  |
+   * +--------+--------+--------+--------+--------+--------+
+   *
+   * timestamp 64 stores the number of seconds and nanoseconds that have elapsed since 1970-01-01 00:00:00 UTC
+   * in 32-bit unsigned integers:
+   * +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+   * |  0xd7  |   -1   |nanoseconds in 30-bit unsigned int |  seconds in 34-bit unsigned int   |
+   * +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+   *
+   * timestamp 96 stores the number of seconds and nanoseconds that have elapsed since 1970-01-01 00:00:00 UTC
+   * in 64-bit signed integer and 32-bit unsigned integer:
+   * +--------+--------+--------+--------+--------+--------+--------+
+   * |  0xc7  |   12   |   -1   |nanoseconds in 32-bit unsigned int |
+   * +--------+--------+--------+--------+--------+--------+--------+
+   * +--------+--------+--------+--------+--------+--------+--------+--------+
+   *                     seconds in 64-bit signed int                        |
+   * +--------+--------+--------+--------+--------+--------+--------+--------+
+   *</pre>
+   *</code>
+   */
+  private void writeTimestamp(ExtensionValue ev, MapOrListWriterImpl writer, String fieldName, boolean isList) {
+    byte zero = 0;
+    byte[] v = ev.getData();
+    final TimeStampHolder ts = new TimeStampHolder();
+    switch (v.length) {
+    case 4: {
+      ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+      buffer.put(zero);
+      buffer.put(zero);
+      buffer.put(zero);
+      buffer.put(zero);
+      buffer.put(v);
+      buffer.position(0);
+      ts.value = buffer.getLong();
+    }
+      break;
+    // uint32_t data32 = value.payload;
+    // result.tv_nsec = 0;
+    // result.tv_sec = data32;
+    case 8: {
+      ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+      buffer.put(zero);
+      buffer.put(zero);
+      buffer.put(zero);
+      buffer.put(zero);
+      buffer.put(v);
+      buffer.position(0);
+      ts.value = buffer.getLong();
+    }
+      break;
+    // uint64_t data64 = value.payload;
+    // result.tv_nsec = data64 >> 34;
+    // result.tv_sec = data64 & 0x00000003ffffffffL;
+    case 12: {
+      ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+      buffer.put(zero);
+      buffer.put(zero);
+      buffer.put(zero);
+      buffer.put(zero);
+      buffer.put(v);
+      buffer.position(0);
+      ts.value = buffer.getLong();
+    }
+      break;
+    // uint32_t data32 = value.payload;
+    // uint64_t data64 = value.payload + 4;
+    // result.tv_nsec = data32;
+    // result.tv_sec = data64;
+    default:
+      // error
+    }
+
+    if (isList == false) {
+      writer.timeStamp(fieldName).write(ts);
+    } else {
+      writer.list.timeStamp().write(ts);
+    }
+  }
+
+  private void writeBinary(byte[] bytes, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+    int length = bytes.length;
+    ensure(length);
+    workBuf.setBytes(0, bytes);
+    final VarBinaryHolder vb = new VarBinaryHolder();
+    vb.buffer = workBuf;
+    vb.start = 0;
+    vb.end = length;
+    if (isList == false) {
+      writer.varBinary(fieldName).write(vb);
+    } else {
+      writer.list.varBinary().write(vb);
     }
   }
 
@@ -271,7 +391,6 @@ public class MsgpackReader extends BaseMsgpackReader {
   public UserException.Builder getExceptionWithContext(Throwable exception, String field, String msg, Object... args) {
     return null;
   }
-
 
   private void ensure(final int length) {
     workBuf = workBuf.reallocIfNeeded(length);

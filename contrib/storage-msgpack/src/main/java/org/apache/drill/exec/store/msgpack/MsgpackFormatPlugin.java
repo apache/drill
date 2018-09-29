@@ -25,7 +25,6 @@ import java.util.Map;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
@@ -33,17 +32,15 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
 
@@ -64,7 +61,7 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
   @Override
   public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
       List<SchemaPath> columns, String userName) {
-    return new MsgpackRecordReader(context, fileWork.getPath(), dfs, columns);
+    return new MsgpackRecordReader(getConfig(), context, fileWork.getPath(), dfs, columns);
   }
 
   @Override
@@ -77,14 +74,7 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
     String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
     options.put("prefix", fragmentId);
 
-    options.put("separator", " ");
-    options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig) writer.getStorageConfig()).getConnection());
-
     options.put("extension", "mp");
-    options.put("extended", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_EXTENDED_TYPES)));
-    options.put("uglify", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_UGLIFY)));
-    options.put("skipnulls",
-        Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_SKIPNULLFIELDS)));
     RecordWriter recordWriter = new MsgpackRecordWriter(writer.getStorageStrategy());
     recordWriter.init(options);
 
@@ -95,6 +85,8 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
   public static class MsgpackFormatConfig implements FormatPluginConfig {
 
     public List<String> extensions = ImmutableList.of("mp");
+    public boolean skipMalformedMsgRecords = true;
+    public boolean printSkippedMalformedMsgRecordLineNumber = true;
     private static final List<String> DEFAULT_EXTS = ImmutableList.of("mp");
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -113,6 +105,8 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
       final int prime = 31;
       int result = 1;
       result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
+      result = prime * result + (printSkippedMalformedMsgRecordLineNumber ? 1231 : 1237);
+      result = prime * result + (skipMalformedMsgRecords ? 1231 : 1237);
       return result;
     }
 
@@ -135,7 +129,21 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
       } else if (!extensions.equals(other.extensions)) {
         return false;
       }
+      if (printSkippedMalformedMsgRecordLineNumber != other.printSkippedMalformedMsgRecordLineNumber) {
+        return false;
+      }
+      if (skipMalformedMsgRecords != other.skipMalformedMsgRecords) {
+        return false;
+      }
       return true;
+    }
+
+    public boolean isSkipMalformedMsgRecords() {
+      return skipMalformedMsgRecords;
+    }
+
+    public boolean isPrintSkippedMalformedMsgRecordLineNumber() {
+      return printSkippedMalformedMsgRecordLineNumber;
     }
   }
 

@@ -19,11 +19,8 @@ package org.apache.drill.exec.store.msgpack;
 
 import java.io.IOException;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.msgpack.value.Value;
-import org.msgpack.value.ValueType;
 
 public class CountingMsgpackReader extends BaseMsgpackReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CountingMsgpackReader.class);
@@ -32,31 +29,8 @@ public class CountingMsgpackReader extends BaseMsgpackReader {
   }
 
   @Override
-  public ReadState write(ComplexWriter writer) throws IOException {
-    if (!unpacker.hasNext()) {
-      return ReadState.END_OF_STREAM;
-    }
-
-    Value v = unpacker.unpackValue();
-    ValueType type = v.getValueType();
-    switch (type) {
-    case MAP:
-      writer.rootAsMap().bit("count").writeBit(1);
-      break;
-    default:
-      throw new DrillRuntimeException("Root objects must be of MAP type. Found: " + type);
-    }
-
-    return ReadState.WRITE_SUCCEED;
-  }
-
-  public UserException.Builder getExceptionWithContext(UserException.Builder exceptionBuilder, String field, String msg,
-      Object... args) {
-    return null;
-  }
-
-  public UserException.Builder getExceptionWithContext(Throwable exception, String field, String msg, Object... args) {
-    return null;
+  protected void writeRecord(Value mapValue, ComplexWriter writer) throws IOException {
+    writer.rootAsMap().bit("count").writeBit(1);
   }
 
   @Override

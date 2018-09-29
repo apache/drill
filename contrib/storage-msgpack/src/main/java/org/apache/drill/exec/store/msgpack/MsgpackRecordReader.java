@@ -24,7 +24,6 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -32,6 +31,7 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState;
+import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -56,14 +56,14 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private int recordCount;
   private long runningRecordCount = 0;
   private final FragmentContext fragmentContext;
-  private final boolean readNumbersAsDouble;
-  private final boolean unionEnabled;
   private long parseErrorCount;
-  private final boolean skipMalformedJSONRecords;
-  private final boolean printSkippedMalformedJSONRecordLineNumber;
+  private final boolean skipMalformedMsgRecords;
+  private final boolean printSkippedMalformedMsgRecordLineNumber;
   ReadState write = null;
 
   private BaseMsgpackReader messageReader;
+
+  private boolean unionEnabled = false; // ????
 
   /**
    * Create a JSON Record Reader that uses a file based input stream.
@@ -74,9 +74,9 @@ public class MsgpackRecordReader extends AbstractRecordReader {
    * @param columns         pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */
-  public MsgpackRecordReader(final FragmentContext fragmentContext, final String inputPath,
+  public MsgpackRecordReader(MsgpackFormatConfig config, final FragmentContext fragmentContext, final String inputPath,
       final DrillFileSystem fileSystem, final List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, inputPath, null, fileSystem, columns);
+    this(config, fragmentContext, inputPath, null, fileSystem, columns);
   }
 
   /**
@@ -89,12 +89,12 @@ public class MsgpackRecordReader extends AbstractRecordReader {
    * @param columns         pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */
-  public MsgpackRecordReader(final FragmentContext fragmentContext, final JsonNode embeddedContent,
+  public MsgpackRecordReader(MsgpackFormatConfig config, final FragmentContext fragmentContext, final JsonNode embeddedContent,
       final DrillFileSystem fileSystem, final List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, null, embeddedContent, fileSystem, columns);
+    this(config, fragmentContext, null, embeddedContent, fileSystem, columns);
   }
 
-  private MsgpackRecordReader(final FragmentContext fragmentContext, final String inputPath,
+  private MsgpackRecordReader(MsgpackFormatConfig config, final FragmentContext fragmentContext, final String inputPath,
       final JsonNode embeddedContent, final DrillFileSystem fileSystem, final List<SchemaPath> columns) {
 
     Preconditions.checkArgument(
@@ -110,15 +110,10 @@ public class MsgpackRecordReader extends AbstractRecordReader {
 
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
-    // only enable all text mode if we aren't using embedded content mode.
-    this.readNumbersAsDouble = embeddedContent == null
-        && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR);
-    this.unionEnabled = embeddedContent == null
-        && fragmentContext.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
-    this.skipMalformedJSONRecords = fragmentContext.getOptions()
-        .getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR);
-    this.printSkippedMalformedJSONRecordLineNumber = fragmentContext.getOptions()
-        .getOption(ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG_VALIDATOR);
+    this.skipMalformedMsgRecords = config.isSkipMalformedMsgRecords();
+    this.printSkippedMalformedMsgRecordLineNumber = config.isPrintSkippedMalformedMsgRecordLineNumber();
+    //this.skipMalformedMsgRecords = true;
+    //this.printSkippedMalformedMsgRecordLineNumber = true;
     setColumns(columns);
   }
 
@@ -139,8 +134,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
       if (isSkipQuery()) {
         this.messageReader = new CountingMsgpackReader();
       } else {
-        this.messageReader = new MsgpackReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()),
-            readNumbersAsDouble);
+        this.messageReader = new MsgpackReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()));
       }
       setupParser();
     } catch (final Exception e) {
@@ -159,7 +153,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     } else {
       // messageReader.setSource(embeddedContent);
     }
-    // messageReader.setIgnoreJSONParseErrors(skipMalformedJSONRecords);
+    messageReader.setIgnoreMsgParseErrors(skipMalformedMsgRecords);
   }
 
   protected void handleAndRaise(String suffix, Exception e) throws UserException {
@@ -196,7 +190,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     writer.reset();
     recordCount = 0;
     parseErrorCount = 0;
-    if (write == ReadState.JSON_RECORD_PARSE_EOF_ERROR) {
+    if (write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
       return recordCount;
     }
     outside: while (recordCount < DEFAULT_ROWS_PER_BATCH) {
@@ -205,17 +199,17 @@ public class MsgpackRecordReader extends AbstractRecordReader {
         write = messageReader.write(writer);
         if (write == ReadState.WRITE_SUCCEED) {
           recordCount++;
-        } else if (write == ReadState.JSON_RECORD_PARSE_ERROR || write == ReadState.JSON_RECORD_PARSE_EOF_ERROR) {
-          if (skipMalformedJSONRecords == false) {
+        } else if (write == ReadState.MSG_RECORD_PARSE_ERROR || write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
+          if (skipMalformedMsgRecords == false) {
             handleAndRaise("Error parsing JSON",
                 new Exception(hadoopPath.getName() + " : line nos :" + (recordCount + 1)));
           }
           ++parseErrorCount;
-          if (printSkippedMalformedJSONRecordLineNumber) {
+          if (printSkippedMalformedMsgRecordLineNumber) {
             logger.debug(
                 "Error parsing JSON in " + hadoopPath.getName() + " : line nos :" + (recordCount + parseErrorCount));
           }
-          if (write == ReadState.JSON_RECORD_PARSE_EOF_ERROR) {
+          if (write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
             break outside;
           }
         } else { // END_OF_STREAM
