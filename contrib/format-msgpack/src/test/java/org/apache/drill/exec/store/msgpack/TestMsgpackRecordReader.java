@@ -27,6 +27,7 @@ import java.time.ZoneId;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSet;
@@ -46,6 +47,9 @@ public class TestMsgpackRecordReader extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher).maxParallelization(1));
 
     MsgpackFormatConfig msgFormat = new MsgpackFormatConfig();
+    msgFormat.setSkipMalformedMsgRecords(true);
+    msgFormat.setPrintSkippedMalformedMsgRecordLineNumber(true);
+    msgFormat.setExtensions(ImmutableList.of("mp"));
     testDir = cluster.makeDataDir("data", "msgpack", msgFormat);
   }
 
@@ -278,12 +282,33 @@ public class TestMsgpackRecordReader extends ClusterTest {
   }
 
   @Test
+  public void testdCountInvalidMessages() throws Exception {
+    String fileName = "invalidMessages.mp";
+    buildInvalidMessages(fileName);
+
+    String sql = "select count(1) as c from `dfs.data`.`" + fileName + "`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("c", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.REQUIRED)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1002L)
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
   public void testTimestamp() throws Exception {
     LocalDate now = LocalDate.now(ZoneId.of("UTC"));
-    long epochSecond = now.atStartOfDay(ZoneId.of("UTC")).toEpochSecond();
+    long epochSeconds = now.atStartOfDay(ZoneId.of("UTC")).toEpochSecond();
+    long nanoSeconds = 0;
 
     String fileName = "timestamp.mp";
-    buildTimestamp(fileName, epochSecond);
+    buildTimestamp(fileName, epochSeconds, nanoSeconds);
 
     String sql = "select * from `dfs.data`.`" + fileName + "`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
@@ -294,7 +319,56 @@ public class TestMsgpackRecordReader extends ClusterTest {
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(epochSecond)
+        .addRow(epochSeconds)
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
+  public void testTimestampWithNanos() throws Exception {
+    LocalDate now = LocalDate.now(ZoneId.of("UTC"));
+    long epochSeconds = now.atStartOfDay(ZoneId.of("UTC")).toEpochSecond();
+    long nanoSeconds = 900_000;
+
+    String fileName = "timestamp.mp";
+    buildTimestamp(fileName, epochSeconds, nanoSeconds);
+
+    String sql = "select * from `dfs.data`.`" + fileName + "`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("timestamp", TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
+
+    // we are ignoring the nanos
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(epochSeconds)
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
+  public void testTimestampLargeWithNanos() throws Exception {
+    long epochSeconds = (long)Math.pow(2, 35);
+    long nanoSeconds = 900_000;
+
+    String fileName = "timestamp.mp";
+    buildTimestamp(fileName, epochSeconds, nanoSeconds);
+
+    String sql = "select * from `dfs.data`.`" + fileName + "`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("timestamp", TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
+
+    // we are ignoring the nanos
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(epochSeconds)
         .build();
     //@formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
@@ -491,6 +565,43 @@ public class TestMsgpackRecordReader extends ClusterTest {
     packer.close();
   }
 
+  private void buildInvalidMessages(String fileName) throws IOException {
+    MessagePacker packer = makeMessagePacker(fileName);
+
+    for (int i = 0; i < 1000; i++) {
+      packer.packMapHeader(1);
+      packer.packString("x").packLong(1);
+    }
+    // missing field name, all these maps are skipped
+    for (int i = 0; i < 100; i++) {
+      packer.packMapHeader(1);
+      packer.packLong(1);
+    }
+
+    // one map with invalid fields
+    packer.packMapHeader(3);
+    // 1. good tuple
+    packer.packString("x").packLong(1);
+    // 2. map is not a good field name, skipped
+    packer.packMapHeader(1);
+    packer.packString("x").packLong(1);
+    // 2. map is not a good field name, skipped
+    packer.packMapHeader(1);
+    packer.packString("x").packLong(1);
+    // 2. tuple okay
+    packer.packString("x").packLong(1);
+    // 3. tuple okay
+    packer.packString("x").packLong(1);
+
+    // out of bad map
+
+    // one more good map
+    packer.packMapHeader(1);
+    packer.packString("x").packLong(1);
+
+    packer.close();
+  }
+
   private void buildMapWithNonStringFieldName(String fileName) throws IOException {
     MessagePacker packer = makeMessagePacker(fileName);
 
@@ -509,22 +620,46 @@ public class TestMsgpackRecordReader extends ClusterTest {
     packer.close();
   }
 
-  private void buildTimestamp(String fileName, long epochSeconds) throws IOException {
+  private void buildTimestamp(String fileName, long epochSeconds, long nanoSeconds) throws IOException {
     MessagePacker packer = makeMessagePacker(fileName);
 
-    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-    buffer.putLong(epochSeconds);
-
-    byte type = (byte) -1;
-
-    byte[] bytes = new byte[4];
-    buffer.position(4);
-    buffer.get(bytes);
+    byte TIMESTAMP_TYPE = (byte) -1;
 
     packer.packMapHeader(1);
-    packer.packString("timestamp").packExtensionTypeHeader(type, bytes.length);
+    packer.packString("timestamp");
+    byte[] bytes = getBytes(epochSeconds, nanoSeconds);
+    packer.packExtensionTypeHeader(TIMESTAMP_TYPE, bytes.length);
     packer.addPayload(bytes);
     packer.close();
+  }
+
+  private byte[] getBytes(long epochSeconds, long nanoSeconds) {
+    if (epochSeconds >> 34 == 0) {
+      long data64 = (nanoSeconds << 34) | epochSeconds;
+      if ((data64 & 0xffffffff00000000L) == 0) {
+        // timestamp 32
+        return getBytes(data64, 4);
+      } else {
+        // timestamp 64
+        return getBytes(data64, 8);
+      }
+    } else {
+      byte[] nanoUnsigned = getBytes(nanoSeconds, 4);
+      byte[] epochSecondsSigned = getBytes(epochSeconds, 8);
+      byte[] ret = new byte[12];
+      System.arraycopy(nanoUnsigned, 0, ret, 0, 4);
+      System.arraycopy(epochSecondsSigned, 0, ret, 4, 8);
+      return ret;
+    }
+  }
+
+  private byte[] getBytes(long data64, int n) {
+    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+    buffer.putLong(data64);
+    byte[] bytes = new byte[n];
+    buffer.position(Long.BYTES - n);
+    buffer.get(bytes);
+    return bytes;
   }
 
   private void buildUnknownExt(String fileName) throws IOException {

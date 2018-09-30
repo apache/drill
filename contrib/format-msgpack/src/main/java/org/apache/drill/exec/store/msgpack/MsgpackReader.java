@@ -36,6 +36,7 @@ import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
@@ -50,6 +51,7 @@ import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
 
 import io.netty.buffer.DrillBuf;
+import jline.internal.Log;
 
 public class MsgpackReader extends BaseMsgpackReader {
 
@@ -57,8 +59,9 @@ public class MsgpackReader extends BaseMsgpackReader {
   private final List<SchemaPath> columns;
   private boolean atLeastOneWrite = false;
   private DrillBuf workBuf;
-  private FieldSelection rootSelection;
-
+  private final FieldSelection rootSelection;
+  private final ByteBuffer timestampReadBuffer = ByteBuffer.allocate(12);
+  private final boolean skipInvalidKeyTypes = true;
   public MsgpackReader(DrillBuf managedBuf) {
     this(managedBuf, GroupScan.ALL_COLUMNS);
   }
@@ -71,26 +74,32 @@ public class MsgpackReader extends BaseMsgpackReader {
   }
 
   @Override
-  protected void writeRecord(Value mapValue, ComplexWriter writer) throws IOException {
-    writeToMap(mapValue, new MapOrListWriterImpl(writer.rootAsMap()), this.rootSelection);
+  protected ReadState writeRecord(Value mapValue, ComplexWriter writer) throws IOException {
+    return writeToMap(mapValue, new MapOrListWriterImpl(writer.rootAsMap()), this.rootSelection);
   }
 
-  private void writeToList(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection)
+  private ReadState writeToList(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection)
       throws IOException {
+    ReadState readState = ReadState.WRITE_SUCCEED;
     writer.start();
     try {
       ArrayValue arrayValue = listOrMapValue.asArrayValue();
       for (int i = 0; i < arrayValue.size(); i++) {
         Value value = arrayValue.get(i);
-        writeElement(value, writer, true, "", selection);
+        readState = writeElement(value, writer, true, "", selection);
+        if(readState != ReadState.WRITE_SUCCEED) {
+          break;
+        }
       }
     } finally {
       writer.end();
     }
+    return readState;
   }
 
-  private void writeToMap(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection)
+  private ReadState writeToMap(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection)
       throws IOException {
+    ReadState readState = ReadState.WRITE_SUCCEED;
     writer.start();
     try {
       MapValue mapValue = listOrMapValue.asMapValue();
@@ -102,13 +111,24 @@ public class MsgpackReader extends BaseMsgpackReader {
           FieldSelection childSelection = selection.getChild(fieldName);
           if (!childSelection.isNeverValid()) {
             Value value = entry.getValue();
-            writeElement(value, writer, false, fieldName, childSelection);
+            readState = writeElement(value, writer, false, fieldName, childSelection);
           }
+        }
+        else {
+          Log.warn("Failed to read field name of type: " + key.getValueType());
+          if(!skipInvalidKeyTypes) {
+            readState = ReadState.MSG_RECORD_PARSE_ERROR;
+          }
+        }
+        if(readState != ReadState.WRITE_SUCCEED)
+        {
+          break;
         }
       }
     } finally {
       writer.end();
     }
+    return readState;
   }
 
   private String getFieldName(Value v) {
@@ -136,14 +156,15 @@ public class MsgpackReader extends BaseMsgpackReader {
     case NIL:
       break;
     default:
-      throw new DrillRuntimeException("UnSupported messagepack type: " + valueType);
+      logger.warn("UnSupported messagepack type: " + valueType);
     }
     return fieldName;
   }
 
-  private void writeElement(Value v, final MapOrListWriterImpl writer, boolean isList, String fieldName,
+  private ReadState writeElement(Value v, final MapOrListWriterImpl writer, boolean isList, String fieldName,
       FieldSelection selection) throws IOException {
 
+    ReadState readState = ReadState.WRITE_SUCCEED;
     ValueType valueType = v.getValueType();
     switch (valueType) {
     case INTEGER:
@@ -158,7 +179,7 @@ public class MsgpackReader extends BaseMsgpackReader {
       atLeastOneWrite = true;
       break;
     case ARRAY:
-      writeToList(v, (MapOrListWriterImpl) writer.list(fieldName), selection);
+      readState = writeToList(v, (MapOrListWriterImpl) writer.list(fieldName), selection);
       atLeastOneWrite = true;
       break;
     case BOOLEAN:
@@ -174,7 +195,7 @@ public class MsgpackReader extends BaseMsgpackReader {
       } else {
         _writer = (MapOrListWriterImpl) writer.listoftmap(fieldName);
       }
-      writeToMap(v, _writer, selection);
+      readState = writeToMap(v, _writer, selection);
       atLeastOneWrite = true;
       break;
     case FLOAT:
@@ -209,8 +230,11 @@ public class MsgpackReader extends BaseMsgpackReader {
       atLeastOneWrite = true;
       break;
     default:
-      throw new DrillRuntimeException("UnSupported messagepack type: " + valueType);
+      logger.warn("UnSupported messagepack type: " + valueType);
+      readState = ReadState.MSG_RECORD_PARSE_ERROR;
     }
+
+    return readState;
   }
 
   /**
@@ -241,54 +265,46 @@ public class MsgpackReader extends BaseMsgpackReader {
    */
   private void writeTimestamp(ExtensionValue ev, MapOrListWriterImpl writer, String fieldName, boolean isList) {
     byte zero = 0;
-    byte[] v = ev.getData();
+    byte[] data = ev.getData();
     final TimeStampHolder ts = new TimeStampHolder();
-    switch (v.length) {
+    switch (data.length) {
     case 4: {
-      ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-      buffer.put(zero);
-      buffer.put(zero);
-      buffer.put(zero);
-      buffer.put(zero);
-      buffer.put(v);
-      buffer.position(0);
-      ts.value = buffer.getLong();
+      timestampReadBuffer.position(0);
+      timestampReadBuffer.put(zero);
+      timestampReadBuffer.put(zero);
+      timestampReadBuffer.put(zero);
+      timestampReadBuffer.put(zero);
+      timestampReadBuffer.put(data);
+      timestampReadBuffer.position(0);
+      long epochSeconds = timestampReadBuffer.getLong();
+      ts.value = epochSeconds;
     }
       break;
-    // uint32_t data32 = value.payload;
-    // result.tv_nsec = 0;
-    // result.tv_sec = data32;
     case 8: {
-      ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-      buffer.put(zero);
-      buffer.put(zero);
-      buffer.put(zero);
-      buffer.put(zero);
-      buffer.put(v);
-      buffer.position(0);
-      ts.value = buffer.getLong();
+      timestampReadBuffer.position(0);
+      timestampReadBuffer.put(data);
+      timestampReadBuffer.position(0);
+      long data64 = timestampReadBuffer.getLong();
+      @SuppressWarnings("unused")
+      long nanos = data64 >>> 34;
+      long epochSeconds = data64 & 0x00000003ffffffffL;
+      ts.value = epochSeconds;
     }
       break;
-    // uint64_t data64 = value.payload;
-    // result.tv_nsec = data64 >> 34;
-    // result.tv_sec = data64 & 0x00000003ffffffffL;
     case 12: {
-      ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-      buffer.put(zero);
-      buffer.put(zero);
-      buffer.put(zero);
-      buffer.put(zero);
-      buffer.put(v);
-      buffer.position(0);
-      ts.value = buffer.getLong();
+      timestampReadBuffer.position(0);
+      timestampReadBuffer.put(data);
+      timestampReadBuffer.position(0);
+      int data32 = timestampReadBuffer.getInt();
+      @SuppressWarnings("unused")
+      long nanosLong = data32;
+      long data64 = timestampReadBuffer.getLong();
+      ts.value = data64;
     }
       break;
-    // uint32_t data32 = value.payload;
-    // uint64_t data64 = value.payload + 4;
-    // result.tv_nsec = data32;
-    // result.tv_sec = data64;
     default:
-      // error
+      throw new DrillRuntimeException(
+          "UnSupported built-in messagepack timestamp type (-1) with data length of: " + data.length);
     }
 
     if (isList == false) {

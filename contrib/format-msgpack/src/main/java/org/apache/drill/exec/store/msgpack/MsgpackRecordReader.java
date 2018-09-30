@@ -201,13 +201,13 @@ public class MsgpackRecordReader extends AbstractRecordReader {
           recordCount++;
         } else if (write == ReadState.MSG_RECORD_PARSE_ERROR || write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
           if (skipMalformedMsgRecords == false) {
-            handleAndRaise("Error parsing JSON",
+            handleAndRaise("Error parsing msgpack",
                 new Exception(hadoopPath.getName() + " : line nos :" + (recordCount + 1)));
           }
           ++parseErrorCount;
           if (printSkippedMalformedMsgRecordLineNumber) {
             logger.debug(
-                "Error parsing JSON in " + hadoopPath.getName() + " : line nos :" + (recordCount + parseErrorCount));
+                "Error parsing msgpack in " + hadoopPath.getName() + " : line nos :" + (recordCount + parseErrorCount));
           }
           if (write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
             break outside;
@@ -216,7 +216,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
           break outside;
         }
       } catch (IOException ex) {
-        handleAndRaise("Error parsing JSON", ex);
+        handleAndRaise("Error parsing msgpack", ex);
       }
     }
     // Skip empty json file with 0 row.

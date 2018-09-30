@@ -29,8 +29,9 @@ public class CountingMsgpackReader extends BaseMsgpackReader {
   }
 
   @Override
-  protected void writeRecord(Value mapValue, ComplexWriter writer) throws IOException {
+  protected ReadState writeRecord(Value mapValue, ComplexWriter writer) throws IOException {
     writer.rootAsMap().bit("count").writeBit(1);
+    return ReadState.WRITE_SUCCEED;
   }
 
   @Override

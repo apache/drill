@@ -85,8 +85,8 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
   public static class MsgpackFormatConfig implements FormatPluginConfig {
 
     public List<String> extensions = ImmutableList.of("mp");
-    public boolean skipMalformedMsgRecords = true;
-    public boolean printSkippedMalformedMsgRecordLineNumber = true;
+    private boolean skipMalformedMsgRecords = true;
+    private boolean printSkippedMalformedMsgRecordLineNumber = true;
     private static final List<String> DEFAULT_EXTS = ImmutableList.of("mp");
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -98,6 +98,28 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
         return DEFAULT_EXTS;
       }
       return extensions;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public boolean isSkipMalformedMsgRecords() {
+      return skipMalformedMsgRecords;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public boolean isPrintSkippedMalformedMsgRecordLineNumber() {
+      return printSkippedMalformedMsgRecordLineNumber;
+    }
+
+    public void setExtensions(List<String> extensions) {
+      this.extensions = extensions;
+    }
+
+    public void setSkipMalformedMsgRecords(boolean skipMalformedMsgRecords) {
+      this.skipMalformedMsgRecords = skipMalformedMsgRecords;
+    }
+
+    public void setPrintSkippedMalformedMsgRecordLineNumber(boolean printSkippedMalformedMsgRecordLineNumber) {
+      this.printSkippedMalformedMsgRecordLineNumber = printSkippedMalformedMsgRecordLineNumber;
     }
 
     @Override
@@ -138,13 +160,6 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
       return true;
     }
 
-    public boolean isSkipMalformedMsgRecords() {
-      return skipMalformedMsgRecords;
-    }
-
-    public boolean isPrintSkippedMalformedMsgRecordLineNumber() {
-      return printSkippedMalformedMsgRecordLineNumber;
-    }
   }
 
   @Override

@@ -26,31 +26,37 @@ public abstract class BaseMsgpackReader {
   protected boolean skipMalformedMsgRecords;
 
   public ReadState write(ComplexWriter writer) throws IOException {
+    ReadState readState = ReadState.WRITE_SUCCEED;
     if (!unpacker.hasNext()) {
-      return ReadState.END_OF_STREAM;
+      readState = ReadState.END_OF_STREAM;
     }
 
     Value v = null;
-    try {
-      v = unpacker.unpackValue();
-    } catch (MessageInsufficientBufferException e) {
-      Log.warn("Failed to unpack MAP, possibly because key/value do not match.", e);
-      return ReadState.MSG_RECORD_PARSE_ERROR;
+    if (readState == ReadState.WRITE_SUCCEED) {
+      try {
+        v = unpacker.unpackValue();
+      } catch (MessageInsufficientBufferException e) {
+        Log.warn("Failed to unpack MAP, possibly because key/value tuples do not match.", e);
+        readState = ReadState.MSG_RECORD_PARSE_ERROR;
+      }
     }
 
-    ValueType type = v.getValueType();
-    switch (type) {
-    case MAP:
-      writeRecord(v, writer);
-      break;
-    default:
-      Log.warn("Value in root of message pack file is not of type MAP. Skipping type found: " + type);
-      return ReadState.MSG_RECORD_PARSE_ERROR;
+    if (readState == ReadState.WRITE_SUCCEED) {
+      ValueType type = v.getValueType();
+      switch (type) {
+      case MAP:
+        readState = writeRecord(v, writer);
+        break;
+      default:
+        Log.warn("Value in root of message pack file is not of type MAP. Skipping type found: " + type);
+        readState = ReadState.MSG_RECORD_PARSE_ERROR;
+      }
     }
-    return ReadState.WRITE_SUCCEED;
+
+    return readState;
   }
 
-  protected abstract void writeRecord(Value mapValue, ComplexWriter writer) throws IOException;
+  protected abstract ReadState writeRecord(Value mapValue, ComplexWriter writer) throws IOException;
 
   public abstract void ensureAtLeastOneField(ComplexWriter writer);
 
