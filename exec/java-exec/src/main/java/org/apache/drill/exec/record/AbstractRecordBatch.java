@@ -135,13 +135,15 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
       return next;
     }
 
-    switch(next) {
+    boolean isNewSchema = false;
+    logger.debug("Received next batch for index: {} with outcome: {}", inputIndex, next);
+    switch (next) {
       case OK_NEW_SCHEMA:
-        stats.batchReceived(inputIndex, b.getRecordCount(), true);
-        break;
+        isNewSchema = true;
       case OK:
       case EMIT:
-        stats.batchReceived(inputIndex, b.getRecordCount(), false);
+        stats.batchReceived(inputIndex, b.getRecordCount(), isNewSchema);
+        logger.debug("Number of records in received batch: {}", b.getRecordCount());
         break;
       default:
         break;

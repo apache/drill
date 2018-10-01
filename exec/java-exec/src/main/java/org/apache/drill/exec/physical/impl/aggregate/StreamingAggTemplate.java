@@ -24,6 +24,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.ValueVector;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
@@ -33,7 +34,7 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA
 public abstract class StreamingAggTemplate implements StreamingAggregator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggregator.class);
   private static final boolean EXTRA_DEBUG = false;
-  private static final int OUTPUT_BATCH_SIZE = 32*1024;
+  private int maxOutputRows = ValueVector.MAX_ROW_COUNT;
 
   // lastOutcome is set ONLY if the lastOutcome was NONE or STOP
   private IterOutcome lastOutcome = null;
@@ -54,7 +55,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   // (i.e if a selection vector the sv4/sv2 entry has been dereferenced or if a vector then the record index itself)
   private int previousIndex = -1;  // the last index that has been processed. Initialized to -1 every time a new
                                    // aggregate group begins (including every time a new data set begins)
-  private int currentIndex; // current index being processed
+  private int currentIndex = Integer.MAX_VALUE; // current index being processed
   /**
    * Number of records added to the current aggregation group.
    */
@@ -72,10 +73,12 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
 
   @Override
-  public void setup(OperatorContext context, RecordBatch incoming, StreamingAggBatch outgoing) throws SchemaChangeException {
+  public void setup(OperatorContext context, RecordBatch incoming,
+                    StreamingAggBatch outgoing, int outputRowCount) throws SchemaChangeException {
     this.context = context;
     this.incoming = incoming;
     this.outgoing = outgoing;
+    this.maxOutputRows = outputRowCount;
     setupInterior(incoming, outgoing);
   }
 
@@ -109,7 +112,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
       allocateOutgoing();
 
       if (firstBatchForDataSet) {
-        this.currentIndex = incoming.getRecordCount() == 0 ? 0 : this.getVectorIndex(underlyingIndex);
+        this.currentIndex = incoming.getRecordCount() == 0 ? Integer.MAX_VALUE : this.getVectorIndex(underlyingIndex);
 
         if (outerOutcome == OK_NEW_SCHEMA) {
           firstBatchForSchema = true;
@@ -178,9 +181,10 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
         // loop through existing records, adding as necessary.
         if(!processRemainingRecordsInBatch()) {
           // output batch is full. Return.
-          return setOkAndReturn();
+          return setOkAndReturn(outerOutcome);
         }
-        // if the current batch came with an EMIT, we're done
+        // if the current batch came with an EMIT, we're done since if we are here it means output batch consumed all
+        // the rows in incoming batch
         if(outerOutcome == EMIT) {
           // output the last record
           outputToBatch(previousIndex);
@@ -215,14 +219,14 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                 done = true;
                 lastOutcome = out;
                 if (firstBatchForDataSet && addedRecordCount == 0) {
-                  return setOkAndReturn();
+                  return setOkAndReturn(NONE);
                 } else if (addedRecordCount > 0) {
                   outputToBatchPrev(previous, previousIndex, outputCount); // No need to check the return value
                   // (output container full or not) as we are not going to insert any more records.
                   if (EXTRA_DEBUG) {
                     logger.debug("Received no more batches, returning.");
                   }
-                  return setOkAndReturn();
+                  return setOkAndReturn(NONE);
                 } else {
                   // not first batch and record Count == 0
                   outcome = out;
@@ -237,6 +241,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                   }
                 } else {
                   resetIndex();
+                  currentIndex = this.getVectorIndex(underlyingIndex);
                   if (previousIndex != -1 && isSamePrev(previousIndex, previous, currentIndex)) {
                     if (EXTRA_DEBUG) {
                       logger.debug("New value was same as last value of previous batch, adding.");
@@ -256,13 +261,16 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                         if (EXTRA_DEBUG) {
                           logger.debug("Output container is full. flushing it.");
                         }
-                        return setOkAndReturnEmit();
+                        return setOkAndReturn(EMIT);
                       }
                     }
                     // important to set the previous index to -1 since we start a new group
                     previousIndex = -1;
                   }
-                  processRemainingRecordsInBatch();
+                  if (!processRemainingRecordsInBatch()) {
+                    // output batch is full. Return.
+                    return setOkAndReturn(EMIT);
+                  }
                   outputToBatch(previousIndex); // currentIndex has been reset to int_max so use previous index.
                 }
                 resetIndex();
@@ -285,7 +293,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                     logger.debug("Wrote out end of previous batch, returning.");
                   }
                   newSchema = true;
-                  return setOkAndReturn();
+                  return setOkAndReturn(OK_NEW_SCHEMA);
                 }
                 cleanup();
                 return AggOutcome.UPDATE_AGGREGATOR;
@@ -294,6 +302,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                 if (incoming.getRecordCount() == 0) {
                   continue;
                 } else {
+                  currentIndex = this.getVectorIndex(underlyingIndex);
                   if (previousIndex != -1 && isSamePrev(previousIndex, previous, currentIndex)) {
                     if (EXTRA_DEBUG) {
                       logger.debug("New value was same as last value of previous batch, adding.");
@@ -315,7 +324,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                           logger.debug("Output container is full. flushing it.");
                         }
                         previousIndex = -1;
-                        return setOkAndReturn();
+                        return setOkAndReturn(OK);
                       }
                     }
                     previousIndex = -1;
@@ -405,8 +414,8 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   }
 
   private final void resetIndex() {
-    underlyingIndex = -1;
-    incIndex();
+    underlyingIndex = 0;
+    currentIndex = Integer.MAX_VALUE;
   }
 
   /**
@@ -414,7 +423,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
    *
    * @return outcome
    */
-  private final AggOutcome setOkAndReturn() {
+  private final AggOutcome setOkAndReturn(IterOutcome seenOutcome) {
     IterOutcome outcomeToReturn;
     firstBatchForDataSet = false;
     if (firstBatchForSchema) {
@@ -428,7 +437,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     for (VectorWrapper<?> v : outgoing) {
       v.getValueVector().getMutator().setValueCount(outputCount);
     }
-    return AggOutcome.RETURN_OUTCOME;
+    return (seenOutcome == EMIT) ? AggOutcome.RETURN_AND_RESET : AggOutcome.RETURN_OUTCOME;
   }
 
   /**
@@ -457,7 +466,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   // Returns output container status after insertion of the given record. Caller must check the return value if it
   // plans to insert more records into outgoing container.
   private final boolean outputToBatch(int inIndex) {
-    assert outputCount < OUTPUT_BATCH_SIZE:
+    assert outputCount < maxOutputRows :
         "Outgoing RecordBatch is not flushed. It reached its max capacity in the last update";
 
     outputRecordKeys(inIndex, outputCount);
@@ -470,14 +479,13 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     resetValues();
     outputCount++;
     addedRecordCount = 0;
-
-    return outputCount == OUTPUT_BATCH_SIZE;
+    return outputCount == maxOutputRows;
   }
 
   // Returns output container status after insertion of the given record. Caller must check the return value if it
   // plans to inserts more record into outgoing container.
   private final boolean outputToBatchPrev(InternalBatch b1, int inIndex, int outIndex) {
-    assert outputCount < OUTPUT_BATCH_SIZE:
+    assert outputCount < maxOutputRows :
         "Outgoing RecordBatch is not flushed. It reached its max capacity in the last update";
 
     outputRecordKeysPrev(b1, inIndex, outIndex);
@@ -485,8 +493,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     resetValues();
     outputCount++;
     addedRecordCount = 0;
-
-    return outputCount == OUTPUT_BATCH_SIZE;
+    return outputCount == maxOutputRows;
   }
 
   private void addRecordInc(int index) {
@@ -506,6 +513,11 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
         + ", addedRecordCount=" + addedRecordCount
         + ", outputCount=" + outputCount
         + "]";
+  }
+
+  @Override
+  public boolean previousBatchProcessed() {
+    return (currentIndex == Integer.MAX_VALUE);
   }
 
   public abstract void setupInterior(@Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;

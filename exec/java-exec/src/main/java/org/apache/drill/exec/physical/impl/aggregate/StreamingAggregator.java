@@ -25,7 +25,8 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
 public interface StreamingAggregator {
 
-  public static TemplateClassDefinition<StreamingAggregator> TEMPLATE_DEFINITION = new TemplateClassDefinition<StreamingAggregator>(StreamingAggregator.class, StreamingAggTemplate.class);
+  TemplateClassDefinition<StreamingAggregator> TEMPLATE_DEFINITION =
+    new TemplateClassDefinition<StreamingAggregator>(StreamingAggregator.class, StreamingAggTemplate.class);
 
 
   /**
@@ -45,25 +46,27 @@ public interface StreamingAggregator {
    * <p>
    * @see org.apache.drill.exec.physical.impl.aggregate.HashAggregator.AggOutcome HashAggregator.AggOutcome
    */
-  public static enum AggOutcome {
+  enum AggOutcome {
     RETURN_OUTCOME,
     CLEANUP_AND_RETURN,
     UPDATE_AGGREGATOR,
     RETURN_AND_RESET;
   }
 
-  public abstract void setup(OperatorContext context, RecordBatch incoming, StreamingAggBatch outgoing) throws SchemaChangeException;
+  void setup(OperatorContext context, RecordBatch incoming, StreamingAggBatch outgoing, int outputRowCount)
+    throws SchemaChangeException;
 
-  public abstract IterOutcome getOutcome();
+  IterOutcome getOutcome();
 
-  public abstract int getOutputCount();
+  int getOutputCount();
 
   // do the work. Also pass in the Iteroutcome of the batch already read in case it might be an EMIT. If the
   // outerOutcome is EMIT, we need to do the work without reading any more batches.
-  public abstract AggOutcome doWork(IterOutcome outerOutcome);
+  AggOutcome doWork(IterOutcome outerOutcome);
 
-  public abstract boolean isDone();
+  boolean isDone();
 
-  public abstract void cleanup();
+  void cleanup();
 
+  boolean previousBatchProcessed();
 }
