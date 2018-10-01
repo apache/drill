@@ -138,6 +138,11 @@ public class MapRDBFunctionalIndexInfo implements FunctionalIndexInfo {
   }
 
   /**
+   * Suppose the index key has functions (rather than plain columns): CAST(a as int), CAST(b as varchar(10)),
+   * then we want to maintain a mapping of the logical expression of that function to the schema path of the
+   * base column involved in the function. In this example map has 2 entries:
+   *   CAST(a as int)  --> 'a'
+   *   CAST(b as varchar(10)) --> 'b'
    * @return the map of indexed expression --> the involved schema paths in a indexed expression
    */
   public Map<LogicalExpression, Set<SchemaPath>> getPathsInFunctionExpr() {

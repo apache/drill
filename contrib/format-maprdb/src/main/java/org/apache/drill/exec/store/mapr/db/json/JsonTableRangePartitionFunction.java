@@ -186,7 +186,7 @@ public class JsonTableRangePartitionFunction extends AbstractRangePartitionFunct
     // get the table handle from the table cache
     Table table = plugin.getJsonTableCache().getTable(tableName, userName);
 
-    // Set the condition to null such that all scan ranges are retrieved for the primary table.
+    // Get all scan ranges for the primary table.
     // The reason is the row keys could typically belong to any one of the tablets of the table, so
     // there is no use trying to get only limited set of scan ranges.
     // NOTE: here we use the restrictedScanRangeSizeMB because the range partitioning should be parallelized
