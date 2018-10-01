@@ -367,4 +367,18 @@ public class RecordIterator implements VectorAccessible {
     clear();
     clearInflightBatches();
   }
+
+  @Override
+  public String toString() {
+    return "RecordIterator[outerPosition=" + outerPosition
+        + ", innerPosition=" + innerPosition
+        + ", innerRecordCount=" + innerRecordCount
+        + ", totalRecordCount=" + totalRecordCount
+        + ", startBatchPosition=" + startBatchPosition
+        + ", markedInnerPosition" + markedInnerPosition
+        + ", markedOuterPosition=" + markedOuterPosition
+        + ", lastOutcome=" + lastOutcome
+        + ", inputIndex=" + inputIndex
+        + "]";
+  }
 }

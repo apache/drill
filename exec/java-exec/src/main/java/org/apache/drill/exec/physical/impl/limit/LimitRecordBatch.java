@@ -37,7 +37,7 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 
 public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
 
   private SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
@@ -58,46 +58,46 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   @Override
   public IterOutcome innerNext() {
     if (!first && !needMoreRecords(numberOfRecords)) {
-        outgoingSv.setRecordCount(0);
-        incoming.kill(true);
+      outgoingSv.setRecordCount(0);
+      incoming.kill(true);
 
-        IterOutcome upStream = next(incoming);
+      IterOutcome upStream = next(incoming);
+      if (upStream == IterOutcome.OUT_OF_MEMORY) {
+        return upStream;
+      }
+
+      while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {
+        // Clear the memory for the incoming batch
+        for (VectorWrapper<?> wrapper : incoming) {
+          wrapper.getValueVector().clear();
+        }
+        // clear memory for incoming sv (if any)
+        if (incomingSv != null) {
+          incomingSv.clear();
+        }
+        upStream = next(incoming);
         if (upStream == IterOutcome.OUT_OF_MEMORY) {
           return upStream;
         }
-
-        while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {
-          // Clear the memory for the incoming batch
-          for (VectorWrapper<?> wrapper : incoming) {
-            wrapper.getValueVector().clear();
-          }
-          // clear memory for incoming sv (if any)
-          if (incomingSv != null) {
-            incomingSv.clear();
-          }
-          upStream = next(incoming);
-          if (upStream == IterOutcome.OUT_OF_MEMORY) {
-            return upStream;
-          }
-        }
-        // If EMIT that means leaf operator is UNNEST, in this case refresh the limit states and return EMIT.
-        if (upStream == EMIT) {
-          // Clear the memory for the incoming batch
-          for (VectorWrapper<?> wrapper : incoming) {
-            wrapper.getValueVector().clear();
-          }
-
-          // clear memory for incoming sv (if any)
-          if (incomingSv != null) {
-            incomingSv.clear();
-          }
-
-          refreshLimitState();
-          return upStream;
-        }
-        // other leaf operator behave as before.
-        return NONE;
       }
+      // If EMIT that means leaf operator is UNNEST, in this case refresh the limit states and return EMIT.
+      if (upStream == EMIT) {
+        // Clear the memory for the incoming batch
+        for (VectorWrapper<?> wrapper : incoming) {
+          wrapper.getValueVector().clear();
+        }
+
+        // clear memory for incoming sv (if any)
+        if (incomingSv != null) {
+          incomingSv.clear();
+        }
+
+        refreshLimitState();
+        return upStream;
+      }
+      // other leaf operator behave as before.
+      return NONE;
+    }
     return super.innerNext();
   }
 
@@ -265,5 +265,11 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     numberOfRecords = (popConfig.getLast() == null) ?
       Integer.MIN_VALUE : Math.max(0, popConfig.getLast()) - recordStartOffset;
     first = true;
+  }
+
+  @Override
+  public void dump() {
+    logger.error("LimitRecordBatch[container={}, offset={}, numberOfRecords={}, incomingSV={}, outgoingSV={}]",
+        container, recordStartOffset, numberOfRecords, incomingSv, outgoingSv);
   }
 }

@@ -106,4 +106,9 @@ public class WindowDataBatch implements VectorAccessible {
   public void clear() {
     container.clear();
   }
+
+  @Override
+  public String toString() {
+    return "WindowDataBatch[container=" + container + ", recordCount=" + recordCount + "]";
+  }
 }

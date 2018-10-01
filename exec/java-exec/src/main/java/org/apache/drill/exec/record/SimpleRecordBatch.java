@@ -28,6 +28,9 @@ import java.util.Iterator;
  * Wrap a VectorContainer into a record batch.
  */
 public class SimpleRecordBatch implements RecordBatch {
+
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRecordBatch.class);
+
   private VectorContainer container;
   private FragmentContext context;
 
@@ -98,5 +101,15 @@ public class SimpleRecordBatch implements RecordBatch {
   @Override
   public VectorContainer getContainer() {
      return container;
+  }
+
+  @Override
+  public void dump() {
+    logger.error("SimpleRecordBatch[container=" + container + "]");
+  }
+
+  @Override
+  public boolean hasFailed() {
+    return false;
   }
 }

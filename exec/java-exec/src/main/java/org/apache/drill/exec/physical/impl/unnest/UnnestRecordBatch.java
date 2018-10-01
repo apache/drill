@@ -241,7 +241,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     }
   }
 
-    @Override
+  @Override
   public VectorContainer getOutgoingContainer() {
     return this.container;
   }
@@ -446,4 +446,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     super.close();
   }
 
+  @Override
+  public void dump() {
+    logger.error("UnnestRecordBatch[container={}, unnest={}, hasRemainder={}, remainderIndex={}, " +
+            "unnestFieldMetadata={}]", container, unnest, hasRemainder, remainderIndex, unnestFieldMetadata);
+  }
 }

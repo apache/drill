@@ -292,4 +292,12 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     container.clear();
     resetRecordCount();
   }
+
+  @Override
+  public String toString() {
+    return "RecordBatchLoader[container=" + container
+        + ", valueCount=" + valueCount
+        + ", schema=" + schema
+        + "]";
+  }
 }

@@ -163,4 +163,19 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
       logger.warn("Exception closing reader: {}", e);
     }
   }
+
+  @Override
+  public String toString() {
+    long position = -1L;
+    try {
+      if (reader != null) {
+        position = reader.getPos();
+      }
+    } catch (IOException e) {
+      logger.trace("Unable to obtain reader position: " + e.getMessage());
+    }
+    return "SequenceFileRecordReader[File=" + split.getPath()
+        + ", Position=" + position
+        + "]";
+  }
 }

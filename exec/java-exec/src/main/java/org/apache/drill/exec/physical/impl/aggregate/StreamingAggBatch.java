@@ -648,4 +648,10 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
   }
+
+  @Override
+  public void dump() {
+    logger.error("StreamingAggBatch[container={}, popConfig={}, aggregator={}, incomingSchema={}]",
+        container, popConfig, aggregator, incomingSchema);
+  }
 }

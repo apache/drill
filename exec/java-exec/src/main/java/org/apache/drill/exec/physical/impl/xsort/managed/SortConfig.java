@@ -137,6 +137,15 @@ public class SortConfig {
                   mergeBatchSize, mSortBatchSize);
   }
 
+  @Override
+  public String toString() {
+    return "SortConfig[spillFileSize=" + spillFileSize
+        + ", spillBatchSize=" + spillBatchSize
+        + ", mergeBatchSize=" + mergeBatchSize
+        + ", mSortBatchSize=" + mSortBatchSize
+        + "]";
+  }
+
   public long maxMemory() { return maxMemory; }
   public int mergeLimit() { return mergeLimit; }
   public long spillFileSize() { return spillFileSize; }

@@ -110,4 +110,10 @@ public abstract class ProjectorTemplate implements Projector {
                               @Named("outIndex") int outIndex)
                        throws SchemaChangeException;
 
+  @Override
+  public String toString() {
+    return "Projector[vector2=" + vector2
+        + ", selectionVectorMode=" + svMode
+        + "]";
+  }
 }

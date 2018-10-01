@@ -103,4 +103,12 @@ public class EasyWriter extends AbstractWriter {
   public int getOperatorType() {
     return formatPlugin.getWriterOperatorType();
   }
+
+  @Override
+  public String toString() {
+    return "EasyWriter[location=" + location
+        + ", storageStrategy=" + getStorageStrategy()
+        + ", partitionColumns=" + partitionColumns
+        + "]";
+  }
 }

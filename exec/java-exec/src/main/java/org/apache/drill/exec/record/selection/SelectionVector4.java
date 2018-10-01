@@ -161,4 +161,13 @@ public class SelectionVector4 implements AutoCloseable {
   public void close() {
     clear();
   }
+
+  @Override
+  public String toString() {
+    return "SelectionVector4[data=" + data
+        + ", recordCount=" + recordCount
+        + ", start=" + start
+        + ", length=" + length
+        + "]";
+  }
 }

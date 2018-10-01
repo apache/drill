@@ -47,6 +47,10 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected final boolean unionTypeEnabled;
   protected BatchState state;
 
+  // Represents last outcome of next(). If an Exception is thrown
+  // during the method's execution a value IterOutcome.STOP will be assigned.
+  private IterOutcome lastOutcome;
+
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context) throws OutOfMemoryException {
     this(popConfig, context, true, context.newOperatorContext(popConfig));
   }
@@ -113,7 +117,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   public final IterOutcome next(final int inputIndex, final RecordBatch b){
-    IterOutcome next = null;
+    IterOutcome next;
     stats.stopProcessing();
     try{
       if (!context.getExecutorState().shouldContinue()) {
@@ -132,15 +136,15 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     }
 
     switch(next) {
-    case OK_NEW_SCHEMA:
-      stats.batchReceived(inputIndex, b.getRecordCount(), true);
-      break;
-    case OK:
-    case EMIT:
-      stats.batchReceived(inputIndex, b.getRecordCount(), false);
-      break;
-    default:
-      break;
+      case OK_NEW_SCHEMA:
+        stats.batchReceived(inputIndex, b.getRecordCount(), true);
+        break;
+      case OK:
+      case EMIT:
+        stats.batchReceived(inputIndex, b.getRecordCount(), false);
+        break;
+      default:
+        break;
     }
 
     return next;
@@ -155,27 +159,38 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
           buildSchema();
           switch (state) {
             case DONE:
-              return IterOutcome.NONE;
+              lastOutcome = IterOutcome.NONE;
+              break;
             case OUT_OF_MEMORY:
               // because we don't support schema changes, it is safe to fail the query right away
               context.getExecutorState().fail(UserException.memoryError()
                 .build(logger));
               // FALL-THROUGH
             case STOP:
-              return IterOutcome.STOP;
+              lastOutcome = IterOutcome.STOP;
+              break;
             default:
               state = BatchState.FIRST;
-              return IterOutcome.OK_NEW_SCHEMA;
+              lastOutcome = IterOutcome.OK_NEW_SCHEMA;
+              break;
           }
+          break;
         }
         case DONE: {
-          return IterOutcome.NONE;
+          lastOutcome = IterOutcome.NONE;
+          break;
         }
         default:
-          return innerNext();
+          lastOutcome = innerNext();
+          break;
       }
+      return lastOutcome;
     } catch (final SchemaChangeException e) {
+      lastOutcome = IterOutcome.STOP;
       throw new DrillRuntimeException(e);
+    } catch (Exception e) {
+      lastOutcome = IterOutcome.STOP;
+      throw e;
     } finally {
       stats.stopProcessing();
     }
@@ -243,6 +258,11 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   @Override
   public VectorContainer getContainer() {
     return  container;
+  }
+
+  @Override
+  public boolean hasFailed() {
+    return lastOutcome == IterOutcome.STOP;
   }
 
   public RecordBatchStatsContext getRecordBatchStatsContext() {

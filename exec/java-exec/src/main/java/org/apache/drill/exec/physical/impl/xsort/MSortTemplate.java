@@ -206,4 +206,13 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
   public abstract int doEval(@Named("leftIndex") int leftIndex,
                              @Named("rightIndex") int rightIndex)
                       throws SchemaChangeException;
+
+  @Override
+  public String toString() {
+    return "MSortTemplate[vector4=" + vector4
+        + ", aux=" + aux
+        + ", runStarts=" + runStarts
+        + ", desiredRecordBatchCount=" + desiredRecordBatchCount
+        + "]";
+  }
 }

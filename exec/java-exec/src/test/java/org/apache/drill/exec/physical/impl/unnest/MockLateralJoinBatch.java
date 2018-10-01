@@ -162,6 +162,15 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
 
   }
 
+  @Override
+  public boolean hasFailed() {
+    return false;
+  }
+
+  @Override
+  public void dump() {
+  }
+
   @Override public int getRecordCount() {
     return 0;
   }

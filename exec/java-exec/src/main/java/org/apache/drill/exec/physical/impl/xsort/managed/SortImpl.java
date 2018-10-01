@@ -592,4 +592,12 @@ public class SortImpl {
       throw ex;
     }
   }
+
+  @Override
+  public String toString() {
+    return "SortImpl[config=" + config
+        + ", outputBatch=" + outputBatch
+        + ", sizer=" + sizer
+        + "]";
+  }
 }
