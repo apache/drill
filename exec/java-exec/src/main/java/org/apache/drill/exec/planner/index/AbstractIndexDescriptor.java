@@ -71,4 +71,10 @@ public abstract class AbstractIndexDescriptor extends DrillIndexDefinition imple
       int numProjectedFields, GroupScan primaryGroupScan) {
     throw new UnsupportedOperationException("getCost() not supported for this index.");
   }
+
+  @Override
+  public boolean isAsyncIndex() {
+    return true;
+  }
+
 }

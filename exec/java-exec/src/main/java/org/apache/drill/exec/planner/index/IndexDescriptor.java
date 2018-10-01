@@ -72,12 +72,19 @@ public interface IndexDescriptor extends IndexDefinition {
    * @param primaryGroupScan Primary table's GroupScan instance
    * @return a RelOptCost instance representing the total cost
    */
-  public RelOptCost getCost(IndexProperties indexProps, RelOptPlanner planner,
+  RelOptCost getCost(IndexProperties indexProps, RelOptPlanner planner,
       int numProjectedFields, GroupScan primaryGroupScan);
 
   /**
    * Get the costing factors associated with the storage/format plugin
    */
-  public PluginCost getPluginCostModel();
+  PluginCost getPluginCostModel();
+
+  /**
+   * Whether this index is maintained synchronously (i.e primary table updates are propagated to the index
+   * synchronously) or asynchronously with some delay.  The latter is more common for distributed NoSQL databases.
+   * @return True if the index is maintained asynchronously, False otherwise
+   */
+  boolean isAsyncIndex();
 
 }

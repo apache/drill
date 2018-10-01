@@ -82,8 +82,11 @@ public class RowKeyJoinPrel extends JoinPrel implements Prel {
     }
     double rowCount = mq.getRowCount(this.getRight());
     DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
-    return costFactory.makeCost(rowCount, 0, 0, 0,
-        0 /* mem cost is 0 because this operator does not make any extra copy of either the left or right batches */);
+
+    // RowKeyJoin operator by itself incurs negligible CPU and I/O cost since it is not doing a real join.
+    // The actual cost is attributed to the skip-scan (random I/O). The RK join will hold 1 batch in memory but
+    // it is not making any extra copy of either the left or right batches, so the memory cost is 0
+    return costFactory.makeCost(rowCount, 0, 0, 0, 0);
   }
 
   @Override

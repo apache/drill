@@ -33,11 +33,7 @@ public class IndexGroup {
   }
 
   public boolean isIntersectIndex() {
-    if (indexProps.size() > 1) {
-      return true;
-    } else {
-      return false;
-    }
+    return indexProps.size() > 1;
   }
 
   public int numIndexes() {

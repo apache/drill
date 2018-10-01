@@ -237,7 +237,8 @@ public class IndexIntersectPlanGenerator extends AbstractIndexPlanGenerator {
     return finalRel;
   }
 
-  private Pair<RelNode, DbGroupScan> buildRestrictedDBScan(RexNode remnant) {
+  private Pair<RelNode, DbGroupScan> buildRestrictedDBScan(RexNode remnant,
+      boolean isAnyIndexAsync) {
 
     DbGroupScan origDbGroupScan = (DbGroupScan)IndexPlanUtils.getGroupScan(origScan);
     List<SchemaPath> cols = new ArrayList<SchemaPath>(origDbGroupScan.getColumns());
@@ -266,9 +267,16 @@ public class IndexIntersectPlanGenerator extends AbstractIndexPlanGenerator {
     final RelDataTypeFactory.FieldInfoBuilder leftFieldTypeBuilder =
         dbScan.getCluster().getTypeFactory().builder();
 
-    FilterPrel leftIndexFilterPrel = new FilterPrel(dbScan.getCluster(), dbScan.getTraitSet(),
-          dbScan, indexContext.getOrigCondition());
-    lastRelNode = leftIndexFilterPrel;
+    FilterPrel leftIndexFilterPrel = null;
+
+    // See NonCoveringIndexPlanGenerator for why we are re-applying index filter condition in case of async indexes.
+    // For intersect planning, any one of the intersected indexes may be async but to keep it simple we re-apply the
+    // full original condition.
+    if (isAnyIndexAsync) {
+      new FilterPrel(dbScan.getCluster(), dbScan.getTraitSet(),
+            dbScan, indexContext.getOrigCondition());
+      lastRelNode = leftIndexFilterPrel;
+    }
 
     // new Project's rowtype is original Project's rowtype [plus rowkey if rowkey is not in original rowtype]
     ProjectPrel leftIndexProjectPrel = null;
@@ -301,8 +309,12 @@ public class IndexIntersectPlanGenerator extends AbstractIndexPlanGenerator {
   @Override
   public RelNode convertChild(final RelNode filter, final RelNode input) throws InvalidRelException {
     Map<IndexDescriptor, RexNode> idxConditionMap = Maps.newLinkedHashMap();
+    boolean isAnyIndexAsync = false;
     for(IndexDescriptor idx : indexInfoMap.keySet()) {
       idxConditionMap.put(idx, indexInfoMap.get(idx).indexCondition);
+      if (!isAnyIndexAsync && idx.isAsyncIndex()) {
+        isAnyIndexAsync = true;
+      }
     }
 
     RelNode indexPlan = null;
@@ -323,7 +335,7 @@ public class IndexIntersectPlanGenerator extends AbstractIndexPlanGenerator {
 
     //now with index plan constructed, build plan of left(probe) side to use restricted db scan
 
-    Pair<RelNode, DbGroupScan> leftRelAndScan = buildRestrictedDBScan(remnant);
+    Pair<RelNode, DbGroupScan> leftRelAndScan = buildRestrictedDBScan(remnant, isAnyIndexAsync);
 
     RelNode finalRel = buildRowKeyJoin(leftRelAndScan.left, rangeDistRight, true, JoinControl.DEFAULT);
     if ( upperProject != null) {
