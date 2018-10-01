@@ -50,16 +50,6 @@ public class HashJoinPOP extends AbstractJoinPop {
   @JsonProperty("subScanForRowKeyJoin")
   private SubScan subScanForRowKeyJoin;
 
-  /*
-  public HashJoinPOP(
-      @JsonProperty("left") PhysicalOperator left,
-      @JsonProperty("right") PhysicalOperator right,
-      @JsonProperty("conditions") List<JoinCondition> conditions,
-      @JsonProperty("joinType") JoinRelType joinType
-  ) {
-    this(left, right, conditions, joinType, false, JoinControl.DEFAULT);
-  }
-*/
   @JsonCreator
   public HashJoinPOP(@JsonProperty("left") PhysicalOperator left, @JsonProperty("right") PhysicalOperator right,
                      @JsonProperty("conditions") List<JoinCondition> conditions,
@@ -80,8 +70,6 @@ public class HashJoinPOP extends AbstractJoinPop {
                      List<JoinCondition> conditions,
                      JoinRelType joinType) {
     this(left, right, conditions, joinType, null, false, JoinControl.DEFAULT);
-    // super(left, right, joinType, null, conditions);
-    // Preconditions.checkArgument(joinType != null, "Join type is missing for HashJoin Pop");
   }
 
   @VisibleForTesting

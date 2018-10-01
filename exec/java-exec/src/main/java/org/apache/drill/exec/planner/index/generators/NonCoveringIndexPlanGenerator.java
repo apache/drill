@@ -205,16 +205,17 @@ public class NonCoveringIndexPlanGenerator extends AbstractIndexPlanGenerator {
     final RelDataTypeFactory.FieldInfoBuilder leftFieldTypeBuilder =
         dbScan.getCluster().getTypeFactory().builder();
 
-    //we are applying the same index condition to primary table's restricted scan, the reason
-    // for this is, the scans on index table and primary table are not a transaction, meaning that _after_ index scan,
-    // primary table might already have data get updated, thus some rows picked by index were modified and no more satisfy the
-    // index condition. By applying the same index condition again here, we will avoid the possibility to have some
-    //not-wanted records get into downstream operators in such scenarios.
-    //the remainder condition will be applied on top of RowKeyJoin.
-    FilterPrel leftIndexFilterPrel = new FilterPrel(dbScan.getCluster(), dbScan.getTraitSet(),
-          dbScan, indexContext.getOrigCondition());
-
-    lastLeft = leftIndexFilterPrel;
+    // We are applying the same index condition to primary table's restricted scan. The reason is, the index may be an async
+    // index .. i.e it is not synchronously updated along with the primary table update as part of a single transaction, so it
+    // is possible that after or during index scan, the primary table rows may have been updated and no longer satisfy the index
+    // condition. By re-applying the index condition here, we will ensure non-qualifying records are filtered out.
+    // The remainder condition will be applied on top of RowKeyJoin.
+    FilterPrel leftIndexFilterPrel = null;
+    if (indexDesc.isAsyncIndex()) {
+      leftIndexFilterPrel = new FilterPrel(dbScan.getCluster(), dbScan.getTraitSet(),
+            dbScan, indexContext.getOrigCondition());
+      lastLeft = leftIndexFilterPrel;
+    }
 
     RelDataType origRowType = origProject == null ? origScan.getRowType() : origProject.getRowType();
 

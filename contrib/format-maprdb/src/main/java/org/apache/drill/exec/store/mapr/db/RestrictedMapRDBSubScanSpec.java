@@ -188,32 +188,4 @@ public class RestrictedMapRDBSubScanSpec extends MapRDBSubScanSpec {
     currentIndex += numKeys;
   }
 
-  /**
-   * Returns the next row key in the iteration.
-   * @return the next row key in the iteration or null if no more row keys
-   */
-  @JsonIgnore
-  public String nextRowKey() {
-    if (hasRowKey()) {
-      // get the entry at the current index within this batch
-      Object o = rowKeyVector.getAccessor().getObject(currentIndex++);
-      if (o == null) {
-        throw new DrillRuntimeException("Encountered a null row key during restricted subscan !");
-      }
-
-      // this is specific to the way the hash join maintains its entries. once we have reached the max
-      // occupied index within a batch, move to the next one and reset the current index to 0
-      // TODO: we should try to abstract this out
-      if (currentIndex > maxOccupiedIndex) {
-        Pair<ValueVector, Integer> currentBatch = rjbatch.nextRowKeyBatch();
-        if (currentBatch != null) {
-          init(currentBatch);
-        }
-      }
-
-      return o.toString();
-    }
-    return null;
-  }
-
 }

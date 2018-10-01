@@ -37,6 +37,7 @@ import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.physical.base.AbstractDbGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
@@ -67,6 +68,7 @@ import java.util.Set;
 public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDiscover {
 
   static final String DEFAULT_STRING_CAST_LEN_STR = "256";
+  static final String FIELD_DELIMITER = ":";
 
   public MapRDBIndexDiscover(GroupScan inScan, DrillScanRelBase scanRel) {
     super((AbstractDbGroupScan) inScan, scanRel);
@@ -78,14 +80,14 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
 
   @Override
   public IndexCollection getTableIndex(String tableName) {
-    //return getTableIndexFromCommandLine(tableName);
     return getTableIndexFromMFS(tableName);
   }
 
   /**
-   *
+   * For a given table name get the list of indexes defined on the table according to the visibility of
+   * the indexes based on permissions.
    * @param tableName
-   * @return
+   * @return an IndexCollection representing the list of indexes for that table
    */
   private IndexCollection getTableIndexFromMFS(String tableName) {
     try {
@@ -120,8 +122,8 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
 
   FileSelection deriveFSSelection(DrillFileSystem fs, IndexDescriptor idxDesc) throws IOException {
     String tableName = idxDesc.getTableName();
-    String[] tablePath = tableName.split("/");
-    String tableParent = tableName.substring(0, tableName.lastIndexOf("/"));
+    String[] tablePath = tableName.split(DrillFileUtils.SEPARATOR);
+    String tableParent = tableName.substring(0, tableName.lastIndexOf(DrillFileUtils.SEPARATOR));
 
     return FileSelection.create(fs, tableParent, tablePath[tablePath.length - 1], false);
   }
@@ -318,7 +320,7 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
   private DrillIndexDescriptor buildIndexDescriptor(String tableName, IndexDesc desc)
       throws InvalidIndexDefinitionException {
     if (desc.isExternal()) {
-      //XX: not support external index
+      // External index is not currently supported
       return null;
     }
 
