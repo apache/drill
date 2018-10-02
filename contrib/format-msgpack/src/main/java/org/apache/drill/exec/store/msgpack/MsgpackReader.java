@@ -28,15 +28,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.TimeStampHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
@@ -57,11 +49,12 @@ public class MsgpackReader extends BaseMsgpackReader {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackReader.class);
   private final List<SchemaPath> columns;
-  private boolean atLeastOneWrite = false;
+  public boolean atLeastOneWrite = false;
   private DrillBuf workBuf;
   private final FieldSelection rootSelection;
   private final ByteBuffer timestampReadBuffer = ByteBuffer.allocate(12);
   private final boolean skipInvalidKeyTypes = true;
+ 
   public MsgpackReader(DrillBuf managedBuf) {
     this(managedBuf, GroupScan.ALL_COLUMNS);
   }
@@ -264,9 +257,9 @@ public class MsgpackReader extends BaseMsgpackReader {
    *</code>
    */
   private void writeTimestamp(ExtensionValue ev, MapOrListWriterImpl writer, String fieldName, boolean isList) {
+    long epochSeconds = 0;
     byte zero = 0;
     byte[] data = ev.getData();
-    final TimeStampHolder ts = new TimeStampHolder();
     switch (data.length) {
     case 4: {
       timestampReadBuffer.position(0);
@@ -276,8 +269,7 @@ public class MsgpackReader extends BaseMsgpackReader {
       timestampReadBuffer.put(zero);
       timestampReadBuffer.put(data);
       timestampReadBuffer.position(0);
-      long epochSeconds = timestampReadBuffer.getLong();
-      ts.value = epochSeconds;
+      epochSeconds = timestampReadBuffer.getLong();
     }
       break;
     case 8: {
@@ -287,8 +279,7 @@ public class MsgpackReader extends BaseMsgpackReader {
       long data64 = timestampReadBuffer.getLong();
       @SuppressWarnings("unused")
       long nanos = data64 >>> 34;
-      long epochSeconds = data64 & 0x00000003ffffffffL;
-      ts.value = epochSeconds;
+      epochSeconds = data64 & 0x00000003ffffffffL;
     }
       break;
     case 12: {
@@ -299,7 +290,7 @@ public class MsgpackReader extends BaseMsgpackReader {
       @SuppressWarnings("unused")
       long nanosLong = data32;
       long data64 = timestampReadBuffer.getLong();
-      ts.value = data64;
+      epochSeconds = data64;
     }
       break;
     default:
@@ -308,9 +299,9 @@ public class MsgpackReader extends BaseMsgpackReader {
     }
 
     if (isList == false) {
-      writer.timeStamp(fieldName).write(ts);
+      writer.timeStamp(fieldName).writeTimeStamp(epochSeconds);
     } else {
-      writer.list.timeStamp().write(ts);
+      writer.list.timeStamp().writeTimeStamp(epochSeconds);
     }
   }
 
@@ -318,14 +309,10 @@ public class MsgpackReader extends BaseMsgpackReader {
     int length = bytes.length;
     ensure(length);
     workBuf.setBytes(0, bytes);
-    final VarBinaryHolder vb = new VarBinaryHolder();
-    vb.buffer = workBuf;
-    vb.start = 0;
-    vb.end = length;
     if (isList == false) {
-      writer.varBinary(fieldName).write(vb);
+      writer.varBinary(fieldName).writeVarBinary(0, length, workBuf);
     } else {
-      writer.list.varBinary().write(vb);
+      writer.list.varBinary().writeVarBinary(0, length, workBuf);
     }
   }
 
@@ -333,54 +320,35 @@ public class MsgpackReader extends BaseMsgpackReader {
     int length = readString.length;
     ensure(length);
     workBuf.setBytes(0, readString);
-    final VarCharHolder vh = new VarCharHolder();
-    vh.buffer = workBuf;
-    vh.start = 0;
-    vh.end = length;
     if (isList == false) {
-      writer.varChar(fieldName).write(vh);
+      writer.varChar(fieldName).writeVarChar(0, length, workBuf);
     } else {
-      writer.list.varChar().write(vh);
+      writer.list.varChar().writeVarChar(0, length, workBuf);
     }
   }
 
   private void writeDouble(double readDouble, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    final Float8Holder f8h = new Float8Holder();
-    f8h.value = readDouble;
     if (isList == false) {
-      writer.float8(fieldName).write(f8h);
+      writer.float8(fieldName).writeFloat8(readDouble);
     } else {
-      writer.list.float8().write(f8h);
+      writer.list.float8().writeFloat8(readDouble);
     }
   }
 
   private void writeBoolean(boolean readBoolean, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    final BitHolder bit = new BitHolder();
-    bit.value = readBoolean ? 1 : 0;
+    int value = readBoolean ? 1 : 0;
     if (isList == false) {
-      writer.bit(fieldName).write(bit);
+      writer.bit(fieldName).writeBit(value);
     } else {
-      writer.list.bit().write(bit);
+      writer.list.bit().writeBit(value);
     }
   }
 
   private void writeInt64(long readInt64, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    final BigIntHolder bh = new BigIntHolder();
-    bh.value = readInt64;
     if (isList == false) {
-      writer.bigInt(fieldName).write(bh);
+      writer.bigInt(fieldName).writeBigInt(readInt64);
     } else {
-      writer.list.bigInt().write(bh);
-    }
-  }
-
-  private void writeInt32(int readInt32, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    final IntHolder ih = new IntHolder();
-    ih.value = readInt32;
-    if (isList == false) {
-      writer.integer(fieldName).write(ih);
-    } else {
-      writer.list.integer().write(ih);
+      writer.list.bigInt().writeBigInt(readInt64);
     }
   }
 

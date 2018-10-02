@@ -441,6 +441,30 @@ public class TestMsgpackRecordReader extends ClusterTest {
     RowSet expected = b.build();
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
+  
+  @Test
+  public void testVarcharNotPresentInFirstBatches() throws Exception {
+    String fileName = "varcharNotPresentInFirstBatches.mp";
+    buildVarcharColumn(fileName);
+
+    String sql = "select x from `dfs.data`.`" + fileName + "`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("x", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
+    //@formatter:on
+    RowSetBuilder b = new RowSetBuilder(client.allocator(), expectedSchema);
+    for (long i = 0; i < 10000; i++) {
+      b.addRow(new Object[] {null});
+    }
+    b.addRow(1);
+    b.addRow(2);
+
+    RowSet expected = b.build();
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
 
   private MessagePacker makeMessagePacker(String fileName) throws IOException {
     return MessagePack.newDefaultPacker(new FileOutputStream(new File(testDir, fileName)));
@@ -546,6 +570,25 @@ public class TestMsgpackRecordReader extends ClusterTest {
     packer.packString("x").packLong(Long.MAX_VALUE);
     packer.packMapHeader(1);
     packer.packString("x").packLong(Long.MAX_VALUE);
+
+    packer.close();
+  }
+
+  private void buildVarcharColumn(String fileName) throws IOException {
+    MessagePacker packer = makeMessagePacker(fileName);
+
+    // messages with no x column
+    for (long i = 0; i < 10000; i++) {
+      packer.packMapHeader(1);
+      packer.packString("y").packLong(i);
+    }
+
+    packer.packMapHeader(2);
+    packer.packString("x").packString("data");
+    packer.packString("y").packLong(1);
+    packer.packMapHeader(2);
+    packer.packString("x").packString("data2");
+    packer.packString("y").packLong(2);
 
     packer.close();
   }
