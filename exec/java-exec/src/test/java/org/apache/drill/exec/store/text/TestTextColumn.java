@@ -22,7 +22,8 @@ import java.util.List;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Test;
-import static org.junit.Assert.assertTrue;
+
+import static org.junit.Assert.assertEquals;
 
 public class TestTextColumn extends BaseTestQuery {
   @Test
@@ -41,7 +42,7 @@ public class TestTextColumn extends BaseTestQuery {
     expectedResultSet.addRow("g, h,\",\"i\",\"j,, \\n k");
 
     TestResultSet actualResultSet = new TestResultSet(actualResults);
-    assertTrue(expectedResultSet.equals(actualResultSet));
+    assertEquals(expectedResultSet, actualResultSet);
   }
 
   @Test
@@ -55,6 +56,22 @@ public class TestTextColumn extends BaseTestQuery {
     expectedResultSet.addRow("g, h,", "i", "j,, \\n k", "l\\\"m");
 
     TestResultSet actualResultSet = new TestResultSet(actualResults);
-    assertTrue(expectedResultSet.equals(actualResultSet));
+    assertEquals(expectedResultSet, actualResultSet);
   }
+
+  @Test
+  public void testColumnsCaseInsensitive() throws Exception {
+    testBuilder()
+        .sqlQuery("select columns as c from cp.`store/text/data/letters.csv`")
+        .unOrdered()
+        .sqlBaselineQuery("select COLUMNS as c from cp.`store/text/data/letters.csv`")
+        .go();
+
+    testBuilder()
+        .sqlQuery("select columns[0], columns[1] from cp.`store/text/data/letters.csv`")
+        .unOrdered()
+        .sqlBaselineQuery("select COLUMNS[0], CoLuMnS[1] from cp.`store/text/data/letters.csv`")
+        .go();
+  }
+
 }
