@@ -82,15 +82,18 @@ public class ComplexUnnestVisitor extends RelShuttleImpl {
     builder.push(newCorrelate);
 
     List<RexNode> topProjectExpressions = left.getRowType().getFieldList().stream()
-        .map(field -> builder.getRexBuilder().makeInputRef(left, field.getIndex()))
-        .collect(Collectors.toList());
+            .map(field -> builder.getRexBuilder().makeInputRef(newCorrelate, field.getIndex()))
+            .collect(Collectors.toList());
 
+    //Accommodate the new $COMPLEX_FIELD_NAME column.
+    int rightStartIndex = left.getRowType().getFieldList().size() + 1;
     switch (correlate.getJoinType()) {
       case LEFT:
       case INNER:
         // adds field from the right input of correlate to the top project
-        topProjectExpressions.add(
-            builder.getRexBuilder().makeInputRef(newCorrelate, topProjectExpressions.size() + 1));
+        topProjectExpressions.addAll(right.getRowType().getFieldList().stream()
+                .map(field -> builder.getRexBuilder().makeInputRef(newCorrelate, field.getIndex() + rightStartIndex))
+                .collect(Collectors.toList()));
         // fall through
       case ANTI:
       case SEMI:

@@ -549,4 +549,24 @@ public class TestLateralPlans extends BaseTestQuery {
               .go();
     }
   }
+
+  @Test
+  public void testNestedColumnQuery() throws Exception {
+    String sql = "select dt.area_code as area_code, dt.ph as ph from cp.`lateraljoin/nested-customer-map.json` t," +
+                 " lateral (select t2.ord.area_code as area_code , t2.ord.phone as ph from unnest(t.c_address.c_phone) t2(ord)) dt";
+
+    String baselineQuery = "select dt.c_ph.area_code as area_code, dt.c_ph.phone as ph from (select flatten(t.c_address.c_phone) as c_ph from cp.`lateraljoin/nested-customer-map.json` t) dt";
+
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(PlannerSettings.ENABLE_UNNEST_LATERAL_KEY, true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      client.testBuilder()
+              .ordered()
+              .sqlBaselineQuery(baselineQuery)
+              .sqlQuery(sql)
+              .go();
+    }
+  }
 }
