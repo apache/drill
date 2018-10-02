@@ -30,9 +30,10 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.msgpack.value.ArrayValue;
 import org.msgpack.value.ExtensionValue;
@@ -54,7 +55,7 @@ public class MsgpackReader extends BaseMsgpackReader {
   private final FieldSelection rootSelection;
   private final ByteBuffer timestampReadBuffer = ByteBuffer.allocate(12);
   private final boolean skipInvalidKeyTypes = true;
- 
+
   public MsgpackReader(DrillBuf managedBuf) {
     this(managedBuf, GroupScan.ALL_COLUMNS);
   }
@@ -68,34 +69,33 @@ public class MsgpackReader extends BaseMsgpackReader {
 
   @Override
   protected ReadState writeRecord(Value mapValue, ComplexWriter writer) throws IOException {
-    return writeToMap(mapValue, new MapOrListWriterImpl(writer.rootAsMap()), this.rootSelection);
+    return writeToMap(mapValue, writer.rootAsMap(), this.rootSelection);
   }
 
-  private ReadState writeToList(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection)
+  private ReadState writeToList(Value value, ListWriter listWriter, FieldSelection selection)
       throws IOException {
     ReadState readState = ReadState.WRITE_SUCCEED;
-    writer.start();
+    listWriter.startList();
     try {
-      ArrayValue arrayValue = listOrMapValue.asArrayValue();
+      ArrayValue arrayValue = value.asArrayValue();
       for (int i = 0; i < arrayValue.size(); i++) {
-        Value value = arrayValue.get(i);
-        readState = writeElement(value, writer, true, "", selection);
-        if(readState != ReadState.WRITE_SUCCEED) {
+        Value element = arrayValue.get(i);
+        readState = writeElement(element, null, listWriter, "", selection);
+        if (readState != ReadState.WRITE_SUCCEED) {
           break;
         }
       }
     } finally {
-      writer.end();
+      listWriter.endList();
     }
     return readState;
   }
 
-  private ReadState writeToMap(Value listOrMapValue, final MapOrListWriterImpl writer, FieldSelection selection)
-      throws IOException {
+  private ReadState writeToMap(Value value, MapWriter writer, FieldSelection selection) throws IOException {
     ReadState readState = ReadState.WRITE_SUCCEED;
     writer.start();
     try {
-      MapValue mapValue = listOrMapValue.asMapValue();
+      MapValue mapValue = value.asMapValue();
       Set<Map.Entry<Value, Value>> entries = mapValue.entrySet();
       for (Map.Entry<Value, Value> entry : entries) {
         Value key = entry.getKey();
@@ -103,18 +103,16 @@ public class MsgpackReader extends BaseMsgpackReader {
         if (fieldName != null) {
           FieldSelection childSelection = selection.getChild(fieldName);
           if (!childSelection.isNeverValid()) {
-            Value value = entry.getValue();
-            readState = writeElement(value, writer, false, fieldName, childSelection);
+            Value element = entry.getValue();
+            readState = writeElement(element, writer, null, fieldName, childSelection);
           }
-        }
-        else {
+        } else {
           Log.warn("Failed to read field name of type: " + key.getValueType());
-          if(!skipInvalidKeyTypes) {
+          if (!skipInvalidKeyTypes) {
             readState = ReadState.MSG_RECORD_PARSE_ERROR;
           }
         }
-        if(readState != ReadState.WRITE_SUCCEED)
-        {
+        if (readState != ReadState.WRITE_SUCCEED) {
           break;
         }
       }
@@ -154,17 +152,17 @@ public class MsgpackReader extends BaseMsgpackReader {
     return fieldName;
   }
 
-  private ReadState writeElement(Value v, final MapOrListWriterImpl writer, boolean isList, String fieldName,
+  private ReadState writeElement(Value value, MapWriter mapWriter, ListWriter listWriter, String fieldName,
       FieldSelection selection) throws IOException {
 
     ReadState readState = ReadState.WRITE_SUCCEED;
-    ValueType valueType = v.getValueType();
+    ValueType valueType = value.getValueType();
     switch (valueType) {
     case INTEGER:
-      IntegerValue iv = v.asIntegerValue();
+      IntegerValue iv = value.asIntegerValue();
       if (iv.isInIntRange() || iv.isInLongRange()) {
         long longVal = iv.toLong();
-        writeInt64(longVal, writer, fieldName, isList);
+        writeInt64(longVal, mapWriter, fieldName, listWriter);
       } else {
         BigInteger i = iv.toBigInteger();
         throw new DrillRuntimeException("UnSupported messagepack type: " + valueType + " with BigInteger value: " + i);
@@ -172,54 +170,52 @@ public class MsgpackReader extends BaseMsgpackReader {
       atLeastOneWrite = true;
       break;
     case ARRAY:
-      readState = writeToList(v, (MapOrListWriterImpl) writer.list(fieldName), selection);
+      readState = writeToList(value, mapWriter.list(fieldName), selection);
       atLeastOneWrite = true;
       break;
     case BOOLEAN:
-      boolean b = v.asBooleanValue().getBoolean();
-      writeBoolean(b, writer, fieldName, isList);
+      boolean b = value.asBooleanValue().getBoolean();
+      writeBoolean(b, mapWriter, fieldName, listWriter);
       atLeastOneWrite = true;
       break;
     case MAP:
       // To handle nested Documents.
-      MapOrListWriterImpl _writer = writer;
-      if (!isList) {
-        _writer = (MapOrListWriterImpl) writer.map(fieldName);
+      if (mapWriter != null) {
+        readState = writeToMap(value, mapWriter.map(fieldName), selection);
       } else {
-        _writer = (MapOrListWriterImpl) writer.listoftmap(fieldName);
+        readState = writeToMap(value, listWriter.map(), selection);
       }
-      readState = writeToMap(v, _writer, selection);
       atLeastOneWrite = true;
       break;
     case FLOAT:
-      FloatValue fv = v.asFloatValue();
+      FloatValue fv = value.asFloatValue();
       double d = fv.toDouble(); // use as double
-      writeDouble(d, writer, fieldName, isList);
+      writeDouble(d, mapWriter, fieldName, listWriter);
       atLeastOneWrite = true;
       break;
     case EXTENSION:
-      ExtensionValue ev = v.asExtensionValue();
+      ExtensionValue ev = value.asExtensionValue();
       byte extType = ev.getType();
       if (extType == -1) {
-        writeTimestamp(ev, writer, fieldName, isList);
+        writeTimestamp(ev, mapWriter, fieldName, listWriter);
       } else {
         byte[] bytes = ev.getData();
-        writeBinary(bytes, writer, fieldName, isList);
+        writeBinary(bytes, mapWriter, fieldName, listWriter);
       }
       atLeastOneWrite = true;
       break;
     case NIL:
       // just read and ignore.
-      v.isNilValue(); // true
+      value.isNilValue(); // true
       break;
     case STRING:
-      byte[] buff = v.asStringValue().asByteArray();
-      writeString(buff, writer, fieldName, isList);
+      byte[] buff = value.asStringValue().asByteArray();
+      writeString(buff, mapWriter, fieldName, listWriter);
       atLeastOneWrite = true;
       break;
     case BINARY:
-      byte[] bytes = v.asBinaryValue().asByteArray();
-      writeBinary(bytes, writer, fieldName, isList);
+      byte[] bytes = value.asBinaryValue().asByteArray();
+      writeBinary(bytes, mapWriter, fieldName, listWriter);
       atLeastOneWrite = true;
       break;
     default:
@@ -256,7 +252,7 @@ public class MsgpackReader extends BaseMsgpackReader {
    *</pre>
    *</code>
    */
-  private void writeTimestamp(ExtensionValue ev, MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeTimestamp(ExtensionValue ev, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
     long epochSeconds = 0;
     byte zero = 0;
     byte[] data = ev.getData();
@@ -298,57 +294,57 @@ public class MsgpackReader extends BaseMsgpackReader {
           "UnSupported built-in messagepack timestamp type (-1) with data length of: " + data.length);
     }
 
-    if (isList == false) {
-      writer.timeStamp(fieldName).writeTimeStamp(epochSeconds);
+    if (mapWriter != null) {
+      mapWriter.timeStamp(fieldName).writeTimeStamp(epochSeconds);
     } else {
-      writer.list.timeStamp().writeTimeStamp(epochSeconds);
+      listWriter.timeStamp().writeTimeStamp(epochSeconds);
     }
   }
 
-  private void writeBinary(byte[] bytes, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeBinary(byte[] bytes, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
     int length = bytes.length;
     ensure(length);
     workBuf.setBytes(0, bytes);
-    if (isList == false) {
-      writer.varBinary(fieldName).writeVarBinary(0, length, workBuf);
+    if (mapWriter != null) {
+      mapWriter.varBinary(fieldName).writeVarBinary(0, length, workBuf);
     } else {
-      writer.list.varBinary().writeVarBinary(0, length, workBuf);
+      listWriter.varBinary().writeVarBinary(0, length, workBuf);
     }
   }
 
-  private void writeString(byte[] readString, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeString(byte[] readString, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
     int length = readString.length;
     ensure(length);
     workBuf.setBytes(0, readString);
-    if (isList == false) {
-      writer.varChar(fieldName).writeVarChar(0, length, workBuf);
+    if (mapWriter != null) {
+      mapWriter.varChar(fieldName).writeVarChar(0, length, workBuf);
     } else {
-      writer.list.varChar().writeVarChar(0, length, workBuf);
+      listWriter.varChar().writeVarChar(0, length, workBuf);
     }
   }
 
-  private void writeDouble(double readDouble, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    if (isList == false) {
-      writer.float8(fieldName).writeFloat8(readDouble);
+  private void writeDouble(double value, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+    if (mapWriter != null) {
+      mapWriter.float8(fieldName).writeFloat8(value);
     } else {
-      writer.list.float8().writeFloat8(readDouble);
+      listWriter.float8().writeFloat8(value);
     }
   }
 
-  private void writeBoolean(boolean readBoolean, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeBoolean(boolean readBoolean, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
     int value = readBoolean ? 1 : 0;
-    if (isList == false) {
-      writer.bit(fieldName).writeBit(value);
+    if (mapWriter != null) {
+      mapWriter.bit(fieldName).writeBit(value);
     } else {
-      writer.list.bit().writeBit(value);
+      listWriter.bit().writeBit(value);
     }
   }
 
-  private void writeInt64(long readInt64, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    if (isList == false) {
-      writer.bigInt(fieldName).writeBigInt(readInt64);
+  private void writeInt64(long value, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+    if (mapWriter != null) {
+      mapWriter.bigInt(fieldName).writeBigInt(value);
     } else {
-      writer.list.bigInt().writeBigInt(readInt64);
+      listWriter.bigInt().writeBigInt(value);
     }
   }
 
