@@ -27,6 +27,8 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.Float8Holder;
+import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 public class MathFunctions{
@@ -70,6 +72,7 @@ public class MathFunctions{
     @Workspace int decimalDigits;
     @Output Float8Holder out;
 
+    @Override
     public void setup() {
       byte[] buf = new byte[right.end - right.start];
       right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
@@ -77,14 +80,103 @@ public class MathFunctions{
       decimalDigits = inputFormat.getMaximumFractionDigits();
     }
 
+    @Override
     public void eval() {
       byte[] buf1 = new byte[left.end - left.start];
       left.buffer.getBytes(left.start, buf1, 0, left.end - left.start);
       String input = new String(buf1);
       try {
         out.value = inputFormat.parse(input).doubleValue();
-      }  catch(java.text.ParseException e) {
+      }  catch (java.text.ParseException e) {
          throw new UnsupportedOperationException("Cannot parse input: " + input + " with pattern : " + inputFormat.toPattern());
+      }
+
+      // Round the value
+      java.math.BigDecimal roundedValue = new java.math.BigDecimal(out.value);
+      out.value = (roundedValue.setScale(decimalDigits, java.math.BigDecimal.ROUND_HALF_UP)).doubleValue();
+    }
+  }
+
+  @FunctionTemplate(name = "convertVarCharToNumber", scope = FunctionScope.SIMPLE, isInternal = true)
+  public static class ToNullableNumber implements DrillSimpleFunc {
+    @Param
+    VarCharHolder left;
+    @Param
+    VarCharHolder right;
+    @Workspace
+    java.text.DecimalFormat inputFormat;
+    @Workspace
+    int decimalDigits;
+    @Output
+    NullableFloat8Holder out;
+
+    @Override
+    public void setup() {
+      byte[] buf = new byte[right.end - right.start];
+      right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
+      inputFormat = new DecimalFormat(new String(buf));
+      decimalDigits = inputFormat.getMaximumFractionDigits();
+    }
+
+    @Override
+    public void eval() {
+      if (left.start == left.end) {
+        out.isSet = 0;
+        return;
+      }
+      out.isSet = 1;
+
+      byte[] buf1 = new byte[left.end - left.start];
+      left.buffer.getBytes(left.start, buf1, 0, left.end - left.start);
+      String input = new String(buf1);
+      try {
+        out.value = inputFormat.parse(input).doubleValue();
+      } catch (java.text.ParseException e) {
+        throw new UnsupportedOperationException("Cannot parse input: " + input + " with pattern : " + inputFormat.toPattern());
+      }
+
+      // Round the value
+      java.math.BigDecimal roundedValue = new java.math.BigDecimal(out.value);
+      out.value = (roundedValue.setScale(decimalDigits, java.math.BigDecimal.ROUND_HALF_UP)).doubleValue();
+    }
+  }
+
+  @FunctionTemplate(name = "convertNullableVarCharToNumber", scope = FunctionScope.SIMPLE, isInternal = true)
+  public static class ToNullableNumberNullableInput implements DrillSimpleFunc {
+    @Param
+    NullableVarCharHolder left;
+    @Param
+    VarCharHolder right;
+    @Workspace
+    java.text.DecimalFormat inputFormat;
+    @Workspace
+    int decimalDigits;
+    @Output
+    NullableFloat8Holder out;
+
+    @Override
+    public void setup() {
+      byte[] buf = new byte[right.end - right.start];
+      right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
+      inputFormat = new DecimalFormat(new String(buf));
+      decimalDigits = inputFormat.getMaximumFractionDigits();
+    }
+
+    @Override
+    public void eval() {
+      if (left.isSet == 0 || left.start == left.end) {
+        out.isSet = 0;
+        return;
+      }
+      out.isSet = 1;
+
+      byte[] buf1 = new byte[left.end - left.start];
+      left.buffer.getBytes(left.start, buf1, 0, left.end - left.start);
+      String input = new String(buf1);
+      try {
+        out.value = inputFormat.parse(input).doubleValue();
+      } catch (java.text.ParseException e) {
+        throw new UnsupportedOperationException("Cannot parse input: " + input + " with pattern : " + inputFormat.toPattern());
       }
 
       // Round the value

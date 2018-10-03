@@ -60,7 +60,7 @@ import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
-import org.apache.drill.common.expression.fn.CastFunctions;
+import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.expression.visitors.ConditionalExprOptimizer;
 import org.apache.drill.common.expression.visitors.ExpressionValidator;
@@ -198,7 +198,7 @@ public class ExpressionTreeMaterializer {
   }
 
   public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionLookupContext functionLookupContext, ErrorCollector errorCollector, boolean exactResolver) {
-    String castFuncName = CastFunctions.getCastFunc(toType.getMinorType());
+    String castFuncName = FunctionReplacementUtils.getCastFunc(toType.getMinorType());
     List<LogicalExpression> castArgs = Lists.newArrayList();
     castArgs.add(fromExpr);  //input_expr
 
@@ -856,7 +856,7 @@ public class ExpressionTreeMaterializer {
         MajorType type = e.getMajorType();
 
         // Get the cast function name from the map
-        String castFuncWithType = CastFunctions.getCastFunc(type.getMinorType());
+        String castFuncWithType = FunctionReplacementUtils.getCastFunc(type.getMinorType());
 
         List<LogicalExpression> newArgs = Lists.newArrayList();
         newArgs.add(input);  //input_expr

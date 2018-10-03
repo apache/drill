@@ -23,7 +23,7 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.expression.fn.CastFunctions;
+import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
@@ -145,7 +145,7 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
 
     final String funcName = ((DrillSimpleFuncHolder) funcHolder).getRegisteredNames()[0];
 
-    if (CastFunctions.isCastFunction(funcName)) {
+    if (FunctionReplacementUtils.isCastFunction(funcName)) {
       Statistics stat = holderExpr.args.get(0).accept(this, null);
       if (stat != null && ! stat.isEmpty()) {
         return evalCastFunc(holderExpr, stat);
