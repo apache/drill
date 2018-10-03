@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -58,6 +58,8 @@ public class RuntimeFilterSink implements AutoCloseable {
    * indicate producer not to put any new elements in it.
    */
   private ReentrantLock queueLock = new ReentrantLock();
+
+  private Condition notEmpty = queueLock.newCondition();
 
   private ReentrantLock aggregatedRFLock = new ReentrantLock();
 
@@ -98,6 +100,7 @@ public class RuntimeFilterSink implements AutoCloseable {
         queueLock.lock();
         if (rfQueue != null) {
           rfQueue.add(runtimeFilterWritable);
+          notEmpty.signal();
         } else {
           runtimeFilterWritable.close();
         }
@@ -155,6 +158,7 @@ public class RuntimeFilterSink implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
+    asyncAggregateThread.interrupt();
     doCleanup();
   }
 
@@ -180,12 +184,13 @@ public class RuntimeFilterSink implements AutoCloseable {
         while (running.get()) {
           try {
             queueLock.lock();
-            toAggregate = (rfQueue != null) ? rfQueue.poll(5, TimeUnit.SECONDS) :  null;
+            toAggregate = (rfQueue != null) ? rfQueue.poll() :  null;
+            if (toAggregate == null) {
+              notEmpty.await();
+              continue;
+            }
           } finally {
             queueLock.unlock();
-          }
-          if (toAggregate == null) {
-            continue;
           }
 
           try {
