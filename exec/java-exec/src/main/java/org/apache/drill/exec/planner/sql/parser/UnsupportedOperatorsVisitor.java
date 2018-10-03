@@ -36,7 +36,6 @@ import org.apache.calcite.sql.fun.SqlCountAggFunction;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlJoin;
-import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
@@ -254,14 +253,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
             "NATURAL JOIN is not supported\n" +
             "See Apache Drill JIRA: DRILL-1986");
-        throw new UnsupportedOperationException();
-      }
-
-      // Block Cross Join
-      if(join.getJoinType() == JoinType.CROSS) {
-        unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
-            "CROSS JOIN is not supported\n" +
-            "See Apache Drill JIRA: DRILL-1921");
         throw new UnsupportedOperationException();
       }
     }

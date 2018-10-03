@@ -51,10 +51,13 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.planner.logical.DrillLimitRel;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.TypeCastRules;
+import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import static org.apache.drill.exec.planner.physical.PlannerSettings.NLJOIN_FOR_SCALAR;
 
 public class JoinUtils {
 
@@ -64,6 +67,11 @@ public class JoinUtils {
     CARTESIAN   // no join condition
   }
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinUtils.class);
+
+  public static final String FAILED_TO_PLAN_CARTESIAN_JOIN = String.format(
+      "This query cannot be planned possibly due to either a cartesian join or an inequality join. %n" +
+          "If a cartesian or inequality join is used intentionally, set the option '%s' to false and try again.",
+      NLJOIN_FOR_SCALAR.getOptionName());
 
   // Check the comparator is supported in join condition. Note that a similar check is also
   // done in JoinPrel; however we have to repeat it here because a physical plan
@@ -125,6 +133,18 @@ public class JoinUtils {
     }
 
     return false;
+  }
+
+  /**
+   * Check if the given RelNode contains any Cartesian join.
+   * Return true if find one. Otherwise, return false.
+   *
+   * @param relNode     {@link RelNode} instance to be inspected
+   * @return            Return true if the given relNode contains Cartesian join.
+   *                    Otherwise, return false
+   */
+  public static boolean checkCartesianJoin(RelNode relNode) {
+    return checkCartesianJoin(relNode, new LinkedList<>(), new LinkedList<>(), new LinkedList<>());
   }
 
   /**
@@ -297,6 +317,16 @@ public class JoinUtils {
    */
   public static boolean hasScalarSubqueryInput(RelNode left, RelNode right) {
     return isScalarSubquery(left) || isScalarSubquery(right);
+  }
+
+  /**
+   * Creates new exception for queries that cannot be planned due
+   * to presence of cartesian or inequality join.
+   *
+   * @return new {@link UnsupportedRelOperatorException} instance
+   */
+  public static UnsupportedRelOperatorException cartesianJoinPlanningException() {
+    return new UnsupportedRelOperatorException(FAILED_TO_PLAN_CARTESIAN_JOIN);
   }
 
   /**
