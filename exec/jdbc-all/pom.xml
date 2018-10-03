@@ -436,15 +436,14 @@
                <exclude>codegen/**</exclude>
                <exclude>bootstrap-storage-plugins.json</exclude>
                <exclude>org/apache/parquet</exclude>
-               <exclude>org/apache/drill/shaded/com/google/common/math</exclude>
-               <exclude>org/apache/drill/shaded/com/google/common/graph</exclude>
-               <exclude>org/apache/drill/shaded/com/google/common/net</exclude>
-               <exclude>org/apache/drill/shaded/com/google/common/primitives</exclude>
-               <exclude>org/apache/drill/shaded/com/google/common/reflect</exclude>
-               <exclude>org/apache/drill/shaded/com/google/common/util</exclude>
-               <exclude>org/apache/drill/shaded/com/google/common/cache</exclude>
-               <exclude>org/apache/drill/shaded/com/google/common/collect/Tree*</exclude>
-               <exclude>org/apache/drill/shaded/com/google/common/collect/Standard*</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/escape/**</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/eventbus/**</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/html/**</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/net/**</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/xml/**</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Tree*</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Standard*</exclude>
                <exclude>com/google/common/math</exclude>
                <exclude>com/google/common/net</exclude>
                <exclude>com/google/common/primitives</exclude>
@@ -751,15 +750,14 @@
                       <exclude>codegen/**</exclude>
                       <exclude>bootstrap-storage-plugins.json</exclude>
                       <exclude>org/apache/parquet</exclude>
-                      <exclude>org/apache/drill/shaded/com/google/common/math</exclude>
-                      <exclude>org/apache/drill/shaded/com/google/common/graph</exclude>
-                      <exclude>org/apache/drill/shaded/com/google/common/net</exclude>
-                      <exclude>org/apache/drill/shaded/com/google/common/primitives</exclude>
-                      <exclude>org/apache/drill/shaded/com/google/common/reflect</exclude>
-                      <exclude>org/apache/drill/shaded/com/google/common/util</exclude>
-                      <exclude>org/apache/drill/shaded/com/google/common/cache</exclude>
-                      <exclude>org/apache/drill/shaded/com/google/common/collect/Tree*</exclude>
-                      <exclude>org/apache/drill/shaded/com/google/common/collect/Standard*</exclude>
+                      <exclude>org/apache/drill/shaded/guava/com/google/common/escape/**</exclude>
+                      <exclude>org/apache/drill/shaded/guava/com/google/common/eventbus/**</exclude>
+                      <exclude>org/apache/drill/shaded/guava/com/google/common/html/**</exclude>
+                      <exclude>org/apache/drill/shaded/guava/com/google/common/net/**</exclude>
+                      <exclude>org/apache/drill/shaded/guava/com/google/common/xml/**</exclude>
+                      <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
+                      <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Tree*</exclude>
+                      <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Standard*</exclude>
                       <exclude>com/google/common/math</exclude>
                       <exclude>com/google/common/net</exclude>
                       <exclude>com/google/common/primitives</exclude>
