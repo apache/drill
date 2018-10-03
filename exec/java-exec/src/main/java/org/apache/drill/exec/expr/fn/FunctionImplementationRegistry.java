@@ -28,6 +28,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,6 +55,7 @@ import org.apache.drill.exec.coord.store.TransientStoreListener;
 import org.apache.drill.exec.exception.FunctionValidationException;
 import org.apache.drill.exec.exception.JarValidationException;
 import org.apache.drill.exec.expr.fn.registry.LocalFunctionRegistry;
+import org.apache.drill.exec.expr.fn.registry.FunctionHolder;
 import org.apache.drill.exec.expr.fn.registry.JarScan;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
@@ -291,6 +293,10 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     return false;
   }
 
+  public LocalFunctionRegistry getLocalFunctionRegistry() {
+    return localFunctionRegistry;
+  }
+
   public RemoteFunctionRegistry getRemoteFunctionRegistry() {
     return remoteFunctionRegistry;
   }
@@ -481,6 +487,17 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
       }
     }
     return missingJars;
+  }
+
+  /**
+   * Retrieve all functions, mapped by source jars (after syncing)
+   * @return Map of source jars and their functions
+   */
+  public Map<String, List<FunctionHolder>> getAllFunctionsHoldersByJar() {
+    if (useDynamicUdfs) {
+      syncWithRemoteRegistry(localFunctionRegistry.getVersion());
+    }
+    return localFunctionRegistry.getAllFunctionsHoldersByJar();
   }
 
   /**

@@ -261,7 +261,9 @@ public class DrillbitContext implements AutoCloseable {
     return classpathScan;
   }
 
-  public RemoteFunctionRegistry getRemoteFunctionRegistry() { return functionRegistry.getRemoteFunctionRegistry(); }
+  public RemoteFunctionRegistry getRemoteFunctionRegistry() {
+    return functionRegistry.getRemoteFunctionRegistry();
+  }
 
   /**
    * Use the operator table built during startup when "exec.udf.use_dynamic" option

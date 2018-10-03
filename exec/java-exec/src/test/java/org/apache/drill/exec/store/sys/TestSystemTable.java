@@ -77,6 +77,11 @@ public class TestSystemTable extends PlanTestBase {
   }
 
   @Test
+  public void functionsTable() throws Exception {
+    test("select * from sys.functions");
+  }
+
+  @Test
   public void profilesTable() throws Exception {
     test("select * from sys.profiles");
   }

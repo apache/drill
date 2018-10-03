@@ -25,6 +25,7 @@ import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -97,9 +98,13 @@ public class FunctionRegistryHolder {
   // function name, Map<function signature, function holder>
   private final Map<String, Map<String, DrillFuncHolder>> functions;
 
+  // jar name, List<function holder>
+  private final Map<String, List<FunctionHolder>> jarFunctions;
+
   public FunctionRegistryHolder() {
     this.functions = new ConcurrentHashMap<>();
     this.jars = new ConcurrentHashMap<>();
+    this.jarFunctions = new HashMap<String, List<FunctionHolder>>();
   }
 
   /**
@@ -131,6 +136,7 @@ public class FunctionRegistryHolder {
         Map<String, Queue<String>> jar = new ConcurrentHashMap<>();
         jars.put(jarName, jar);
         addFunctions(jar, newJar.getValue());
+        jarFunctions.put(jarName, newJar.getValue());
       }
       this.version = version;
     }
@@ -158,6 +164,17 @@ public class FunctionRegistryHolder {
   public List<String> getAllJarNames() {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       return new ArrayList<>(jars.keySet());
+    }
+  }
+
+  /**
+   * Retrieves all functions associated with all the jars
+   * This is read operation, so several users can perform this operation at the same time.
+   * @return list of all functions, mapped by their sources
+   */
+  public Map<String, List<FunctionHolder>> getAllFunctionHoldersByJar() {
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
+      return jarFunctions;
     }
   }
 
@@ -365,5 +382,7 @@ public class FunctionRegistryHolder {
         functions.remove(function);
       }
     }
+    jarFunctions.remove(jarName);
+
   }
 }

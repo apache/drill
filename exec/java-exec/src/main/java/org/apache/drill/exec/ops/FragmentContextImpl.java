@@ -239,6 +239,8 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     Preconditions.checkArgument(this.buffers == null, "Can only set buffers once.");
     this.buffers = buffers;
   }
+
+  @Override
   public QueryProfileStoreContext getProfileStoreContext() {
     return context.getProfileStoreContext();
   }
@@ -248,6 +250,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     return context.getUserConnections();
   }
 
+  @Override
   public void setExecutorState(final ExecutorState executorState) {
     Preconditions.checkArgument(this.executorState == null, "ExecutorState can only be set once.");
     this.executorState = executorState;
@@ -257,6 +260,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     executorState.fail(cause);
   }
 
+  @Override
   public SchemaPlus getFullRootSchema() {
     if (queryContext == null) {
       fail(new UnsupportedOperationException("Schema tree can only be created in root fragment. " +
@@ -278,6 +282,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     return queryContext.getFullRootSchema(schemaConfig);
   }
 
+  @Override
   public FragmentStats getStats() {
     return stats;
   }
@@ -326,10 +331,12 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
    * The FragmentHandle for this Fragment
    * @return FragmentHandle
    */
+  @Override
   public FragmentHandle getHandle() {
     return fragment.getHandle();
   }
 
+  @Override
   public String getFragIdString() {
     final FragmentHandle handle = getHandle();
     final String frag = handle != null ? handle.getMajorFragmentId() + ":" + handle.getMinorFragmentId() : "0:0";
@@ -361,6 +368,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
    * Get this fragment's allocator.
    * @return the allocator
    */
+  @Override
   @Deprecated
   public BufferAllocator getAllocator() {
     if (allocator == null) {
@@ -411,10 +419,12 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     return tunnel;
   }
 
+  @Override
   public IncomingBuffers getBuffers() {
     return buffers;
   }
 
+  @Override
   public OperatorContext newOperatorContext(PhysicalOperator popConfig, OperatorStats stats)
       throws OutOfMemoryException {
     OperatorContextImpl context = new OperatorContextImpl(popConfig, this, stats);
@@ -422,6 +432,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     return context;
   }
 
+  @Override
   public OperatorContext newOperatorContext(PhysicalOperator popConfig)
       throws OutOfMemoryException {
     OperatorContextImpl context = new OperatorContextImpl(popConfig, this);
@@ -444,10 +455,12 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     return executionControls;
   }
 
+  @Override
   public String getQueryUserName() {
     return fragment.getCredentials().getUserName();
   }
 
+  @Override
   public boolean isImpersonationEnabled() {
     // TODO(DRILL-2097): Until SimpleRootExec tests are removed, we need to consider impersonation disabled if there is
     // no config
@@ -509,6 +522,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     return valueHolder;
   }
 
+  @Override
   public ExecutorService getExecutor(){
     return context.getExecutor();
   }
