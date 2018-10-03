@@ -53,8 +53,8 @@
     <jackson.version>2.9.5</jackson.version>
     <jackson.databind.version>2.9.5</jackson.databind.version>
     <zookeeper.version>3.4.12</zookeeper.version>
-    <mapr.release.version>6.0.1-mapr</mapr.release.version>
-    <ojai.version>2.0.1-mapr-1804</ojai.version>
+    <mapr.release.version>6.1.0-mapr</mapr.release.version>
+    <ojai.version>3.0-mapr-1808</ojai.version>
     <kerby.version>1.0.0-RC2</kerby.version>
     <findbugs.version>3.0.0</findbugs.version>
     <netty.tcnative.classifier />
