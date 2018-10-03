@@ -61,9 +61,29 @@
     {from: "VarChar", to: "TimeStamp", major: "VarCharDate", alias: "timestamptype"},
     {from: "VarChar", to: "Time", major: "VarCharDate", alias: "timetype"},
 
+    {from: "VarChar", to: "NullableDate", major: "NullableVarCharDate"},
+    {from: "VarChar", to: "NullableTimeStamp", major: "NullableVarCharDate"},
+    {from: "VarChar", to: "NullableTime", major: "NullableVarCharDate"},
+
+    {from: "NullableVarChar", to: "NullableDate", major: "NullableVarCharDate"},
+    {from: "NullableVarChar", to: "NullableTimeStamp", major: "NullableVarCharDate"},
+    {from: "NullableVarChar", to: "NullableTime", major: "NullableVarCharDate"},
+
     {from: "VarBinary", to: "Date", major: "VarBinaryDate", alias: "datetype"},
     {from: "VarBinary", to: "TimeStamp", major: "VarBinaryDate", alias: "timestamptype"},
     {from: "VarBinary", to: "Time", major: "VarBinaryDate", alias: "timetype"},
+
+    {from: "VarBinary", to: "NullableDate", major: "NullableVarCharDate"},
+    {from: "VarBinary", to: "NullableTimeStamp", major: "NullableVarCharDate"},
+    {from: "VarBinary", to: "NullableTime", major: "NullableVarCharDate"},
+
+    {from: "NullableVarBinary", to: "NullableDate", major: "NullableVarCharDate"},
+    {from: "NullableVarBinary", to: "NullableTimeStamp", major: "NullableVarCharDate"},
+    {from: "NullableVarBinary", to: "NullableTime", major: "NullableVarCharDate"},
+
+    {from: "NullableVar16Char", to: "NullableDate", major: "NullableVarCharDate"},
+    {from: "NullableVar16Char", to: "NullableTimeStamp", major: "NullableVarCharDate"},
+    {from: "NullableVar16Char", to: "NullableTime", major: "NullableVarCharDate"},
 
     {from: "Date", to: "VarChar", major: "DateVarChar", bufferLength: "10"}
     {from: "TimeStamp", to: "VarChar", major: "DateVarChar", bufferLength: "23"},
@@ -72,6 +92,14 @@
     {from: "VarChar", to: "Interval", major: "VarCharInterval"},
     {from: "VarChar", to: "IntervalDay", major: "VarCharInterval"},
     {from: "VarChar", to: "IntervalYear", major: "VarCharInterval"},
+
+    {from: "VarChar", to: "NullableInterval", major: "NullableVarCharInterval"},
+    {from: "VarChar", to: "NullableIntervalDay", major: "NullableVarCharInterval"},
+    {from: "VarChar", to: "NullableIntervalYear", major: "NullableVarCharInterval"},
+
+    {from: "NullableVarChar", to: "NullableInterval", major: "NullableVarCharInterval"},
+    {from: "NullableVarChar", to: "NullableIntervalDay", major: "NullableVarCharInterval"},
+    {from: "NullableVarChar", to: "NullableIntervalYear", major: "NullableVarCharInterval"},
 
     {from: "Interval", to: "VarChar", major: "IntervalVarChar", bufferLength: "65"},
     {from: "IntervalYear", to: "VarChar", major: "IntervalYearVarChar", bufferLength: "35"},
@@ -118,27 +146,27 @@
     {from: "VarChar", to: "NullableFloat4", major: "EmptyString", javaType:"Float", parse:"Float"},
     {from: "VarChar", to: "NullableFloat8", major: "EmptyString", javaType:"Double", parse:"Double"},
 
-    {from: "VarChar", to: "NullableVarDecimal", major: "EmptyStringVarCharDecimalComplex"},
+    {from: "VarChar", to: "NullableVarDecimal", major: "NullableVarCharDecimalComplex"},
 
     {from: "NullableVarChar", to: "NullableInt", major: "EmptyString", javaType:"Integer", primeType:"int"},
     {from: "NullableVarChar", to: "NullableBigInt", major: "EmptyString", javaType: "Long", primeType: "long"},
     {from: "NullableVarChar", to: "NullableFloat4", major: "EmptyString", javaType:"Float", parse:"Float"},
     {from: "NullableVarChar", to: "NullableFloat8", major: "EmptyString", javaType:"Double", parse:"Double"},
 
-    {from: "NullableVarChar", to: "NullableVarDecimal", major: "EmptyStringVarCharDecimalComplex"},
+    {from: "NullableVarChar", to: "NullableVarDecimal", major: "NullableVarCharDecimalComplex"},
 
     {from: "NullableVar16Char", to: "NullableInt", major: "EmptyString", javaType:"Integer", primeType:"int"},
     {from: "NullableVar16Char", to: "NullableBigInt", major: "EmptyString", javaType: "Long", primeType: "long"},
     {from: "NullableVar16Char", to: "NullableFloat4", major: "EmptyString", javaType:"Float", parse:"Float"},
     {from: "NullableVar16Char", to: "NullableFloat8", major: "EmptyString", javaType:"Double", parse:"Double"},
 
-    {from: "NullableVar16Char", to: "NullableVarDecimal", major: "EmptyStringVarCharDecimalComplex"},
+    {from: "NullableVar16Char", to: "NullableVarDecimal", major: "NullableVarCharDecimalComplex"},
 
     {from: "NullableVarBinary", to: "NullableInt", major: "EmptyString", javaType:"Integer", primeType:"int"},
     {from: "NullableVarBinary", to: "NullableBigInt", major: "EmptyString", javaType: "Long", primeType: "long"},
     {from: "NullableVarBinary", to: "NullableFloat4", major: "EmptyString", javaType:"Float", parse:"Float"},
     {from: "NullableVarBinary", to: "NullableFloat8", major: "EmptyString", javaType:"Double", parse:"Double"},
 
-    {from: "NullableVarBinary", to: "NullableVarDecimal", major: "EmptyStringVarCharDecimalComplex"},
+    {from: "NullableVarBinary", to: "NullableVarDecimal", major: "NullableVarCharDecimalComplex"},
   ]
 }

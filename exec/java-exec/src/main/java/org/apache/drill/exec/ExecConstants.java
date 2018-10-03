@@ -499,8 +499,8 @@ public final class ExecConstants {
   public static final PositiveLongValidator SLICE_TARGET_OPTION = new PositiveLongValidator(SLICE_TARGET, Long.MAX_VALUE,
       new OptionDescription("The number of records manipulated within a fragment before Drill parallelizes operations."));
 
-  public static final String CAST_TO_NULLABLE_NUMERIC = "drill.exec.functions.cast_empty_string_to_null";
-  public static final BooleanValidator CAST_TO_NULLABLE_NUMERIC_OPTION = new BooleanValidator(CAST_TO_NULLABLE_NUMERIC,
+  public static final String CAST_EMPTY_STRING_TO_NULL = "drill.exec.functions.cast_empty_string_to_null";
+  public static final BooleanValidator CAST_EMPTY_STRING_TO_NULL_OPTION = new BooleanValidator(CAST_EMPTY_STRING_TO_NULL,
       new OptionDescription("In a text file, treat empty fields as NULL values instead of empty string."));
 
   /**

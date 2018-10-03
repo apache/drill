@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
@@ -42,7 +43,6 @@ import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.RunTimeScan;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -204,16 +204,16 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     if (functionCall.args.size() == 0) {
       return funcName;
     }
-    boolean castToNullableNumeric = optionManager != null &&
-                  optionManager.getOption(ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION);
-    if (! castToNullableNumeric) {
+    boolean castEmptyStringToNull = optionManager != null &&
+                  optionManager.getOption(ExecConstants.CAST_EMPTY_STRING_TO_NULL_OPTION);
+    if (!castEmptyStringToNull) {
       return funcName;
     }
     MajorType majorType =  functionCall.args.get(0).getMajorType();
     DataMode dataMode = majorType.getMode();
     MinorType minorType = majorType.getMinorType();
-    if (CastFunctions.isReplacementNeeded(funcName, minorType)) {
-        funcName = CastFunctions.getReplacingCastFunction(funcName, dataMode, minorType);
+    if (FunctionReplacementUtils.isReplacementNeeded(funcName, minorType)) {
+      funcName = FunctionReplacementUtils.getReplacingFunction(funcName, dataMode, minorType);
     }
 
     return funcName;

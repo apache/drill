@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -350,6 +351,24 @@ public class TestBuilder {
       i++;
     }
     this.baselineRecords.add(ret);
+    return this;
+  }
+
+  /**
+   * This method is used to pass in an array of values for records verification in case if
+   * {@link #baselineColumns(String...)} specifies one column only without
+   * the need to create a CSV or JSON file to store the baseline.
+   *
+   * This can be called repeatedly to pass an array of records to verify. It works for both ordered and unordered
+   * checks.
+   *
+   * @param baselineValues baseline values for a single column to validate
+   * @return {@code this} test builder
+   */
+  public TestBuilder baselineValuesForSingleColumn(Object... baselineValues) {
+    assertEquals("Only one column should be specified", 1, baselineColumns.length);
+    Arrays.stream(baselineValues)
+        .forEach(this::baselineValues);
     return this;
   }
 

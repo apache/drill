@@ -18,9 +18,13 @@
 <@pp.dropOutputFile />
 
 <#list cast.types as type>
-<#if type.major == "VarCharDate" || type.major == "VarBinaryDate">  <#-- Template to convert from VarChar/ VarBinary to Date, Time, TimeStamp -->
+<#if type.major == "VarCharDate" || type.major == "VarBinaryDate" || type.major == "NullableVarCharDate">  <#-- Template to convert from VarChar/ VarBinary to Date, Time, TimeStamp -->
 
+<#if type.major == "VarCharDate" || type.major == "VarBinaryDate">
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}To${type.to}.java" />
+<#elseif type.major == "NullableVarCharDate">
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/GCast${type.from}To${type.to}.java" />
+</#if>
 
 <#include "/@includes/license.ftl" />
 
@@ -46,9 +50,17 @@ import io.netty.buffer.DrillBuf;
  * This class is generated using freemarker and the ${.template_name} template.
  */
 @SuppressWarnings("unused")
+<#if type.major == "VarCharDate" || type.major == "VarBinaryDate">
 @FunctionTemplate(names = {"cast${type.to?upper_case}", "${type.alias}"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
   costCategory = FunctionCostCategory.COMPLEX)
 public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
+<#elseif type.major == "NullableVarCharDate">
+@FunctionTemplate(name = "castEmptyString${type.from}To${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = NullHandling.INTERNAL,
+    isInternal = true)
+public class GCast${type.from}To${type.to} implements DrillSimpleFunc {
+</#if>
 
   @Param ${type.from}Holder in;
   @Output ${type.to}Holder out;
@@ -56,24 +68,31 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   public void setup() { }
 
   public void eval() {
+    <#if type.major == "NullableVarCharDate">
+    if(<#if type.from == "NullableVarChar" || type.from == "NullableVar16Char" || type.from == "NullableVarBinary">in.isSet == 0 || </#if>in.end == in.start) {
+      out.isSet = 0;
+      return;
+    }
+    out.isSet = 1;
+    </#if>
 
-      <#if type.to != "Date">
-      byte[] buf = new byte[in.end - in.start];
-      in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
-      </#if>  
-      
-      <#if type.to == "Date">
-      out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getDate(in.buffer, in.start, in.end);
+    <#if type.to != "Date" && type.to != "NullableDate">
+    byte[] buf = new byte[in.end - in.start];
+    in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
+    String input = new String(buf, com.google.common.base.Charsets.UTF_8);
+    </#if>
 
-      <#elseif type.to == "TimeStamp">
-      java.time.LocalDateTime parsedDateTime = org.apache.drill.exec.expr.fn.impl.DateUtility.parseBest(input);
-      out.value = parsedDateTime.toInstant(java.time.ZoneOffset.UTC).toEpochMilli();
+    <#if type.to == "Date" || type.to == "NullableDate">
+    out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getDate(in.buffer, in.start, in.end);
 
-      <#elseif type.to == "Time">
-      java.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeFormatter();
-      out.value = (int) (java.time.LocalTime.parse(input, f).atDate(java.time.LocalDate.ofEpochDay(0)).toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
-      </#if>
+    <#elseif type.to == "TimeStamp" || type.to == "NullableTimeStamp">
+    java.time.LocalDateTime parsedDateTime = org.apache.drill.exec.expr.fn.impl.DateUtility.parseBest(input);
+    out.value = parsedDateTime.toInstant(java.time.ZoneOffset.UTC).toEpochMilli();
+
+    <#elseif type.to == "Time" || type.to == "NullableTime">
+    java.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeFormatter();
+    out.value = (int) (java.time.LocalTime.parse(input, f).atDate(java.time.LocalDate.ofEpochDay(0)).toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
+    </#if>
   }
 }
 </#if> <#-- type.major -->
