@@ -24,13 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -80,7 +77,7 @@ public class MsgpackReader extends BaseMsgpackReader {
       ArrayValue arrayValue = value.asArrayValue();
       for (int i = 0; i < arrayValue.size(); i++) {
         Value element = arrayValue.get(i);
-        readState = writeElement(element, null, listWriter, "", selection);
+        readState = writeElement(element, null, listWriter, null, selection);
         if (readState != ReadState.WRITE_SUCCEED) {
           break;
         }
@@ -163,11 +160,12 @@ public class MsgpackReader extends BaseMsgpackReader {
       if (iv.isInIntRange() || iv.isInLongRange()) {
         long longVal = iv.toLong();
         writeInt64(longVal, mapWriter, fieldName, listWriter);
+        atLeastOneWrite = true;
       } else {
         BigInteger i = iv.toBigInteger();
-        throw new DrillRuntimeException("UnSupported messagepack type: " + valueType + " with BigInteger value: " + i);
+        logger.warn("UnSupported messagepack type: " + valueType + " with BigInteger value: " + i);
+        readState = ReadState.MSG_RECORD_PARSE_ERROR;
       }
-      atLeastOneWrite = true;
       break;
     case ARRAY:
       readState = writeToList(value, mapWriter.list(fieldName), selection);
@@ -290,7 +288,7 @@ public class MsgpackReader extends BaseMsgpackReader {
     }
       break;
     default:
-      throw new DrillRuntimeException(
+      logger.error(
           "UnSupported built-in messagepack timestamp type (-1) with data length of: " + data.length);
     }
 
@@ -354,22 +352,13 @@ public class MsgpackReader extends BaseMsgpackReader {
       // for count purposes.
       SchemaPath sp = columns.get(0);
       PathSegment root = sp.getRootSegment();
-      BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
+      MapWriter mapWriter = writer.rootAsMap();
       while (root.getChild() != null && !root.getChild().isArray()) {
-        fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
+        mapWriter = mapWriter.map(root.getNameSegment().getPath());
         root = root.getChild();
       }
-      fieldWriter.integer(root.getNameSegment().getPath());
+      mapWriter.integer(root.getNameSegment().getPath());
     }
-  }
-
-  public UserException.Builder getExceptionWithContext(UserException.Builder exceptionBuilder, String field, String msg,
-      Object... args) {
-    return null;
-  }
-
-  public UserException.Builder getExceptionWithContext(Throwable exception, String field, String msg, Object... args) {
-    return null;
   }
 
   private void ensure(final int length) {

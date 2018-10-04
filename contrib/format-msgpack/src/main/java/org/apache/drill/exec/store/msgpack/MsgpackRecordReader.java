@@ -40,7 +40,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonNode;
 
 public class MsgpackRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackRecordReader.class);
@@ -59,14 +58,14 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private long parseErrorCount;
   private final boolean skipMalformedMsgRecords;
   private final boolean printSkippedMalformedMsgRecordLineNumber;
-  ReadState write = null;
+  private ReadState write = null;
 
   private BaseMsgpackReader messageReader;
 
   private boolean unionEnabled = false; // ????
 
   /**
-   * Create a JSON Record Reader that uses a file based input stream.
+   * Create a msgpack Record Reader that uses a file based input stream.
    *
    * @param fragmentContext
    * @param inputPath
@@ -75,45 +74,15 @@ public class MsgpackRecordReader extends AbstractRecordReader {
    * @throws OutOfMemoryException
    */
   public MsgpackRecordReader(MsgpackFormatConfig config, final FragmentContext fragmentContext, final String inputPath,
-      final DrillFileSystem fileSystem, final List<SchemaPath> columns) throws OutOfMemoryException {
-    this(config, fragmentContext, inputPath, null, fileSystem, columns);
-  }
+      final DrillFileSystem fileSystem, final List<SchemaPath> columns) {
 
-  /**
-   * Create a new JSON Record Reader that uses a in memory materialized JSON
-   * stream.
-   *
-   * @param fragmentContext
-   * @param embeddedContent
-   * @param fileSystem
-   * @param columns         pathnames of columns/subfields to read
-   * @throws OutOfMemoryException
-   */
-  public MsgpackRecordReader(MsgpackFormatConfig config, final FragmentContext fragmentContext, final JsonNode embeddedContent,
-      final DrillFileSystem fileSystem, final List<SchemaPath> columns) throws OutOfMemoryException {
-    this(config, fragmentContext, null, embeddedContent, fileSystem, columns);
-  }
-
-  private MsgpackRecordReader(MsgpackFormatConfig config, final FragmentContext fragmentContext, final String inputPath,
-      final JsonNode embeddedContent, final DrillFileSystem fileSystem, final List<SchemaPath> columns) {
-
-    Preconditions.checkArgument(
-        (inputPath == null && embeddedContent != null) || (inputPath != null && embeddedContent == null),
-        "One of inputPath or embeddedContent must be set but not both.");
-
-    if (inputPath != null) {
-      this.hadoopPath = new Path(inputPath);
-    } else {
-      // jccote not sure what embedded content is?
-      // this.embeddedContent = embeddedContent;
-    }
+    Preconditions.checkArgument((inputPath != null), "InputPath must be set.");
+    this.hadoopPath = new Path(inputPath);
 
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
     this.skipMalformedMsgRecords = config.isSkipMalformedMsgRecords();
     this.printSkippedMalformedMsgRecordLineNumber = config.isPrintSkippedMalformedMsgRecordLineNumber();
-    //this.skipMalformedMsgRecords = true;
-    //this.printSkippedMalformedMsgRecordLineNumber = true;
     setColumns(columns);
   }
 
@@ -126,9 +95,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   @Override
   public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
     try {
-      if (hadoopPath != null) {
-        this.stream = fileSystem.openPossiblyCompressedStream(hadoopPath);
-      }
+      this.stream = fileSystem.openPossiblyCompressedStream(hadoopPath);
 
       this.writer = new VectorContainerWriter(output, unionEnabled);
       if (isSkipQuery()) {
@@ -138,7 +105,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
       }
       setupParser();
     } catch (final Exception e) {
-      handleAndRaise("Failure reading JSON file", e);
+      handleAndRaise("Failure reading mgspack file", e);
     }
   }
 
@@ -148,11 +115,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   }
 
   private void setupParser() throws IOException {
-    if (hadoopPath != null) {
-      messageReader.setSource(stream);
-    } else {
-      // messageReader.setSource(embeddedContent);
-    }
+    messageReader.setSource(stream);
     messageReader.setIgnoreMsgParseErrors(skipMalformedMsgRecords);
   }
 
@@ -219,7 +182,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
         handleAndRaise("Error parsing msgpack", ex);
       }
     }
-    // Skip empty json file with 0 row.
+    // Skip empty msgpack file with 0 row.
     // Only when data source has > 0 row, ensure the batch has one field.
     if (recordCount > 0) {
       messageReader.ensureAtLeastOneField(writer);
