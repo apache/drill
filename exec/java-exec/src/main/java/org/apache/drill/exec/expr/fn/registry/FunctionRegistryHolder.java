@@ -26,6 +26,7 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -98,13 +99,9 @@ public class FunctionRegistryHolder {
   // function name, Map<function signature, function holder>
   private final Map<String, Map<String, DrillFuncHolder>> functions;
 
-  // jar name, List<function holder>
-  private final Map<String, List<FunctionHolder>> jarFunctions;
-
   public FunctionRegistryHolder() {
     this.functions = new ConcurrentHashMap<>();
     this.jars = new ConcurrentHashMap<>();
-    this.jarFunctions = new HashMap<String, List<FunctionHolder>>();
   }
 
   /**
@@ -136,7 +133,6 @@ public class FunctionRegistryHolder {
         Map<String, Queue<String>> jar = new ConcurrentHashMap<>();
         jars.put(jarName, jar);
         addFunctions(jar, newJar.getValue());
-        jarFunctions.put(jarName, newJar.getValue());
       }
       this.version = version;
     }
@@ -168,14 +164,35 @@ public class FunctionRegistryHolder {
   }
 
   /**
-   * Retrieves all functions associated with all the jars
+   * Retrieves all functions (holders) associated with all the jars
    * This is read operation, so several users can perform this operation at the same time.
    * @return list of all functions, mapped by their sources
    */
-  public Map<String, List<FunctionHolder>> getAllFunctionHoldersByJar() {
+  public Map<String, List<FunctionHolder>> getAllJarsWithFunctionHolders() {
+    Map<String, List<FunctionHolder>> allFunctionHoldersByJar = new HashMap<>();
+
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
-      return jarFunctions;
+      for (String jarName : jars.keySet()) {
+        //Capture functionHolders here
+        List<FunctionHolder> drillFuncHolderList = new LinkedList<>();
+
+        Map<String, Queue<String>> functionsInJar = jars.get(jarName);
+        for (Map.Entry<String, Queue<String>> functionEntry : functionsInJar.entrySet()) {
+          String fnName = functionEntry.getKey();
+          Queue<String> fnSignatureList = functionEntry.getValue();
+          //Get all FunctionHolders (irrespective of source)
+          Map<String, DrillFuncHolder> functionHolders = functions.get(fnName);
+          //Iterate for matching entries and populate new Map
+          for (Map.Entry<String, DrillFuncHolder> entry : functionHolders.entrySet()) {
+            if (fnSignatureList.contains(entry.getKey())) {
+              drillFuncHolderList.add(new FunctionHolder(fnName, entry.getKey(), entry.getValue()));
+            }
+          }
+        }
+        allFunctionHoldersByJar.put(jarName, drillFuncHolderList);
+      }
     }
+    return allFunctionHoldersByJar;
   }
 
   /**
@@ -382,7 +399,5 @@ public class FunctionRegistryHolder {
         functions.remove(function);
       }
     }
-    jarFunctions.remove(jarName);
-
   }
 }

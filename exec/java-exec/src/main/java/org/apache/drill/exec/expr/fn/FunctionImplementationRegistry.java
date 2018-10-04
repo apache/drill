@@ -491,13 +491,13 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
 
   /**
    * Retrieve all functions, mapped by source jars (after syncing)
-   * @return Map of source jars and their functions
+   * @return Map of source jars and their functionHolders
    */
-  public Map<String, List<FunctionHolder>> getAllFunctionsHoldersByJar() {
+  public Map<String, List<FunctionHolder>> getAllJarsWithFunctionsHolders() {
     if (useDynamicUdfs) {
       syncWithRemoteRegistry(localFunctionRegistry.getVersion());
     }
-    return localFunctionRegistry.getAllFunctionsHoldersByJar();
+    return localFunctionRegistry.getAllJarsWithFunctionsHolders();
   }
 
   /**

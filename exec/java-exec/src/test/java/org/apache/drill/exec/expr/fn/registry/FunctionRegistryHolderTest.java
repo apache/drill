@@ -163,11 +163,18 @@ public class FunctionRegistryHolderTest {
   }
 
   @Test
-  public void testGetAllFunctionHoldersByJar() {
-    Map<String, List<FunctionHolder>> fnHoldersInRegistry = registryHolder.getAllFunctionHoldersByJar();
+  public void testGetAllJarsWithFunctionHolders() {
+    Map<String, List<FunctionHolder>> fnHoldersInRegistry = registryHolder.getAllJarsWithFunctionHolders();
     //Iterate and confirm lists are same
     for (String jarName : Lists.newArrayList(newJars.keySet())) {
-      compareTwoLists(newJars.get(jarName), fnHoldersInRegistry.get(jarName));
+      List<DrillFuncHolder> expectedHolderList = newJars.get(jarName).stream()
+          .map(FunctionHolder::getHolder) //Extract DrillFuncHolder
+          .collect(Collectors.toList());
+      List<DrillFuncHolder> testHolderList = fnHoldersInRegistry.get(jarName).stream()
+          .map(FunctionHolder::getHolder) //Extract DrillFuncHolder
+          .collect(Collectors.toList());
+
+      compareTwoLists(expectedHolderList, testHolderList);
     }
 
     Map<String, String> shuffleFunctionMap = new HashMap<>();
@@ -181,7 +188,7 @@ public class FunctionRegistryHolderTest {
       }
     }
 
-    //Test: Remove items from ExpectedMap
+    //Test: Remove items from ExpectedMap based on match from testJar's functionHolder items
     for (String testJar : registryHolder.getAllJarNames()) {
       for (FunctionHolder funcHolder : fnHoldersInRegistry.get(testJar)) {
         if (funcHolder.getName().equals(SHUFFLE_FUNC_NAME)) {

@@ -239,8 +239,8 @@ public class LocalFunctionRegistry {
    * Returns a map of all function holders mapped by source jars
    * @return all functions organized by source jars
    */
-  public Map<String, List<FunctionHolder>> getAllFunctionsHoldersByJar() {
-    return registryHolder.getAllFunctionHoldersByJar();
+  public Map<String, List<FunctionHolder>> getAllJarsWithFunctionsHolders() {
+    return registryHolder.getAllJarsWithFunctionHolders();
   }
 
   /**

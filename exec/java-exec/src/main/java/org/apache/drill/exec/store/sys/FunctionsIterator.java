@@ -27,7 +27,6 @@ import java.util.Map;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.FunctionHolder;
-import org.apache.drill.exec.expr.fn.registry.LocalFunctionRegistry;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.store.pojo.NonNullable;
 
@@ -43,18 +42,10 @@ public class FunctionsIterator implements Iterator<Object> {
     Map<String, FunctionInfo> functionMap = new HashMap<String, FunctionInfo>();
     //Access Registry for function list
     FunctionImplementationRegistry funcImplRegistry = (FunctionImplementationRegistry) context.getFunctionRegistry();
-    Map<String, List<FunctionHolder>>  jarFunctionListMap = funcImplRegistry.getAllFunctionsHoldersByJar();
-
-    //Step 1: Load Built-In
-    for (FunctionHolder builtInEntry : jarFunctionListMap.get(LocalFunctionRegistry.BUILT_IN)) {
-      populateFunctionMap(functionMap, LocalFunctionRegistry.BUILT_IN, builtInEntry.getHolder());
-    }
-    //Step 2: Load UDFs
+    Map<String, List<FunctionHolder>> jarFunctionListMap = funcImplRegistry.getAllJarsWithFunctionsHolders();
     for (String jarName : new ArrayList<>(jarFunctionListMap.keySet())) {
-      if (!jarName.equals(LocalFunctionRegistry.BUILT_IN)) {
-        for (FunctionHolder udfEntry : jarFunctionListMap.get(jarName)) {
-          populateFunctionMap(functionMap, jarName, udfEntry.getHolder());
-        }
+      for (FunctionHolder dfhEntry : jarFunctionListMap.get(jarName)) {
+        populateFunctionMap(functionMap, jarName, dfhEntry.getHolder());
       }
     }
 
@@ -76,7 +67,7 @@ public class FunctionsIterator implements Iterator<Object> {
     sortedIterator = functionList.iterator();
   }
 
-  //Populate for give Jar-FunctionHolder Entry
+  //Populate the map for a given Jar-DrillFunctionHolder
   private void populateFunctionMap(Map<String, FunctionInfo> functionMap, String jarName, DrillFuncHolder dfh) {
     String registeredNames[] = dfh.getRegisteredNames();
     String signature = dfh.getInputParameters();
@@ -98,6 +89,9 @@ public class FunctionsIterator implements Iterator<Object> {
     return sortedIterator.next();
   }
 
+  /**
+   * Representation of an entry in the System table - Functions
+   */
   public static class FunctionInfo {
     @NonNullable
     public final String name;
