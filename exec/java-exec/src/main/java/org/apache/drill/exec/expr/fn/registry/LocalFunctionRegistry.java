@@ -24,8 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -77,13 +78,16 @@ public class LocalFunctionRegistry {
   private final FunctionRegistryHolder registryHolder;
 
   /**
-   * Registers all functions present in Drill classpath on start-up. All functions will be marked as built-in.
-   * Built-in functions are not allowed to be unregistered. Initially sync registry version will be set to 0.
+   * Registers all functions present in Drill classpath on start-up.
+   * All functions will be marked as built-in. Built-in functions are not allowed to be unregistered.
+   * Since local function registry version is based on remote function registry version,
+   * initially sync version will be set to {@link DataChangeVersion#UNDEFINED}
+   * to ensure that upon first check both registries would be synchronized.
    */
   public LocalFunctionRegistry(ScanResult classpathScan) {
     registryHolder = new FunctionRegistryHolder();
     validate(BUILT_IN, classpathScan);
-    register(Lists.newArrayList(new JarScan(BUILT_IN, classpathScan, this.getClass().getClassLoader())), 0);
+    register(Lists.newArrayList(new JarScan(BUILT_IN, classpathScan, this.getClass().getClassLoader())), DataChangeVersion.UNDEFINED);
     if (logger.isTraceEnabled()) {
       StringBuilder allFunctions = new StringBuilder();
       for (DrillFuncHolder method: registryHolder.getAllFunctionsWithHolders().values()) {
@@ -96,7 +100,7 @@ public class LocalFunctionRegistry {
   /**
    * @return remote function registry version number with which local function registry is synced
    */
-  public long getVersion() {
+  public int getVersion() {
     return registryHolder.getVersion();
   }
 
@@ -160,7 +164,7 @@ public class LocalFunctionRegistry {
    * @param jars list of jars to be registered
    * @param version remote function registry version number with which local function registry is synced
    */
-  public void register(List<JarScan> jars, long version) {
+  public void register(List<JarScan> jars, int version) {
     Map<String, List<FunctionHolder>> newJars = new HashMap<>();
     for (JarScan jarScan : jars) {
       FunctionConverter converter = new FunctionConverter();
@@ -219,7 +223,7 @@ public class LocalFunctionRegistry {
    * @param name function name
    * @return all function holders associated with the function name. Function name is case insensitive.
    */
-  public List<DrillFuncHolder> getMethods(String name, AtomicLong version) {
+  public List<DrillFuncHolder> getMethods(String name, AtomicInteger version) {
     return registryHolder.getHoldersByFunctionName(name.toLowerCase(), version);
   }
 
@@ -238,7 +242,7 @@ public class LocalFunctionRegistry {
    * @param operatorTable drill operator table
    */
   public void register(DrillOperatorTable operatorTable) {
-    AtomicLong versionHolder = new AtomicLong();
+    AtomicInteger versionHolder = new AtomicInteger();
     final Map<String, Collection<DrillFuncHolder>> registeredFunctions =
         registryHolder.getAllFunctionsWithHolders(versionHolder).asMap();
     operatorTable.setFunctionRegistryVersion(versionHolder.get());

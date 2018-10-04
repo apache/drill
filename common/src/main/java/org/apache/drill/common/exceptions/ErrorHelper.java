@@ -181,4 +181,17 @@ public class ErrorHelper {
     return (UserException) cause;
   }
 
+  /**
+   * Helps to hide checked exception from the compiler but then actually throw it.
+   * Is useful when implementing functional interfaces that allow checked exceptions.
+   *
+   * @param e original exception instance
+   * @param <E> exception type
+   * @throws E exception instance
+   */
+  @SuppressWarnings("unchecked")
+  public static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
+    throw (E) e;
+  }
+
 }
