@@ -48,7 +48,7 @@ import org.apache.calcite.sql.SqlKind;
 public class ProjectPrel extends DrillProjectRelBase implements Prel{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectPrel.class);
 
-  private final boolean outputProj;
+  protected final boolean outputProj;
 
   public ProjectPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
       RelDataType rowType) {

@@ -48,8 +48,11 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   protected final GroupScan groupScan;
   private final RelDataType rowType;
 
-  public ScanPrel(RelOptCluster cluster, RelTraitSet traits,
-      GroupScan groupScan, RelDataType rowType) {
+  public ScanPrel(RelNode old, RelTraitSet traitSets, GroupScan scan, RelDataType rowType) {
+    this(old.getCluster(), traitSets, scan, rowType);
+  }
+
+  public ScanPrel(RelOptCluster cluster, RelTraitSet traits, GroupScan groupScan, RelDataType rowType) {
     super(cluster, traits);
     this.groupScan = getCopy(groupScan);
     this.rowType = rowType;
@@ -84,11 +87,6 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   @Override
   public GroupScan getGroupScan() {
     return groupScan;
-  }
-
-  public static ScanPrel create(RelNode old, RelTraitSet traitSets,
-      GroupScan scan, RelDataType rowType) {
-    return new ScanPrel(old.getCluster(), traitSets, getCopy(scan), rowType);
   }
 
   @Override

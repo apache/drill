@@ -506,6 +506,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * The rest of projects will remove the duplicate column when we generate POP in json format.
      */
     phyRelNode = StarColumnConverter.insertRenameProject(phyRelNode);
+    log("Physical RelNode after Top and Rename Project inserting: ", phyRelNode, logger, null);
 
     /*
      * 2.)

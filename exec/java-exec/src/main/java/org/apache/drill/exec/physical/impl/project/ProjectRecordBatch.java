@@ -876,7 +876,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
    */
   @Override
   protected IterOutcome handleNullInput() {
-    if (! popConfig.isOutputProj()) {
+    if (!popConfig.isOutputProj()) {
       return super.handleNullInput();
     }
 

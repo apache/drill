@@ -66,7 +66,7 @@ public class KafkaPushDownFilterIntoScan extends StoragePluginOptimizerRule {
 
     logger.info("Partitions ScanSpec after pushdown: " + newScanSpec);
     GroupScan newGroupScan = groupScan.cloneWithNewSpec(newScanSpec);
-    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupScan, scan.getRowType());
+    final ScanPrel newScanPrel = new ScanPrel(scan, filter.getTraitSet(), newGroupScan, scan.getRowType());
     call.transformTo(filter.copy(filter.getTraitSet(), ImmutableList.of(newScanPrel)));
   }
 
