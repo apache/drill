@@ -39,13 +39,18 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 public class ProjectAllowDupPrel extends ProjectPrel {
 
   public ProjectAllowDupPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
-      RelDataType rowType) {
-    super(cluster, traits, child, exps, rowType);
+                             RelDataType rowType) {
+    this(cluster, traits, child, exps, rowType, false);
+  }
+
+  public ProjectAllowDupPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
+      RelDataType rowType, boolean outputProj) {
+    super(cluster, traits, child, exps, rowType, outputProj);
   }
 
   @Override
   public ProjectAllowDupPrel copy(RelTraitSet traitSet, RelNode input, List<RexNode> exps, RelDataType rowType) {
-    return new ProjectAllowDupPrel(getCluster(), traitSet, input, exps, rowType);
+    return new ProjectAllowDupPrel(getCluster(), traitSet, input, exps, rowType, outputProj);
   }
 
   @Override
@@ -54,7 +59,8 @@ public class ProjectAllowDupPrel extends ProjectPrel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    Project p = new Project(this.getProjectExpressions(new DrillParseContext(PrelUtil.getSettings(getCluster()))),  childPOP);
+    Project p = new Project(this.getProjectExpressions(new DrillParseContext(PrelUtil.getSettings(getCluster()))),
+        childPOP, outputProj);
     return creator.addMetadata(this, p);
   }
 
