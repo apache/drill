@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.sys;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -50,30 +49,32 @@ public class FunctionsIterator implements Iterator<Object> {
     }
 
     List<FunctionInfo> functionList = new ArrayList<FunctionsIterator.FunctionInfo>(functionMap.values());
-    functionList.sort(new Comparator<FunctionInfo>() {
-      @Override
-      public int compare(FunctionInfo o1, FunctionInfo o2) {
-        int result = o1.name.compareTo(o2.name);
-        if (result == 0) {
-          result = o1.signature.compareTo(o2.signature);
-        }
-        if (result == 0) {
-          return o1.returnType.compareTo(o2.returnType);
-        }
-        return result;
+    functionList.sort((FunctionInfo o1, FunctionInfo o2) -> {
+      int result = o1.name.compareTo(o2.name);
+      if (result == 0) {
+        result = o1.signature.compareTo(o2.signature);
       }
+      if (result == 0) {
+        return o1.returnType.compareTo(o2.returnType);
+      }
+      return result;
     });
 
     sortedIterator = functionList.iterator();
   }
 
-  //Populate the map for a given Jar-DrillFunctionHolder
+  /**
+   * Populate the map of functionInfo based on the functionSignatureKey for a given Jar-DrillFunctionHolder
+   * @param functionMap map to populate
+   * @param jarName name of the source jar
+   * @param dfh functionHolder that carries all the registered names and the signature
+   */
   private void populateFunctionMap(Map<String, FunctionInfo> functionMap, String jarName, DrillFuncHolder dfh) {
     String registeredNames[] = dfh.getRegisteredNames();
     String signature = dfh.getInputParameters();
     String returnType = dfh.getReturnType().getMinorType().toString();
     for (String name : registeredNames) {
-      //Generate a uniqueKey to allow for fnName#fnSignature
+      //Generate a unique key for a function holder as 'functionName#functionSignature'
       String funcSignatureKey = new StringBuilder(64).append(name).append('#').append(signature).toString();
       functionMap.put(funcSignatureKey, new FunctionInfo(name, signature, returnType, jarName));
     }
