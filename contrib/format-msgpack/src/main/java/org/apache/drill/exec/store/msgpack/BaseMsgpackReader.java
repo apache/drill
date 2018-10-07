@@ -36,7 +36,7 @@ public abstract class BaseMsgpackReader {
       try {
         v = unpacker.unpackValue();
       } catch (MessageInsufficientBufferException e) {
-        Log.warn("Failed to unpack MAP, possibly because key/value tuples do not match.", e);
+        Log.warn("Failed to unpack MAP, possibly because key/value tuples do not match.");
         readState = ReadState.MSG_RECORD_PARSE_ERROR;
       }
     }
