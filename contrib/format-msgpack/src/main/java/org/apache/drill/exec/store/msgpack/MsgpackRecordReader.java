@@ -19,21 +19,32 @@ package org.apache.drill.exec.store.msgpack;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MapColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState;
 import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -58,11 +69,15 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private long parseErrorCount;
   private final boolean skipMalformedMsgRecords;
   private final boolean printSkippedMalformedMsgRecordLineNumber;
+  private final boolean learnSchema;
+  private Path schemaLocation;
   private ReadState write = null;
 
   private BaseMsgpackReader messageReader;
 
   private boolean unionEnabled = false; // ????
+
+  private OutputMutator output;
 
   /**
    * Create a msgpack Record Reader that uses a file based input stream.
@@ -83,6 +98,8 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     this.fragmentContext = fragmentContext;
     this.skipMalformedMsgRecords = config.isSkipMalformedMsgRecords();
     this.printSkippedMalformedMsgRecordLineNumber = config.isPrintSkippedMalformedMsgRecordLineNumber();
+    this.learnSchema = config.isLearnSchema();
+    this.schemaLocation = new Path(this.hadoopPath.getParent(), ".schema.proto");
     setColumns(columns);
   }
 
@@ -95,8 +112,8 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   @Override
   public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
     try {
+      this.output = output;
       this.stream = fileSystem.openPossiblyCompressedStream(hadoopPath);
-
       this.writer = new VectorContainerWriter(output, unionEnabled);
       if (isSkipQuery()) {
         this.messageReader = new CountingMsgpackReader();
@@ -182,14 +199,77 @@ public class MsgpackRecordReader extends AbstractRecordReader {
         handleAndRaise("Error parsing msgpack", ex);
       }
     }
-    // Skip empty msgpack file with 0 row.
-    // Only when data source has > 0 row, ensure the batch has one field.
-    if (recordCount > 0) {
-      messageReader.ensureAtLeastOneField(writer);
+
+    if (this.isStarQuery() && learnSchema) {
+      MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
+      try {
+        MaterializedField previous = msgpackSchema.load(schemaLocation);
+        if (previous != null) {
+          MaterializedField current = writer.getMapVector().getField();
+          MaterializedField merged = msgpackSchema.merge(previous, current);
+          msgpackSchema.save(merged, schemaLocation);
+        } else {
+          MaterializedField current = writer.getMapVector().getField();
+          msgpackSchema.save(current, schemaLocation);
+        }
+      } catch (Exception e) {
+        handleAndRaise("Error merging msgpack schema", e);
+      }
     }
+
+    try {
+      MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
+      MaterializedField desiredRootMap = msgpackSchema.load(schemaLocation);
+      if (desiredRootMap != null) {
+        TupleMetadata tupleSchema = new TupleSchema();
+        for(MaterializedField c: desiredRootMap.getChildren()) {
+          tupleSchema.add(c);
+        }
+
+        Collection<SchemaPath> columns = getColumns();
+        if (isStarQuery()) {
+          columns = new ArrayList<>();
+          Iterator<ColumnMetadata> it = tupleSchema.iterator();
+          while (it.hasNext()) {
+            columns.add(SchemaPath.getSimplePath(it.next().name()));
+          }
+        }
+
+        for (SchemaPath sp : columns) {
+          PathSegment fieldPath = sp.getRootSegment();
+          BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
+          TupleMetadata referenceSchema = tupleSchema;
+          while (fieldPath.getChild() != null && !fieldPath.getChild().isArray()) {
+            String name = fieldPath.getNameSegment().getPath();
+            ColumnMetadata metadata = referenceSchema.metadata(name);
+            if (metadata != null && metadata.isMap()) {
+              referenceSchema = ((MapColumnMetadata) metadata).mapSchema();
+            }
+            fieldWriter = fieldWriter.map(name);
+            fieldPath = fieldPath.getChild();
+          }
+          // We are now positioned at the map that should have the field in question
+          // Note this can be the root map or a sub map.
+          String name = fieldPath.getNameSegment().getPath();
+          // MaterializedField currentField = getChild(fieldWriter.getField(), name);
+          ColumnMetadata metadata = referenceSchema.metadata(name);
+          if (metadata != null) {
+            if (metadata.type() == MinorType.VARCHAR) {
+              fieldWriter.varChar(name);
+            } else if (metadata.type() == MinorType.BIGINT) {
+              fieldWriter.bigInt(name);
+            }
+          }
+        }
+      }
+    } catch (Exception e) {
+      handleAndRaise("Error merging msgpack schema", e);
+    }
+
     writer.setValueCount(recordCount);
-    updateRunningCount();
+
     return recordCount;
+
   }
 
   private void updateRunningCount() {

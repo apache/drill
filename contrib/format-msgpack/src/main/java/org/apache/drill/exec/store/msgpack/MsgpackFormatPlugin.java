@@ -18,20 +18,18 @@
 package org.apache.drill.exec.store.msgpack;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
@@ -59,6 +57,11 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
   }
 
   @Override
+  public FormatMatcher getMatcher() {
+    return super.getMatcher();
+  }
+
+  @Override
   public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
       List<SchemaPath> columns, String userName) {
     return new MsgpackRecordReader(getConfig(), context, fileWork.getPath(), dfs, columns);
@@ -66,19 +69,7 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
 
   @Override
   public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
-    Map<String, String> options = new HashMap<>();
-
-    options.put("location", writer.getLocation());
-
-    FragmentHandle handle = context.getHandle();
-    String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
-    options.put("prefix", fragmentId);
-
-    options.put("extension", "mp");
-    RecordWriter recordWriter = new MsgpackRecordWriter(writer.getStorageStrategy());
-    recordWriter.init(options);
-
-    return recordWriter;
+    throw new UnsupportedOperationException();
   }
 
   @JsonTypeName("msgpack")
@@ -87,6 +78,7 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
     public List<String> extensions = ImmutableList.of("mp");
     private boolean skipMalformedMsgRecords = true;
     private boolean printSkippedMalformedMsgRecordLineNumber = true;
+    private boolean learnSchema = true;
     private static final List<String> DEFAULT_EXTS = ImmutableList.of("mp");
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -108,6 +100,15 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public boolean isPrintSkippedMalformedMsgRecordLineNumber() {
       return printSkippedMalformedMsgRecordLineNumber;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public boolean isLearnSchema() {
+      return learnSchema;
+    }
+
+    public void setLearnSchema(boolean learnSchema) {
+      this.learnSchema = learnSchema;
     }
 
     public void setExtensions(List<String> extensions) {
@@ -169,7 +170,7 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
 
   @Override
   public int getWriterOperatorType() {
-    return CoreOperatorType.JSON_WRITER_VALUE;
+    throw new UnsupportedOperationException();
   }
 
   @Override

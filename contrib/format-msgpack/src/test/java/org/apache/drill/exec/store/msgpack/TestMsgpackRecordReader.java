@@ -16,6 +16,8 @@ package org.apache.drill.exec.store.msgpack;
  * limitations under the License.
  */
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,10 +32,13 @@ import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConf
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryRowSetIterator;
+import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.msgpack.core.MessagePack;
@@ -41,6 +46,7 @@ import org.msgpack.core.MessagePacker;
 
 public class TestMsgpackRecordReader extends ClusterTest {
   private static File testDir;
+  private static File schemaLocation;
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -49,8 +55,18 @@ public class TestMsgpackRecordReader extends ClusterTest {
     MsgpackFormatConfig msgFormat = new MsgpackFormatConfig();
     msgFormat.setSkipMalformedMsgRecords(true);
     msgFormat.setPrintSkippedMalformedMsgRecordLineNumber(true);
+    msgFormat.setLearnSchema(true);
     msgFormat.setExtensions(ImmutableList.of("mp"));
     testDir = cluster.makeDataDir("data", "msgpack", msgFormat);
+    schemaLocation = new File(testDir, ".schema.proto");
+  }
+
+  @Before
+  public void before() {
+    if (TestMsgpackRecordReader.schemaLocation.exists()) {
+      boolean deleted = TestMsgpackRecordReader.schemaLocation.delete();
+      assertTrue(deleted);
+    }
   }
 
   @Test
@@ -219,6 +235,26 @@ public class TestMsgpackRecordReader extends ClusterTest {
   }
 
   @Test
+  public void testdNestedArrayWithMap() throws Exception {
+    String fileName = "buildNestedArrayWithMap.mp";
+    buildNestedArrayWithMap(fileName);
+
+    String sql = "select root.arrayWithMap[0].x as x from `dfs.data`.`" + fileName + "` as root";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1L)
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
   public void testSelectArrayOfMap2() throws Exception {
     String fileName = "selectArrayOfMap.mp";
     buildNestedArrayOfMap(fileName);
@@ -352,7 +388,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
   @Test
   public void testTimestampLargeWithNanos() throws Exception {
-    long epochSeconds = (long)Math.pow(2, 35);
+    long epochSeconds = (long) Math.pow(2, 35);
     long nanoSeconds = 900_000;
 
     String fileName = "timestamp.mp";
@@ -441,14 +477,64 @@ public class TestMsgpackRecordReader extends ClusterTest {
     RowSet expected = b.build();
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
-  
+
   @Test
-  public void testVarcharNotPresentInFirstBatches() throws Exception {
+  public void testVarcharNotPresentInFirstBatchesSelectAll() throws Exception {
     String fileName = "varcharNotPresentInFirstBatches.mp";
     buildVarcharColumn(fileName);
 
+    String sql = "select * from `dfs.data`.`" + fileName + "`";
+    QueryRowSetIterator training = client.queryBuilder().sql(sql).rowSetIterator();
+    while (training.hasNext()) {
+      DirectRowSet next = training.next();
+      next.clear();
+    }
+
+    QueryRowSetIterator actual = client.queryBuilder().sql(sql).rowSetIterator();
+    assertTrue(actual.hasNext());
+    DirectRowSet actualBatch1 = actual.next();
+    assertTrue(actual.hasNext());
+    DirectRowSet actualBatch2 = actual.next();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("y", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+        .add("x", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
+    //@formatter:on
+    RowSetBuilder b = new RowSetBuilder(client.allocator(), expectedSchema);
+    for (long i = 0; i < MsgpackRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+      b.addRow(i, null);
+    }
+    RowSet expected = b.build();
+    new RowSetComparison(expected).verifyAndClearAll(actualBatch1);
+
+    b = new RowSetBuilder(client.allocator(), expectedSchema);
+    b.addRow(1L, null);
+    b.addRow(2L, "data");
+    b.addRow(3L, "data2");
+    expected = b.build();
+    new RowSetComparison(expected).verifyAndClearAll(actualBatch2);
+  }
+
+  @Test
+  public void testVarcharNotPresentInFirstBatchesSelectVarchar() throws Exception {
+    String fileName = "varcharNotPresentInFirstBatches.mp";
+    buildVarcharColumn(fileName);
+
+    String sqlTraining = "select * from `dfs.data`.`" + fileName + "`";
+    QueryRowSetIterator training = client.queryBuilder().sql(sqlTraining).rowSetIterator();
+    while (training.hasNext()) {
+      DirectRowSet next = training.next();
+      next.clear();
+    }
+
     String sql = "select x from `dfs.data`.`" + fileName + "`";
-    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+    QueryRowSetIterator actual = client.queryBuilder().sql(sql).rowSetIterator();
+    assertTrue(actual.hasNext());
+    DirectRowSet actualBatch1 = actual.next();
+    assertTrue(actual.hasNext());
+    DirectRowSet actualBatch2 = actual.next();
 
     //@formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -456,14 +542,56 @@ public class TestMsgpackRecordReader extends ClusterTest {
         .buildSchema();
     //@formatter:on
     RowSetBuilder b = new RowSetBuilder(client.allocator(), expectedSchema);
-    for (long i = 0; i < 10000; i++) {
-      b.addRow(new Object[] {null});
+    for (long i = 0; i < MsgpackRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+      b.addRow(new Object[] { null });
     }
-    b.addRow(1);
-    b.addRow(2);
-
     RowSet expected = b.build();
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    new RowSetComparison(expected).verifyAndClearAll(actualBatch1);
+
+    b = new RowSetBuilder(client.allocator(), expectedSchema);
+    b.addRow(new Object[] { null });
+    b.addRow("data");
+    b.addRow("data2");
+    expected = b.build();
+    new RowSetComparison(expected).verifyAndClearAll(actualBatch2);
+  }
+
+  @Test
+  public void testMapFieldVarcharNotPresentInFirstBatchesSelectVarchar() throws Exception {
+    String fileName = "testMapFieldVarcharNotPresentInFirstBatchesSelectVarchar.mp";
+    buildChangesToMapColumn(fileName);
+
+    String sqlTraining = "select * from `dfs.data`.`" + fileName + "`";
+    QueryRowSetIterator training = client.queryBuilder().sql(sqlTraining).rowSetIterator();
+    while (training.hasNext()) {
+      DirectRowSet next = training.next();
+      next.clear();
+    }
+
+    String sql = "select root.aMap.x as w from `dfs.data`.`" + fileName + "` as root";
+    QueryRowSetIterator actual = client.queryBuilder().sql(sql).rowSetIterator();
+    assertTrue(actual.hasNext());
+    DirectRowSet actualBatch1 = actual.next();
+    assertTrue(actual.hasNext());
+    DirectRowSet actualBatch2 = actual.next();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("w", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
+    //@formatter:on
+    RowSetBuilder b = new RowSetBuilder(client.allocator(), expectedSchema);
+    for (long i = 0; i < MsgpackRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+      b.addRow(new Object[] { null });
+    }
+    RowSet expected = b.build();
+    new RowSetComparison(expected).verifyAndClearAll(actualBatch1);
+
+    b = new RowSetBuilder(client.allocator(), expectedSchema);
+    b.addRow("data");
+    b.addRow("data2");
+    expected = b.build();
+    new RowSetComparison(expected).verifyAndClearAll(actualBatch2);
   }
 
   private MessagePacker makeMessagePacker(String fileName) throws IOException {
@@ -538,6 +666,18 @@ public class TestMsgpackRecordReader extends ClusterTest {
     packer.close();
   }
 
+  private void buildNestedArrayWithMap(String fileName) throws IOException {
+    MessagePacker packer = makeMessagePacker(fileName);
+
+    packer.packMapHeader(1);
+    packer.packString("arrayWithMap");
+    packer.packArrayHeader(2);
+    packer.packMapHeader(1).packString("x").packInt(1);
+    packer.packMapHeader(1).packString("y").packFloat(2.2f);
+
+    packer.close();
+  }
+
   private void buildTypes(String fileName) throws IOException {
     MessagePacker packer = makeMessagePacker(fileName);
 
@@ -577,16 +717,42 @@ public class TestMsgpackRecordReader extends ClusterTest {
   private void buildVarcharColumn(String fileName) throws IOException {
     MessagePacker packer = makeMessagePacker(fileName);
 
-    // messages with no x column
-    for (long i = 0; i < 10000; i++) {
+    // first batch with no x column
+    for (long i = 0; i < MsgpackRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
       packer.packMapHeader(1);
       packer.packString("y").packLong(i);
     }
 
-    packer.packMapHeader(2);
-    packer.packString("x").packString("data");
+    // second batch
+    packer.packMapHeader(1);
     packer.packString("y").packLong(1);
     packer.packMapHeader(2);
+    packer.packString("x").packString("data");
+    packer.packString("y").packLong(2);
+    packer.packMapHeader(2);
+    packer.packString("x").packString("data2");
+    packer.packString("y").packLong(3);
+
+    packer.close();
+  }
+
+  private void buildChangesToMapColumn(String fileName) throws IOException {
+    MessagePacker packer = makeMessagePacker(fileName);
+
+    // first batch, no x child
+    for (long i = 0; i < MsgpackRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+      packer.packMapHeader(1);
+      packer.packString("aMap").packMapHeader(1);
+      packer.packString("y").packLong(i);
+    }
+
+    // second batch, x and y are present
+    packer.packMapHeader(1);
+    packer.packString("aMap").packMapHeader(2);
+    packer.packString("x").packString("data");
+    packer.packString("y").packLong(1);
+    packer.packMapHeader(1);
+    packer.packString("aMap").packMapHeader(2);
     packer.packString("x").packString("data2");
     packer.packString("y").packLong(2);
 
