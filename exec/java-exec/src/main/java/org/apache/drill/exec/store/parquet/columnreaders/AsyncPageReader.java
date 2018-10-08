@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.util.concurrent.ExecutorServiceUtil;
 import org.apache.drill.exec.util.filereader.DirectBufInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -133,7 +134,7 @@ class AsyncPageReader extends PageReader {
     super.init();
     //Avoid Init if a shutdown is already in progress even if init() is called once
     if (!parentColumnReader.isShuttingDown) {
-      asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
+      asyncPageRead.offer(ExecutorServiceUtil.submit(threadPool, new AsyncPageReaderTask(debugName, pageQueue)));
     }
   }
 
@@ -230,7 +231,7 @@ class AsyncPageReader extends PageReader {
           //if the queue was full before we took a page out, then there would
           // have been no new read tasks scheduled. In that case, schedule a new read.
           if (!parentColumnReader.isShuttingDown && pageQueueFull) {
-            asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
+            asyncPageRead.offer(ExecutorServiceUtil.submit(threadPool, new AsyncPageReaderTask(debugName, pageQueue)));
           }
         }
       } finally {
@@ -264,7 +265,7 @@ class AsyncPageReader extends PageReader {
             //if the queue was full before we took a page out, then there would
             // have been no new read tasks scheduled. In that case, schedule a new read.
             if (!parentColumnReader.isShuttingDown && pageQueueFull) {
-              asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
+              asyncPageRead.offer(ExecutorServiceUtil.submit(threadPool, new AsyncPageReaderTask(debugName, pageQueue)));
             }
           }
           pageHeader = readStatus.getPageHeader();
@@ -456,7 +457,7 @@ class AsyncPageReader extends PageReader {
           // if the queue is not full, schedule another read task immediately. If it is then the consumer
           // will schedule a new read task as soon as it removes a page from the queue.
           if (!parentColumnReader.isShuttingDown && queue.remainingCapacity() > 0) {
-            asyncPageRead.offer(parent.threadPool.submit(new AsyncPageReaderTask(debugName, queue)));
+            asyncPageRead.offer(ExecutorServiceUtil.submit(parent.threadPool, new AsyncPageReaderTask(debugName, queue)));
           }
         }
         // Do nothing.
