@@ -25,7 +25,8 @@
     </#if>
   <!-- Ace Libraries for Syntax Formatting -->
   <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8"></script>
+  <!-- Disabled in favour of dynamic: script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8" -->
+  <script src="/dynamic/mode-sql.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/theme-sqlserver.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/snippets/sql.js" type="text/javascript" charset="utf-8"></script>

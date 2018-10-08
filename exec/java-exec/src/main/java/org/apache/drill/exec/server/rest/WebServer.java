@@ -20,8 +20,6 @@ package org.apache.drill.exec.server.rest;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -32,6 +30,8 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ssl.SSLConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.expr.fn.registry.FunctionHolder;
+import org.apache.drill.exec.expr.fn.registry.LocalFunctionRegistry;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.options.OptionList;
@@ -84,20 +84,34 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.BindException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Wrapper class around jetty based webserver.
  */
 public class WebServer implements AutoCloseable {
+  private static final String ACE_MODE_SQL_TEMPLATE_JS = "ace.mode-sql.template.js";
+  private static final String ACE_MODE_SQL_JS = "mode-sql.js";
+  private static final String DRILL_FUNCTIONS_PLACEHOLDER = "__DRILL_FUNCTIONS__";
+
+  private static final String STATUS_THREADS_PATH = "/status/threads";
+  private static final String STATUS_METRICS_PATH = "/status/metrics";
+
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebServer.class);
   private static final String OPTIONS_DESCRIBE_JS = "options.describe.js";
   private static final String OPTIONS_DESCRIBE_TEMPLATE_JS = "options.describe.template.js";
@@ -117,11 +131,12 @@ public class WebServer implements AutoCloseable {
 
   public File getTmpJavaScriptDir() {
     if (tmpJavaScriptDir == null) {
-      tmpJavaScriptDir = Files.createTempDir();
+      tmpJavaScriptDir = org.apache.drill.shaded.guava.com.google.common.io.Files.createTempDir();
       tmpJavaScriptDir.deleteOnExit();
       //Perform All auto generated files at this point
       try {
         generateOptionsDescriptionJSFile();
+        generateFunctionJS();
       } catch (IOException e) {
         logger.error("Unable to create temp dir for JavaScripts. {}", e);
       }
@@ -177,7 +192,7 @@ public class WebServer implements AutoCloseable {
     FilterHolder filterHolder = new FilterHolder(CrossOriginFilter.class);
     filterHolder.setInitParameter("allowedOrigins", "*");
     //Allowing CORS for metrics only
-    webServerContext.addFilter(filterHolder, "/status/metrics", null);
+    webServerContext.addFilter(filterHolder, STATUS_METRICS_PATH, null);
     embeddedJetty.setHandler(webServerContext);
 
     ServerConnector connector = createConnector(port, acceptors, selectors);
@@ -215,8 +230,8 @@ public class WebServer implements AutoCloseable {
     servletHolder.setInitOrder(1);
     servletContextHandler.addServlet(servletHolder, "/*");
 
-    servletContextHandler.addServlet(new ServletHolder(new MetricsServlet(metrics)), "/status/metrics");
-    servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
+    servletContextHandler.addServlet(new ServletHolder(new MetricsServlet(metrics)), STATUS_METRICS_PATH);
+    servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), STATUS_THREADS_PATH);
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
     // Get resource URL for Drill static assets, based on where Drill icon is located
@@ -456,14 +471,12 @@ public class WebServer implements AutoCloseable {
     FileUtils.deleteDirectory(getTmpJavaScriptDir());
   }
 
-  private static final String FILE_CONTENT_FOOTER = "};";
-
   //Generate Options Description JavaScript
   private void generateOptionsDescriptionJSFile() throws IOException {
     //Obtain list of Options & their descriptions
     OptionManager optionManager = this.drillbit.getContext().getOptionManager();
     OptionList publicOptions = optionManager.getPublicOptionList();
-    List<OptionValue> options = Lists.newArrayList(publicOptions);
+    List<OptionValue> options = new ArrayList<>(publicOptions);
     Collections.sort(options);
     int numLeftToWrite = options.size();
 
@@ -471,6 +484,7 @@ public class WebServer implements AutoCloseable {
     InputStream optionsDescripTemplateStream = Resource.newClassPathResource(OPTIONS_DESCRIBE_TEMPLATE_JS).getInputStream();
     //Generated file
     File optionsDescriptionFile = new File(getTmpJavaScriptDir(), OPTIONS_DESCRIBE_JS);
+    final String FILE_CONTENT_FOOTER = "};";
     optionsDescriptionFile.deleteOnExit();
     //Create a copy of a template and write with that!
     java.nio.file.Files.copy(optionsDescripTemplateStream, optionsDescriptionFile.toPath());
@@ -493,6 +507,52 @@ public class WebServer implements AutoCloseable {
       writer.append(FILE_CONTENT_FOOTER);
       writer.newLine();
       writer.flush();
+    }
+  }
+
+  //Generates ACE library javascript populated with list of available SQL functions
+  private void generateFunctionJS() throws IOException {
+    //Naturally ordered set of function names
+    TreeSet<String> functionSet = new TreeSet<>();
+    //Extracting ONLY builtIn functions (i.e those already available)
+    List<FunctionHolder> builtInFuncHolderList = this.drillbit.getContext().getFunctionImplementationRegistry().getLocalFunctionRegistry()
+        .getAllJarsWithFunctionsHolders().get(LocalFunctionRegistry.BUILT_IN);
+
+    //Build List of usable functions
+    int skipCount = 0;
+    for (FunctionHolder builtInFunctionHolder : builtInFuncHolderList) {
+      String name = builtInFunctionHolder.getName();
+      if (!name.contains(" ") && name.matches("([a-z]|[A-Z])\\w+")) {
+        functionSet.add(name);
+      } else {
+        logger.debug("Non-alphabetic leading character. Function skipped : {} ", name);
+        skipCount++;
+      }
+    }
+    logger.debug("{} functions will not be available in WebUI : {} ", skipCount);
+
+    //Generated file
+    File functionsListFile = new File(getTmpJavaScriptDir(), ACE_MODE_SQL_JS);
+    //Template source Javascript file
+    InputStream aceModeSqlTemplateStream = Resource.newClassPathResource(ACE_MODE_SQL_TEMPLATE_JS).getInputStream();
+    functionsListFile.deleteOnExit();
+    int numLeftToWrite = functionSet.size();
+    //Create a copy of a template and write with that!
+    java.nio.file.Files.copy(aceModeSqlTemplateStream, functionsListFile.toPath());
+    StringBuilder funcListBldr = new StringBuilder();
+      //Iterate through options in Properties file
+      for (String functionName : functionSet) {
+        numLeftToWrite--;
+        //Note: We don't need to worry about short descriptions for WebUI, since they will never be explicitly accessed from the map
+        funcListBldr.append(functionName).append( numLeftToWrite > 0 ? "|" : "");
+      }
+    Path path = Paths.get(functionsListFile.getPath());
+    try (Stream<String> lines = Files.lines(path)) {
+      List <String> replaced =
+          lines //Replacing first occurrence
+            .map(line -> line.replaceFirst(DRILL_FUNCTIONS_PLACEHOLDER, funcListBldr.toString()))
+            .collect(Collectors.toList());
+      Files.write(path, replaced);
     }
   }
 }
