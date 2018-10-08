@@ -35,9 +35,7 @@
 
       <link href="/static/css/bootstrap.min.css" rel="stylesheet">
 
-      <script type="text/javascript" language="javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-      <script> window.jQuery  || document.write('<script type="text/javascript" language="javascript" src="../static/js/jquery-3.2.1.min.js">\x3C/script>')
-      </script>
+      <script type="text/javascript" language="javascript" src="../static/js/jquery-3.2.1.min.js"></script>
       <script src="/static/js/bootstrap.min.js"></script>
 
       <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
