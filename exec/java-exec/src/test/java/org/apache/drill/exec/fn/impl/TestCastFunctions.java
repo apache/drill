@@ -19,14 +19,21 @@ package org.apache.drill.exec.fn.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.vector.IntervalYearVector;
 import org.apache.drill.test.BaseTestQuery;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,6 +46,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import mockit.integration.junit4.JMockit;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
 
 @RunWith(JMockit.class)
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
@@ -663,5 +671,33 @@ public class TestCastFunctions extends BaseTestQuery {
     thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456.123 overflows specified precision 4 with scale 0"));
 
     test(query);
+  }
+
+  @Test // DRILL-6783
+  public void testCastVarCharIntervalYear() throws Exception {
+    String query = "select cast('P31M' as interval month) as i from cp.`employee.json` limit 10";
+    List<QueryDataBatch> result = testSqlWithResults(query);
+    RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
+
+    QueryDataBatch b = result.get(0);
+    loader.load(b.getHeader().getDef(), b.getData());
+
+    IntervalYearVector vector = (IntervalYearVector) loader.getValueAccessorById(
+          IntervalYearVector.class,
+          loader.getValueVectorId(SchemaPath.getCompoundPath("i")).getFieldIds())
+        .getValueVector();
+
+    Set<String> resultSet = new HashSet<>();
+    for (int i = 0; i < loader.getRecordCount(); i++) {
+      String displayValue = vector.getAccessor().getAsStringBuilder(i).toString();
+      resultSet.add(displayValue);
+    }
+
+    Assert.assertEquals(
+        "Casting literal string as INTERVAL should yield the same result for each row", 1, resultSet.size());
+    Assert.assertThat(resultSet, hasItem("2 years 7 months"));
+
+    b.release();
+    loader.clear();
   }
 }
