@@ -24,11 +24,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -45,6 +46,7 @@ import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConf
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -70,6 +72,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private final boolean skipMalformedMsgRecords;
   private final boolean printSkippedMalformedMsgRecordLineNumber;
   private final boolean learnSchema;
+  private final boolean useSchema;
   private Path schemaLocation;
   private ReadState write = null;
 
@@ -99,6 +102,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     this.skipMalformedMsgRecords = config.isSkipMalformedMsgRecords();
     this.printSkippedMalformedMsgRecordLineNumber = config.isPrintSkippedMalformedMsgRecordLineNumber();
     this.learnSchema = config.isLearnSchema();
+    this.useSchema = config.isUseSchema();
     this.schemaLocation = new Path(this.hadoopPath.getParent(), ".schema.proto");
     setColumns(columns);
   }
@@ -196,11 +200,27 @@ public class MsgpackRecordReader extends AbstractRecordReader {
           break outside;
         }
       } catch (IOException ex) {
-        handleAndRaise("Error parsing msgpack", ex);
+        handleAndRaise("Error parsing msgpack file.", ex);
       }
     }
 
-    if (this.isStarQuery() && learnSchema) {
+    if (learnSchema) {
+      learnSchema();
+    }
+    // Since we know the schema of the msgpack records we will create fields
+    // for any of the missing ones. We use the selection and create missing ones.
+    if (useSchema) {
+      applySchemaIfAny();
+    }
+
+    writer.setValueCount(recordCount);
+    updateRunningCount();
+    return recordCount;
+
+  }
+
+  private void learnSchema() {
+    if (this.isStarQuery()) {
       MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
       try {
         MaterializedField previous = msgpackSchema.load(schemaLocation);
@@ -215,25 +235,22 @@ public class MsgpackRecordReader extends AbstractRecordReader {
       } catch (Exception e) {
         handleAndRaise("Error merging msgpack schema", e);
       }
+    } else {
+      logger.warn("Msgpack reader is in learning mode but the query is not a select star. Learning skipped.");
     }
+  }
 
+  private void applySchemaIfAny() {
     try {
       MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
       MaterializedField desiredRootMap = msgpackSchema.load(schemaLocation);
       if (desiredRootMap != null) {
         TupleMetadata tupleSchema = new TupleSchema();
-        for(MaterializedField c: desiredRootMap.getChildren()) {
+        for (MaterializedField c : desiredRootMap.getChildren()) {
           tupleSchema.add(c);
         }
 
-        Collection<SchemaPath> columns = getColumns();
-        if (isStarQuery()) {
-          columns = new ArrayList<>();
-          Iterator<ColumnMetadata> it = tupleSchema.iterator();
-          while (it.hasNext()) {
-            columns.add(SchemaPath.getSimplePath(it.next().name()));
-          }
-        }
+        Collection<SchemaPath> columns = getColumnsToApplySchema(tupleSchema);
 
         for (SchemaPath sp : columns) {
           PathSegment fieldPath = sp.getRootSegment();
@@ -251,25 +268,98 @@ public class MsgpackRecordReader extends AbstractRecordReader {
           // We are now positioned at the map that should have the field in question
           // Note this can be the root map or a sub map.
           String name = fieldPath.getNameSegment().getPath();
-          // MaterializedField currentField = getChild(fieldWriter.getField(), name);
           ColumnMetadata metadata = referenceSchema.metadata(name);
-          if (metadata != null) {
-            if (metadata.type() == MinorType.VARCHAR) {
-              fieldWriter.varChar(name);
-            } else if (metadata.type() == MinorType.BIGINT) {
-              fieldWriter.bigInt(name);
-            }
-          }
+          createFieldIfMissing(fieldWriter, metadata);
         }
       }
     } catch (Exception e) {
-      handleAndRaise("Error merging msgpack schema", e);
+      handleAndRaise("Error applying msgpack schema to writer.", e);
     }
+  }
 
-    writer.setValueCount(recordCount);
+  private void createFieldIfMissing(BaseWriter.MapWriter mapWriter, ColumnMetadata metadata) {
+    if (metadata.mode() == DataMode.REPEATED) {
+      ListWriter subListWriter = mapWriter.list(metadata.name());
+      createRepeatedFieldIfMissing(subListWriter, metadata);
+    } else {
+      createSingleFieldIfMissing(mapWriter, metadata);
+    }
+  }
 
-    return recordCount;
+  private void createRepeatedFieldIfMissing(ListWriter listWriter, ColumnMetadata metadata) {
+    if (metadata != null) {
+      switch (metadata.type()) {
+      case BIGINT:
+        listWriter.bigInt();
+        break;
+      case TIMESTAMP:
+        listWriter.timeStamp();
+        break;
+      case VARCHAR:
+        listWriter.varChar();
+        break;
+      case VARBINARY:
+        listWriter.varBinary();
+        break;
+      case FLOAT8:
+        listWriter.float8();
+        break;
+      case MAP:
+        listWriter.map();
+        break;
+      case LIST:
+        ColumnMetadata childSchema = metadata.childSchema();
+        ListWriter list = listWriter.list();
+        createRepeatedFieldIfMissing(list, childSchema);
+        break;
+      default:
+        throw new DrillRuntimeException("Type not yet supported " + metadata.type());
+      }
+    }
+  }
 
+  private void createSingleFieldIfMissing(BaseWriter.MapWriter fieldWriter, ColumnMetadata metadata) {
+    if (metadata != null) {
+      switch (metadata.type()) {
+      case BIGINT:
+        fieldWriter.bigInt(metadata.name());
+        break;
+      case TIMESTAMP:
+        fieldWriter.timeStamp(metadata.name());
+        break;
+      case VARCHAR:
+        fieldWriter.varChar(metadata.name());
+        break;
+      case VARBINARY:
+        fieldWriter.varBinary(metadata.name());
+        break;
+      case FLOAT8:
+        fieldWriter.float8(metadata.name());
+        break;
+      case MAP:
+        fieldWriter.map(metadata.name());
+        break;
+      case LIST:
+        ColumnMetadata childSchema = metadata.childSchema();
+        ListWriter list = fieldWriter.list(metadata.name());
+        createRepeatedFieldIfMissing(list, childSchema);
+        break;
+      default:
+        throw new DrillRuntimeException("Type not yet supported " + metadata.type());
+      }
+    }
+  }
+
+  private Collection<SchemaPath> getColumnsToApplySchema(TupleMetadata tupleSchema) {
+    Collection<SchemaPath> columns = getColumns();
+    if (isStarQuery()) {
+      columns = new ArrayList<>();
+      Iterator<ColumnMetadata> it = tupleSchema.iterator();
+      while (it.hasNext()) {
+        columns.add(SchemaPath.getSimplePath(it.next().name()));
+      }
+    }
+    return columns;
   }
 
   private void updateRunningCount() {

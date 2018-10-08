@@ -79,6 +79,7 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
     private boolean skipMalformedMsgRecords = true;
     private boolean printSkippedMalformedMsgRecordLineNumber = true;
     private boolean learnSchema = true;
+    private boolean useSchema = true;
     private static final List<String> DEFAULT_EXTS = ImmutableList.of("mp");
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -92,19 +93,28 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
       return extensions;
     }
 
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     public boolean isSkipMalformedMsgRecords() {
       return skipMalformedMsgRecords;
     }
 
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     public boolean isPrintSkippedMalformedMsgRecordLineNumber() {
       return printSkippedMalformedMsgRecordLineNumber;
     }
 
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     public boolean isLearnSchema() {
       return learnSchema;
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public boolean isUseSchema() {
+      return useSchema;
+    }
+
+    public void setUseSchema(boolean useSchema) {
+      this.useSchema = useSchema;
     }
 
     public void setLearnSchema(boolean learnSchema) {
@@ -128,8 +138,10 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
       final int prime = 31;
       int result = 1;
       result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
+      result = prime * result + (learnSchema ? 1231 : 1237);
       result = prime * result + (printSkippedMalformedMsgRecordLineNumber ? 1231 : 1237);
       result = prime * result + (skipMalformedMsgRecords ? 1231 : 1237);
+      result = prime * result + (useSchema ? 1231 : 1237);
       return result;
     }
 
@@ -152,10 +164,16 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
       } else if (!extensions.equals(other.extensions)) {
         return false;
       }
+      if (learnSchema != other.learnSchema) {
+        return false;
+      }
       if (printSkippedMalformedMsgRecordLineNumber != other.printSkippedMalformedMsgRecordLineNumber) {
         return false;
       }
       if (skipMalformedMsgRecords != other.skipMalformedMsgRecords) {
+        return false;
+      }
+      if (useSchema != other.useSchema) {
         return false;
       }
       return true;

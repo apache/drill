@@ -168,7 +168,12 @@ public class MsgpackReader extends BaseMsgpackReader {
       }
       break;
     case ARRAY:
-      readState = writeToList(value, mapWriter.list(fieldName), selection);
+      if(mapWriter != null) {
+        readState = writeToList(value, mapWriter.list(fieldName), selection);
+      }
+      else{
+        readState = writeToList(value, listWriter.list(), selection);
+      }
       atLeastOneWrite = true;
       break;
     case BOOLEAN:

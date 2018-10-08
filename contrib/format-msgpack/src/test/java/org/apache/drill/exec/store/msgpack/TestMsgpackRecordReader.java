@@ -56,6 +56,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
     msgFormat.setSkipMalformedMsgRecords(true);
     msgFormat.setPrintSkippedMalformedMsgRecordLineNumber(true);
     msgFormat.setLearnSchema(true);
+    msgFormat.setUseSchema(true);
     msgFormat.setExtensions(ImmutableList.of("mp"));
     testDir = cluster.makeDataDir("data", "msgpack", msgFormat);
     schemaLocation = new File(testDir, ".schema.proto");
@@ -108,6 +109,52 @@ public class TestMsgpackRecordReader extends ClusterTest {
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow(1L)
         .addRow(1L)
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
+  public void testArrayOfArray() throws Exception {
+    String fileName = "testArrayOfArray.mp";
+    buildArrayOfArray(fileName);
+
+    String sql = "select * from `dfs.data`.`" + fileName + "`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addRepeatedList("arrayOfArray")
+        .addArray(TypeProtos.MinorType.BIGINT)
+        .resumeSchema()
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(new Object[] {new Long[][] {{1L},{1L,1L}}} )
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
+  public void testArrayOfArrayOfArray() throws Exception {
+    String fileName = "testArrayOfArrayOfArray.mp";
+    buildArrayOfArrayOfArray(fileName);
+
+    String sql = "select * from `dfs.data`.`" + fileName + "`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addRepeatedList("arrayOfArrayOfArray")
+        .addDimension()
+        .addArray(TypeProtos.MinorType.BIGINT)
+        .resumeList()
+        .resumeSchema()
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(new Object[] {new Long[][][] {{{5L}}}} )
         .build();
     //@formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
@@ -885,4 +932,31 @@ public class TestMsgpackRecordReader extends ClusterTest {
     packer.addPayload(bytes);
     packer.close();
   }
+
+  private void buildArrayOfArray(String fileName) throws IOException {
+    MessagePacker packer = makeMessagePacker(fileName);
+
+    packer.packMapHeader(1);
+    packer.packString("arrayOfArray");
+    packer.packArrayHeader(2);
+    packer.packArrayHeader(1);
+    packer.packInt(1);
+    packer.packArrayHeader(2);
+    packer.packInt(1);
+    packer.packInt(1);
+    packer.close();
+  }
+
+  private void buildArrayOfArrayOfArray(String fileName) throws IOException {
+    MessagePacker packer = makeMessagePacker(fileName);
+
+    packer.packMapHeader(1);
+    packer.packString("arrayOfArrayOfArray");
+    packer.packArrayHeader(1);
+    packer.packArrayHeader(1);
+    packer.packArrayHeader(1);
+    packer.packInt(5);
+    packer.close();
+  }
+
 }
