@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.drill.exec.work.filter.RuntimeFilterSink;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
@@ -160,16 +161,15 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
   void close();
 
   /**
-   * Return null ,if setRuntimeFilter not being called
    * @return
    */
-  RuntimeFilterWritable getRuntimeFilter();
+  RuntimeFilterSink getRuntimeFilterSink();
 
   /**
-   * Set a RuntimeFilter when the RuntimeFilter receiver belongs to the same MinorFragment
+   * add a RuntimeFilter when the RuntimeFilter receiver belongs to the same MinorFragment
    * @param runtimeFilter
    */
-  public void setRuntimeFilter(RuntimeFilterWritable runtimeFilter);
+  public void addRuntimeFilter(RuntimeFilterWritable runtimeFilter);
 
   interface ExecutorState {
     /**

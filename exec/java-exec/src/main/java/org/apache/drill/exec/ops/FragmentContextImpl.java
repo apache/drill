@@ -61,6 +61,7 @@ import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
+import org.apache.drill.exec.work.filter.RuntimeFilterSink;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -136,7 +137,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
 
-  private RuntimeFilterWritable runtimeFilterWritable;
+  private RuntimeFilterSink runtimeFilterSink;
 
   /**
    * Create a FragmentContext instance for non-root fragment.
@@ -208,6 +209,11 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     stats = new FragmentStats(allocator, fragment.getAssignment());
     bufferManager = new BufferManagerImpl(this.allocator);
     constantValueHolderCache = Maps.newHashMap();
+    boolean enableRF = context.getOptionManager().getOption(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER);
+    if (enableRF) {
+      ExecutorService executorService = context.getExecutor();
+      this.runtimeFilterSink = new RuntimeFilterSink(this.allocator, executorService);
+    }
   }
 
   /**
@@ -348,13 +354,13 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   }
 
   @Override
-  public void setRuntimeFilter(RuntimeFilterWritable runtimeFilter) {
-    this.runtimeFilterWritable = runtimeFilter;
+  public void addRuntimeFilter(RuntimeFilterWritable runtimeFilter) {
+    this.runtimeFilterSink.aggregate(runtimeFilter);
   }
 
   @Override
-  public RuntimeFilterWritable getRuntimeFilter() {
-    return runtimeFilterWritable;
+  public RuntimeFilterSink getRuntimeFilterSink() {
+    return runtimeFilterSink;
   }
 
   /**
@@ -470,9 +476,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     for (OperatorContextImpl opContext : contexts) {
       suppressingClose(opContext);
     }
-    if (runtimeFilterWritable != null) {
-      suppressingClose(runtimeFilterWritable);
-    }
+    suppressingClose(runtimeFilterSink);
     suppressingClose(bufferManager);
     suppressingClose(allocator);
   }

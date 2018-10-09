@@ -197,11 +197,8 @@ public class RuntimeFilterVisitor extends BasePrelVisitor<Prel, Void, RuntimeExc
     @Override
     public Void visitExchange(ExchangePrel exchange, RFHelperHolder holder) throws RuntimeException {
       if (holder != null) {
-        boolean broadcastExchange = exchange instanceof BroadcastExchangePrel;
         if (holder.isFromBuildSide()) {
-          //To the build side ,we need to identify whether the HashJoin's direct children have a Broadcast node to mark
-          //this HashJoin as BroadcastHashJoin
-          holder.setEncounteredBroadcastExchange(broadcastExchange);
+          holder.setBuildSideExchange(exchange);
         }
       }
       return visitPrel(exchange, holder);
@@ -224,19 +221,11 @@ public class RuntimeFilterVisitor extends BasePrelVisitor<Prel, Void, RuntimeExc
           Prel right = (Prel) hashJoinPrel.getRight();
           holder.setFromBuildSide(true);
           right.accept(this, holder);
-          boolean buildSideEncountererdBroadcastExchange = holder.isEncounteredBroadcastExchange();
-          if (buildSideEncountererdBroadcastExchange) {
-            runtimeFilterDef.setSendToForeman(false);
-          } else {
-            runtimeFilterDef.setSendToForeman(true);
-          }
+          boolean routeToForeman = holder.needToRouteToForeman();
+          runtimeFilterDef.setSendToForeman(routeToForeman);
           List<BloomFilterDef> bloomFilterDefs = runtimeFilterDef.getBloomFilterDefs();
           for (BloomFilterDef bloomFilterDef : bloomFilterDefs) {
-            if (buildSideEncountererdBroadcastExchange) {
-              bloomFilterDef.setLocal(true);
-            } else {
-              bloomFilterDef.setLocal(false);
-            }
+            bloomFilterDef.setLocal(!routeToForeman);
           }
         }
       }
@@ -338,18 +327,17 @@ public class RuntimeFilterVisitor extends BasePrelVisitor<Prel, Void, RuntimeExc
    * RuntimeFilter helper util holder
    */
   private static class RFHelperHolder {
-    //whether this join operator is a partitioned HashJoin or broadcast HashJoin,
-    //also single node HashJoin is not expected to do JPPD.
-    private boolean encounteredBroadcastExchange;
 
     private boolean fromBuildSide;
 
-    public boolean isEncounteredBroadcastExchange() {
-      return encounteredBroadcastExchange;
+    private ExchangePrel exchangePrel;
+
+    public void setBuildSideExchange(ExchangePrel exchange){
+      this.exchangePrel = exchange;
     }
 
-    public void setEncounteredBroadcastExchange(boolean encounteredBroadcastExchange) {
-      this.encounteredBroadcastExchange = encounteredBroadcastExchange;
+    public boolean needToRouteToForeman() {
+      return exchangePrel != null && !(exchangePrel instanceof BroadcastExchangePrel);
     }
 
     public boolean isFromBuildSide() {
