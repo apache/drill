@@ -18,10 +18,11 @@
 package org.apache.drill.exec.work.filter;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -63,18 +64,17 @@ public class RuntimeFilterSink implements AutoCloseable {
 
   private ReentrantLock aggregatedRFLock = new ReentrantLock();
 
-  private Thread asyncAggregateThread;
-
   private BufferAllocator bufferAllocator;
+
+  private Future future;
 
   private static final Logger logger = LoggerFactory.getLogger(RuntimeFilterSink.class);
 
 
-  public RuntimeFilterSink(BufferAllocator bufferAllocator) {
+  public RuntimeFilterSink(BufferAllocator bufferAllocator, ExecutorService executorService) {
     this.bufferAllocator = bufferAllocator;
     AsyncAggregateWorker asyncAggregateWorker = new AsyncAggregateWorker();
-    asyncAggregateThread = new NamedThreadFactory("RFAggregating-").newThread(asyncAggregateWorker);
-    asyncAggregateThread.start();
+    future = executorService.submit(asyncAggregateWorker);
   }
 
   public void aggregate(RuntimeFilterWritable runtimeFilterWritable) {
@@ -158,7 +158,7 @@ public class RuntimeFilterSink implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    asyncAggregateThread.interrupt();
+    future.cancel(true);
     doCleanup();
   }
 
@@ -209,7 +209,7 @@ public class RuntimeFilterSink implements AutoCloseable {
           currentBookId.incrementAndGet();
         }
       } catch (InterruptedException e) {
-        logger.info("Thread : {} was interrupted.", asyncAggregateThread.getName(), e);
+        logger.info("RFAggregating Thread : {} was interrupted.", Thread.currentThread().getName());
         Thread.currentThread().interrupt();
       } finally {
         doCleanup();
