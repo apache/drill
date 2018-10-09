@@ -389,7 +389,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
   private boolean handleSchemaChange() {
     try {
       stats.startSetup();
-      logger.debug("Setting up new schema based on incoming batch. Old output schema: %s", container.getSchema());
+      logger.debug("Setting up new schema based on incoming batch. Old output schema: {}", container.getSchema());
       setupNewSchema();
       return true;
     } catch (SchemaChangeException ex) {
@@ -805,7 +805,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
    */
   private void setupNewSchema() throws SchemaChangeException {
 
-    logger.debug("Setting up new schema based on incoming batch. New left schema: %s and New right schema: %s",
+    logger.debug("Setting up new schema based on incoming batch. New left schema: {} and New right schema: {}",
       left.getSchema(), right.getSchema());
 
     // Clear up the container
