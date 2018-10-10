@@ -19,7 +19,6 @@ package org.apache.drill.exec.expr.fn.registry;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.junit.Before;
@@ -28,6 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,11 +61,11 @@ public class FunctionRegistryHolderTest {
     FunctionHolder lower = new FunctionHolder(LOWER_FUNC_NAME, "lower(VARCHAR-REQUIRED)", mock(DrillFuncHolder.class));
     FunctionHolder upper = new FunctionHolder("upper", "upper(VARCHAR-REQUIRED)", mock(DrillFuncHolder.class));
     FunctionHolder shuffle = new FunctionHolder(SHUFFLE_FUNC_NAME, "shuffle()", mock(DrillFuncHolder.class));
-    newJars.put(built_in, Lists.newArrayList(lower, upper, shuffle));
+    newJars.put(built_in, new ArrayList<>(Arrays.asList(lower, upper, shuffle)));
     FunctionHolder custom_lower = new FunctionHolder("custom_lower", "lower(VARCHAR-REQUIRED)", mock(DrillFuncHolder.class));
     FunctionHolder custom_upper = new FunctionHolder("custom_upper", "custom_upper(VARCHAR-REQUIRED)", mock(DrillFuncHolder.class));
     FunctionHolder overloaded_shuffle = new FunctionHolder(SHUFFLE_FUNC_NAME, "shuffle(FLOAT8-REQUIRED,FLOAT8-OPTIONAL)", mock(DrillFuncHolder.class));
-    newJars.put(udf_jar, Lists.newArrayList(custom_lower, custom_upper, overloaded_shuffle));
+    newJars.put(udf_jar, new ArrayList<>(Arrays.asList(custom_lower, custom_upper, overloaded_shuffle)));
   }
 
   @Before
@@ -166,7 +166,7 @@ public class FunctionRegistryHolderTest {
   public void testGetAllJarsWithFunctionHolders() {
     Map<String, List<FunctionHolder>> fnHoldersInRegistry = registryHolder.getAllJarsWithFunctionHolders();
     //Iterate and confirm lists are same
-    for (String jarName : Lists.newArrayList(newJars.keySet())) {
+    for (String jarName : newJars.keySet()) {
       List<DrillFuncHolder> expectedHolderList = newJars.get(jarName).stream()
           .map(FunctionHolder::getHolder) //Extract DrillFuncHolder
           .collect(Collectors.toList());
@@ -180,7 +180,7 @@ public class FunctionRegistryHolderTest {
     Map<String, String> shuffleFunctionMap = new HashMap<>();
     // Confirm that same function spans multiple jars with different signatures
     //Init: Expected Map of items
-    for (String jarName : Lists.newArrayList(newJars.keySet())) {
+    for (String jarName : newJars.keySet()) {
       for (FunctionHolder funcHolder : newJars.get(jarName)) {
         if (funcHolder.getName().equals(SHUFFLE_FUNC_NAME)) {
           shuffleFunctionMap.put(funcHolder.getSignature(), jarName);
@@ -262,8 +262,8 @@ public class FunctionRegistryHolderTest {
 
   @Test
   public void testGetHoldersByFunctionName() {
-    List<DrillFuncHolder> expectedUniqueResult = Lists.newArrayList();
-    List<DrillFuncHolder> expectedMultipleResult = Lists.newArrayList();
+    List<DrillFuncHolder> expectedUniqueResult = new ArrayList<>();
+    List<DrillFuncHolder> expectedMultipleResult = new ArrayList<>();
     for (List<FunctionHolder> functionHolders : newJars.values()) {
       for (FunctionHolder functionHolder : functionHolders) {
         if (LOWER_FUNC_NAME.equals(functionHolder.getName())) {

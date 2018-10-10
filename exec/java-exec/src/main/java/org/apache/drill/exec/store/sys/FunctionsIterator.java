@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.sys;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Map;
 
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.FunctionLookupContext;
 import org.apache.drill.exec.expr.fn.registry.FunctionHolder;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.store.pojo.NonNullable;
@@ -33,34 +35,46 @@ import org.apache.drill.exec.store.pojo.NonNullable;
  * List functions as a System Table
  */
 public class FunctionsIterator implements Iterator<Object> {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionsIterator.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionsIterator.class);
 
-  private Iterator<FunctionInfo> sortedIterator;
+  private final Iterator<FunctionInfo> sortedIterator;
 
   public FunctionsIterator(ExecutorFragmentContext context) {
     Map<String, FunctionInfo> functionMap = new HashMap<String, FunctionInfo>();
     //Access Registry for function list
-    FunctionImplementationRegistry funcImplRegistry = (FunctionImplementationRegistry) context.getFunctionRegistry();
-    Map<String, List<FunctionHolder>> jarFunctionListMap = funcImplRegistry.getAllJarsWithFunctionsHolders();
-    for (String jarName : new ArrayList<>(jarFunctionListMap.keySet())) {
-      for (FunctionHolder dfhEntry : jarFunctionListMap.get(jarName)) {
-        populateFunctionMap(functionMap, jarName, dfhEntry.getHolder());
+    FunctionLookupContext functionLookupContext = context.getFunctionRegistry();
+    //Check true instance type
+    if (functionLookupContext instanceof FunctionImplementationRegistry) {
+      @SuppressWarnings("resource")
+      FunctionImplementationRegistry functionImplRegistry = (FunctionImplementationRegistry) functionLookupContext;
+      Map<String, List<FunctionHolder>> jarFunctionListMap = functionImplRegistry.getAllJarsWithFunctionsHolders();
+
+      for (String jarName : jarFunctionListMap.keySet()) {
+        for (FunctionHolder dfhEntry : jarFunctionListMap.get(jarName)) {
+          populateFunctionMap(functionMap, jarName, dfhEntry.getHolder());
+        }
       }
+
+      List<FunctionInfo> functionList = new ArrayList<FunctionsIterator.FunctionInfo>(functionMap.values());
+      functionList.sort((FunctionInfo o1, FunctionInfo o2) -> {
+        int result = o1.name.compareTo(o2.name);
+        if (result == 0) {
+          result = o1.signature.compareTo(o2.signature);
+        }
+        if (result == 0) {
+          return o1.returnType.compareTo(o2.returnType);
+        }
+        return result;
+      });
+
+      sortedIterator = functionList.iterator();
+    } else {
+      //Logging error
+      logger.error("Function Registry was found to be of {} instead of {}. No functions could be loaded ",
+          FunctionImplementationRegistry.class, functionLookupContext.getClass());
+      sortedIterator = Collections.emptyIterator();
     }
 
-    List<FunctionInfo> functionList = new ArrayList<FunctionsIterator.FunctionInfo>(functionMap.values());
-    functionList.sort((FunctionInfo o1, FunctionInfo o2) -> {
-      int result = o1.name.compareTo(o2.name);
-      if (result == 0) {
-        result = o1.signature.compareTo(o2.signature);
-      }
-      if (result == 0) {
-        return o1.returnType.compareTo(o2.returnType);
-      }
-      return result;
-    });
-
-    sortedIterator = functionList.iterator();
   }
 
   /**
@@ -75,6 +89,7 @@ public class FunctionsIterator implements Iterator<Object> {
     String returnType = dfh.getReturnType().getMinorType().toString();
     for (String name : registeredNames) {
       //Generate a unique key for a function holder as 'functionName#functionSignature'
+      //Bumping capacity from default 16 to 64 (since key is expected to be bigger, and reduce probability of resizing)
       String funcSignatureKey = new StringBuilder(64).append(name).append('#').append(signature).toString();
       functionMap.put(funcSignatureKey, new FunctionInfo(name, signature, returnType, jarName));
     }
@@ -98,7 +113,9 @@ public class FunctionsIterator implements Iterator<Object> {
     public final String name;
     @NonNullable
     public final String signature;
+    @NonNullable
     public final String returnType;
+    @NonNullable
     public final String source;
 
     public FunctionInfo(String funcName, String funcSignature, String funcReturnType, String jarName) {
