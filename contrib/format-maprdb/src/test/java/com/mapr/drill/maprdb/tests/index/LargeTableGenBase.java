@@ -46,45 +46,44 @@ public class LargeTableGenBase {
       cities = new ArrayList<>();
       List<String> states = new ArrayList<>();
 
-      int fnNum = 2000; //2k
-      int lnNum = 200000;//200k
-      int cityNum = 10000;//10k
+      int fnNum = 2000;     // 2k
+      int lnNum = 200000;   // 200k
+      int cityNum = 10000;  // 10k
       int stateNum = 50;
       Random rand = new Random(2017);
       int i;
       try {
         Set<String> strSet = new LinkedHashSet<>();
-        while(strSet.size() < stateNum) {
+        while (strSet.size() < stateNum) {
           strSet.add(RandomStringUtils.random(2, 0, 0, true, false, null, rand));
         }
         states.addAll(strSet);
 
         strSet = new LinkedHashSet<>();
-        while(strSet.size() < cityNum) {
+        while (strSet.size() < cityNum) {
           int len = 3 + strSet.size() % 6;
           strSet.add(RandomStringUtils.random(len, 0, 0, true, false, null, rand));
         }
 
         Iterator<String> it = strSet.iterator();
-        for(i=0; i<cityNum; ++i) {
+        for (i = 0; i < cityNum; ++i) {
           cities.add(new String[]{"10000", states.get(i%stateNum),  it.next()});
         }
 
         strSet = new LinkedHashSet<>();
-        while(strSet.size() < fnNum) {
+        while (strSet.size() < fnNum) {
           int len = 3 + strSet.size() % 6;
           strSet.add(RandomStringUtils.random(len, 0, 0, true, false, null, rand));
         }
         firstnames.addAll(strSet);
 
         strSet = new LinkedHashSet<>();
-        while(strSet.size() < lnNum) {
+        while (strSet.size() < lnNum) {
           int len = 3 + strSet.size() % 6;
           strSet.add(RandomStringUtils.random(len, 0, 0, true, false, null, rand));
         }
         lastnames.addAll(strSet);
-      }
-      catch(Exception e) {
+      } catch(Exception e) {
         System.out.println("init data got exception");
         e.printStackTrace();
       }
@@ -109,7 +108,7 @@ public class LargeTableGenBase {
   }
 
   protected String getPhone(int i) {
-    //80% phones are unique,
+    // 80% phones are unique,
     return String.format("%d", 6500*1000*1000L + randomized[ (randomized.length - i) %((int) (randomized.length * 0.8)) ]);
   }
 
@@ -125,14 +124,14 @@ public class LargeTableGenBase {
     return String.format("%d",randomized[i%randomized.length] % 47 + 1);
   }
 
-  //date yyyy-mm-dd
+  // date yyyy-mm-dd
   protected String getBirthdate(int i) {
     int thisseed = randomized[i%randomized.length];
     return String.format("%d-%02d-%02d",
         2016 - (thisseed % 60 + 10), thisseed % 12 + 1, (thisseed * 31) % 28 + 1 );
   }
 
-  //timestamp, yyyy-mm-dd HH:mm:ss
+  // timestamp, yyyy-mm-dd HH:mm:ss
   protected String getFirstLogin(int i) {
     int thisseed = randomized[i%randomized.length];
     int nextseed = randomized[(i+1)%randomized.length];

@@ -32,15 +32,15 @@ public class MapRDBFunctionalIndexInfo implements FunctionalIndexInfo {
 
   private boolean hasFunctionalField = false;
 
-  //when we scan schemaPath in groupscan's columns, we check if this column(schemaPath) should be rewritten to '$N',
-  //When there are more than two functions on the same column in index, CAST(a.b as INT), CAST(a.b as VARCHAR),
+  // When we scan schemaPath in groupscan's columns, we check if this column(schemaPath) should be rewritten to '$N',
+  // When there are more than two functions on the same column in index, CAST(a.b as INT), CAST(a.b as VARCHAR),
   // then we should map SchemaPath a.b to a set of SchemaPath, e.g. $1, $2
   private Map<SchemaPath, Set<SchemaPath>> columnToConvert;
 
   // map of functional index expression to destination SchemaPath e.g. $N
   private Map<LogicalExpression, LogicalExpression> exprToConvert;
 
-  //map of SchemaPath involved in a functional field
+  // map of SchemaPath involved in a functional field
   private Map<LogicalExpression, Set<SchemaPath>> pathsInExpr;
 
   private Set<SchemaPath> newPathsForIndexedFunction;
@@ -52,7 +52,7 @@ public class MapRDBFunctionalIndexInfo implements FunctionalIndexInfo {
     columnToConvert = Maps.newHashMap();
     exprToConvert = Maps.newHashMap();
     pathsInExpr = Maps.newHashMap();
-    //keep the order of new paths, it may be related to the naming policy
+    // keep the order of new paths, it may be related to the naming policy
     newPathsForIndexedFunction = Sets.newLinkedHashSet();
     allPathsInFunction = Sets.newHashSet();
     init();
@@ -60,15 +60,15 @@ public class MapRDBFunctionalIndexInfo implements FunctionalIndexInfo {
 
   private void init() {
     int count = 0;
-    for(LogicalExpression indexedExpr : indexDesc.getIndexColumns()) {
-      if( !(indexedExpr instanceof SchemaPath) ) {
+    for (LogicalExpression indexedExpr : indexDesc.getIndexColumns()) {
+      if (!(indexedExpr instanceof SchemaPath)) {
         hasFunctionalField = true;
         SchemaPath functionalFieldPath = SchemaPath.getSimplePath("$"+count);
         newPathsForIndexedFunction.add(functionalFieldPath);
 
-        //now we handle only cast expression
-        if(indexedExpr instanceof CastExpression) {
-          //We handle only CAST directly on SchemaPath for now.
+        // now we handle only cast expression
+        if (indexedExpr instanceof CastExpression) {
+          // We handle only CAST directly on SchemaPath for now.
           SchemaPath pathBeingCasted = (SchemaPath)((CastExpression) indexedExpr).getInput();
           addTargetPathForOriginalPath(pathBeingCasted, functionalFieldPath);
           addPathInExpr(indexedExpr, pathBeingCasted);
@@ -119,7 +119,7 @@ public class MapRDBFunctionalIndexInfo implements FunctionalIndexInfo {
    * @return
    */
   public SchemaPath getNewPath(SchemaPath path) {
-    if(columnToConvert.containsKey(path)) {
+    if (columnToConvert.containsKey(path)) {
       return columnToConvert.get(path).iterator().next();
     }
     return null;
@@ -131,7 +131,7 @@ public class MapRDBFunctionalIndexInfo implements FunctionalIndexInfo {
    * @return the renamed schemapath in index table for the indexed expression
    */
   public SchemaPath getNewPathFromExpr(LogicalExpression expr) {
-    if(exprToConvert.containsKey(expr)) {
+    if (exprToConvert.containsKey(expr)) {
       return (SchemaPath)exprToConvert.get(expr);
     }
     return null;

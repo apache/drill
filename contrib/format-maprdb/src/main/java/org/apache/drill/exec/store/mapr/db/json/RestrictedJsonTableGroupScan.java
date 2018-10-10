@@ -90,7 +90,7 @@ public class RestrictedJsonTableGroupScan extends JsonTableGroupScan {
   private List<RestrictedMapRDBSubScanSpec> getEndPointFragmentMapping(int minorFragmentId) {
     List<RestrictedMapRDBSubScanSpec> restrictedSubScanSpecList = Lists.newArrayList();
     List<MapRDBSubScanSpec> subScanSpecList = endpointFragmentMapping.get(minorFragmentId);
-    for(MapRDBSubScanSpec s : subScanSpecList) {
+    for (MapRDBSubScanSpec s : subScanSpecList) {
       restrictedSubScanSpecList.add((RestrictedMapRDBSubScanSpec) s);
     }
     return restrictedSubScanSpecList;
@@ -128,7 +128,7 @@ public class RestrictedJsonTableGroupScan extends JsonTableGroupScan {
 
   @Override
   public ScanStats getScanStats() {
-    //TODO: ideally here we should use the rowcount from index scan, and multiply a factor of restricted scan
+    // TODO: ideally here we should use the rowcount from index scan, and multiply a factor of restricted scan
     double rowCount;
     PluginCost pluginCostModel = formatPlugin.getPluginCostModel();
     final int avgColumnSize = pluginCostModel.getAverageColumnSize(this);
@@ -178,7 +178,7 @@ public class RestrictedJsonTableGroupScan extends JsonTableGroupScan {
   public String toString() {
     return "RestrictedJsonTableGroupScan [ScanSpec=" + scanSpec + ", columns=" + columns
         + ", rowcount=" + computeRestrictedScanRowcount()
-        + (maxRecordsToRead>0? ", limit=" + maxRecordsToRead : "")
-        + (getMaxParallelizationWidth()>0? ", maxwidth=" + getMaxParallelizationWidth() : "") + "]";
+        + (maxRecordsToRead > 0 ? ", limit=" + maxRecordsToRead : "")
+        + (getMaxParallelizationWidth() > 0 ? ", maxwidth=" + getMaxParallelizationWidth() : "") + "]";
   }
 }

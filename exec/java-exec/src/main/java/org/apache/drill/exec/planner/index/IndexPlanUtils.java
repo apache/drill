@@ -103,8 +103,8 @@ public class IndexPlanUtils {
     GroupScan groupScan = scanRel.getGroupScan();
     if (groupScan instanceof DbGroupScan) {
       DbGroupScan dbscan = ((DbGroupScan) groupScan);
-      //if we already applied index convert rule, and this scan is indexScan or restricted scan already,
-      //no more trying index convert rule
+      // if we already applied index convert rule, and this scan is indexScan or restricted scan already,
+      // no more trying index convert rule
       return dbscan.supportsSecondaryIndex() && (!dbscan.isIndexScan()) && (!dbscan.isRestrictedScan());
     }
     return false;
@@ -115,8 +115,8 @@ public class IndexPlanUtils {
    * @return
    */
   static public boolean isCoveringIndex(IndexCallContext indexContext, FunctionalIndexInfo functionInfo) {
-    if(functionInfo.hasFunctional()) {
-      //need info from full query
+    if (functionInfo.hasFunctional()) {
+      // need info from full query
       return queryCoveredByIndex(indexContext, functionInfo);
     }
     DbGroupScan groupScan = (DbGroupScan) getGroupScan(indexContext.getScan());
@@ -140,12 +140,12 @@ public class IndexPlanUtils {
    */
   static private boolean queryCoveredByIndex(IndexCallContext indexContext,
                               FunctionalIndexInfo functionInfo) {
-    //for indexed functions, if relevant schemapaths are included in index(in indexed fields or non-indexed fields),
+    // for indexed functions, if relevant schemapaths are included in index(in indexed fields or non-indexed fields),
     // check covering based on the local information we have:
-    //   if references to schema paths in functional indexes disappear beyond capProject
+    // if references to schema paths in functional indexes disappear beyond capProject
 
     if (indexContext.getFilter() != null && indexContext.getUpperProject() == null) {
-      if( !isFullQuery(indexContext)) {
+      if (!isFullQuery(indexContext)) {
         return false;
       }
     }
@@ -160,7 +160,7 @@ public class IndexPlanUtils {
           LogicalExpression expr = RexToExpression.toDrill(parserContext, null, indexContext.getScan(), rex);
           exprs.add(expr);
         }
-        //now collect paths in filter since upperProject may drop some paths in filter
+        // now collect paths in filter since upperProject may drop some paths in filter
         IndexableExprMarker filterMarker = new IndexableExprMarker(indexContext.getScan());
         indexContext.getFilterCondition().accept(filterMarker);
         for (RexNode rex : filterMarker.getIndexableExpression().keySet()) {
@@ -168,7 +168,7 @@ public class IndexPlanUtils {
           exprs.add(expr);
         }
       } else {
-        //we have underneath project, so we have to do more to convert expressions
+        // we have underneath project, so we have to do more to convert expressions
         for (RexNode rex : indexContext.getUpperProject().getProjects()) {
           LogicalExpression expr = RexToExpression.toDrill(parserContext, indexContext.getLowerProject(), indexContext.getScan(), rex);
           exprs.add(expr);
@@ -194,22 +194,22 @@ public class IndexPlanUtils {
         exprs.add(expr);
       }
     }
-    else {//upperProject and lowerProject both are null, the only place to find columns being used in query is scan
+    else { // upperProject and lowerProject both are null, the only place to find columns being used in query is scan
       exprs.addAll(indexContext.getScanColumns());
     }
 
     Map<LogicalExpression, Set<SchemaPath>> exprPathMap = functionInfo.getPathsInFunctionExpr();
     PathInExpr exprSearch = new PathInExpr(exprPathMap);
 
-    for(LogicalExpression expr: exprs) {
-      if(expr.accept(exprSearch, null) == false) {
+    for (LogicalExpression expr: exprs) {
+      if (expr.accept(exprSearch, null) == false) {
         return false;
       }
     }
-    //if we come to here, paths in indexed function expressions are covered in capProject.
-    //now we check other paths.
+    // if we come to here, paths in indexed function expressions are covered in capProject.
+    // now we check other paths.
 
-    //check the leftout paths (appear in capProject other than functional index expression) are covered by other index fields or not
+    // check the leftout paths (appear in capProject other than functional index expression) are covered by other index fields or not
     List<LogicalExpression> leftPaths = Lists.newArrayList(exprSearch.getRemainderPaths());
 
     indexContext.setLeftOutPathsInFunctions(exprSearch.getRemainderPathsInFunctions());
@@ -218,7 +218,7 @@ public class IndexPlanUtils {
 
   static private boolean isFullQuery(IndexCallContext indexContext) {
     RelNode rootInCall = indexContext.getCall().rel(0);
-    //check if the tip of the operator stack we have is also the top of the whole query, if yes, return true
+    // check if the tip of the operator stack we have is also the top of the whole query, if yes, return true
     if (indexContext.getCall().getPlanner().getRoot() instanceof RelSubset) {
       final RelSubset rootSet = (RelSubset) indexContext.getCall().getPlanner().getRoot();
       if (rootSet.getRelList().contains(rootInCall)) {
@@ -241,13 +241,13 @@ public class IndexPlanUtils {
    * @return the output RelCollation
    */
   public static RelCollation buildCollationLowerProject(List<RexNode> projectRexs, RelNode input, FunctionalIndexInfo indexInfo) {
-    //if leading fields of index are here, add them to RelCollation
+    // if leading fields of index are here, add them to RelCollation
     List<RelFieldCollation> newFields = Lists.newArrayList();
     if (!indexInfo.hasFunctional()) {
       Map<LogicalExpression, Integer> projectExprs = Maps.newLinkedHashMap();
       DrillParseContext parserContext = new DrillParseContext(PrelUtil.getPlannerSettings(input.getCluster()));
       int idx=0;
-      for(RexNode rex : projectRexs) {
+      for (RexNode rex : projectRexs) {
         projectExprs.put(DrillOptiq.toDrill(parserContext, input, rex), idx);
         idx++;
       }
@@ -336,7 +336,7 @@ public class IndexPlanUtils {
   }
 
   public static int getIndexFromCollation(int refIndex, List<RelFieldCollation> inputFieldCollations) {
-    for (int i=0; i < inputFieldCollations.size(); i++) {
+    for (int i = 0; i < inputFieldCollations.size(); i++) {
       if (refIndex == inputFieldCollations.get(i).getFieldIndex()) {
         return i;
       }
@@ -385,14 +385,14 @@ public class IndexPlanUtils {
             indexContext.getUpperProject().getProjects().get(idx));
         indexContext.getSortExprs().add(expr);
       }
-      else {//one project is null now
+      else { // one project is null now
         oneProject = (indexContext.getUpperProject() != null)? indexContext.getUpperProject() : indexContext.getLowerProject();
-        if(oneProject != null) {
+        if (oneProject != null) {
           LogicalExpression expr = RexToExpression.toDrill(parserContext, null, indexContext.getScan(),
               getProjects(oneProject).get(idx));
           indexContext.getSortExprs().add(expr);
         }
-        else {//two projects are null
+        else { // two projects are null
           SchemaPath path;
           RelDataTypeField f = indexContext.getScan().getRowType().getFieldList().get(idx);
           String pathSeg = f.getName().replaceAll("`", "");
@@ -426,14 +426,14 @@ public class IndexPlanUtils {
                 indexContext.upperProject.getProjects().get(idx));
         indexContext.sortExprs.add(expr);
       }
-      else {//one project is null now
+      else { // one project is null now
         oneProject = (indexContext.upperProject != null)? indexContext.upperProject : indexContext.lowerProject;
-        if(oneProject != null) {
+        if (oneProject != null) {
           LogicalExpression expr = RexToExpression.toDrill(parserContext, null, indexContext.scan,
                   oneProject.getProjects().get(idx));
           indexContext.sortExprs.add(expr);
         }
-        else {//two projects are null
+        else { // two projects are null
           SchemaPath path;
           RelDataTypeField f = indexContext.scan.getRowType().getFieldList().get(idx);
           String pathSeg = f.getName().replaceAll("`", "");
@@ -452,8 +452,8 @@ public class IndexPlanUtils {
    * @return if there is filter and expr is only in equality condition of the filter, return true
    */
   private static boolean exprOnlyInEquality(LogicalExpression expr, IndexCallContext context) {
-    //if there is no filter, expr wont be in equality
-    if(context.getFilter() == null) {
+    // if there is no filter, expr wont be in equality
+    if (context.getFilter() == null) {
       return false;
     }
     final Set<LogicalExpression> onlyInEquality = context.getOrigMarker().getExpressionsOnlyInEquality();
@@ -496,7 +496,7 @@ public class IndexPlanUtils {
     Map<LogicalExpression, Integer> projectExprs = Maps.newLinkedHashMap();
     DrillParseContext parserContext = new DrillParseContext(PrelUtil.getPlannerSettings(input.getCluster()));
     int idx=0;
-    for(RexNode rex : projectRexs) {
+    for (RexNode rex : projectRexs) {
       LogicalExpression expr;
       expr = RexToExpression.toDrill(parserContext, project, input, rex);
       projectExprs.put(expr, idx);
@@ -546,7 +546,7 @@ public class IndexPlanUtils {
       if (!projectExprs.containsKey(expr)) {
         // leading indexed field is not projected
         // but it is only-in-equality field, -- we continue to next indexed field, but we don't generate collation for this field
-        if(exprOnlyInEquality(expr, context)) {
+        if (exprOnlyInEquality(expr, context)) {
           continue;
         }
         // else no more collation is needed to be generated, since we now have one leading field which is not in equality condition
@@ -566,7 +566,7 @@ public class IndexPlanUtils {
       RelFieldCollation.NullDirection nullsDir = indexDesc.getNullsOrderingDirection();
       RelFieldCollation.Direction dir = (idxCollation == null)?
           null : idxCollation.getFieldCollations().get(idxFieldCount).direction;
-      if ( dir == null) {
+      if (dir == null) {
         break;
       }
       newFields.add(new RelFieldCollation(projectExprs.get(expr), dir, nullsDir));
@@ -609,7 +609,7 @@ public class IndexPlanUtils {
           FieldReference ref = FieldReference.getWithQuotedRef(f1.getName());
           RelFieldCollation origCollation = collationMap.get(ref);
           if (origCollation != null) {
-            RelFieldCollation fc = new RelFieldCollation(j,//origCollation.getFieldIndex(),
+            RelFieldCollation fc = new RelFieldCollation(j,
                 origCollation.direction, origCollation.nullDirection);
             rsScanCollationMap.put(origCollation.getFieldIndex(), fc);
           }
@@ -703,18 +703,18 @@ public class IndexPlanUtils {
     }
 
     List<SchemaPath> newPaths = Lists.newArrayList(paths);
-    for (int i=0; i<paths.size(); ++i) {
+    for (int i = 0; i < paths.size(); ++i) {
       SchemaPath newPath = functionInfo.getNewPath(paths.get(i));
-      if(newPath == null) {
+      if (newPath == null) {
         continue;
       }
 
       addedPaths.add(newPath);
       // if this path only in indexed function, we are safe to replace it
-      if(pathOnlyInIndexedFunction(paths.get(i))) {
+      if (pathOnlyInIndexedFunction(paths.get(i))) {
         newPaths.set(i, newPath);
       }
-      else {// we should not replace this column, instead we add a new "$N" field.
+      else {  // we should not replace this column, instead we add a new "$N" field.
         newPaths.add(newPath);
       }
     }
@@ -797,14 +797,14 @@ public class IndexPlanUtils {
                                   List<LogicalExpression> indexCols,
                                   IndexConditionInfo.Builder builder, RexNode condition) {
     boolean prefix = true;
-    int i=0;
+    int i = 0;
 
     RexNode initCondition = condition.isAlwaysTrue() ? null : condition;
     while (prefix && i < indexCols.size()) {
       LogicalExpression p = indexCols.get(i++);
       List<LogicalExpression> prefixCol = ImmutableList.of(p);
       IndexConditionInfo info = builder.indexConditionRelatedToFields(prefixCol, initCondition);
-      if(info != null && info.hasIndexCol) {
+      if (info != null && info.hasIndexCol) {
         // the col had a match with one of the conditions; save the information about
         // indexcol --> condition mapping
         leadingPrefixMap.put(p, info.indexCondition);

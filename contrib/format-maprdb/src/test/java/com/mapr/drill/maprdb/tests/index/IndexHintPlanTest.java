@@ -46,7 +46,7 @@ public class IndexHintPlanTest extends IndexPlanTest {
                 new String[]{"RowKeyJoin"}
         );
 
-        //default plan picked by optimizer.
+        // default plan picked by optimizer.
         PlanTestBase.testPlanMatchingPatterns(query,
                 new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*indexName=i_ssn"},
                 new String[]{"RowKeyJoin"}
@@ -75,13 +75,12 @@ public class IndexHintPlanTest extends IndexPlanTest {
                 new String[]{"RowKeyJoin"}
         );
 
-        //default plan picked by optimizer
+        // default plan picked by optimizer
         PlanTestBase.testPlanMatchingPatterns(query,
                 new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*indexName=(i_state_city|i_state_age_phone)"},
                 new String[]{"RowKeyJoin"}
         );
 
-        return;
     }
 
     @Test
@@ -101,21 +100,20 @@ public class IndexHintPlanTest extends IndexPlanTest {
                 new String[]{"RowKeyJoin"}
         );
 
-        //default plan picked by query optimizer.
+        // default plan picked by query optimizer.
         PlanTestBase.testPlanMatchingPatterns(query,
                 new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*indexName=(i_state_city|i_state_age_phone)"},
                 new String[]{"RowKeyJoin"}
         );
 
-        return;
     }
 
-    //Negative cases
+    // Negative cases
 
     @Test
     // A testcase where there are multiple index to pick from but none of them equals to the index provided as hint (index hint is wrong).
-    //In this index is not at all present in the table hence it falls back to the case where the index itself is not given.
-    //Hence here one of the i_state_city or i_state_age_lic will be selected depending upon the cost.
+    // In this index is not at all present in the table hence it falls back to the case where the index itself is not given.
+    // Hence here one of the i_state_city or i_state_age_lic will be selected depending upon the cost.
     public void testWithMultipleIndexesButNoIndexWithHint() throws Exception {
 
         String hintquery = "SELECT t.`address`.`state` AS `state` FROM table(hbase.`index_test_primary`(type => 'maprdb', index => 'i_state_and_city')) as t " +
@@ -126,7 +124,6 @@ public class IndexHintPlanTest extends IndexPlanTest {
                 new String[]{"RowKeyJoin"}
         );
 
-        return;
     }
 
     @Test
@@ -150,12 +147,11 @@ public class IndexHintPlanTest extends IndexPlanTest {
                 new String[]{"RowKeyJoin"}
         );
 
-        return;
     }
 
 
     @Test
-    //Covering index should be generated for a simple query instead of a RowKeyJoin.
+    // Covering index should be generated for a simple query instead of a RowKeyJoin.
     public void testSimpleNoRowKeyJoin() throws Exception {
         String query = "SELECT `reverseid` from table(hbase.`index_test_primary`(type => 'maprdb', index => 'hash_i_reverseid'))  " +
                 "where `reverseid` = 1234";
@@ -166,6 +162,5 @@ public class IndexHintPlanTest extends IndexPlanTest {
                 new String[]{"RowKeyJoin"}
         );
 
-        return;
    }
 }

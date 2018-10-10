@@ -46,9 +46,9 @@ public class DecodeFieldPath implements DrillSimpleFunc {
         toStringFromUTF8(input.start, input.end, input.buffer).split(",");
     String[] decodedPaths = org.apache.drill.exec.util.EncodedSchemaPathSet.decode(encodedPaths);
     java.util.Arrays.sort(decodedPaths);
-    
+
     StringBuilder sb = new StringBuilder();
-    for(String decodedPath : decodedPaths) {
+    for (String decodedPath : decodedPaths) {
       sb.append(", ").append(org.ojai.FieldPath.parseFrom(decodedPath).asPathString());
     }
     String outputString = "[" + sb.substring(2) + "]";

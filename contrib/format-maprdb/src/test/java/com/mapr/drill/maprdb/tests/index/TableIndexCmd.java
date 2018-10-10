@@ -71,12 +71,9 @@ public class TableIndexCmd {
   public static void pressEnterKeyToContinue()
   {
     System.out.println("Press any key to continue...");
-    try
-    {
+    try {
       System.in.read();
-    }
-    catch(Exception e)
-    {}
+    } catch(Exception e) {}
   }
 
 
@@ -90,36 +87,35 @@ public class TableIndexCmd {
     boolean waitKeyPress = true;
     long inSize = 10000;
     Map<String, String> params = parseParameter(args);
-    if(args.length >= 2) {
-      if(params.get("host") != null) {
+    if (args.length >= 2) {
+      if (params.get("host") != null) {
         inHost = params.get("host");
       }
-      if(params.get("port") != null) {
+      if (params.get("port") != null) {
         inPort = params.get("port");
       }
-      if(params.get("table") != null) {
+      if (params.get("table") != null) {
         inTable = params.get("table");
       }
-      if(params.get("size") != null) {
+      if (params.get("size") != null) {
         inSize = Long.parseLong(params.get("size"));
       }
-      if(params.get("dict") != null) {
+      if (params.get("dict") != null) {
         dictPath = params.get("dict");
       }
-      if(params.get("wait") != null) {
+      if (params.get("wait") != null) {
         String answer = params.get("wait");
         waitKeyPress = answer.startsWith("y") || answer.startsWith("t")? true : false;
       }
     }
-    if(waitKeyPress == true) {
+    if (waitKeyPress == true) {
       pressEnterKeyToContinue();
     }
     try {
       TestBigTable tbt = new TestBigTable();
       tbt.init(inHost, inPort);
       tbt.gen.generateTableWithIndex(inTable, (int)(inSize & 0xFFFFFFFFL), null);
-    }
-    catch(Exception e) {
+    } catch(Exception e) {
       System.out.println("generate big table got exception:" + e.getMessage());
       e.printStackTrace();
     }
