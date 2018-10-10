@@ -27,8 +27,8 @@ public abstract class AbstractMatchFunction<T> implements MatchFunction<T> {
     GroupScan groupScan = scanRel.getGroupScan();
     if (groupScan instanceof DbGroupScan) {
       DbGroupScan dbscan = ((DbGroupScan) groupScan);
-      //if we already applied index convert rule, and this scan is indexScan or restricted scan already,
-      //no more trying index convert rule
+      // if we already applied index convert rule, and this scan is indexScan or restricted scan already,
+      // no more trying index convert rule
       return dbscan.supportsSecondaryIndex() && (!dbscan.isIndexScan()) && (!dbscan.isRestrictedScan());
     }
     return false;
@@ -37,8 +37,8 @@ public abstract class AbstractMatchFunction<T> implements MatchFunction<T> {
   public boolean checkScan(GroupScan groupScan) {
     if (groupScan instanceof DbGroupScan) {
       DbGroupScan dbscan = ((DbGroupScan) groupScan);
-      //if we already applied index convert rule, and this scan is indexScan or restricted scan already,
-      //no more trying index convert rule
+      // if we already applied index convert rule, and this scan is indexScan or restricted scan already,
+      // no more trying index convert rule
       return dbscan.supportsSecondaryIndex() &&
              !dbscan.isRestrictedScan() &&
               (!dbscan.isFilterPushedDown() || dbscan.isIndexScan()) &&

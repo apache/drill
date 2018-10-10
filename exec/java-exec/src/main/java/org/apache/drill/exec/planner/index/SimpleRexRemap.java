@@ -86,31 +86,31 @@ public class SimpleRexRemap {
   public RexNode rewriteEqualOnCharToLike(RexNode expr,
                                           Map<RexNode, LogicalExpression> equalOnCastCharExprs) {
     Map<RexNode, RexNode> srcToReplace = Maps.newIdentityHashMap();
-    for(Map.Entry<RexNode, LogicalExpression> entry: equalOnCastCharExprs.entrySet()) {
+    for (Map.Entry<RexNode, LogicalExpression> entry: equalOnCastCharExprs.entrySet()) {
       RexNode equalOp = entry.getKey();
       LogicalExpression opInput = entry.getValue();
 
       final List<RexNode> operands = ((RexCall)equalOp).getOperands();
       RexLiteral newLiteral = null;
       RexNode input = null;
-      if(operands.size() == 2 ) {
+      if (operands.size() == 2 ) {
         RexLiteral oplit = null;
         if (operands.get(0) instanceof RexLiteral) {
           oplit = (RexLiteral) operands.get(0);
-          if(oplit.getTypeName() == SqlTypeName.CHAR) {
+          if (oplit.getTypeName() == SqlTypeName.CHAR) {
             newLiteral = builder.makeLiteral(((NlsString) oplit.getValue()).getValue() + "%");
             input = operands.get(1);
           }
         }
         else if (operands.get(1) instanceof RexLiteral) {
           oplit = (RexLiteral) operands.get(1);
-          if(oplit.getTypeName() == SqlTypeName.CHAR) {
+          if (oplit.getTypeName() == SqlTypeName.CHAR) {
             newLiteral = builder.makeLiteral(((NlsString) oplit.getValue()).getValue() + "%");
             input = operands.get(0);
           }
         }
       }
-      if(newLiteral != null) {
+      if (newLiteral != null) {
         srcToReplace.put(equalOp, builder.makeCall(SqlStdOperatorTable.LIKE, input, newLiteral));
       }
     }
@@ -130,16 +130,16 @@ public class SimpleRexRemap {
    */
   public RexNode rewriteWithMap(RexNode srcRex, Map<RexNode, LogicalExpression> mapRexToExpr) {
     Map<RexNode, RexNode> destNodeMap = Maps.newHashMap();
-    for(Map.Entry<RexNode, LogicalExpression> entry: mapRexToExpr.entrySet()) {
+    for (Map.Entry<RexNode, LogicalExpression> entry: mapRexToExpr.entrySet()) {
       LogicalExpression entryExpr = entry.getValue();
 
       LogicalExpression destExpr = destExprMap.get(entryExpr);
-      //then build rexNode from the path
+      // then build rexNode from the path
       RexNode destRex = buildRexForField(destExpr==null?entryExpr : destExpr, newRowType);
       destNodeMap.put(entry.getKey(), destRex);
     }
 
-    //Visit through the nodes, if destExprMap has an entry to provide substitute to replace a rexNode, replace the rexNode
+    // Visit through the nodes, if destExprMap has an entry to provide substitute to replace a rexNode, replace the rexNode
     RexReplace replacer = new RexReplace(destNodeMap);
     RexNode resultRex = srcRex.accept(replacer);
     return resultRex;
@@ -158,7 +158,7 @@ public class SimpleRexRemap {
 
   public static String getFullPath(PathSegment pathSeg) {
     PathSegment.NameSegment nameSeg = (PathSegment.NameSegment)pathSeg;
-    if(nameSeg.isLastPath()) {
+    if (nameSeg.isLastPath()) {
       return nameSeg.getPath();
     }
     return String.format("%s.%s",

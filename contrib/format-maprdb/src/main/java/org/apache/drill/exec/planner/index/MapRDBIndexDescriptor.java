@@ -122,9 +122,9 @@ public class MapRDBIndexDescriptor extends DrillIndexDescriptor {
       List<LogicalExpression> allCols = Lists.newArrayList();
       Collection<SchemaPath> decoded;
 
-      for(LogicalExpression expr : expressions) {
+      for (LogicalExpression expr : expressions) {
         LogicalExpression nonDecoded = expr.accept(this, null);
-        if(nonDecoded != null) {
+        if (nonDecoded != null) {
           allCols.add(nonDecoded);
         }
       }

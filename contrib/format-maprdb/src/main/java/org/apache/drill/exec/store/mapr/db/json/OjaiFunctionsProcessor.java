@@ -47,7 +47,7 @@ class OjaiFunctionsProcessor extends AbstractExprVisitor<Void, Void, RuntimeExce
     final Throwable throwable = new Throwable();
     final StackTraceElement[] ste = throwable.getStackTrace();
     final StringBuilder sb = new StringBuilder();
-    for(int i = 1; i < ste.length; ++i) {
+    for (int i = 1; i < ste.length; ++i) {
       sb.append(ste[i].toString());
       sb.append('\n');
     }

@@ -157,7 +157,7 @@ public class IndexSelector  {
               indexContext.getScan(), functionInfo, indexContext);
     }
 
-    if ( (inputCollation != null) &&
+    if ((inputCollation != null) &&
          (inputCollation.satisfies(indexContext.getCollation()))) {
       return true;
     }

@@ -146,14 +146,11 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{"RowKeyJoin"}
     );
 
-    System.out.println("Covering Plan Verified!");
-
     testBuilder()
         .sqlQuery(query)
         .ordered()
         .baselineColumns("phone").baselineValues("6500005471")
         .go();
-    return;
 
   }
 
@@ -167,8 +164,6 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{"RowKeyJoin"}
     );
 
-    System.out.println("Covering Plan Verified!");
-
     testBuilder()
         .optionSettingQueriesForTestQuery(defaultHavingIndexPlan)
         .sqlQuery(query)
@@ -176,7 +171,6 @@ public class IndexPlanTest extends BaseJsonTest {
         .baselineColumns("ssn").baselineValues("100007423")
         .go();
 
-    return;
   }
 
   @Test
@@ -190,8 +184,6 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{"RowKeyJoin", "indexName="}
     );
 
-    System.out.println("No Index Plan Verified!");
-
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
@@ -199,7 +191,6 @@ public class IndexPlanTest extends BaseJsonTest {
         .baselineColumns("ssn").baselineValues("100007632")
         .go();
 
-    return;
   }
 
   @Test
@@ -214,15 +205,12 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{}
     );
 
-    System.out.println("Non-Covering Plan Verified!");
-
     testBuilder()
         .sqlQuery(query)
         .ordered()
         .baselineColumns("fname").baselineValues("KfFzK")
         .go();
 
-    return;
   }
 
   @Test
@@ -276,7 +264,6 @@ public class IndexPlanTest extends BaseJsonTest {
         .baselineColumns("tid").baselineValues("1012")
         .go();
 
-    return;
   }
 
   @Test
@@ -298,7 +285,6 @@ public class IndexPlanTest extends BaseJsonTest {
         .baselineColumns("rowid").baselineValues("1012")
         .go();
 
-    return;
   }
 
   @Test
@@ -322,7 +308,7 @@ public class IndexPlanTest extends BaseJsonTest {
     } finally {
       test(defaultRowKeyJoinBackIOFactor);
     }
-    return;
+
   }
 
   @Test
@@ -356,7 +342,7 @@ public class IndexPlanTest extends BaseJsonTest {
     } finally {
       test(defaultIntersectPlans + ";" + enableFTS);
     }
-    return;
+
   }
 
   @Test
@@ -391,7 +377,7 @@ public class IndexPlanTest extends BaseJsonTest {
     } finally {
       test(defaultRowKeyJoinBackIOFactor);
     }
-    return;
+
   }
 
   @Test//filter cover indexed, included and not in index at all filter
@@ -420,8 +406,8 @@ public class IndexPlanTest extends BaseJsonTest {
         .build()
         .run();
 
-    return;
   }
+
   @Test
   public void CompositeIndexCoveringPlan() throws Exception {
 
@@ -448,7 +434,7 @@ public class IndexPlanTest extends BaseJsonTest {
         .sqlBaselineQuery(query)
         .build()
         .run();
-    return;
+
   }
 
   @Test
@@ -477,12 +463,12 @@ public class IndexPlanTest extends BaseJsonTest {
       test(defaultHavingIndexPlan);
       test(sliceTargetDefault);
     }
-    return;
+
   }
 
   @Test
   public void TestCastVarCharCoveringPlan() throws Exception {
-    //length 255 is to exact match the casted indexed field's length
+    // length 255 is to exact match the casted indexed field's length
     String query = "SELECT t._id as tid, cast(t.driverlicense as varchar(255)) as driverlicense FROM hbase.`index_test_primary` as t " +
         " where cast(t.driverlicense as varchar(255))='100007423'";
     test(defaultHavingIndexPlan);
@@ -491,8 +477,6 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{"RowKeyJoin"}
     );
 
-    System.out.println("TestCastCoveringPlan Plan Verified!");
-
     testBuilder()
         .optionSettingQueriesForTestQuery(defaultHavingIndexPlan)
         .sqlQuery(query)
@@ -500,7 +484,6 @@ public class IndexPlanTest extends BaseJsonTest {
         .baselineColumns("tid", "driverlicense").baselineValues("1012", "100007423")
         .go();
 
-    return;
   }
 
   @Test
@@ -513,8 +496,6 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{"RowKeyJoin"}
     );
 
-    System.out.println("TestCastCoveringPlan Plan Verified!");
-
     testBuilder()
         .optionSettingQueriesForTestQuery(defaultHavingIndexPlan)
         .sqlQuery(query)
@@ -522,7 +503,6 @@ public class IndexPlanTest extends BaseJsonTest {
         .baselineColumns("tid", "ssn", "phone").baselineValues("1012", 100007423, "6500005471")
         .go();
 
-    return;
   }
 
   @Test
@@ -535,14 +515,12 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{}
     );
 
-    System.out.println("TestCastNonCoveringPlan Plan Verified!");
-
     testBuilder()
         .sqlQuery(query)
         .ordered()
         .baselineColumns("ssn").baselineValues("100007423")
         .go();
-    return;
+
   }
 
   @Test
@@ -555,15 +533,12 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{}
     );
 
-    System.out.println("TestCastVarchar_ConvertToRangePlan Verified!");
-
     testBuilder()
         .sqlQuery(query)
         .ordered()
         .baselineColumns("ssn").baselineValues("100007423")
         .go();
 
-    return;
   }
 
   @Test // cast expression in filter is not indexed, but the same field casted to different type was indexed (CAST id.ssn as INT)
@@ -579,7 +554,7 @@ public class IndexPlanTest extends BaseJsonTest {
 
   @Test
   public void TestLongerCastVarCharNoIndex() throws Exception {
-    //length 256 is to exact match the casted indexed field's length
+    // length 256 is to exact match the casted indexed field's length
     String query = "SELECT t._id as tid, cast(t.driverlicense as varchar(500)) as driverlicense FROM hbase.`index_test_primary` as t " +
         " where cast(t.driverlicense as varchar(500))='100007423'";
     test(defaultHavingIndexPlan);
@@ -588,9 +563,6 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{"RowKeyJoin", "indexName="}
     );
 
-    System.out.println("TestLongerCastVarCharNoIndex Plan Verified!");
-
-    return;
   }
 
   @Test
@@ -666,7 +638,7 @@ public class IndexPlanTest extends BaseJsonTest {
         new String[]{"Sort"}
     );
 
-    //simple field, driverlicense
+    // simple field, driverlicense
     testBuilder()
         .sqlQuery(query)
         .ordered()
@@ -675,7 +647,7 @@ public class IndexPlanTest extends BaseJsonTest {
         .baselineColumns("phone").baselineValues("6500001595")
         .go();
 
-    //query on field of item expression(having capProject), non-simple field t.id.ssn
+    // query on field of item expression(having capProject), non-simple field t.id.ssn
     testBuilder()
         .sqlQuery(query2)
         .ordered()
@@ -696,7 +668,7 @@ public class IndexPlanTest extends BaseJsonTest {
     }
   }
 
-  //test cases are from TestNonCoveringPlanSortRemoved. Sort was removed when force_sort_noncovering was default(false)
+  // test cases are from TestNonCoveringPlanSortRemoved. Sort was removed when force_sort_noncovering was default(false)
   @Test
   public void TestNonCoveringPlanWithNoRemoveSortOption() throws Exception {
     try {
@@ -717,7 +689,7 @@ public class IndexPlanTest extends BaseJsonTest {
           new String[]{}
       );
 
-      //simple field, driverlicense
+      // simple field, driverlicense
       testBuilder()
           .sqlQuery(query)
           .ordered()
@@ -726,7 +698,7 @@ public class IndexPlanTest extends BaseJsonTest {
           .baselineColumns("phone").baselineValues("6500001595")
           .go();
 
-      //query on field of item expression(having capProject), non-simple field t.id.ssn
+      // query on field of item expression(having capProject), non-simple field t.id.ssn
       testBuilder()
           .sqlQuery(query2)
           .ordered()
@@ -795,7 +767,7 @@ public class IndexPlanTest extends BaseJsonTest {
         " where t.address.state = 'wo' and t.personal.age = 35 and t.contact.phone < '6500003000' order by t.contact.phone";
     test(defaultHavingIndexPlan);
 
-    //we should glue to index i_state_age_phone to make sure we are testing the targeted prefix construction code path
+    // we should glue to index i_state_age_phone to make sure we are testing the targeted prefix construction code path
     PlanTestBase.testPlanMatchingPatterns(query,
         new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*indexName=i_state_age_phone"},
         new String[]{"Sort"}
@@ -833,7 +805,7 @@ public class IndexPlanTest extends BaseJsonTest {
       .run();
   }
 
-  @Test  //ORDER BY last two columns not in the indexed order; Sort SHOULD NOT be dropped
+  @Test  // ORDER BY last two columns not in the indexed order; Sort SHOULD NOT be dropped
   public void TestCoveringPlanSortPrefix_3() throws Exception {
     String query = "SELECT CAST(t.personal.age as VARCHAR) as age, t.contact.phone FROM hbase.`index_test_primary` as t " +
         " where t.address.state = 'wo' and t.personal.age < 35 and t.contact.phone < '6500003000' order by t.contact.phone, t.personal.age";
@@ -976,7 +948,7 @@ public class IndexPlanTest extends BaseJsonTest {
         .go();
   }
 
-  @Test //non-covering plan. order by cast indexed field, sort SHOULD be removed
+  @Test // non-covering plan. order by cast indexed field, sort SHOULD be removed
   public void orderByCastNonCoveringPlan() throws Exception {
     String query = "SELECT t.name.lname as lname FROM hbase.`index_test_primary` as t " +
         " where CAST(t.id.ssn as INT) < 100000003 order by CAST(t.id.ssn as INT)";
@@ -996,8 +968,8 @@ public class IndexPlanTest extends BaseJsonTest {
   }
 
 
-  @Ignore //in statsCache, condition state+city has rowcount 1250, but state only has 1000. so it is picking i_state_age_phone
-  @Test //non-covering, order by non leading field, and leading fields are not in equality condition, Sort SHOULD NOT be removed
+  @Ignore // in statsCache, condition state+city has rowcount 1250, but state only has 1000. so it is picking i_state_age_phone
+  @Test // non-covering, order by non leading field, and leading fields are not in equality condition, Sort SHOULD NOT be removed
   public void NonCoveringPlan_SortPrefix_1() throws Exception {
 
     String query = "SELECT t.`id`.`ssn` AS `ssn` FROM hbase.`index_test_primary` as t " +
@@ -1008,10 +980,10 @@ public class IndexPlanTest extends BaseJsonTest {
             "RowKeyJoin(.*[\n\r])+.*RestrictedJsonTableGroupScan(.*[\n\r])+.*JsonTableGroupScan.*indexName=i_state_city"},
         new String[]{}
     );
-    return;
+
   }
 
-  @Test //non-covering, order by non leading field, and leading fields are in equality condition, Sort SHOULD be removed
+  @Test // non-covering, order by non leading field, and leading fields are in equality condition, Sort SHOULD be removed
   public void NonCoveringPlan_SortPrefix_2() throws Exception {
 
     String query = "SELECT t.`id`.`ssn` AS `ssn` FROM hbase.`index_test_primary` as t " +
@@ -1022,11 +994,11 @@ public class IndexPlanTest extends BaseJsonTest {
             "RowKeyJoin(.*[\n\r])+.*RestrictedJsonTableGroupScan(.*[\n\r])+.*JsonTableGroupScan.*indexName=i_state_city"},
         new String[]{"Sort"}
     );
-    return;
+
   }
 
   @Ignore ("Should be modified to get an index plan; not very useful since most covering plan filters get pushed")
-  @Test //Correct projection and results when filter on non-indexed column in covering plan.
+  @Test // Correct projection and results when filter on non-indexed column in covering plan.
   public void nonIndexedColumnFilterCoveringPlan() throws Exception {
     String query = "SELECT t.name.fname as fname FROM hbase.`index_test_primary` as t " +
         " where t.personal.age > 68 and t.name.fname IN ('CnGobfR', 'THOHP')";
@@ -1046,7 +1018,7 @@ public class IndexPlanTest extends BaseJsonTest {
   }
 
   @Test
-  @Ignore ("Fix after MEP 5.0")
+  @Ignore
   public void orderByLimitNonCoveringPlan() throws Exception {
     String query = "SELECT t.name.lname as lname FROM hbase.`index_test_primary` as t " +
         " where t.id.ssn < '100000003' order by t.id.ssn limit 2";
@@ -1260,7 +1232,7 @@ public class IndexPlanTest extends BaseJsonTest {
     String query = "SELECT cast(t.activity.irs.firstlogin as timestamp) AS `firstlogin`, t.id.ssn as ssn FROM hbase.`index_test_primary` as t " +
         "order by cast(t.activity.irs.firstlogin as timestamp), t.id.ssn limit 2";
     test(defaultHavingIndexPlan);
-    //no collation for hash index so Sort or TopN must have been preserved
+    // no collation for hash index so Sort or TopN must have been preserved
     PlanTestBase.testPlanMatchingPatterns(query,
         new String[] {"(Sort|TopN)"},
         new String[]{"indexName="}
@@ -1295,7 +1267,7 @@ public class IndexPlanTest extends BaseJsonTest {
         .run();
   }
 
-  @Test //negative case for no filter plan
+  @Test // negative case for no filter plan
   public void testNoFilterOrderByNoIndexMatch() throws Exception {
     String query = "SELECT t.`id`.`ssn` AS `ssn`, t.contact.phone as phone FROM hbase.`index_test_primary` as t " +
         "order by t.name.fname limit 2";
@@ -1306,27 +1278,30 @@ public class IndexPlanTest extends BaseJsonTest {
     );
   }
 
-// Enable this testcase once MD-2848 is fixed.
-//  @Test
-//  public void IntersectPlanWithOneSideNoRows() throws Exception {
-//    try {
-//      String query = "SELECT t.`name`.`lname` AS `lname` FROM hbase.`index_test_primary` as t " +
-//              " where t.personal.age = 53 AND t.personal.income=111145";
-//      test(defaultHavingIndexPlan);
-//      test(preferIntersectPlans + ";" + disableFTS);
-//      PlanTestBase.testPlanMatchingPatterns(query,
-//              new String[]{"RowKeyJoin(.*[\n\r])+.*RestrictedJsonTableGroupScan(.*[\n\r])+.*HashJoin(.*[\n\r])+.*JsonTableGroupScan.*indexName=(i_age|i_income)(.*[\n\r])+.*JsonTableGroupScan.*indexName=(i_age|i_income)"},
-//              new String[]{}
-//      );
-//
-//      testNoResult(query);
-//
-//    } finally {
-//      test(defaultIntersectPlans + ";" + enableFTS);
-//    }
-//  }
+// This test case encounters an error :
+//  "Error: SYSTEM ERROR: IllegalStateException: Batch data read operation (iterator()) attempted when last
+//                next() call on batch [#16, ScanBatch] returned NONE (not OK or OK_NEW_SCHEMA)."
+// TODO: fix the root cause of the above error then enable the test
+  @Test
+  @Ignore
+  public void IntersectPlanWithOneSideNoRows() throws Exception {
+    try {
+      String query = "SELECT t.`name`.`lname` AS `lname` FROM hbase.`index_test_primary` as t " +
+              " where t.personal.age = 53 AND t.personal.income=111145";
+      test(defaultHavingIndexPlan);
+      test(preferIntersectPlans + ";" + disableFTS);
+      PlanTestBase.testPlanMatchingPatterns(query,
+              new String[]{"RowKeyJoin(.*[\n\r])+.*RestrictedJsonTableGroupScan(.*[\n\r])+.*HashJoin(.*[\n\r])+.*JsonTableGroupScan.*indexName=(i_age|i_income)(.*[\n\r])+.*JsonTableGroupScan.*indexName=(i_age|i_income)"},
+              new String[]{}
+      );
 
-  //"i_cast_age_state_phone", "$CAST(personal.age@STRING),address.state,contact.phone", "name.fname",
+      testNoResult(query);
+
+    } finally {
+      test(defaultIntersectPlans + ";" + enableFTS);
+    }
+  }
+
   @Test
   public void testTrailingFieldIndexCovering() throws Exception {
     String query = "SELECT t.`name`.`fname` AS `fname` FROM hbase.`index_test_primary` as t " +
@@ -1372,7 +1347,7 @@ public class IndexPlanTest extends BaseJsonTest {
     try {
       test(defaultHavingIndexPlan);
       test(disableHashAgg);
-      //no collation for hash index so Sort or TopN must have been preserved
+      // no collation for hash index so Sort or TopN must have been preserved
       PlanTestBase.testPlanMatchingPatterns(query,
               new String[]{"indexName=i_lic", "StreamAgg"},
               new String[]{"(Sort|TopN)"}
@@ -1396,7 +1371,7 @@ public class IndexPlanTest extends BaseJsonTest {
     String query = " select t1.driverlicense from hbase.`index_test_primary` t1" +
             " order by t1.driverlicense desc limit 2";
     test(defaultHavingIndexPlan);
-    //no collation for hash index so Sort or TopN must have been preserved
+    // no collation for hash index so Sort or TopN must have been preserved
     PlanTestBase.testPlanMatchingPatterns(query,
             new String[] {"(Sort|TopN)"},
             new String[]{"indexName="}
@@ -1418,7 +1393,7 @@ public class IndexPlanTest extends BaseJsonTest {
     try {
       test(defaultHavingIndexPlan);
       test(disableHashAgg);
-      //no collation for hash index so Sort or TopN must have been preserved
+      // no collation for hash index so Sort or TopN must have been preserved
       PlanTestBase.testPlanMatchingPatterns(query,
               new String[]{"indexName=i_lic", "StreamAgg"},
               new String[]{"(Sort|TopN)"}
@@ -1492,7 +1467,7 @@ public class IndexPlanTest extends BaseJsonTest {
     try {
       test(defaultHavingIndexPlan);
       test(disableHashAgg);
-      //no collation for hash index so Sort or TopN must have been preserved
+      // no collation for hash index so Sort or TopN must have been preserved
       PlanTestBase.testPlanMatchingPatterns(query,
               new String[]{"(Sort|TopN)", "StreamAgg"},
               new String[]{"indexName="}
@@ -1539,7 +1514,7 @@ public class IndexPlanTest extends BaseJsonTest {
     }
   }
 
-  @Test //negative case for no filter plan
+  @Test // negative case for no filter plan
   public void testNoFilterGroupByNoIndexMatch() throws Exception {
     String query = "SELECT max(t.`id`.`ssn`) AS `ssn`, max(t.contact.phone) as phone FROM hbase.`index_test_primary` as t " +
             "group by t.name.fname limit 2";

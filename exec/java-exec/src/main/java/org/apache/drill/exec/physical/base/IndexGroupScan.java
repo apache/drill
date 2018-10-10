@@ -72,5 +72,4 @@ public interface IndexGroupScan extends GroupScan {
 
   @JsonIgnore
   public void setParallelizationWidth(int width);
-
 }

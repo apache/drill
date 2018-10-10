@@ -23,7 +23,7 @@ import com.mapr.db.index.IndexDesc;
 import com.mapr.fs.jni.MapRConstants;
 import com.mapr.org.apache.hadoop.hbase.util.Bytes;
 
-public class MapRDBSubScanSpec implements Comparable<MapRDBSubScanSpec>{
+public class MapRDBSubScanSpec implements Comparable<MapRDBSubScanSpec> {
 
   protected String tableName;
   protected IndexDesc indexDesc;

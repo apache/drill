@@ -105,7 +105,7 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
       return;
     }
 
-    for(final VectorWrapper<?> v : left) {
+    for (final VectorWrapper<?> v : left) {
       final TransferPair pair = v.getValueVector().makeTransferPair(
           container.addOrGet(v.getField(), callBack));
       transfers.add(pair);
@@ -148,7 +148,7 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
         // we got a new batch from the right input, set this flag
         // such that subsequent check by a scan would indicate availability
         // of the row keys.
-        while((rightUpstream == IterOutcome.OK || rightUpstream == IterOutcome.OK_NEW_SCHEMA) &&
+        while ((rightUpstream == IterOutcome.OK || rightUpstream == IterOutcome.OK_NEW_SCHEMA) &&
             right.getRecordCount() == 0) {
           rightUpstream = next(right);
           logger.trace("rowkeyjoin loop when recordCount == 0. rightUpstream {}", rightUpstream);
@@ -203,16 +203,16 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
   }
 
   private void outputCurrentLeftBatch() {
-    //Schema change when state is FIRST shouldn't happen as buildSchema should
-    //take care of building the schema for the first batch. This check is introduced
-    //to guard against any schema change after buildSchema phase and reading
-    //the first batch of rows.
+    // Schema change when state is FIRST shouldn't happen as buildSchema should
+    // take care of building the schema for the first batch. This check is introduced
+    // to guard against any schema change after buildSchema phase and reading
+    // the first batch of rows.
     if (leftUpstream == IterOutcome.OK_NEW_SCHEMA && state == BatchState.FIRST ||
         state == BatchState.NOT_FIRST) {
       container.zeroVectors();
       transfers.clear();
 
-      for(final VectorWrapper<?> v : left) {
+      for (final VectorWrapper<?> v : left) {
         final TransferPair pair = v.getValueVector().makeTransferPair(
             container.addOrGet(v.getField(), callBack));
         transfers.add(pair);
@@ -223,7 +223,7 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
       }
     }
 
-    for(TransferPair t : transfers) {
+    for (TransferPair t : transfers) {
       t.transfer();
     }
 
@@ -238,7 +238,7 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
 
   @Override  // implement RowKeyJoin interface
   public Pair<ValueVector, Integer> nextRowKeyBatch() {
-    if ( hasRowKeyBatch && right.getRecordCount() > 0 ) {
+    if (hasRowKeyBatch && right.getRecordCount() > 0 ) {
       // since entire right row key batch will be returned to the caller, reset
       // the hasRowKeyBatch to false
       hasRowKeyBatch = false;
