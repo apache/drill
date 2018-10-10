@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.planner.logical.DrillJoin;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -45,7 +46,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 /**
  * Base class for logical and physical Joins implemented in Drill.
  */
-public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
+public abstract class DrillJoinRelBase extends Join implements DrillJoin {
   protected List<Integer> leftKeys = Lists.newArrayList();
   protected List<Integer> rightKeys = Lists.newArrayList();
 

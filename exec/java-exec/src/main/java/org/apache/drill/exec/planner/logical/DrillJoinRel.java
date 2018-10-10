@@ -104,7 +104,7 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
    * @return
    */
   private LogicalOperator implementInput(DrillImplementor implementor, int i, int offset, RelNode input) {
-    return implementInput(implementor, i, offset, input, this);
+    return implementInput(implementor, i, offset, input, this, this.getRowType().getFieldNames());
   }
 
   /**
@@ -118,12 +118,12 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
    * @return
    */
   public static LogicalOperator implementInput(DrillImplementor implementor, int i, int offset,
-                                                RelNode input, DrillRel currentNode) {
+                                               RelNode input, DrillRel currentNode,
+                                               List<String> parentFields) {
     final LogicalOperator inputOp = implementor.visitChild(currentNode, i, input);
     assert uniqueFieldNames(input.getRowType());
-    final List<String> fields = currentNode.getRowType().getFieldNames();
     final List<String> inputFields = input.getRowType().getFieldNames();
-    final List<String> outputFields = fields.subList(offset, offset + inputFields.size());
+    final List<String> outputFields = parentFields.subList(offset, offset + inputFields.size());
     if (!outputFields.equals(inputFields)) {
       // Ensure that input field names are the same as output field names.
       // If there are duplicate field names on left and right, fields will get

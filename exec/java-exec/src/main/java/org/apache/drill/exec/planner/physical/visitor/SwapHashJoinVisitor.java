@@ -68,7 +68,7 @@ public class SwapHashJoinVisitor extends BasePrelVisitor<Prel, Double, RuntimeEx
       // Mark left/right is swapped, when INNER hash join's left row count < ( 1+ margin factor) right row count.
       RelMetadataQuery mq = newJoin.getCluster().getMetadataQuery();
       if (newJoin.getLeft().estimateRowCount(mq) < (1 + value) * newJoin.getRight().estimateRowCount(mq) &&
-          newJoin.getJoinType() == JoinRelType.INNER) {
+          newJoin.getJoinType() == JoinRelType.INNER && !newJoin.isSemiJoin()) {
         ((HashJoinPrel) newJoin).setSwapped(true);
       }
     }

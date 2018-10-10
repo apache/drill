@@ -22,6 +22,7 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.CorrelationId;
+import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.type.RelDataType;
@@ -39,7 +40,6 @@ import static org.apache.calcite.rel.core.RelFactories.DEFAULT_FILTER_FACTORY;
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_JOIN_FACTORY;
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_MATCH_FACTORY;
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_PROJECT_FACTORY;
-import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SEMI_JOIN_FACTORY;
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SET_OP_FACTORY;
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SORT_FACTORY;
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_TABLE_SCAN_FACTORY;
@@ -60,6 +60,17 @@ public class DrillRelFactories {
   public static final RelFactories.JoinFactory DRILL_LOGICAL_JOIN_FACTORY = new DrillJoinFactoryImpl();
 
   public static final RelFactories.AggregateFactory DRILL_LOGICAL_AGGREGATE_FACTORY = new DrillAggregateFactoryImpl();
+
+  public static final RelFactories.SemiJoinFactory DRILL_SEMI_JOIN_FACTORY = new SemiJoinFactoryImpl();
+
+  private static class SemiJoinFactoryImpl implements RelFactories.SemiJoinFactory {
+    public RelNode createSemiJoin(RelNode left, RelNode right,
+                                  RexNode condition) {
+      final JoinInfo joinInfo = JoinInfo.of(left, right, condition);
+      return DrillSemiJoinRel.create(left, right,
+              condition, joinInfo.leftKeys, joinInfo.rightKeys);
+    }
+  }
   /**
    * A {@link RelBuilderFactory} that creates a {@link DrillRelBuilder} that will
    * create logical relational expressions for everything.
@@ -69,7 +80,7 @@ public class DrillRelFactories {
           Contexts.of(DEFAULT_PROJECT_FACTORY,
               DEFAULT_FILTER_FACTORY,
               DEFAULT_JOIN_FACTORY,
-              DEFAULT_SEMI_JOIN_FACTORY,
+              DRILL_SEMI_JOIN_FACTORY,
               DEFAULT_SORT_FACTORY,
               DEFAULT_AGGREGATE_FACTORY,
               DEFAULT_MATCH_FACTORY,
