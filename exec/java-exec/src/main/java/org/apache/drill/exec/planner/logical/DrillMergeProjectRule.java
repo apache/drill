@@ -174,7 +174,7 @@ public class DrillMergeProjectRule extends RelOptRule {
         RelOptUtil.pushPastProject(topProject.getProjects(), bottomProject);
 
     // replace the two projects with a combined projection
-    if(topProject instanceof DrillProjectRel) {
+    if (topProject instanceof DrillProjectRel) {
       RelNode newProjectRel = DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY.createProject(
           bottomProject.getInput(), newProjects,
           topProject.getRowType().getFieldNames());

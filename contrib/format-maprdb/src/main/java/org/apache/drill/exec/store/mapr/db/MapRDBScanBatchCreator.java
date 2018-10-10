@@ -33,14 +33,14 @@ import org.apache.drill.exec.store.mapr.db.json.MaprDBJsonRecordReader;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
-public class MapRDBScanBatchCreator implements BatchCreator<MapRDBSubScan>{
+public class MapRDBScanBatchCreator implements BatchCreator<MapRDBSubScan> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBScanBatchCreator.class);
 
   @Override
   public ScanBatch getBatch(ExecutorFragmentContext context, MapRDBSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = new LinkedList<>();
-    for(MapRDBSubScanSpec scanSpec : subScan.getRegionScanSpecList()){
+    for (MapRDBSubScanSpec scanSpec : subScan.getRegionScanSpecList()) {
       try {
         if (BinaryTableGroupScan.TABLE_BINARY.equals(subScan.getTableType())) {
           readers.add(new HBaseRecordReader(

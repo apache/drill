@@ -56,7 +56,7 @@ public class DrillIndexDescriptor extends AbstractIndexDescriptor {
 
   @Override
   public double getRows(RelNode scan, RexNode indexCondition) {
-    //TODO: real implementation is to use Drill's stats implementation. for now return fake value 1.0
+    // TODO: real implementation is to use Drill's stats implementation. for now return fake value 1.0
     return 1.0;
   }
 
@@ -78,27 +78,39 @@ public class DrillIndexDescriptor extends AbstractIndexDescriptor {
     return null;
   }
 
-  public void attach(String storageName, DrillTable inTable) {
-    storage = storageName;
-    setDrillTable(inTable);
-  }
-
+  /**
+   * Set the storage plugin name
+   * @param storageName
+   */
   public void setStorageName(String storageName) {
     storage = storageName;
   }
 
+  /**
+   * Get storage plugin name for this index descriptor
+   * @return name of the storage plugin
+   */
   public String getStorageName() {
     return storage;
   }
 
+  /**
+   * Set the drill table corresponding to the index
+   * @param table
+   */
   public void setDrillTable(DrillTable table) {
     this.table = table;
   }
 
+  /**
+   * Get the drill table corresponding to the index descriptor
+   * @return instance of DrillTable
+   */
   public DrillTable getDrillTable() {
     return this.table;
   }
 
+  @Override
   public FunctionalIndexInfo getFunctionalInfo() {
     return null;
   }

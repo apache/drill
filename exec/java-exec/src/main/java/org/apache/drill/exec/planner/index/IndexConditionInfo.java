@@ -62,8 +62,7 @@ public class IndexConditionInfo {
     public Builder(RexNode condition,
                    Iterable<IndexDescriptor> indexes,
                    RexBuilder builder,
-                   RelNode scan
-    ) {
+                   RelNode scan) {
       this.condition = condition;
       this.builder = builder;
       this.scan = scan;
@@ -73,8 +72,7 @@ public class IndexConditionInfo {
     public Builder(RexNode condition,
                    IndexDescriptor index,
                    RexBuilder builder,
-                   DrillScanRel scan
-    ) {
+                   DrillScanRel scan) {
       this.condition = condition;
       this.builder = builder;
       this.scan = scan;
@@ -87,7 +85,7 @@ public class IndexConditionInfo {
      */
     public IndexConditionInfo getCollectiveInfo(IndexLogicalPlanCallContext indexContext) {
       Set<LogicalExpression> paths = Sets.newLinkedHashSet();
-      for ( IndexDescriptor index : indexes ) {
+      for (IndexDescriptor index : indexes ) {
         paths.addAll(index.getIndexColumns());
         //paths.addAll(index.getNonIndexColumns());
       }
@@ -98,10 +96,12 @@ public class IndexConditionInfo {
      * A utility function to check whether the given index hint is valid.
      */
     public boolean isValidIndexHint(IndexLogicalPlanCallContext indexContext) {
-      if (indexContext.indexHint.equals("")) { return false; }
+      if (indexContext.indexHint.equals("")) {
+        return false;
+      }
 
-      for ( IndexDescriptor index: indexes ) {
-        if ( indexContext.indexHint.equals(index.getIndexName())) {
+      for (IndexDescriptor index: indexes ) {
+        if (indexContext.indexHint.equals(index.getIndexName())) {
           return true;
         }
       }
@@ -119,15 +119,15 @@ public class IndexConditionInfo {
       Map<IndexDescriptor, IndexConditionInfo> indexInfoMap = Maps.newLinkedHashMap();
 
       RexNode initCondition = condition;
-      for(IndexDescriptor index : indexes) {
+      for (IndexDescriptor index : indexes) {
         List<LogicalExpression> leadingColumns = new ArrayList<>();
-        if(initCondition.isAlwaysTrue()) {
+        if (initCondition.isAlwaysTrue()) {
           break;
         }
-        //TODO: Ensure we dont get NULL pointer exceptions
+        // TODO: Ensure we dont get NULL pointer exceptions
         leadingColumns.add(index.getIndexColumns().get(0));
         IndexConditionInfo info = indexConditionRelatedToFields(leadingColumns, initCondition);
-        if(info == null || info.hasIndexCol == false) {
+        if (info == null || info.hasIndexCol == false) {
           // No info found, based on remaining condition. Check if the leading columns are same as another index
           IndexConditionInfo origInfo = indexConditionRelatedToFields(leadingColumns, condition);
           if (origInfo == null || origInfo.hasIndexCol == false) {
@@ -144,17 +144,25 @@ public class IndexConditionInfo {
       return indexInfoMap;
     }
 
+    /**
+     * Given a RexNode corresponding to the condition expression tree and the index descriptor,
+     * check if one or more columns involved in the condition tree form a prefix of the columns in the
+     * index keys.
+     * @param indexDesc
+     * @param initCondition
+     * @return True if prefix, False if not
+     */
     public boolean isConditionPrefix(IndexDescriptor indexDesc, RexNode initCondition) {
       List<LogicalExpression> indexCols = indexDesc.getIndexColumns();
       boolean prefix = true;
       int numPrefix = 0;
       if (indexCols.size() > 0 && initCondition != null) {
-        int i=0;
+        int i = 0;
         while (prefix && i < indexCols.size()) {
           LogicalExpression p = indexCols.get(i++);
           List<LogicalExpression> prefixCol = ImmutableList.of(p);
           IndexConditionInfo info = indexConditionRelatedToFields(prefixCol, initCondition);
-          if(info != null && info.hasIndexCol) {
+          if (info != null && info.hasIndexCol) {
             numPrefix++;
             initCondition = info.remainderCondition;
             if (initCondition.isAlwaysTrue()) {
@@ -194,14 +202,14 @@ public class IndexConditionInfo {
       Map<IndexDescriptor, IndexConditionInfo> indexInfoMap = Maps.newLinkedHashMap();
       RexNode initCondition = condition;
       for (IndexDescriptor index : indexes) {
-        if(initCondition.isAlwaysTrue()) {
+        if (initCondition.isAlwaysTrue()) {
           break;
         }
-        if(!isConditionPrefix(index, initCondition)) {
+        if (!isConditionPrefix(index, initCondition)) {
           continue;
         }
         IndexConditionInfo info = indexConditionRelatedToFields(index.getIndexColumns(), initCondition);
-        if(info == null || info.hasIndexCol == false) {
+        if (info == null || info.hasIndexCol == false) {
           continue;
         }
         initCondition = info.remainderCondition;
@@ -235,7 +243,7 @@ public class IndexConditionInfo {
 
       List<RexNode> conjuncts = RelOptUtil.conjunctions(condition);
       List<RexNode> indexConjuncts = RelOptUtil.conjunctions(indexCondition);
-      for(RexNode indexConjunction: indexConjuncts) {
+      for (RexNode indexConjunction: indexConjuncts) {
         RexUtil.removeAll(conjuncts, indexConjunction);
       }
 

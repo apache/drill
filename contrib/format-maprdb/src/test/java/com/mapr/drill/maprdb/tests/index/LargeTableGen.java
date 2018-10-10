@@ -67,7 +67,7 @@ public class LargeTableGen extends LargeTableGenBase {
   Table createOrGetTable(String tableName, int recordNum) {
     if (admin.tableExists(tableName)) {
       return MapRDBImpl.getTable(tableName);
-      //admin.deleteTable(tableName);
+      // admin.deleteTable(tableName);
     }
     else {
       TableDescriptor desc = new TableDescriptorImpl(new Path(tableName));
@@ -76,7 +76,7 @@ public class LargeTableGen extends LargeTableGenBase {
 
       String[] splitsStr = new String[splits];
       StringBuilder strBuilder = new StringBuilder("Splits:");
-      for(int i=0; i<splits; ++i) {
+      for (int i = 0; i < splits; ++i) {
         splitsStr[i] = String.format("%d", (i+1)*SPLIT_SIZE);
         strBuilder.append(splitsStr[i] + ", ");
       }
@@ -87,20 +87,20 @@ public class LargeTableGen extends LargeTableGenBase {
   }
 
   private void createIndex(Table table, String[] indexDef) throws Exception {
-    if(indexDef == null) {
-      //don't create index here. indexes may have been created
+    if (indexDef == null) {
+      // don't create index here. indexes may have been created
       return;
     }
-    for(int i=0; i<indexDef.length / 3; ++i) {
+    for (int i = 0; i < indexDef.length / 3; ++i) {
       String indexCmd = String.format("maprcli table index add"
           + " -path " + table.getPath()
           + " -index %s"
           + " -indexedfields '%s'"
           + ((indexDef[3 * i + 2].length()==0)?"":" -includedfields '%s'")
           + ((indexDef[3 * i].startsWith("hash"))? " -hashed true" : ""),
-          indexDefInCommand(indexDef[3 * i]), //index name
-          indexDefInCommand(indexDef[3 * i + 1]), //indexedfields
-          indexDefInCommand(indexDef[3 * i + 2])); //includedfields
+          indexDefInCommand(indexDef[3 * i]), // index name
+          indexDefInCommand(indexDef[3 * i + 1]), // indexedfields
+          indexDefInCommand(indexDef[3 * i + 2])); // includedfields
       System.out.println(indexCmd);
 
       TestCluster.runCommand(indexCmd);
@@ -111,8 +111,8 @@ public class LargeTableGen extends LargeTableGenBase {
   private String indexDefInCommand(String def) {
     String[] splitted = def.split(",");
     StringBuffer ret = new StringBuffer();
-    for(String field: splitted) {
-      if(ret.length() == 0) {
+    for (String field: splitted) {
+      if (ret.length() == 0) {
         ret.append(field);
       }
       else {
@@ -129,14 +129,14 @@ public class LargeTableGen extends LargeTableGenBase {
     DBTests.setTableStatsSendInterval(1);
 
     if (admin.tableExists(tablePath)) {
-      //admin.deleteTable(tablePath);
+      // admin.deleteTable(tablePath);
     }
 
-    //create Json String
+    // create Json String
     int batch, i;
     int BATCH_SIZE=2000;
     try (Table table = createOrGetTable(tablePath, recordNumber)) {
-      //create index
+      // create index
       createIndex(table, indexDef);
       for (batch = 0; batch < recordNumber; batch += BATCH_SIZE) {
         int batchStop = Math.min(recordNumber, batch + BATCH_SIZE);
@@ -156,13 +156,9 @@ public class LargeTableGen extends LargeTableGenBase {
         }
         try (InputStream in = new StringBufferInputStream(strBuf.toString());
              DocumentStream stream = Json.newDocumentStream(in)) {
-          //write by individual document
-          //for (Document document : stream) {
-          //  table.insert(document, "rowid");
-          //}
           try {
-            table.insert(stream, "rowid"); //insert a batch  of document in stream
-          }catch(Exception e) {
+            table.insert(stream, "rowid"); // insert a batch  of document in stream
+          } catch(Exception e) {
             System.out.println(stream.toString());
             throw e;
           }

@@ -320,7 +320,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     double totalRowCount = stats.getRowCount(null, null);
     logger.debug("GroupScan {} with stats {}: rowCount={}, condition={}, totalRowCount={}, fullTableRowCount={}",
             System.identityHashCode(this), System.identityHashCode(stats), rowCount,
-            scanSpec.getCondition()==null?"null":scanSpec.getCondition(),
+            scanSpec.getCondition() == null ? "null" : scanSpec.getCondition(),
             totalRowCount, fullTableRowCount);
     // If UNKNOWN, or DB stats sync issues(manifests as 0 rows) use defaults.
     if (rowCount == ROWCOUNT_UNKNOWN || rowCount == 0) {
@@ -377,7 +377,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     PluginCost pluginCostModel = formatPlugin.getPluginCostModel();
     final int avgColumnSize = pluginCostModel.getAverageColumnSize(this);
     boolean filterPushed = (scanSpec.getSerializedFilter() != null);
-    if(scanSpec != null && scanSpec.getIndexDesc() != null) {
+    if (scanSpec != null && scanSpec.getIndexDesc() != null) {
       totalColNum = scanSpec.getIndexDesc().getIncludedFields().size()
           + scanSpec.getIndexDesc().getIndexedFields().size() + 1;
     }
@@ -446,8 +446,8 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
   @Override
   public String toString() {
     return "JsonTableGroupScan [ScanSpec=" + scanSpec + ", columns=" + columns
-        + (maxRecordsToRead>0? ", limit=" + maxRecordsToRead : "")
-        + (getMaxParallelizationWidth()>0? ", maxwidth=" + getMaxParallelizationWidth() : "") + "]";
+        + (maxRecordsToRead > 0 ? ", limit=" + maxRecordsToRead : "")
+        + (getMaxParallelizationWidth() > 0 ? ", maxwidth=" + getMaxParallelizationWidth() : "") + "]";
   }
 
   public JsonScanSpec getScanSpec() {
@@ -498,7 +498,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
       indexDesc = (IndexDesc)((MapRDBIndexDescriptor)index).getOriginalDesc();
     }
     // If no index is specified, get it from the primary table
-    if(indexDesc == null && scanSpec.isSecondaryIndex()) {
+    if (indexDesc == null && scanSpec.isSecondaryIndex()) {
       throw new UnsupportedOperationException("getAverageRowSizeStats should be invoked on primary table");
     }
 
@@ -540,12 +540,11 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
    * @return {@link MapRDBStatisticsPayload} statistics
    */
   private MapRDBStatisticsPayload getFirstKeyEstimatedStatsInternal(QueryCondition condition, IndexDesc index, RelNode scanRel) {
-    // double totalRows = getRowCount(null, scanPrel);
 
     // If no index is specified, get it from the primary table
-    if(index == null && scanSpec.isSecondaryIndex()) {
+    if (index == null && scanSpec.isSecondaryIndex()) {
       // If stats not cached get it from the table.
-      //table = MapRDB.getTable(scanSpec.getPrimaryTablePath());
+      // table = MapRDB.getTable(scanSpec.getPrimaryTablePath());
       throw new UnsupportedOperationException("getFirstKeyEstimatedStats should be invoked on primary table");
     }
 
@@ -740,7 +739,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     if (maxRecordsToRead < 0) {
       return true;
     }
-    return false;//limit is already pushed. No more pushdown of limit
+    return false; // limit is already pushed. No more pushdown of limit
   }
 
   @Override

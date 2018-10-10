@@ -129,19 +129,19 @@ public class DrillIndexDefinition implements IndexDefinition {
   }
 
   boolean castIsCompatible(CastExpression castExpr, Collection<LogicalExpression> indexFields) {
-    for(LogicalExpression indexExpr : indexFields) {
-      if(indexExpr.getClass() != castExpr.getClass()) {
+    for (LogicalExpression indexExpr : indexFields) {
+      if (indexExpr.getClass() != castExpr.getClass()) {
         continue;
       }
       CastExpression indexCastExpr = (CastExpression)indexExpr;
-      //we compare input using equals because we know we are comparing SchemaPath,
-      //if we extend to support other expression, make sure the equals of that expression
-      //is implemented properly, otherwise it will fall to identity comparison
-      if ( !castExpr.getInput().equals(indexCastExpr.getInput()) ) {
+      // we compare input using equals because we know we are comparing SchemaPath,
+      // if we extend to support other expression, make sure the equals of that expression
+      // is implemented properly, otherwise it will fall to identity comparison
+      if (!castExpr.getInput().equals(indexCastExpr.getInput()) ) {
           continue;
       }
 
-      if( castExpr.getMajorType().getMinorType() != indexCastExpr.getMajorType().getMinorType()) {
+      if (castExpr.getMajorType().getMinorType() != indexCastExpr.getMajorType().getMinorType()) {
         continue;
       }
       return true;
@@ -150,8 +150,8 @@ public class DrillIndexDefinition implements IndexDefinition {
   }
 
   protected boolean columnsInIndexFields(Collection<LogicalExpression> columns, Collection<LogicalExpression> indexFields) {
-    //we need to do extra check, so we could allow the case when query condition expression is not identical with indexed fields
-    //and they still could use the index either by implicit cast or the difference is allowed, e.g. width of varchar
+    // we need to do extra check, so we could allow the case when query condition expression is not identical with indexed fields
+    // and they still could use the index either by implicit cast or the difference is allowed, e.g. width of varchar
     for (LogicalExpression col : columns) {
       if (col instanceof CastExpression) {
         if (!castIsCompatible((CastExpression) col, indexFields)) {
@@ -170,8 +170,8 @@ public class DrillIndexDefinition implements IndexDefinition {
   protected boolean someColumnsInIndexFields(Collection<LogicalExpression> columns,
       Collection<LogicalExpression> indexFields) {
 
-    //we need to do extra check, so we could allow the case when query condition expression is not identical with indexed fields
-    //and they still could use the index either by implicit cast or the difference is allowed, e.g. width of varchar
+    // we need to do extra check, so we could allow the case when query condition expression is not identical with indexed fields
+    // and they still could use the index either by implicit cast or the difference is allowed, e.g. width of varchar
     for (LogicalExpression col : columns) {
       if (col instanceof CastExpression) {
         if (castIsCompatible((CastExpression) col, indexFields)) {

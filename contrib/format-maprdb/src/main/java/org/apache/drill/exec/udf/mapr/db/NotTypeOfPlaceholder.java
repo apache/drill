@@ -34,10 +34,9 @@ import org.apache.drill.exec.expr.holders.IntHolder;
  * which will replace this function with the real OJAI equivalent to be pushed down.
  * Therefore, there's no implementation here.
  */
-@FunctionTemplate(
-                name="ojai_nottypeof",
-                scope=FunctionTemplate.FunctionScope.SIMPLE,
-                nulls=FunctionTemplate.NullHandling.INTERNAL)
+@FunctionTemplate(name = "ojai_nottypeof",
+                scope = FunctionTemplate.FunctionScope.SIMPLE,
+                nulls = FunctionTemplate.NullHandling.INTERNAL)
 public class NotTypeOfPlaceholder implements DrillSimpleFunc {
 
         @Param BigIntHolder /*FieldReader*/ field;

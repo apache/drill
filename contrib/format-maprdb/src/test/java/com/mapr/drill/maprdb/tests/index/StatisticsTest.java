@@ -56,8 +56,7 @@ public class StatisticsTest extends IndexPlanTest {
         + " where (t.personal.age < 30 or t.personal.age > 100)"
         + " and (t.address.state = 'mo' or t.address.state = 'ca')";
     PlanTestBase.testPlanMatchingPatterns(explain+query,
-        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"},
-        new String[] {}
+        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"}
     );
 
     // Top-level ORs - Cannot split top-level ORs so use defaults
@@ -65,8 +64,7 @@ public class StatisticsTest extends IndexPlanTest {
         + " where (t.personal.age > 30 and t.personal.age < 100)"
         + " or (t.address.state = 'mo')";
     PlanTestBase.testPlanMatchingPatterns(explain+query,
-        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"},
-        new String[] {}
+        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"}
     );
 
     // ANDed condition - Leading index column(personal.age) and non-leading column(address.city)
@@ -74,8 +72,7 @@ public class StatisticsTest extends IndexPlanTest {
         + " where (t.personal.age < 30 or t.personal.age > 100)"
         + " and `address.city` = 'sf'";
     PlanTestBase.testPlanMatchingPatterns(explain+query,
-        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"},
-        new String[] {}
+        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"}
     );
 
     // ANDed condition - Leading index columns (address.state) and (address.city)
@@ -83,8 +80,7 @@ public class StatisticsTest extends IndexPlanTest {
         + " where (`address.state` = 'mo' or `address.state` = 'ca') " // Leading index column
         + " and `address.city` = 'sf'";                                // Non leading index column
     PlanTestBase.testPlanMatchingPatterns(explain+query,
-        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"},
-        new String[] {}
+        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"}
     );
 
     // ANDed condition - Leading index columns (address.state) and non-index column (name.fname)
@@ -92,24 +88,21 @@ public class StatisticsTest extends IndexPlanTest {
         + " where (`address.state` = 'mo' or `address.state` = 'ca') " // Leading index column
         + " and `name.fname` = 'VcFahj'";                              // Non index column
     PlanTestBase.testPlanMatchingPatterns(explain+query,
-        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"},
-        new String[] {}
+        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"}
     );
 
     // Simple condition - LIKE predicate
     query = "select t._id as rowid from hbase.`index_test_primary` as t "
         + "where t.driverlicense like '100007423%'";
     PlanTestBase.testPlanMatchingPatterns(explain+query,
-        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"},
-        new String[] {}
+        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"}
     );
 
     // Simple condition - LIKE predicate with ESCAPE clause
     query = "select t._id as rowid from hbase.`index_test_primary` as t "
         + "where t.driverlicense like '100007423%' ESCAPE '/'";
     PlanTestBase.testPlanMatchingPatterns(explain+query,
-        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"},
-        new String[] {}
+        new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*rows=10000"}
     );
   }
 }
