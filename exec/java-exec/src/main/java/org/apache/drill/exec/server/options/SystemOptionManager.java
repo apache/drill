@@ -81,6 +81,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(PlannerSettings.STREAMAGG),
       new OptionDefinition(PlannerSettings.TOPN, new OptionMetaData(OptionValue.AccessibleScopes.ALL, false, true)),
       new OptionDefinition(PlannerSettings.HASHJOIN),
+      new OptionDefinition(PlannerSettings.SEMIJOIN),
       new OptionDefinition(PlannerSettings.MERGEJOIN),
       new OptionDefinition(PlannerSettings.NESTEDLOOPJOIN),
       new OptionDefinition(PlannerSettings.MULTIPHASE),

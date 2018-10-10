@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
-import org.apache.drill.exec.planner.logical.DrillJoinRel;
+import org.apache.drill.exec.planner.logical.DrillJoin;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -47,8 +47,8 @@ public abstract class JoinPruleBase extends Prule {
     super(operand, description);
   }
 
-  protected boolean checkPreconditions(DrillJoinRel join, RelNode left, RelNode right,
-      PlannerSettings settings) {
+  protected boolean checkPreconditions(DrillJoin join, RelNode left, RelNode right,
+                                       PlannerSettings settings) {
     List<Integer> leftKeys = Lists.newArrayList();
     List<Integer> rightKeys = Lists.newArrayList();
     List<Boolean> filterNulls = Lists.newArrayList();
@@ -66,7 +66,7 @@ public abstract class JoinPruleBase extends Prule {
     return distFields;
   }
 
-  protected boolean checkBroadcastConditions(RelOptPlanner planner, DrillJoinRel join, RelNode left, RelNode right) {
+  protected boolean checkBroadcastConditions(RelOptPlanner planner, DrillJoin join, RelNode left, RelNode right) {
 
     double estimatedRightRowCount = RelMetadataQuery.instance().getRowCount(right);
     if (estimatedRightRowCount < PrelUtil.getSettings(join.getCluster()).getBroadcastThreshold()
@@ -78,10 +78,11 @@ public abstract class JoinPruleBase extends Prule {
     return false;
   }
 
-  protected void createDistBothPlan(RelOptRuleCall call, DrillJoinRel join,
+  protected void createDistBothPlan(RelOptRuleCall call, DrillJoin join,
       PhysicalJoinType physicalJoinType,
       RelNode left, RelNode right,
-      RelCollation collationLeft, RelCollation collationRight, boolean hashSingleKey)throws InvalidRelException {
+      RelCollation collationLeft, RelCollation collationRight,
+      boolean hashSingleKey, boolean semiJoin)throws InvalidRelException {
 
     /* If join keys are  l1 = r1 and l2 = r2 and ... l_k = r_k, then consider the following options of plan:
      *   1) Plan1: distributed by (l1, l2, ..., l_k) for left side and by (r1, r2, ..., r_k) for right side.
@@ -93,10 +94,12 @@ public abstract class JoinPruleBase extends Prule {
      *   Whether enumerate plan 2, .., Plan_(k+1) depends on option : hashSingleKey.
      */
 
-    DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
-    DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
+    DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
+            ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
+    DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
+            ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
 
-    createDistBothPlan(call, join, physicalJoinType, left, right, collationLeft, collationRight, hashLeftPartition, hashRightPartition);
+    createDistBothPlan(call, join, physicalJoinType, left, right, collationLeft, collationRight, hashLeftPartition, hashRightPartition, semiJoin);
 
     assert (join.getLeftKeys().size() == join.getRightKeys().size());
 
@@ -110,7 +113,7 @@ public abstract class JoinPruleBase extends Prule {
         hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys().subList(i, i+1))));
         hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys().subList(i, i+1))));
 
-        createDistBothPlan(call, join, physicalJoinType, left, right, collationLeft, collationRight, hashLeftPartition, hashRightPartition);
+        createDistBothPlan(call, join, physicalJoinType, left, right, collationLeft, collationRight, hashLeftPartition, hashRightPartition, semiJoin);
       }
     }
   }
@@ -118,11 +121,11 @@ public abstract class JoinPruleBase extends Prule {
   // Create join plan with both left and right children hash distributed. If the physical join type
   // is MergeJoin, a collation must be provided for both left and right child and the plan will contain
   // sort converter if necessary to provide the collation.
-  private void createDistBothPlan(RelOptRuleCall call, DrillJoinRel join,
+  private void createDistBothPlan(RelOptRuleCall call, DrillJoin join,
       PhysicalJoinType physicalJoinType,
       RelNode left, RelNode right,
       RelCollation collationLeft, RelCollation collationRight,
-      DrillDistributionTrait hashLeftPartition, DrillDistributionTrait hashRightPartition) throws InvalidRelException {
+      DrillDistributionTrait hashLeftPartition, DrillDistributionTrait hashRightPartition, boolean isSemiJoin) throws InvalidRelException {
 
     RelTraitSet traitsLeft = null;
     RelTraitSet traitsRight = null;
@@ -145,7 +148,7 @@ public abstract class JoinPruleBase extends Prule {
       final RelTraitSet traitSet = PrelUtil.removeCollation(traitsLeft, call);
       newJoin = new HashJoinPrel(join.getCluster(), traitSet,
                                  convertedLeft, convertedRight, join.getCondition(),
-                                 join.getJoinType());
+                                 join.getJoinType(), isSemiJoin);
 
     } else if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
       newJoin = new MergeJoinPrel(join.getCluster(), traitsLeft,
@@ -158,11 +161,11 @@ public abstract class JoinPruleBase extends Prule {
   // Create join plan with left child ANY distributed and right child BROADCAST distributed. If the physical join type
   // is MergeJoin, a collation must be provided for both left and right child and the plan will contain sort converter
   // if necessary to provide the collation.
-  protected void createBroadcastPlan(final RelOptRuleCall call, final DrillJoinRel join,
+  protected void createBroadcastPlan(final RelOptRuleCall call, final DrillJoin join,
       final RexNode joinCondition,
       final PhysicalJoinType physicalJoinType,
       final RelNode left, final RelNode right,
-      final RelCollation collationLeft, final RelCollation collationRight) throws InvalidRelException {
+      final RelCollation collationLeft, final RelCollation collationRight, boolean semiJoin) throws InvalidRelException {
 
     DrillDistributionTrait distBroadcastRight = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.BROADCAST_DISTRIBUTED);
     RelTraitSet traitsRight = null;
@@ -184,10 +187,10 @@ public abstract class JoinPruleBase extends Prule {
 
     if(traitProp){
       if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
-        new SubsetTransformer<DrillJoinRel, InvalidRelException>(call) {
+        new SubsetTransformer<DrillJoin, InvalidRelException>(call) {
 
           @Override
-          public RelNode convertChild(final DrillJoinRel join, final RelNode rel) throws InvalidRelException {
+          public RelNode convertChild(final DrillJoin join, final RelNode rel) throws InvalidRelException {
             DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
             RelTraitSet newTraitsLeft = newTraitSet(Prel.DRILL_PHYSICAL, collationLeft, toDist);
 
@@ -200,24 +203,24 @@ public abstract class JoinPruleBase extends Prule {
 
 
       } else if (physicalJoinType == PhysicalJoinType.HASH_JOIN) {
-        new SubsetTransformer<DrillJoinRel, InvalidRelException>(call) {
+        new SubsetTransformer<DrillJoin, InvalidRelException>(call) {
 
           @Override
-          public RelNode convertChild(final DrillJoinRel join,  final RelNode rel) throws InvalidRelException {
+          public RelNode convertChild(final DrillJoin join,  final RelNode rel) throws InvalidRelException {
             DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
             RelTraitSet newTraitsLeft = newTraitSet(Prel.DRILL_PHYSICAL, toDist);
             RelNode newLeft = convert(left, newTraitsLeft);
             return new HashJoinPrel(join.getCluster(), newTraitsLeft, newLeft, convertedRight, joinCondition,
-                                         join.getJoinType());
+                                         join.getJoinType(), semiJoin);
 
           }
 
         }.go(join, convertedLeft);
       } else if (physicalJoinType == PhysicalJoinType.NESTEDLOOP_JOIN) {
-        new SubsetTransformer<DrillJoinRel, InvalidRelException>(call) {
+        new SubsetTransformer<DrillJoin, InvalidRelException>(call) {
 
           @Override
-          public RelNode convertChild(final DrillJoinRel join,  final RelNode rel) throws InvalidRelException {
+          public RelNode convertChild(final DrillJoin join,  final RelNode rel) throws InvalidRelException {
             DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
             RelTraitSet newTraitsLeft = newTraitSet(Prel.DRILL_PHYSICAL, toDist);
             RelNode newLeft = convert(left, newTraitsLeft);
@@ -235,7 +238,7 @@ public abstract class JoinPruleBase extends Prule {
       } else if (physicalJoinType == PhysicalJoinType.HASH_JOIN) {
         final RelTraitSet traitSet = PrelUtil.removeCollation(convertedLeft.getTraitSet(), call);
         call.transformTo(new HashJoinPrel(join.getCluster(), traitSet, convertedLeft,
-            convertedRight, joinCondition, join.getJoinType()));
+            convertedRight, joinCondition, join.getJoinType(), semiJoin));
       } else if (physicalJoinType == PhysicalJoinType.NESTEDLOOP_JOIN) {
         call.transformTo(new NestedLoopJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft,
             convertedRight, joinCondition, join.getJoinType()));

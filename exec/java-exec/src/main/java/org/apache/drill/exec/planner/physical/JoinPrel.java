@@ -17,9 +17,14 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.calcite.rex.RexChecker;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.validate.SqlValidatorUtil;
+import org.apache.calcite.util.Litmus;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
@@ -37,7 +42,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.Pair;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
@@ -48,11 +52,18 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinPrel.class);
 
+  protected final boolean isSemiJoin;
   protected JoinUtils.JoinCategory joincategory;
 
   public JoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType) {
+                  JoinRelType joinType) {
+    this(cluster, traits, left, right, condition, joinType, false);
+  }
+
+  public JoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+      JoinRelType joinType, boolean isSemiJoin) {
     super(cluster, traits, left, right, condition, joinType);
+    this.isSemiJoin = isSemiJoin;
   }
 
   @Override
@@ -73,7 +84,12 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
     assert uniqueFieldNames(input.getRowType());
     final List<String> fields = getRowType().getFieldNames();
     final List<String> inputFields = input.getRowType().getFieldNames();
-    final List<String> outputFields = fields.subList(offset, offset + inputFields.size());
+    final List<String> outputFields;
+    if (fields.size() > offset) {
+      outputFields = fields.subList(offset, offset + inputFields.size());
+    } else {
+      outputFields = new ArrayList<>();
+    }
     if (!outputFields.equals(inputFields)) {
       // Ensure that input field names are the same as output field names.
       // If there are duplicate field names on left and right, fields will get
@@ -86,6 +102,9 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
   }
 
   private RelNode rename(RelNode input, List<RelDataTypeField> inputFields, List<String> outputFieldNames) {
+    if (outputFieldNames.size() == 0) {
+      return input;
+    }
     List<RexNode> exprs = Lists.newArrayList();
 
     for (RelDataTypeField field : inputFields) {
@@ -139,4 +158,62 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
     }
   }
 
+  public boolean isSemiJoin() {
+    return isSemiJoin;
+  }
+
+  /* A Drill physical rel which is semi join will have output row type with fields from only
+     left side of the join. Calcite's join rel expects to have the output row type from
+     left and right side of the join. This function is overloaded to not throw exceptions for
+     a Drill semi join physical rel.
+   */
+  @Override public boolean isValid(Litmus litmus, Context context) {
+    if (!this.isSemiJoin && !super.isValid(litmus, context)) {
+      return false;
+    }
+    if (getRowType().getFieldCount()
+            != getSystemFieldList().size()
+            + left.getRowType().getFieldCount()
+            + (this.isSemiJoin ? 0 : right.getRowType().getFieldCount())) {
+      return litmus.fail("field count mismatch");
+    }
+    if (condition != null) {
+      if (condition.getType().getSqlTypeName() != SqlTypeName.BOOLEAN) {
+        return litmus.fail("condition must be boolean: {}",
+                condition.getType());
+      }
+      // The input to the condition is a row type consisting of system
+      // fields, left fields, and right fields. Very similar to the
+      // output row type, except that fields have not yet been made due
+      // due to outer joins.
+      RexChecker checker =
+              new RexChecker(
+                      getCluster().getTypeFactory().builder()
+                              .addAll(getSystemFieldList())
+                              .addAll(getLeft().getRowType().getFieldList())
+                              .addAll(getRight().getRowType().getFieldList())
+                              .build(),
+                      context, litmus);
+      condition.accept(checker);
+      if (checker.getFailureCount() > 0) {
+        return litmus.fail(checker.getFailureCount()
+                + " failures in condition " + condition);
+      }
+    }
+    return litmus.succeed();
+  }
+
+  @Override public RelDataType deriveRowType() {
+    if (isSemiJoin) {
+      return SqlValidatorUtil.deriveJoinRowType(
+              left.getRowType(),
+              null,
+              this.joinType,
+              getCluster().getTypeFactory(),
+              null,
+              new ArrayList<>());
+    } else {
+      return super.deriveRowType();
+    }
+  }
 }

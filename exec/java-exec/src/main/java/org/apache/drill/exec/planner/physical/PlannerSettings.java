@@ -64,6 +64,8 @@ public class PlannerSettings implements Context{
       new OptionDescription("Generates the topN plan for queries with the ORDER BY and LIMIT clauses."));
   public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin",
       new OptionDescription("Enable the memory hungry hash join. Drill assumes that a query will have adequate memory to complete and tries to use the fastest operations possible to complete the planned inner, left, right, or full outer joins using a hash table. Does not write to disk. Disabling hash join allows Drill to manage arbitrarily large data in a small memory footprint."));
+  public static final OptionValidator SEMIJOIN = new BooleanValidator("planner.enable_semijoin",
+          new OptionDescription("Enable the semi join optimization. Planner removes the distinct processing below the hash join and sets the semi join flag in hash join."));
   public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin",
       new OptionDescription("Sort-based operation. A merge join is used for inner join, left and right outer joins. Inputs to the merge join must be sorted. It reads the sorted input streams from both sides and finds matching rows. Writes to disk."));
   public static final OptionValidator NESTEDLOOPJOIN = new BooleanValidator("planner.enable_nestedloopjoin",
@@ -271,6 +273,10 @@ public class PlannerSettings implements Context{
 
   public boolean isHashJoinEnabled() {
     return options.getOption(HASHJOIN.getOptionName()).bool_val;
+  }
+
+  public boolean isSemiJoinEnabled() {
+    return options.getOption(SEMIJOIN.getOptionName()).bool_val;
   }
 
   public boolean isMergeJoinEnabled() {
