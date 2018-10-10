@@ -57,15 +57,18 @@ public class MsgpackSchema {
   }
 
   public MaterializedField merge(MaterializedField existingField, MaterializedField newField) {
-    Preconditions.checkArgument(existingField.getType().getMinorType() == MinorType.MAP, "Field " + existingField + " is not a MAP type.");
-    Preconditions.checkArgument(existingField.hasSameTypeAndMode(newField), "Field " + existingField + " and " + newField + " not same.");
+    Preconditions.checkArgument(existingField.getType().getMinorType() == MinorType.MAP,
+        "Field " + existingField + " is not a MAP type.");
+    Preconditions.checkArgument(existingField.hasSameTypeAndMode(newField),
+        "Field " + existingField + " and " + newField + " not same.");
     MaterializedField merged = existingField.clone();
     privateMerge(merged, newField);
     return merged;
   }
 
   private void privateMerge(MaterializedField existingField, MaterializedField newField) {
-    Preconditions.checkArgument(existingField.getType().getMinorType() == MinorType.MAP, "Field " + existingField + " is not a MAP type.");
+    Preconditions.checkArgument(existingField.getType().getMinorType() == MinorType.MAP,
+        "Field " + existingField + " is not a MAP type.");
     for (MaterializedField newChild : newField.getChildren()) {
       String newChildName = newChild.getName();
       MaterializedField foundExistingChild = getFieldByName(newChildName, existingField);
@@ -92,5 +95,4 @@ public class MsgpackSchema {
     }
     return null;
   }
-
 }

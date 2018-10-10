@@ -7,15 +7,19 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.List;
 import java.util.Stack;
 
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.SchemaChangeRuntimeException;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -44,6 +48,22 @@ public class MsgpackSchemaTest extends ClusterTest {
   public void before() throws Exception {
     dfs.delete(schemaLocation, false);
     msgpackSchema = new MsgpackSchema(dfs);
+  }
+
+  @Test
+  public void test1() throws Exception {
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("apple", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+        .add("banana", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+        .add("orange", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("potato", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL).buildSchema();
+
+    List<MaterializedField> fieldList = expectedSchema.toFieldList();
+    MajorType mapType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.MAP).build();
+    MaterializedField root = MaterializedField.create("", mapType);
+    for (MaterializedField f : fieldList) {
+      root.addChild(f);
+    }
   }
 
   @Test
