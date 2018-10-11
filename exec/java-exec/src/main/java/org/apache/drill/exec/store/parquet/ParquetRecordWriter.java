@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -284,7 +285,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private Type getType(MaterializedField field) {
     MinorType minorType = field.getType().getMinorType();
     DataMode dataMode = field.getType().getMode();
-    switch(minorType) {
+    switch (minorType) {
       case MAP:
         List<Type> types = Lists.newArrayList();
         for (MaterializedField childField : field.getChildren()) {
@@ -293,6 +294,10 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         return new GroupType(dataMode == DataMode.REPEATED ? Repetition.REPEATED : Repetition.OPTIONAL, field.getName(), types);
       case LIST:
         throw new UnsupportedOperationException("Unsupported type " + minorType);
+      case NULL:
+        MaterializedField newField = field.withType(
+          TypeProtos.MajorType.newBuilder().setMinorType(MinorType.INT).setMode(DataMode.OPTIONAL).build());
+        return getPrimitiveType(newField);
       default:
         return getPrimitiveType(field);
     }

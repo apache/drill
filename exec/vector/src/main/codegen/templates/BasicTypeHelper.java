@@ -17,6 +17,7 @@
  */
 import org.apache.drill.exec.vector.UntypedNullHolder;
 import org.apache.drill.exec.vector.UntypedNullVector;
+import org.apache.drill.exec.vector.complex.impl.UntypedHolderReaderImpl;
 
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/BasicTypeHelper.java" />
@@ -221,6 +222,8 @@ public class BasicTypeHelper {
         }
   </#list>
 </#list>
+      case NULL:
+        return UntypedHolderReaderImpl.class;
       default:
         break;
       }

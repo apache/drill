@@ -15,16 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.complex.reader;
+package org.apache.drill.exec.vector.complex.impl;
 
-import org.apache.drill.exec.vector.complex.impl.UntypedReader;
-import org.apache.drill.exec.vector.complex.reader.BaseReader.ListReader;
-import org.apache.drill.exec.vector.complex.reader.BaseReader.MapReader;
-import org.apache.drill.exec.vector.complex.reader.BaseReader.RepeatedListReader;
-import org.apache.drill.exec.vector.complex.reader.BaseReader.RepeatedMapReader;
-import org.apache.drill.exec.vector.complex.reader.BaseReader.ScalarReader;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.vector.UntypedNullHolder;
 
+public class UntypedReaderImpl extends AbstractFieldReader {
 
+  @Override
+  public TypeProtos.MajorType getType() {
+    return UntypedNullHolder.TYPE;
+  }
 
-public interface FieldReader extends MapReader, ListReader, ScalarReader, RepeatedMapReader, RepeatedListReader, UntypedReader {
+  @Override
+  public boolean isSet() {
+    return false;
+  }
+
+  @Override
+  public int size() {
+    return 0;
+  }
+
+  @Override
+  public void read(UntypedNullHolder holder) {
+    holder.isSet = 0;
+  }
+
+  @Override
+  public void read(int arrayIndex, UntypedNullHolder holder) {
+    holder.isSet = 0;
+  }
+
 }

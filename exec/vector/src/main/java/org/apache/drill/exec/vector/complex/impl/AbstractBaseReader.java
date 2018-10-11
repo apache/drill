@@ -23,6 +23,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.UntypedNullHolder;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
@@ -78,6 +79,16 @@ abstract class AbstractBaseReader implements FieldReader{
   @Override
   public void read(int index, UnionHolder holder) {
     throw new IllegalStateException("The current reader doesn't support reading union type");
+  }
+
+  @Override
+  public void read(UntypedNullHolder holder) {
+    throw new IllegalStateException("The current reader doesn't support reading untyped null");
+  }
+
+  @Override
+  public void read(int index, UntypedNullHolder holder) {
+    throw new IllegalStateException("The current reader doesn't support reading untyped null");
   }
 
   @Override
