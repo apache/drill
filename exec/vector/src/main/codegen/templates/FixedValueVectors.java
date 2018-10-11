@@ -532,7 +532,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     public StringBuilder getAsStringBuilder(int index) {
-      return DateUtilities.intervalYearStringBuilder(data.getInt(index));
+      int value = get(index);
+      return DateUtilities.intervalYearStringBuilder(value);
     }
     <#elseif minor.class == "Time">
 
