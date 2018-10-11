@@ -182,7 +182,7 @@ public class FunctionRegistryHolderTest {
     //Init: Expected Map of items
     for (String jarName : newJars.keySet()) {
       for (FunctionHolder funcHolder : newJars.get(jarName)) {
-        if (funcHolder.getName().equals(SHUFFLE_FUNC_NAME)) {
+        if (SHUFFLE_FUNC_NAME.equals(funcHolder.getName())) {
           shuffleFunctionMap.put(funcHolder.getSignature(), jarName);
         }
       }
@@ -191,7 +191,7 @@ public class FunctionRegistryHolderTest {
     //Test: Remove items from ExpectedMap based on match from testJar's functionHolder items
     for (String testJar : registryHolder.getAllJarNames()) {
       for (FunctionHolder funcHolder : fnHoldersInRegistry.get(testJar)) {
-        if (funcHolder.getName().equals(SHUFFLE_FUNC_NAME)) {
+        if (SHUFFLE_FUNC_NAME.equals(funcHolder.getName())) {
           String testSignature = funcHolder.getSignature();
           String expectedJar = shuffleFunctionMap.get(testSignature);
           if (testJar.equals(expectedJar)) {
