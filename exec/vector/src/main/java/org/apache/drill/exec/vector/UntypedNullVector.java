@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector;
 
 
+import org.apache.drill.exec.vector.complex.impl.UntypedReaderImpl;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -50,7 +51,9 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
   }
 
   @Override
-  public FieldReader getReader() { throw new UnsupportedOperationException(); }
+  public FieldReader getReader() {
+    return new UntypedReaderImpl();
+  }
 
   @Override
   public int getBufferSizeFor(final int valueCount) { return 0; }

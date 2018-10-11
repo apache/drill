@@ -344,7 +344,7 @@ public class EvaluationVisitor {
       } else if (e instanceof HoldingContainerExpression) {
         return ((HoldingContainerExpression) e).getContainer();
       } else if (e instanceof NullExpression) {
-        return generator.declare(Types.optional(MinorType.INT));
+        return generator.declare(e.getMajorType());
       } else if (e instanceof TypedNullConstant) {
         return generator.declare(e.getMajorType());
       } else {

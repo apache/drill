@@ -136,6 +136,9 @@ public class EventBasedRecordWriter {
       case LIST:
         return recordWriter.getNewRepeatedListConverter(fieldId, fieldName, reader);
 
+      case NULL:
+        return recordWriter.getNewNullableIntConverter(fieldId, fieldName, reader);
+
         <#list vv.types as type>
         <#list type.minor as minor>
       case ${minor.class?upper_case}:

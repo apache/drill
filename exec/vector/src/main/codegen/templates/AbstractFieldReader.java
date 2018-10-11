@@ -103,6 +103,10 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
   }
   </#list></#list>
 
+  public void read(int arrayIndex, UntypedNullHolder holder) {
+      fail("UntypedNullHolder");
+  }
+
   public FieldReader reader(String name) {
     fail("reader(String name)");
     return null;
