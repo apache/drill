@@ -25,6 +25,8 @@ import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -159,6 +161,38 @@ public class FunctionRegistryHolder {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       return new ArrayList<>(jars.keySet());
     }
+  }
+
+  /**
+   * Retrieves all functions (holders) associated with all the jars
+   * This is read operation, so several users can perform this operation at the same time.
+   * @return list of all functions, mapped by their sources
+   */
+  public Map<String, List<FunctionHolder>> getAllJarsWithFunctionHolders() {
+    Map<String, List<FunctionHolder>> allFunctionHoldersByJar = new HashMap<>();
+
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
+      for (String jarName : jars.keySet()) {
+        //Capture functionHolders here
+        List<FunctionHolder> drillFuncHolderList = new LinkedList<>();
+
+        Map<String, Queue<String>> functionsInJar = jars.get(jarName);
+        for (Map.Entry<String, Queue<String>> functionEntry : functionsInJar.entrySet()) {
+          String fnName = functionEntry.getKey();
+          Queue<String> fnSignatureList = functionEntry.getValue();
+          //Get all FunctionHolders (irrespective of source)
+          Map<String, DrillFuncHolder> functionHolders = functions.get(fnName);
+          //Iterate for matching entries and populate new Map
+          for (Map.Entry<String, DrillFuncHolder> entry : functionHolders.entrySet()) {
+            if (fnSignatureList.contains(entry.getKey())) {
+              drillFuncHolderList.add(new FunctionHolder(fnName, entry.getKey(), entry.getValue()));
+            }
+          }
+        }
+        allFunctionHoldersByJar.put(jarName, drillFuncHolderList);
+      }
+    }
+    return allFunctionHoldersByJar;
   }
 
   /**

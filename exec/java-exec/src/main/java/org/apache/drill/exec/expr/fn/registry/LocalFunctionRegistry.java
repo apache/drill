@@ -236,6 +236,14 @@ public class LocalFunctionRegistry {
   }
 
   /**
+   * Returns a map of all function holders mapped by source jars
+   * @return all functions organized by source jars
+   */
+  public Map<String, List<FunctionHolder>> getAllJarsWithFunctionsHolders() {
+    return registryHolder.getAllJarsWithFunctionHolders();
+  }
+
+  /**
    * Registers all functions present in {@link DrillOperatorTable},
    * also sets sync registry version used at the moment of function registration.
    *
