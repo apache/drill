@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.msgpack;
 
 import java.io.IOException;
 
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.msgpack.value.Value;
 
@@ -29,12 +30,9 @@ public class CountingMsgpackReader extends BaseMsgpackReader {
   }
 
   @Override
-  protected ReadState writeRecord(Value mapValue, ComplexWriter writer) throws IOException {
+  protected ReadState writeRecord(Value mapValue, ComplexWriter writer, MaterializedField schema) throws IOException {
     writer.rootAsMap().bit("count").writeBit(1);
     return ReadState.WRITE_SUCCEED;
   }
 
-  @Override
-  public void ensureAtLeastOneField(ComplexWriter writer) {
-  }
 }

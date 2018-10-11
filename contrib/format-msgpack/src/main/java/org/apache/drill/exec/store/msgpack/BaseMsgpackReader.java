@@ -3,6 +3,7 @@ package org.apache.drill.exec.store.msgpack;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.msgpack.core.MessageInsufficientBufferException;
 import org.msgpack.core.MessagePack;
@@ -25,7 +26,7 @@ public abstract class BaseMsgpackReader {
   protected MessageUnpacker unpacker;
   protected boolean skipMalformedMsgRecords;
 
-  public ReadState write(ComplexWriter writer) throws IOException {
+  public ReadState write(ComplexWriter writer, MaterializedField schema) throws IOException {
     ReadState readState = ReadState.WRITE_SUCCEED;
     if (!unpacker.hasNext()) {
       readState = ReadState.END_OF_STREAM;
@@ -45,7 +46,7 @@ public abstract class BaseMsgpackReader {
       ValueType type = v.getValueType();
       switch (type) {
       case MAP:
-        readState = writeRecord(v, writer);
+        readState = writeRecord(v, writer, schema);
         break;
       default:
         Log.warn("Value in root of message pack file is not of type MAP. Skipping type found: " + type);
@@ -56,9 +57,8 @@ public abstract class BaseMsgpackReader {
     return readState;
   }
 
-  protected abstract ReadState writeRecord(Value mapValue, ComplexWriter writer) throws IOException;
-
-  public abstract void ensureAtLeastOneField(ComplexWriter writer);
+  protected abstract ReadState writeRecord(Value mapValue, ComplexWriter writer, MaterializedField schema)
+      throws IOException;
 
   public void setSource(InputStream stream) {
     unpacker = MessagePack.newDefaultUnpacker(stream);

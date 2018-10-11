@@ -42,6 +42,8 @@ import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
 
+import jline.internal.Log;
+
 public class MsgpackRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackRecordReader.class);
 
@@ -159,6 +161,17 @@ public class MsgpackRecordReader extends AbstractRecordReader {
 
   @Override
   public int next() {
+
+    MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
+    MaterializedField schema = null;
+    try {
+      if (!this.learnSchema && this.useSchema) {
+        schema = msgpackSchema.load(schemaLocation);
+      }
+    } catch (IOException e) {
+      Log.warn("Failed to load schema file: " + schemaLocation + " " + e.getMessage());
+    }
+
     writer.allocate();
     writer.reset();
     recordCount = 0;
@@ -169,7 +182,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     outside: while (recordCount < DEFAULT_ROWS_PER_BATCH) {
       try {
         writer.setPosition(recordCount);
-        write = messageReader.write(writer);
+        write = messageReader.write(writer, schema);
         if (write == ReadState.WRITE_SUCCEED) {
           recordCount++;
         } else if (write == ReadState.MSG_RECORD_PARSE_ERROR || write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {

@@ -835,6 +835,30 @@ public class TestMsgpackRecordReader extends ClusterTest {
     verify(rowSetBuilder.build(), nextRowSet());
   }
 
+  @Test
+  public void testSchemaInconsitentColumn() throws Exception {
+    learnModel();
+
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("str");
+      packer.packLong(1L);
+      packer.packMapHeader(1);
+      packer.packString("str");
+      packer.packString("data");
+    }
+    String sql = "select root.str as w from dfs.data.`test.mp` as root";
+    rowSetIterator = client.queryBuilder().sql(sql).rowSetIterator();
+
+    schemaBuilder.add("w", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
+    expectedSchema = schemaBuilder.buildSchema();
+    rowSetBuilder = newRowSetBuilder();
+    // record not matching schema are skipped.
+   // rowSetBuilder.addRow(new Object[] {null});
+    rowSetBuilder.addRow("data");
+    verify(rowSetBuilder.build(), nextRowSet());
+  }
+
   private static byte[] getTimestampBytes(long epochSeconds, long nanoSeconds) {
     if (epochSeconds >> 34 == 0) {
       long data64 = (nanoSeconds << 34) | epochSeconds;
