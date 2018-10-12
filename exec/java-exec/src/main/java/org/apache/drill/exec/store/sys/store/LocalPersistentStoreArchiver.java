@@ -30,7 +30,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 /**
  * Archive profiles
@@ -72,8 +72,8 @@ public class LocalPersistentStoreArchiver {
       //We'll attempt to reduce to 90% of threshold, but in batches of archivalRate
       int excessCount = profilesInStoreCount - (int) Math.round(0.9*archivalThreshold);
       int numToArchive = Math.min(excessCount, archivalRate);
-      logger.info("Found {} excess profiles. For now, will attempt archiving {} profiles to {}", excessCount
-          , numToArchive, archivePath);
+      logger.info("Found {} excess profiles. For now, will attempt archiving {} profiles to {}", excessCount,
+          numToArchive, archivePath);
       int archivedCount = 0;
       try {
         if (fs.isDirectory(archivePath)) {

@@ -59,7 +59,6 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.glassfish.jersey.server.mvc.Viewable;
 
-import com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @Path("/")
@@ -234,6 +233,7 @@ public class ProfileResources {
   @Produces(MediaType.APPLICATION_JSON)
   public QProfiles getProfilesJSON(@Context UriInfo uriInfo) {
     try {
+      final DrillConfig drillConfig = work.getContext().getConfig();
       final QueryProfileStoreContext profileStoreContext = work.getContext().getProfileStoreContext();
       final PersistentStore<QueryProfile> completed = profileStoreContext.getCompletedProfileStore();
       final TransientStore<QueryInfo> running = profileStoreContext.getRunningProfileStore();
@@ -243,17 +243,20 @@ public class ProfileResources {
       final List<ProfileInfo> runningQueries = Lists.newArrayList();
 
       final Iterator<Map.Entry<String, QueryInfo>> runningEntries = running.entries();
+      final long currentSysTime = System.currentTimeMillis();
+
       while (runningEntries.hasNext()) {
         try {
           final Map.Entry<String, QueryInfo> runningEntry = runningEntries.next();
           final QueryInfo profile = runningEntry.getValue();
-          if (principal.canManageProfileOf(profile.getUser())) {
+          final String runningProfileUser = profile.getUser();
+          if (principal.canManageProfileOf(runningProfileUser)) {
             runningQueries.add(
-                new ProfileInfo(work.getContext().getConfig(),
-                    runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(),
+                new ProfileInfo(drillConfig,
+                    runningEntry.getKey(), profile.getStart(), currentSysTime,
                     profile.getForeman().getAddress(), profile.getQuery(),
                     ProfileUtil.getQueryStateDisplayName(profile.getState()),
-                    profile.getUser(), profile.getTotalCost(), profile.getQueueName()));
+                    runningProfileUser, profile.getTotalCost(), profile.getQueueName()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
@@ -276,21 +279,22 @@ public class ProfileResources {
       while (range.hasNext()) {
         try {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();
+          final String queryId = profileEntry.getKey();
           final QueryProfile profile = profileEntry.getValue();
-          if (principal.canManageProfileOf(profile.getUser())) {
+          final String completedProfileUser = profile.getUser();
+          if (principal.canManageProfileOf(completedProfileUser)) {
             finishedQueries.add(
-                new ProfileInfo(work.getContext().getConfig(),
-                    profileEntry.getKey(), profile.getStart(), profile.getEnd(),
+                new ProfileInfo(drillConfig,
+                    queryId, profile.getStart(), profile.getEnd(),
                     profile.getForeman().getAddress(), profile.getQuery(),
                     ProfileUtil.getQueryStateDisplayName(profile.getState()),
-                    profile.getUser(), profile.getTotalCost(), profile.getQueueName()));
+                    completedProfileUser, profile.getTotalCost(), profile.getQueueName()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
           logger.error("Error getting finished query profile.", e);
         }
       }
-
       Collections.sort(finishedQueries, Collections.reverseOrder());
 
       return new QProfiles(runningQueries, finishedQueries, errors);
