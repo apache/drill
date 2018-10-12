@@ -47,7 +47,7 @@ import jline.internal.Log;
 public class MsgpackRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackRecordReader.class);
 
-  public static final long DEFAULT_ROWS_PER_BATCH = BaseValueVector.INITIAL_VALUE_ALLOCATION;
+  public static final long DEFAULT_ROWS_PER_BATCH = 0x4000;
 
   private VectorContainerWriter writer;
 
@@ -213,8 +213,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     // all the fields even if that means they are empty.
     if (learnSchema || useSchema) {
       applySchemaIfAny();
-    }
-    else {
+    } else {
       messageReader.ensureAtLeastOneField(writer);
     }
 
