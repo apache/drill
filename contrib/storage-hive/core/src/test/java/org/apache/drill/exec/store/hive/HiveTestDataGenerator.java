@@ -459,9 +459,6 @@ public class HiveTestDataGenerator {
             "  char_part='char')"
     );
 
-    // create a Hive view to test how its metadata is populated in Drill's INFORMATION_SCHEMA
-    executeQuery(hiveDriver, "CREATE VIEW IF NOT EXISTS hiveview AS SELECT * FROM kv");
-
     executeQuery(hiveDriver, "CREATE TABLE IF NOT EXISTS " +
         "partition_pruning_test_loadtable(a DATE, b TIMESTAMP, c INT, d INT, e INT) " +
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
@@ -547,6 +544,14 @@ public class HiveTestDataGenerator {
 
     createSubDirTable(hiveDriver, testDataFile);
 
+    // hive views
+    executeQuery(hiveDriver, "CREATE OR REPLACE VIEW readtest_view AS SELECT * FROM readtest");
+    executeQuery(hiveDriver, "CREATE VIEW IF NOT EXISTS hive_view AS SELECT * FROM kv");
+    executeQuery(hiveDriver, "CREATE OR REPLACE VIEW kv_native_view AS SELECT * FROM kv_native");
+    executeQuery(hiveDriver, "CREATE MATERIALIZED VIEW IF NOT EXISTS hive_view_m AS SELECT * FROM kv WHERE key = 1");
+    executeQuery(hiveDriver, "CREATE OR REPLACE VIEW view_over_hive_view AS SELECT * FROM hive_view WHERE key BETWEEN 2 AND 3");
+    executeQuery(hiveDriver, "CREATE OR REPLACE VIEW db1.two_table_view AS SELECT COUNT(dk.key) dk_key_count FROM db1.avro dk " +
+        "INNER JOIN kv ON kv.key = dk.key");
     ss.close();
   }
 
@@ -696,4 +701,5 @@ public class HiveTestDataGenerator {
 
     return sb.toString();
   }
+
 }

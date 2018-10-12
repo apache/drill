@@ -25,15 +25,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
-import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
-import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -41,11 +38,16 @@ import org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
-import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
+import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.thrift.TException;
+
+import static org.apache.drill.exec.util.ImpersonationUtil.getProcessUserName;
 
 public class HiveSchemaFactory extends AbstractSchemaFactory {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaFactory.class);
@@ -104,14 +106,11 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
    * Close this schema factory in preparation for retrying. Attempt to close
    * connections, but just ignore any errors.
    */
-
   public void close() {
-    try {
-      processUserMetastoreClient.close();
-    } catch (Exception e) { }
-    try {
-      metaStoreClientLoadingCache.invalidateAll();
-    } catch (Exception e) { }
+    AutoCloseables.closeSilently(
+        processUserMetastoreClient::close,
+        metaStoreClientLoadingCache::invalidateAll
+    );
   }
 
   @Override
@@ -160,7 +159,9 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
       }
     }
 
-    /** Help method to get subschema when we know it exists (already checks the existence) */
+    /**
+     * Helper method to get subschema when we know it exists (already checked the existence)
+     */
     private HiveDatabaseSchema getSubSchemaKnownExists(String name) {
       return new HiveDatabaseSchema(this, name, mClient, schemaConfig);
     }
@@ -208,20 +209,19 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
       return false;
     }
 
-    DrillTable getDrillTable(String dbName, String t) {
+    Table getDrillTable(String dbName, String t) {
       HiveReadEntry entry = getSelectionBaseOnName(dbName, t);
       if (entry == null) {
         return null;
       }
+      final String schemaUser = schemaConfig.getUserName();
+      return TableType.VIEW == entry.getJdbcTableType()
+          ? new DrillHiveViewTable(entry, schemaPath, schemaConfig, getUser(schemaUser, entry.getTable().getOwner()))
+          : new DrillHiveTable(getName(), plugin, getUser(schemaUser, getProcessUserName()), entry);
+    }
 
-      final String userToImpersonate = needToImpersonateReadingData() ? schemaConfig.getUserName() :
-          ImpersonationUtil.getProcessUserName();
-
-      if (entry.getJdbcTableType() == TableType.VIEW) {
-        return new DrillHiveViewTable(getName(), plugin, userToImpersonate, entry);
-      } else {
-        return new DrillHiveTable(getName(), plugin, userToImpersonate, entry);
-      }
+    private String getUser(String impersonated, String notImpersonated) {
+      return needToImpersonateReadingData() ? impersonated : notImpersonated;
     }
 
     HiveReadEntry getSelectionBaseOnName(String dbName, String t) {

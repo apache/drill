@@ -103,10 +103,10 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
   public void testInfoSchemaWithHiveView() throws Exception {
     testBuilder()
         .optionSettingQueriesForTestQuery("USE hive.`default`")
-        .sqlQuery("SELECT * FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME = 'hiveview'")
+        .sqlQuery("SELECT * FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME = 'hive_view'")
         .unOrdered()
         .baselineColumns("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME", "VIEW_DEFINITION")
-        .baselineValues("DRILL", "hive.default", "hiveview", "SELECT `kv`.`key`, `kv`.`value` FROM `default`.`kv`")
+        .baselineValues("DRILL", "hive.default", "hive_view", "SELECT `kv`.`key`, `kv`.`value` FROM `default`.`kv`")
         .go();
   }
 
@@ -116,4 +116,5 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
       hiveTest.deleteHiveTestPlugin(getDrillbitContext().getStorage());
     }
   }
+
 }
