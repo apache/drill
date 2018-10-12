@@ -19,7 +19,6 @@ package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -113,10 +112,6 @@ public class QueryWrapper {
 
     if (webUserConnection.getError() != null) {
       throw new UserRemoteException(webUserConnection.getError());
-    }
-
-    if (webUserConnection.results.isEmpty()) {
-      webUserConnection.results.add(Maps.<String, String>newHashMap());
     }
 
     // Return the QueryResult.
