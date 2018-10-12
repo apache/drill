@@ -85,6 +85,23 @@ public abstract class SingleVectorState implements VectorState {
     }
   }
 
+  public static class IsSetVectorState extends FixedWidthVectorState {
+
+    public IsSetVectorState(WriterPosition writer, ValueVector mainVector) {
+      super(writer, mainVector);
+    }
+
+    @Override
+    public int allocateVector(ValueVector vector, int cardinality) {
+      int size = super.allocateVector(vector, cardinality);
+
+      // IsSet ("bit") vectors rely on values being initialized to zero (unset.)
+
+      ((FixedWidthVector) vector).zeroVector();
+      return size;
+    }
+  }
+
   /**
    * State for a scalar value vector. The vector might be for a simple (non-array)
    * vector, or might be the payload part of a scalar array (repeated scalar)

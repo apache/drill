@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
-import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.FixedWidthVectorState;
+import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.IsSetVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.OffsetVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.UnionState.UnionVectorState;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
@@ -111,14 +111,14 @@ public class ListState extends ContainerState
 
     private final ColumnMetadata schema;
     private final ListVector vector;
-    private final FixedWidthVectorState bitsVectorState;
-    private final OffsetVectorState offsetVectorState;
+    private final VectorState bitsVectorState;
+    private final VectorState offsetVectorState;
     private VectorState memberVectorState;
 
     public ListVectorState(UnionWriterImpl writer, ListVector vector) {
       this.schema = writer.schema();
       this.vector = vector;
-      bitsVectorState = new FixedWidthVectorState(writer, vector.getBitsVector());
+      bitsVectorState = new IsSetVectorState(writer, vector.getBitsVector());
       offsetVectorState = new OffsetVectorState(writer, vector.getOffsetVector(), writer.elementPosition());
       memberVectorState = new NullVectorState();
     }
@@ -126,7 +126,7 @@ public class ListState extends ContainerState
     public ListVectorState(ListWriterImpl writer, WriterPosition elementWriter, ListVector vector) {
       this.schema = writer.schema();
       this.vector = vector;
-      bitsVectorState = new FixedWidthVectorState(writer, vector.getBitsVector());
+      bitsVectorState = new IsSetVectorState(writer, vector.getBitsVector());
       offsetVectorState = new OffsetVectorState(writer, vector.getOffsetVector(), elementWriter);
       memberVectorState = new NullVectorState();
     }

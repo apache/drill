@@ -24,3 +24,4 @@ install_manifest.txt
 *.swp
 # TODO - DRILL-4336
 exec/jdbc-all/dependency-reduced-pom.xml
+.*.html
