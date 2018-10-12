@@ -104,9 +104,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <useSystemClassLoader>false</useSystemClassLoader>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.antlr</groupId>

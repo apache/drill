@@ -30,6 +30,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHive
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -55,21 +56,22 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
 
   // Tables in "db_general"
   private static final String g_student_user0 = "student_user0";
+
+  private static final String vw_student_user0 = "vw_student_user0";
+
   private static final String g_voter_role0 = "voter_role0";
+
+  private static final String vw_voter_role0 = "vw_voter_role0";
+
   private static final String g_student_user2 = "student_user2";
 
+  private static final String vw_student_user2 = "vw_student_user2";
 
   // Create a view on "g_student_user0". View is owned by user0:group0 and has permissions 750
   private static final String v_student_u0g0_750 = "v_student_u0g0_750";
 
   // Create a view on "v_student_u0g0_750". View is owned by user1:group1 and has permissions 750
   private static final String v_student_u1g1_750 = "v_student_u1g1_750";
-
-  private static final String query_v_student_u0g0_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750);
-
-  private static final String query_v_student_u1g1_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u1g1_750);
 
   // Role for testing purpose
   private static final String test_role0 = "role0";
@@ -110,24 +112,59 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     return hiveConfig;
   }
 
+
+  /*
+   * Generating database objects with permissions:
+   * <p>
+   * |                                         | org1Users[0] | org1Users[1] | org1Users[2]
+   * ---------------------------------------------------------------------------------------
+   * db_general.g_student_user0                |      +       |      -       |      -       |
+   * db_general.g_voter_role0                  |      -       |      +       |      +       |
+   * db_general.g_student_user2                |      -       |      -       |      +       |
+   * |                                         |              |              |              |
+   * mini_dfs_plugin.tmp.v_student_u0g0_750    |      +       |      +       |      -       |
+   * mini_dfs_plugin.tmp.v_student_u1g1_750    |      -       |      +       |      +       |
+   * |                                         |              |              |              |
+   * db_general.vw_student_user0               |      +       |      -       |      -       |
+   * db_general.vw_voter_role0                 |      -       |      +       |      +       |
+   * db_general.vw_student_user2               |      -       |      -       |      +       |
+   * ---------------------------------------------------------------------------------------
+   *
+   * @throws Exception - if view creation failed
+   */
   private static void generateTestData() throws Exception {
     final SessionState ss = new SessionState(hiveConf);
     SessionState.start(ss);
     final Driver driver = new Driver(hiveConf);
 
     executeQuery(driver, "CREATE DATABASE " + db_general);
-    createTbl(driver, db_general, g_student_user0, studentDef, studentData);
-    createTbl(driver, db_general, g_voter_role0, voterDef, voterData);
-    createTbl(driver, db_general, g_student_user2, studentDef, studentData);
+    createTable(driver, db_general, g_student_user0, studentDef, studentData);
+    createTable(driver, db_general, g_voter_role0, voterDef, voterData);
+    createTable(driver, db_general, g_student_user2, studentDef, studentData);
+
+    createHiveView(driver, db_general, vw_student_user0, g_student_user0);
+    createHiveView(driver, db_general, vw_voter_role0, g_voter_role0);
+    createHiveView(driver, db_general, vw_student_user2, g_student_user2);
 
     executeQuery(driver, "SET ROLE admin");
     executeQuery(driver, "CREATE ROLE " + test_role0);
     executeQuery(driver, "GRANT ROLE " + test_role0 + " TO USER " + org1Users[1]);
     executeQuery(driver, "GRANT ROLE " + test_role0 + " TO USER " + org1Users[2]);
 
-    executeQuery(driver, String.format("GRANT SELECT ON %s.%s TO USER %s", db_general, g_student_user0, org1Users[0]));
-    executeQuery(driver, String.format("GRANT SELECT ON %s.%s TO ROLE %s", db_general, g_voter_role0, test_role0));
-    executeQuery(driver, String.format("GRANT SELECT ON %s.%s TO USER %s", db_general, g_student_user2, org1Users[2]));
+    executeQuery(driver, String.format("GRANT SELECT ON db_general.%s TO USER %s",
+        g_student_user0, org1Users[0]));
+    executeQuery(driver, String.format("GRANT SELECT ON db_general.%s TO USER %s",
+        vw_student_user0, org1Users[0]));
+
+    executeQuery(driver, String.format("GRANT SELECT ON db_general.%s TO ROLE %s",
+        g_voter_role0, test_role0));
+    executeQuery(driver, String.format("GRANT SELECT ON db_general.%s TO ROLE %s",
+        vw_voter_role0, test_role0));
+
+    executeQuery(driver, String.format("GRANT SELECT ON db_general.%s TO USER %s",
+        g_student_user2, org1Users[2]));
+    executeQuery(driver, String.format("GRANT SELECT ON db_general.%s TO USER %s",
+        vw_student_user2, org1Users[2]));
 
     createView(org1Users[0], org1Groups[0], v_student_u0g0_750,
         String.format("SELECT rownum, name, age, studentnum FROM %s.%s.%s",
@@ -137,14 +174,9 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
         String.format("SELECT rownum, name, age FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750));
   }
 
-  private static void createTbl(final Driver driver, final String db, final String tbl, final String tblDef,
-      final String data) throws Exception {
-    executeQuery(driver, String.format(tblDef, db, tbl));
-    executeQuery(driver, String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE %s.%s", data, db, tbl));
-  }
-
   // Irrespective of each db permissions, all dbs show up in "SHOW SCHEMAS"
   @Test
+  @Ignore //todo: enable after fix of DRILL-6923
   public void showSchemas() throws Exception {
     testBuilder()
         .sqlQuery("SHOW SCHEMAS LIKE 'hive.%'")
@@ -156,31 +188,22 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   }
 
   @Test
-  public void showTables_user0() throws Exception {
+  public void user0_showTables() throws Exception {
     updateClient(org1Users[0]);
     showTablesHelper(db_general,
         // Users are expected to see all tables in a database even if they don't have permissions to read from tables.
         ImmutableList.of(
             g_student_user0,
             g_student_user2,
-            g_voter_role0
+            g_voter_role0,
+            vw_student_user0,
+            vw_voter_role0,
+            vw_student_user2
         ));
   }
 
   @Test
-  public void showTables_user1() throws Exception {
-    updateClient(org1Users[1]);
-    showTablesHelper(db_general,
-        // Users are expected to see all tables in a database even if they don't have permissions to read from tables.
-        ImmutableList.of(
-            g_student_user0,
-            g_student_user2,
-            g_voter_role0
-        ));
-  }
-
-  @Test
-  public void select_user0_1() throws Exception {
+  public void user0_allowed_g_student_user0() throws Exception {
     // SELECT on "student_user0" table is granted to user "user0"
     updateClient(org1Users[0]);
     test("USE " + hivePluginName + "." + db_general);
@@ -188,7 +211,12 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   }
 
   @Test
-  public void select_user0_2() throws Exception {
+  public void user0_allowed_vw_student_user0() throws Exception {
+    queryHiveView(org1Users[0], vw_student_user0);
+  }
+
+  @Test
+  public void user0_forbidden_g_voter_role0() throws Exception {
     // SELECT on table "student_user0" is NOT granted to user "user0" directly or indirectly through role "role0" as
     // user "user0" is not part of role "role0"
     updateClient(org1Users[0]);
@@ -199,7 +227,39 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   }
 
   @Test
-  public void select_user1_1() throws Exception {
+  public void user0_forbidden_vw_voter_role0() throws Exception {
+    queryHiveViewNotAuthorized(org1Users[0], vw_voter_role0);
+  }
+
+  @Test
+  public void user0_forbidden_v_student_u1g1_750() throws Exception {
+    updateClient(org1Users[0]);
+    queryViewNotAuthorized(v_student_u1g1_750);
+  }
+
+  @Test
+  public void user0_allowed_v_student_u0g0_750() throws Exception {
+    updateClient(org1Users[0]);
+    queryView(v_student_u0g0_750);
+  }
+
+  @Test
+  public void user1_showTables() throws Exception {
+    updateClient(org1Users[1]);
+    showTablesHelper(db_general,
+        // Users are expected to see all tables in a database even if they don't have permissions to read from tables.
+        ImmutableList.of(
+            g_student_user0,
+            g_student_user2,
+            g_voter_role0,
+            vw_student_user0,
+            vw_voter_role0,
+            vw_student_user2
+        ));
+  }
+
+  @Test
+  public void user1_forbidden_g_student_user0() throws Exception {
     // SELECT on table "student_user0" is NOT granted to user "user1"
     updateClient(org1Users[1]);
     test("USE " + hivePluginName + "." + db_general);
@@ -209,7 +269,12 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   }
 
   @Test
-  public void select_user1_2() throws Exception {
+  public void user1_forbidden_vw_student_user0() throws Exception {
+    queryHiveViewNotAuthorized(org1Users[1], vw_student_user0);
+  }
+
+  @Test
+  public void user1_allowed_g_voter_role0() throws Exception {
     // SELECT on "voter_role0" table is granted to role "role0" and user "user1" is part the role "role0"
     updateClient(org1Users[1]);
     test("USE " + hivePluginName + "." + db_general);
@@ -217,7 +282,12 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   }
 
   @Test
-  public void select_user1_3() throws Exception {
+  public void user1_allowed_vw_voter_role0() throws Exception {
+    queryHiveView(org1Users[1], vw_voter_role0);
+  }
+
+  @Test
+  public void user1_allowed_g_voter_role0_but_forbidden_g_student_user2() throws Exception {
     // SELECT on "voter_role0" table is granted to role "role0" and user "user1" is part the role "role0"
     // SELECT on "student_user2" table is NOT granted to either role "role0" or user "user1"
     updateClient(org1Users[1]);
@@ -229,7 +299,31 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   }
 
   @Test
-  public void select_user2_1() throws Exception {
+  public void user1_allowed_vw_voter_role0_but_forbidden_vw_student_user2() throws Exception {
+    // SELECT on "vw_voter_role0" table is granted to role "role0" and user "user1" is part the role "role0"
+    // SELECT on "vw_student_user2" table is NOT granted to either role "role0" or user "user1"
+    updateClient(org1Users[1]);
+    test("USE " + hivePluginName + "." + db_general);
+    final String query =
+        String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", vw_voter_role0, vw_student_user2);
+    errorMsgTestHelper(query, "Principal [name=user1_1, type=USER] does not have following privileges for " +
+        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.vw_student_user2]]");
+  }
+
+  @Test
+  public void user1_allowed_v_student_u0g0_750() throws Exception {
+    updateClient(org1Users[1]);
+    queryView(v_student_u0g0_750);
+  }
+
+  @Test
+  public void user1_allowed_v_student_u1g1_750() throws Exception {
+    updateClient(org1Users[1]);
+    queryView(v_student_u1g1_750);
+  }
+
+  @Test
+  public void user2_allowed_g_voter_role0() throws Exception {
     // SELECT on "voter_role0" table is granted to role "role0" and user "user2" is part the role "role0"
     updateClient(org1Users[2]);
     test("USE " + hivePluginName + "." + db_general);
@@ -237,7 +331,12 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   }
 
   @Test
-  public void select_user2_2() throws Exception {
+  public void user2_allowed_vw_voter_role0() throws Exception {
+    queryHiveView(org1Users[2], vw_voter_role0);
+  }
+
+  @Test
+  public void user2_allowed_g_student_user2() throws Exception {
     // SELECT on "student_user2" table is granted to user "user2"
     updateClient(org1Users[2]);
     test("USE " + hivePluginName + "." + db_general);
@@ -245,7 +344,12 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   }
 
   @Test
-  public void select_user2_3() throws Exception {
+  public void user2_allowed_vw_student_user2() throws Exception {
+    queryHiveView(org1Users[2], vw_student_user2);
+  }
+
+  @Test
+  public void user2_allowed_g_voter_role0_and_g_student_user2() throws Exception {
     // SELECT on "voter_role0" table is granted to role "role0" and user "user2" is part the role "role0"
     // SELECT on "student_user2" table is granted to user "user2"
     updateClient(org1Users[2]);
@@ -253,48 +357,23 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     test(String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", g_voter_role0, g_student_user2));
   }
 
-  private static void queryViewHelper(final String queryUser, final String query) throws Exception {
-    updateClient(queryUser);
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("rownum")
-        .baselineValues(1)
-        .go();
-  }
-
   @Test
-  public void selectUser0_v_student_u0g0_750() throws Exception {
-    queryViewHelper(org1Users[0], query_v_student_u0g0_750);
-  }
-
-  @Test
-  public void selectUser1_v_student_u0g0_750() throws Exception {
-    queryViewHelper(org1Users[1], query_v_student_u0g0_750);
-  }
-
-  @Test
-  public void selectUser2_v_student_u0g0_750() throws Exception {
+  public void user2_allowed_vw_voter_role0_and_vw_student_user2() throws Exception {
     updateClient(org1Users[2]);
-    errorMsgTestHelper(query_v_student_u0g0_750, String.format(
-        "Not authorized to read view [v_student_u0g0_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
+    test("USE " + hivePluginName + "." + db_general);
+    test(String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", vw_voter_role0, vw_student_user2));
   }
 
   @Test
-  public void selectUser0_v_student_u1g1_750() throws Exception {
-    updateClient(org1Users[0]);
-    errorMsgTestHelper(query_v_student_u1g1_750, String.format(
-        "Not authorized to read view [v_student_u1g1_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
+  public void user2_forbidden_v_student_u0g0_750() throws Exception {
+    updateClient(org1Users[2]);
+    queryViewNotAuthorized(v_student_u0g0_750);
   }
 
   @Test
-  public void selectUser1_v_student_u1g1_750() throws Exception {
-    queryViewHelper(org1Users[1], query_v_student_u1g1_750);
-  }
-
-  @Test
-  public void selectUser2_v_student_u1g1_750() throws Exception {
-    queryViewHelper(org1Users[2], query_v_student_u1g1_750);
+  public void user2_allowed_v_student_u1g1_750() throws Exception {
+    updateClient(org1Users[2]);
+    queryView(v_student_u1g1_750);
   }
 
   @AfterClass
@@ -302,4 +381,33 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     stopMiniDfsCluster();
     stopHiveMetaStore();
   }
+
+  private static void queryHiveView(String usr, String viewName) throws Exception {
+    String query = String.format("SELECT COUNT(*) AS rownum FROM %s.%s.%s",
+        hivePluginName, db_general, viewName);
+    updateClient(usr);
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("rownum")
+        .baselineValues(1L)
+        .go();
+  }
+
+  private static void queryHiveViewNotAuthorized(String usr, String viewName) throws Exception {
+    final String query = String.format("SELECT * FROM %s.%s.%s", hivePluginName, db_general, viewName);
+    final String expectedError = String.format("Principal [name=%s, type=USER] does not have following privileges for " +
+            "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.%s]]\n",
+        usr, viewName);
+
+    updateClient(usr);
+    errorMsgTestHelper(query, expectedError);
+  }
+
+  private static void createHiveView(Driver driver, String db, String viewName, String tblName) {
+    String viewFullName = db + "." + viewName;
+    String tblFullName = db + "." + tblName;
+    executeQuery(driver, String.format("CREATE OR REPLACE VIEW %s AS SELECT * FROM %s LIMIT 1", viewFullName, tblFullName));
+  }
+
 }

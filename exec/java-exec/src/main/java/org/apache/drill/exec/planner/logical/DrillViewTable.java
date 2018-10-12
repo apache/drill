@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.List;
+
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.schema.Schema.TableType;
@@ -67,7 +70,7 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
 
       if (viewExpansionContext.isImpersonationEnabled()) {
         token = viewExpansionContext.reserveViewExpansionToken(viewOwner);
-        rel = context.expandView(rowType, view.getSql(), token.getSchemaTree(), view.getWorkspaceSchemaPath()).rel;
+        rel = expandViewForImpersonatedUser(context, rowType, view.getWorkspaceSchemaPath(), token.getSchemaTree());
       } else {
         rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath(), ImmutableList.<String>of()).rel;
       }
@@ -83,6 +86,14 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
         token.release();
       }
     }
+  }
+
+
+  protected RelNode expandViewForImpersonatedUser(ToRelContext context,
+                                                  RelDataType rowType,
+                                                  List<String> workspaceSchemaPath,
+                                                  SchemaPlus tokenSchemaTree) {
+    return context.expandView(rowType, view.getSql(), tokenSchemaTree, workspaceSchemaPath).rel;
   }
 
   @Override
@@ -104,4 +115,5 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
   @Override public boolean isRolledUp(String column) {
     return false;
   }
+
 }

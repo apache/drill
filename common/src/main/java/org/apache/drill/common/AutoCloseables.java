@@ -19,11 +19,17 @@ package org.apache.drill.common;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for AutoCloseable classes.
  */
 public class AutoCloseables {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(AutoCloseables.class);
 
   public interface Closeable extends AutoCloseable {
     @Override
@@ -92,4 +98,20 @@ public class AutoCloseables {
       throw topLevelException;
     }
   }
+
+  /**
+   * Close all without caring about thrown exceptions
+   * @param closeables - array containing auto closeables
+   */
+  public static void closeSilently(AutoCloseable... closeables) {
+    Arrays.stream(closeables).filter(Objects::nonNull)
+        .forEach(target -> {
+          try {
+            target.close();
+          } catch (Exception e) {
+            LOGGER.warn(String.format("Exception was thrown while closing auto closeable: %s", target), e);
+          }
+        });
+  }
+
 }
