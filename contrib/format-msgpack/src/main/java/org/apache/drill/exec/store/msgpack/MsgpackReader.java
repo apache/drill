@@ -23,20 +23,24 @@ import static org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState.WR
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.msgpack.value.ArrayValue;
 import org.msgpack.value.ExtensionValue;
 import org.msgpack.value.FloatValue;
@@ -58,6 +62,12 @@ public class MsgpackReader extends BaseMsgpackReader {
   private final ByteBuffer timestampReadBuffer = ByteBuffer.allocate(12);
   private final boolean skipInvalidKeyTypes = true;
   private boolean skipInvalidSchemaMsgRecords = false;
+  /**
+   * Collection for tracking empty array writers during reading
+   * and storing them for initializing empty arrays
+   */
+  private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
+  private boolean allTextMode = false;
 
   public MsgpackReader(DrillBuf managedBuf, List<SchemaPath> columns) {
     assert Preconditions.checkNotNull(columns).size() > 0 : "msgpack record reader requires at least a column";
@@ -87,6 +97,7 @@ public class MsgpackReader extends BaseMsgpackReader {
         }
       }
     } finally {
+      addIfNotInitialized(listWriter);
       listWriter.endList();
     }
     return WRITE_SUCCEED;
@@ -465,4 +476,75 @@ public class MsgpackReader extends BaseMsgpackReader {
     workBuf = workBuf.reallocIfNeeded(length);
   }
 
+  /**
+   * Checks that list has not been initialized and adds it to the emptyArrayWriters collection.
+   * @param list ListWriter that should be checked
+   */
+  private void addIfNotInitialized(ListWriter list) {
+    if (list.getValueCapacity() == 0) {
+      emptyArrayWriters.add(list);
+    }
+  }
+
+  @SuppressWarnings("resource")
+  @Override
+  public void ensureAtLeastOneField(ComplexWriter writer) {
+    List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
+    List<PathSegment> fieldPathList = Lists.newArrayList();
+    BitSet emptyStatus = new BitSet(columns.size());
+    int i = 0;
+
+    // first pass: collect which fields are empty
+    for (SchemaPath sp : columns) {
+      PathSegment fieldPath = sp.getRootSegment();
+      BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
+      while (fieldPath.getChild() != null && !fieldPath.getChild().isArray()) {
+        fieldWriter = fieldWriter.map(fieldPath.getNameSegment().getPath());
+        fieldPath = fieldPath.getChild();
+      }
+      writerList.add(fieldWriter);
+      fieldPathList.add(fieldPath);
+      if (fieldWriter.isEmptyMap()) {
+        emptyStatus.set(i, true);
+      }
+      if (i == 0 && !allTextMode ) {
+        // when allTextMode is false, there is not much benefit to producing all
+        // the empty fields; just produce 1 field. The reason is that the type of the
+        // fields is unknown, so if we produce multiple Integer fields by default, a
+        // subsequent batch that contains non-integer fields will error out in any case.
+        // Whereas, with allTextMode true, we are sure that all fields are going to be
+        // treated as varchar, so it makes sense to produce all the fields, and in fact
+        // is necessary in order to avoid schema change exceptions by downstream operators.
+        break;
+      }
+      i++;
+    }
+
+    // second pass: create default typed vectors corresponding to empty fields
+    // Note: this is not easily do-able in 1 pass because the same fieldWriter
+    // may be shared by multiple fields whereas we want to keep track of all fields
+    // independently, so we rely on the emptyStatus.
+    for (int j = 0; j < fieldPathList.size(); j++) {
+      BaseWriter.MapWriter fieldWriter = writerList.get(j);
+      PathSegment fieldPath = fieldPathList.get(j);
+      if (emptyStatus.get(j)) {
+        if (allTextMode) {
+          fieldWriter.varChar(fieldPath.getNameSegment().getPath());
+        } else {
+          fieldWriter.integer(fieldPath.getNameSegment().getPath());
+        }
+      }
+    }
+
+    for (BaseWriter.ListWriter field : emptyArrayWriters) {
+      // checks that array has not been initialized
+      if (field.getValueCapacity() == 0) {
+        if (allTextMode) {
+          field.varChar();
+        } else {
+          field.integer();
+        }
+      }
+    }
+  }
 }

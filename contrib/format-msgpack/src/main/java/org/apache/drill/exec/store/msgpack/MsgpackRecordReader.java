@@ -214,6 +214,9 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     if (learnSchema || useSchema) {
       applySchemaIfAny();
     }
+    else {
+      messageReader.ensureAtLeastOneField(writer);
+    }
 
     writer.setValueCount(recordCount);
     updateRunningCount();

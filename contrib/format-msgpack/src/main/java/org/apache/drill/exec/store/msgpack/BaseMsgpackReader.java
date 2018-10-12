@@ -68,4 +68,7 @@ public abstract class BaseMsgpackReader {
     this.skipMalformedMsgRecords = skipMalformedMsgRecords;
   }
 
+  public void ensureAtLeastOneField(ComplexWriter writer) {
+  }
+
 }

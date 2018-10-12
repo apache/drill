@@ -120,6 +120,36 @@ public class TestMsgpackRecordReader extends ClusterTest {
   }
 
   @Test
+  public void testSelectColumnThatDoesNotExist() throws Exception {
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(3);
+      packer.packString("apple").packInt(1);
+      packer.packString("banana").packInt(2);
+      packer.packString("orange").packString("infini!!!");
+
+      packer.packMapHeader(3);
+      packer.packString("apple").packInt(1);
+      packer.packString("banana").packInt(2);
+      packer.packString("potato").packDouble(12.12);
+    }
+
+    String sql = "select pinaple from `dfs.data`.`test.mp`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("pinaple", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
+
+    //@formatter:off
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(new Object[] {null})
+        .addRow(new Object[] {null})
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
   public void testBasicSelect() throws Exception {
     try (MessagePacker packer = testPacker()) {
       packer.packMapHeader(3);
@@ -1036,7 +1066,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
   }
 
   private static MsgpackFormatConfig noSchemaConfig() {
-    return buildConfig(false, true);
+    return buildConfig(false, false);
   }
 
   private static MsgpackFormatConfig buildConfig(boolean learnSchema, boolean useSchema) {
