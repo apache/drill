@@ -18,62 +18,60 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.janino.Java;
-import org.codehaus.janino.Java.ClassDeclaration;
+import org.codehaus.janino.Java.AbstractClassDeclaration;
 import org.codehaus.janino.Java.MethodDeclarator;
-import org.codehaus.janino.util.Traverser;
+import org.codehaus.janino.util.AbstractTraverser;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+public class MethodGrabbingVisitor {
 
-
-public class MethodGrabbingVisitor{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MethodGrabbingVisitor.class);
-
-  private Class<?> c;
-  private Map<String, String> methods = Maps.newHashMap();
-  private ClassFinder classFinder = new ClassFinder();
+  private final Class<?> clazz;
+  private final Map<String, String> methods = new HashMap<>();
+  private final ClassFinder classFinder = new ClassFinder();
   private boolean captureMethods = false;
 
-  private MethodGrabbingVisitor(Class<?> c) {
-    super();
-    this.c = c;
+  private MethodGrabbingVisitor(Class<?> clazz) {
+    this.clazz = clazz;
   }
 
-  public class ClassFinder extends Traverser{
+  /**
+   * Creates a map with all method names and their modified bodies
+   * from specified {@link Java.CompilationUnit}.
+   *
+   * @param compilationUnit the source of the methods to collect
+   * @param clazz           type of the class to handle
+   * @return a map with all method names and their modified bodies.
+   */
+  public static Map<String, String> getMethods(Java.CompilationUnit compilationUnit, Class<?> clazz) {
+    MethodGrabbingVisitor visitor = new MethodGrabbingVisitor(clazz);
+    visitor.classFinder.visitTypeDeclaration(compilationUnit.getPackageMemberTypeDeclarations()[0]);
+    return visitor.methods;
+  }
+
+  public class ClassFinder extends AbstractTraverser<RuntimeException> {
 
     @Override
-    public void traverseClassDeclaration(ClassDeclaration cd) {
-//      logger.debug("Traversing: {}", cd.getClassName());
+    public void traverseClassDeclaration(AbstractClassDeclaration classDeclaration) {
       boolean prevCapture = captureMethods;
-      captureMethods = c.getName().equals(cd.getClassName());
-      super.traverseClassDeclaration(cd);
+      captureMethods = clazz.getName().equals(classDeclaration.getClassName());
+      super.traverseClassDeclaration(classDeclaration);
       captureMethods = prevCapture;
     }
 
     @Override
-    public void traverseMethodDeclarator(MethodDeclarator md) {
-//      logger.debug(c.getName() + ": Found {}, include {}", md.name, captureMethods);
-
-      if(captureMethods){
+    public void traverseMethodDeclarator(MethodDeclarator methodDeclarator) {
+      if (captureMethods) {
         StringWriter writer = new StringWriter();
-        ModifiedUnparseVisitor v = new ModifiedUnparseVisitor(writer);
-//        UnparseVisitor v = new UnparseVisitor(writer);
-
-        md.accept(v);
-        v.close();
+        ModifiedUnparser unparser = new ModifiedUnparser(writer);
+        unparser.visitMethodDeclarator(methodDeclarator);
+        unparser.close();
         writer.flush();
-        methods.put(md.name, writer.getBuffer().toString());
+        methods.put(methodDeclarator.name, writer.getBuffer().toString());
       }
     }
-  }
-
-
-  public static Map<String, String> getMethods(Java.CompilationUnit cu, Class<?> c){
-    MethodGrabbingVisitor visitor = new MethodGrabbingVisitor(c);
-    cu.getPackageMemberTypeDeclarations()[0].accept(visitor.classFinder.comprehensiveVisitor());
-    return visitor.methods;
   }
 
 }

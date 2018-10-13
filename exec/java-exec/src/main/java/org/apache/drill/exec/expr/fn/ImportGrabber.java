@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.janino.Java;
@@ -24,20 +25,32 @@ import org.codehaus.janino.Java.CompilationUnit.SingleStaticImportDeclaration;
 import org.codehaus.janino.Java.CompilationUnit.SingleTypeImportDeclaration;
 import org.codehaus.janino.Java.CompilationUnit.StaticImportOnDemandDeclaration;
 import org.codehaus.janino.Java.CompilationUnit.TypeImportOnDemandDeclaration;
-import org.codehaus.janino.util.Traverser;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-
+import org.codehaus.janino.util.AbstractTraverser;
 
 public class ImportGrabber {
 
-  private final List<String> imports = Lists.newArrayList();
-  private final ImportFinder finder = new ImportFinder();
+  private final List<String> imports = new ArrayList<>();
+  private final ImportFinder importFinder = new ImportFinder();
 
   private ImportGrabber() {
   }
 
-  public class ImportFinder extends Traverser {
+  /**
+   * Creates list of imports that are present in compilation unit.
+   * For example:
+   * [import io.netty.buffer.DrillBuf;, import org.apache.drill.exec.expr.DrillSimpleFunc;]
+   *
+   * @param compilationUnit compilation unit
+   * @return list of imports
+   */
+  public static List<String> getImports(Java.CompilationUnit compilationUnit) {
+    ImportGrabber visitor = new ImportGrabber();
+    compilationUnit.importDeclarations.forEach(visitor.importFinder::visitImportDeclaration);
+
+    return visitor.imports;
+  }
+
+  public class ImportFinder extends AbstractTraverser<RuntimeException> {
 
     @Override
     public void traverseSingleTypeImportDeclaration(SingleTypeImportDeclaration stid) {
@@ -58,26 +71,6 @@ public class ImportGrabber {
     public void traverseStaticImportOnDemandDeclaration(StaticImportOnDemandDeclaration siodd) {
       imports.add(siodd.toString());
     }
-
-
-  }
-
-  /**
-   * Creates list of imports that are present in compilation unit.
-   * For example:
-   * [import io.netty.buffer.DrillBuf;, import org.apache.drill.exec.expr.DrillSimpleFunc;]
-   *
-   * @param compilationUnit compilation unit
-   * @return list of imports
-   */
-  public static List<String> getImports(Java.CompilationUnit compilationUnit){
-    final ImportGrabber visitor = new ImportGrabber();
-
-    for (Java.CompilationUnit.ImportDeclaration importDeclaration : compilationUnit.importDeclarations) {
-      importDeclaration.accept(visitor.finder.comprehensiveVisitor());
-    }
-
-    return visitor.imports;
   }
 
 }
