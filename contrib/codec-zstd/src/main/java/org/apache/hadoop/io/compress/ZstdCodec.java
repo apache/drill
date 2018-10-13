@@ -24,10 +24,10 @@ import java.io.OutputStream;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.io.compress.zstd.ZstdCompressionInputStream;
 import org.apache.hadoop.io.compress.zstd.ZstdCompressor;
 import org.apache.hadoop.io.compress.zstd.ZstdDecompressor;
-import org.apache.hadoop.fs.CommonConfigurationKeys;
 
 /**
  * This class creates snappy compressors/decompressors.
@@ -49,7 +49,7 @@ public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompre
   /**
    * Return the configuration used by this object.
    *
-   * @return the configuration object used by this objec.
+   * @return the configuration object used by this object.
    */
   @Override
   public Configuration getConf() {
@@ -100,13 +100,7 @@ public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompre
    */
   @Override
   public CompressionOutputStream createOutputStream(OutputStream out, Compressor compressor) throws IOException {
-    checkNativeCodeLoaded();
-    int bufferSize = conf.getInt(CommonConfigurationKeys.IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_KEY,
-        CommonConfigurationKeys.IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_DEFAULT);
-
-    int compressionOverhead = (bufferSize / 6) + 32;
-
-    return new BlockCompressorStream(out, compressor, bufferSize, compressionOverhead);
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   /**
@@ -127,10 +121,7 @@ public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompre
    */
   @Override
   public Compressor createCompressor() {
-    checkNativeCodeLoaded();
-    int bufferSize = conf.getInt(CommonConfigurationKeys.IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_KEY,
-        CommonConfigurationKeys.IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_DEFAULT);
-    return new ZstdCompressor(bufferSize);
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   /**

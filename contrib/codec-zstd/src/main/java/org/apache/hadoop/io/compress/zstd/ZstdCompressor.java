@@ -292,18 +292,6 @@ public class ZstdCompressor implements Compressor {
   public void end() {
   }
 
-  // Instead of using the Zstd class directly what I did in the ZstdDecompressor
-  // class was
-  // to use the ZstdDirectBufferDecompressingStream. So the following method was
-  // removed.
-  // However in retrospect it might be better to use the Zstd class directly
-  // inside
-  // this class and the ZstdDecompressor. As long as we take the
-  // ZstdDirectBufferDecompressingStream
-  // as a good example of how to drive the Zstd API.
-
-  // private native static void initIDs();
-
   private int compressBytesDirect() {
     int level = 1;
     long ret = Zstd.compressDirectByteBuffer(compressedDirectBuf, 0, directBufferSize, uncompressedDirectBuf, 0,

@@ -169,25 +169,4 @@ public class ZstdCompressionInputStream extends CompressionInputStream {
   public synchronized void reset() throws IOException {
     throw new IOException("mark/reset not supported");
   }
-
-  public static void main(String[] args) throws Exception {
-    FileInputStream fin = new FileInputStream("/tmp/testBasicLarge.mp.zst");
-    FileOutputStream fout = new FileOutputStream("/tmp/testBasicLarge.mp.out2");
-    ZstdDecompressor decompressor = new ZstdDecompressor();
-    ZstdCompressionInputStream decomp = new ZstdCompressionInputStream(fin, decompressor, 1 * 1024);
-    try {
-      Stopwatch stopwatch = Stopwatch.createStarted();
-      IOUtils.copyLarge(decomp, fout);
-      stopwatch.stop();
-      System.out.println("took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-    } finally {
-      if (fin != null) {
-        fin.close();
-      }
-      if (fout != null) {
-        fout.close();
-      }
-    }
-  }
-
 }

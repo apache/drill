@@ -15,14 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.hadoop.io.compress.zstd;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,11 +26,9 @@ import org.apache.hadoop.io.compress.Decompressor;
 
 import com.github.luben.zstd.ZstdDirectBufferDecompressingStream;
 import com.github.luben.zstd.util.Native;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 /**
- * A {@link Decompressor} based on the snappy compression algorithm.
- * http://code.google.com/p/snappy/
+ * A {@link Decompressor} based on the zstandard compression algorithm.
  */
 public class ZstdDecompressor implements Decompressor {
   private static final Log LOG = LogFactory.getLog(ZstdDecompressor.class.getName());
@@ -68,8 +62,7 @@ public class ZstdDecompressor implements Decompressor {
   /**
    * Creates a new compressor.
    *
-   * @param directBufferSize
-   *          size of the direct buffer to be used.
+   * @param directBufferSize size of the direct buffer to be used.
    */
   public ZstdDecompressor(int directBufferSize) {
     this.directBufferSize = directBufferSize;
@@ -95,12 +88,9 @@ public class ZstdDecompressor implements Decompressor {
    * {@link #needsInput()}--that the buffer may be safely modified. With this
    * requirement, an extra buffer-copy can be avoided.)
    *
-   * @param b
-   *          Input data
-   * @param off
-   *          Start offset
-   * @param len
-   *          Length
+   * @param b   Input data
+   * @param off Start offset
+   * @param len Length
    */
   @Override
   public void setInput(byte[] b, int off, int len) {
@@ -117,7 +107,6 @@ public class ZstdDecompressor implements Decompressor {
 
     setInputFromSavedData();
 
-    // Reinitialize snappy's output direct-buffer
     uncompressedDirectBuf.limit(directBufferSize);
     uncompressedDirectBuf.position(directBufferSize);
 
@@ -201,17 +190,14 @@ public class ZstdDecompressor implements Decompressor {
   }
 
   /**
-   * Fills specified buffer with uncompressed data. Returns actual number of
-   * bytes of uncompressed data. A return value of 0 indicates that
+   * Fills specified buffer with uncompressed data. Returns actual number of bytes
+   * of uncompressed data. A return value of 0 indicates that
    * {@link #needsInput()} should be called in order to determine if more input
    * data is required.
    *
-   * @param b
-   *          Buffer for the compressed data
-   * @param off
-   *          Start offset of the data
-   * @param len
-   *          Size of the buffer
+   * @param b   Buffer for the compressed data
+   * @param off Start offset of the data
+   * @param len Size of the buffer
    * @return The actual number of bytes of compressed data.
    * @throws IOException
    */
@@ -280,41 +266,5 @@ public class ZstdDecompressor implements Decompressor {
   @Override
   public void end() {
     // do nothing
-  }
-
-  public static void main(String[] args) throws Exception {
-    FileInputStream fin = new FileInputStream("/tmp/testBasicLarge.mp.zst");
-    FileOutputStream fout = new FileOutputStream("/tmp/testBasicLarge.mp.out");
-    try {
-      ZstdDecompressor z = new ZstdDecompressor();
-      byte[] compressed = new byte[4 * 1024];
-      byte[] uncompressed = new byte[8 * 1024];
-
-      Stopwatch stopwatch = Stopwatch.createStarted();
-      int n = fin.read(compressed);
-      if (n > 0) {
-        z.setInput(compressed, 0, n);
-      }
-      while (n > 0) {
-        int w = 1;
-        while (w > 0) {
-          w = z.decompress(uncompressed, 0, uncompressed.length);
-          fout.write(uncompressed, 0, w);
-        }
-        n = fin.read(compressed);
-        if (n > 0) {
-          z.setInput(compressed, 0, n);
-        }
-      }
-      stopwatch.stop();
-      System.out.println("took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-    } finally {
-      if (fin != null) {
-        fin.close();
-      }
-      if (fout != null) {
-        fout.close();
-      }
-    }
   }
 }
