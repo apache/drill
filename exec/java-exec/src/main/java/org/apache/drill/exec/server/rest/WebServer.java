@@ -471,7 +471,10 @@ public class WebServer implements AutoCloseable {
     FileUtils.deleteDirectory(getTmpJavaScriptDir());
   }
 
-  //Generate Options Description JavaScript
+  /**
+   * Generate Options Description JavaScript to serve http://drillhost/options ACE library search features
+   * @throws IOException
+   */
   private void generateOptionsDescriptionJSFile() throws IOException {
     //Obtain list of Options & their descriptions
     OptionManager optionManager = this.drillbit.getContext().getOptionManager();
@@ -484,7 +487,7 @@ public class WebServer implements AutoCloseable {
     InputStream optionsDescripTemplateStream = Resource.newClassPathResource(OPTIONS_DESCRIBE_TEMPLATE_JS).getInputStream();
     //Generated file
     File optionsDescriptionFile = new File(getTmpJavaScriptDir(), OPTIONS_DESCRIBE_JS);
-    final String FILE_CONTENT_FOOTER = "};";
+    final String file_content_footer = "};";
     optionsDescriptionFile.deleteOnExit();
     //Create a copy of a template and write with that!
     java.nio.file.Files.copy(optionsDescripTemplateStream, optionsDescriptionFile.toPath());
@@ -504,13 +507,16 @@ public class WebServer implements AutoCloseable {
           writer.newLine();
         }
       }
-      writer.append(FILE_CONTENT_FOOTER);
+      writer.append(file_content_footer);
       writer.newLine();
       writer.flush();
     }
   }
 
-  //Generates ACE library javascript populated with list of available SQL functions
+  /**
+   * Generates ACE library javascript populated with list of available SQL functions
+   * @throws IOException
+   */
   private void generateFunctionJS() throws IOException {
     //Naturally ordered set of function names
     TreeSet<String> functionSet = new TreeSet<>();
@@ -518,7 +524,8 @@ public class WebServer implements AutoCloseable {
     List<FunctionHolder> builtInFuncHolderList = this.drillbit.getContext().getFunctionImplementationRegistry().getLocalFunctionRegistry()
         .getAllJarsWithFunctionsHolders().get(LocalFunctionRegistry.BUILT_IN);
 
-    //Build List of usable functions
+    //Build List of 'usable' functions (i.e. functions that start with an alphabet and can be autocompleted by the ACE library)
+    //Example of 'unusable' functions would be operators like '<', '!'
     int skipCount = 0;
     for (FunctionHolder builtInFunctionHolder : builtInFuncHolderList) {
       String name = builtInFunctionHolder.getName();
@@ -529,28 +536,25 @@ public class WebServer implements AutoCloseable {
         skipCount++;
       }
     }
-    logger.debug("{} functions will not be available in WebUI : {} ", skipCount);
+    logger.debug("{} functions will not be available in WebUI", skipCount);
 
     //Generated file
     File functionsListFile = new File(getTmpJavaScriptDir(), ACE_MODE_SQL_JS);
-    //Template source Javascript file
-    InputStream aceModeSqlTemplateStream = Resource.newClassPathResource(ACE_MODE_SQL_TEMPLATE_JS).getInputStream();
     functionsListFile.deleteOnExit();
-    int numLeftToWrite = functionSet.size();
-    //Create a copy of a template and write with that!
-    java.nio.file.Files.copy(aceModeSqlTemplateStream, functionsListFile.toPath());
-    StringBuilder funcListBldr = new StringBuilder();
-      //Iterate through options in Properties file
-      for (String functionName : functionSet) {
-        numLeftToWrite--;
-        //Note: We don't need to worry about short descriptions for WebUI, since they will never be explicitly accessed from the map
-        funcListBldr.append(functionName).append( numLeftToWrite > 0 ? "|" : "");
-      }
+    //Template source Javascript file
+    try (InputStream aceModeSqlTemplateStream = Resource.newClassPathResource(ACE_MODE_SQL_TEMPLATE_JS).getInputStream()) {
+      //Create a copy of a template and write with that!
+      java.nio.file.Files.copy(aceModeSqlTemplateStream, functionsListFile.toPath());
+    }
+
+    //Construct String
+    String funcListString = String.join("|", functionSet);
+
     Path path = Paths.get(functionsListFile.getPath());
     try (Stream<String> lines = Files.lines(path)) {
       List <String> replaced =
           lines //Replacing first occurrence
-            .map(line -> line.replaceFirst(DRILL_FUNCTIONS_PLACEHOLDER, funcListBldr.toString()))
+            .map(line -> line.replaceFirst(DRILL_FUNCTIONS_PLACEHOLDER, funcListString))
             .collect(Collectors.toList());
       Files.write(path, replaced);
     }
