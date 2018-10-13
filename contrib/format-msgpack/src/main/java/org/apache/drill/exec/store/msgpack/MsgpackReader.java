@@ -378,7 +378,7 @@ public class MsgpackReader extends BaseMsgpackReader {
    *</code>
    */
   private void writeTimestamp(ExtensionValue ev, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
-    long epochSeconds = 0;
+    long epochMilliSeconds = 0;
     byte zero = 0;
     byte[] data = ev.getData();
     switch (data.length) {
@@ -390,9 +390,9 @@ public class MsgpackReader extends BaseMsgpackReader {
       timestampReadBuffer.put(zero);
       timestampReadBuffer.put(data);
       timestampReadBuffer.position(0);
-      epochSeconds = timestampReadBuffer.getLong();
-    }
+      epochMilliSeconds = timestampReadBuffer.getLong() * 1000;
       break;
+    }
     case 8: {
       timestampReadBuffer.position(0);
       timestampReadBuffer.put(data);
@@ -400,28 +400,30 @@ public class MsgpackReader extends BaseMsgpackReader {
       long data64 = timestampReadBuffer.getLong();
       @SuppressWarnings("unused")
       long nanos = data64 >>> 34;
-      epochSeconds = data64 & 0x00000003ffffffffL;
-    }
+      long seconds = data64 & 0x00000003ffffffffL;
+      epochMilliSeconds = (seconds * 1000) + (nanos / 1000000);
       break;
+    }
     case 12: {
       timestampReadBuffer.position(0);
       timestampReadBuffer.put(data);
       timestampReadBuffer.position(0);
       int data32 = timestampReadBuffer.getInt();
       @SuppressWarnings("unused")
-      long nanosLong = data32;
+      long nanos = data32;
       long data64 = timestampReadBuffer.getLong();
-      epochSeconds = data64;
-    }
+      long seconds = data64;
+      epochMilliSeconds = (seconds * 1000) + (nanos / 1000000);
       break;
+    }
     default:
       logger.error("UnSupported built-in messagepack timestamp type (-1) with data length of: " + data.length);
     }
 
     if (mapWriter != null) {
-      mapWriter.timeStamp(fieldName).writeTimeStamp(epochSeconds);
+      mapWriter.timeStamp(fieldName).writeTimeStamp(epochMilliSeconds);
     } else {
-      listWriter.timeStamp().writeTimeStamp(epochSeconds);
+      listWriter.timeStamp().writeTimeStamp(epochMilliSeconds);
     }
   }
 
