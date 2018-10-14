@@ -100,7 +100,7 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
       for (IndexDesc idx : indexes) {
         DrillIndexDescriptor hbaseIdx = buildIndexDescriptor(tableName, idx);
         if (hbaseIdx == null) {
-          //not able to build a valid index based on the index info from MFS
+          // not able to build a valid index based on the index info from MFS
           logger.error("Not able to build index for {}", idx.toString());
           continue;
         }
@@ -233,9 +233,9 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
   }
 
   private LogicalExpression castFunctionSQLSyntax(String field, String type) throws InvalidIndexDefinitionException {
-    //get castTypeStr so we can construct SQL syntax string before MapRDB could provide such syntax
+    // get castTypeStr so we can construct SQL syntax string before MapRDB could provide such syntax
     String castTypeStr = getDrillTypeStr(type);
-    if(castTypeStr == null) {//no cast
+    if(castTypeStr == null) {  // no cast
       throw new InvalidIndexDefinitionException("cast function type not recognized: " + type + "for field " + field);
     }
     try {
@@ -255,7 +255,7 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
   private LogicalExpression getIndexExpression(IndexFieldDesc desc) throws InvalidIndexDefinitionException {
     final String fieldName = desc.getFieldPath().asPathString();
     final String functionDef = desc.getFunctionName();
-    if ((functionDef != null)) {//this is a function
+    if ((functionDef != null)) {  // this is a function
       String[] tokens = functionDef.split("\\s+");
       if (tokens[0].equalsIgnoreCase("cast")) {
         if (tokens.length != 3) {
@@ -270,7 +270,7 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
         throw new InvalidIndexDefinitionException("function definition is not supported for indexing: " + functionDef);
       }
     }
-    //else it is a schemaPath
+    // else it is a schemaPath
     return fieldName2SchemaPath(fieldName);
   }
 
@@ -285,7 +285,7 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
 
   private List<RelFieldCollation> getFieldCollations(IndexDesc desc, Collection<IndexFieldDesc> descCollection) {
     List<RelFieldCollation> fieldCollations = new ArrayList<>();
-    int i=0;
+    int i = 0;
     for (IndexFieldDesc field : descCollection) {
       RelFieldCollation.Direction direction = (field.getSortOrder() == IndexFieldDesc.Order.Asc) ?
           RelFieldCollation.Direction.ASCENDING : (field.getSortOrder() == IndexFieldDesc.Order.Desc ?

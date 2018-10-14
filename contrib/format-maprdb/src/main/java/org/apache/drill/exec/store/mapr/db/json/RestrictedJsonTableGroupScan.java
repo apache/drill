@@ -57,7 +57,7 @@ public class RestrictedJsonTableGroupScan extends JsonTableGroupScan {
                             @JsonProperty("format") MapRDBFormatPlugin formatPlugin,
                             @JsonProperty("scanSpec") JsonScanSpec scanSpec, /* scan spec of the original table */
                             @JsonProperty("columns") List<SchemaPath> columns,
-                            @JsonProperty("")MapRDBStatistics statistics) {
+                            @JsonProperty("") MapRDBStatistics statistics) {
     super(userName, storagePlugin, formatPlugin, scanSpec, columns, statistics);
   }
 

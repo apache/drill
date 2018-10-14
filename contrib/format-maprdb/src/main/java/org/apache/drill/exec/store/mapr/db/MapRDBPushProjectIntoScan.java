@@ -30,18 +30,21 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.drill.exec.planner.common.DrillRelOptUtil;
-import org.apache.drill.exec.planner.common.DrillRelOptUtil.ProjectPushInfo;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.mapr.db.binary.BinaryTableGroupScan;
 import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
 import org.apache.drill.exec.util.Utilities;
 
 import java.util.List;
 
+/**
+ * Push a physical Project into Scan. Currently, this rule is only doing projection pushdown for MapRDB-JSON tables
+ * since it was needed for the secondary index feature which only applies to Json tables.
+ * For binary tables, note that the DrillPushProjectIntoScanRule is still applicable during the logical
+ * planning phase.
+ */
 public abstract class MapRDBPushProjectIntoScan extends StoragePluginOptimizerRule {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBPushProjectIntoScan.class);
 
@@ -53,17 +56,10 @@ public abstract class MapRDBPushProjectIntoScan extends StoragePluginOptimizerRu
       RelOptHelper.some(ProjectPrel.class, RelOptHelper.any(ScanPrel.class)), "MapRDBPushProjIntoScan:Proj_On_Scan") {
     @Override
     public void onMatch(RelOptRuleCall call) {
-      final ScanPrel scan = (ScanPrel) call.rel(1);
-      final ProjectPrel project = (ProjectPrel) call.rel(0);
-      if (!(scan.getGroupScan() instanceof MapRDBGroupScan)) {
-        return;
-      }
-      doPushProjectIntoGroupScan(call, project, scan, (MapRDBGroupScan) scan.getGroupScan());
-      if (scan.getGroupScan() instanceof BinaryTableGroupScan) {
-        BinaryTableGroupScan groupScan = (BinaryTableGroupScan) scan.getGroupScan();
+      final ProjectPrel project = call.rel(0);
+      final ScanPrel scan = call.rel(1);
 
-      } else {
-        assert (scan.getGroupScan() instanceof JsonTableGroupScan);
+      if (scan.getGroupScan() instanceof JsonTableGroupScan) {
         JsonTableGroupScan groupScan = (JsonTableGroupScan) scan.getGroupScan();
 
         doPushProjectIntoGroupScan(call, project, scan, groupScan);
@@ -72,9 +68,10 @@ public abstract class MapRDBPushProjectIntoScan extends StoragePluginOptimizerRu
 
     @Override
     public boolean matches(RelOptRuleCall call) {
-      final ScanPrel scan = (ScanPrel) call.rel(1);
-      if (scan.getGroupScan() instanceof BinaryTableGroupScan ||
-          scan.getGroupScan() instanceof JsonTableGroupScan) {
+      final ScanPrel scan = call.rel(1);
+
+      // See class level comments above for why only JsonGroupScan is considered
+      if (scan.getGroupScan() instanceof JsonTableGroupScan) {
         return super.matches(call);
       }
       return false;
@@ -82,12 +79,12 @@ public abstract class MapRDBPushProjectIntoScan extends StoragePluginOptimizerRu
   };
 
   protected void doPushProjectIntoGroupScan(RelOptRuleCall call,
-      ProjectPrel project, ScanPrel scan, MapRDBGroupScan groupScan) {
+      ProjectPrel project, ScanPrel scan, JsonTableGroupScan groupScan) {
     try {
 
       DrillRelOptUtil.ProjectPushInfo columnInfo =
           DrillRelOptUtil.getFieldsInformation(scan.getRowType(), project.getProjects());
-      if (columnInfo == null || Utilities.isStarQuery(columnInfo.getFields()) //
+      if (columnInfo == null || Utilities.isStarQuery(columnInfo.getFields())
           || !groupScan.canPushdownProjects(columnInfo.getFields())) {
         return;
       }
