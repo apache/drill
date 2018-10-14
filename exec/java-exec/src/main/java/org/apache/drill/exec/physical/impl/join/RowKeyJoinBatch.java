@@ -281,4 +281,10 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
     super.close();
   }
 
+  @Override
+  public void dump() {
+    logger.error("RowKeyJoinBatch[container={}, left={}, right={}, hasRowKeyBatch={}, rkJoinState={}]",
+        container, left, right, hasRowKeyBatch, rkJoinState);
+  }
+
 }

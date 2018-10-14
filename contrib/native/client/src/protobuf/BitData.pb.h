@@ -521,6 +521,13 @@ class RuntimeFilterBDef : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& probe_fields() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_probe_fields();
 
+  // optional int32 hj_op_id = 7;
+  inline bool has_hj_op_id() const;
+  inline void clear_hj_op_id();
+  static const int kHjOpIdFieldNumber = 7;
+  inline ::google::protobuf::int32 hj_op_id() const;
+  inline void set_hj_op_id(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:exec.bit.data.RuntimeFilterBDef)
  private:
   inline void set_has_query_id();
@@ -531,6 +538,8 @@ class RuntimeFilterBDef : public ::google::protobuf::Message {
   inline void clear_has_minor_fragment_id();
   inline void set_has_to_foreman();
   inline void clear_has_to_foreman();
+  inline void set_has_hj_op_id();
+  inline void clear_has_hj_op_id();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -538,11 +547,12 @@ class RuntimeFilterBDef : public ::google::protobuf::Message {
   ::google::protobuf::int32 major_fragment_id_;
   ::google::protobuf::int32 minor_fragment_id_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int32 > bloom_filter_size_in_bytes_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> probe_fields_;
   bool to_foreman_;
+  ::google::protobuf::int32 hj_op_id_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> probe_fields_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitData_2eproto();
   friend void protobuf_AssignDesc_BitData_2eproto();
@@ -1041,6 +1051,28 @@ RuntimeFilterBDef::probe_fields() const {
 inline ::google::protobuf::RepeatedPtrField< ::std::string>*
 RuntimeFilterBDef::mutable_probe_fields() {
   return &probe_fields_;
+}
+
+// optional int32 hj_op_id = 7;
+inline bool RuntimeFilterBDef::has_hj_op_id() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void RuntimeFilterBDef::set_has_hj_op_id() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void RuntimeFilterBDef::clear_has_hj_op_id() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void RuntimeFilterBDef::clear_hj_op_id() {
+  hj_op_id_ = 0;
+  clear_has_hj_op_id();
+}
+inline ::google::protobuf::int32 RuntimeFilterBDef::hj_op_id() const {
+  return hj_op_id_;
+}
+inline void RuntimeFilterBDef::set_hj_op_id(::google::protobuf::int32 value) {
+  set_has_hj_op_id();
+  hj_op_id_ = value;
 }
 
 

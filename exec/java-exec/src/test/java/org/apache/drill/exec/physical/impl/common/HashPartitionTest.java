@@ -132,7 +132,7 @@ public class HashPartitionTest {
 
         {
           int compositeIndex = hashPartition.probeForKey(1, 12);
-          int startIndex = hashPartition.getStartIndex(compositeIndex);
+          int startIndex = hashPartition.getStartIndex(compositeIndex).getLeft();
           int nextIndex = hashPartition.getNextIndex(startIndex);
 
           Assert.assertEquals(2, startIndex);

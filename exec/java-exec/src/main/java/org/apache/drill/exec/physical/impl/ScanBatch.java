@@ -182,11 +182,11 @@ public class ScanBatch implements CloseableRecordBatch {
     if(isRepeatableScan) {
       readers = readerList.iterator();
       return IterOutcome.NONE;
-    } 
-    else {
+    } else {
       releaseAssets(); // All data has been read. Release resource.
       done = true;
-      return IterOutcome.NONE;}
+      return IterOutcome.NONE;
+    }
   }
 
   /**
@@ -204,11 +204,10 @@ public class ScanBatch implements CloseableRecordBatch {
         return false;
       }
       return true;
-    }
-    else {// Regular scan
+    } else { // Regular scan
       currentReader.close();
       currentReader = null;
-      return true;// In regular case, we always continue the iteration, if no more reader, we will break out at the head of loop
+      return true; // In regular case, we always continue the iteration, if no more reader, we will break out at the head of loop
     }
   }
 
@@ -283,7 +282,7 @@ public class ScanBatch implements CloseableRecordBatch {
         }
       }
       lastOutcome = IterOutcome.STOP;
-      throw UserException.systemError(e)
+      throw UserException.internalError(e)
           .addContext("Setup failed for", currentReaderClassName)
           .build(logger);
     } catch (UserException ex) {
@@ -291,7 +290,7 @@ public class ScanBatch implements CloseableRecordBatch {
       throw ex;
     } catch (Exception ex) {
       lastOutcome = IterOutcome.STOP;
-      throw UserException.systemError(ex).build(logger);
+      throw UserException.internalError(ex).build(logger);
     } finally {
       oContext.getStats().stopProcessing();
     }
@@ -334,7 +333,7 @@ public class ScanBatch implements CloseableRecordBatch {
       }
     } catch(SchemaChangeException e) {
       // No exception should be thrown here.
-      throw UserException.systemError(e)
+      throw UserException.internalError(e)
           .addContext("Failure while allocating implicit vectors")
           .build(logger);
     }

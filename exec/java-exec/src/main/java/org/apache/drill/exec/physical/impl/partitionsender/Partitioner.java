@@ -29,6 +29,9 @@ import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.record.RecordBatch;
 
 public interface Partitioner {
+  // Keep the recordCount as (2^x) - 1 to better utilize the memory allocation in ValueVectors; however
+  // other criteria such as batch sizing in terms of actual MBytes rather than record count could also be applied
+  // by the operator.
   int DEFAULT_RECORD_BATCH_SIZE = (1 << 10) - 1;
 
   void setup(ExchangeFragmentContext context,

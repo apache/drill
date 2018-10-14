@@ -34,7 +34,7 @@ import org.apache.drill.exec.util.Utilities;
  * Base class for logical/physical scan rel implemented in Drill.
  */
 public abstract class DrillScanRelBase extends TableScan implements DrillRelNode {
-  private GroupScan groupScan;
+  protected GroupScan groupScan;
   protected final DrillTable drillTable;
 
   public DrillScanRelBase(RelOptCluster cluster,

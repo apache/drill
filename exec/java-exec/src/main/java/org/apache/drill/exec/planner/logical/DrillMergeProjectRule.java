@@ -169,6 +169,14 @@ public class DrillMergeProjectRule extends RelOptRule {
     return list;
   }
 
+  /**
+   * The purpose of the replace() method is to allow the caller to replace a 'top' and 'bottom' project with
+   * a single merged project with the assumption that caller knows exactly the semantics/correctness of merging
+   * the two projects. This is not applying the full fledged DrillMergeProjectRule.
+   * @param topProject
+   * @param bottomProject
+   * @return new project after replacement
+   */
   public static Project replace(Project topProject, Project bottomProject) {
     final List<RexNode> newProjects =
         RelOptUtil.pushPastProject(topProject.getProjects(), bottomProject);

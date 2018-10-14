@@ -77,7 +77,7 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
     }
     newGroupsScan.setFilterPushedDown(true);
 
-    final ScanPrel newScanPrel = new ScanPrel(scan, filter.getTraitSet(),
+    final ScanPrel newScanPrel = new ScanPrel(scan.getCluster(), filter.getTraitSet(),
         newGroupsScan, scan.getRowType(), scan.getTable());
 
     if (mongoFilterBuilder.isAllExpressionsConverted()) {
