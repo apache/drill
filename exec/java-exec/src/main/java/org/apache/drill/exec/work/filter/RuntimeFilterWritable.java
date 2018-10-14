@@ -103,6 +103,27 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable{
     return new RuntimeFilterWritable(runtimeFilterBDef, cloned);
   }
 
+  public void retainBuffers(final int increment) {
+    if (increment <= 0) {
+      return;
+    }
+    for (final DrillBuf buf : data) {
+      buf.retain(increment);
+    }
+  }
+  //TODO: Not used currently because of DRILL-6826
+  public RuntimeFilterWritable newRuntimeFilterWritable(BufferAllocator bufferAllocator) {
+    int bufNum = data.length;
+    DrillBuf [] newBufs = new DrillBuf[bufNum];
+    int i = 0;
+    for (DrillBuf buf : data) {
+      DrillBuf transferredBuffer = buf.transferOwnership(bufferAllocator).buffer;
+      newBufs[i] = transferredBuffer;
+      i++;
+    }
+    return new RuntimeFilterWritable(this.runtimeFilterBDef, newBufs);
+  }
+
   public String toString() {
     return identifier;
   }

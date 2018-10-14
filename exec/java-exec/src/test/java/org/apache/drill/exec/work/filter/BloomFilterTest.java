@@ -135,7 +135,6 @@ public class BloomFilterTest {
 
   @Test
   public void testNotExist() throws Exception {
-
     Drillbit bit = new Drillbit(c, RemoteServiceSet.getLocalServiceSet(), ClassPathScanner.fromPrescan(c));
     bit.run();
     DrillbitContext bitContext = bit.getContext();
@@ -192,6 +191,12 @@ public class BloomFilterTest {
     long hashCode = probeHash64.hash64Code(0, 0, 0);
     boolean contain = bloomFilter.find(hashCode);
     Assert.assertFalse(contain);
+    bloomFilter.getContent().close();
+    vectorContainer.clear();
+    probeVectorContainer.clear();
+    context.close();
+    bitContext.close();
+    bit.close();
   }
 
 
@@ -254,6 +259,12 @@ public class BloomFilterTest {
     long hashCode = probeHash64.hash64Code(0, 0, 0);
     boolean contain = bloomFilter.find(hashCode);
     Assert.assertTrue(contain);
+    bloomFilter.getContent().close();
+    vectorContainer.clear();
+    probeVectorContainer.clear();
+    context.close();
+    bitContext.close();
+    bit.close();
   }
 
 
@@ -324,5 +335,11 @@ public class BloomFilterTest {
     long hashCode = probeHash64.hash64Code(0, 0, 0);
     boolean contain = bloomFilter.find(hashCode);
     Assert.assertTrue(contain);
+    bloomFilter.getContent().close();
+    vectorContainer.clear();
+    probeVectorContainer.clear();
+    context.close();
+    bitContext.close();
+    bit.close();
   }
 }

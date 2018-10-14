@@ -28,6 +28,8 @@ public class BloomFilterDef {
   private boolean local;
 
   private String probeField;
+
+  private String buildField;
   //TODO
   @JsonIgnore
   private Double leftNDV;
@@ -37,10 +39,11 @@ public class BloomFilterDef {
 
   @JsonCreator
   public BloomFilterDef(@JsonProperty("numBytes") int numBytes, @JsonProperty("local") boolean local, @JsonProperty("probeField")
-                        String probeField){
+                        String probeField, @JsonProperty("buildField") String buildField){
     this.numBytes = numBytes;
     this.local = local;
     this.probeField = probeField;
+    this.buildField = buildField;
   }
 
 
@@ -61,7 +64,7 @@ public class BloomFilterDef {
   }
 
   public String toString() {
-    return "BF:{numBytes=" + numBytes + ",send2Foreman=" + !local + ",probeField= " + probeField + " }";
+    return "BF:{numBytes=" + numBytes + ",send2Foreman=" + !local + ",probeField= " + probeField + ",buildField= " + buildField + " }";
   }
 
   @JsonIgnore
@@ -80,6 +83,11 @@ public class BloomFilterDef {
 
   public void setRightNDV(Double rightNDV) {
     this.rightNDV = rightNDV;
+  }
+
+  public String getBuildField()
+  {
+    return buildField;
   }
 
 }

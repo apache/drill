@@ -18,13 +18,8 @@
 package org.apache.drill.exec.work.filter;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.exec.physical.base.GroupScan;
-
-
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -37,17 +32,18 @@ public class RuntimeFilterDef {
   private List<BloomFilterDef> bloomFilterDefs;
 
   private boolean sendToForeman;
-  @JsonIgnore
-  private GroupScan probeSideGroupScan;
 
+  private long runtimeFilterIdentifier;
 
   @JsonCreator
   public RuntimeFilterDef(@JsonProperty("generateBloomFilter") boolean generateBloomFilter, @JsonProperty("generateMinMaxFilter") boolean generateMinMaxFilter,
-                          @JsonProperty("bloomFilterDefs") List<BloomFilterDef> bloomFilterDefs, @JsonProperty("sendToForeman") boolean sendToForeman) {
+                          @JsonProperty("bloomFilterDefs") List<BloomFilterDef> bloomFilterDefs, @JsonProperty("sendToForeman") boolean sendToForeman,
+                          @JsonProperty("runtimeFilterIdentifier") long runtimeFilterIdentifier) {
     this.generateBloomFilter = generateBloomFilter;
     this.generateMinMaxFilter = generateMinMaxFilter;
     this.bloomFilterDefs = bloomFilterDefs;
     this.sendToForeman = sendToForeman;
+    this.runtimeFilterIdentifier = runtimeFilterIdentifier;
   }
 
 
@@ -84,12 +80,11 @@ public class RuntimeFilterDef {
     this.sendToForeman = sendToForeman;
   }
 
-  @JsonIgnore
-  public GroupScan getProbeSideGroupScan() {
-    return probeSideGroupScan;
+  public long getRuntimeFilterIdentifier() {
+    return runtimeFilterIdentifier;
   }
 
-  public void setProbeSideGroupScan(GroupScan probeSideGroupScan) {
-    this.probeSideGroupScan = probeSideGroupScan;
+  public void setRuntimeFilterIdentifier(long runtimeFilterIdentifier) {
+    this.runtimeFilterIdentifier = runtimeFilterIdentifier;
   }
 }

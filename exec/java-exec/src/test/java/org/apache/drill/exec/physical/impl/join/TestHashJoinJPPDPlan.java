@@ -34,38 +34,6 @@ public class TestHashJoinJPPDPlan extends JoinTestBase {
   }
 
   @Test
-  public void testInnnerHashJoin() throws Exception {
-    String sql = "SELECT nations.N_NAME, count(*)"
-      + "FROM\n"
-      + " dfs.`sample-data/nation.parquet` nations\n"
-      + "JOIN\n"
-      + "  dfs.`sample-data/region.parquet` regions\n"
-      + "  on nations.N_REGIONKEY = regions.R_REGIONKEY "
-      + "WHERE nations.N_NAME = 'A' "
-      + "group by nations.N_NAME";
-    String expectedColNames1 =  "\"runtimeFilterDef\"";
-    String expectedColNames2 =  "\"bloomFilterDefs\"";
-    String expectedColNames3 =  "\"runtime-filter\"";
-    testPhysicalPlan(sql, expectedColNames1, expectedColNames2, expectedColNames3);
-  }
-
-  @Test
-  public void testRightHashJoin() throws Exception {
-    String sql = "SELECT nations.N_NAME, count(*)"
-      + "FROM\n"
-      + " dfs.`sample-data/nation.parquet` nations\n"
-      + "RIGHT JOIN\n"
-      + "  dfs.`sample-data/region.parquet` regions\n"
-      + "  on nations.N_REGIONKEY = regions.R_REGIONKEY "
-      + "WHERE nations.N_NAME = 'A' "
-      + "group by nations.N_NAME";
-    String expectedColNames1 =  "\"runtimeFilterDef\"";
-    String expectedColNames2 =  "\"bloomFilterDefs\"";
-    String expectedColNames3 =  "\"runtime-filter\"";
-    testPhysicalPlan(sql, expectedColNames1, expectedColNames2, expectedColNames3);
-  }
-
-  @Test
   public void testLeftHashJoin() throws Exception {
     String sql = "SELECT nations.N_NAME, count(*)"
       + "FROM\n"
@@ -95,24 +63,4 @@ public class TestHashJoinJPPDPlan extends JoinTestBase {
     String excludedColNames3 =  "\"runtime-filter\"";
     testPlanWithAttributesMatchingPatterns(sql, null, new String[]{excludedColNames1, excludedColNames2, excludedColNames3});
   }
-
-  @Test
-  public void testInnnerHashJoinWithRightDeepTree() throws Exception {
-    String sql = "SELECT nations.N_NAME, count(*)"
-      + "FROM\n"
-      + " cp.`tpch/nation.parquet` nations\n"
-      + "JOIN\n"
-      + "  cp.`tpch/region.parquet` regions\n"
-      + "  on nations.N_REGIONKEY = regions.R_REGIONKEY "
-      + "JOIN cp.`tpch/customer.parquet` customers\n"
-      + " on nations.N_NATIONKEY = customers.C_NATIONKEY "
-      + "WHERE nations.N_NAME = 'A' "
-      + "group by nations.N_NAME";
-    String expectedColNames1 =  "\"runtimeFilterDef\"";
-    String expectedColNames2 =  "\"bloomFilterDefs\"";
-    String expectedColNames3 =  "\"runtime-filter\"";
-    testPhysicalPlan(sql, expectedColNames1, expectedColNames2, expectedColNames3);
-  }
-
-
 }

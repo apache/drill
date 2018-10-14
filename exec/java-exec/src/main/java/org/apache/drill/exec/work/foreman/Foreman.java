@@ -151,7 +151,7 @@ public class Foreman implements Runnable {
     this.fragmentsRunner = new FragmentsRunner(bee, initiatingClient, drillbitContext, this);
     this.queryStateProcessor = new QueryStateProcessor(queryIdString, queryManager, drillbitContext, new ForemanResult());
     this.profileOption = setProfileOption(queryContext.getOptions());
-    this.enableRuntimeFilter = drillbitContext.getOptionManager().getBoolean(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER_KEY);
+    this.enableRuntimeFilter = queryContext.getOptions().getOption(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER_KEY).bool_val;
   }
 
 

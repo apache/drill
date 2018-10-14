@@ -34,6 +34,7 @@ import java.util.Arrays;
 public class BloomFilter {
   // Bytes in a bucket.
   private static final int BYTES_PER_BUCKET = 32;
+
   // Minimum bloom filter data size.
   private static final int MINIMUM_BLOOM_SIZE_IN_BYTES = 256;
 
@@ -41,16 +42,14 @@ public class BloomFilter {
 
   private int numBytes;
 
-  private int mask[] = new int[8];
-
-  private byte[] tempBucket = new byte[32];
-
+  private int bucketMask[] = new int[8];
 
   public BloomFilter(int numBytes, BufferAllocator bufferAllocator) {
     int size = BloomFilter.adjustByteSize(numBytes);
     this.byteBuf = bufferAllocator.buffer(size);
     this.numBytes = byteBuf.capacity();
-    this.byteBuf.writerIndex(numBytes);
+    this.byteBuf.writeZero(this.numBytes);
+    this.byteBuf.writerIndex(this.numBytes);
   }
 
   public BloomFilter(int ndv, double fpp, BufferAllocator bufferAllocator) {
@@ -74,26 +73,27 @@ public class BloomFilter {
   }
 
   private void setMask(int key) {
-    //8 odd numbers act as salt value to participate in the computation of the mask.
+    //8 odd numbers act as salt value to participate in the computation of the bucketMask.
     final int SALT[] = {0x47b6137b, 0x44974d91, 0x8824ad5b, 0xa2b7289d, 0x705495c7, 0x2df1424b, 0x9efc4947, 0x5c6bfb31};
 
-    Arrays.fill(mask, 0);
+    Arrays.fill(bucketMask, 0);
 
     for (int i = 0; i < 8; ++i) {
-      mask[i] = key * SALT[i];
+      bucketMask[i] = key * SALT[i];
     }
 
     for (int i = 0; i < 8; ++i) {
-      mask[i] = mask[i] >> 27;
+      bucketMask[i] = bucketMask[i] >>> 27;
     }
 
     for (int i = 0; i < 8; ++i) {
-      mask[i] = 0x1 << mask[i];
+      bucketMask[i] = 0x1 << bucketMask[i];
     }
   }
 
   /**
    * Add an element's hash value to this bloom filter.
+   *
    * @param hash hash result of element.
    */
   public void insert(long hash) {
@@ -101,16 +101,13 @@ public class BloomFilter {
     int key = (int) hash;
     setMask(key);
     int initialStartIndex = bucketIndex * BYTES_PER_BUCKET;
-    byteBuf.getBytes(initialStartIndex, tempBucket);
     for (int i = 0; i < 8; i++) {
+      int index = initialStartIndex + i * 4;
       //every iterate batch,we set 32 bits
-      int bitsetIndex = i * 4;
-      tempBucket[bitsetIndex] = (byte) (tempBucket[bitsetIndex] | (byte) (mask[i] >>> 24));
-      tempBucket[bitsetIndex + 1] = (byte) (tempBucket[(bitsetIndex) + 1] | (byte) (mask[i] >>> 16));
-      tempBucket[bitsetIndex + 2] = (byte) (tempBucket[(bitsetIndex) + 2] | (byte) (mask[i] >>> 8));
-      tempBucket[bitsetIndex + 3] = (byte) (tempBucket[(bitsetIndex) + 3] | (byte) (mask[i]));
+      int a = byteBuf.getInt(index);
+      a |= bucketMask[i];
+      byteBuf.setInt(index, a);
     }
-    byteBuf.setBytes(initialStartIndex, tempBucket);
   }
 
   /**
@@ -123,17 +120,12 @@ public class BloomFilter {
     int bucketIndex = (int) (hash >> 32) & (numBytes / BYTES_PER_BUCKET - 1);
     int key = (int) hash;
     setMask(key);
-
     int startIndex = bucketIndex * BYTES_PER_BUCKET;
-    byteBuf.getBytes(startIndex, tempBucket);
     for (int i = 0; i < 8; i++) {
-      byte set = 0;
-      int bitsetIndex = i * 4;
-      set |= tempBucket[bitsetIndex] & ((byte) (mask[i] >>> 24));
-      set |= tempBucket[(bitsetIndex + 1)] & ((byte) (mask[i] >>> 16));
-      set |= tempBucket[(bitsetIndex + 2)] & ((byte) (mask[i] >>> 8));
-      set |= tempBucket[(bitsetIndex + 3)] & ((byte) mask[i]);
-      if (0 == set) {
+      int index = startIndex + i * 4;
+      int a = byteBuf.getInt(index);
+      int b = a & bucketMask[i];
+      if (b == 0) {
         return false;
       }
     }
@@ -142,6 +134,7 @@ public class BloomFilter {
 
   /**
    * Merge this bloom filter with other one
+   *
    * @param other
    */
   public void or(BloomFilter other) {
@@ -150,20 +143,19 @@ public class BloomFilter {
     Preconditions.checkArgument(otherLength == thisLength);
     Preconditions.checkState(otherLength % BYTES_PER_BUCKET == 0);
     Preconditions.checkState(thisLength % BYTES_PER_BUCKET == 0);
-    byte[] otherTmpBucket = new byte[BYTES_PER_BUCKET];
-    for (int i = 0; i < thisLength / BYTES_PER_BUCKET; i++) {
-      byteBuf.getBytes(i * BYTES_PER_BUCKET, tempBucket);
-      other.byteBuf.getBytes(i * BYTES_PER_BUCKET, otherTmpBucket);
-      for (int j = 0; j < BYTES_PER_BUCKET; j++) {
-        tempBucket[j] = (byte) (tempBucket[j] | otherTmpBucket[j]);
-      }
-      this.byteBuf.setBytes(i, tempBucket);
+    for (int i = 0; i < thisLength / 8; i++) {
+      int index = i * 8;
+      long a = byteBuf.getLong(index);
+      long b = other.byteBuf.getLong(index);
+      long c = a | b;
+      byteBuf.setLong(index, c);
     }
   }
 
   /**
    * Calculate optimal size according to the number of distinct values and false positive probability.
    * See http://en.wikipedia.org/wiki/Bloom_filter#Probability_of_false_positives for the formula.
+   *
    * @param ndv: The number of distinct values.
    * @param fpp: The false positive probability.
    * @return optimal number of bytes of given ndv and fpp.
@@ -177,7 +169,7 @@ public class BloomFilter {
     bits |= bits >> 8;
     bits |= bits >> 16;
     bits++;
-    int bytes = bits/8;
+    int bytes = bits / 8;
     return bytes;
   }
 
