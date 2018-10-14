@@ -48,4 +48,5 @@ message RuntimeFilterBDef{
   repeated int32 bloom_filter_size_in_bytes = 5;
   repeated string probe_fields = 6; // probe fields with corresponding BloomFilters
   optional int32 hj_op_id = 7; // the operator id of the HashJoin which generates this RuntimeFilter
+  optional int64 rf_identifier = 8; // the runtime filter identifier
 }

@@ -21,6 +21,7 @@ import org.apache.drill.exec.physical.impl.ScreenCreator;
 import org.apache.drill.exec.physical.impl.SingleSenderCreator;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggTemplate;
 import org.apache.drill.exec.physical.impl.broadcastsender.BroadcastSenderRootExec;
+import org.apache.drill.exec.physical.impl.filter.RuntimeFilterRecordBatch;
 import org.apache.drill.exec.physical.impl.flatten.FlattenRecordBatch;
 import org.apache.drill.exec.physical.impl.join.HashJoinBatch;
 import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
@@ -61,6 +62,7 @@ public class OperatorMetricRegistry {
     register(CoreOperatorType.LATERAL_JOIN_VALUE, AbstractBinaryRecordBatch.Metric.class);
     register(CoreOperatorType.UNNEST_VALUE, UnnestRecordBatch.Metric.class);
     register(CoreOperatorType.UNION_VALUE, AbstractBinaryRecordBatch.Metric.class);
+    register(CoreOperatorType.RUNTIME_FILTER_VALUE, RuntimeFilterRecordBatch.Metric.class);
   }
 
   private static void register(final int operatorType, final Class<? extends MetricDef> metricDef) {

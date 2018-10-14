@@ -39,7 +39,9 @@ public class RuntimeFilterReporter {
     this.context = context;
   }
 
-  public void sendOut(List<BloomFilter> bloomFilters, List<String> probeFields, boolean sendToForeman, int hashJoinOpId) {
+  public void sendOut(List<BloomFilter> bloomFilters, List<String> probeFields, RuntimeFilterDef runtimeFilterDef, int hashJoinOpId) {
+    boolean sendToForeman = runtimeFilterDef.isSendToForeman();
+    long rfIdentifier = runtimeFilterDef.getRuntimeFilterIdentifier();
     ExecProtos.FragmentHandle fragmentHandle = context.getHandle();
     DrillBuf[] data = new DrillBuf[bloomFilters.size()];
     List<Integer> bloomFilterSizeInBytes = new ArrayList<>();
@@ -64,6 +66,7 @@ public class RuntimeFilterReporter {
       .setMinorFragmentId(minorFragmentId)
       .setToForeman(sendToForeman)
       .setHjOpId(hashJoinOpId)
+      .setRfIdentifier(rfIdentifier)
       .addAllBloomFilterSizeInBytes(bloomFilterSizeInBytes)
       .build();
     RuntimeFilterWritable runtimeFilterWritable = new RuntimeFilterWritable(runtimeFilterB, data);

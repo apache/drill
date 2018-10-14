@@ -443,6 +443,8 @@ public final class SchemaBitData
                     output.writeString(6, probeFields, true);
                 if(message.hasHjOpId())
                     output.writeInt32(7, message.getHjOpId(), false);
+                if(message.hasRfIdentifier())
+                    output.writeInt64(8, message.getRfIdentifier(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitData.RuntimeFilterBDef message)
             {
@@ -504,6 +506,9 @@ public final class SchemaBitData
                         case 7:
                             builder.setHjOpId(input.readInt32());
                             break;
+                        case 8:
+                            builder.setRfIdentifier(input.readInt64());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -551,6 +556,7 @@ public final class SchemaBitData
                 case 5: return "bloomFilterSizeInBytes";
                 case 6: return "probeFields";
                 case 7: return "hjOpId";
+                case 8: return "rfIdentifier";
                 default: return null;
             }
         }
@@ -569,6 +575,7 @@ public final class SchemaBitData
             fieldMap.put("bloomFilterSizeInBytes", 5);
             fieldMap.put("probeFields", 6);
             fieldMap.put("hjOpId", 7);
+            fieldMap.put("rfIdentifier", 8);
         }
     }
 
