@@ -58,7 +58,10 @@ public class BroadcastExchangePrel extends ExchangePrel{
     final int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
     final double cpuCost = broadcastFactor * DrillCostBase.SVR_CPU_COST * inputRows;
 
-    //we assume localhost network cost is 1/10 of regular network cost
+    // We assume localhost network cost is 1/10 of regular network cost
+    //  ( c * num_bytes * (N - 1) ) + ( c * num_bytes * 0.1)
+    // = c * num_bytes * (N - 0.9)
+    // TODO: a similar adjustment should be made to HashExchangePrel
     final double networkCost = broadcastFactor * DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth * (numEndPoints - 0.9);
 
     return new DrillCostBase(inputRows, cpuCost, 0, networkCost);

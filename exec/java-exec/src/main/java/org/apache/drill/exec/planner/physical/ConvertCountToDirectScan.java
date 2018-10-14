@@ -128,8 +128,8 @@ public class ConvertCountToDirectScan extends Prule {
     final ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, 1, 1, scanRowType.getFieldCount());
     final GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getFiles(), scanStats);
 
-    final ScanPrel newScan = new ScanPrel(scan, scan.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON), 
-        directScan, scanRowType);
+    final DirectScanPrel newScan = new DirectScanPrel(scan.getCluster(),
+        scan.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON), directScan, scanRowType);
 
     final ProjectPrel newProject = new ProjectPrel(agg.getCluster(), agg.getTraitSet().plus(Prel.DRILL_PHYSICAL)
         .plus(DrillDistributionTrait.SINGLETON), newScan, prepareFieldExpressions(scanRowType), agg.getRowType());
@@ -158,7 +158,6 @@ public class ConvertCountToDirectScan extends Prule {
 
     for (int i = 0; i < agg.getAggCallList().size(); i++) {
       AggregateCall aggCall = agg.getAggCallList().get(i);
-    //for (AggregateCall aggCall : agg.getAggCallList()) {
       long cnt;
 
       // rule can be applied only for count function, return empty counts

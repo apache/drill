@@ -47,8 +47,8 @@ public abstract class MapRDBPushLimitIntoScan extends StoragePluginOptimizerRule
 
     @Override
     public void onMatch(RelOptRuleCall call) {
-      final ScanPrel scan = call.rel(1);
       final LimitPrel limit = call.rel(0);
+      final ScanPrel scan = call.rel(1);
       doPushLimitIntoGroupScan(call, limit, null, scan, scan.getGroupScan());
     }
 

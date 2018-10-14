@@ -378,7 +378,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
   public int probeForKey(int recordsProcessed, int hashCode) throws SchemaChangeException {
     return hashTable.probeForKey(recordsProcessed, hashCode);
   }
-  public int getStartIndex(int probeIndex) {
+  public Pair<Integer, Boolean> getStartIndex(int probeIndex) {
     /* The current probe record has a key that matches. Get the index
      * of the first row in the build side that matches the current key
      */
@@ -387,15 +387,15 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
      * side. Set the bit corresponding to this index so if we are doing a FULL or RIGHT
      * join we keep track of which records we need to project at the end
      */
-    hjHelper.setRecordMatched(compositeIndex);
-    return compositeIndex;
+    boolean matchExists = hjHelper.setRecordMatched(compositeIndex);
+    return Pair.of(compositeIndex, matchExists);
   }
   public int getNextIndex(int compositeIndex) {
     // in case of iner rows with duplicate keys, get the next one
     return hjHelper.getNextIndex(compositeIndex);
   }
-  public void setRecordMatched(int compositeIndex) {
-    hjHelper.setRecordMatched(compositeIndex);
+  public boolean setRecordMatched(int compositeIndex) {
+    return hjHelper.setRecordMatched(compositeIndex);
   }
   public List<Integer> getNextUnmatchedIndex() {
     return hjHelper.getNextUnmatchedIndex();

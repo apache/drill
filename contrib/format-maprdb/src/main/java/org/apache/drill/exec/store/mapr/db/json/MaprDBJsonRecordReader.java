@@ -236,7 +236,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
           idOnly = (scannedFields == null);
         }
 
-        if(projectWholeDocument) {
+        if (projectWholeDocument) {
           projector = new FieldProjector(projectedFieldsSet);
         }
 

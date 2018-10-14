@@ -183,4 +183,11 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
     return counter;
   }
 
+
+  @Override
+  public void dump() {
+    logger.error("RangePartitionRecordBatch[container={}, numPartitions={}, recordCount={}, partitionIdVector={}]",
+        container, numPartitions, recordCount, partitionIdVector);
+  }
+
 }

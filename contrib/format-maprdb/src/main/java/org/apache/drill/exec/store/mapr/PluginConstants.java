@@ -53,6 +53,9 @@ public class PluginConstants {
 
   public static final int JSON_TABLE_NUM_TABLETS_PER_INDEX_DEFAULT = 32;
 
+  public static final int JSON_TABLE_SCAN_SIZE_MB_MIN = 32;
+  public static final int JSON_TABLE_SCAN_SIZE_MB_MAX = 8192;
+
   public static final String JSON_TABLE_SCAN_SIZE_MB = "format-maprdb.json.scanSizeMB";
   public static final int JSON_TABLE_SCAN_SIZE_MB_DEFAULT = 128;
 

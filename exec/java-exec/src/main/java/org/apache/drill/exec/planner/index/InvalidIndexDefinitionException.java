@@ -19,6 +19,10 @@ package org.apache.drill.exec.planner.index;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 
+/**
+ * An InvalidIndexDefinitionException may be thrown if Drill does not recognize the
+ * type or expression of the index during the index discovery phase
+ */
 public class InvalidIndexDefinitionException extends DrillRuntimeException {
   public InvalidIndexDefinitionException(String message) {
     super(message);

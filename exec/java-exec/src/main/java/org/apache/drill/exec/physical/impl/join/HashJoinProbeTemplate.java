@@ -30,6 +30,7 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -47,8 +48,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   // Join type, INNER, LEFT, RIGHT or OUTER
   private JoinRelType joinType;
 
-  //joinControl object derived from the int type joinControl passed from outgoingBatch(HashJoinBatch)
-  //so we can do different things in hashtable for INTERSECT_DISTINCT and INTERSECT_ALL
+  // joinControl determines how to handle INTERSECT_DISTINCT vs. INTERSECT_ALL
   private JoinControl joinControl;
 
   private HashJoinBatch outgoingJoinBatch = null;
@@ -325,16 +325,30 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
            * of the first row in the build side that matches the current key
            * (and record this match in the bitmap, in case of a FULL/RIGHT join)
            */
-          currentCompositeIdx = currPartition.getStartIndex(probeIndex);
+          Pair<Integer, Boolean> matchStatus = currPartition.getStartIndex(probeIndex);
+
+          boolean matchExists = matchStatus.getRight();
+
+          if (joinControl.isIntersectDistinct() && matchExists) {
+            // since it is intersect distinct and we already have one record matched, move to next probe row
+            recordsProcessed++;
+            continue;
+          }
+
+          currentCompositeIdx = matchStatus.getLeft();
 
           outputRecords =
             outputRow(currPartition.getContainers(), currentCompositeIdx,
               probeBatch.getContainer(), recordsProcessed);
 
           /* Projected single row from the build side with matching key but there
-           * may be more rows with the same key. Check if that's the case
+           * may be more rows with the same key. Check if that's the case as long as
+           * we are not doing intersect distinct since it only cares about
+           * distinct values.
            */
-          currentCompositeIdx = currPartition.getNextIndex(currentCompositeIdx);
+          currentCompositeIdx = joinControl.isIntersectDistinct() ? -1 :
+            currPartition.getNextIndex(currentCompositeIdx);
+
           if (currentCompositeIdx == -1) {
             /* We only had one row in the build side that matched the current key
              * from the probe side. Drain the next row in the probe side.
