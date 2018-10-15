@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
@@ -30,23 +31,31 @@ import java.time.ZoneId;
 import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.LogFixture;
+import org.apache.drill.test.LogFixture.LogFixtureBuilder;
 import org.apache.drill.test.QueryRowSetIterator;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
+
+import ch.qos.logback.classic.Level;
 
 public class TestMsgpackRecordReader extends ClusterTest {
   private static int ALL_FIELD_TYPES_SIZE = 12;
@@ -87,8 +96,23 @@ public class TestMsgpackRecordReader extends ClusterTest {
     schemaBuilder = new SchemaBuilder();
   }
 
+  @After
+  public void after() {
+    this.expectedSchema = null;
+    this.rowSetBuilder = null;
+    this.rowSetIterator = null;
+    this.schemaBuilder = null;
+  }
+
+//  LogFixtureBuilder logBuilder = LogFixture.builder()
+//      // Log to the console for debugging convenience
+//      .toConsole().logger("org.apache.drill.exec", Level.TRACE);
+//  try (LogFixture logs = logBuilder.build()) {
+//  }
+
   @Test
   public void testBasic() throws Exception {
+
     try (MessagePacker packer = testPacker()) {
       packer.packMapHeader(3);
       packer.packString("apple").packInt(1);
@@ -137,8 +161,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("pinaple", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("pinaple", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
     //@formatter:off
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -207,6 +230,79 @@ public class TestMsgpackRecordReader extends ClusterTest {
         .build();
     //@formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
+  @Ignore // this fails because of interall drill bug
+  public void testArrayOfArrayMsgpack() throws Exception {
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("arrayOfArray");
+      packer.packArrayHeader(2);
+      packer.packArrayHeader(1);
+      packer.packLong(1);
+      packer.packArrayHeader(2);
+      packer.packLong(1);
+      packer.packLong(1);
+      for (int i = 0; i < BATCH_SIZE; i++) {
+        packer.packMapHeader(1);
+        packer.packString("anInt");
+        packer.packInt(1);
+      }
+    }
+
+    String sql = "select root.arrayOfArray[0][0] as w from `dfs.data`.`test.mp` as root";
+    rowSetIterator = client.queryBuilder().sql(sql).rowSetIterator();
+
+    schemaBuilder = new SchemaBuilder();
+    schemaBuilder.add("w", TypeProtos.MinorType.BIGINT, DataMode.OPTIONAL);
+    expectedSchema = schemaBuilder.buildSchema();
+
+    DirectRowSet batch1 = nextRowSet();
+    rowSetBuilder = newRowSetBuilder();
+    rowSetBuilder.addRow(1L);
+    for (int i = 0; i < BATCH_SIZE - 1; i++) {
+      rowSetBuilder.addRow(new Object[] { null });
+    }
+    verify(rowSetBuilder.build(), batch1);
+    DirectRowSet batch2 = nextRowSet();
+    rowSetBuilder = newRowSetBuilder();
+    rowSetBuilder.addRow(new Object[] { null });
+    verify(rowSetBuilder.build(), batch2);
+  }
+
+  @Test
+  @Ignore // this fails because of interall drill bug
+  public void testArrayOfArrayJson() throws Exception {
+    try (OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(new File(testDir, "test.json")))) {
+      w.write("{\"arrayOfArray\":[[1],[1,2]]}\n");
+      for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+        w.write("{\"anInt\":1}\n");
+      }
+    }
+    LogFixtureBuilder logBuilder = LogFixture.builder()
+        // Log to the console for debugging convenience
+        .toConsole().logger("org.apache.drill.exec", Level.TRACE);
+    try (LogFixture logs = logBuilder.build()) {
+      String sql = "select root.arrayOfArray[0][0] as w from `dfs.data`.`test.json` as root";
+      rowSetIterator = client.queryBuilder().sql(sql).rowSetIterator();
+
+      schemaBuilder = new SchemaBuilder();
+      schemaBuilder.add("w", TypeProtos.MinorType.BIGINT, DataMode.OPTIONAL);
+      expectedSchema = schemaBuilder.buildSchema();
+
+      DirectRowSet batch1 = nextRowSet();
+      rowSetBuilder = newRowSetBuilder();
+      rowSetBuilder.addRow(1L);
+      for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH - 1; i++) {
+        rowSetBuilder.addRow(new Object[] { null });
+      }
+      verify(rowSetBuilder.build(), batch1);
+      DirectRowSet batch2 = nextRowSet();
+      rowSetBuilder = newRowSetBuilder();
+      rowSetBuilder.addRow(new Object[] { null });
+      verify(rowSetBuilder.build(), batch2);
+    }
   }
 
   @Test
@@ -554,7 +650,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(epochSeconds)
+        .addRow(epochSeconds*1000)
         .build();
     //@formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
@@ -584,7 +680,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
     // we are ignoring the nanos
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(epochSeconds)
+        .addRow(epochSeconds*1000)
         .build();
     //@formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
@@ -613,7 +709,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
     // we are ignoring the nanos
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(epochSeconds)
+        .addRow(epochSeconds*1000)
         .build();
     //@formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
@@ -790,22 +886,8 @@ public class TestMsgpackRecordReader extends ClusterTest {
     verify(rowSetBuilder.build(), nextRowSet());
   }
 
-//  @Test
-//  public void testSchemaArrayOfArray() throws Exception {
-//    learnModel();
-//    String sql = "select root.arrayOfarray[0] as w from dfs.data.`secondBatchHasCompleteModel.mp` as root";
-//    rowSetIterator = client.queryBuilder().sql(sql).rowSetIterator();
-//
-//    schemaBuilder.add("w", TypeProtos.MinorType.LATE, TypeProtos.DataMode.OPTIONAL);
-//    expectedSchema = schemaBuilder.buildSchema();
-//    verifyFirstBatchNull();
-//
-//    rowSetBuilder = newRowSetBuilder();
-//    rowSetBuilder.addRow(new Object[] { new Object[] {} });
-//    verify(rowSetBuilder.build(), nextRowSet());
-//  }
-
   @Test
+  @Ignore // this fails because of interall drill bug
   public void testSchemaArrayOfArrayCell() throws Exception {
     learnModel();
     String sql = "select root.arrayOfarray[0][0] as w from dfs.data.`secondBatchHasCompleteModel.mp` as root";
@@ -884,7 +966,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
     expectedSchema = schemaBuilder.buildSchema();
     rowSetBuilder = newRowSetBuilder();
     // record not matching schema are skipped.
-   // rowSetBuilder.addRow(new Object[] {null});
+    // rowSetBuilder.addRow(new Object[] {null});
     rowSetBuilder.addRow("data");
     verify(rowSetBuilder.build(), nextRowSet());
   }

@@ -18,19 +18,13 @@
 
 package org.apache.hadoop.io.compress.zstd;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.io.compress.CompressionInputStream;
 import org.apache.hadoop.io.compress.Decompressor;
-
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
