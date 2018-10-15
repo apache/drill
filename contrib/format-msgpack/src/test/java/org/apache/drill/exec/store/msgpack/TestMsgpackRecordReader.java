@@ -203,6 +203,34 @@ public class TestMsgpackRecordReader extends ClusterTest {
   }
 
   @Test
+  public void testSkipOverInvalidElementsInArray() throws Exception {
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("anArray");
+      packer.packArrayHeader(5);
+      packer.packString("stringVal");
+      packer.packString("stringVal");
+      packer.packString("stringVal");
+      packer.packLong(1L);
+      packer.packString("stringVal");
+    }
+
+    String sql = "select * from `dfs.data`.`test.mp`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    //@formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addArray("anArray", TypeProtos.MinorType.VARCHAR)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(new Object[] {new String[] {"stringVal","stringVal","stringVal","stringVal"}})
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
   public void testArrayOfArray() throws Exception {
     try (MessagePacker packer = testPacker()) {
       packer.packMapHeader(1);

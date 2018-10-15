@@ -25,6 +25,11 @@ public abstract class BaseMsgpackReader {
 
   protected MessageUnpacker unpacker;
   protected boolean skipMalformedMsgRecords;
+  protected MsgpackReaderContext context;
+
+  public BaseMsgpackReader(MsgpackReaderContext context) {
+    this.context = context;
+  }
 
   public ReadState write(ComplexWriter writer, MaterializedField schema) throws IOException {
     ReadState readState = ReadState.WRITE_SUCCEED;

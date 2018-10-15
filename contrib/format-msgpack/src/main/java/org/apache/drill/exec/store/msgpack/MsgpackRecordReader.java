@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -39,8 +38,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 
-import com.fasterxml.jackson.core.JsonParseException;
-
 import jline.internal.Log;
 
 public class MsgpackRecordReader extends AbstractRecordReader {
@@ -50,14 +47,9 @@ public class MsgpackRecordReader extends AbstractRecordReader {
 
   private VectorContainerWriter writer;
 
-  // Data we're consuming
-  private Path hadoopPath;
   private InputStream stream;
   private final DrillFileSystem fileSystem;
-  private int recordCount;
-  private long runningRecordCount = 0;
   private final FragmentContext fragmentContext;
-  private long parseErrorCount;
   private final boolean skipMalformedMsgRecords;
   private final boolean printSkippedMalformedMsgRecordLineNumber;
   private final boolean learnSchema;
@@ -66,6 +58,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private ReadState write = null;
   private MsgpackSchemaWriter schemaWriter = new MsgpackSchemaWriter();
 
+  private MsgpackReaderContext context = new MsgpackReaderContext();
   private BaseMsgpackReader messageReader;
 
   private boolean unionEnabled = false; // ????
@@ -85,7 +78,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
       final DrillFileSystem fileSystem, final List<SchemaPath> columns) {
 
     Preconditions.checkArgument((inputPath != null), "InputPath must be set.");
-    this.hadoopPath = new Path(inputPath);
+    context.hadoopPath = new Path(inputPath);
 
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
@@ -93,30 +86,29 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     this.printSkippedMalformedMsgRecordLineNumber = config.isPrintSkippedMalformedMsgRecordLineNumber();
     this.learnSchema = config.isLearnSchema();
     this.useSchema = config.isUseSchema();
-    this.schemaLocation = new Path(this.hadoopPath.getParent(), ".schema.proto");
+    this.schemaLocation = new Path(context.hadoopPath.getParent(), ".schema.proto");
     setColumns(columns);
   }
 
   @Override
   public String toString() {
-    return super.toString() + "[hadoopPath = " + hadoopPath + ", recordCount = " + recordCount + ", parseErrorCount = "
-        + parseErrorCount + ", runningRecordCount = " + runningRecordCount + ", ...]";
+    return super.toString() + context.toString() + ", ...]";
   }
 
   @Override
-  public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
+  public void setup(final OperatorContext operatorContext, final OutputMutator output) throws ExecutionSetupException {
     try {
       this.output = output;
-      this.stream = fileSystem.openPossiblyCompressedStream(hadoopPath);
+      this.stream = fileSystem.openPossiblyCompressedStream(context.hadoopPath);
       this.writer = new VectorContainerWriter(output, unionEnabled);
       if (isSkipQuery()) {
-        this.messageReader = new CountingMsgpackReader();
+        this.messageReader = new CountingMsgpackReader(context);
       } else {
-        this.messageReader = new MsgpackReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()));
+        this.messageReader = new MsgpackReader(context, fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()));
       }
       setupParser();
     } catch (final Exception e) {
-      handleAndRaise("Failure reading mgspack file", e);
+      context.handleAndRaise("Failure reading mgspack file", e);
     }
   }
 
@@ -130,34 +122,6 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     messageReader.setIgnoreMsgParseErrors(skipMalformedMsgRecords);
   }
 
-  protected void handleAndRaise(String suffix, Exception e) throws UserException {
-
-    String message = e.getMessage();
-    int columnNr = -1;
-
-    if (e instanceof JsonParseException) {
-      final JsonParseException ex = (JsonParseException) e;
-      message = ex.getOriginalMessage();
-      columnNr = ex.getLocation().getColumnNr();
-    }
-
-    UserException.Builder exceptionBuilder = UserException.dataReadError(e).message("%s - %s", suffix, message);
-    if (columnNr > 0) {
-      exceptionBuilder.pushContext("Column ", columnNr);
-    }
-
-    if (hadoopPath != null) {
-      exceptionBuilder.pushContext("Record ", currentRecordNumberInFile()).pushContext("File ",
-          hadoopPath.toUri().getPath());
-    }
-
-    throw exceptionBuilder.build(logger);
-  }
-
-  private long currentRecordNumberInFile() {
-    return runningRecordCount + recordCount + 1;
-  }
-
   @Override
   public int next() {
 
@@ -168,31 +132,29 @@ public class MsgpackRecordReader extends AbstractRecordReader {
         schema = msgpackSchema.load(schemaLocation);
       }
     } catch (IOException e) {
-      Log.warn("Failed to load schema file: " + schemaLocation + " " + e.getMessage());
+      logger.warn("Failed to load schema file: " + schemaLocation + " " + e.getMessage());
     }
 
     writer.allocate();
     writer.reset();
-    recordCount = 0;
-    parseErrorCount = 0;
+    context.recordCount = 0;
     if (write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
-      return recordCount;
+      return context.recordCount;
     }
-    outside: while (recordCount < DEFAULT_ROWS_PER_BATCH) {
+    outside: while (context.recordCount < DEFAULT_ROWS_PER_BATCH) {
       try {
-        writer.setPosition(recordCount);
+        writer.setPosition(context.recordCount);
         write = messageReader.write(writer, schema);
         if (write == ReadState.WRITE_SUCCEED) {
-          recordCount++;
+          context.recordCount++;
         } else if (write == ReadState.MSG_RECORD_PARSE_ERROR || write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
           if (skipMalformedMsgRecords == false) {
-            handleAndRaise("Error parsing msgpack",
-                new Exception(hadoopPath.getName() + " : line nos :" + (recordCount + 1)));
+            context.handleAndRaise("Error parsing msgpack", new Exception("Failed to parse record."));
           }
-          ++parseErrorCount;
+          ++context.parseErrorCount;
           if (printSkippedMalformedMsgRecordLineNumber) {
-            logger.debug(
-                "Error parsing msgpack in " + hadoopPath.getName() + " : line nos :" + (recordCount + parseErrorCount));
+            Log.warn(
+                "Error parsing msgpack in " + context.hadoopPath.getName() + " : line nos :" + context.currentRecordNumberInFile());
           }
           if (write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
             break outside;
@@ -201,7 +163,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
           break outside;
         }
       } catch (IOException ex) {
-        handleAndRaise("Error parsing msgpack file.", ex);
+        context.handleAndRaise("Error parsing msgpack file.", ex);
       }
     }
 
@@ -216,9 +178,9 @@ public class MsgpackRecordReader extends AbstractRecordReader {
       messageReader.ensureAtLeastOneField(writer);
     }
 
-    writer.setValueCount(recordCount);
+    writer.setValueCount(context.recordCount);
     updateRunningCount();
-    return recordCount;
+    return context.recordCount;
 
   }
 
@@ -230,7 +192,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
         schemaWriter.applySchema(schema, writer);
       }
     } catch (Exception e) {
-      handleAndRaise("Error applying msgpack schema to writer.", e);
+      context.handleAndRaise("Error applying msgpack schema to writer.", e);
     }
   }
 
@@ -248,7 +210,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
           msgpackSchema.save(current, schemaLocation);
         }
       } catch (Exception e) {
-        handleAndRaise("Error merging msgpack schema", e);
+        context.handleAndRaise("Error merging msgpack schema", e);
       }
     } else {
       logger.warn("Msgpack reader is in learning mode but the query is not a select star. Learning skipped.");
@@ -256,7 +218,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   }
 
   private void updateRunningCount() {
-    runningRecordCount += recordCount;
+    context.runningRecordCount += context.recordCount;
   }
 
   @Override

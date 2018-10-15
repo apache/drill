@@ -63,13 +63,14 @@ public class MsgpackReader extends BaseMsgpackReader {
   private final boolean skipInvalidKeyTypes = true;
   private boolean skipInvalidSchemaMsgRecords = false;
   /**
-   * Collection for tracking empty array writers during reading
-   * and storing them for initializing empty arrays
+   * Collection for tracking empty array writers during reading and storing them
+   * for initializing empty arrays
    */
   private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
   private boolean allTextMode = false;
 
-  public MsgpackReader(DrillBuf managedBuf, List<SchemaPath> columns) {
+  public MsgpackReader(MsgpackReaderContext context, DrillBuf managedBuf, List<SchemaPath> columns) {
+    super(context);
     assert Preconditions.checkNotNull(columns).size() > 0 : "msgpack record reader requires at least a column";
     this.workBuf = managedBuf;
     this.columns = columns;
@@ -90,9 +91,16 @@ public class MsgpackReader extends BaseMsgpackReader {
       for (int i = 0; i < arrayValue.size(); i++) {
         Value element = arrayValue.get(i);
         if (!element.isNilValue()) {
-          ReadState readState = writeElement(element, null, listWriter, null, selection, schema);
-          if (readState != WRITE_SUCCEED) {
-            return readState;
+          try {
+            ReadState readState = writeElement(element, null, listWriter, null, selection, schema);
+            if (readState != WRITE_SUCCEED) {
+              return readState;
+            }
+          } catch (Exception e) {
+            Log.warn("Failed to write element of type: " + element.getValueType() + " into list. File: "
+                + context.hadoopPath + " line no: " + context.currentRecordNumberInFile());
+            logger.warn("Failed to write element of type: " + element.getValueType() + " into list. File: "
+                + context.hadoopPath + " line no: " + context.currentRecordNumberInFile(), e);
           }
         }
       }
@@ -118,7 +126,8 @@ public class MsgpackReader extends BaseMsgpackReader {
         }
         String fieldName = getFieldName(key);
         if (fieldName == null) {
-          Log.warn("Failed to read field name of type: " + key.getValueType());
+          Log.warn("Failed to read field name of type: " + key.getValueType() + " in file: " + context.hadoopPath
+              + " line no: " + context.currentRecordNumberInFile());
           if (skipInvalidKeyTypes) {
             continue;
           } else {
@@ -479,7 +488,9 @@ public class MsgpackReader extends BaseMsgpackReader {
   }
 
   /**
-   * Checks that list has not been initialized and adds it to the emptyArrayWriters collection.
+   * Checks that list has not been initialized and adds it to the
+   * emptyArrayWriters collection.
+   *
    * @param list ListWriter that should be checked
    */
   private void addIfNotInitialized(ListWriter list) {
@@ -509,14 +520,15 @@ public class MsgpackReader extends BaseMsgpackReader {
       if (fieldWriter.isEmptyMap()) {
         emptyStatus.set(i, true);
       }
-      if (i == 0 && !allTextMode ) {
+      if (i == 0 && !allTextMode) {
         // when allTextMode is false, there is not much benefit to producing all
         // the empty fields; just produce 1 field. The reason is that the type of the
         // fields is unknown, so if we produce multiple Integer fields by default, a
         // subsequent batch that contains non-integer fields will error out in any case.
         // Whereas, with allTextMode true, we are sure that all fields are going to be
         // treated as varchar, so it makes sense to produce all the fields, and in fact
-        // is necessary in order to avoid schema change exceptions by downstream operators.
+        // is necessary in order to avoid schema change exceptions by downstream
+        // operators.
         break;
       }
       i++;

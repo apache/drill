@@ -26,7 +26,8 @@ import org.msgpack.value.Value;
 public class CountingMsgpackReader extends BaseMsgpackReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CountingMsgpackReader.class);
 
-  public CountingMsgpackReader() {
+  public CountingMsgpackReader(MsgpackReaderContext context) {
+    super(context);
   }
 
   @Override
