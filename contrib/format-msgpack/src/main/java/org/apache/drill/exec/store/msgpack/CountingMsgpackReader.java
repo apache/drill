@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.msgpack;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
@@ -26,8 +27,8 @@ import org.msgpack.value.Value;
 public class CountingMsgpackReader extends BaseMsgpackReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CountingMsgpackReader.class);
 
-  public CountingMsgpackReader(MsgpackReaderContext context) {
-    super(context);
+  public CountingMsgpackReader(InputStream stream, MsgpackReaderContext context) {
+    super(stream, context);
   }
 
   @Override

@@ -76,8 +76,9 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
   public static class MsgpackFormatConfig implements FormatPluginConfig {
 
     public List<String> extensions = ImmutableList.of("mp");
-    private boolean skipMalformedMsgRecords = true;
-    private boolean printSkippedMalformedMsgRecordLineNumber = true;
+    private boolean readBinaryAsString = false;
+    private boolean lenient = true;
+    private boolean printToConsole = true;
     private boolean learnSchema = true;
     private boolean useSchema = true;
     private static final List<String> DEFAULT_EXTS = ImmutableList.of("mp");
@@ -94,13 +95,18 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
     }
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
-    public boolean isSkipMalformedMsgRecords() {
-      return skipMalformedMsgRecords;
+    public boolean isReadBinaryAsString() {
+      return readBinaryAsString;
     }
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
-    public boolean isPrintSkippedMalformedMsgRecordLineNumber() {
-      return printSkippedMalformedMsgRecordLineNumber;
+    public boolean isLenient() {
+      return lenient;
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public boolean isPrintToConsole() {
+      return printToConsole;
     }
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
@@ -125,12 +131,16 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
       this.extensions = extensions;
     }
 
-    public void setSkipMalformedMsgRecords(boolean skipMalformedMsgRecords) {
-      this.skipMalformedMsgRecords = skipMalformedMsgRecords;
+    public void setLenient(boolean lenient) {
+      this.lenient = lenient;
     }
 
-    public void setPrintSkippedMalformedMsgRecordLineNumber(boolean printSkippedMalformedMsgRecordLineNumber) {
-      this.printSkippedMalformedMsgRecordLineNumber = printSkippedMalformedMsgRecordLineNumber;
+    public void setReadBinaryAsString(boolean readBinaryAsString) {
+      this.readBinaryAsString = readBinaryAsString;
+    }
+
+    public void setPrintToConsole(boolean printToConsole) {
+      this.printToConsole = printToConsole;
     }
 
     @Override
@@ -139,8 +149,9 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
       int result = 1;
       result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
       result = prime * result + (learnSchema ? 1231 : 1237);
-      result = prime * result + (printSkippedMalformedMsgRecordLineNumber ? 1231 : 1237);
-      result = prime * result + (skipMalformedMsgRecords ? 1231 : 1237);
+      result = prime * result + (printToConsole ? 1231 : 1237);
+      result = prime * result + (lenient ? 1231 : 1237);
+      result = prime * result + (readBinaryAsString ? 1231 : 1237);
       result = prime * result + (useSchema ? 1231 : 1237);
       return result;
     }
@@ -167,10 +178,13 @@ public class MsgpackFormatPlugin extends EasyFormatPlugin<MsgpackFormatConfig> {
       if (learnSchema != other.learnSchema) {
         return false;
       }
-      if (printSkippedMalformedMsgRecordLineNumber != other.printSkippedMalformedMsgRecordLineNumber) {
+      if (printToConsole != other.printToConsole) {
         return false;
       }
-      if (skipMalformedMsgRecords != other.skipMalformedMsgRecords) {
+      if (readBinaryAsString != other.readBinaryAsString) {
+        return false;
+      }
+      if (lenient != other.lenient) {
         return false;
       }
       if (useSchema != other.useSchema) {

@@ -1181,8 +1181,8 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
   private static MsgpackFormatConfig buildConfig(boolean learnSchema, boolean useSchema) {
     MsgpackFormatConfig msgFormat = new MsgpackFormatConfig();
-    msgFormat.setSkipMalformedMsgRecords(true);
-    msgFormat.setPrintSkippedMalformedMsgRecordLineNumber(true);
+    msgFormat.setLenient(true);
+    msgFormat.setPrintToConsole(true);
     msgFormat.setLearnSchema(learnSchema);
     msgFormat.setUseSchema(useSchema);
     msgFormat.setExtensions(ImmutableList.of("mp"));

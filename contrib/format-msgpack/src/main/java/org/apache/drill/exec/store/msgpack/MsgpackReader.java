@@ -21,6 +21,7 @@ import static org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState.MS
 import static org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState.WRITE_SUCCEED;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -50,7 +52,6 @@ import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
 
 import io.netty.buffer.DrillBuf;
-import jline.internal.Log;
 
 public class MsgpackReader extends BaseMsgpackReader {
 
@@ -60,8 +61,8 @@ public class MsgpackReader extends BaseMsgpackReader {
   private DrillBuf workBuf;
   private final FieldSelection rootSelection;
   private final ByteBuffer timestampReadBuffer = ByteBuffer.allocate(12);
-  private final boolean skipInvalidKeyTypes = true;
-  private boolean skipInvalidSchemaMsgRecords = false;
+  private boolean useSchema = false;
+
   /**
    * Collection for tracking empty array writers during reading and storing them
    * for initializing empty arrays
@@ -69,8 +70,9 @@ public class MsgpackReader extends BaseMsgpackReader {
   private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
   private boolean allTextMode = false;
 
-  public MsgpackReader(MsgpackReaderContext context, DrillBuf managedBuf, List<SchemaPath> columns) {
-    super(context);
+  public MsgpackReader(InputStream stream, MsgpackReaderContext context, DrillBuf managedBuf,
+      List<SchemaPath> columns) {
+    super(stream, context);
     assert Preconditions.checkNotNull(columns).size() > 0 : "msgpack record reader requires at least a column";
     this.workBuf = managedBuf;
     this.columns = columns;
@@ -79,7 +81,7 @@ public class MsgpackReader extends BaseMsgpackReader {
 
   @Override
   protected ReadState writeRecord(Value mapValue, ComplexWriter writer, MaterializedField schema) throws IOException {
-    this.skipInvalidSchemaMsgRecords = schema != null;
+    this.useSchema = schema != null;
     return writeToMap(mapValue, writer.rootAsMap(), this.rootSelection, schema);
   }
 
@@ -91,20 +93,14 @@ public class MsgpackReader extends BaseMsgpackReader {
       for (int i = 0; i < arrayValue.size(); i++) {
         Value element = arrayValue.get(i);
         if (!element.isNilValue()) {
-          try {
-            ReadState readState = writeElement(element, null, listWriter, null, selection, schema);
-            if (readState != WRITE_SUCCEED) {
-              return readState;
-            }
-          } catch (Exception e) {
-            Log.warn("Failed to write element of type: " + element.getValueType() + " into list. File: "
-                + context.hadoopPath + " line no: " + context.currentRecordNumberInFile());
-            logger.warn("Failed to write element of type: " + element.getValueType() + " into list. File: "
-                + context.hadoopPath + " line no: " + context.currentRecordNumberInFile(), e);
+          ReadState readState = writeElement(element, null, listWriter, null, selection, schema);
+          if (readState != WRITE_SUCCEED) {
+            return readState;
           }
         }
       }
-    } finally {
+    } finally
+    {
       addIfNotInitialized(listWriter);
       listWriter.endList();
     }
@@ -126,9 +122,8 @@ public class MsgpackReader extends BaseMsgpackReader {
         }
         String fieldName = getFieldName(key);
         if (fieldName == null) {
-          Log.warn("Failed to read field name of type: " + key.getValueType() + " in file: " + context.hadoopPath
-              + " line no: " + context.currentRecordNumberInFile());
-          if (skipInvalidKeyTypes) {
+          if (context.lenient) {
+            context.parseWarn();
             continue;
           } else {
             return MSG_RECORD_PARSE_ERROR;
@@ -155,7 +150,7 @@ public class MsgpackReader extends BaseMsgpackReader {
   }
 
   private MaterializedField getChildSchema(MaterializedField schema, String fieldName) {
-    if (!skipInvalidSchemaMsgRecords) {
+    if (!useSchema) {
       return null;
     }
     for (MaterializedField c : schema.getChildren()) {
@@ -191,121 +186,133 @@ public class MsgpackReader extends BaseMsgpackReader {
     case NIL:
       break;
     default:
-      logger.warn("UnSupported messagepack type: " + valueType);
+      throw new DrillRuntimeException("UnSupported msgpack type: " + valueType);
     }
     return fieldName;
   }
 
   private ReadState writeElement(Value value, MapWriter mapWriter, ListWriter listWriter, String fieldName,
       FieldSelection selection, MaterializedField schema) throws IOException {
-
-    if (!checkElementSchema(value, schema)) {
-      return MSG_RECORD_PARSE_ERROR;
-    }
-
-    ValueType valueType = value.getValueType();
-    switch (valueType) {
-    case ARRAY: {
-      ListWriter subListWriter;
-      MaterializedField childSchema;
-      if (mapWriter != null) {
-        // Write array in map.
-        subListWriter = mapWriter.list(fieldName);
-        childSchema = getArrayInMapChildSchema(schema);
-      } else {
-        // Write array in array.
-        subListWriter = listWriter.list();
-        childSchema = getArrayInArrayChildSchema(schema);
-      }
-      if (!checkChildSchema(childSchema)) {
+    try {
+      if (!checkElementSchema(value, schema)) {
         return MSG_RECORD_PARSE_ERROR;
       }
-      ReadState readState = writeToList(value, subListWriter, selection, childSchema);
-      if (readState == WRITE_SUCCEED) {
-        atLeastOneWrite = true;
+
+      ValueType valueType = value.getValueType();
+      switch (valueType) {
+      case ARRAY: {
+        ListWriter subListWriter;
+        MaterializedField childSchema;
+        if (mapWriter != null) {
+          // Write array in map.
+          subListWriter = mapWriter.list(fieldName);
+          childSchema = getArrayInMapChildSchema(schema);
+        } else {
+          // Write array in array.
+          subListWriter = listWriter.list();
+          childSchema = getArrayInArrayChildSchema(schema);
+        }
+        if (!checkChildSchema(childSchema)) {
+          return MSG_RECORD_PARSE_ERROR;
+        }
+        ReadState readState = writeToList(value, subListWriter, selection, childSchema);
+        if (readState == WRITE_SUCCEED) {
+          atLeastOneWrite = true;
+        }
+        return readState;
       }
-      return readState;
-    }
-    case MAP: {
-      MapWriter subMapWriter;
-      if (mapWriter != null) {
-        // Write map in a map.
-        subMapWriter = mapWriter.map(fieldName);
-      } else {
-        // Write map in a list.
-        subMapWriter = listWriter.map();
+      case MAP: {
+        MapWriter subMapWriter;
+        if (mapWriter != null) {
+          // Write map in a map.
+          subMapWriter = mapWriter.map(fieldName);
+        } else {
+          // Write map in a list.
+          subMapWriter = listWriter.map();
+        }
+        ReadState readState = writeToMap(value, subMapWriter, selection, schema);
+        if (readState == WRITE_SUCCEED) {
+          atLeastOneWrite = true;
+        }
+        return readState;
       }
-      ReadState readState = writeToMap(value, subMapWriter, selection, schema);
-      if (readState == WRITE_SUCCEED) {
-        atLeastOneWrite = true;
-      }
-      return readState;
-    }
-    case FLOAT: {
-      FloatValue fv = value.asFloatValue();
-      double d = fv.toDouble(); // use as double
-      writeDouble(d, mapWriter, fieldName, listWriter);
-      atLeastOneWrite = true;
-      return WRITE_SUCCEED;
-    }
-    case INTEGER: {
-      IntegerValue iv = value.asIntegerValue();
-      if (iv.isInIntRange() || iv.isInLongRange()) {
-        long longVal = iv.toLong();
-        writeInt64(longVal, mapWriter, fieldName, listWriter);
+      case FLOAT: {
+        FloatValue fv = value.asFloatValue();
+        double d = fv.toDouble(); // use as double
+        writeDouble(d, mapWriter, fieldName, listWriter);
         atLeastOneWrite = true;
         return WRITE_SUCCEED;
-      } else {
-        BigInteger i = iv.toBigInteger();
-        logger.warn("UnSupported messagepack type: " + valueType + " with BigInteger value: " + i);
-        return MSG_RECORD_PARSE_ERROR;
       }
-    }
-    case EXTENSION: {
-      ExtensionValue ev = value.asExtensionValue();
-      byte extType = ev.getType();
-      if (extType == -1) {
-        writeTimestamp(ev, mapWriter, fieldName, listWriter);
-      } else {
-        byte[] bytes = ev.getData();
-        writeBinary(bytes, mapWriter, fieldName, listWriter);
+      case INTEGER: {
+        IntegerValue iv = value.asIntegerValue();
+        if (iv.isInIntRange() || iv.isInLongRange()) {
+          long longVal = iv.toLong();
+          writeInt64(longVal, mapWriter, fieldName, listWriter);
+          atLeastOneWrite = true;
+          return WRITE_SUCCEED;
+        } else {
+          BigInteger i = iv.toBigInteger();
+          throw new DrillRuntimeException(
+              "UnSupported messagepack type: " + valueType + " with BigInteger value: " + i);
+        }
       }
-      atLeastOneWrite = true;
-      return WRITE_SUCCEED;
-    }
-    case BOOLEAN: {
-      boolean b = value.asBooleanValue().getBoolean();
-      writeBoolean(b, mapWriter, fieldName, listWriter);
-      atLeastOneWrite = true;
-      return WRITE_SUCCEED;
-    }
-    case STRING: {
-      byte[] buff = value.asStringValue().asByteArray();
-      writeString(buff, mapWriter, fieldName, listWriter);
-      atLeastOneWrite = true;
-      return WRITE_SUCCEED;
-    }
-    case BINARY: {
-      byte[] bytes = value.asBinaryValue().asByteArray();
-      writeBinary(bytes, mapWriter, fieldName, listWriter);
-      atLeastOneWrite = true;
-      return WRITE_SUCCEED;
-    }
-    default:
-      logger.warn("UnSupported messagepack type: " + valueType);
-      return MSG_RECORD_PARSE_ERROR;
+      case EXTENSION: {
+        ExtensionValue ev = value.asExtensionValue();
+        byte extType = ev.getType();
+        if (extType == -1) {
+          writeTimestamp(ev, mapWriter, fieldName, listWriter);
+        } else {
+          byte[] bytes = ev.getData();
+          writeBinary(bytes, mapWriter, fieldName, listWriter);
+        }
+        atLeastOneWrite = true;
+        return WRITE_SUCCEED;
+      }
+      case BOOLEAN: {
+        boolean b = value.asBooleanValue().getBoolean();
+        writeBoolean(b, mapWriter, fieldName, listWriter);
+        atLeastOneWrite = true;
+        return WRITE_SUCCEED;
+      }
+      case STRING: {
+        byte[] buff = value.asStringValue().asByteArray();
+        writeString(buff, mapWriter, fieldName, listWriter);
+        atLeastOneWrite = true;
+        return WRITE_SUCCEED;
+      }
+      case BINARY: {
+        byte[] bytes = value.asBinaryValue().asByteArray();
+        if (context.readBinaryAsString) {
+          writeString(bytes, mapWriter, fieldName, listWriter);
+        } else {
+          writeBinary(bytes, mapWriter, fieldName, listWriter);
+        }
+        atLeastOneWrite = true;
+        return WRITE_SUCCEED;
+      }
+      default:
+        throw new DrillRuntimeException("UnSupported msgpack type: " + valueType);
+      }
+    } catch (Exception e) {
+      if (context.lenient) {
+        context.warn("Failed to write element name: " + fieldName + " of type: " + value.getValueType()
+            + " into list. File: " + context.hadoopPath + " line no: " + context.currentRecordNumberInFile(), e);
+        return WRITE_SUCCEED;
+      } else {
+        throw e;
+      }
     }
   }
 
   private boolean checkChildSchema(MaterializedField childSchema) {
-    if (!skipInvalidSchemaMsgRecords) {
+    if (!useSchema) {
       return true;
     }
     return childSchema != null;
   }
 
   private MaterializedField getArrayInArrayChildSchema(MaterializedField schema) throws IOException {
-    if (!skipInvalidSchemaMsgRecords) {
+    if (!useSchema) {
       return null;
     }
     Collection<MaterializedField> children = schema.getChildren();
@@ -313,7 +320,7 @@ public class MsgpackReader extends BaseMsgpackReader {
   }
 
   private MaterializedField getArrayInMapChildSchema(MaterializedField schema) throws IOException {
-    if (!skipInvalidSchemaMsgRecords) {
+    if (!useSchema) {
       return null;
     }
     if (schema.getType().getMinorType() == MinorType.MAP) {
@@ -325,7 +332,7 @@ public class MsgpackReader extends BaseMsgpackReader {
   }
 
   private boolean checkElementSchema(Value value, MaterializedField schema) {
-    if (!skipInvalidSchemaMsgRecords) {
+    if (!useSchema) {
       return true;
     }
 
@@ -355,8 +362,7 @@ public class MsgpackReader extends BaseMsgpackReader {
     case BINARY:
       return schemaType == MinorType.VARBINARY;
     default:
-      logger.warn("UnSupported messagepack type: " + value);
-      return false;
+      throw new DrillRuntimeException("Unsupported msgpack type: " + value);
     }
   }
 

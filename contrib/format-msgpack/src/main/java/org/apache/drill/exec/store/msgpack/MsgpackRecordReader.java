@@ -38,8 +38,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 
-import jline.internal.Log;
-
 public class MsgpackRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackRecordReader.class);
 
@@ -50,8 +48,6 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private InputStream stream;
   private final DrillFileSystem fileSystem;
   private final FragmentContext fragmentContext;
-  private final boolean skipMalformedMsgRecords;
-  private final boolean printSkippedMalformedMsgRecordLineNumber;
   private final boolean learnSchema;
   private final boolean useSchema;
   private Path schemaLocation;
@@ -62,8 +58,6 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private BaseMsgpackReader messageReader;
 
   private boolean unionEnabled = false; // ????
-
-  private OutputMutator output;
 
   /**
    * Create a msgpack Record Reader that uses a file based input stream.
@@ -82,8 +76,9 @@ public class MsgpackRecordReader extends AbstractRecordReader {
 
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
-    this.skipMalformedMsgRecords = config.isSkipMalformedMsgRecords();
-    this.printSkippedMalformedMsgRecordLineNumber = config.isPrintSkippedMalformedMsgRecordLineNumber();
+    this.context.readBinaryAsString = config.isReadBinaryAsString();
+    this.context.lenient = config.isLenient();
+    this.context.printToConsole = config.isPrintToConsole();
     this.learnSchema = config.isLearnSchema();
     this.useSchema = config.isUseSchema();
     this.schemaLocation = new Path(context.hadoopPath.getParent(), ".schema.proto");
@@ -98,15 +93,14 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   @Override
   public void setup(final OperatorContext operatorContext, final OutputMutator output) throws ExecutionSetupException {
     try {
-      this.output = output;
       this.stream = fileSystem.openPossiblyCompressedStream(context.hadoopPath);
       this.writer = new VectorContainerWriter(output, unionEnabled);
       if (isSkipQuery()) {
-        this.messageReader = new CountingMsgpackReader(context);
+        this.messageReader = new CountingMsgpackReader(stream, context);
       } else {
-        this.messageReader = new MsgpackReader(context, fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()));
+        this.messageReader = new MsgpackReader(stream, context, fragmentContext.getManagedBuffer(),
+            Lists.newArrayList(getColumns()));
       }
-      setupParser();
     } catch (final Exception e) {
       context.handleAndRaise("Failure reading mgspack file", e);
     }
@@ -115,11 +109,6 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   @Override
   protected List<SchemaPath> getDefaultColumnsToRead() {
     return ImmutableList.of();
-  }
-
-  private void setupParser() throws IOException {
-    messageReader.setSource(stream);
-    messageReader.setIgnoreMsgParseErrors(skipMalformedMsgRecords);
   }
 
   @Override
@@ -132,7 +121,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
         schema = msgpackSchema.load(schemaLocation);
       }
     } catch (IOException e) {
-      logger.warn("Failed to load schema file: " + schemaLocation + " " + e.getMessage());
+      context.warn("Failed to load schema file: " + schemaLocation + " " + e.getMessage());
     }
 
     writer.allocate();
@@ -148,14 +137,11 @@ public class MsgpackRecordReader extends AbstractRecordReader {
         if (write == ReadState.WRITE_SUCCEED) {
           context.recordCount++;
         } else if (write == ReadState.MSG_RECORD_PARSE_ERROR || write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
-          if (skipMalformedMsgRecords == false) {
+          if (context.lenient == false) {
             context.handleAndRaise("Error parsing msgpack", new Exception("Failed to parse record."));
           }
           ++context.parseErrorCount;
-          if (printSkippedMalformedMsgRecordLineNumber) {
-            Log.warn(
-                "Error parsing msgpack in " + context.hadoopPath.getName() + " : line nos :" + context.currentRecordNumberInFile());
-          }
+          context.parseWarn();
           if (write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
             break outside;
           }
@@ -213,7 +199,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
         context.handleAndRaise("Error merging msgpack schema", e);
       }
     } else {
-      logger.warn("Msgpack reader is in learning mode but the query is not a select star. Learning skipped.");
+      context.warn("Msgpack reader is in learning mode but the query is not a select star. Learning skipped.");
     }
   }
 

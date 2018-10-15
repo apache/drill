@@ -22,6 +22,8 @@ import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
 
+import jline.internal.Log;
+
 public class MsgpackReaderContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackReaderContext.class);
 
@@ -30,6 +32,12 @@ public class MsgpackReaderContext {
   public long runningRecordCount = 0;
   public long parseErrorCount;
   public int recordCount;
+
+  public boolean printToConsole;
+
+  public boolean lenient;
+
+  public boolean readBinaryAsString;
 
   public long currentRecordNumberInFile() {
     return parseErrorCount + runningRecordCount + recordCount + 1;
@@ -63,5 +71,26 @@ public class MsgpackReaderContext {
   public String toString() {
     return super.toString() + "[hadoopPath = " + hadoopPath + ", recordCount = " + recordCount + ", parseErrorCount = "
         + parseErrorCount + ", runningRecordCount = " + runningRecordCount + ", ...]";
+  }
+
+  public void warn(String message) {
+    if (printToConsole) {
+      Log.warn(message);
+    } else {
+      logger.warn(message);
+    }
+  }
+
+  public void warn(String message, Exception e) {
+    if (printToConsole) {
+      Log.warn(message, e.getMessage());
+    } else {
+      logger.warn(message, e);
+    }
+  }
+
+  public void parseWarn() {
+    warn("Parsing msgpack in " + hadoopPath.getName() + " : line nos :" + currentRecordNumberInFile());
+
   }
 }

@@ -24,11 +24,11 @@ public abstract class BaseMsgpackReader {
   // @formatter:on
 
   protected MessageUnpacker unpacker;
-  protected boolean skipMalformedMsgRecords;
   protected MsgpackReaderContext context;
 
-  public BaseMsgpackReader(MsgpackReaderContext context) {
+  public BaseMsgpackReader(InputStream stream, MsgpackReaderContext context) {
     this.context = context;
+    this.unpacker = MessagePack.newDefaultUnpacker(stream);
   }
 
   public ReadState write(ComplexWriter writer, MaterializedField schema) throws IOException {
@@ -65,15 +65,6 @@ public abstract class BaseMsgpackReader {
   protected abstract ReadState writeRecord(Value mapValue, ComplexWriter writer, MaterializedField schema)
       throws IOException;
 
-  public void setSource(InputStream stream) {
-    unpacker = MessagePack.newDefaultUnpacker(stream);
-  }
-
-  public void setIgnoreMsgParseErrors(boolean skipMalformedMsgRecords) {
-    this.skipMalformedMsgRecords = skipMalformedMsgRecords;
-  }
-
   public void ensureAtLeastOneField(ComplexWriter writer) {
   }
-
 }
