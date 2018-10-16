@@ -30,6 +30,7 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -47,8 +48,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   // Join type, INNER, LEFT, RIGHT or OUTER
   private JoinRelType joinType;
 
-  //joinControl object derived from the int type joinControl passed from outgoingBatch(HashJoinBatch)
-  //so we can do different things in hashtable for INTERSECT_DISTINCT and INTERSECT_ALL
+  // joinControl determines how to handle INTERSECT_DISTINCT vs. INTERSECT_ALL
   private JoinControl joinControl;
 
   private HashJoinBatch outgoingJoinBatch = null;
@@ -326,7 +326,18 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
            * of the first row in the build side that matches the current key
            * (and record this match in the bitmap, in case of a FULL/RIGHT join)
            */
-          currentCompositeIdx = currPartition.getStartIndex(probeIndex);
+          Pair<Integer, Boolean> matchStatus = currPartition.getStartIndex(probeIndex);
+
+          currentCompositeIdx = matchStatus.getLeft();
+
+          boolean matchExists = matchStatus.getRight();
+
+          if (joinControl.isIntersectDistinct() && matchExists) {
+            // since it is intersect distinct and we already have one record matched, move to next probe row
+            getNextRecord = true;
+            recordsProcessed++;
+            continue;
+          }
 
           outputRecords =
             outputRow(currPartition.getContainers(), currentCompositeIdx,
@@ -361,7 +372,14 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
       }
       else { // match the next inner row with the same key
 
-        currPartition.setRecordMatched(currentCompositeIdx);
+        boolean matchExists = currPartition.setRecordMatched(currentCompositeIdx);
+
+        if (joinControl.isIntersectDistinct() && matchExists) {
+          // since it is intersect distinct and we already have one record matched, move to next probe row
+          getNextRecord = true;
+          recordsProcessed++;
+          continue;
+        }
 
         outputRecords =
           outputRow(currPartition.getContainers(), currentCompositeIdx,
