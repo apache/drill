@@ -172,6 +172,10 @@
           <groupId>sqlline</groupId>
           <artifactId>sqlline</artifactId>
         </exclusion>
+        <exclusion>
+          <artifactId>stream</artifactId>
+          <groupId>com.clearspring.analytics</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

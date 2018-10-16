@@ -94,7 +94,7 @@ public abstract class TableFormatPlugin implements FormatPlugin {
 
   @Override
   public AbstractWriter getWriter(PhysicalOperator child, String location,
-      List<String> partitionColumns) throws IOException {
+      boolean append, List<String> partitionColumns) throws IOException {
     throw new UnsupportedOperationException();
   }
 

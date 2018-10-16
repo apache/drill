@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs;
 
 import static java.util.Collections.unmodifiableList;
+import static org.apache.drill.exec.dotdrill.DotDrillType.STATS;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -44,6 +45,7 @@ import org.apache.calcite.schema.TranslatableTable;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -53,7 +55,7 @@ import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.dotdrill.DotDrillUtil;
 import org.apache.drill.exec.dotdrill.View;
-import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
@@ -65,6 +67,8 @@ import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
+import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.drill.exec.store.easy.json.JSONFormatPlugin;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -200,6 +204,17 @@ public class WorkspaceSchemaFactory {
 
   public FileSystemPlugin getPlugin() {
     return plugin;
+  }
+
+  // Ensure given tableName is not a stats table
+  private static void ensureNotStatsTable(final String tableName) {
+    if (tableName.toLowerCase().endsWith(STATS.getEnding())) {
+      throw UserException
+          .validationError()
+          .message("Given table [%s] is already a stats table. " +
+              "Cannot perform stats operations on a stats table.", tableName)
+          .build(logger);
+    }
   }
 
   /**
@@ -551,7 +566,47 @@ public class WorkspaceSchemaFactory {
       } catch (UnsupportedOperationException e) {
         logger.debug("The filesystem for this workspace does not support this operation.", e);
       }
-      return tables.get(tableKey);
+      final DrillTable table = tables.get(tableKey);
+      setMetadataTable(table, tableName);
+      return table;
+    }
+
+    private void setMetadataTable(final DrillTable table, final String tableName) {
+      if (table == null) {
+        return;
+      }
+
+      // If this itself is the stats table, then skip it.
+      if (tableName.toLowerCase().endsWith(STATS.getEnding())) {
+        return;
+      }
+
+      try {
+        if (table.getStatsTable() == null) {
+          Table statsTable = getStatsTable(tableName);
+          if (statsTable != null) {
+            table.setStatsTable(new DrillStatsTable(getFullSchemaName(), getStatsTableName(tableName)));
+          }
+        }
+      } catch (final Exception e) {
+        logger.warn("Failed to find the stats table for table [{}] in schema [{}]", tableName, getFullSchemaName());
+      }
+    }
+
+    // Get stats table name for a given table name.
+    private String getStatsTableName(final String tableName) {
+      final Path tablePath = new Path(config.getLocation(), tableName);
+      try {
+        if (fs.isDirectory(tablePath)) {
+          return tableName + Path.SEPARATOR + STATS.getEnding();
+        } else {
+          return tableName + STATS.getEnding();
+        }
+      } catch (final Exception e) {
+        throw new DrillRuntimeException(
+            String.format("Failed to find the location of the stats for table [%s] in schema [%s]",
+                tableName, getFullSchemaName()));
+      }
     }
 
     @Override
@@ -571,6 +626,34 @@ public class WorkspaceSchemaFactory {
     public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy storageStrategy) {
       String storage = schemaConfig.getOption(ExecConstants.OUTPUT_FORMAT_OPTION).string_val;
       FormatPlugin formatPlugin = plugin.getFormatPlugin(storage);
+      return createOrAppendToTable(tableName, false, formatPlugin, partitionColumns, storageStrategy);
+    }
+
+    @Override
+    public CreateTableEntry createStatsTable(String tableName) {
+      ensureNotStatsTable(tableName);
+      final String statsTableName = getStatsTableName(tableName);
+      FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.DEFAULT_NAME);
+      return createOrAppendToTable(statsTableName, false, formatPlugin, ImmutableList.<String>of(),
+          StorageStrategy.DEFAULT);
+    }
+
+    @Override
+    public CreateTableEntry appendToStatsTable(String tableName) {
+      ensureNotStatsTable(tableName);
+      final String statsTableName = getStatsTableName(tableName);
+      FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.DEFAULT_NAME);
+      return createOrAppendToTable(statsTableName, true, formatPlugin, ImmutableList.<String>of(),
+          StorageStrategy.DEFAULT);
+    }
+
+    @Override
+    public Table getStatsTable(String tableName) {
+      return getTable(getStatsTableName(tableName));
+    }
+
+    private CreateTableEntry createOrAppendToTable(String tableName, boolean append, FormatPlugin formatPlugin,
+        List<String> partitonColumns, StorageStrategy storageStrategy) {
       if (formatPlugin == null) {
         throw new UnsupportedOperationException(
           String.format("Unsupported format '%s' in workspace '%s'", config.getDefaultInputFormat(),
@@ -581,7 +664,8 @@ public class WorkspaceSchemaFactory {
           (FileSystemConfig) plugin.getConfig(),
           formatPlugin,
           config.getLocation() + Path.SEPARATOR + tableName,
-          partitionColumns,
+          append,
+          partitonColumns,
           storageStrategy);
     }
 

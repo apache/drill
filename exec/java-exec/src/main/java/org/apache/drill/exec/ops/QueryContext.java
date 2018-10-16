@@ -288,6 +288,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     return new PartitionExplorerImpl(getRootSchema());
   }
 
+  public DrillbitContext getDrillbitContext() {
+    return drillbitContext;
+  }
+
   @Override
   public ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
     if (!constantValueHolderCache.containsKey(value)) {

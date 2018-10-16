@@ -80,7 +80,9 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
     PCAPNG_SUB_SCAN(55),
     RUNTIME_FILTER(56),
     ROWKEY_JOIN(57),
-    SYSLOG_SUB_SCAN(58);
+    SYSLOG_SUB_SCAN(58),
+    STATISTICS_AGGREGATE(59),
+    UNPIVOT_MAPS(60);
     
     public final int number;
     
@@ -157,6 +159,8 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
             case 56: return RUNTIME_FILTER;
             case 57: return ROWKEY_JOIN;
             case 58: return SYSLOG_SUB_SCAN;
+            case 59: return STATISTICS_AGGREGATE;
+            case 60: return UNPIVOT_MAPS;
             default: return null;
         }
     }

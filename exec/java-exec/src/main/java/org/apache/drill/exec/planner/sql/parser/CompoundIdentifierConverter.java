@@ -64,6 +64,7 @@ public class CompoundIdentifierConverter extends SqlShuttle {
     // Every element of the array corresponds to the item in the list
     // returned by getOperandList() method for concrete SqlCall implementation.
     REWRITE_RULES = ImmutableMap.<Class<? extends SqlCall>, RewriteType[]>builder()
+        .put(SqlAnalyzeTable.class, arrayOf(D, D, E, D))
         .put(SqlSelect.class, arrayOf(D, E, D, E, E, E, E, E, D, D))
         .put(SqlCreateTable.class, arrayOf(D, D, D, E, D, D))
         .put(SqlCreateView.class, arrayOf(D, E, E, D))
