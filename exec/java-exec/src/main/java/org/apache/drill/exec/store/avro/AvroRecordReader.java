@@ -403,9 +403,11 @@ public class AvroRecordReader extends AbstractRecordReader {
   public String toString() {
     long currentPosition = -1L;
     try {
-      currentPosition = reader.tell();
+      if (reader != null) {
+        currentPosition = reader.tell();
+      }
     } catch (IOException e) {
-      logger.trace("Unable to obtain reader position: " + e.getMessage());
+      logger.trace("Unable to obtain reader position.", e);
     }
     return "AvroRecordReader[File=" + hadoop
         + ", Position=" + currentPosition

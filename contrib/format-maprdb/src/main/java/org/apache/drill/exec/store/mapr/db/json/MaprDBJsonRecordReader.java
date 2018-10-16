@@ -531,7 +531,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder("MaprDBJsonRecordReader[Table=")
-        .append(table.getPath());
+        .append(table != null ? table.getPath() : null);
     if (reader != null) {
       sb.append(", Document ID=")
           .append(IdCodec.asString(reader.getId()));
