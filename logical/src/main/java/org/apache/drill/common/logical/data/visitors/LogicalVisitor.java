@@ -20,6 +20,7 @@ package org.apache.drill.common.logical.data.visitors;
 
 import org.apache.drill.common.logical.data.LateralJoin;
 import org.apache.drill.common.logical.data.Unnest;
+import org.apache.drill.common.logical.data.Analyze;
 import org.apache.drill.common.logical.data.Values;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Flatten;
@@ -51,6 +52,7 @@ public interface LogicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
     public RETURN visitGroupingAggregate(GroupingAggregate groupBy, EXTRA value) throws EXCEP;
     public RETURN visitFilter(Filter filter, EXTRA value) throws EXCEP;
     public RETURN visitFlatten(Flatten flatten, EXTRA value) throws EXCEP;
+    public RETURN visitAnalyze(Analyze analyze, EXTRA value) throws EXCEP;
 
     public RETURN visitProject(Project project, EXTRA value) throws EXCEP;
     public RETURN visitValues(Values constant, EXTRA value) throws EXCEP;

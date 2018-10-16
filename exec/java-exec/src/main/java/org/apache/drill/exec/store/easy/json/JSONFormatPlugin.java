@@ -70,6 +70,8 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     Map<String, String> options = new HashMap<>();
 
     options.put("location", writer.getLocation());
+    options.put("append", Boolean.toString(writer.getAppend()));
+
     FragmentHandle handle = context.getHandle();
     String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
     options.put("prefix", fragmentId);

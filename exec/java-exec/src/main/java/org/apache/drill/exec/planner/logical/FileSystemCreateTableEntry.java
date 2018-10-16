@@ -46,6 +46,7 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
   private FileSystemConfig storageConfig;
   private FormatPlugin formatPlugin;
   private String location;
+  private boolean append;
   private final List<String> partitionColumns;
   private final StorageStrategy storageStrategy;
 
@@ -53,6 +54,7 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
   public FileSystemCreateTableEntry(@JsonProperty("storageConfig") FileSystemConfig storageConfig,
                                     @JsonProperty("formatConfig") FormatPluginConfig formatConfig,
                                     @JsonProperty("location") String location,
+                                    @JsonProperty("append") boolean append,
                                     @JsonProperty("partitionColumn") List<String> partitionColumns,
                                     @JsonProperty("storageStrategy") StorageStrategy storageStrategy,
                                     @JacksonInject StoragePluginRegistry engineRegistry)
@@ -67,11 +69,13 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
   public FileSystemCreateTableEntry(FileSystemConfig storageConfig,
                                     FormatPlugin formatPlugin,
                                     String location,
+                                    boolean append,
                                     List<String> partitionColumns,
                                     StorageStrategy storageStrategy) {
     this.storageConfig = storageConfig;
     this.formatPlugin = formatPlugin;
     this.location = location;
+    this.append = append;
     this.partitionColumns = partitionColumns;
     this.storageStrategy = storageStrategy;
   }
@@ -94,7 +98,7 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
           formatPlugin.getName())).build(logger);
     }
 
-    AbstractWriter writer = formatPlugin.getWriter(child, location, partitionColumns);
+    AbstractWriter writer = formatPlugin.getWriter(child, location, append, partitionColumns);
     writer.setStorageStrategy(storageStrategy);
     return writer;
   }

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.cost;
 
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
@@ -31,6 +32,8 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
+import org.apache.drill.exec.planner.logical.DrillScanRel;
 
 public class DrillRelMdRowCount extends RelMdRowCount {
   private static final DrillRelMdRowCount INSTANCE = new DrillRelMdRowCount();
@@ -80,5 +83,21 @@ public class DrillRelMdRowCount extends RelMdRowCount {
   @Override
   public Double getRowCount(Join rel, RelMetadataQuery mq) {
     return rel.estimateRowCount(mq);
+  }
+
+  public Double getRowCount(RelNode rel, RelMetadataQuery mq) {
+    if (rel instanceof DrillScanRel) {
+      return getRowCount((DrillScanRel)rel, mq);
+    }
+    return super.getRowCount(rel, mq);
+  }
+
+  private Double getRowCount(DrillScanRel scanRel, RelMetadataQuery mq) {
+    final DrillStatsTable md = scanRel.getDrillTable().getStatsTable();
+    if (md != null) {
+      return md.getRowCount();
+    }
+
+    return super.getRowCount(scanRel, mq);
   }
 }

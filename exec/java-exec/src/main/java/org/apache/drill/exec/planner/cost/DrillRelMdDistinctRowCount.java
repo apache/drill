@@ -17,16 +17,21 @@
  */
 package org.apache.drill.exec.planner.cost;
 
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
+import org.apache.calcite.rel.metadata.RelColumnOrigin;
 import org.apache.calcite.rel.metadata.RelMdDistinctRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
+
+import java.util.List;
 
 public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount {
   private static final DrillRelMdDistinctRowCount INSTANCE =
@@ -60,5 +65,52 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount {
       ImmutableBitSet groupKey, RexNode predicate) {
     // Consistent with the estimation of Aggregate row count in RelMdRowCount : distinctRowCount = rowCount * 10%.
     return scan.estimateRowCount(mq) * 0.1;
+  }
+
+  public Double getDistinctRowCount(RelNode rel, RelMetadataQuery mq, ImmutableBitSet groupKey, RexNode predicate) {
+    if (rel instanceof DrillScanRel) {
+      return getDistinctRowCount((DrillScanRel) rel, mq, groupKey);
+    } else {
+      return super.getDistinctRowCount(rel, mq, groupKey, predicate);
+    }
+  }
+
+  /**
+   * Estimates the number of rows which would be produced by a GROUP BY on the
+   * set of columns indicated by groupKey.
+   * column").
+   */
+  private Double getDistinctRowCount(DrillScanRel scan, RelMetadataQuery mq, ImmutableBitSet groupKey) {
+    if (scan.getDrillTable() == null || scan.getDrillTable().getStatsTable() == null) {
+      // If there is no table or metadata (stats) table associated with scan, estimate the distinct row count.
+      // Consistent with the estimation of Aggregate row count in RelMdRowCount : distinctRowCount = rowCount * 10%.
+      return scan.getRows() * 0.1;
+    }
+
+    // TODO: may be we should get the column origin of each group by key before we look up it in metadata table?
+    List<RelColumnOrigin> cols = Lists.newArrayList();
+
+    if (groupKey.length() == 0) {
+      return new Double(0);
+    }
+
+    DrillStatsTable md = scan.getDrillTable().getStatsTable();
+
+    final double rc = mq.getRowCount(scan);
+    double s = 1.0;
+    for (int i = 0; i < groupKey.length(); i++) {
+      final String colName = scan.getRowType().getFieldNames().get(i);
+      if (!groupKey.get(i) && colName.equals("*")) {
+        continue;
+      }
+
+      Double d = md.getNdv(colName);
+      if (d == null) {
+        continue;
+      }
+
+      s *= 1 - d / rc;
+    }
+    return new Double((1 - s) * rc);
   }
 }

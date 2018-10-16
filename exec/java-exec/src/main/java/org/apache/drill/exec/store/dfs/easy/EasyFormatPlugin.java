@@ -193,8 +193,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   @Override
-  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException {
-    return new EasyWriter(child, location, partitionColumns, this);
+  public AbstractWriter getWriter(PhysicalOperator child, String location, boolean append, List<String> partitionColumns) throws IOException {
+    return new EasyWriter(child, location, append, partitionColumns, this);
   }
 
   @Override

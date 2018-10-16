@@ -49,7 +49,7 @@ public interface FormatPlugin {
 
   FormatMatcher getMatcher();
 
-  AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException;
+  public AbstractWriter getWriter(PhysicalOperator child, String location, boolean append, List<String> partitionColumns) throws IOException;
 
   Set<StoragePluginOptimizerRule> getOptimizerRules();
 
