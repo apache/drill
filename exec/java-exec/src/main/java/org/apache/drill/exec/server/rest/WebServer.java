@@ -529,7 +529,7 @@ public class WebServer implements AutoCloseable {
     int skipCount = 0;
     for (FunctionHolder builtInFunctionHolder : builtInFuncHolderList) {
       String name = builtInFunctionHolder.getName();
-      if (!name.contains(" ") && name.matches("([a-z]|[A-Z])\\w+")) {
+      if (!name.contains(" ") && name.matches("([a-z]|[A-Z])\\w+") && !builtInFunctionHolder.getHolder().isInternal()) {
         functionSet.add(name);
       } else {
         logger.debug("Non-alphabetic leading character. Function skipped : {} ", name);

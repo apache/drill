@@ -87,11 +87,12 @@ public class FunctionsIterator implements Iterator<Object> {
     String registeredNames[] = dfh.getRegisteredNames();
     String signature = dfh.getInputParameters();
     String returnType = dfh.getReturnType().getMinorType().toString();
+    boolean isInternal = dfh.isInternal();
     for (String name : registeredNames) {
       //Generate a unique key for a function holder as 'functionName#functionSignature'
       //Bumping capacity from default 16 to 64 (since key is expected to be bigger, and reduce probability of resizing)
       String funcSignatureKey = new StringBuilder(64).append(name).append('#').append(signature).toString();
-      functionMap.put(funcSignatureKey, new FunctionInfo(name, signature, returnType, jarName));
+      functionMap.put(funcSignatureKey, new FunctionInfo(name, signature, returnType, jarName, isInternal));
     }
   }
 
@@ -117,12 +118,19 @@ public class FunctionsIterator implements Iterator<Object> {
     public final String returnType;
     @NonNullable
     public final String source;
+    @NonNullable
+    public final boolean internal;
 
     public FunctionInfo(String funcName, String funcSignature, String funcReturnType, String jarName) {
+      this(funcName, funcSignature, funcReturnType, jarName, false);
+    }
+
+    public FunctionInfo(String funcName, String funcSignature, String funcReturnType, String jarName, boolean isInternal) {
       this.name = funcName;
       this.signature = funcSignature;
       this.returnType = funcReturnType;
       this.source = jarName;
+      this.internal = isInternal;
     }
   }
 }
