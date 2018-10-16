@@ -126,6 +126,10 @@ public abstract class BaseRootExec implements RootExec {
 
   @Override
   public void dumpBatches() {
+    if (operators == null) {
+      return;
+    }
+
     final int numberOfBatchesToDump = 2;
     logger.error("Batch dump started: dumping last {} failed batches", numberOfBatchesToDump);
     // As batches are stored in a 'flat' List there is a need to filter out the failed batch

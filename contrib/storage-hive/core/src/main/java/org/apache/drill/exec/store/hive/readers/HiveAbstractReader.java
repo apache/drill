@@ -429,7 +429,7 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
         position = reader.getPos();
       }
     } catch (IOException e) {
-      logger.trace("Unable to obtain reader position: " + e.getMessage());
+      logger.trace("Unable to obtain reader position.", e);
     }
     return getClass().getSimpleName() + "[Database=" + table.getDbName()
         + ", Table=" + table.getTableName()
