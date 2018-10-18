@@ -328,25 +328,28 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
            */
           Pair<Integer, Boolean> matchStatus = currPartition.getStartIndex(probeIndex);
 
-          currentCompositeIdx = matchStatus.getLeft();
-
           boolean matchExists = matchStatus.getRight();
 
           if (joinControl.isIntersectDistinct() && matchExists) {
             // since it is intersect distinct and we already have one record matched, move to next probe row
-            getNextRecord = true;
             recordsProcessed++;
             continue;
           }
+
+          currentCompositeIdx = matchStatus.getLeft();
 
           outputRecords =
             outputRow(currPartition.getContainers(), currentCompositeIdx,
               probeBatch.getContainer(), recordsProcessed);
 
           /* Projected single row from the build side with matching key but there
-           * may be more rows with the same key. Check if that's the case
+           * may be more rows with the same key. Check if that's the case as long as
+           * we are not doing intersect distinct since it only cares about
+           * distinct values.
            */
-          currentCompositeIdx = currPartition.getNextIndex(currentCompositeIdx);
+          currentCompositeIdx = joinControl.isIntersectDistinct() ? -1 :
+            currPartition.getNextIndex(currentCompositeIdx);
+
           if (currentCompositeIdx == -1) {
             /* We only had one row in the build side that matched the current key
              * from the probe side. Drain the next row in the probe side.
@@ -372,14 +375,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
       }
       else { // match the next inner row with the same key
 
-        boolean matchExists = currPartition.setRecordMatched(currentCompositeIdx);
-
-        if (joinControl.isIntersectDistinct() && matchExists) {
-          // since it is intersect distinct and we already have one record matched, move to next probe row
-          getNextRecord = true;
-          recordsProcessed++;
-          continue;
-        }
+        currPartition.setRecordMatched(currentCompositeIdx);
 
         outputRecords =
           outputRow(currPartition.getContainers(), currentCompositeIdx,
