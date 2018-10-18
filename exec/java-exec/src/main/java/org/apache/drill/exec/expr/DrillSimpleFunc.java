@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
-public interface DrillSimpleFunc extends DrillFunc{
-  public void setup();
-  public void eval();
+public interface DrillSimpleFunc extends DrillFunc {
+  void setup();
+  void eval();
 }

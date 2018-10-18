@@ -1393,6 +1393,32 @@ public class TestStringFunctions extends BaseTestQuery {
   }
 
   @Test
+  public void testSplitWithNullInput() throws Exception {
+    // Contents of the generated file:
+    /*
+      {"a": "aaaaaa.bbb.cc.ddddd"}
+      {"a": null}
+      {"a": "aa"}
+     */
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), "nullable_strings.json")))) {
+      String[] fieldValue = {"\"aaaaaa.bbb.cc.ddddd\"", null, "\"aa\""};
+      for (String value : fieldValue) {
+        String entry = String.format("{ \"a\": %s}\n", value);
+        writer.write(entry);
+      }
+    }
+
+    testBuilder()
+        .sqlQuery("select split(a, '.') wordsCount from dfs.`nullable_strings.json` t")
+        .unOrdered()
+        .baselineColumns("wordsCount")
+        .baselineValues(ImmutableList.of(new Text("aaaaaa"), new Text("bbb"), new Text("cc"), new Text("ddddd")))
+        .baselineValues(ImmutableList.of())
+        .baselineValues(ImmutableList.of(new Text("aa")))
+        .go();
+  }
+
+  @Test
   public void testReverse() throws Exception {
     testBuilder()
       .sqlQuery("select reverse('qwerty') words from (values(1))")

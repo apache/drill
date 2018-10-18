@@ -63,6 +63,19 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
       FunctionInitializer initializer) {
     this.attributes = attributes;
     this.initializer = initializer;
+
+    checkNullHandling(attributes.getNullHandling());
+  }
+
+  /**
+   * Check if function type supports provided null handling strategy.
+   * <p>Keep in mind that this method is invoked in {@link #DrillFuncHolder(FunctionAttributes, FunctionInitializer)}
+   * constructor so make sure not to use any state fields when overriding the method to avoid uninitialized state.</p>
+   *
+   * @param nullHandling null handling strategy defined for a function
+   * @throws IllegalArgumentException if provided {@code nullHandling} is not supported
+   */
+  protected void checkNullHandling(NullHandling nullHandling) {
   }
 
   protected String meth(String methodName) {
