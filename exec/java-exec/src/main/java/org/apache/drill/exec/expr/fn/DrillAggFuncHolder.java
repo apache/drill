@@ -65,7 +65,6 @@ class DrillAggFuncHolder extends DrillFuncHolder {
       FunctionAttributes attributes,
       FunctionInitializer initializer) {
     super(attributes, initializer);
-    checkArgument(attributes.getNullHandling() == NullHandling.INTERNAL, "An aggregation function is required to do its own null handling.");
   }
 
   @Override
@@ -263,4 +262,9 @@ class DrillAggFuncHolder extends DrillFuncHolder {
 
   }
 
+  @Override
+  protected void checkNullHandling(NullHandling nullHandling) {
+    checkArgument(nullHandling == NullHandling.INTERNAL,
+        "An aggregate function is required to handle null input(s) on its own.");
+  }
 }

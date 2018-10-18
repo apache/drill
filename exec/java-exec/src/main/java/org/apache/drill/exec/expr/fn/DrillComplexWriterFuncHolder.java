@@ -20,6 +20,7 @@ package org.apache.drill.exec.expr.fn;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.record.VectorAccessibleComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
@@ -30,6 +31,8 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JVar;
+
+import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkArgument;
 
 public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder {
 
@@ -89,5 +92,12 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder {
     classGenerator.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     return null;
+  }
+
+  @Override
+  protected void checkNullHandling(NullHandling nullHandling) {
+    checkArgument(nullHandling == NullHandling.INTERNAL,
+        "Function with @Output of type 'org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter'" +
+            " is required to handle null input(s) on its own.");
   }
 }
