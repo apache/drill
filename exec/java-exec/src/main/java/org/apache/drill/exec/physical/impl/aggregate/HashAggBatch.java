@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -49,7 +50,6 @@ import org.apache.drill.exec.physical.impl.aggregate.HashAggregator.AggOutcome;
 import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
-import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -192,9 +192,10 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     long memAvail = oContext.getAllocator().getLimit();
     long minBatchesPerPartition = context.getOptions().getOption(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR);
     long minBatchesNeeded = 2 * minBatchesPerPartition; // 2 - to cover overheads, etc.
-    boolean is2ndPhase = popConfig.getAggPhase() == AggPrelBase.OperatorPhase.PHASE_2of2;
     boolean fallbackEnabled = context.getOptions().getOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY).bool_val;
-    if ( is2ndPhase && !fallbackEnabled ) {
+    final AggPrelBase.OperatorPhase phase = popConfig.getAggPhase();
+
+    if ( phase.is2nd() && !fallbackEnabled ) {
       minBatchesNeeded *= 2;  // 2nd phase (w/o fallback) needs at least 2 partitions
     }
     if ( configuredBatchSize > memAvail / minBatchesNeeded ) { // no cast - memAvail may be bigger than max-int
