@@ -107,6 +107,10 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
 
+  public boolean isInternal() {
+    return attributes.isInternal();
+  }
+
   /**
    * Generates string representation of function input parameters:
    * PARAMETER_TYPE_1-PARAMETER_MODE_1,PARAMETER_TYPE_2-PARAMETER_MODE_2

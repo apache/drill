@@ -293,6 +293,10 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     return false;
   }
 
+  public LocalFunctionRegistry getLocalFunctionRegistry() {
+    return localFunctionRegistry;
+  }
+
   public RemoteFunctionRegistry getRemoteFunctionRegistry() {
     return remoteFunctionRegistry;
   }

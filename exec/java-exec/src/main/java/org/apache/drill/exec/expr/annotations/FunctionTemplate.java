@@ -91,6 +91,11 @@ public @interface FunctionTemplate {
   boolean checkPrecisionRange() default false;
 
   /**
+   * Defines if a function is internal and not intended for public use [e.g. castEmptyStringNullableVarBinaryToNullableVarDecimal(..) ]
+   */
+  boolean isInternal() default false;
+
+  /**
    * This enum will be used to estimate the average size of the output
    * produced by a function that produces variable length output
    */

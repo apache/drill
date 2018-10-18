@@ -28,6 +28,7 @@ public class ValueReference {
   private boolean isConstant = false;
   private boolean isFieldReader = false;
   private boolean isComplexWriter = false;
+  private boolean isInternal = false;
 
   public ValueReference(MajorType type, String name) {
     Preconditions.checkNotNull(type);
@@ -50,6 +51,14 @@ public class ValueReference {
 
   public boolean isConstant() {
     return isConstant;
+  }
+
+  public void setInternal(boolean isInternal) {
+    this.isInternal = isInternal;
+  }
+
+  public boolean isInternal() {
+    return isInternal;
   }
 
   public boolean isFieldReader() {

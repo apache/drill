@@ -31,22 +31,9 @@ var SqlHighlightRules = function() {
         "true|false"
     );
 
-    //Drill-specific
+    //Drill-specific (auto-generated: See DRILL-6084)
     var builtinFunctions = (
-        //Math and Trignometric
-        "abs|cbrt|ceil|ceiling|degrees|e|exp|floor|log|log|log10|lshift|mod|negative|pi|pow|radians|rand|round|round|rshift|sign|sqrt|trunc|trunc|" +
-        "sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|" +
-        //datatype conversion
-        "cast|convert_to|convert_from|string_binary|binary_string|" +
-        //time-conversion
-        "to_char|to_date|to_number|to_timestamp|to_timestamp|" +
-        "age|extract|current_date|current_time|current_timestamp|date_add|date_part|date_sub|localtime|localtimestamp|now|timeofday|unix_timestamp|" +
-        //string manipulation
-        "byte_substr|char_length|concat|ilike|initcap|length|lower|lpad|ltrim|position|regexp_replace|rpad|rtrim|strpos|substr|trim|upper|" +
-        //statistical
-        "avg|count|max|min|sum|stddev|stddev_pop|stddev_samp|variance|var_pop|var_samp|" +
-        //null-handling
-        "coalesce|nullif"
+        "__DRILL_FUNCTIONS__"
     );
 
     //Drill-specific
