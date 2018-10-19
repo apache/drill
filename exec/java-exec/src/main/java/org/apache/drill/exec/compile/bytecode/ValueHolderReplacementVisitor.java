@@ -55,14 +55,8 @@ public class ValueHolderReplacementVisitor extends ClassVisitor {
       innerVisitor = new CheckMethodVisitorFsm(api, innerVisitor);
     }
 
-    /*
-     * Before using the ScalarReplacementNode to rewrite method code, use the
-     * AloadPopRemover to eliminate unnecessary ALOAD-POP pairs; see the
-     * AloadPopRemover javadoc for a detailed explanation.
-     */
-    return new AloadPopRemover(api,
-        new ScalarReplacementNode(
-            className, access, name, desc, signature, exceptions, innerVisitor, verifyBytecode));
+    return new ScalarReplacementNode(className, access, name, desc, signature,
+        exceptions,innerVisitor, verifyBytecode);
   }
 
   private static class Debugger extends MethodNode {

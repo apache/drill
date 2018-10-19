@@ -48,7 +48,7 @@
     <parquet.version>1.10.0</parquet.version>
     <calcite.version>1.17.0-drill-r1</calcite.version>
     <avatica.version>1.12.0</avatica.version>
-    <janino.version>3.0.10</janino.version>
+    <janino.version>3.0.11</janino.version>
     <sqlline.version>1.5.0</sqlline.version>
     <jackson.version>2.9.5</jackson.version>
     <jackson.databind.version>2.9.5</jackson.databind.version>
