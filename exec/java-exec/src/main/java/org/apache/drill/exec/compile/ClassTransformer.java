@@ -30,6 +30,7 @@ import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.server.options.OptionSet;
+import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
 import org.codehaus.commons.compiler.CompileException;
 import org.objectweb.asm.ClassReader;
@@ -61,7 +62,10 @@ public class ClassTransformer {
   public final static String SCALAR_REPLACEMENT_OPTION =
       "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement";
   public final static EnumeratedStringValidator SCALAR_REPLACEMENT_VALIDATOR = new EnumeratedStringValidator(
-      SCALAR_REPLACEMENT_OPTION, null, "try", "off", "try", "on");
+      SCALAR_REPLACEMENT_OPTION,
+      new OptionDescription("Enables Drill to attempt scalar replacement. If an error occurs during the attempt, Drill falls back to the previous behavior. Default is 'try'. Accepted values are 'try', 'off', and 'on'. (Drill 0.8+)"),
+      "try", "off", "try", "on");
+
 
   @VisibleForTesting // although we need it even if it weren't used in testing
   public enum ScalarReplacementOption {
