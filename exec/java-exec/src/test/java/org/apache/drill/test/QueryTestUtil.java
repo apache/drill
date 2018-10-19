@@ -257,8 +257,8 @@ public class QueryTestUtil {
     // set the system option
     final DrillbitContext drillbitContext = drillbit.getContext();
     final SystemOptionManager optionManager = drillbitContext.getOptionManager();
-    final OptionValue originalOptionValue = optionManager.getOption(ClassTransformer.SCALAR_REPLACEMENT_OPTION);
-    optionManager.setLocalOption(ClassTransformer.SCALAR_REPLACEMENT_OPTION, srOption.name().toLowerCase());
+    final OptionValue originalOptionValue = optionManager.getOption(ExecConstants.SCALAR_REPLACEMENT_OPTION);
+    optionManager.setLocalOption(ExecConstants.SCALAR_REPLACEMENT_OPTION, srOption.name().toLowerCase());
 
     // flush the code cache
     drillbitContext.getCompiler().flushCache();
@@ -280,7 +280,7 @@ public class QueryTestUtil {
     final DrillbitContext drillbitContext = drillbit.getContext();
     @SuppressWarnings("resource")
     final OptionManager optionManager = drillbitContext.getOptionManager();
-    optionManager.setLocalOption(ClassTransformer.SCALAR_REPLACEMENT_OPTION, srOption);
+    optionManager.setLocalOption(ExecConstants.SCALAR_REPLACEMENT_OPTION, srOption);
 
     // flush the code cache
     drillbitContext.getCompiler().flushCache();

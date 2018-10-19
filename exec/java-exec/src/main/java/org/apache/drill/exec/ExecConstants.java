@@ -357,6 +357,12 @@ public final class ExecConstants {
   public static final OptionValidator PARQUET_PAGEREADER_USE_FADVISE_VALIDATOR = new  BooleanValidator(PARQUET_PAGEREADER_USE_FADVISE,
       new OptionDescription("If the file system supports it, the Parquet file reader issues an fadvise call to enable file server side sequential reading and caching. Since many HDFS implementations do not support this and because this may have no effect in conditions of high concurrency, the option is set to false. Useful for benchmarks and for performance critical queries."));
 
+  // scalar replacement strategy
+  public final static String SCALAR_REPLACEMENT_OPTION = "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement";
+  public final static EnumeratedStringValidator SCALAR_REPLACEMENT_VALIDATOR = new EnumeratedStringValidator( SCALAR_REPLACEMENT_OPTION,
+      new OptionDescription("Enables Drill to attempt scalar replacement. If an error occurs during the attempt, Drill falls back to the previous behavior. Default is 'try'. Accepted values are 'try', 'on', and 'off'. (Drill 0.8+)"),
+      "try", "on", "off");
+
   // Controls whether to enable bulk parquet reader processing
   public static final String PARQUET_FLAT_READER_BULK = "store.parquet.flat.reader.bulk";
   public static final OptionValidator PARQUET_FLAT_READER_BULK_VALIDATOR = new BooleanValidator(PARQUET_FLAT_READER_BULK,
