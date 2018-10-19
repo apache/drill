@@ -293,9 +293,9 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
       if (direction != null) {
         // assume null direction of NULLS UNSPECIFIED for now until MapR-DB adds that to the APIs
         RelFieldCollation.NullDirection nulldir =
-            desc.getMissingAndNullOrdering() == MissingAndNullOrdering.MissingAndNullFirst ? NullDirection.FIRST :
-            (desc.getMissingAndNullOrdering() == MissingAndNullOrdering.MissingAndNullLast ?
-                NullDirection.LAST : NullDirection.UNSPECIFIED);
+            direction == RelFieldCollation.Direction.ASCENDING ? NullDirection.LAST :
+            (direction == RelFieldCollation.Direction.DESCENDING ?
+                NullDirection.FIRST : NullDirection.UNSPECIFIED);
         RelFieldCollation c = new RelFieldCollation(i++, direction, nulldir);
         fieldCollations.add(c);
       } else {

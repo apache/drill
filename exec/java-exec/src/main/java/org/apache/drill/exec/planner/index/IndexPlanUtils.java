@@ -563,7 +563,8 @@ public class IndexPlanUtils {
       }
 
       RelCollation idxCollation = indexDesc.getCollation();
-      RelFieldCollation.NullDirection nullsDir = indexDesc.getNullsOrderingDirection();
+      RelFieldCollation.NullDirection nullsDir = idxCollation == null ? RelFieldCollation.NullDirection.UNSPECIFIED :
+              idxCollation.getFieldCollations().get(idxFieldCount).nullDirection;
       RelFieldCollation.Direction dir = (idxCollation == null)?
           null : idxCollation.getFieldCollations().get(idxFieldCount).direction;
       if (dir == null) {

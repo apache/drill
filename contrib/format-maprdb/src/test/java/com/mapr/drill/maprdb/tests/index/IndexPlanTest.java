@@ -106,6 +106,7 @@ public class IndexPlanTest extends BaseJsonTest {
         {"i_ssn", "id.ssn", "contact.phone",
             "i_state_city", "address.state,address.city", "name.fname,name.lname",//mainly for composite key test
             "i_age", "personal.age", "",
+            "i_age_desc", "personal.age:desc", "",
             "i_income", "personal.income", "",
             "i_lic", "driverlicense", "reverseid",
             "i_state_city_dl", "address.state,address.city", "driverlicense",
@@ -1935,27 +1936,58 @@ public class IndexPlanTest extends BaseJsonTest {
   public void testRowkeyJoinPushdown_13() throws Exception {
     // Check option planner.rowkeyjoin_conversion_using_hashjoin works as expected!
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where _id in (select t2._id " +
-        " from hbase.`index_test_primary` t2 where cast(t2.activity.irs.firstlogin as timestamp) = " +
-        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+            " from hbase.`index_test_primary` t2 where cast(t2.activity.irs.firstlogin as timestamp) = " +
+            " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
-      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{"RowKeyJoin"}, new String[]{});
       testBuilder()
-          .sqlQuery(query)
-          .ordered()
-          .baselineColumns("ssn").baselineValues("100007423")
-          .go();
+              .sqlQuery(query)
+              .ordered()
+              .baselineColumns("ssn").baselineValues("100007423")
+              .go();
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";" +
-          forceRowKeyJoinConversionUsingHashJoin + ";");
-      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"HashJoin"}, new String[] {"RowKeyJoin"});
+              forceRowKeyJoinConversionUsingHashJoin + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{"HashJoin"}, new String[]{"RowKeyJoin"});
       testBuilder()
-          .sqlQuery(query)
-          .ordered()
-          .baselineColumns("ssn").baselineValues("100007423")
-          .go();
+              .sqlQuery(query)
+              .ordered()
+              .baselineColumns("ssn").baselineValues("100007423")
+              .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";" +
-          defaultRowKeyJoinConversionUsingHashJoin);
+              defaultRowKeyJoinConversionUsingHashJoin);
     }
+  }
+
+  public void TestIndexScanWithDescOrderByNullsFirst() throws Exception {
+
+    String query = "select t.personal.age from hbase.`index_test_primary` t order by t.personal.age desc nulls first limit 1";
+    try {
+      test(defaultHavingIndexPlan + ";" + lowRowKeyJoinBackIOFactor + ";");
+      PlanTestBase.testPlanMatchingPatterns(query,
+              new String[]{".*JsonTableGroupScan.*indexName=i_age_desc.*"},
+              new String[]{}
+      );
+    } finally {
+      test(defaultRowKeyJoinBackIOFactor);
+    }
+    return;
+  }
+
+  @Test
+  public void TestIndexScanWithDescOrderByNullsLast() throws Exception {
+
+    String query = "select t.personal.age from hbase.`index_test_primary` t order by t.personal.age desc nulls last limit 1";
+    try {
+      test(defaultHavingIndexPlan + ";" + lowRowKeyJoinBackIOFactor + ";");
+      PlanTestBase.testPlanMatchingPatterns(query,
+              new String[]{},
+              new String[]{".*indexName=i_age_desc.*"}
+      );
+    } finally {
+      test(defaultRowKeyJoinBackIOFactor);
+    }
+    return;
   }
 }
