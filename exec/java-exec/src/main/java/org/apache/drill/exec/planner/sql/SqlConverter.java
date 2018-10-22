@@ -119,6 +119,14 @@ public class SqlConverter {
   private VolcanoPlanner planner;
   private boolean useRootSchema = false;
 
+  static {
+    /*
+     * Sets value to false to avoid simplifying project expressions
+     * during creating new projects since it may cause changing data mode
+     * which causes to assertion errors during type validation
+     */
+    Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
+  }
 
   public SqlConverter(QueryContext context) {
     this.settings = context.getPlannerSettings();
@@ -372,13 +380,6 @@ public class SqlConverter {
     final SqlToRelConverter sqlToRelConverter =
         new SqlToRelConverter(new Expander(), validator, catalog, cluster, DrillConvertletTable.INSTANCE,
             sqlToRelConverterConfig);
-
-    /*
-     * Sets value to false to avoid simplifying project expressions
-     * during creating new projects since it may cause changing data mode
-     * which causes to assertion errors during type validation
-     */
-    Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
 
     //To avoid unexpected column errors set a value of top to false
     final RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, false);

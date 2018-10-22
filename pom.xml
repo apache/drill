@@ -50,8 +50,8 @@
     <guava.version>19.0</guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.10.0</parquet.version>
-    <calcite.version>1.17.0-drill-r2</calcite.version>
-    <avatica.version>1.12.0</avatica.version>
+    <calcite.version>1.18.0-drill-r0</calcite.version>
+    <avatica.version>1.13.0</avatica.version>
     <janino.version>3.0.11</janino.version>
     <sqlline.version>1.6.0</sqlline.version>
     <jackson.version>2.9.5</jackson.version>
@@ -1050,14 +1050,35 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.apache.drill</groupId>
-        <artifactId>drill-shaded-guava</artifactId>
-        <version>${shaded.guava.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>${guava.version}</version>
+        <groupId>org.apache.calcite</groupId>
+        <artifactId>calcite-core</artifactId>
+        <version>${calcite.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.calcite.avatica</groupId>
+            <artifactId>avatica-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-jdk1.5</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.calcite.avatica</groupId>
@@ -1077,6 +1098,16 @@
             <groupId>com.google.protobuf</groupId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.drill</groupId>
+        <artifactId>drill-shaded-guava</artifactId>
+        <version>${shaded.guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
       </dependency>
       <dependency>
         <groupId>org.msgpack</groupId>
@@ -2379,39 +2410,6 @@
             <artifactId>xalan</artifactId>
             <version>2.7.1</version>
           </dependency>
-
-          <dependency>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-core</artifactId>
-            <version>${calcite.version}</version>
-            <exclusions>
-              <exclusion>
-                <groupId>org.apache.calcite.avatica</groupId>
-                <artifactId>avatica-core</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>org.jgrapht</groupId>
-                <artifactId>jgrapht-jdk1.5</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>com.fasterxml.jackson.core</groupId>
-                 <artifactId>jackson-core</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>com.fasterxml.jackson.core</groupId>
-                 <artifactId>jackson-databind</artifactId>
-              </exclusion>
-            </exclusions>
-          </dependency>
-
           <dependency>
             <groupId>net.sf.jpam</groupId>
             <artifactId>jpam</artifactId>

@@ -35,8 +35,6 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -47,7 +45,6 @@ import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.QueryState;
 import org.apache.calcite.avatica.util.Cursor;
-import org.apache.calcite.avatica.util.Cursor.Accessor;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
@@ -1267,15 +1264,8 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     connection.getDriver().handler.onStatementExecute(statement, null);
 
     if (signature.cursorFactory != null) {
-      // Avatica accessors have to be wrapped to match Drill behaviour regarding exception thrown
       super.execute();
-      List<Accessor> wrappedAccessorList = new ArrayList<>(accessorList.size());
-      for(Accessor accessor: accessorList) {
-        wrappedAccessorList.add(new WrappedAccessor(accessor));
-      }
-      this.accessorList = wrappedAccessorList;
-    }
-    else {
+    } else {
       DrillCursor drillCursor = new DrillCursor(connection, statement, signature);
       //Getting handle to elapsed timer for timeout purposes
       this.elapsedTimer = drillCursor.getElapsedTimer();
