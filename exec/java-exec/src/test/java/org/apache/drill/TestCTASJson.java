@@ -39,13 +39,13 @@ public class TestCTASJson extends PlanTestBase {
           .sqlQuery(query)
           .ordered()
           .jsonBaselineFile("json/" + testName + ".json")
-          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
+          .optionSettingQueriesForTestQuery("alter session set `store.format` = 'json' ")
           .optionSettingQueriesForTestQuery("alter session set store.json.writer.skip_null_fields = true") // DEFAULT
           .build()
           .run();
     } finally {
       test("drop table " + testName + "_json");
-      test("alter session reset store.format ");
+      test("alter session reset `store.format` ");
       test("alter session reset store.json.writer.skip_null_fields ");
     }
   }
@@ -67,13 +67,13 @@ public class TestCTASJson extends PlanTestBase {
           .sqlQuery(query)
           .ordered()
           .jsonBaselineFile("json/" + testName + "_out.json")
-          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
+          .optionSettingQueriesForTestQuery("alter session set `store.format` = 'json' ")
           .optionSettingQueriesForTestQuery("alter session set store.json.writer.skip_null_fields = false") // change from DEFAULT
           .build()
           .run();
     } finally{
       test("drop table " + testName + "_json" );
-      test("alter session reset store.format ");
+      test("alter session reset `store.format` ");
       test("alter session reset store.json.writer.skip_null_fields ");
     }
 
@@ -96,14 +96,14 @@ public class TestCTASJson extends PlanTestBase {
           .sqlQuery(query)
           .ordered()
           .jsonBaselineFile("json/" + testName + ".json")
-          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
+          .optionSettingQueriesForTestQuery("alter session set `store.format` = 'json' ")
           .optionSettingQueriesForTestQuery(
               "alter session set store.json.writer.skip_null_fields = true") // DEFAULT
           .build()
           .run();
     }finally{
       test("drop table " + testName + "_json" );
-      test("alter session reset store.format ");
+      test("alter session reset `store.format` ");
       test("alter session reset store.json.writer.skip_null_fields ");
     }
 
@@ -126,14 +126,14 @@ public class TestCTASJson extends PlanTestBase {
           .sqlQuery(query)
           .ordered()
           .jsonBaselineFile("json/" + testName + "_out.json")
-          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
+          .optionSettingQueriesForTestQuery("alter session set `store.format` = 'json' ")
           .optionSettingQueriesForTestQuery(
               "alter session set store.json.writer.skip_null_fields = false") // change from DEFAULT
           .build()
           .run();
     } finally {
       test("drop table " + testName + "_json" );
-      test("alter session reset store.format ");
+      test("alter session reset `store.format` ");
       test("alter session reset store.json.writer.skip_null_fields ");
     }
 

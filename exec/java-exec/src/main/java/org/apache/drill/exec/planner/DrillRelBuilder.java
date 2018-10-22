@@ -67,4 +67,14 @@ public class DrillRelBuilder extends RelBuilder {
   public static RelBuilderFactory proto(Object... factories) {
     return proto(Contexts.of(factories));
   }
+
+  /**
+   * Disables combining of consecutive {@link org.apache.calcite.rel.core.Project} nodes.
+   * See comments under CALCITE-2470 for details.
+   * @return false
+   */
+  @Override
+  protected boolean shouldMergeProject() {
+    return false;
+  }
 }

@@ -30,6 +30,7 @@ import java.sql.Ref;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLXML;
+import java.sql.Struct;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -204,6 +205,11 @@ public class AvaticaDrillSqlAccessor implements Accessor {
 
   @Override
   public Array getArray() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  @Override
+  public Struct getStruct() throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
