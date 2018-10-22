@@ -116,8 +116,9 @@ public final class ExecConstants {
 
   // Hash Join Options
   public static final String HASHJOIN_HASHTABLE_CALC_TYPE_KEY = "exec.hashjoin.hash_table_calc_type";
-  public static final StringValidator HASHJOIN_HASHTABLE_CALC_TYPE = new StringValidator(HASHJOIN_HASHTABLE_CALC_TYPE_KEY,
-      new OptionDescription("Sets the Hash Join Memory Calculator type. Default is LEAN. This option also accepts CONSERVATIVE as a value."));
+  public static final EnumeratedStringValidator HASHJOIN_HASHTABLE_CALC_TYPE = new EnumeratedStringValidator(HASHJOIN_HASHTABLE_CALC_TYPE_KEY,
+      new OptionDescription("Sets the Hash Join Memory Calculator type. Default is LEAN. This option also accepts CONSERVATIVE as a value."),
+      "LEAN", "CONSERVATIVE");
   public static final String HASHJOIN_SAFETY_FACTOR_KEY = "exec.hashjoin.safety_factor";
   public static final DoubleValidator HASHJOIN_SAFETY_FACTOR = new RangeDoubleValidator(HASHJOIN_SAFETY_FACTOR_KEY, 1.0, Double.MAX_VALUE,
       new OptionDescription("Sets the Hash Join Memory Calculation Safety; multiplies the internal size estimate. Default is 1.0"));
@@ -313,9 +314,13 @@ public final class ExecConstants {
       "fixed_len_byte_array", "binary");
 
   // TODO - The below two options don't seem to be used in the Drill code base
+  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
   public static final String PARQUET_VECTOR_FILL_THRESHOLD = "store.parquet.vector_fill_threshold";
+  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
   public static final OptionValidator PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_THRESHOLD, 99L, null);
+  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
   public static final String PARQUET_VECTOR_FILL_CHECK_THRESHOLD = "store.parquet.vector_fill_check_threshold";
+  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
   public static final OptionValidator PARQUET_VECTOR_FILL_CHECK_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_CHECK_THRESHOLD, 100L, null);
 
   public static final String PARQUET_NEW_RECORD_READER = "store.parquet.use_new_reader";
