@@ -166,7 +166,8 @@ public final class ExecConstants {
   // Low value may OOM (e.g., when incoming rows become wider), higher values use fewer partitions but are safer
   public static final String HASHAGG_MIN_BATCHES_PER_PARTITION_KEY = "exec.hashagg.min_batches_per_partition";
   public static final LongValidator HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR = new RangeLongValidator(HASHAGG_MIN_BATCHES_PER_PARTITION_KEY, 1, 5,
-      new OptionDescription("Sets the safety assumption for the minimum number of batches needed for each partition when performing hash aggregation. Default is 2"));
+      new OptionDescription("Sets the safety assumption for the minimum number of batches needed for each partition when performing hash aggregation. Default is 2. "
+          + "Low value may OOM if incoming rows become very wide. See Spill-to-disk for Hash Aggregate operator for more information."));
   // Can be turned off mainly for testing. Memory prediction is used to decide on when to spill to disk; with this option off,
   // spill would be triggered only by another mechanism -- "catch OOMs and then spill".
   public static final String HASHAGG_USE_MEMORY_PREDICTION_KEY = "exec.hashagg.use_memory_prediction";
@@ -317,11 +318,13 @@ public final class ExecConstants {
   @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
   public static final String PARQUET_VECTOR_FILL_THRESHOLD = "store.parquet.vector_fill_threshold";
   @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
-  public static final OptionValidator PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_THRESHOLD, 99L, null);
+  public static final OptionValidator PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_THRESHOLD, 99L,
+      new OptionDescription("Deprecated. Will be removed starting in 1.15.0"));
   @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
   public static final String PARQUET_VECTOR_FILL_CHECK_THRESHOLD = "store.parquet.vector_fill_check_threshold";
   @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
-  public static final OptionValidator PARQUET_VECTOR_FILL_CHECK_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_CHECK_THRESHOLD, 100L, null);
+  public static final OptionValidator PARQUET_VECTOR_FILL_CHECK_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_CHECK_THRESHOLD, 100L,
+      new OptionDescription("Deprecated. Will be removed starting in 1.15.0"));
 
   public static final String PARQUET_NEW_RECORD_READER = "store.parquet.use_new_reader";
   public static final OptionValidator PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR = new BooleanValidator(PARQUET_NEW_RECORD_READER,
