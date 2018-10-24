@@ -284,16 +284,21 @@ public class TypeInferenceUtils {
           // In summary, if we have a boolean output function in the WHERE-CLAUSE,
           // this logic can validate and execute user queries seamlessly
           boolean allBooleanOutput = true;
+          boolean isNullable = false;
           for (DrillFuncHolder function : functions) {
             if (function.getReturnType().getMinorType() != TypeProtos.MinorType.BIT) {
               allBooleanOutput = false;
               break;
             }
+            if (function.getReturnType().getMode() == TypeProtos.DataMode.OPTIONAL
+                || function.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) {
+              isNullable = true;
+            }
           }
 
-          if(allBooleanOutput) {
+          if (allBooleanOutput) {
             return factory.createTypeWithNullability(
-                factory.createSqlType(SqlTypeName.BOOLEAN), true);
+                factory.createSqlType(SqlTypeName.BOOLEAN), isNullable);
           } else {
             return factory.createTypeWithNullability(
                 factory.createSqlType(SqlTypeName.ANY),
