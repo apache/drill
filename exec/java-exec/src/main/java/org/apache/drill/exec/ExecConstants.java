@@ -315,14 +315,14 @@ public final class ExecConstants {
       "fixed_len_byte_array", "binary");
 
   // TODO - The below two options don't seem to be used in the Drill code base
-  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
+  @Deprecated // TODO: DRILL-6527
   public static final String PARQUET_VECTOR_FILL_THRESHOLD = "store.parquet.vector_fill_threshold";
-  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
+  @Deprecated // TODO: DRILL-6527
   public static final OptionValidator PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_THRESHOLD, 99L,
       new OptionDescription("Deprecated."));
-  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
+  @Deprecated // TODO: DRILL-6527
   public static final String PARQUET_VECTOR_FILL_CHECK_THRESHOLD = "store.parquet.vector_fill_check_threshold";
-  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
+  @Deprecated // TODO: DRILL-6527
   public static final OptionValidator PARQUET_VECTOR_FILL_CHECK_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_CHECK_THRESHOLD, 100L,
       new OptionDescription("Deprecated."));
 
@@ -476,9 +476,9 @@ public final class ExecConstants {
 
   // TODO: We need to add a feature that enables storage plugins to add their own options. Currently we have to declare
   // in core which is not right. Move this option and above two mongo plugin related options once we have the feature.
-  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
+  @Deprecated // TODO: DRILL-6527
   public static final String HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS = "store.hive.optimize_scan_with_native_readers";
-  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
+  @Deprecated // TODO: DRILL-6527
   public static final OptionValidator HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR = new BooleanValidator(HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS,
       new OptionDescription("Deprecated as of Drill 1.14. Use the store.hive.parquet.optimize_scan_with_native_reader option instead. Enables Drill to use the Drill native reader (instead of the Hive Serde interface) to optimize reads of Parquet-backed tables from Hive. Default is false."));
   public static final String HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER = "store.hive.parquet.optimize_scan_with_native_reader";
