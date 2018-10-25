@@ -480,6 +480,9 @@ public class WebServer implements AutoCloseable {
     OptionManager optionManager = this.drillbit.getContext().getOptionManager();
     OptionList publicOptions = optionManager.getPublicOptionList();
     List<OptionValue> options = new ArrayList<>(publicOptions);
+    //Add internal options
+    OptionList internalOptions = optionManager.getInternalOptionList();
+    options.addAll(internalOptions);
     Collections.sort(options);
     int numLeftToWrite = options.size();
 

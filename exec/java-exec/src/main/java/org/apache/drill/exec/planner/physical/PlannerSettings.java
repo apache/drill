@@ -60,7 +60,8 @@ public class PlannerSettings implements Context{
       new OptionDescription("Enable hash aggregation; otherwise, Drill does a sort-based aggregation. Writes to disk. Enable is recommended."));
   public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg",
       new OptionDescription("Sort-based operation. Writes to disk."));
-  public static final OptionValidator TOPN = new BooleanValidator("planner.enable_topn", null);
+  public static final OptionValidator TOPN = new BooleanValidator("planner.enable_topn",
+      new OptionDescription("Generates the topN plan for queries with the ORDER BY and LIMIT clauses."));
   public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin",
       new OptionDescription("Enable the memory hungry hash join. Drill assumes that a query will have adequate memory to complete and tries to use the fastest operations possible to complete the planned inner, left, right, or full outer joins using a hash table. Does not write to disk. Disabling hash join allows Drill to manage arbitrarily large data in a small memory footprint."));
   public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin",
@@ -83,8 +84,8 @@ public class PlannerSettings implements Context{
       new OptionDescription("The factor for adjusting the estimated row count when considering multiple join order sequences during the planning phase."));
   public static final OptionValidator MUX_EXCHANGE = new BooleanValidator("planner.enable_mux_exchange",
       new OptionDescription("Toggles the state of hashing to a multiplexed exchange."));
-  public static final OptionValidator ORDERED_MUX_EXCHANGE = new BooleanValidator("planner.enable_ordered_mux_exchange",
-      null);
+  public static final OptionValidator ORDERED_MUX_EXCHANGE = new BooleanValidator(ExecConstants.ORDERED_MUX_EXCHANGE,
+      new OptionDescription("Generates the MUX exchange operator for ORDER BY queries with many minor fragments."));
   public static final OptionValidator DEMUX_EXCHANGE = new BooleanValidator("planner.enable_demux_exchange",
       new OptionDescription("Toggles the state of hashing to a demulitplexed exchange."));
   public static final OptionValidator PARTITION_SENDER_THREADS_FACTOR = new LongValidator("planner.partitioner_sender_threads_factor",
@@ -130,24 +131,28 @@ public class PlannerSettings implements Context{
 
   public static final String TYPE_INFERENCE_KEY = "planner.enable_type_inference";
   public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY, null);
-  public static final LongValidator IN_SUBQUERY_THRESHOLD =
-      new PositiveLongValidator("planner.in_subquery_threshold", Integer.MAX_VALUE, null); /* Same as Calcite's default IN List subquery size */
+  public static final LongValidator IN_SUBQUERY_THRESHOLD = new PositiveLongValidator("planner.in_subquery_threshold", Integer.MAX_VALUE,
+      new OptionDescription("Defines the threshold of values in the IN list of the query to generate a hash join instead of an OR predicate.")); /* Same as Calcite's default IN List subquery size */
 
   public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY = "planner.store.parquet.rowgroup.filter.pushdown.enabled";
-  public static final BooleanValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING = new BooleanValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY, null);
+  public static final BooleanValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING = new BooleanValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY,
+      new OptionDescription("Enables filter pushdown optimization for Parquet files. Drill reads the file metadata, stored in the footer, to eliminate row groups based on the filter condition. Default is true. (Drill 1.9+)"));
   public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY = "planner.store.parquet.rowgroup.filter.pushdown.threshold";
-  public static final PositiveLongValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD = new PositiveLongValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY,
-      Long.MAX_VALUE, null);
+  public static final PositiveLongValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD = new PositiveLongValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY, Long.MAX_VALUE,
+      new OptionDescription("Sets the number of row groups that a table can have. You can increase the threshold if the filter can prune many row groups. However, if this setting is too high, the filter evaluation overhead increases. Base this setting on the data set. Reduce this setting if the planning time is significant or you do not see any benefit at runtime. (Drill 1.9+)"));
 
   public static final String QUOTING_IDENTIFIERS_KEY = "planner.parser.quoting_identifiers";
   public static final EnumeratedStringValidator QUOTING_IDENTIFIERS = new EnumeratedStringValidator(
-      QUOTING_IDENTIFIERS_KEY, null, Quoting.BACK_TICK.string, Quoting.DOUBLE_QUOTE.string, Quoting.BRACKET.string);
+      QUOTING_IDENTIFIERS_KEY,
+      new OptionDescription("Sets the type of identifier quotes for the SQL parser. Default is backticks ('`'). The SQL parser accepts double quotes ('\"') and square brackets ('['). (Drill 1.11+)"),
+      Quoting.BACK_TICK.string, Quoting.DOUBLE_QUOTE.string, Quoting.BRACKET.string);
 
   /*
     "planner.enable_unnest_lateral" is to allow users to choose enable unnest+lateraljoin feature.
    */
   public static final String ENABLE_UNNEST_LATERAL_KEY = "planner.enable_unnest_lateral";
-  public static final BooleanValidator ENABLE_UNNEST_LATERAL = new BooleanValidator(ENABLE_UNNEST_LATERAL_KEY, null);
+  public static final BooleanValidator ENABLE_UNNEST_LATERAL = new BooleanValidator(ENABLE_UNNEST_LATERAL_KEY,
+      new OptionDescription("Enables lateral join functionality. Default is false. (Drill 1.14+)"));
 
   /*
      Enables rules that re-write query joins in the most optimal way.
@@ -171,10 +176,12 @@ public class PlannerSettings implements Context{
      Note: once hash and merge joins will allow non-equi join conditions,
      the need to turn off join optimization may go away.
    */
-  public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization", null);
+  public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization",
+      new OptionDescription("Enables join ordering optimization."));
   // for testing purpose
   public static final String FORCE_2PHASE_AGGR_KEY = "planner.force_2phase_aggr";
-  public static final BooleanValidator FORCE_2PHASE_AGGR = new BooleanValidator(FORCE_2PHASE_AGGR_KEY, null);
+  public static final BooleanValidator FORCE_2PHASE_AGGR = new BooleanValidator(FORCE_2PHASE_AGGR_KEY,
+      new OptionDescription("Forces the cost-based query planner to generate a two phase aggregation for an aggregate operator."));
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;

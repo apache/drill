@@ -26,11 +26,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.server.options.OptionSet;
-import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
 import org.codehaus.commons.compiler.CompileException;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
@@ -57,11 +57,6 @@ public class ClassTransformer {
   private final ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
   private final DrillConfig config;
   private final OptionSet optionManager;
-
-  public final static String SCALAR_REPLACEMENT_OPTION =
-      "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement";
-  public final static EnumeratedStringValidator SCALAR_REPLACEMENT_VALIDATOR = new EnumeratedStringValidator(
-      SCALAR_REPLACEMENT_OPTION, null, "try", "off", "try", "on");
 
   @VisibleForTesting // although we need it even if it weren't used in testing
   public enum ScalarReplacementOption {
@@ -235,7 +230,7 @@ public class ClassTransformer {
       final String entireClass,
       final String materializedClassName) throws ClassTransformationException {
     // unfortunately, this hasn't been set up at construction time, so we have to do it here
-    final ScalarReplacementOption scalarReplacementOption = ScalarReplacementOption.fromString(optionManager.getOption(SCALAR_REPLACEMENT_VALIDATOR));
+    final ScalarReplacementOption scalarReplacementOption = ScalarReplacementOption.fromString(optionManager.getOption(ExecConstants.SCALAR_REPLACEMENT_VALIDATOR));
 
     try {
       final long t1 = System.nanoTime();
