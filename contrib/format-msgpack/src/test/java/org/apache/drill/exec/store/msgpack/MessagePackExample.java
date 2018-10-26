@@ -2,30 +2,67 @@
 package org.apache.drill.exec.store.msgpack;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Map;
+import java.util.Set;
 
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
+import org.msgpack.core.MessageUnpacker;
+import org.msgpack.value.BinaryValue;
+import org.msgpack.value.ImmutableValue;
+import org.msgpack.value.MapValue;
+import org.msgpack.value.NumberValue;
+import org.msgpack.value.Value;
+import org.msgpack.value.ValueType;
 
 /**
  * This class describes the usage of MessagePack
  */
 public class MessagePackExample {
-  public static File destinationFolder = new File("src/test/resources/msgpack/test");
+  public static File destinationFolder = new File("/tmp");
 
   private MessagePackExample() {
   }
 
   public static void main(String[] args) throws Exception {
     MessagePackExample.writeTest();
+    MessageUnpacker unpacker = makeMessageUnpacker("test.mp");
+    while(unpacker.hasNext()) {
+      ImmutableValue value = unpacker.unpackValue();
+      ValueType type = value.getValueType();
+      if(type==ValueType.MAP) {
+        MapValue mapValue = value.asMapValue();
+        Set<Map.Entry<Value, Value>> valueEntries = mapValue.entrySet();
+        for (Map.Entry<Value, Value> valueEntry : valueEntries) {
+          Value key = valueEntry.getKey();
+          Value element = valueEntry.getValue();
+          if(key.isStringValue() && key.asStringValue().asString().equals("big")) {
+            NumberValue numberValue = element.asNumberValue();
+            String string = numberValue.toString();
+            System.out.println(string);
+            long long1 = numberValue.toLong();
+
+            System.err.println(long1);
+
+          BinaryValue asBinaryValue = numberValue.asRawValue().asBinaryValue();
+          }
+        }
+      }
+    }
     MessagePackExample.write2Batchs();
   }
 
   public static MessagePacker makeMessagePacker(String fileName) throws IOException {
     File dst = new File(destinationFolder.getPath() + File.separator + fileName);
     return MessagePack.newDefaultPacker(new FileOutputStream(dst));
+  }
+  public static MessageUnpacker makeMessageUnpacker(String fileName) throws IOException {
+    File dst = new File(destinationFolder.getPath() + File.separator + fileName);
+    return MessagePack.newDefaultUnpacker(new FileInputStream(dst));
   }
 
   public static void write2Batchs() throws IOException {

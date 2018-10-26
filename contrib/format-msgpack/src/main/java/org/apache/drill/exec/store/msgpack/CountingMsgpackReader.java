@@ -22,7 +22,7 @@ import java.io.InputStream;
 
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-import org.msgpack.value.Value;
+import org.msgpack.value.MapValue;
 
 public class CountingMsgpackReader extends BaseMsgpackReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CountingMsgpackReader.class);
@@ -32,7 +32,7 @@ public class CountingMsgpackReader extends BaseMsgpackReader {
   }
 
   @Override
-  protected ReadState writeRecord(Value mapValue, ComplexWriter writer, MaterializedField schema) throws IOException {
+  protected ReadState writeRecord(MapValue mapValue, ComplexWriter writer, MaterializedField schema) throws IOException {
     writer.rootAsMap().bit("count").writeBit(1);
     return ReadState.WRITE_SUCCEED;
   }

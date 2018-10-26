@@ -44,10 +44,13 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.msgpack.value.ArrayValue;
+import org.msgpack.value.BinaryValue;
+import org.msgpack.value.BooleanValue;
 import org.msgpack.value.ExtensionValue;
 import org.msgpack.value.FloatValue;
 import org.msgpack.value.IntegerValue;
 import org.msgpack.value.MapValue;
+import org.msgpack.value.StringValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
 
@@ -80,13 +83,45 @@ public class MsgpackReader extends BaseMsgpackReader {
   }
 
   @Override
-  protected ReadState writeRecord(Value mapValue, ComplexWriter writer, MaterializedField schema) throws IOException {
+  protected ReadState writeRecord(MapValue value, ComplexWriter writer, MaterializedField schema) throws IOException {
     this.useSchema = schema != null;
-    return writeToMap(mapValue, writer.rootAsMap(), this.rootSelection, schema);
+    return writeToMap(value, writer.rootAsMap(), this.rootSelection, schema);
   }
 
-  private ReadState writeToList(Value value, ListWriter listWriter, FieldSelection selection, MaterializedField schema)
-      throws IOException {
+  private ReadState writeMapValue(MapValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      FieldSelection selection, MaterializedField schema) {
+    MapWriter subMapWriter;
+    if (mapWriter != null) {
+      // Write map in a map.
+      subMapWriter = mapWriter.map(fieldName);
+    } else {
+      // Write map in a list.
+      subMapWriter = listWriter.map();
+    }
+    return writeToMap(value, subMapWriter, selection, schema);
+  }
+
+  private ReadState writeArrayValue(ArrayValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      FieldSelection selection, MaterializedField schema) {
+    ListWriter subListWriter;
+    MaterializedField childSchema;
+    if (mapWriter != null) {
+      // Write array in map.
+      subListWriter = mapWriter.list(fieldName);
+      childSchema = getArrayInMapChildSchema(schema);
+    } else {
+      // Write array in array.
+      subListWriter = listWriter.list();
+      childSchema = getArrayInArrayChildSchema(schema);
+    }
+    if (!checkChildSchema(childSchema)) {
+      return MSG_RECORD_PARSE_ERROR;
+    }
+    return writeToList(value, subListWriter, selection, childSchema);
+  }
+
+  private ReadState writeToList(Value value, ListWriter listWriter, FieldSelection selection,
+      MaterializedField schema) {
     listWriter.startList();
     try {
       ArrayValue arrayValue = value.asArrayValue();
@@ -99,21 +134,18 @@ public class MsgpackReader extends BaseMsgpackReader {
           }
         }
       }
-    } finally
-    {
+    } finally {
       addIfNotInitialized(listWriter);
       listWriter.endList();
     }
     return WRITE_SUCCEED;
   }
 
-  private ReadState writeToMap(Value value, MapWriter writer, FieldSelection selection, MaterializedField schema)
-      throws IOException {
+  private ReadState writeToMap(MapValue value, MapWriter writer, FieldSelection selection, MaterializedField schema) {
 
     writer.start();
     try {
-      MapValue mapValue = value.asMapValue();
-      Set<Map.Entry<Value, Value>> valueEntries = mapValue.entrySet();
+      Set<Map.Entry<Value, Value>> valueEntries = value.entrySet();
       for (Map.Entry<Value, Value> valueEntry : valueEntries) {
         Value key = valueEntry.getKey();
         Value element = valueEntry.getValue();
@@ -192,116 +224,56 @@ public class MsgpackReader extends BaseMsgpackReader {
   }
 
   private ReadState writeElement(Value value, MapWriter mapWriter, ListWriter listWriter, String fieldName,
-      FieldSelection selection, MaterializedField schema) throws IOException {
+      FieldSelection selection, MaterializedField schema) {
     try {
-      if (!checkElementSchema(value, schema)) {
-        return MSG_RECORD_PARSE_ERROR;
-      }
+      // if (!checkElementSchema(value, schema)) {
+      // return MSG_RECORD_PARSE_ERROR;
+      // }
 
       ValueType valueType = value.getValueType();
       switch (valueType) {
-      case ARRAY: {
-        ListWriter subListWriter;
-        MaterializedField childSchema;
-        if (mapWriter != null) {
-          // Write array in map.
-          subListWriter = mapWriter.list(fieldName);
-          childSchema = getArrayInMapChildSchema(schema);
-        } else {
-          // Write array in array.
-          subListWriter = listWriter.list();
-          childSchema = getArrayInArrayChildSchema(schema);
-        }
-        if (!checkChildSchema(childSchema)) {
-          return MSG_RECORD_PARSE_ERROR;
-        }
-        ReadState readState = writeToList(value, subListWriter, selection, childSchema);
-        if (readState == WRITE_SUCCEED) {
-          atLeastOneWrite = true;
-        }
-        return readState;
-      }
-      case MAP: {
-        MapWriter subMapWriter;
-        if (mapWriter != null) {
-          // Write map in a map.
-          subMapWriter = mapWriter.map(fieldName);
-        } else {
-          // Write map in a list.
-          subMapWriter = listWriter.map();
-        }
-        ReadState readState = writeToMap(value, subMapWriter, selection, schema);
-        if (readState == WRITE_SUCCEED) {
-          atLeastOneWrite = true;
-        }
-        return readState;
-      }
-      case FLOAT: {
-        FloatValue fv = value.asFloatValue();
-        double d = fv.toDouble(); // use as double
-        writeDouble(d, mapWriter, fieldName, listWriter);
-        atLeastOneWrite = true;
-        return WRITE_SUCCEED;
-      }
-      case INTEGER: {
-        IntegerValue iv = value.asIntegerValue();
-        if (iv.isInIntRange() || iv.isInLongRange()) {
-          long longVal = iv.toLong();
-          writeInt64(longVal, mapWriter, fieldName, listWriter);
-          atLeastOneWrite = true;
-          return WRITE_SUCCEED;
-        } else {
-          BigInteger i = iv.toBigInteger();
-          throw new DrillRuntimeException(
-              "UnSupported messagepack type: " + valueType + " with BigInteger value: " + i);
-        }
-      }
-      case EXTENSION: {
+      case ARRAY:
+        return writeArrayValue(value.asArrayValue(), mapWriter, fieldName, listWriter, selection, schema);
+      case MAP:
+        return writeMapValue(value.asMapValue(), mapWriter, fieldName, listWriter, selection, schema);
+      case EXTENSION:
         ExtensionValue ev = value.asExtensionValue();
         byte extType = ev.getType();
         if (extType == -1) {
           writeTimestamp(ev, mapWriter, fieldName, listWriter);
         } else {
           byte[] bytes = ev.getData();
-          writeBinary(bytes, mapWriter, fieldName, listWriter);
+          writeAsVarBinary(bytes, mapWriter, fieldName, listWriter);
         }
-        atLeastOneWrite = true;
-        return WRITE_SUCCEED;
-      }
-      case BOOLEAN: {
-        boolean b = value.asBooleanValue().getBoolean();
-        writeBoolean(b, mapWriter, fieldName, listWriter);
-        atLeastOneWrite = true;
-        return WRITE_SUCCEED;
-      }
-      case STRING: {
-        byte[] buff = value.asStringValue().asByteArray();
-        writeString(buff, mapWriter, fieldName, listWriter);
-        atLeastOneWrite = true;
-        return WRITE_SUCCEED;
-      }
-      case BINARY: {
-        byte[] bytes = value.asBinaryValue().asByteArray();
-        if (context.readBinaryAsString) {
-          writeString(bytes, mapWriter, fieldName, listWriter);
-        } else {
-          writeBinary(bytes, mapWriter, fieldName, listWriter);
-        }
-        atLeastOneWrite = true;
-        return WRITE_SUCCEED;
-      }
+        break;
+      case FLOAT:
+        writeFloatValue(value.asFloatValue(), mapWriter, fieldName, listWriter, schema);
+        break;
+      case INTEGER:
+        writeIntegerValue(value.asIntegerValue(), mapWriter, fieldName, listWriter, schema);
+        break;
+      case BOOLEAN:
+        writeBooleanValue(value.asBooleanValue(), mapWriter, fieldName, listWriter, schema);
+        break;
+      case STRING:
+        writeStringValue(value.asStringValue(), mapWriter, fieldName, listWriter, schema);
+        break;
+      case BINARY:
+        writeBinaryValue(value.asBinaryValue(), mapWriter, fieldName, listWriter, schema);
+        break;
       default:
         throw new DrillRuntimeException("UnSupported msgpack type: " + valueType);
       }
     } catch (Exception e) {
       if (context.lenient) {
         context.warn("Failed to write element name: " + fieldName + " of type: " + value.getValueType()
-            + " into list. File: " + context.hadoopPath + " line no: " + context.currentRecordNumberInFile(), e);
+            + " into list. File: " + context.hadoopPath + " line no: " + context.currentRecordNumberInFile() + " ", e);
         return WRITE_SUCCEED;
       } else {
-        throw e;
+        throw new DrillRuntimeException(e);
       }
     }
+    return WRITE_SUCCEED;
   }
 
   private boolean checkChildSchema(MaterializedField childSchema) {
@@ -311,7 +283,7 @@ public class MsgpackReader extends BaseMsgpackReader {
     return childSchema != null;
   }
 
-  private MaterializedField getArrayInArrayChildSchema(MaterializedField schema) throws IOException {
+  private MaterializedField getArrayInArrayChildSchema(MaterializedField schema) {
     if (!useSchema) {
       return null;
     }
@@ -319,7 +291,7 @@ public class MsgpackReader extends BaseMsgpackReader {
     return children.iterator().next();
   }
 
-  private MaterializedField getArrayInMapChildSchema(MaterializedField schema) throws IOException {
+  private MaterializedField getArrayInMapChildSchema(MaterializedField schema) {
     if (!useSchema) {
       return null;
     }
@@ -435,6 +407,7 @@ public class MsgpackReader extends BaseMsgpackReader {
       logger.error("UnSupported built-in messagepack timestamp type (-1) with data length of: " + data.length);
     }
 
+    atLeastOneWrite = true;
     if (mapWriter != null) {
       mapWriter.timeStamp(fieldName).writeTimeStamp(epochMilliSeconds);
     } else {
@@ -442,10 +415,141 @@ public class MsgpackReader extends BaseMsgpackReader {
     }
   }
 
-  private void writeBinary(byte[] bytes, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+  private void writeIntegerValue(IntegerValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MaterializedField schema) {
+    if (!value.isInLongRange()) {
+      BigInteger i = value.toBigInteger();
+      throw new DrillRuntimeException(
+          "UnSupported messagepack type: " + value.getValueType() + " with BigInteger value: " + i);
+    }
+
+    MinorType targetSchemaType = MinorType.BIGINT;
+    if (useSchema) {
+      targetSchemaType = schema.getType().getMinorType();
+    }
+    switch (targetSchemaType) {
+    case VARCHAR:
+      String s = value.toString();
+      writeAsVarChar(s.getBytes(), mapWriter, fieldName, listWriter);
+      break;
+    case VARBINARY:
+      long longValue = value.toLong();
+      ensure(8);
+      workBuf.setLong(0, longValue);
+      writeAsVarBinary(mapWriter, fieldName, listWriter, 8);
+      break;
+    case BIGINT:
+      writeAsBigInt(value.toLong(), mapWriter, fieldName, listWriter);
+      break;
+    default:
+      throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
+    }
+  }
+
+  private void writeBinaryValue(BinaryValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MaterializedField schema) {
+    MinorType targetSchemaType = MinorType.VARBINARY;
+    if (useSchema) {
+      targetSchemaType = schema.getType().getMinorType();
+    }
+    if (context.readBinaryAsString) {
+      targetSchemaType = MinorType.VARCHAR;
+    }
+    switch (targetSchemaType) {
+    case VARCHAR:
+      byte[] buff = value.asByteArray();
+      writeAsVarChar(buff, mapWriter, fieldName, listWriter);
+      break;
+    case VARBINARY:
+      byte[] binBuff = value.asByteArray();
+      writeAsVarBinary(binBuff, mapWriter, fieldName, listWriter);
+      break;
+    default:
+      throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
+    }
+  }
+
+  private void writeStringValue(StringValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MaterializedField schema) {
+    MinorType targetSchemaType = MinorType.VARCHAR;
+    if (useSchema) {
+      targetSchemaType = schema.getType().getMinorType();
+    }
+    switch (targetSchemaType) {
+    case VARCHAR:
+      byte[] buff = value.asByteArray();
+      writeAsVarChar(buff, mapWriter, fieldName, listWriter);
+      break;
+    case VARBINARY:
+      byte[] binBuff = value.asByteArray();
+      writeAsVarBinary(binBuff, mapWriter, fieldName, listWriter);
+      break;
+    default:
+      throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
+    }
+  }
+
+  private void writeFloatValue(FloatValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MaterializedField schema) {
+    MinorType targetSchemaType = MinorType.FLOAT8;
+    if (useSchema) {
+      targetSchemaType = schema.getType().getMinorType();
+    }
+    switch (targetSchemaType) {
+    case VARCHAR:
+      String s = value.toString();
+      writeAsVarChar(s.getBytes(), mapWriter, fieldName, listWriter);
+      break;
+    case VARBINARY:
+      double d = value.toDouble(); // use as double
+      ensure(8);
+      workBuf.setDouble(0, d);
+      writeAsVarBinary(mapWriter, fieldName, listWriter, 8);
+      break;
+    case FLOAT8:
+      writeAsFloat8(value.toDouble(), mapWriter, fieldName, listWriter);
+      break;
+    default:
+      throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
+    }
+  }
+
+  private void writeBooleanValue(BooleanValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MaterializedField schema) {
+
+    MinorType targetSchemaType = MinorType.BIT;
+    if (useSchema) {
+      targetSchemaType = schema.getType().getMinorType();
+    }
+
+    switch (targetSchemaType) {
+    case VARCHAR:
+      String s = value.toString();
+      writeAsVarChar(s.getBytes(), mapWriter, fieldName, listWriter);
+      break;
+    case VARBINARY:
+      boolean b = value.getBoolean();
+      ensure(1);
+      workBuf.setBoolean(0, b);
+      writeAsVarBinary(mapWriter, fieldName, listWriter, 1);
+      break;
+    case BIT:
+      writeAsBit(value.getBoolean(), mapWriter, fieldName, listWriter);
+      break;
+    default:
+      throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
+    }
+  }
+
+  private void writeAsVarBinary(byte[] bytes, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
     int length = bytes.length;
     ensure(length);
     workBuf.setBytes(0, bytes);
+    writeAsVarBinary(mapWriter, fieldName, listWriter, length);
+  }
+
+  private void writeAsVarBinary(MapWriter mapWriter, String fieldName, ListWriter listWriter, int length) {
+    atLeastOneWrite = true;
     if (mapWriter != null) {
       mapWriter.varBinary(fieldName).writeVarBinary(0, length, workBuf);
     } else {
@@ -453,10 +557,15 @@ public class MsgpackReader extends BaseMsgpackReader {
     }
   }
 
-  private void writeString(byte[] readString, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+  private void writeAsVarChar(byte[] readString, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
     int length = readString.length;
     ensure(length);
     workBuf.setBytes(0, readString);
+    writeAsVarChar(mapWriter, fieldName, listWriter, length);
+  }
+
+  private void writeAsVarChar(MapWriter mapWriter, String fieldName, ListWriter listWriter, int length) {
+    atLeastOneWrite = true;
     if (mapWriter != null) {
       mapWriter.varChar(fieldName).writeVarChar(0, length, workBuf);
     } else {
@@ -464,15 +573,17 @@ public class MsgpackReader extends BaseMsgpackReader {
     }
   }
 
-  private void writeDouble(double value, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+  private void writeAsFloat8(double d, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+    atLeastOneWrite = true;
     if (mapWriter != null) {
-      mapWriter.float8(fieldName).writeFloat8(value);
+      mapWriter.float8(fieldName).writeFloat8(d);
     } else {
-      listWriter.float8().writeFloat8(value);
+      listWriter.float8().writeFloat8(d);
     }
   }
 
-  private void writeBoolean(boolean readBoolean, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+  private void writeAsBit(boolean readBoolean, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+    atLeastOneWrite = true;
     int value = readBoolean ? 1 : 0;
     if (mapWriter != null) {
       mapWriter.bit(fieldName).writeBit(value);
@@ -481,7 +592,8 @@ public class MsgpackReader extends BaseMsgpackReader {
     }
   }
 
-  private void writeInt64(long value, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+  private void writeAsBigInt(long value, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+    atLeastOneWrite = true;
     if (mapWriter != null) {
       mapWriter.bigInt(fieldName).writeBigInt(value);
     } else {

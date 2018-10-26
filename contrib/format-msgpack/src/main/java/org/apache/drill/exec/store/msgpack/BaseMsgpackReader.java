@@ -8,6 +8,7 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.msgpack.core.MessageInsufficientBufferException;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
+import org.msgpack.value.MapValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
 
@@ -51,7 +52,7 @@ public abstract class BaseMsgpackReader {
       ValueType type = v.getValueType();
       switch (type) {
       case MAP:
-        readState = writeRecord(v, writer, schema);
+        readState = writeRecord(v.asMapValue(), writer, schema);
         break;
       default:
         Log.warn("Value in root of message pack file is not of type MAP. Skipping type found: " + type);
@@ -62,7 +63,7 @@ public abstract class BaseMsgpackReader {
     return readState;
   }
 
-  protected abstract ReadState writeRecord(Value mapValue, ComplexWriter writer, MaterializedField schema)
+  protected abstract ReadState writeRecord(MapValue mapValue, ComplexWriter writer, MaterializedField schema)
       throws IOException;
 
   public void ensureAtLeastOneField(ComplexWriter writer) {

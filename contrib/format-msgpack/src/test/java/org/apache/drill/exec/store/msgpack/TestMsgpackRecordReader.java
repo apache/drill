@@ -1,20 +1,4 @@
 package org.apache.drill.exec.store.msgpack;
-/*
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -29,13 +13,17 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -111,6 +99,61 @@ public class TestMsgpackRecordReader extends ClusterTest {
 //  }
 
   @Test
+  @Ignore
+  public void testPerformance() throws Exception {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    try (MessagePacker packer = testPacker()) {
+      for (int i = 0; i < 100_000; i++) {
+        packer.packMapHeader(10);
+        packer.packString("a").packString(UUID.randomUUID().toString());
+        packer.packString("b").packString(UUID.randomUUID().toString());
+        packer.packString("c").packString(UUID.randomUUID().toString());
+        packer.packString("d").packString(UUID.randomUUID().toString());
+        packer.packString("e").packString(UUID.randomUUID().toString());
+        packer.packString("f").packString(UUID.randomUUID().toString());
+        packer.packString("g").packString(UUID.randomUUID().toString());
+        packer.packString("h").packString(UUID.randomUUID().toString());
+        packer.packString("i");
+        int BUFFER_SIZE = 1024 + (int)(Math.random() * 1024 * 4);
+        byte[] bytes = new byte[BUFFER_SIZE];
+        for (int j = 0; j < bytes.length; j++) {
+          bytes[j] = (byte) (Math.random() * 255);
+        }
+        packer.packBinaryHeader(BUFFER_SIZE).addPayload(bytes);
+        packer.packString("j");
+        for (int j = 0; j < bytes.length; j++) {
+          bytes[j] = (byte) (Math.random() * 255);
+        }
+        packer.packBinaryHeader(BUFFER_SIZE).addPayload(bytes);
+      }
+    }
+    System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+
+    LogFixtureBuilder logBuilder = LogFixture.builder()
+        // Log to the console for debugging convenience
+        .toConsole().logger("org.apache.drill.exec", Level.ERROR);
+    try (LogFixture logs = logBuilder.build()) {
+
+      String sql = "select * from `dfs.data`.`test.mp` limit 1";
+      List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+      for (QueryDataBatch batch : results) {
+        batch.release();
+      }
+
+      for (int i = 0; i < 20; i++) {
+        stopwatch.reset().start();
+        sql = "select * from `dfs.data`.`test.mp`";
+        results = client.queryBuilder().sql(sql).results();
+        for (QueryDataBatch batch : results) {
+          batch.release();
+        }
+        System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+      }
+
+    }
+  }
+
+  @Test
   public void testBasic() throws Exception {
 
     try (MessagePacker packer = testPacker()) {
@@ -138,6 +181,90 @@ public class TestMsgpackRecordReader extends ClusterTest {
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow(1L, 2L, "infini!!!", null)
         .addRow(1L, 2L, null, 12.12d)
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
+  public void testSchemaArrayOfElementsOfDifferentTypes() throws Exception {
+
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("anArray").packArrayHeader(4);
+      packer.packString("first element");
+      byte[] bytes = new byte[] { 'A' };
+      packer.packBinaryHeader(1).addPayload(bytes);
+      packer.packDouble(123.456d);
+      packer.packLong(99L);
+    }
+
+    // schema learning mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
+
+    String sql = "select * from `dfs.data`.`test.mp`";
+    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+    for (QueryDataBatch batch : results) {
+      batch.release();
+    }
+    // schema using mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
+
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder().addArray("anArray", TypeProtos.MinorType.VARCHAR).buildSchema();
+
+    //@formatter:off
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(new Object[] {new String[] {"first element", "A", "123.456", "99"}})
+        .build();
+    //@formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
+  public void testSchemaRepeatedMapWithFieldWithDifferentTypes() throws Exception {
+
+//    try (OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(new File(testDir, "test.json")))) {
+//      w.write("{\"arrayOfMap\":[{\"type\": 3, \"data\": 44}]}\n");
+//    }
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("arrayOfMap").packArrayHeader(3);
+      packer.packMapHeader(2);
+      packer.packString("type").packInt(2);
+      packer.packString("data").packString("data");
+      packer.packMapHeader(2);
+      packer.packString("type").packInt(1);
+      packer.packString("data");
+      byte[] bytes = new byte[] { 'A' };
+      packer.packBinaryHeader(1).addPayload(bytes);
+      packer.packMapHeader(2);
+      packer.packString("type").packInt(3);
+      packer.packString("data").packLong(44L);
+    }
+
+    // schema learning mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
+
+    String sql = "select * from `dfs.data`.`test.mp`";
+    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+
+    for (QueryDataBatch batch : results) {
+      batch.release();
+    }
+
+    // schema using mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
+
+    sql = "select root.arrayOfMap[2].data as data from `dfs.data`.`test.mp` as root";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder().add("data", MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
+    //@formatter:off
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("44")
         .build();
     //@formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
@@ -995,6 +1122,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
     rowSetBuilder = newRowSetBuilder();
     // record not matching schema are skipped.
     // rowSetBuilder.addRow(new Object[] {null});
+    rowSetBuilder.addRow("1");
     rowSetBuilder.addRow("data");
     verify(rowSetBuilder.build(), nextRowSet());
   }
