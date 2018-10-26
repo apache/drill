@@ -23,11 +23,12 @@ import static org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState.WR
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -63,8 +64,8 @@ public class MsgpackReader extends BaseMsgpackReader {
   public boolean atLeastOneWrite = false;
   private DrillBuf workBuf;
   private final FieldSelection rootSelection;
-  private final ByteBuffer timestampReadBuffer = ByteBuffer.allocate(12);
   private boolean useSchema = false;
+  private List<MsgpackExtensionReader> extensionReaders = new ArrayList<>();
 
   /**
    * Collection for tracking empty array writers during reading and storing them
@@ -80,6 +81,12 @@ public class MsgpackReader extends BaseMsgpackReader {
     this.workBuf = managedBuf;
     this.columns = columns;
     rootSelection = FieldSelection.getFieldSelection(columns);
+
+    ServiceLoader<MsgpackExtensionReader> loader = ServiceLoader.load(MsgpackExtensionReader.class);
+    for (MsgpackExtensionReader msgpackExtensionReader : loader) {
+      logger.debug("Loaded msgpack extension reader: " + msgpackExtensionReader.getClass());
+      extensionReaders.add(msgpackExtensionReader);
+    }
   }
 
   @Override
@@ -239,9 +246,20 @@ public class MsgpackReader extends BaseMsgpackReader {
       case EXTENSION:
         ExtensionValue ev = value.asExtensionValue();
         byte extType = ev.getType();
-        if (extType == -1) {
-          writeTimestamp(ev, mapWriter, fieldName, listWriter);
+        // Try to find extension type reader for given type.
+        MsgpackExtensionReader msgpackExtensionReader = null;
+        for (int i = 0; i < extensionReaders.size(); i++) {
+          MsgpackExtensionReader r = extensionReaders.get(i);
+          if (r.handlesType(extType)) {
+            msgpackExtensionReader = r;
+            break;
+          }
+        }
+        if (msgpackExtensionReader != null) {
+          msgpackExtensionReader.write(ev, mapWriter, fieldName, listWriter);
+          atLeastOneWrite = true;
         } else {
+          // Fallback to reading extension type as varbinary.
           byte[] bytes = ev.getData();
           writeAsVarBinary(bytes, mapWriter, fieldName, listWriter);
         }
@@ -335,83 +353,6 @@ public class MsgpackReader extends BaseMsgpackReader {
       return schemaType == MinorType.VARBINARY;
     default:
       throw new DrillRuntimeException("Unsupported msgpack type: " + value);
-    }
-  }
-
-  /**
-   * <code>
-   * <pre>
-   * timestamp 32 stores the number of seconds that have elapsed since 1970-01-01 00:00:00 UTC
-   * in an 32-bit unsigned integer:
-   * +--------+--------+--------+--------+--------+--------+
-   * |  0xd6  |   -1   |   seconds in 32-bit unsigned int  |
-   * +--------+--------+--------+--------+--------+--------+
-   *
-   * timestamp 64 stores the number of seconds and nanoseconds that have elapsed since 1970-01-01 00:00:00 UTC
-   * in 32-bit unsigned integers:
-   * +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-   * |  0xd7  |   -1   |nanoseconds in 30-bit unsigned int |  seconds in 34-bit unsigned int   |
-   * +--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
-   *
-   * timestamp 96 stores the number of seconds and nanoseconds that have elapsed since 1970-01-01 00:00:00 UTC
-   * in 64-bit signed integer and 32-bit unsigned integer:
-   * +--------+--------+--------+--------+--------+--------+--------+
-   * |  0xc7  |   12   |   -1   |nanoseconds in 32-bit unsigned int |
-   * +--------+--------+--------+--------+--------+--------+--------+
-   * +--------+--------+--------+--------+--------+--------+--------+--------+
-   *                     seconds in 64-bit signed int                        |
-   * +--------+--------+--------+--------+--------+--------+--------+--------+
-   *</pre>
-   *</code>
-   */
-  private void writeTimestamp(ExtensionValue ev, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
-    long epochMilliSeconds = 0;
-    byte zero = 0;
-    byte[] data = ev.getData();
-    switch (data.length) {
-    case 4: {
-      timestampReadBuffer.position(0);
-      timestampReadBuffer.put(zero);
-      timestampReadBuffer.put(zero);
-      timestampReadBuffer.put(zero);
-      timestampReadBuffer.put(zero);
-      timestampReadBuffer.put(data);
-      timestampReadBuffer.position(0);
-      epochMilliSeconds = timestampReadBuffer.getLong() * 1000;
-      break;
-    }
-    case 8: {
-      timestampReadBuffer.position(0);
-      timestampReadBuffer.put(data);
-      timestampReadBuffer.position(0);
-      long data64 = timestampReadBuffer.getLong();
-      @SuppressWarnings("unused")
-      long nanos = data64 >>> 34;
-      long seconds = data64 & 0x00000003ffffffffL;
-      epochMilliSeconds = (seconds * 1000) + (nanos / 1000000);
-      break;
-    }
-    case 12: {
-      timestampReadBuffer.position(0);
-      timestampReadBuffer.put(data);
-      timestampReadBuffer.position(0);
-      int data32 = timestampReadBuffer.getInt();
-      @SuppressWarnings("unused")
-      long nanos = data32;
-      long data64 = timestampReadBuffer.getLong();
-      long seconds = data64;
-      epochMilliSeconds = (seconds * 1000) + (nanos / 1000000);
-      break;
-    }
-    default:
-      logger.error("UnSupported built-in messagepack timestamp type (-1) with data length of: " + data.length);
-    }
-
-    atLeastOneWrite = true;
-    if (mapWriter != null) {
-      mapWriter.timeStamp(fieldName).writeTimeStamp(epochMilliSeconds);
-    } else {
-      listWriter.timeStamp().writeTimeStamp(epochMilliSeconds);
     }
   }
 
