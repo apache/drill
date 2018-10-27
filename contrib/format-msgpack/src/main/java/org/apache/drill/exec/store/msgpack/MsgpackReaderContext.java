@@ -91,6 +91,9 @@ public class MsgpackReaderContext {
 
   public void parseWarn() {
     warn("Parsing msgpack in " + hadoopPath.getName() + " : line nos :" + currentRecordNumberInFile());
+  }
 
+  public void parseWarn(Exception e) {
+    warn("Parsing msgpack in " + hadoopPath.getName() + " : line nos :" + currentRecordNumberInFile(), e);
   }
 }

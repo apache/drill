@@ -154,6 +154,40 @@ public class TestMsgpackRecordReader extends ClusterTest {
   }
 
   @Test
+  @Ignore
+  public void testPerformanceExceptionHandling() throws Exception {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    try (MessagePacker packer = testPacker()) {
+      for (int i = 0; i < 10_000_000; i++) {
+        if(i % 10000 == 0) {
+          packer.packString("a").packString("A");
+        }
+        else {
+          packer.packMapHeader(1);
+          packer.packString("a").packString("A");
+        }
+      }
+    }
+    System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+
+    LogFixtureBuilder logBuilder = LogFixture.builder()
+        // Log to the console for debugging convenience
+        .toConsole().logger("org.apache.drill.exec", Level.ERROR);
+    try (LogFixture logs = logBuilder.build()) {
+
+      for (int i = 0; i < 20; i++) {
+        stopwatch.reset().start();
+        String sql = "select * from `dfs.data`.`test.mp`";
+        List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+        for (QueryDataBatch batch : results) {
+          batch.release();
+        }
+        System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+      }
+    }
+  }
+
+  @Test
   public void testBasic() throws Exception {
 
     try (MessagePacker packer = testPacker()) {
@@ -1310,7 +1344,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
   private static MsgpackFormatConfig buildConfig(boolean learnSchema, boolean useSchema) {
     MsgpackFormatConfig msgFormat = new MsgpackFormatConfig();
     msgFormat.setLenient(true);
-    msgFormat.setPrintToConsole(true);
+    msgFormat.setPrintToConsole(false);
     msgFormat.setLearnSchema(learnSchema);
     msgFormat.setUseSchema(useSchema);
     msgFormat.setExtensions(ImmutableList.of("mp"));

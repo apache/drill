@@ -30,7 +30,6 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState;
 import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -39,7 +38,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 
 public class MsgpackRecordReader extends AbstractRecordReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackRecordReader.class);
 
   public static final long DEFAULT_ROWS_PER_BATCH = 0x4000;
 
@@ -51,13 +49,14 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private final boolean learnSchema;
   private final boolean useSchema;
   private Path schemaLocation;
-  private ReadState write = null;
   private MsgpackSchemaWriter schemaWriter = new MsgpackSchemaWriter();
 
   private MsgpackReaderContext context = new MsgpackReaderContext();
-  private BaseMsgpackReader messageReader;
+  private MsgpackReader messageReader;
 
   private boolean unionEnabled = false; // ????
+
+  private boolean hasMore = true;
 
   /**
    * Create a msgpack Record Reader that uses a file based input stream.
@@ -95,12 +94,8 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     try {
       this.stream = fileSystem.openPossiblyCompressedStream(context.hadoopPath);
       this.writer = new VectorContainerWriter(output, unionEnabled);
-      if (isSkipQuery()) {
-        this.messageReader = new CountingMsgpackReader(stream, context);
-      } else {
-        this.messageReader = new MsgpackReader(stream, context, fragmentContext.getManagedBuffer(),
-            Lists.newArrayList(getColumns()));
-      }
+      this.messageReader = new MsgpackReader(stream, context, fragmentContext.getManagedBuffer(),
+          Lists.newArrayList(getColumns()), isSkipQuery());
     } catch (final Exception e) {
       context.handleAndRaise("Failure reading mgspack file", e);
     }
@@ -127,29 +122,26 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     writer.allocate();
     writer.reset();
     context.recordCount = 0;
-    if (write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
+    if (!hasMore) {
       return context.recordCount;
     }
-    outside: while (context.recordCount < DEFAULT_ROWS_PER_BATCH) {
+    while (context.recordCount < DEFAULT_ROWS_PER_BATCH) {
       try {
         writer.setPosition(context.recordCount);
-        write = messageReader.write(writer, schema);
-        if (write == ReadState.WRITE_SUCCEED) {
+        hasMore = messageReader.write(writer, schema);
+        if (!hasMore) {
+          break;
+        } else {
           context.recordCount++;
-        } else if (write == ReadState.MSG_RECORD_PARSE_ERROR || write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
-          if (context.lenient == false) {
-            context.handleAndRaise("Error parsing msgpack", new Exception("Failed to parse record."));
-          }
-          ++context.parseErrorCount;
-          context.parseWarn();
-          if (write == ReadState.MSG_RECORD_PARSE_EOF_ERROR) {
-            break outside;
-          }
-        } else { // END_OF_STREAM
-          break outside;
         }
-      } catch (IOException ex) {
-        context.handleAndRaise("Error parsing msgpack file.", ex);
+      } catch (MsgpackParsingException e) {
+        if (!context.lenient) {
+          context.handleAndRaise("Error parsing msgpack", e);
+        }
+        ++context.parseErrorCount;
+        context.parseWarn(e);
+      } catch (IOException e) {
+        context.handleAndRaise("Error parsing msgpack", e);
       }
     }
 

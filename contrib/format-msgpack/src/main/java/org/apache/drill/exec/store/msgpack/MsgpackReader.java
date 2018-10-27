@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.store.msgpack;
 
-import static org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState.MSG_RECORD_PARSE_ERROR;
-import static org.apache.drill.exec.store.msgpack.BaseMsgpackReader.ReadState.WRITE_SUCCEED;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -42,8 +39,10 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.msgpack.core.MessageInsufficientBufferException;
+import org.msgpack.core.MessagePack;
+import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.ArrayValue;
 import org.msgpack.value.BinaryValue;
 import org.msgpack.value.BooleanValue;
@@ -57,7 +56,7 @@ import org.msgpack.value.ValueType;
 
 import io.netty.buffer.DrillBuf;
 
-public class MsgpackReader extends BaseMsgpackReader {
+public class MsgpackReader {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackReader.class);
   private final List<SchemaPath> columns;
@@ -66,6 +65,9 @@ public class MsgpackReader extends BaseMsgpackReader {
   private final FieldSelection rootSelection;
   private boolean useSchema = false;
   private List<MsgpackExtensionReader> extensionReaders = new ArrayList<>();
+  protected MessageUnpacker unpacker;
+  protected MsgpackReaderContext context;
+  private final boolean skipQuery;
 
   /**
    * Collection for tracking empty array writers during reading and storing them
@@ -74,12 +76,14 @@ public class MsgpackReader extends BaseMsgpackReader {
   private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
   private boolean allTextMode = false;
 
-  public MsgpackReader(InputStream stream, MsgpackReaderContext context, DrillBuf managedBuf,
-      List<SchemaPath> columns) {
-    super(stream, context);
-    assert Preconditions.checkNotNull(columns).size() > 0 : "msgpack record reader requires at least a column";
+  public MsgpackReader(InputStream stream, MsgpackReaderContext context, DrillBuf managedBuf, List<SchemaPath> columns,
+      boolean skipQuery) {
+
+    this.context = context;
+    this.unpacker = MessagePack.newDefaultUnpacker(stream);
     this.workBuf = managedBuf;
     this.columns = columns;
+    this.skipQuery = skipQuery;
     rootSelection = FieldSelection.getFieldSelection(columns);
 
     ServiceLoader<MsgpackExtensionReader> loader = ServiceLoader.load(MsgpackExtensionReader.class);
@@ -89,13 +93,37 @@ public class MsgpackReader extends BaseMsgpackReader {
     }
   }
 
-  @Override
-  protected ReadState writeRecord(MapValue value, ComplexWriter writer, MaterializedField schema) throws IOException {
-    this.useSchema = schema != null;
-    return writeToMap(value, writer.rootAsMap(), this.rootSelection, schema);
+  public boolean write(ComplexWriter writer, MaterializedField schema)
+      throws IOException, MessageInsufficientBufferException {
+    if (!unpacker.hasNext()) {
+      return false;
+    }
+
+    try {
+      Value v = unpacker.unpackValue();
+      ValueType type = v.getValueType();
+      if (type == ValueType.MAP) {
+        writeRecord(v.asMapValue(), writer, schema);
+      } else {
+        throw new MsgpackParsingException(
+            "Value in root of message pack file is not of type MAP. Skipping type found: " + type);
+      }
+    } catch (MessageInsufficientBufferException e) {
+      throw new MsgpackParsingException("Failed to unpack MAP, possibly because key/value tuples do not match.");
+    }
+    return true;
   }
 
-  private ReadState writeMapValue(MapValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+  protected void writeRecord(MapValue value, ComplexWriter writer, MaterializedField schema) throws IOException {
+    if (skipQuery) {
+      writer.rootAsMap().bit("count").writeBit(1);
+    } else {
+      this.useSchema = schema != null;
+      writeToMap(value, writer.rootAsMap(), this.rootSelection, schema);
+    }
+  }
+
+  private void writeMapValue(MapValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
       FieldSelection selection, MaterializedField schema) {
     MapWriter subMapWriter;
     if (mapWriter != null) {
@@ -105,10 +133,10 @@ public class MsgpackReader extends BaseMsgpackReader {
       // Write map in a list.
       subMapWriter = listWriter.map();
     }
-    return writeToMap(value, subMapWriter, selection, schema);
+    writeToMap(value, subMapWriter, selection, schema);
   }
 
-  private ReadState writeArrayValue(ArrayValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+  private void writeArrayValue(ArrayValue value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
       FieldSelection selection, MaterializedField schema) {
     ListWriter subListWriter;
     MaterializedField childSchema;
@@ -121,34 +149,27 @@ public class MsgpackReader extends BaseMsgpackReader {
       subListWriter = listWriter.list();
       childSchema = getArrayInArrayChildSchema(schema);
     }
-    if (!checkChildSchema(childSchema)) {
-      return MSG_RECORD_PARSE_ERROR;
-    }
-    return writeToList(value, subListWriter, selection, childSchema);
+    checkChildSchema(null, childSchema);
+    writeToList(value, subListWriter, selection, childSchema);
   }
 
-  private ReadState writeToList(Value value, ListWriter listWriter, FieldSelection selection,
-      MaterializedField schema) {
+  private void writeToList(Value value, ListWriter listWriter, FieldSelection selection, MaterializedField schema) {
     listWriter.startList();
     try {
       ArrayValue arrayValue = value.asArrayValue();
       for (int i = 0; i < arrayValue.size(); i++) {
         Value element = arrayValue.get(i);
         if (!element.isNilValue()) {
-          ReadState readState = writeElement(element, null, listWriter, null, selection, schema);
-          if (readState != WRITE_SUCCEED) {
-            return readState;
-          }
+          writeElement(element, null, listWriter, null, selection, schema);
         }
       }
     } finally {
       addIfNotInitialized(listWriter);
       listWriter.endList();
     }
-    return WRITE_SUCCEED;
   }
 
-  private ReadState writeToMap(MapValue value, MapWriter writer, FieldSelection selection, MaterializedField schema) {
+  private void writeToMap(MapValue value, MapWriter writer, FieldSelection selection, MaterializedField schema) {
 
     writer.start();
     try {
@@ -165,7 +186,7 @@ public class MsgpackReader extends BaseMsgpackReader {
             context.parseWarn();
             continue;
           } else {
-            return MSG_RECORD_PARSE_ERROR;
+            throw new MsgpackParsingException("Failed to parse fieldname.");
           }
         }
         FieldSelection childSelection = selection.getChild(fieldName);
@@ -173,19 +194,12 @@ public class MsgpackReader extends BaseMsgpackReader {
           continue;
         }
         MaterializedField childSchema = getChildSchema(schema, fieldName);
-        if (!checkChildSchema(childSchema)) {
-          return MSG_RECORD_PARSE_ERROR;
-        }
-        ReadState readState = writeElement(element, writer, null, fieldName, childSelection, childSchema);
-        if (readState != WRITE_SUCCEED) {
-          return readState;
-        }
+        checkChildSchema(fieldName, childSchema);
+        writeElement(element, writer, null, fieldName, childSelection, childSchema);
       }
     } finally {
       writer.end();
     }
-
-    return WRITE_SUCCEED;
   }
 
   private MaterializedField getChildSchema(MaterializedField schema, String fieldName) {
@@ -230,7 +244,7 @@ public class MsgpackReader extends BaseMsgpackReader {
     return fieldName;
   }
 
-  private ReadState writeElement(Value value, MapWriter mapWriter, ListWriter listWriter, String fieldName,
+  private void writeElement(Value value, MapWriter mapWriter, ListWriter listWriter, String fieldName,
       FieldSelection selection, MaterializedField schema) {
     try {
       // if (!checkElementSchema(value, schema)) {
@@ -240,9 +254,11 @@ public class MsgpackReader extends BaseMsgpackReader {
       ValueType valueType = value.getValueType();
       switch (valueType) {
       case ARRAY:
-        return writeArrayValue(value.asArrayValue(), mapWriter, fieldName, listWriter, selection, schema);
+        writeArrayValue(value.asArrayValue(), mapWriter, fieldName, listWriter, selection, schema);
+        break;
       case MAP:
-        return writeMapValue(value.asMapValue(), mapWriter, fieldName, listWriter, selection, schema);
+        writeMapValue(value.asMapValue(), mapWriter, fieldName, listWriter, selection, schema);
+        break;
       case EXTENSION:
         ExtensionValue ev = value.asExtensionValue();
         byte extType = ev.getType();
@@ -286,19 +302,22 @@ public class MsgpackReader extends BaseMsgpackReader {
       if (context.lenient) {
         context.warn("Failed to write element name: " + fieldName + " of type: " + value.getValueType()
             + " into list. File: " + context.hadoopPath + " line no: " + context.currentRecordNumberInFile() + " ", e);
-        return WRITE_SUCCEED;
       } else {
-        throw new DrillRuntimeException(e);
+        throw new MsgpackParsingException(
+            "Failed to write element name: " + fieldName + " of type: " + value.getValueType() + " into list. File: "
+                + context.hadoopPath + " line no: " + context.currentRecordNumberInFile() + " ",
+            e);
       }
     }
-    return WRITE_SUCCEED;
   }
 
-  private boolean checkChildSchema(MaterializedField childSchema) {
+  private void checkChildSchema(String fieldName, MaterializedField childSchema) {
     if (!useSchema) {
-      return true;
+      return;
     }
-    return childSchema != null;
+    if (childSchema == null) {
+      throw new MsgpackParsingException("Field name: " + fieldName + " has no child schema.");
+    }
   }
 
   private MaterializedField getArrayInArrayChildSchema(MaterializedField schema) {
@@ -559,7 +578,6 @@ public class MsgpackReader extends BaseMsgpackReader {
   }
 
   @SuppressWarnings("resource")
-  @Override
   public void ensureAtLeastOneField(ComplexWriter writer) {
     List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
     List<PathSegment> fieldPathList = Lists.newArrayList();
