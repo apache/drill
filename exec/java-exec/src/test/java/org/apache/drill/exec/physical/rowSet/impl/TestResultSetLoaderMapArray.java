@@ -45,8 +45,8 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
@@ -123,7 +123,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
             mapValue(320, "d3.2"),
             mapValue(330, "d3.3")))
         .build();
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
 
     // In the second, create a row, then add a map member.
     // Should be back-filled to empty for the first row.
@@ -172,7 +172,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
             mapValue(620, "d6.2", null),
             mapValue(630, "d6.3", "e6.3")))
         .build();
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
 
     rsLoader.close();
   }
@@ -220,13 +220,13 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
             mapValue(320, strArray()),
             mapValue(330, strArray("d3.3.1", "d1.2.2"))))
         .build();
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
 
     rsLoader.close();
   }
 
   /**
-   * Test a doubly-nested arrays of maps.
+   * Test a doubly-nested array of maps.
    */
 
   @Test

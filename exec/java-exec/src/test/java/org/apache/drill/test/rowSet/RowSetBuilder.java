@@ -22,7 +22,6 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
 import java.util.Set;
@@ -65,7 +64,7 @@ public final class RowSetBuilder {
     writer = rowSet.writer(capacity);
   }
 
-  public TupleWriter writer() { return writer; }
+  public RowSetWriter writer() { return writer; }
 
   /**
    * Add a new row using column values passed as variable-length arguments. Expects

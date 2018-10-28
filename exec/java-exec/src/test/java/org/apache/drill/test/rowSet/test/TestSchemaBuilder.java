@@ -273,6 +273,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertEquals(MinorType.VARCHAR, child.type());
     assertEquals(DataMode.REPEATED, child.mode());
   }
+
   /**
    * Test methods to provide a width (precision) for VarChar
    * columns. The schema builder does not provide shortcuts for

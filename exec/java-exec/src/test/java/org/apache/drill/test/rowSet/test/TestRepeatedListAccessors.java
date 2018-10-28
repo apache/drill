@@ -49,6 +49,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSetReader;
@@ -402,7 +403,13 @@ public class TestRepeatedListAccessors extends SubOperatorTest {
         .addRow(4, objArray(strArray(), strArray("i"), strArray()))
         .build();
 
-    RowSetUtilities.verify(expected, result);
+    new RowSetComparison(expected).verify(result);
+
+    // Test that the row set rebuilds its internal structure from
+    // a vector container.
+
+    RowSet wrapped = fixture.wrap(result.container());
+    RowSetUtilities.verify(expected, wrapped);
   }
 
   @Test
