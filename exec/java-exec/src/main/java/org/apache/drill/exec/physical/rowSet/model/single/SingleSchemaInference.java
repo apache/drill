@@ -87,7 +87,7 @@ public class SingleSchemaInference {
 
   private TupleSchema inferMapSchema(AbstractMapVector vector) {
     final List<ColumnMetadata> columns = new ArrayList<>();
-    for (int i = 0; i < vector.getField().getChildren().size(); i++) {
+    for (int i = 0; i < vector.size(); i++) {
       columns.add(inferVector(vector.getChildByOrdinal(i)));
     }
     return MetadataUtils.fromColumns(columns);
