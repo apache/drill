@@ -165,7 +165,7 @@ public class HashJoinPrel  extends JoinPrel {
     buildJoinConditions(conditions, leftFields, rightFields, leftKeys, rightKeys);
 
     RuntimeFilterDef runtimeFilterDef = this.getRuntimeFilterDef();
-    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype, runtimeFilterDef, isRowKeyJoin, htControl);
+    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype, isSemiJoin, runtimeFilterDef, isRowKeyJoin, htControl);
     return creator.addMetadata(this, hjoin);
   }
 

@@ -33,16 +33,19 @@ public abstract class AbstractJoinPop extends AbstractBase {
 
   protected final JoinRelType joinType;
 
+  protected final boolean semiJoin;
+
   protected final LogicalExpression condition;
 
   protected final List<JoinCondition> conditions;
 
   public AbstractJoinPop(PhysicalOperator leftOp, PhysicalOperator rightOp,
-                         JoinRelType joinType, LogicalExpression joinCondition,
+                         JoinRelType joinType, boolean semiJoin, LogicalExpression joinCondition,
                          List<JoinCondition> joinConditions) {
     left = leftOp;
     right = rightOp;
     this.joinType = joinType;
+    this.semiJoin = semiJoin;
     condition = joinCondition;
     conditions = joinConditions;
   }
@@ -68,6 +71,8 @@ public abstract class AbstractJoinPop extends AbstractBase {
   public JoinRelType getJoinType() {
     return joinType;
   }
+
+  public boolean isSemiJoin() { return semiJoin; }
 
   public LogicalExpression getCondition() { return condition; }
 

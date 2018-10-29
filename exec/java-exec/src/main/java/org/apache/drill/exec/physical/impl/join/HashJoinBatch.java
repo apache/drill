@@ -122,6 +122,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
   // Join type, INNER, LEFT, RIGHT or OUTER
   private final JoinRelType joinType;
+  private boolean semiJoin;
   private boolean joinIsLeftOrFull;
   private boolean joinIsRightOrFull;
   private boolean skipHashTableBuild; // when outer side is empty, and the join is inner or left (see DRILL-6755)
@@ -566,6 +567,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
             hashJoinProbe.setupHashJoinProbe(probeBatch,
               this,
               joinType,
+              semiJoin,
               leftUpstream,
               partitions,
               spilledState.getCycle(),
@@ -777,7 +779,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     baseHashTable.updateIncoming(buildBatch, probeBatch); // in case we process the spilled files
     // Recreate the partitions every time build is initialized
     for (int part = 0; part < numPartitions; part++ ) {
-      partitions[part] = new HashPartition(context, allocator, baseHashTable, buildBatch, probeBatch,
+      partitions[part] = new HashPartition(context, allocator, baseHashTable, buildBatch, probeBatch, semiJoin,
         RECORDS_PER_BATCH, spillSet, part, spilledState.getCycle(), numPartitions);
     }
 
@@ -998,6 +1000,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
             : read_right_HV_vector.getAccessor().get(ind); // get the hash value from the HV column
           int currPart = hashCode & spilledState.getPartitionMask();
           hashCode >>>= spilledState.getBitsInMask();
+          // semi-join skips join-key-duplicate rows
+          if ( semiJoin ) {
+
+          }
           // Append the new inner row to the appropriate partition; spill (that partition) if needed
           partitions[currPart].appendInnerRow(buildBatch.getContainer(), ind, hashCode, buildCalc); // may spill if needed
         }
@@ -1093,7 +1099,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
   private void setupOutputContainerSchema() {
 
-    if (buildSchema != null) {
+    if (buildSchema != null && ! semiJoin ) {
       for (final MaterializedField field : buildSchema) {
         final MajorType inputType = field.getType();
         final MajorType outputType;
@@ -1160,6 +1166,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     this.buildBatch = right;
     this.probeBatch = left;
     joinType = popConfig.getJoinType();
+    semiJoin = popConfig.isSemiJoin();
     joinIsLeftOrFull  = joinType == JoinRelType.LEFT  || joinType == JoinRelType.FULL;
     joinIsRightOrFull = joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL;
     conditions = popConfig.getConditions();
