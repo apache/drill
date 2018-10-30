@@ -1,6 +1,6 @@
 ---
 title: "Modifying Query Planning Options"
-date: 2016-11-21 22:28:44 UTC
+date: 2018-10-30 00:43:14 UTC
 parent: "Query Plans and Tuning"
 --- 
 
@@ -25,7 +25,7 @@ The following planning options affect query planning and performance:
      Default is 100000. The minimum number of estimated records to work with in a major fragment before applying additional parallelization.
  
 * **planner.broadcast_threshold**  
-     Default is 10000000. The maximum number of records allowed to be broadcast as part of a join. After one million records, Drill reshuffles data rather than doing a broadcast to one side of the join. To improve performance you can increase this number, especially on 10GB Ethernet clusters.
+     Default is 10000000. The maximum number of records allowed to be broadcast as part of a join. When the threshold is reached, Drill reshuffles data rather than doing a broadcast to one side of the join. To improve performance you can increase this number, especially on 10GB Ethernet clusters.
  
 
 
