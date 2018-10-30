@@ -1,23 +1,26 @@
-package org.apache.drill.exec.store.msgpack;
+package org.apache.drill.exec.store.msgpack.valuewriter;
 
 import java.nio.ByteBuffer;
 
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.msgpack.value.ExtensionValue;
+import org.msgpack.value.Value;
 
-public class TimestampMsgpackExtensionReader implements MsgpackExtensionReader {
+public class TimestampValueWriter extends ScalarValueWriter implements ExtensionValueHandler {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TimestampMsgpackExtensionReader.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TimestampValueWriter.class);
 
   private final ByteBuffer timestampReadBuffer = ByteBuffer.allocate(12);
 
-  public TimestampMsgpackExtensionReader() {
+  public TimestampValueWriter() {
   }
 
   @Override
-  public boolean handlesType(byte extType) {
-    return extType == -1 || extType == 0;
+  public byte getExtensionTypeNumber() {
+    return 0;
   }
 
   /**
@@ -47,10 +50,13 @@ public class TimestampMsgpackExtensionReader implements MsgpackExtensionReader {
    *</code>
    */
   @Override
-  public void write(ExtensionValue ev, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+  public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
+      MaterializedField schema) {
+
+    ExtensionValue value = v.asExtensionValue();
     long epochMilliSeconds = 0;
     byte zero = 0;
-    byte[] data = ev.getData();
+    byte[] data = value.getData();
     switch (data.length) {
     case 4: {
       timestampReadBuffer.position(0);

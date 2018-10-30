@@ -21,6 +21,8 @@ import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
 
 public class MsgpackSchema {
+  public static final String SCHEMA_FILE_NAME = ".schema.proto";
+
   @SuppressWarnings("unused")
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackSchema.class);
 
@@ -32,7 +34,7 @@ public class MsgpackSchema {
 
   public MaterializedField load(Path schemaLocation) throws AccessControlException, FileNotFoundException, IOException {
     MaterializedField previousMapField = null;
-    if (fileSystem.exists(schemaLocation)) {
+    if (schemaLocation != null && fileSystem.exists(schemaLocation)) {
       try (FSDataInputStream in = fileSystem.open(schemaLocation)) {
         String schemaData = IOUtils.toString(in);
         Builder newBuilder = SerializedField.newBuilder();
@@ -92,6 +94,20 @@ public class MsgpackSchema {
       if (newChildName.equalsIgnoreCase(f.getName())) {
         return f;
       }
+    }
+    return null;
+  }
+
+  public Path findSchemaFile(Path dir) throws IOException {
+    int MAX_DEPTH = 5;
+    int depth = 0;
+    while (dir != null && depth < MAX_DEPTH) {
+      Path schemaLocation = new Path(dir, SCHEMA_FILE_NAME);
+      if (fileSystem.exists(schemaLocation)) {
+        return schemaLocation;
+      }
+      dir = dir.getParent();
+      depth++;
     }
     return null;
   }

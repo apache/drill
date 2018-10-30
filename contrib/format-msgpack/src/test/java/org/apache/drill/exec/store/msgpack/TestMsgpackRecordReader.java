@@ -1046,6 +1046,46 @@ public class TestMsgpackRecordReader extends ClusterTest {
   }
 
   @Test
+  public void testFindingSchemaInParentDirs() throws Exception {
+
+    try (MessagePacker packer = testPacker()) {
+      for (int i = 0; i < BATCH_SIZE; i++) {
+        packer.packMapHeader(1);
+        packer.packString("int").packInt(0);
+      }
+      packer.packMapHeader(1);
+      packer.packString("str");
+      packer.packString("data");
+    }
+    String sql = "select * from dfs.data.`test.mp`";
+    // schema learning mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
+
+    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+    for (QueryDataBatch batch : results) {
+      batch.release();
+    }
+    // schema using mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
+
+    new File(testDir, "subdir").mkdir();
+    File src = new File(testDir, "test.mp");
+    File dst = new File(new File(testDir, "subdir"), "test.mp");
+    src.renameTo(dst);
+
+    sql = "select root.str as w from dfs.data.`subdir/test.mp` as root";
+    rowSetIterator = client.queryBuilder().sql(sql).rowSetIterator();
+
+    schemaBuilder.add("w", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
+    expectedSchema = schemaBuilder.buildSchema();
+    verifyFirstBatchNull();
+
+    rowSetBuilder = newRowSetBuilder();
+    rowSetBuilder.addRow("data");
+    verify(rowSetBuilder.build(), nextRowSet());
+  }
+
+  @Test
   public void testSchemaMapOfMapShort() throws Exception {
     learnModel();
     String sql = "select root.mapOfmap.aMap.sho as w from dfs.data.`secondBatchHasCompleteModel.mp` as root";

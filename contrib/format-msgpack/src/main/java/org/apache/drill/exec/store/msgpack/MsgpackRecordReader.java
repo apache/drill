@@ -39,6 +39,9 @@ import org.apache.hadoop.fs.Path;
 
 public class MsgpackRecordReader extends AbstractRecordReader {
 
+  @SuppressWarnings("unused")
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackRecordReader.class);
+
   public static final long DEFAULT_ROWS_PER_BATCH = 0x4000;
 
   private VectorContainerWriter writer;
@@ -48,7 +51,6 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private final FragmentContext fragmentContext;
   private final boolean learnSchema;
   private final boolean useSchema;
-  private Path schemaLocation;
   private MsgpackSchemaWriter schemaWriter = new MsgpackSchemaWriter();
 
   private MsgpackReaderContext context = new MsgpackReaderContext();
@@ -80,7 +82,6 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     this.context.printToConsole = config.isPrintToConsole();
     this.learnSchema = config.isLearnSchema();
     this.useSchema = config.isUseSchema();
-    this.schemaLocation = new Path(context.hadoopPath.getParent(), ".schema.proto");
     setColumns(columns);
   }
 
@@ -109,10 +110,12 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   @Override
   public int next() {
 
-    MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
     MaterializedField schema = null;
+    Path schemaLocation = null;
     try {
       if (!this.learnSchema && this.useSchema) {
+        MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
+        schemaLocation = msgpackSchema.findSchemaFile(context.hadoopPath.getParent());
         schema = msgpackSchema.load(schemaLocation);
       }
     } catch (IOException e) {
@@ -165,6 +168,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private void applySchemaIfAny() {
     try {
       MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
+      Path schemaLocation = msgpackSchema.findSchemaFile(context.hadoopPath.getParent());
       MaterializedField schema = msgpackSchema.load(schemaLocation);
       if (schema != null) {
         schemaWriter.applySchema(schema, writer);
@@ -176,15 +180,22 @@ public class MsgpackRecordReader extends AbstractRecordReader {
 
   private void learnSchema() {
     if (this.isStarQuery()) {
-      MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
       try {
+        MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
+        Path schemaLocation = msgpackSchema.findSchemaFile(context.hadoopPath.getParent());
         MaterializedField previous = msgpackSchema.load(schemaLocation);
         if (previous != null) {
           MaterializedField current = writer.getMapVector().getField();
           MaterializedField merged = msgpackSchema.merge(previous, current);
+          if(schemaLocation == null) {
+            schemaLocation = new Path(context.hadoopPath.getParent(), MsgpackSchema.SCHEMA_FILE_NAME);
+          }
           msgpackSchema.save(merged, schemaLocation);
         } else {
           MaterializedField current = writer.getMapVector().getField();
+          if(schemaLocation == null) {
+            schemaLocation = new Path(context.hadoopPath.getParent(), MsgpackSchema.SCHEMA_FILE_NAME);
+          }
           msgpackSchema.save(current, schemaLocation);
         }
       } catch (Exception e) {

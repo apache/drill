@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
 
+import io.netty.buffer.DrillBuf;
 import jline.internal.Log;
 
 public class MsgpackReaderContext {
@@ -32,12 +33,15 @@ public class MsgpackReaderContext {
   public long runningRecordCount = 0;
   public long parseErrorCount;
   public int recordCount;
+  public DrillBuf workBuf;
 
   public boolean printToConsole;
 
   public boolean lenient;
 
   public boolean readBinaryAsString;
+
+  public boolean useSchema;
 
   public long currentRecordNumberInFile() {
     return parseErrorCount + runningRecordCount + recordCount + 1;
