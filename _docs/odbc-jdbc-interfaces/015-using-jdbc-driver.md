@@ -1,6 +1,6 @@
 ---
 title: "Using the JDBC Driver"
-date: 2018-04-19 23:14:01 UTC
+date: 2018-10-30 21:47:13 UTC
 parent: "ODBC/JDBC Interfaces"
 ---
 This section explains how to install and use the JDBC driver for Apache Drill. To use the JDBC driver, you have to:
@@ -15,7 +15,7 @@ Most client tools provide a UI where you can enter all of the required connectio
 
 ## Prerequisites
 
-  * JRE 7 or JDK 7  
+  * JRE 8 or JDK 8  
   * [A Drill installation]({{site.baseurl}}/docs/install-drill/)  
   * Capability to resolve the actual host name of the Drill node(s) with the IP(s), as described in step 4 of [Install the Drill JDBC Driver with JReport]({{site.baseurl}}/docs/configuring-jreport-with-drill/#step-1:-install-the-drill-jdbc-driver-with-jreport). 
 
