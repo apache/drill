@@ -39,7 +39,7 @@ import org.ojai.Document;
 import org.ojai.DocumentStream;
 import org.ojai.json.Json;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.mapr.db.Table;
 import com.mapr.db.tests.utils.DBTests;
 import com.mapr.drill.maprdb.tests.MaprDBTestsSuite;

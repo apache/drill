@@ -30,7 +30,7 @@ import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.ojai.Value;
 import org.ojai.store.QueryCondition;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import com.mapr.db.impl.ConditionImpl;
 import com.mapr.db.impl.MapRDBImpl;
 
