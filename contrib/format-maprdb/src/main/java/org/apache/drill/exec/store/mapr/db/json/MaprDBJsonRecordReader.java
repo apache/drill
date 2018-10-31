@@ -62,8 +62,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
 
-import com.mapr.db.MapRDB;
-import com.mapr.org.apache.hadoop.hbase.util.Bytes;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;

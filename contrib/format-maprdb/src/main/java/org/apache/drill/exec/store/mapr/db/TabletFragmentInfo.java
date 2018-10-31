@@ -79,23 +79,30 @@ public class TabletFragmentInfo  implements Comparable<TabletFragmentInfo> {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     TabletFragmentInfo other = (TabletFragmentInfo) obj;
     if (regionInfo == null) {
-      if (other.regionInfo != null)
+      if (other.regionInfo != null) {
         return false;
-    } else if (!regionInfo.equals(other.regionInfo))
+      }
+    } else if (!regionInfo.equals(other.regionInfo)) {
       return false;
+    }
     if (tabletInfoImpl == null) {
-      if (other.tabletInfoImpl != null)
+      if (other.tabletInfoImpl != null) {
         return false;
-    } else if (!tabletInfoImpl.equals(other.tabletInfoImpl))
+      }
+    } else if (!tabletInfoImpl.equals(other.tabletInfoImpl)) {
       return false;
+    }
     return true;
   }
 

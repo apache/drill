@@ -733,7 +733,7 @@ public class IndexPlanTest extends BaseJsonTest {
   public void TestCoveringPlanJoin_1() throws Exception {
     String query = "SELECT count(*) as cnt FROM hbase.`index_test_primary` as t1 " +
         " inner join hbase.`index_test_primary` as t2 on t1.driverlicense = t2.driverlicense " +
-        " where t1.driverlicense < 100000003 and t2.driverlicense < 100000003" ;
+        " where t1.driverlicense < 100000003 and t2.driverlicense < 100000003";
     test(defaultHavingIndexPlan);
     PlanTestBase.testPlanMatchingPatterns(query,
         new String[] {".*JsonTableGroupScan.*tableName=.*index_test_primary.*indexName=",

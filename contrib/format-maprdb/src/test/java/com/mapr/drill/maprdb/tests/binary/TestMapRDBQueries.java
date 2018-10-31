@@ -43,5 +43,4 @@ public class TestMapRDBQueries extends TestHBaseQueries {
   public static void tearDownAfterClass() throws Exception {
     MaprDBTestsSuite.cleanupTests();
   }
-  
 }

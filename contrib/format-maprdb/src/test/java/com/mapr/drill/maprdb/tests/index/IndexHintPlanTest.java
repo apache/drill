@@ -18,7 +18,6 @@ package com.mapr.drill.maprdb.tests.index;
  * limitations under the License.
  */
 
-import com.mapr.drill.maprdb.tests.json.BaseJsonTest;
 import com.mapr.tests.annotations.ClusterTest;
 import org.apache.drill.PlanTestBase;
 import org.junit.experimental.categories.Category;

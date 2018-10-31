@@ -43,5 +43,4 @@ public class TestMapRDBCFAsJSONString extends TestHBaseCFAsJSONString {
   public static void tearDownAfterClass() throws Exception {
     MaprDBTestsSuite.cleanupTests();
   }
-  
 }

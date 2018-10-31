@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.planner.index;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import com.mapr.db.Admin;
 import com.mapr.db.MapRDB;
 import com.mapr.db.exceptions.DBException;
@@ -64,6 +63,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDiscover {
 
