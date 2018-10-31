@@ -742,6 +742,9 @@ public class UserException extends DrillRuntimeException {
     if (getCause() != null) {
       // some unit tests use this information to make sure a specific exception was thrown in the server
       builder.setException(ErrorHelper.getWrapper(getCause()));
+    } else {
+      // not a wrapper exception
+      builder.setException(ErrorHelper.getWrapper(this));
     }
     return builder.build();
   }
