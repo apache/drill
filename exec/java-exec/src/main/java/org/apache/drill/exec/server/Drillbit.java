@@ -57,6 +57,7 @@ import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.util.GuavaPatcher;
+import org.apache.drill.exec.util.ProtobufPatcher;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.zookeeper.Environment;
 
@@ -72,6 +73,12 @@ public class Drillbit implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
 
   static {
+    /*
+     * HBase and MapR-DB clients use older version of protobuf,
+     * and override some methods that became final in recent versions.
+     * This code removes these final modifiers.
+     */
+    ProtobufPatcher.patch();
     /*
      * HBase client uses older version of Guava's Stopwatch API,
      * while Drill ships with 18.x which has changes the scope of
