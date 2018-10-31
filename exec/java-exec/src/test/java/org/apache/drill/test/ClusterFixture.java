@@ -167,7 +167,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   private void configureZk() {
     // Start ZK if requested.
 
-    String zkConnect = null;
+    String zkConnect;
     if (builder.zkHelper != null) {
       // Case where the test itself started ZK and we're only using it.
 
@@ -594,18 +594,22 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   /**
    * Convert a Java object (typically a boxed scalar) to a string
    * for use in SQL. Quotes strings but just converts others to
-   * string format.
+   * string format. If value to encode is null, return null.
    *
    * @param value the value to encode
    * @return the SQL-acceptable string equivalent
    */
 
   public static String stringify(Object value) {
+    if (value == null) {
+      return null;
+    }
+
     if (value instanceof String) {
       return "'" + value + "'";
-    } else {
-      return value.toString();
     }
+
+    return value.toString();
   }
 
   public static String getResource(String resource) throws IOException {

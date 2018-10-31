@@ -131,7 +131,7 @@ public class MapRDBFormatPlugin extends TableFormatPlugin {
   @Override
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
       List<SchemaPath> columns) throws IOException {
-    return getGroupScan(userName, selection, columns, null /* indexDesc */);
+    return getGroupScan(userName, selection, columns, (IndexDesc) null /* indexDesc */);
   }
 
   @JsonIgnore

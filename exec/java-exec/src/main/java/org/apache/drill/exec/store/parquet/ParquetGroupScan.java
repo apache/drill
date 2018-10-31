@@ -80,8 +80,9 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
                           @JsonProperty("columns") List<SchemaPath> columns,
                           @JsonProperty("selectionRoot") String selectionRoot,
                           @JsonProperty("cacheFileRoot") String cacheFileRoot,
+                          @JsonProperty("readerConfig") ParquetReaderConfig readerConfig,
                           @JsonProperty("filter") LogicalExpression filter) throws IOException, ExecutionSetupException {
-    super(ImpersonationUtil.resolveUserName(userName), columns, entries, filter);
+    super(ImpersonationUtil.resolveUserName(userName), columns, entries, readerConfig, filter);
     Preconditions.checkNotNull(storageConfig);
     Preconditions.checkNotNull(formatConfig);
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
@@ -98,16 +99,18 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
   public ParquetGroupScan(String userName,
                           FileSelection selection,
                           ParquetFormatPlugin formatPlugin,
-                          List<SchemaPath> columns) throws IOException {
-    this(userName, selection, formatPlugin, columns, ValueExpressions.BooleanExpression.TRUE);
+                          List<SchemaPath> columns,
+                          ParquetReaderConfig readerConfig) throws IOException {
+    this(userName, selection, formatPlugin, columns, readerConfig, ValueExpressions.BooleanExpression.TRUE);
   }
 
   public ParquetGroupScan(String userName,
                           FileSelection selection,
                           ParquetFormatPlugin formatPlugin,
                           List<SchemaPath> columns,
+                          ParquetReaderConfig readerConfig,
                           LogicalExpression filter) throws IOException {
-    super(userName, columns, new ArrayList<>(), filter);
+    super(userName, columns, new ArrayList<>(), readerConfig, filter);
 
     this.formatPlugin = formatPlugin;
     this.formatConfig = formatPlugin.getConfig();
@@ -178,7 +181,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
 
   @Override
   public ParquetRowGroupScan getSpecificScan(int minorFragmentId) {
-    return new ParquetRowGroupScan(getUserName(), formatPlugin, getReadEntries(minorFragmentId), columns, selectionRoot, filter);
+    return new ParquetRowGroupScan(getUserName(), formatPlugin, getReadEntries(minorFragmentId), columns, readerConfig, selectionRoot, filter);
   }
 
   @Override
@@ -245,13 +248,13 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
         metaPath = new Path(p, Metadata.METADATA_FILENAME);
       }
       if (!metaContext.isMetadataCacheCorrupted() && metaPath != null && fs.exists(metaPath)) {
-        parquetTableMetadata = Metadata.readBlockMeta(processUserFileSystem, metaPath, metaContext, formatConfig);
+        parquetTableMetadata = Metadata.readBlockMeta(processUserFileSystem, metaPath, metaContext, readerConfig);
         if (parquetTableMetadata != null) {
           usedMetadataCache = true;
         }
       }
       if (!usedMetadataCache) {
-        parquetTableMetadata = Metadata.getParquetTableMetadata(processUserFileSystem, p.toString(), formatConfig);
+        parquetTableMetadata = Metadata.getParquetTableMetadata(processUserFileSystem, p.toString(), readerConfig);
       }
     } else {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
@@ -259,7 +262,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
       if (!metaContext.isMetadataCacheCorrupted() && fs.isDirectory(new Path(selectionRoot))
           && fs.exists(metaPath)) {
         if (parquetTableMetadata == null) {
-          parquetTableMetadata = Metadata.readBlockMeta(processUserFileSystem, metaPath, metaContext, formatConfig);
+          parquetTableMetadata = Metadata.readBlockMeta(processUserFileSystem, metaPath, metaContext, readerConfig);
         }
         if (parquetTableMetadata != null) {
           usedMetadataCache = true;
@@ -283,7 +286,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
                     (oldFs, newFs) -> newFs,
                     LinkedHashMap::new));
 
-        parquetTableMetadata = Metadata.getParquetTableMetadata(statusMap, formatConfig);
+        parquetTableMetadata = Metadata.getParquetTableMetadata(statusMap, readerConfig);
       }
     }
   }
@@ -362,7 +365,8 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
    * @param metaFilePath metadata cache file path
    * @return file selection read from cache
    *
-   * @throws UserException when the updated selection is empty, this happens if the user selects an empty folder.
+   * @throws org.apache.drill.common.exceptions.UserException when the updated selection is empty,
+   * this happens if the user selects an empty folder.
    */
   private FileSelection expandSelectionFromMetadataCache(FileSelection selection, Path metaFilePath) throws IOException {
     // get the metadata for the root directory by reading the metadata file
@@ -371,14 +375,14 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
 
     // get (and set internal field) the metadata for the directory by reading the metadata file
     FileSystem processUserFileSystem = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(), fs.getConf());
-    parquetTableMetadata = Metadata.readBlockMeta(processUserFileSystem, metaFilePath, metaContext, formatConfig);
+    parquetTableMetadata = Metadata.readBlockMeta(processUserFileSystem, metaFilePath, metaContext, readerConfig);
     if (ignoreExpandingSelection(parquetTableMetadata)) {
       return selection;
     }
     if (formatConfig.areCorruptDatesAutoCorrected()) {
       ParquetReaderUtility.correctDatesInMetadataCache(this.parquetTableMetadata);
     }
-    ParquetReaderUtility.correctBinaryInMetadataCache(parquetTableMetadata);
+    ParquetReaderUtility.transformBinaryInMetadataCache(parquetTableMetadata, readerConfig);
     List<FileStatus> fileStatuses = selection.getStatuses(fs);
 
     if (fileSet == null) {
@@ -412,7 +416,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
         if (status.isDirectory()) {
           //TODO [DRILL-4496] read the metadata cache files in parallel
           final Path metaPath = new Path(cacheFileRoot, Metadata.METADATA_FILENAME);
-          final ParquetTableMetadataBase metadata = Metadata.readBlockMeta(processUserFileSystem, metaPath, metaContext, formatConfig);
+          final ParquetTableMetadataBase metadata = Metadata.readBlockMeta(processUserFileSystem, metaPath, metaContext, readerConfig);
           if (ignoreExpandingSelection(metadata)) {
             return selection;
           }

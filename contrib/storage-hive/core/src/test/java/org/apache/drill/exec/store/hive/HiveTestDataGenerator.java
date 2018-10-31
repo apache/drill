@@ -552,12 +552,12 @@ public class HiveTestDataGenerator {
 
   private void createTestDataForDrillNativeParquetReaderTests(Driver hiveDriver) {
     // Hive managed table that has data qualified for Drill native filter push down
-    executeQuery(hiveDriver, "create table kv_native(key int, sub_key int) stored as parquet");
+    executeQuery(hiveDriver, "create table kv_native(key int, int_key int, var_key varchar(10), dec_key decimal(5, 2)) stored as parquet");
     // each insert is created in separate file
-    executeQuery(hiveDriver, "insert into table kv_native values (1, 1), (1, 2)");
-    executeQuery(hiveDriver, "insert into table kv_native values (1, 3), (1, 4)");
-    executeQuery(hiveDriver, "insert into table kv_native values (2, 5), (2, 6)");
-    executeQuery(hiveDriver, "insert into table kv_native values (null, 9), (null, 10)");
+    executeQuery(hiveDriver, "insert into table kv_native values (1, 1, 'var_1', 1.11), (1, 2, 'var_2', 2.22)");
+    executeQuery(hiveDriver, "insert into table kv_native values (1, 3, 'var_3', 3.33), (1, 4, 'var_4', 4.44)");
+    executeQuery(hiveDriver, "insert into table kv_native values (2, 5, 'var_5', 5.55), (2, 6, 'var_6', 6.66)");
+    executeQuery(hiveDriver, "insert into table kv_native values (null, 7, 'var_7', 7.77), (null, 8, 'var_8', 8.88)");
 
     // Hive external table which has three partitions
 

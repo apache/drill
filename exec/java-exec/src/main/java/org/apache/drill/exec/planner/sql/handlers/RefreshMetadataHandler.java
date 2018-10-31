@@ -19,13 +19,9 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
 
-import java.io.IOException;
-
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.tools.RelConversionException;
-import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -37,6 +33,7 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
+import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
@@ -58,7 +55,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
   }
 
   @Override
-  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
+  public PhysicalPlan getPlan(SqlNode sqlNode) throws ForemanSetupException {
     final SqlRefreshMetadata refreshTable = unwrap(sqlNode, SqlRefreshMetadata.class);
 
     try {
@@ -119,7 +116,12 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
       if (!(formatConfig instanceof ParquetFormatConfig)) {
         formatConfig = new ParquetFormatConfig();
       }
-      Metadata.createMeta(fs, selectionRoot, (ParquetFormatConfig) formatConfig);
+
+      ParquetReaderConfig readerConfig = ParquetReaderConfig.builder()
+        .withFormatConfig((ParquetFormatConfig) formatConfig)
+        .withOptions(context.getOptions())
+        .build();
+      Metadata.createMeta(fs, selectionRoot, readerConfig);
       return direct(true, "Successfully updated metadata for table %s.", tableName);
 
     } catch(Exception e) {

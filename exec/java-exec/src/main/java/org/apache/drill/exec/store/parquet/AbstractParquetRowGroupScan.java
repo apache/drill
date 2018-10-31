@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -37,15 +38,18 @@ public abstract class AbstractParquetRowGroupScan extends AbstractBase implement
 
   protected final List<RowGroupReadEntry> rowGroupReadEntries;
   protected final List<SchemaPath> columns;
+  protected final ParquetReaderConfig readerConfig;
   protected final LogicalExpression filter;
 
   protected AbstractParquetRowGroupScan(String userName,
                                      List<RowGroupReadEntry> rowGroupReadEntries,
                                      List<SchemaPath> columns,
+                                     ParquetReaderConfig readerConfig,
                                      LogicalExpression filter) {
     super(userName);
     this.rowGroupReadEntries = rowGroupReadEntries;
     this.columns = columns == null ? GroupScan.ALL_COLUMNS : columns;
+    this.readerConfig = readerConfig == null ? ParquetReaderConfig.getDefaultInstance() : readerConfig;
     this.filter = filter;
   }
 
@@ -57,6 +61,18 @@ public abstract class AbstractParquetRowGroupScan extends AbstractBase implement
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
+  }
+
+  @JsonProperty("readerConfig")
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  // do not serialize reader config if it contains all default values
+  public ParquetReaderConfig getReaderConfigForSerialization() {
+    return ParquetReaderConfig.getDefaultInstance().equals(readerConfig) ? null : readerConfig;
+  }
+
+  @JsonIgnore
+  public ParquetReaderConfig getReaderConfig() {
+    return readerConfig;
   }
 
   @JsonProperty
@@ -80,7 +96,6 @@ public abstract class AbstractParquetRowGroupScan extends AbstractBase implement
   }
 
   public abstract AbstractParquetRowGroupScan copy(List<SchemaPath> columns);
-  public abstract boolean areCorruptDatesAutoCorrected();
   @JsonIgnore
   public abstract Configuration getFsConf(RowGroupReadEntry rowGroupReadEntry) throws IOException;
   public abstract boolean supportsFileImplicitColumns();

@@ -333,6 +333,14 @@ public final class ExecConstants {
   public static final OptionValidator PARQUET_READER_INT96_AS_TIMESTAMP_VALIDATOR = new BooleanValidator(PARQUET_READER_INT96_AS_TIMESTAMP,
       new OptionDescription("Enables Drill to implicitly interpret the INT96 timestamp data type in Parquet files."));
 
+  public static final String PARQUET_READER_STRINGS_SIGNED_MIN_MAX = "store.parquet.reader.strings_signed_min_max";
+  public static final StringValidator PARQUET_READER_STRINGS_SIGNED_MIN_MAX_VALIDATOR = new EnumeratedStringValidator(PARQUET_READER_STRINGS_SIGNED_MIN_MAX,
+    new OptionDescription("Allows binary statistics usage for files created prior to 1.9.1 parquet library version where " +
+      "statistics was incorrectly calculated for UTF-8 data. For cases when user exactly knows " +
+      "that data in binary columns is in ASCII (not UTF-8), turning this property to 'true' " +
+      "enables statistics usage for varchar and decimal data types. Default is unset, i.e. empty string. " +
+      "Allowed values: 'true', 'false', '' (empty string)."), "true", "false", "");
+
   public static final String PARQUET_PAGEREADER_ASYNC = "store.parquet.reader.pagereader.async";
   public static final OptionValidator PARQUET_PAGEREADER_ASYNC_VALIDATOR = new BooleanValidator(PARQUET_PAGEREADER_ASYNC,
       new OptionDescription("Enable the asynchronous page reader. This pipelines the reading of data from disk for high performance."));
