@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.hadoop.conf.Configuration;
 
@@ -36,28 +37,32 @@ import org.apache.hadoop.conf.Configuration;
  */
 public interface FormatPlugin {
 
-  public boolean supportsRead();
+  boolean supportsRead();
 
-  public boolean supportsWrite();
+  boolean supportsWrite();
 
   /**
    * Indicates whether this FormatPlugin supports auto-partitioning for CTAS statements
    * @return true if auto-partitioning is supported
    */
-  public boolean supportsAutoPartitioning();
+  boolean supportsAutoPartitioning();
 
-  public FormatMatcher getMatcher();
+  FormatMatcher getMatcher();
 
-  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException;
+  AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException;
 
-  public Set<StoragePluginOptimizerRule> getOptimizerRules();
+  Set<StoragePluginOptimizerRule> getOptimizerRules();
 
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) throws IOException;
+  AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) throws IOException;
 
-  public FormatPluginConfig getConfig();
-  public StoragePluginConfig getStorageConfig();
-  public Configuration getFsConf();
-  public DrillbitContext getContext();
-  public String getName();
+  default AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, OptionManager options) throws IOException {
+    return getGroupScan(userName, selection, columns);
+  }
+
+  FormatPluginConfig getConfig();
+  StoragePluginConfig getStorageConfig();
+  Configuration getFsConf();
+  DrillbitContext getContext();
+  String getName();
 
 }

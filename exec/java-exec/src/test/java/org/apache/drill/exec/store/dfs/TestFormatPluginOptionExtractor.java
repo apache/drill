@@ -54,7 +54,7 @@ public class TestFormatPluginOptionExtractor {
           assertEquals("(type: String, name: String)", d.presentParams());
           break;
         case "parquet":
-          assertEquals(d.typeName, "(type: String, autoCorrectCorruptDates: boolean)", d.presentParams());
+          assertEquals(d.typeName, "(type: String, autoCorrectCorruptDates: boolean, enableStringsSignedMinMax: boolean)", d.presentParams());
           break;
         case "json":
         case "sequencefile":

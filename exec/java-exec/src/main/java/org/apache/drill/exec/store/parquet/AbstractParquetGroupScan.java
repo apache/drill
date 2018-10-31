@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
@@ -80,14 +81,20 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
   protected List<RowGroupInfo> rowGroupInfos;
   protected ListMultimap<Integer, RowGroupInfo> mappings;
   protected Set<String> fileSet;
+  protected ParquetReaderConfig readerConfig;
 
   private List<EndpointAffinity> endpointAffinities;
   private ParquetGroupScanStatistics parquetGroupScanStatistics;
 
-  protected AbstractParquetGroupScan(String userName, List<SchemaPath> columns, List<ReadEntryWithPath> entries, LogicalExpression filter) {
+  protected AbstractParquetGroupScan(String userName,
+                                     List<SchemaPath> columns,
+                                     List<ReadEntryWithPath> entries,
+                                     ParquetReaderConfig readerConfig,
+                                     LogicalExpression filter) {
     super(userName);
     this.columns = columns;
     this.entries = entries;
+    this.readerConfig = readerConfig == null ? ParquetReaderConfig.getDefaultInstance() : readerConfig;
     this.filter = filter;
   }
 
@@ -103,6 +110,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
     this.parquetGroupScanStatistics = that.parquetGroupScanStatistics == null ? null : new ParquetGroupScanStatistics(that.parquetGroupScanStatistics);
     this.fileSet = that.fileSet == null ? null : new HashSet<>(that.fileSet);
     this.entries = that.entries == null ? null : new ArrayList<>(that.entries);
+    this.readerConfig = that.readerConfig;
   }
 
   @JsonProperty
@@ -113,6 +121,18 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
   @JsonProperty
   public List<ReadEntryWithPath> getEntries() {
     return entries;
+  }
+
+  @JsonProperty("readerConfig")
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  // do not serialize reader config if it contains all default values
+  public ParquetReaderConfig getReaderConfigForSerialization() {
+    return ParquetReaderConfig.getDefaultInstance().equals(readerConfig) ? null : readerConfig;
+  }
+
+  @JsonIgnore
+  public ParquetReaderConfig getReaderConfig() {
+    return readerConfig;
   }
 
   @JsonIgnore

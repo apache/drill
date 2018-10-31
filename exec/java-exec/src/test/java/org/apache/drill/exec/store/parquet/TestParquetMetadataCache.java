@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.drill.PlanTestBase;
@@ -27,7 +26,6 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -41,7 +39,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -53,7 +50,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   private static final String TABLE_NAME_2 = "parquetTable2";
 
   @BeforeClass
-  public static void copyData() throws Exception {
+  public static void copyData() {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel"));
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"), Paths.get(TABLE_NAME_1));
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet2"), Paths.get(TABLE_NAME_2));
@@ -787,71 +784,6 @@ public class TestParquetMetadataCache extends PlanTestBase {
       PlanTestBase.testPlanMatchingPatterns(query, new String[]{"usedMetadataFile=true"}, new String[]{"Filter"});
     } finally {
       test("drop table if exists %s", intervalYearPartitionTable);
-    }
-  }
-
-  @Test // DRILL-4139
-  public void testVarCharWithNullsPartitionPruning() throws Exception {
-    final String intervalYearPartitionTable = "dfs.tmp.`varchar_optional_partition`";
-    try {
-      test("create table %s partition by (col_vrchr) as " +
-        "select * from cp.`parquet/alltypes_optional.parquet`", intervalYearPartitionTable);
-
-      String query = String.format("select * from %s where col_vrchr = 'Nancy Cloke'",
-        intervalYearPartitionTable);
-      int expectedRowCount = 1;
-
-      int actualRowCount = testSql(query);
-      assertEquals("Row count does not match the expected value", expectedRowCount, actualRowCount);
-      PlanTestBase.testPlanMatchingPatterns(query, new String[]{"usedMetadataFile=false"}, new String[]{"Filter"});
-
-      test("refresh table metadata %s", intervalYearPartitionTable);
-
-      actualRowCount = testSql(query);
-      assertEquals("Row count does not match the expected value", expectedRowCount, actualRowCount);
-      PlanTestBase.testPlanMatchingPatterns(query, new String[]{"usedMetadataFile=true"}, new String[]{"Filter"});
-    } finally {
-      test("drop table if exists %s", intervalYearPartitionTable);
-    }
-  }
-
-  @Ignore // Statistics for DECIMAL is not available (see PARQUET-1322).
-  @Test // DRILL-4139
-  public void testDecimalPartitionPruning() throws Exception {
-    List<String> ctasQueries = Lists.newArrayList();
-    // decimal stores as fixed_len_byte_array
-    ctasQueries.add("create table %s partition by (manager_id) as " +
-      "select * from cp.`parquet/fixedlenDecimal.parquet`");
-    // decimal stores as int32
-    ctasQueries.add("create table %s partition by (manager_id) as " +
-      "select cast(manager_id as decimal(6, 0)) as manager_id, EMPLOYEE_ID, FIRST_NAME, LAST_NAME " +
-      "from cp.`parquet/fixedlenDecimal.parquet`");
-    // decimal stores as int64
-    ctasQueries.add("create table %s partition by (manager_id) as " +
-      "select cast(manager_id as decimal(18, 6)) as manager_id, EMPLOYEE_ID, FIRST_NAME, LAST_NAME " +
-      "from cp.`parquet/fixedlenDecimal.parquet`");
-    final String decimalPartitionTable = "dfs.tmp.`decimal_optional_partition`";
-    for (String ctasQuery : ctasQueries) {
-      try {
-        test("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
-        test(ctasQuery, decimalPartitionTable);
-
-        String query = String.format("select * from %s where manager_id = 148", decimalPartitionTable);
-        int expectedRowCount = 6;
-
-        int actualRowCount = testSql(query);
-        assertEquals("Row count does not match the expected value", expectedRowCount, actualRowCount);
-        PlanTestBase.testPlanMatchingPatterns(query, new String[]{"usedMetadataFile=false"}, new String[]{"Filter"});
-
-        test("refresh table metadata %s", decimalPartitionTable);
-
-        actualRowCount = testSql(query);
-        assertEquals("Row count does not match the expected value", expectedRowCount, actualRowCount);
-        PlanTestBase.testPlanMatchingPatterns(query, new String[]{"usedMetadataFile=true"}, new String[]{"Filter"});
-      } finally {
-        test("drop table if exists %s", decimalPartitionTable);
-        test("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
-      }
     }
   }
 

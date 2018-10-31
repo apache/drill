@@ -32,11 +32,13 @@ import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hive.HiveDrillNativeParquetScan;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
+import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
@@ -97,7 +99,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
       }
 
       final Map<String, String> partitionColMapping = getPartitionColMapping(hiveTable, partitionColumnLabel);
-      final DrillScanRel nativeScanRel = createNativeScanRel(partitionColMapping, hiveScanRel, logicalInputSplits);
+      final DrillScanRel nativeScanRel = createNativeScanRel(partitionColMapping, hiveScanRel, logicalInputSplits, settings.getOptions());
       if (hiveScanRel.getRowType().getFieldCount() == 0) {
         call.transformTo(nativeScanRel);
       } else {
@@ -138,7 +140,8 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
    */
   private DrillScanRel createNativeScanRel(final Map<String, String> partitionColMapping,
                                            final DrillScanRel hiveScanRel,
-                                           final List<HiveMetadataProvider.LogicalInputSplit> logicalInputSplits) throws Exception {
+                                           final List<HiveMetadataProvider.LogicalInputSplit> logicalInputSplits,
+                                           final OptionManager options) throws Exception {
 
     final RelDataTypeFactory typeFactory = hiveScanRel.getCluster().getTypeFactory();
     final RelDataType varCharType = typeFactory.createSqlType(SqlTypeName.VARCHAR);
@@ -178,7 +181,8 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
             nativeScanCols,
             hiveScan.getStoragePlugin(),
             logicalInputSplits,
-            hiveScan.getConfProperties());
+            hiveScan.getConfProperties(),
+            ParquetReaderConfig.builder().withOptions(options).build());
 
     return new DrillScanRel(
         hiveScanRel.getCluster(),

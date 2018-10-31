@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
+import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -35,7 +36,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.store.dfs.MetadataContext;
-import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -45,7 +45,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.statistics.Statistics;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
@@ -64,6 +63,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,16 +88,15 @@ public class Metadata {
   public static final String[] OLD_METADATA_FILENAMES = {".drill.parquet_metadata.v2"};
   public static final String METADATA_FILENAME = ".drill.parquet_metadata";
   public static final String METADATA_DIRECTORIES_FILENAME = ".drill.parquet_metadata_directories";
-  public static final String PARQUET_STRINGS_SIGNED_MIN_MAX_ENABLED = "parquet.strings.signed-min-max.enabled";
 
-  private final ParquetFormatConfig formatConfig;
+  private final ParquetReaderConfig readerConfig;
 
   private ParquetTableMetadataBase parquetTableMetadata;
   private ParquetTableMetadataDirs parquetTableMetadataDirs;
 
 
-  private Metadata(ParquetFormatConfig formatConfig) {
-    this.formatConfig = formatConfig;
+  private Metadata(ParquetReaderConfig readerConfig) {
+    this.readerConfig = readerConfig;
   }
 
   /**
@@ -105,9 +104,10 @@ public class Metadata {
    *
    * @param fs file system
    * @param path path
+   * @param readerConfig parquet reader configuration
    */
-  public static void createMeta(FileSystem fs, String path, ParquetFormatConfig formatConfig) throws IOException {
-    Metadata metadata = new Metadata(formatConfig);
+  public static void createMeta(FileSystem fs, String path, ParquetReaderConfig readerConfig) throws IOException {
+    Metadata metadata = new Metadata(readerConfig);
     metadata.createMetaFilesRecursively(path, fs);
   }
 
@@ -116,11 +116,12 @@ public class Metadata {
    *
    * @param fs file system
    * @param path path
+   * @param readerConfig parquet reader configuration
+   *
    * @return parquet table metadata
    */
-  public static ParquetTableMetadata_v3 getParquetTableMetadata(FileSystem fs, String path, ParquetFormatConfig formatConfig)
-      throws IOException {
-    Metadata metadata = new Metadata(formatConfig);
+  public static ParquetTableMetadata_v3 getParquetTableMetadata(FileSystem fs, String path, ParquetReaderConfig readerConfig) throws IOException {
+    Metadata metadata = new Metadata(readerConfig);
     return metadata.getParquetTableMetadata(path, fs);
   }
 
@@ -128,12 +129,12 @@ public class Metadata {
    * Get the parquet metadata for a list of parquet files.
    *
    * @param fileStatusMap file statuses and corresponding file systems
-   * @param formatConfig parquet format config
+   * @param readerConfig parquet reader configuration
    * @return parquet table metadata
    */
   public static ParquetTableMetadata_v3 getParquetTableMetadata(Map<FileStatus, FileSystem> fileStatusMap,
-                                                                ParquetFormatConfig formatConfig) throws IOException {
-    Metadata metadata = new Metadata(formatConfig);
+                                                                ParquetReaderConfig readerConfig) throws IOException {
+    Metadata metadata = new Metadata(readerConfig);
     return metadata.getParquetTableMetadata(fileStatusMap);
   }
 
@@ -143,15 +144,17 @@ public class Metadata {
    * @param fs current file system
    * @param path The path to the metadata file, located in the directory that contains the parquet files
    * @param metaContext metadata context
-   * @param formatConfig parquet format plugin configs
+   * @param readerConfig parquet reader configuration
    * @return parquet table metadata. Null if metadata cache is missing, unsupported or corrupted
    */
-  public static @Nullable ParquetTableMetadataBase readBlockMeta(FileSystem fs, Path path, MetadataContext metaContext,
-      ParquetFormatConfig formatConfig) {
+  public static @Nullable ParquetTableMetadataBase readBlockMeta(FileSystem fs,
+                                                                 Path path,
+                                                                 MetadataContext metaContext,
+                                                                 ParquetReaderConfig readerConfig) {
     if (ignoreReadingMetadata(metaContext, path)) {
       return null;
     }
-    Metadata metadata = new Metadata(formatConfig);
+    Metadata metadata = new Metadata(readerConfig);
     metadata.readBlockMeta(path, false, metaContext, fs);
     return metadata.parquetTableMetadata;
   }
@@ -162,15 +165,17 @@ public class Metadata {
    * @param fs current file system
    * @param path The path to the metadata file, located in the directory that contains the parquet files
    * @param metaContext metadata context
-   * @param formatConfig parquet format plugin configs
+   * @param readerConfig parquet reader configuration
    * @return parquet metadata for a directory. Null if metadata cache is missing, unsupported or corrupted
    */
-  public static @Nullable ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, Path path,
-      MetadataContext metaContext, ParquetFormatConfig formatConfig) {
+  public static @Nullable ParquetTableMetadataDirs readMetadataDirs(FileSystem fs,
+                                                                    Path path,
+                                                                    MetadataContext metaContext,
+                                                                    ParquetReaderConfig readerConfig) {
     if (ignoreReadingMetadata(metaContext, path)) {
       return null;
     }
-    Metadata metadata = new Metadata(formatConfig);
+    Metadata metadata = new Metadata(readerConfig);
     metadata.readBlockMeta(path, true, metaContext, fs);
     return metadata.parquetTableMetadataDirs;
   }
@@ -412,12 +417,9 @@ public class Metadata {
     final ParquetMetadata metadata;
     final UserGroupInformation processUserUgi = ImpersonationUtil.getProcessUserUGI();
     final Configuration conf = new Configuration(fs.getConf());
-    final ParquetReadOptions parquetReadOptions = ParquetReadOptions.builder()
-        .useSignedStringMinMax(true)
-        .build();
     try {
       metadata = processUserUgi.doAs((PrivilegedExceptionAction<ParquetMetadata>)() -> {
-        try (ParquetFileReader parquetFileReader = ParquetFileReader.open(HadoopInputFile.fromStatus(file, conf), parquetReadOptions)) {
+        try (ParquetFileReader parquetFileReader = ParquetFileReader.open(HadoopInputFile.fromStatus(file, conf), readerConfig.toReadOptions())) {
           return parquetFileReader.getFooter();
         }
       });
@@ -429,8 +431,7 @@ public class Metadata {
 
     MessageType schema = metadata.getFileMetaData().getSchema();
 
-//    Map<SchemaPath, OriginalType> originalTypeMap = Maps.newHashMap();
-    Map<SchemaPath, ColTypeInfo> colTypeInfoMap = Maps.newHashMap();
+    Map<SchemaPath, ColTypeInfo> colTypeInfoMap = new HashMap<>();
     schema.getPaths();
     for (String[] path : schema.getPaths()) {
       colTypeInfoMap.put(SchemaPath.getCompoundPath(path), getColTypeInfo(schema, schema, path, 0));
@@ -440,11 +441,10 @@ public class Metadata {
 
     ArrayList<SchemaPath> ALL_COLS = new ArrayList<>();
     ALL_COLS.add(SchemaPath.STAR_COLUMN);
-    boolean autoCorrectCorruptDates = formatConfig.areCorruptDatesAutoCorrected();
-    ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(metadata, ALL_COLS, autoCorrectCorruptDates);
-    if (logger.isDebugEnabled()) {
-      logger.debug(containsCorruptDates.toString());
-    }
+    ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(metadata, ALL_COLS,
+      readerConfig.autoCorrectCorruptedDates());
+    logger.debug("Contains corrupt dates: {}.", containsCorruptDates);
+
     for (BlockMetaData rowGroup : metadata.getBlocks()) {
       List<ColumnMetadata_v3> columnMetadataList = new ArrayList<>();
       long length = 0;

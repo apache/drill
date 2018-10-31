@@ -20,9 +20,13 @@ package org.apache.drill.exec.expr.stat;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.LogicalExpressionBase;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.parquet.column.statistics.Statistics;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -100,7 +104,43 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
     if (!leftStat.hasNonNullValue() || !rightStat.hasNonNullValue()) {
       return RowsMatch.SOME;
     }
+
+    if (left.getMajorType().getMinorType() == TypeProtos.MinorType.VARDECIMAL) {
+      /*
+        to compare correctly two decimal statistics we need to ensure that min and max values have the same scale,
+        otherwise adjust statistics to the highest scale
+        since decimal value is stored as unscaled we need to move dot to the right on the difference between scales
+       */
+      int leftScale = left.getMajorType().getScale();
+      int rightScale = right.getMajorType().getScale();
+      if (leftScale > rightScale) {
+        rightStat = adjustDecimalStatistics(rightStat, leftScale - rightScale);
+      } else if (leftScale < rightScale) {
+        leftStat = adjustDecimalStatistics(leftStat, rightScale - leftScale);
+      }
+    }
+
     return predicate.apply(leftStat, rightStat);
+  }
+
+  /**
+   * Creates decimal statistics where min and max values are re-created using given scale.
+   *
+   * @param statistics statistics that needs to be adjusted
+   * @param scale adjustment scale
+   * @return adjusted statistics
+   */
+  @SuppressWarnings("unchecked")
+  private Statistics<C> adjustDecimalStatistics(Statistics<C> statistics, int scale) {
+    byte[] minBytes = new BigDecimal(new BigInteger(statistics.getMinBytes()))
+      .setScale(scale, RoundingMode.HALF_UP).unscaledValue().toByteArray();
+    byte[] maxBytes = new BigDecimal(new BigInteger(statistics.getMaxBytes()))
+      .setScale(scale, RoundingMode.HALF_UP).unscaledValue().toByteArray();
+    return (Statistics<C>) Statistics.getBuilderForReading(statistics.type())
+        .withMin(minBytes)
+        .withMax(maxBytes)
+        .withNumNulls(statistics.getNumNulls())
+        .build();
   }
 
   /**
@@ -117,9 +157,22 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
       LogicalExpression left,
       LogicalExpression right
   ) {
-    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) ->
-      leftStat.compareMaxToValue(rightStat.genericGetMin()) < 0 || rightStat.compareMaxToValue(leftStat.genericGetMin()) < 0 ? RowsMatch.NONE : RowsMatch.SOME
-    ) {
+    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
+      // compare left max and right min
+      int leftToRightComparison = leftStat.compareMaxToValue(rightStat.genericGetMin());
+      // compare right max and left min
+      int rightToLeftComparison = rightStat.compareMaxToValue(leftStat.genericGetMin());
+
+      // if both comparison results are equal to 0 and both statistics have no nulls,
+      // it means that min and max values in each statistics are the same and match each other,
+      // return that all rows match the condition
+      if (leftToRightComparison == 0 && rightToLeftComparison == 0 && hasNoNulls(leftStat) && hasNoNulls(rightStat)) {
+        return RowsMatch.ALL;
+      }
+
+      // if at least one comparison result is negative, it means that none of the rows match the condition
+      return leftToRightComparison < 0 || rightToLeftComparison < 0 ? RowsMatch.NONE : RowsMatch.SOME;
+    }) {
       @Override
       public String toString() {
         return left + " = " + right;

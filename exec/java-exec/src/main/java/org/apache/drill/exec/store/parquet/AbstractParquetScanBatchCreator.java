@@ -30,12 +30,10 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
@@ -50,16 +48,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.drill.exec.store.parquet.metadata.Metadata.PARQUET_STRINGS_SIGNED_MIN_MAX_ENABLED;
-import static org.apache.parquet.format.converter.ParquetMetadataConverter.NO_FILTER;
-
 public abstract class AbstractParquetScanBatchCreator {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractParquetScanBatchCreator.class);
-
-  private static final String ENABLE_BYTES_READ_COUNTER = "parquet.benchmark.bytes.read";
-  private static final String ENABLE_BYTES_TOTAL_COUNTER = "parquet.benchmark.bytes.total";
-  private static final String ENABLE_TIME_READ_COUNTER = "parquet.benchmark.time.read";
 
   protected ScanBatch getBatch(ExecutorFragmentContext context, AbstractParquetRowGroupScan rowGroupScan, OperatorContext oContext) throws ExecutionSetupException {
     final ColumnExplorer columnExplorer = new ColumnExplorer(context.getOptions(), rowGroupScan.getColumns());
@@ -87,12 +78,13 @@ public abstract class AbstractParquetScanBatchCreator {
       try {
         Stopwatch timer = logger.isTraceEnabled() ? Stopwatch.createUnstarted() : null;
         DrillFileSystem fs = fsManager.get(rowGroupScan.getFsConf(rowGroup), rowGroup.getPath());
+        ParquetReaderConfig readerConfig = rowGroupScan.getReaderConfig();
         if (!footers.containsKey(rowGroup.getPath())) {
           if (timer != null) {
             timer.start();
           }
 
-          ParquetMetadata footer = readFooter(fs.getConf(), rowGroup.getPath());
+          ParquetMetadata footer = readFooter(fs.getConf(), rowGroup.getPath(), readerConfig);
           if (timer != null) {
             long timeToRead = timer.elapsed(TimeUnit.MICROSECONDS);
             logger.trace("ParquetTrace,Read Footer,{},{},{},{},{},{},{}", "", rowGroup.getPath(), "", 0, 0, 0, timeToRead);
@@ -101,10 +93,9 @@ public abstract class AbstractParquetScanBatchCreator {
         }
         ParquetMetadata footer = footers.get(rowGroup.getPath());
 
-        boolean autoCorrectCorruptDates = rowGroupScan.areCorruptDatesAutoCorrected();
-        ParquetReaderUtility.DateCorruptionStatus containsCorruptDates =
-          ParquetReaderUtility.detectCorruptDates(footer, rowGroupScan.getColumns(), autoCorrectCorruptDates);
-        logger.debug("Contains corrupt dates: {}", containsCorruptDates);
+        ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(footer,
+          rowGroupScan.getColumns(), readerConfig.autoCorrectCorruptedDates());
+        logger.debug("Contains corrupt dates: {}.", containsCorruptDates);
 
         boolean useNewReader = context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER);
         boolean containsComplexColumn = ParquetReaderUtility.containsComplexColumn(footer, rowGroupScan.getColumns());
@@ -149,7 +140,7 @@ public abstract class AbstractParquetScanBatchCreator {
     }
 
     // all readers should have the same number of implicit columns, add missing ones with value null
-    Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
+    Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant(null));
     for (Map<String, String> map : implicitColumns) {
       map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
     }
@@ -159,14 +150,9 @@ public abstract class AbstractParquetScanBatchCreator {
 
   protected abstract AbstractDrillFileSystemManager getDrillFileSystemCreator(OperatorContext operatorContext, OptionManager optionManager);
 
-  private ParquetMetadata readFooter(Configuration conf, String path) throws IOException {
-    conf = new Configuration(conf);
-    conf.setBoolean(ENABLE_BYTES_READ_COUNTER, false);
-    conf.setBoolean(ENABLE_BYTES_TOTAL_COUNTER, false);
-    conf.setBoolean(ENABLE_TIME_READ_COUNTER, false);
-    conf.setBoolean(PARQUET_STRINGS_SIGNED_MIN_MAX_ENABLED, true);
-    ParquetReadOptions options = ParquetReadOptions.builder().withMetadataFilter(NO_FILTER).build();
-    try (ParquetFileReader reader = ParquetFileReader.open(HadoopInputFile.fromPath(new Path(path), conf), options)) {
+  private ParquetMetadata readFooter(Configuration conf, String path, ParquetReaderConfig readerConfig) throws IOException {
+    try (ParquetFileReader reader = ParquetFileReader.open(HadoopInputFile.fromPath(new Path(path),
+      readerConfig.addCountersToConf(conf)), readerConfig.toReadOptions())) {
       return reader.getFooter();
     }
   }

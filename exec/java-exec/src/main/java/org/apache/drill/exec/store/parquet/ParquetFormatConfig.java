@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class ParquetFormatConfig implements FormatPluginConfig {
 
   public boolean autoCorrectCorruptDates = true;
+  public boolean enableStringsSignedMinMax = false;
 
   /**
    * @return true if auto correction of corrupt dates is enabled, false otherwise
@@ -34,6 +35,21 @@ public class ParquetFormatConfig implements FormatPluginConfig {
   @JsonIgnore
   public boolean areCorruptDatesAutoCorrected() {
     return autoCorrectCorruptDates;
+  }
+
+  /**
+   * Parquet statistics for UTF-8 data for files created prior to 1.9.1 parquet library version was stored incorrectly.
+   * If user exactly knows that data in binary columns is in ASCII (not UTF-8), turning this property to 'true'
+   * enables statistics usage for varchar and decimal columns.
+   *
+   * Can be overridden for individual tables using
+   * @link org.apache.drill.exec.ExecConstants#PARQUET_READER_STRINGS_SIGNED_MIN_MAX} session option.
+   *
+   * @return true if string signed min max enabled, false otherwise
+   */
+  @JsonIgnore
+  public boolean isStringsSignedMinMaxEnabled() {
+    return enableStringsSignedMinMax;
   }
 
   @Override
@@ -47,12 +63,25 @@ public class ParquetFormatConfig implements FormatPluginConfig {
 
     ParquetFormatConfig that = (ParquetFormatConfig) o;
 
-    return autoCorrectCorruptDates == that.autoCorrectCorruptDates;
+    if (autoCorrectCorruptDates != that.autoCorrectCorruptDates) {
+      return false;
+    }
 
+    return enableStringsSignedMinMax == that.enableStringsSignedMinMax;
   }
 
   @Override
   public int hashCode() {
-    return (autoCorrectCorruptDates ? 1231 : 1237);
+    int result = (autoCorrectCorruptDates ? 1231 : 1237);
+    result = 31 * result + (enableStringsSignedMinMax ? 1231 : 1237);
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    return "ParquetFormatConfig{"
+      + "autoCorrectCorruptDates=" + autoCorrectCorruptDates
+      + ", enableStringsSignedMinMax=" + enableStringsSignedMinMax
+      + '}';
   }
 }
