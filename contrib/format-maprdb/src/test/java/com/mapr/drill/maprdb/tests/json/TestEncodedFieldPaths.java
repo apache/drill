@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.ojai.DocumentStream;
 import org.ojai.json.Json;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import com.mapr.db.Table;
 import com.mapr.db.tests.utils.DBTests;
 
