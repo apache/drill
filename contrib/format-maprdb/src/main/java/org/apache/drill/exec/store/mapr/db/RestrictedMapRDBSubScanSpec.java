@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.mapr.db;
 import com.mapr.db.impl.IdCodec;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.physical.impl.join.RowKeyJoin;
 import org.apache.drill.exec.record.AbstractRecordBatch.BatchState;
 import org.apache.drill.exec.vector.ValueVector;
@@ -166,7 +165,9 @@ public class RestrictedMapRDBSubScanSpec extends MapRDBSubScanSpec {
   public ByteBuffer[] getRowKeyIdsToRead(int numRowKeysToRead) {
 
     int numKeys = hasRowKeys(numRowKeysToRead);
-    if (numKeys == 0) return null;
+    if (numKeys == 0) {
+      return null;
+    }
 
     int index = 0;
     final ByteBuffer[] rowKeyIds = new ByteBuffer[numKeys];

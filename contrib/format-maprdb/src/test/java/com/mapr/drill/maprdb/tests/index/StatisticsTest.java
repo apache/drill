@@ -17,20 +17,12 @@
  */
 package com.mapr.drill.maprdb.tests.index;
 
-import com.google.common.collect.Lists;
-import com.mapr.db.Admin;
-import com.mapr.drill.maprdb.tests.MaprDBTestsSuite;
-import com.mapr.drill.maprdb.tests.json.BaseJsonTest;
 import com.mapr.tests.annotations.ClusterTest;
 import org.apache.drill.PlanTestBase;
-import org.apache.hadoop.hbase.TableName;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.List;
 
 @Category(ClusterTest.class)
 public class StatisticsTest extends IndexPlanTest {

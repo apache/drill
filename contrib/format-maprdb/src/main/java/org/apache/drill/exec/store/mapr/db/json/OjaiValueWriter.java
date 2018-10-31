@@ -176,14 +176,14 @@ public class OjaiValueWriter {
     buffer.setBytes(0, strBytes);
     writer.varChar(fieldName).writeVarChar(0, strBytes.length, buffer);
   }
-  
+
   protected void writeBinary(MapWriter writer, String fieldName, ByteBuffer buf) {
     int bufLen = buf.remaining();
     buffer = buffer.reallocIfNeeded(bufLen);
     buffer.setBytes(0, buf, buf.position(), bufLen);
     writer.varBinary(fieldName).writeVarBinary(0, bufLen, buffer);
   }
-  
+
   protected void writeString(MapWriter writer, String fieldName, String value) {
     final byte[] strBytes = Bytes.toBytes(value);
     buffer = buffer.reallocIfNeeded(strBytes.length);

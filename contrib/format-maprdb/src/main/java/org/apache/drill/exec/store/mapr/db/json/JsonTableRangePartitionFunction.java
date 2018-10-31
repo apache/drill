@@ -102,7 +102,7 @@ public class JsonTableRangePartitionFunction extends AbstractRangePartitionFunct
 
     partitionKeyVector = v.getValueVector();
 
-    Preconditions.checkArgument(partitionKeyVector != null, "Found null partitionKeVector.") ;
+    Preconditions.checkArgument(partitionKeyVector != null, "Found null partitionKeVector.");
   }
 
   @Override
@@ -130,8 +130,8 @@ public class JsonTableRangePartitionFunction extends AbstractRangePartitionFunct
   @Override
   public int eval(int index, int numPartitions) {
 
-	  String key = partitionKeyVector.getAccessor().getObject(index).toString();
-	  byte[] encodedKey = IdCodec.encodeAsBytes(key);
+    String key = partitionKeyVector.getAccessor().getObject(index).toString();
+    byte[] encodedKey = IdCodec.encodeAsBytes(key);
 
     int tabletId = -1;
 

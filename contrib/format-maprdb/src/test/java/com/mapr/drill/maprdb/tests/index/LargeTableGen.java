@@ -148,7 +148,7 @@ public class LargeTableGen extends LargeTableGenBase {
                   "\"personal\": {\"age\" : %s, \"income\": %s, \"birthdate\": {\"$dateDay\": \"%s\"} }," +
                   "\"activity\": {\"irs\" : { \"firstlogin\":  \"%s\" } }," +
                   "\"driverlicense\":{\"$numberLong\": %s} } \n",
-              i + 1, recordNumber - i , getSSN(i), getPhone(i), getEmail(i),
+              i + 1, recordNumber - i, getSSN(i), getPhone(i), getEmail(i),
               getAddress(i)[2], getAddress(i)[1], getFirstName(i), getLastName(i),
               getAge(i), getIncome(i), getBirthdate(i),
               getFirstLogin(i),

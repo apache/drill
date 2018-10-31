@@ -297,7 +297,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
             startRow = prefix.getBytes(Charsets.UTF_8);
             stopRow = startRow.clone();
             boolean isMaxVal = true;
-            for (int i = stopRow.length - 1; i >= 0 ; --i) {
+            for (int i = stopRow.length - 1; i >= 0; --i) {
               int nextByteValue = (0xff & stopRow[i]) + 1;
               if (nextByteValue < 0xff) {
                 stopRow[i] = (byte) nextByteValue;

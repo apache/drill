@@ -58,7 +58,7 @@ public abstract class TableFormatMatcher extends FormatMatcher {
 
   @Override
   public boolean isFileReadable(DrillFileSystem fs, FileStatus status) throws IOException {
-    return (status instanceof MapRFileStatus) 
+    return (status instanceof MapRFileStatus)
         && ((MapRFileStatus) status).isTable()
         && isSupportedTable((MapRFileStatus) status);
   }

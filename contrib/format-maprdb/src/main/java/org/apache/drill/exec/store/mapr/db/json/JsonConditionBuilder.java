@@ -27,7 +27,6 @@ import org.ojai.store.QueryCondition;
 import org.ojai.store.QueryCondition.Op;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import com.mapr.db.MapRDB;
 import com.mapr.db.impl.MapRDBImpl;
 
 public class JsonConditionBuilder extends AbstractExprVisitor<JsonScanSpec, Void, RuntimeException> implements DrillHBaseConstants {

@@ -17,11 +17,6 @@
  */
 package org.apache.drill.exec.store.mapr.db;
 
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
-import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
-import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
-import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
 import com.mapr.db.Table;
 import com.mapr.db.impl.MapRDBImpl;
 import com.mapr.db.index.IndexDesc;
@@ -34,6 +29,11 @@ import org.apache.hadoop.security.UserGroupInformation;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.TimeUnit;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
+import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
+import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
 
 public class MapRDBTableCache {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBFormatPlugin.class);
@@ -209,7 +209,7 @@ public class MapRDBTableCache {
     static boolean isEqual(Object a, Object b) {
       return a == b || a != null && a.equals(b);
     }
-    
+
     public boolean equals(Object obj) {
       if (obj == this) {
         return true;
