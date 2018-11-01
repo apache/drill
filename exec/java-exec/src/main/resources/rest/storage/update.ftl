@@ -27,7 +27,6 @@
 </#macro>
 
 <#macro page_body>
-  <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
   <h3>Configuration</h3>

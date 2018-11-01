@@ -22,7 +22,6 @@
 </#macro>
 
 <#macro page_body>
-<a href="/logs">back</a><br/>
 <div class="page-header">
 </div>
 <h3>${model.getName()} <span class="badge alert-info">(last ${model.getMaxLines()} lines)</span></h3>
