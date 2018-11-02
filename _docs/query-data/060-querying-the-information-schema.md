@@ -1,6 +1,6 @@
 ---
 title: "Querying the INFORMATION SCHEMA"
-date: 2017-04-05 00:09:56 UTC
+date: 2018-11-02 17:50:26 UTC
 parent: "Query Data"
 ---
 When you are using Drill to connect to multiple data sources, you need a
@@ -36,7 +36,7 @@ maximum flexibility inside BI tools, the only catalog that Drill supports is
     | DRILL        | sys                 |
     +--------------+---------------------+
 
-The INFORMATION_SCHEMA name and associated keywords are case-sensitive. You
+The INFORMATION_SCHEMA name and associated keywords are case-insensitive. You
 can also return a list of schemas by running the SHOW DATABASES command:
 
     SHOW DATABASES;
@@ -106,6 +106,5 @@ of those columns:
     | COLUMN_NAME | DATA_TYPE  |
     +-------------+------------+
     | OrderTotal  | Decimal    |
-    +-------------+------------+
+    +-------------+------------+  
 
-In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type]({{ site.baseurl }}/docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.
