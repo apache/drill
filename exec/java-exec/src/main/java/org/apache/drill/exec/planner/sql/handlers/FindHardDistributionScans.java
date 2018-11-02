@@ -52,7 +52,12 @@ class FindHardDistributionScans extends RelShuttleImpl {
     DrillTable unwrap;
     unwrap = scan.getTable().unwrap(DrillTable.class);
     if (unwrap == null) {
-      unwrap = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
+      DrillTranslatableTable drillTranslatableTable = scan.getTable().unwrap(DrillTranslatableTable.class);
+      if (drillTranslatableTable == null) {
+        contains = true; // it rejects single mode.
+        return scan;
+      }
+      unwrap = drillTranslatableTable.getDrillTable();
     }
 
     try {
