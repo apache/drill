@@ -1,6 +1,6 @@
 ---
 title: "Selecting Nested Data for a Column"
-date:  
+date: 2018-11-02
 parent: "Querying Complex Data"
 ---
 The following queries show how to access the nested data inside the parts of

@@ -1,6 +1,6 @@
 ---
 title: "Monitoring and Canceling Queries in the Drill Web Console"
-date:  
+date: 2018-11-02
 parent: "Query Data"
 ---
 You can monitor and cancel queries from the Drill Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to do so. To access the Drill

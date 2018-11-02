@@ -1,6 +1,6 @@
 ---
 title: "Analyzing the Yelp Academic Dataset"
-date:  
+date: 2018-11-02
 parent: "Tutorials"
 ---
 Apache Drill is one of the fastest growing open source projects, with the community making rapid progress with monthly releases. The key difference is Drill’s agility and flexibility.

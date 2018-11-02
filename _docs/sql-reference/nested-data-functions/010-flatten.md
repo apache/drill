@@ -1,6 +1,6 @@
 ---
 title: "FLATTEN"
-date:  
+date: 2018-11-02
 parent: "Nested Data Functions"
 ---
 FLATTEN separates the elements in a repeated field into individual records.

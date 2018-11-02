@@ -1,6 +1,6 @@
 ---
 title: "Browsing Data and Defining Views"
-date:  
+date: 2018-11-02
 parent: "Using Drill Explorer"
 ---
 After connecting Drill Explorer to data, the Browse and SQL tabs appear on the right side of the console. On the Browse tab, you view any metadata that might exist for a schema that you access with Drill. On the SQL tab, you preview the results

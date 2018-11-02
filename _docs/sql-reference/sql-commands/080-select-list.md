@@ -1,6 +1,6 @@
 ---
 title: "SELECT List"
-date:  
+date: 2018-11-02
 parent: "SQL Commands"
 ---
 

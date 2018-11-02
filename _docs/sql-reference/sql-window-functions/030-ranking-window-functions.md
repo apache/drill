@@ -1,6 +1,6 @@
 ---
 title: "Ranking Window Functions"
-date:  
+date: 2018-11-02
 parent: "SQL Window Functions"
 ---
 

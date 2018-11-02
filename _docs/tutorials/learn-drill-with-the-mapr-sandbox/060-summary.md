@@ -1,6 +1,6 @@
 ---
 title: "Summary"
-date:  
+date: 2018-11-02
 parent: "Learn Drill with the MapR Sandbox"
 ---
 This tutorial introduced Apache Drill and its ability to run ANSI SQL queries

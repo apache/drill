@@ -1,6 +1,6 @@
 ---
 title: "Starting Drill on Windows"
-date:  
+date: 2018-11-02
 parent: "Installing Drill in Embedded Mode"
 ---
 Start the Drill shell using the **sqlline command**. Complete the following steps to launch the Drill shell:

@@ -1,6 +1,6 @@
 ---
 title: "Functions for Handling Nulls"
-date:  
+date: 2018-11-02
 parent: "SQL Functions"
 ---
 

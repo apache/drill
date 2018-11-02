@@ -1,6 +1,6 @@
 ---
 title: "Azure Blob Storage Plugin"
-date: 
+date: 2018-11-02
 parent: "Connect a Data Source"
 ---
 Drill works well with Azure Blob Storage thanks to the Hadoop compatible layer that exists and make Azure Blob Storage usable by any tool that supports HDFS, just like Apache Drill.

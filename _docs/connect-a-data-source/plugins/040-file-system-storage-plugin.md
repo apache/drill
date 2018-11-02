@@ -1,6 +1,6 @@
 ---
 title: "File System Storage Plugin"
-date:  
+date: 2018-11-02
 parent: "Connect a Data Source"
 ---
 You can register a storage plugin configuration that connects Drill to a local file system or to a distributed file system registered in the Hadoop `core-site.xml`, such as S3

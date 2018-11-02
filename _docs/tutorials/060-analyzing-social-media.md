@@ -1,6 +1,6 @@
 ---
 title: "Analyzing Social Media"
-date:  
+date: 2018-11-02
 parent: "Tutorials"
 ---
 

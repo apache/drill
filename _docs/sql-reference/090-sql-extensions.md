@@ -1,6 +1,6 @@
 ---
 title: "SQL Extensions"
-date:  
+date: 2018-11-02
 parent: "SQL Reference"
 ---
 Drill extends SQL to explore smaller-scale data in ways not possible with SQL. Using intuitive SQL extensions you work with self-describing data and complex data types. Extensions to SQL include capabilities for exploring self-describing data, such as files and HBase, directly in the native format.

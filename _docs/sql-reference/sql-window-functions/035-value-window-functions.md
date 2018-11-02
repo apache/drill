@@ -1,6 +1,6 @@
 ---
 title: "Value Window Functions"
-date:  
+date: 2018-11-02
 parent: "SQL Window Functions"
 ---
 Window functions operate on a set of rows and return a single value for each row from the underlying query. The OVER() clause differentiates window functions from other analytical and reporting functions. See [SQL Window Functions Introduction]({{ site.baseurl }}/docs/sql-window-functions-introduction/).
