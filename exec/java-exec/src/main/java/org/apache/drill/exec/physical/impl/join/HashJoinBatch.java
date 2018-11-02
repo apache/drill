@@ -215,6 +215,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   private List<BloomFilter> bloomFilters = new ArrayList<>();
   private boolean bloomFiltersGenerated = false;
 
+  private long countTotal;
+  private long countDuplicates;
+  private boolean skipDuplicates; // optional, for semi join
+
   /**
    * This holds information about the spilled partitions for the build and probe side.
    */
@@ -720,7 +724,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     }
 
     final HashTableConfig htConfig = new HashTableConfig((int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
-      true, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators, joinControl.asInt());
+      ! skipDuplicates, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators, joinControl.asInt());
 
     // Create the chained hash table
     baseHashTable =
@@ -811,8 +815,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     baseHashTable.updateIncoming(buildBatch, probeBatch); // in case we process the spilled files
     // Recreate the partitions every time build is initialized
     for (int part = 0; part < numPartitions; part++ ) {
-      partitions[part] = new HashPartition(context, allocator, baseHashTable, buildBatch, probeBatch, semiJoin,
-        RECORDS_PER_BATCH, spillSet, part, spilledState.getCycle(), numPartitions);
+      partitions[part] = new HashPartition(context, allocator, baseHashTable, buildBatch, probeBatch, semiJoin, skipDuplicates, RECORDS_PER_BATCH, spillSet, part, spilledState.getCycle(),
+        numPartitions);
     }
 
     spilledInners = new HashJoinSpilledPartition[numPartitions];
@@ -1035,9 +1039,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
             : read_right_HV_vector.getAccessor().get(ind); // get the hash value from the HV column
           int currPart = hashCode & spilledState.getPartitionMask();
           hashCode >>>= spilledState.getBitsInMask();
-          // semi-join skips join-key-duplicate rows
-          if ( semiJoin ) {
-
+          // semi-join builds the hash-table, and skips join-key-duplicate rows
+          if ( skipDuplicates ) {
+            if ( partitions[currPart].insertKeyIntoHashTable(buildBatch.getContainer(), ind, hashCode) ) { continue; }
           }
           // Append the new inner row to the appropriate partition; spill (that partition) if needed
           partitions[currPart].appendInnerRow(buildBatch.getContainer(), ind, hashCode, buildCalc); // may spill if needed
@@ -1096,6 +1100,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
         if (postBuildCalc.shouldSpill()) {
           // Spill this partition if we need to make room
           partn.spillThisPartition();
+        } else if ( skipDuplicates ) {
+          // All in memory, and aready got the Hash Table - just build the containers
+          partn.buildContainers();
         } else {
           // Only build hash tables for partitions that are not spilled
           partn.buildContainersHashTableAndHelper();
@@ -1202,6 +1209,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     this.probeBatch = left;
     joinType = popConfig.getJoinType();
     semiJoin = popConfig.isSemiJoin();
+    skipDuplicates = semiJoin && context.getOptions().getBoolean(ExecConstants.HASHJOIN_SEMI_SKIP_DUPLICATES_KEY);
     joinIsLeftOrFull  = joinType == JoinRelType.LEFT  || joinType == JoinRelType.FULL;
     joinIsRightOrFull = joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL;
     conditions = popConfig.getConditions();

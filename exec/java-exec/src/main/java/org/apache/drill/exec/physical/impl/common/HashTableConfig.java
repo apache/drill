@@ -70,7 +70,7 @@ public class HashTableConfig  {
 
   @JsonCreator
   public HashTableConfig(@JsonProperty("initialCapacity") int initialCapacity,
-                         @JsonProperty("initialCapacity") boolean initialSizeIsFinal,
+                         @JsonProperty("initialSizeIsFinal") boolean initialSizeIsFinal,
                          @JsonProperty("loadFactor") float loadFactor,
                          @JsonProperty("keyExprsBuild") List<NamedExpression> keyExprsBuild,
                          @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe,

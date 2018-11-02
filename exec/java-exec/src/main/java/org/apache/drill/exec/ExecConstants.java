@@ -157,8 +157,9 @@ public final class ExecConstants {
   public static final BooleanValidator HASHJOIN_ENABLE_RUNTIME_FILTER_WAITING = new BooleanValidator(HASHJOIN_RUNTIME_FILTER_WAITING_ENABLE_KEY, null);
   public static final String HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME_KEY = "exec.hashjoin.runtime_filter.max.waiting.time";
   public static final PositiveLongValidator HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME = new PositiveLongValidator(HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME_KEY, Character.MAX_VALUE, null);
-
-
+  public static final String HASHJOIN_SEMI_SKIP_DUPLICATES_KEY = "exec.hashjoin.semi_skip_duplicates";
+  public static final BooleanValidator HASHJOIN_SEMI_SKIP_DUPLICATES_VALIDATOR = new BooleanValidator(HASHJOIN_SEMI_SKIP_DUPLICATES_KEY,
+    new OptionDescription("When TRUE, make Semi Hash Join check for incoming duplicated and skip those (use more cpu, less memory)"));
 
   // Hash Aggregate Options
   public static final String HASHAGG_NUM_PARTITIONS_KEY = "exec.hashagg.num_partitions";
