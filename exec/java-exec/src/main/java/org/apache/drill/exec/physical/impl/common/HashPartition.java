@@ -245,6 +245,9 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     try {
       status = hashTable.put(ind, htIndex, hashCode, BATCH_SIZE);
     } catch (RetryAfterSpillException RE) {
+      if ( numPartitions == 1 ) { // if cannot spill
+        throw new OutOfMemoryException(RE);
+      }
       spillThisPartition(); // free some memory
       return false;
     }
@@ -521,6 +524,16 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     spillFile = null;
     writer = null;
     partitionBatchesCount = 0;
+  }
+
+  /**
+   * Stop skipping duplicates (when there are too few of them)
+   * thus not maintaining the hash table as new rows arrive
+   */
+  public void stopSkippingDuplicates() {
+    assert skipDuplicates;
+    hashTable.reset();
+    skipDuplicates = false;
   }
 
   /**

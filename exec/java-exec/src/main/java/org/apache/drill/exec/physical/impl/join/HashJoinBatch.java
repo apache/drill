@@ -217,6 +217,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
   private long countTotal;
   private long countDuplicates;
+  private long decisionThreshold;
   private boolean skipDuplicates; // optional, for semi join
 
   /**
@@ -794,18 +795,16 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   }
 
   /**
-   *  Call only after num partitions is known
+   *  Call only after the final 'num partitions' is known (See partitionNumTuning())
    */
   private void delayedSetup() {
-    //
-    //  Find out the estimated max batch size, etc
-    //  and compute the max numPartitions possible
-    //  See partitionNumTuning()
-    //
-
     spilledState.initialize(numPartitions);
     // Create array for the partitions
     partitions = new HashPartition[numPartitions];
+    // Runtime stats for semi-join: Help decide early if seen too many duplicates (based on initial data, about 32K per partition)
+    countTotal = countDuplicates = 0;
+    decisionThreshold =
+      ((numPartitions + 1) / 2) * context.getOptions().getLong(ExecConstants.MIN_HASH_TABLE_SIZE_KEY);
   }
 
   /**
@@ -1041,7 +1040,24 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
           hashCode >>>= spilledState.getBitsInMask();
           // semi-join builds the hash-table, and skips join-key-duplicate rows
           if ( skipDuplicates ) {
-            if ( partitions[currPart].insertKeyIntoHashTable(buildBatch.getContainer(), ind, hashCode) ) { continue; }
+            countTotal++;
+            boolean aDuplicate = partitions[currPart].insertKeyIntoHashTable(buildBatch.getContainer(), ind, hashCode);
+            // A heuristic: Make a decision once the threshold was met - either continue skipping duplicates, or stop
+            // (skipping duplicates carries a cost, so better avoid if duplicates are few ,i.e. < %20 )
+            if ( countTotal == decisionThreshold ) {
+              if ( countDuplicates < (decisionThreshold * 0.2) ) { // when less than 20% duplicates
+                for (HashPartition partn : partitions) {
+                  partn.stopSkippingDuplicates();
+                }
+                skipDuplicates = false;
+              }
+              logger.debug("Semi {} skipping duplicates after {} rows, seeing {} percent duplicates", skipDuplicates ? "to continue" : "stopped",
+                countTotal, (100 * countDuplicates) / countTotal);
+            }
+            if ( aDuplicate ) {
+              countDuplicates++;
+              continue;
+            }
           }
           // Append the new inner row to the appropriate partition; spill (that partition) if needed
           partitions[currPart].appendInnerRow(buildBatch.getContainer(), ind, hashCode, buildCalc); // may spill if needed
