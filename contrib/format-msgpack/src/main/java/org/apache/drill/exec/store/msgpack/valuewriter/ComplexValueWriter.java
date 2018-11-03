@@ -29,12 +29,16 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
       valueWriterMap.get(value.getValueType()).write(value, mapWriter, fieldName, listWriter, selection, schema);
     } catch (Exception e) {
       if (context.lenient) {
-        context.warn("Failed to write element name: " + fieldName + " of type: " + value.getValueType()
-            + " into list. File: " + context.hadoopPath + " line no: " + context.currentRecordNumberInFile() + " ", e);
+        context.warn(
+            "Failed to write element name: " + fieldName + " of type: " + value.getValueType() + " into "
+                + mapWriter == null ? "list"
+                    : "map" + " File: " + context.hadoopPath + " line no: " + context.currentRecordNumberInFile() + " ",
+            e);
       } else {
         throw new MsgpackParsingException(
-            "Failed to write element name: " + fieldName + " of type: " + value.getValueType() + " into list. File: "
-                + context.hadoopPath + " line no: " + context.currentRecordNumberInFile() + " ",
+            "Failed to write element name: " + fieldName + " of type: " + value.getValueType() + " into"
+                + mapWriter == null ? "list"
+                    : "map" + " File: " + context.hadoopPath + " line no: " + context.currentRecordNumberInFile() + " ",
             e);
       }
     }

@@ -24,6 +24,19 @@ public class MapValueWriter extends ComplexValueWriter {
   @Override
   public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
       MaterializedField schema) {
+
+//    if (context.useSchema) {
+//      if (schema == null) {
+//        context.warn("Writing a MAP value but target schema is null. FieldName: " + fieldName + " target type: "
+//            + schema.getType() + " path is: " + printPath(mapWriter, listWriter));
+//        return;
+//      } else if (schema.getType().getMinorType() != MinorType.MAP) {
+//        context.warn("Writing a MAP value but target schema type is: " + schema.getType() + " path is: "
+//            + printPath(mapWriter, listWriter));
+//        return;
+//      }
+//    }
+
     MapValue value = v.asMapValue();
     MapWriter subMapWriter;
     if (mapWriter != null) {

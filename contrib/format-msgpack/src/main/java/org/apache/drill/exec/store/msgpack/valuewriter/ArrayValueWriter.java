@@ -26,6 +26,23 @@ public class ArrayValueWriter extends ComplexValueWriter {
   @Override
   public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
       MaterializedField schema) {
+
+//    if (context.useSchema) {
+//      if (schema == null) {
+//        context.warn("Writing a ARRAY value but target schema is null. FieldName: " + fieldName + " target type: "
+//            + schema.getType() + " path is: " + printPath(mapWriter, listWriter));
+//        return;
+//      } else if (schema.getDataMode() != DataMode.REPEATED) {
+//        context.warn("Writing a ARRAY value but target schema type is not repeated it is minortype: "
+//            + schema.getType().getMinorType() + " path is: " + printPath(mapWriter, listWriter));
+//        return;
+//      } else if (schema.getType().getMinorType() != MinorType.LIST) {
+//        context.warn("Writing a ARRAY value but target schema type is not LIST, minortype: "
+//            + schema.getType().getMinorType() + " path is: " + printPath(mapWriter, listWriter));
+//        return;
+//      }
+//    }
+
     ArrayValue value = v.asArrayValue();
     ListWriter subListWriter;
     MaterializedField childSchema;
