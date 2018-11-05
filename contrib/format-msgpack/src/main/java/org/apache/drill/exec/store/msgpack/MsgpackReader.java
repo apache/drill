@@ -47,8 +47,6 @@ import org.msgpack.value.MapValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
 
-import io.netty.buffer.DrillBuf;
-
 public class MsgpackReader {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackReader.class);
@@ -65,17 +63,14 @@ public class MsgpackReader {
   private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
   private boolean allTextMode = false;
   private MapValueWriter mapValueWriter;
+  private EnumMap<ValueType, AbstractValueWriter> valueWriterMap = new EnumMap<>(ValueType.class);
 
-  public MsgpackReader(InputStream stream, MsgpackReaderContext context, DrillBuf managedBuf, List<SchemaPath> columns,
-      boolean skipQuery) {
+  public MsgpackReader(InputStream stream, List<SchemaPath> columns, boolean skipQuery) {
 
-    this.context = context;
-    this.context.workBuf = managedBuf;
     this.unpacker = MessagePack.newDefaultUnpacker(stream);
     this.columns = columns;
     this.skipQuery = skipQuery;
     rootSelection = FieldSelection.getFieldSelection(columns);
-    EnumMap<ValueType, AbstractValueWriter> valueWriterMap = new EnumMap<>(ValueType.class);
     valueWriterMap.put(ValueType.ARRAY, new ArrayValueWriter(valueWriterMap, emptyArrayWriters));
     valueWriterMap.put(ValueType.FLOAT, new FloatValueWriter());
     valueWriterMap.put(ValueType.INTEGER, new IntegerValueWriter());
@@ -85,11 +80,15 @@ public class MsgpackReader {
     valueWriterMap.put(ValueType.EXTENSION, new ExtensionValueWriter());
     mapValueWriter = new MapValueWriter(valueWriterMap);
     valueWriterMap.put(ValueType.MAP, mapValueWriter);
+  }
 
+  public void setup(MsgpackReaderContext context) {
+    this.context = context;
     for (AbstractValueWriter w : valueWriterMap.values()) {
       w.setup(this.context);
     }
   }
+
 
   public boolean write(ComplexWriter writer, MaterializedField schema)
       throws IOException, MessageInsufficientBufferException {
@@ -118,15 +117,15 @@ public class MsgpackReader {
     if (skipQuery) {
       writer.rootAsMap().bit("count").writeBit(1);
     } else {
-      mapValueWriter.writeToMap(value, writer.rootAsMap(), this.rootSelection, schema);
+      mapValueWriter.writeMapValue(value, writer.rootAsMap(), this.rootSelection, schema);
     }
   }
 
-//
-//
-//  private void ensure(final int length) {
-//    workBuf = workBuf.reallocIfNeeded(length);
-//  }
+  //
+  //
+  // private void ensure(final int length) {
+  // workBuf = workBuf.reallocIfNeeded(length);
+  // }
 
   @SuppressWarnings("resource")
   public void ensureAtLeastOneField(ComplexWriter writer) {

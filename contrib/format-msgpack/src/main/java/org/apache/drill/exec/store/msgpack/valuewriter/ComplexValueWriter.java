@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.drill.exec.store.msgpack.valuewriter;
 
 import java.util.EnumMap;
@@ -9,6 +26,7 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
+import org.slf4j.helpers.MessageFormatter;
 
 public abstract class ComplexValueWriter extends AbstractValueWriter {
 
@@ -21,6 +39,16 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
 
   protected void writeElement(Value value, MapWriter mapWriter, ListWriter listWriter, String fieldName,
       FieldSelection selection, MaterializedField schema) {
+    if (logger.isDebugEnabled()) {
+      if (mapWriter != null) {
+        logger.debug("write type: '{}' value: '{}' into map at '{}.{}' target schema: '{}'", value.getValueType(),
+            value, printPath(fieldName, mapWriter, listWriter), fieldName, schema);
+      } else {
+        logger.debug("write type: '{}' value: '{}' into list at '{}.[]' target schema: '{}'", value.getValueType(),
+            value, printPath(fieldName, mapWriter, listWriter), schema);
+      }
+    }
+
     try {
       // if (!checkElementSchema(value, schema)) {
       // return MSG_RECORD_PARSE_ERROR;
@@ -28,55 +56,24 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
 
       valueWriterMap.get(value.getValueType()).write(value, mapWriter, fieldName, listWriter, selection, schema);
     } catch (Exception e) {
-      if (context.lenient) {
-        context.warn(
-            "Failed to write element name: " + fieldName + " of type: " + value.getValueType() + " into "
-                + mapWriter == null ? "list"
-                    : "map" + " File: " + context.hadoopPath + " line no: " + context.currentRecordNumberInFile() + " ",
-            e);
+      String message = null;
+      if (mapWriter != null) {
+        message = MessageFormatter
+            .arrayFormat("failed to write type: '{}' value: '{}' into map at '{}.{}' target schema: '{}'\n",
+                new Object[] { value.getValueType(), value, printPath(fieldName, mapWriter, listWriter), fieldName,
+                    schema })
+            .getMessage();
       } else {
-        throw new MsgpackParsingException(
-            "Failed to write element name: " + fieldName + " of type: " + value.getValueType() + " into"
-                + mapWriter == null ? "list"
-                    : "map" + " File: " + context.hadoopPath + " line no: " + context.currentRecordNumberInFile() + " ",
-            e);
+        message = MessageFormatter
+            .arrayFormat("failed to write type: '{}' value: '{}' into list at '{}.[]' target schema: '{}'\n",
+                new Object[] { value.getValueType(), value, printPath(fieldName, mapWriter, listWriter), schema })
+            .getMessage();
+      }
+      if (context.lenient) {
+        context.warn(message, e);
+      } else {
+        throw new MsgpackParsingException(message, e);
       }
     }
   }
-
-//private boolean checkElementSchema(Value value, MaterializedField schema) {
-//if (!useSchema) {
-//  return true;
-//}
-//
-//ValueType valueType = value.getValueType();
-//MinorType schemaType = schema.getType().getMinorType();
-//switch (valueType) {
-//case INTEGER:
-//  return schemaType == MinorType.BIGINT;
-//case ARRAY:
-//  return schema.getDataMode() == DataMode.REPEATED;
-//case BOOLEAN:
-//  return schemaType == MinorType.BIT;
-//case MAP:
-//  return schemaType == MinorType.MAP;
-//case FLOAT:
-//  return schemaType == MinorType.FLOAT8;
-//case EXTENSION:
-//  ExtensionValue ev = value.asExtensionValue();
-//  byte extType = ev.getType();
-//  if (extType == -1) {
-//    return schemaType == MinorType.TIMESTAMP;
-//  } else {
-//    return schemaType == MinorType.VARBINARY;
-//  }
-//case STRING:
-//  return schemaType == MinorType.VARCHAR;
-//case BINARY:
-//  return schemaType == MinorType.VARBINARY;
-//default:
-//  throw new DrillRuntimeException("Unsupported msgpack type: " + value);
-//}
-//}
-
 }

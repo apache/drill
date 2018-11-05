@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.drill.exec.store.msgpack;
 
 import static org.junit.Assert.assertEquals;
@@ -71,9 +88,13 @@ public class TestMsgpackRecordReader extends ClusterTest {
   private TupleMetadata expectedSchema;
   private QueryRowSetIterator rowSetIterator;
   private SchemaBuilder schemaBuilder;
+  LogFixture logs;
 
   @Before
   public void before() {
+    LogFixtureBuilder logBuilder = LogFixture.builder().logger("org.apache.drill.exec.store.msgpack", Level.ERROR);
+    logs = logBuilder.build();
+
     if (schemaLocation.exists()) {
       boolean deleted = schemaLocation.delete();
       assertTrue(deleted);
@@ -90,13 +111,16 @@ public class TestMsgpackRecordReader extends ClusterTest {
     this.rowSetBuilder = null;
     this.rowSetIterator = null;
     this.schemaBuilder = null;
+    if (this.logs != null) {
+      this.logs.close();
+    }
   }
 
-//  LogFixtureBuilder logBuilder = LogFixture.builder()
-//      // Log to the console for debugging convenience
-//      .toConsole().logger("org.apache.drill.exec", Level.TRACE);
-//  try (LogFixture logs = logBuilder.build()) {
-//  }
+  // LogFixtureBuilder logBuilder = LogFixture.builder()
+  // // Log to the console for debugging convenience
+  // .toConsole().logger("org.apache.drill.exec", Level.TRACE);
+  // try (LogFixture logs = logBuilder.build()) {
+  // }
 
   @Test
   @Ignore
@@ -129,27 +153,50 @@ public class TestMsgpackRecordReader extends ClusterTest {
     }
     System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
 
-    LogFixtureBuilder logBuilder = LogFixture.builder()
-        // Log to the console for debugging convenience
-        .toConsole().logger("org.apache.drill.exec.store.msgpack", Level.DEBUG);
-    try (LogFixture logs = logBuilder.build()) {
+    String sql = "select * from `dfs.data`.`test.mp` limit 1";
+    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+    for (QueryDataBatch batch : results) {
+      batch.release();
+    }
 
-      String sql = "select * from `dfs.data`.`test.mp` limit 1";
+    for (int i = 0; i < 20; i++) {
+      stopwatch.reset().start();
+      sql = "select * from `dfs.data`.`test.mp`";
+      results = client.queryBuilder().sql(sql).results();
+      for (QueryDataBatch batch : results) {
+        batch.release();
+      }
+      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    }
+  }
+
+  @Test
+  @Ignore
+  public void testPerformanceArrayOfElementsOfDifferentTypes() throws Exception {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("anArray").packArrayHeader(4);
+      packer.packString("first element");
+      byte[] bytes = new byte[] { 'A' };
+      packer.packBinaryHeader(1).addPayload(bytes);
+      packer.packDouble(123.456d);
+      packer.packLong(99L);
+    }
+    System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+
+    String sql = "select * from `dfs.data`.`test.mp`";
+
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, noSchemaConfig());
+
+    for (int i = 0; i < 10; i++) {
+      stopwatch.reset().start();
       List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
       for (QueryDataBatch batch : results) {
         batch.release();
       }
-
-      for (int i = 0; i < 20; i++) {
-        stopwatch.reset().start();
-        sql = "select * from `dfs.data`.`test.mp`";
-        results = client.queryBuilder().sql(sql).results();
-        for (QueryDataBatch batch : results) {
-          batch.release();
-        }
-        System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-      }
-
+      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 
@@ -169,20 +216,14 @@ public class TestMsgpackRecordReader extends ClusterTest {
     }
     System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
 
-    LogFixtureBuilder logBuilder = LogFixture.builder()
-        // Log to the console for debugging convenience
-        .toConsole().logger("org.apache.drill.exec", Level.ERROR);
-    try (LogFixture logs = logBuilder.build()) {
-
-      for (int i = 0; i < 20; i++) {
-        stopwatch.reset().start();
-        String sql = "select * from `dfs.data`.`test.mp`";
-        List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
-        for (QueryDataBatch batch : results) {
-          batch.release();
-        }
-        System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    for (int i = 0; i < 20; i++) {
+      stopwatch.reset().start();
+      String sql = "select * from `dfs.data`.`test.mp`";
+      List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+      for (QueryDataBatch batch : results) {
+        batch.release();
       }
+      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 
@@ -200,28 +241,20 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.packString("banana").packInt(2);
       packer.packString("potato").packDouble(12.12);
     }
-    LogFixtureBuilder logBuilder = LogFixture.builder()
-        // Log to the console for debugging convenience
-        .toConsole().logger("org.apache.drill.exec.store.msgpack", Level.DEBUG);
-    try (LogFixture logs = logBuilder.build()) {
+    String sql = "select * from `dfs.data`.`test.mp`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-      String sql = "select * from `dfs.data`.`test.mp`";
-      RowSet actual = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("apple", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+        .add("banana", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+        .add("orange", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("potato", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("apple", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-          .add("banana", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-          .add("orange", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .add("potato", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL).buildSchema();
-
-    //@formatter:off
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L, 2L, "infini!!!", null)
-        .addRow(1L, 2L, null, 12.12d)
-        .build();
-    //@formatter:on
-      new RowSetComparison(expected).verifyAndClearAll(actual);
-    }
+    // @formatter:off
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(1L, 2L, "infini!!!", null)
+        .addRow(1L, 2L, null, 12.12d).build();
+    // @formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
   @Test
@@ -252,20 +285,48 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
     TupleMetadata expectedSchema = new SchemaBuilder().addArray("anArray", TypeProtos.MinorType.VARCHAR).buildSchema();
 
-    //@formatter:off
+    // @formatter:off
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(new Object[] {new String[] {"first element", "A", "123.456", "99"}})
-        .build();
-    //@formatter:on
+        .addRow(new Object[] { new String[] { "first element", "A", "123.456", "99" } }).build();
+    // @formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
+  public void testArrayOfElementsOfDifferentTypes() throws Exception {
+
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("anArray").packArrayHeader(4);
+      packer.packString("first element");
+      byte[] bytes = new byte[] { 'A' };
+      packer.packBinaryHeader(1).addPayload(bytes);
+      packer.packDouble(123.456d);
+      packer.packLong(99L);
+    }
+
+    String sql = "select * from `dfs.data`.`test.mp`";
+
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, noSchemaConfig());
+
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder().addArray("anArray", TypeProtos.MinorType.VARCHAR).buildSchema();
+
+    // @formatter:off
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(new Object[] { new String[] { "first element" } }).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
   @Test
   public void testSchemaRepeatedMapWithFieldWithDifferentTypes() throws Exception {
 
-//    try (OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(new File(testDir, "test.json")))) {
-//      w.write("{\"arrayOfMap\":[{\"type\": 3, \"data\": 44}]}\n");
-//    }
+    // try (OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(new
+    // File(testDir, "test.json")))) {
+    // w.write("{\"arrayOfMap\":[{\"type\": 3, \"data\": 44}]}\n");
+    // }
     try (MessagePacker packer = testPacker()) {
       packer.packMapHeader(1);
       packer.packString("arrayOfMap").packArrayHeader(3);
@@ -300,11 +361,9 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
     TupleMetadata expectedSchema = new SchemaBuilder().add("data", MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .buildSchema();
-    //@formatter:off
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow("44")
-        .build();
-    //@formatter:on
+    // @formatter:off
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow("44").build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -328,12 +387,10 @@ public class TestMsgpackRecordReader extends ClusterTest {
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("pinaple", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    //@formatter:off
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(new Object[] {null})
-        .addRow(new Object[] {null})
-        .build();
-    //@formatter:on
+    // @formatter:off
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(new Object[] { null })
+        .addRow(new Object[] { null }).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -354,16 +411,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select `apple` as y from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("y", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("y", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L)
-        .addRow(1L)
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(1L).addRow(1L).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -383,15 +436,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select * from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
-    TupleMetadata expectedSchema = new SchemaBuilder()
-        .addArray("anArray", TypeProtos.MinorType.VARCHAR)
-        .buildSchema();
+    // @formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder().addArray("anArray", TypeProtos.MinorType.VARCHAR).buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(new Object[] {new String[] {"stringVal","stringVal","stringVal","stringVal"}})
-        .build();
-    //@formatter:on
+        .addRow(new Object[] { new String[] { "stringVal", "stringVal", "stringVal", "stringVal" } }).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -411,17 +461,13 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select * from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
-    TupleMetadata expectedSchema = new SchemaBuilder()
-        .addRepeatedList("arrayOfArray")
-        .addArray(TypeProtos.MinorType.BIGINT)
-        .resumeSchema()
-        .buildSchema();
+    // @formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder().addRepeatedList("arrayOfArray")
+        .addArray(TypeProtos.MinorType.BIGINT).resumeSchema().buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(new Object[] {new Long[][] {{1L},{1L,1L}}} )
-        .build();
-    //@formatter:on
+        .addRow(new Object[] { new Long[][] { { 1L }, { 1L, 1L } } }).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -473,29 +519,24 @@ public class TestMsgpackRecordReader extends ClusterTest {
         w.write("{\"anInt\":1}\n");
       }
     }
-    LogFixtureBuilder logBuilder = LogFixture.builder()
-        // Log to the console for debugging convenience
-        .toConsole().logger("org.apache.drill.exec", Level.TRACE);
-    try (LogFixture logs = logBuilder.build()) {
-      String sql = "select root.arrayOfArray[0][0] as w from `dfs.data`.`test.json` as root";
-      rowSetIterator = client.queryBuilder().sql(sql).rowSetIterator();
+    String sql = "select root.arrayOfArray[0][0] as w from `dfs.data`.`test.json` as root";
+    rowSetIterator = client.queryBuilder().sql(sql).rowSetIterator();
 
-      schemaBuilder = new SchemaBuilder();
-      schemaBuilder.add("w", TypeProtos.MinorType.BIGINT, DataMode.OPTIONAL);
-      expectedSchema = schemaBuilder.buildSchema();
+    schemaBuilder = new SchemaBuilder();
+    schemaBuilder.add("w", TypeProtos.MinorType.BIGINT, DataMode.OPTIONAL);
+    expectedSchema = schemaBuilder.buildSchema();
 
-      DirectRowSet batch1 = nextRowSet();
-      rowSetBuilder = newRowSetBuilder();
-      rowSetBuilder.addRow(1L);
-      for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH - 1; i++) {
-        rowSetBuilder.addRow(new Object[] { null });
-      }
-      verify(rowSetBuilder.build(), batch1);
-      DirectRowSet batch2 = nextRowSet();
-      rowSetBuilder = newRowSetBuilder();
+    DirectRowSet batch1 = nextRowSet();
+    rowSetBuilder = newRowSetBuilder();
+    rowSetBuilder.addRow(1L);
+    for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH - 1; i++) {
       rowSetBuilder.addRow(new Object[] { null });
-      verify(rowSetBuilder.build(), batch2);
     }
+    verify(rowSetBuilder.build(), batch1);
+    DirectRowSet batch2 = nextRowSet();
+    rowSetBuilder = newRowSetBuilder();
+    rowSetBuilder.addRow(new Object[] { null });
+    verify(rowSetBuilder.build(), batch2);
   }
 
   @Test
@@ -512,19 +553,13 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select * from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
-    TupleMetadata expectedSchema = new SchemaBuilder()
-        .addRepeatedList("arrayOfArrayOfArray")
-        .addDimension()
-        .addArray(TypeProtos.MinorType.BIGINT)
-        .resumeList()
-        .resumeSchema()
-        .buildSchema();
+    // @formatter:off
+    TupleMetadata expectedSchema = new SchemaBuilder().addRepeatedList("arrayOfArrayOfArray").addDimension()
+        .addArray(TypeProtos.MinorType.BIGINT).resumeList().resumeSchema().buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(new Object[] {new Long[][][] {{{5L}}}} )
-        .build();
-    //@formatter:on
+        .addRow(new Object[] { new Long[][][] { { { 5L } } } }).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -544,16 +579,13 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select root.aMap.b as x from `dfs.data`.`test.mp` as root";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(44L)
-        .addRow(new Object[] {null})
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(44L).addRow(new Object[] { null })
         .build();
-    //@formatter:on
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -573,16 +605,13 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select round(root.anArray[1], 3) as x from `dfs.data`.`test.mp` as root";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("x", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("x", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(new Object[] {null})
-        .addRow(0.342d)
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(new Object[] { null }).addRow(0.342d)
         .build();
-    //@formatter:on
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -609,7 +638,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
     // nil column will not be read at all.
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("raw", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .add("bin", TypeProtos.MinorType.VARBINARY, TypeProtos.DataMode.OPTIONAL)
@@ -619,22 +648,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
         .add("lon", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
         .add("sho", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
         .add("dou", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
-        .add("flo", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("flo", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(
-            "some data",
-            new byte[]{0x1, 0x2, 0x9, 0xF},
-            32_000_000L,
-            64_000_000_000L,
-            77L,
-            64_000_000_000L,
-            222L,
-            1.1d,
-            1.1f)
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow("some data",
+        new byte[] { 0x1, 0x2, 0x9, 0xF }, 32_000_000L, 64_000_000_000L, 77L, 64_000_000_000L, 222L, 1.1d, 1.1f)
         .build();
-    //@formatter:on
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -651,15 +670,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select root.mapOfMap.aMap.x as x from `dfs.data`.`test.mp` as root";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L)
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(1L).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -676,15 +692,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select root.arrayOfMap[0].x as x from `dfs.data`.`test.mp` as root";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L)
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(1L).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -701,15 +714,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select root.arrayWithMap[0].x as x from `dfs.data`.`test.mp` as root";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L)
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(1L).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -726,15 +736,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select root.mapWithArray.anArray[1] as x from `dfs.data`.`test.mp` as root";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("x", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("x", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow("v2")
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow("v2").build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -755,18 +762,16 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select * from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
         .add("y", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .add("z", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("z", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L, 2L, 3L)
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(1L, 2L, 3L)
         // Incomplete MAP are skipped
         .build();
-    //@formatter:on
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -808,15 +813,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select count(1) as c from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("c", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.REQUIRED)
-        .buildSchema();
+        .add("c", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.REQUIRED).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1002L)
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(1002L).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -837,15 +839,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select * from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("timestamp", TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("timestamp", TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(epochSeconds*1000)
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(epochSeconds * 1000).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -866,16 +865,13 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select * from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("timestamp", TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("timestamp", TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
     // we are ignoring the nanos
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(epochSeconds*1000)
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(epochSeconds * 1000).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -895,16 +891,13 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select * from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("timestamp", TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("timestamp", TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
     // we are ignoring the nanos
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(epochSeconds*1000)
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(epochSeconds * 1000).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -925,15 +918,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select * from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("x", TypeProtos.MinorType.VARBINARY, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("x", TypeProtos.MinorType.VARBINARY, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(new byte[] {'j','k'})
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(new byte[] { 'j', 'k' }).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -957,19 +947,16 @@ public class TestMsgpackRecordReader extends ClusterTest {
     String sql = "select * from `dfs.data`.`test.mp`";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("1", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
         .add("A", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
         .add("3", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
         .add("xyz", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .add("5", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
+        .add("5", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L, 2L, 3L, 4L, 5L)
-        .build();
-    //@formatter:on
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(1L, 2L, 3L, 4L, 5L).build();
+    // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
 
@@ -993,11 +980,10 @@ public class TestMsgpackRecordReader extends ClusterTest {
     DirectRowSet batch1 = it.next();
     assertTrue(it.hasNext());
     DirectRowSet batch2 = it.next();
-    //@formatter:off
+    // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
-    //@formatter:on
+        .add("x", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL).buildSchema();
+    // @formatter:on
     RowSetBuilder b = new RowSetBuilder(client.allocator(), expectedSchema);
     for (long i = 0; i < BATCH_SIZE; i++) {
       b.addRow(i);
@@ -1242,16 +1228,6 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
   @Test
   public void testSchemaCoerceArrayToVarchar() throws Exception {
-    for (int i = 0; i < 1000; i++) {
-      try {
-        test1();
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-  }
-
-  public void test1() throws Exception {
     learnModel();
 
     try (MessagePacker packer = testPacker()) {
@@ -1260,7 +1236,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.packString("data");
       packer.packMapHeader(1);
       packer.packString("str");
-      packer.packArrayHeader(1); // str field is an array instead of being a varchar
+      packer.packArrayHeader(3); // str field is an array instead of being a varchar
       packer.packString("x");
       packer.packString("y");
       packer.packString("z");

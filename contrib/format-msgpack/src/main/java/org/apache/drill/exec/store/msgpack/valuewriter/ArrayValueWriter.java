@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.drill.exec.store.msgpack.valuewriter;
 
 import java.util.Collection;
@@ -50,12 +67,38 @@ public class ArrayValueWriter extends ComplexValueWriter {
       // Write array in map.
       subListWriter = mapWriter.list(fieldName);
       childSchema = getArrayInMapChildSchema(fieldName, schema);
+      push(fieldName);
     } else {
       // Write array in array.
       subListWriter = listWriter.list();
       childSchema = getArrayInArrayChildSchema(schema);
+      push("[]");
     }
-    writeToList(value, subListWriter, selection, childSchema);
+    writeArrayValue(value, subListWriter, selection, childSchema);
+    pop();
+  }
+
+  private void writeArrayValue(Value value, ListWriter listWriter, FieldSelection selection, MaterializedField schema) {
+      logger.debug("      list value schema is: '{}'", schema);
+    if(context.useSchema){
+      if(schema == null){
+        logger.debug("------no schema to write list value -> skipping");
+        return;
+      }
+    }
+    listWriter.startList();
+    try {
+      ArrayValue arrayValue = value.asArrayValue();
+      for (int i = 0; i < arrayValue.size(); i++) {
+        Value element = arrayValue.get(i);
+        if (!element.isNilValue()) {
+          writeElement(element, null, listWriter, null, selection, schema);
+        }
+      }
+    } finally {
+      addIfNotInitialized(listWriter);
+      listWriter.endList();
+    }
   }
 
   private MaterializedField getArrayInMapChildSchema(String fieldName, MaterializedField schema) {
@@ -66,11 +109,14 @@ public class ArrayValueWriter extends ComplexValueWriter {
       return schema;
     } else {
       Collection<MaterializedField> children = schema.getChildren();
-      MaterializedField childSchema = children.iterator().next();
-      if (childSchema == null) {
-        throw new MsgpackParsingException("Field name: " + fieldName + " has no child schema.");
+      if(!children.isEmpty()){
+        MaterializedField childSchema = children.iterator().next();
+        //if (childSchema == null) {
+        //  throw new MsgpackParsingException("Field name: " + fieldName + " has no child schema.");
+        //}
+        return childSchema;
       }
-      return childSchema;
+      return null;
     }
   }
 
@@ -86,21 +132,6 @@ public class ArrayValueWriter extends ComplexValueWriter {
     return childSchema;
   }
 
-  private void writeToList(Value value, ListWriter listWriter, FieldSelection selection, MaterializedField schema) {
-    listWriter.startList();
-    try {
-      ArrayValue arrayValue = value.asArrayValue();
-      for (int i = 0; i < arrayValue.size(); i++) {
-        Value element = arrayValue.get(i);
-        if (!element.isNilValue()) {
-          writeElement(element, null, listWriter, null, selection, schema);
-        }
-      }
-    } finally {
-      addIfNotInitialized(listWriter);
-      listWriter.endList();
-    }
-  }
 
   /**
    * Checks that list has not been initialized and adds it to the

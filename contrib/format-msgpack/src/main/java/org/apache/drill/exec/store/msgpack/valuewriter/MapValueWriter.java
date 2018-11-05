@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.drill.exec.store.msgpack.valuewriter;
 
 import java.util.EnumMap;
@@ -5,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.msgpack.MsgpackParsingException;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
@@ -25,31 +43,35 @@ public class MapValueWriter extends ComplexValueWriter {
   public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
       MaterializedField schema) {
 
-//    if (context.useSchema) {
-//      if (schema == null) {
-//        context.warn("Writing a MAP value but target schema is null. FieldName: " + fieldName + " target type: "
-//            + schema.getType() + " path is: " + printPath(mapWriter, listWriter));
-//        return;
-//      } else if (schema.getType().getMinorType() != MinorType.MAP) {
-//        context.warn("Writing a MAP value but target schema type is: " + schema.getType() + " path is: "
-//            + printPath(mapWriter, listWriter));
-//        return;
-//      }
-//    }
+    if (context.useSchema) {
+      if (schema == null) {
+        logger.debug("------no schema for map value -> skipping.");
+        return;
+      } else if (schema.getType().getMinorType() != MinorType.MAP) {
+        logger.debug("------schema is not a MAP for map value -> skipping.");
+        return;
+      }
+    }
 
     MapValue value = v.asMapValue();
     MapWriter subMapWriter;
     if (mapWriter != null) {
       // Write map in a map.
       subMapWriter = mapWriter.map(fieldName);
+      push(fieldName);
     } else {
       // Write map in a list.
       subMapWriter = listWriter.map();
+      push("list");
     }
-    writeToMap(value, subMapWriter, selection, schema);
+    writeMapValue(value, subMapWriter, selection, schema);
+    pop();
   }
 
-  public void writeToMap(MapValue value, MapWriter writer, FieldSelection selection, MaterializedField schema) {
+  public void writeMapValue(MapValue value, MapWriter writer, FieldSelection selection, MaterializedField schema) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("      map value schema is: '{}'", schema);
+    }
 
     writer.start();
     try {
@@ -71,6 +93,7 @@ public class MapValueWriter extends ComplexValueWriter {
         }
         FieldSelection childSelection = selection.getChild(fieldName);
         if (childSelection.isNeverValid()) {
+          logger.debug("Skipping none selected field: {}", fieldName);
           continue;
         }
         MaterializedField childSchema = getChildSchema(schema, fieldName);

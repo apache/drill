@@ -95,8 +95,9 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     try {
       this.stream = fileSystem.openPossiblyCompressedStream(context.hadoopPath);
       this.writer = new VectorContainerWriter(output, unionEnabled);
-      this.messageReader = new MsgpackReader(stream, context, fragmentContext.getManagedBuffer(),
-          Lists.newArrayList(getColumns()), isSkipQuery());
+      this.messageReader = new MsgpackReader(stream, Lists.newArrayList(getColumns()), isSkipQuery());
+      this.context.workBuf = fragmentContext.getManagedBuffer();
+      this.messageReader.setup(this.context);
     } catch (final Exception e) {
       context.handleAndRaise("Failure reading mgspack file", e);
     }
@@ -171,6 +172,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
       Path schemaLocation = msgpackSchema.findSchemaFile(context.hadoopPath.getParent());
       MaterializedField schema = msgpackSchema.load(schemaLocation);
       if (schema != null) {
+        logger.debug("Applying schema to fill in missing fields.");
         schemaWriter.applySchema(schema, writer);
       }
     } catch (Exception e) {
@@ -185,17 +187,20 @@ public class MsgpackRecordReader extends AbstractRecordReader {
         Path schemaLocation = msgpackSchema.findSchemaFile(context.hadoopPath.getParent());
         MaterializedField previous = msgpackSchema.load(schemaLocation);
         if (previous != null) {
+          logger.debug("Found previous schema. Merging.");
           MaterializedField current = writer.getMapVector().getField();
           MaterializedField merged = msgpackSchema.merge(previous, current);
-          if(schemaLocation == null) {
+          if (schemaLocation == null) {
             schemaLocation = new Path(context.hadoopPath.getParent(), MsgpackSchema.SCHEMA_FILE_NAME);
           }
+          logger.debug("Saving {} merged schema content is: {}", schemaLocation, merged);
           msgpackSchema.save(merged, schemaLocation);
         } else {
           MaterializedField current = writer.getMapVector().getField();
-          if(schemaLocation == null) {
+          if (schemaLocation == null) {
             schemaLocation = new Path(context.hadoopPath.getParent(), MsgpackSchema.SCHEMA_FILE_NAME);
           }
+          logger.debug("Saving {} schema content is: {}", schemaLocation, current);
           msgpackSchema.save(current, schemaLocation);
         }
       } catch (Exception e) {

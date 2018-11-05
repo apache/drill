@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.msgpack;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.helpers.MessageFormatter;
 
 import com.fasterxml.jackson.core.JsonParseException;
 
@@ -98,6 +99,12 @@ public class MsgpackReaderContext {
   }
 
   public void parseWarn(Exception e) {
-    warn("Parsing msgpack in " + hadoopPath.getName() + " : line nos :" + currentRecordNumberInFile(), e);
+    String message = MessageFormatter.arrayFormat("Parsing msgpack file '{}' at line number '{}' error is '{}'\n",
+        new Object[] { this.hadoopPath.getName(), this.currentRecordNumberInFile(), e.getMessage() }).getMessage();
+    if (printToConsole) {
+      Log.warn(message);
+    } else {
+      logger.warn(message);
+    }
   }
 }
