@@ -106,6 +106,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
         <form role="form" id="queryForm" action="/query" method="POST">
           <div id="query-editor" class="form-group">${model.getProfile().query}</div>
           <input class="form-control" id="query" name="query" type="hidden" value="${model.getProfile().query}"/>
+          <div style="padding:5px"><b>Hint: </b>Use <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
           <div class="form-group">
             <div class="radio-inline">
               <label>
@@ -459,7 +460,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       enableLiveAutocompletion: false
     });
 
-    //Pops out a new window and provids prompt to print
+    //Pops out a new window and provide prompt to print
     var popUpAndPrintPlan = function() {
       var srcSvg = $('#query-visual-canvas');
       var screenRatio=0.9;
@@ -467,6 +468,21 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       printWindow.document.writeln($(srcSvg).parent().html());
       printWindow.print();
     };
+
+    //Provides hint based on OS
+    var browserOS = navigator.platform.toLowerCase();
+    if ((browserOS.indexOf("mac") > -1)) {
+      document.getElementById('keyboardHint').innerHTML="Meta+Enter";
+    } else {
+      document.getElementById('keyboardHint').innerHTML="Ctrl+Enter";
+    }
+
+    // meta+enter / ctrl+enter to submit query
+    document.getElementById('queryForm')
+            .addEventListener('keydown', function(e) {
+      if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
+      if (e.target.form) doSubmitQueryWithUserName();
+    });
     </script>
 
 </#macro>

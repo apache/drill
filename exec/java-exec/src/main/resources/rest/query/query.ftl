@@ -72,7 +72,8 @@
       </div>
     </div>
     <div class="form-group">
-      <label for="query">Query</label>
+      <div style="display: inline-block"><label for="query">Query</label></div>
+      <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
       <div id="query-editor-format"></div>
       <input class="form-control" type="hidden" id="query" name="query"/>
     </div>
@@ -112,11 +113,20 @@
       enableBasicAutocompletion: true,
       enableLiveAutocompletion: false
     });
-    // meta-enter to submit query
+
+    //Provides hint based on OS
+    var browserOS = navigator.platform.toLowerCase();
+    if ((browserOS.indexOf("mac") > -1)) {
+      document.getElementById('keyboardHint').innerHTML="Meta+Enter";
+    } else {
+      document.getElementById('keyboardHint').innerHTML="Ctrl+Enter";
+    }
+
+    // meta+enter / ctrl+enter to submit query
     document.getElementById('queryForm')
             .addEventListener('keydown', function(e) {
-      if (!(e.keyCode == 13 && e.metaKey)) return;
-      if (e.target.form) e.target.form.submit();
+      if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
+      if (e.target.form) doSubmitQueryWithUserName();
     });
   </script>
 
