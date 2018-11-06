@@ -29,9 +29,13 @@ import com.github.luben.zstd.util.Native;
 
 /**
  * A {@link Decompressor} based on the zstandard compression algorithm.
+ *
+ * Example code taken from hadoop
+ * http://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-common/api/src-html/org/apache/hadoop/io/compress/SnappyCodec.html
+ * 
  */
 public class ZstdDecompressor implements Decompressor {
-  private static final Log LOG = LogFactory.getLog(ZstdDecompressor.class.getName());
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZstdDecompressor.class);
 
   private int directBufferSize;
   private ByteBuffer compressedDirectBuf = null;
@@ -50,7 +54,7 @@ public class ZstdDecompressor implements Decompressor {
         // initIDs();
         Native.load();
       } catch (Throwable t) {
-        LOG.error("failed to load ZstdDecompressor", t);
+        logger.error("failed to load ZstdDecompressor", t);
       }
     }
   }

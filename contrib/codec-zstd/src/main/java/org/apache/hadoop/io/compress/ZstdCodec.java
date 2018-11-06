@@ -30,7 +30,18 @@ import org.apache.hadoop.io.compress.zstd.ZstdCompressor;
 import org.apache.hadoop.io.compress.zstd.ZstdDecompressor;
 
 /**
- * This class creates snappy compressors/decompressors.
+ * This class creates zstandard compressors/decompressors. Based on the
+ * zstandard compression algorithm. https://facebook.github.io/zstd/
+ *
+ * The java binding for zstandard is provided by
+ * https://github.com/luben/zstd-jni
+ * 
+ * Example code taken from hadoop
+ * http://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-common/api/src-html/org/apache/hadoop/io/compress/SnappyCodec.html
+ * 
+ * The ZstdCodec implementation is registered with the Hadoop framework via the
+ * Java Plugin mechanism. look at
+ * META-INF/services/org.apache.hadoop.io.compress.CompressionCodec
  */
 public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompressionCodec {
   Configuration conf;
@@ -38,8 +49,7 @@ public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompre
   /**
    * Set the configuration to be used by this object.
    *
-   * @param conf
-   *          the configuration object.
+   * @param conf the configuration object.
    */
   @Override
   public void setConf(Configuration conf) {
@@ -77,8 +87,7 @@ public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompre
    * Create a {@link CompressionOutputStream} that will write to the given
    * {@link OutputStream}.
    *
-   * @param out
-   *          the location for the final output stream
+   * @param out the location for the final output stream
    * @return a stream the user can write uncompressed data to have it compressed
    * @throws IOException
    */
@@ -91,10 +100,8 @@ public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompre
    * Create a {@link CompressionOutputStream} that will write to the given
    * {@link OutputStream} with the given {@link Compressor}.
    *
-   * @param out
-   *          the location for the final output stream
-   * @param compressor
-   *          compressor to use
+   * @param out        the location for the final output stream
+   * @param compressor compressor to use
    * @return a stream the user can write uncompressed data to have it compressed
    * @throws IOException
    */
@@ -128,8 +135,7 @@ public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompre
    * Create a {@link CompressionInputStream} that will read from the given input
    * stream.
    *
-   * @param in
-   *          the stream to read compressed bytes from
+   * @param in the stream to read compressed bytes from
    * @return a stream to read uncompressed bytes from
    * @throws IOException
    */
@@ -142,10 +148,8 @@ public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompre
    * Create a {@link CompressionInputStream} that will read from the given
    * {@link InputStream} with the given {@link Decompressor}.
    *
-   * @param in
-   *          the stream to read compressed bytes from
-   * @param decompressor
-   *          decompressor to use
+   * @param in           the stream to read compressed bytes from
+   * @param decompressor decompressor to use
    * @return a stream to read uncompressed bytes from
    * @throws IOException
    */
@@ -158,8 +162,7 @@ public class ZstdCodec implements Configurable, CompressionCodec, DirectDecompre
   }
 
   /**
-   * Get the type of {@link Decompressor} needed by this
-   * {@link CompressionCodec}.
+   * Get the type of {@link Decompressor} needed by this {@link CompressionCodec}.
    *
    * @return the type of decompressor needed by this codec.
    */

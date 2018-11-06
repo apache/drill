@@ -26,6 +26,9 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.io.compress.CompressionInputStream;
 import org.apache.hadoop.io.compress.Decompressor;
 
+/**
+ * A zstandard implementation of the hadoop CompressionInputStream.
+ */
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
 public class ZstdCompressionInputStream extends CompressionInputStream {

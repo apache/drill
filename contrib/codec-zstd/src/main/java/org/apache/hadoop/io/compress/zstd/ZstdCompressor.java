@@ -21,8 +21,6 @@ package org.apache.hadoop.io.compress.zstd;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.Compressor;
 
@@ -31,13 +29,16 @@ import com.github.luben.zstd.ZstdDirectBufferCompressingStream;
 import com.github.luben.zstd.util.Native;
 
 /**
- * A {@link Compressor} based on the snappy compression algorithm.
- * http://code.google.com/p/snappy/
+ * A {@link Compressor} based on the zstandard compression algorithm.
+ * https://facebook.github.io/zstd/
  *
- * jccote !!!DID NOT TEST THIS CLASS, JUST RENAMED SNAPPY FOR ZSTD!!!
+ * jccote !!!DID NOT TEST THIS CLASS, JUST RENAMED SNAPPY FOR ZSTD!!! code taken
+ * from hadoop
+ * http://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-common/api/src-html/org/apache/hadoop/io/compress/SnappyCodec.html
+ * 
  */
 public class ZstdCompressor implements Compressor {
-  private static final Log LOG = LogFactory.getLog(ZstdCompressor.class.getName());
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZstdCompressor.class);
 
   private int directBufferSize;
   private ByteBuffer compressedDirectBuf = null;
@@ -56,7 +57,7 @@ public class ZstdCompressor implements Compressor {
         // initIDs();
         Native.load();
       } catch (Throwable t) {
-        LOG.error("failed to load ZstdCompressor", t);
+        logger.error("failed to load ZstdCompressor", t);
       }
     }
   }
@@ -68,8 +69,7 @@ public class ZstdCompressor implements Compressor {
   /**
    * Creates a new compressor.
    *
-   * @param directBufferSize
-   *          size of the direct buffer to be used.
+   * @param directBufferSize size of the direct buffer to be used.
    */
   public ZstdCompressor(int directBufferSize) {
     this.directBufferSize = directBufferSize;
@@ -86,16 +86,12 @@ public class ZstdCompressor implements Compressor {
   }
 
   /**
-   * Sets input data for compression. This should be called whenever
-   * #needsInput() returns <code>true</code> indicating that more input data is
-   * required.
+   * Sets input data for compression. This should be called whenever #needsInput()
+   * returns <code>true</code> indicating that more input data is required.
    *
-   * @param b
-   *          Input data
-   * @param off
-   *          Start offset
-   * @param len
-   *          Length
+   * @param b   Input data
+   * @param off Start offset
+   * @param len Length
    */
   @Override
   public void setInput(byte[] b, int off, int len) {
@@ -159,8 +155,8 @@ public class ZstdCompressor implements Compressor {
   }
 
   /**
-   * When called, indicates that compression should end with the current
-   * contents of the input buffer.
+   * When called, indicates that compression should end with the current contents
+   * of the input buffer.
    */
   @Override
   public void finish() {
@@ -171,8 +167,8 @@ public class ZstdCompressor implements Compressor {
    * Returns true if the end of the compressed data output stream has been
    * reached.
    *
-   * @return <code>true</code> if the end of the compressed data output stream
-   *         has been reached.
+   * @return <code>true</code> if the end of the compressed data output stream has
+   *         been reached.
    */
   @Override
   public boolean finished() {
@@ -182,15 +178,12 @@ public class ZstdCompressor implements Compressor {
 
   /**
    * Fills specified buffer with compressed data. Returns actual number of bytes
-   * of compressed data. A return value of 0 indicates that needsInput() should
-   * be called in order to determine if more input data is required.
+   * of compressed data. A return value of 0 indicates that needsInput() should be
+   * called in order to determine if more input data is required.
    *
-   * @param b
-   *          Buffer for the compressed data
-   * @param off
-   *          Start offset of the data
-   * @param len
-   *          Size of the buffer
+   * @param b   Buffer for the compressed data
+   * @param off Start offset of the data
+   * @param len Size of the buffer
    * @return The actual number of bytes of compressed data.
    */
   @Override
@@ -261,8 +254,7 @@ public class ZstdCompressor implements Compressor {
    * Prepare the compressor to be used in a new stream with settings defined in
    * the given Configuration
    *
-   * @param conf
-   *          Configuration from which new setting are fetched
+   * @param conf Configuration from which new setting are fetched
    */
   @Override
   public void reinit(Configuration conf) {
