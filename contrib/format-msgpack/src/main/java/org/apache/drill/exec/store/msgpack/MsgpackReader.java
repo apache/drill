@@ -121,12 +121,6 @@ public class MsgpackReader {
     }
   }
 
-  //
-  //
-  // private void ensure(final int length) {
-  // workBuf = workBuf.reallocIfNeeded(length);
-  // }
-
   @SuppressWarnings("resource")
   public void ensureAtLeastOneField(ComplexWriter writer) {
     List<BaseWriter.MapWriter> writerList = Lists.newArrayList();

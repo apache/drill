@@ -27,10 +27,10 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
+import org.apache.drill.exec.store.msgpack.schema.MsgpackSchema;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
@@ -43,22 +43,18 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackRecordReader.class);
 
   public static final long DEFAULT_ROWS_PER_BATCH = 0x4000;
-
   private VectorContainerWriter writer;
-
   private InputStream stream;
   private final DrillFileSystem fileSystem;
   private final FragmentContext fragmentContext;
   private final boolean learnSchema;
   private final boolean useSchema;
-  private MsgpackSchemaWriter schemaWriter = new MsgpackSchemaWriter();
-
-  private MsgpackReaderContext context = new MsgpackReaderContext();
+  private final MsgpackReaderContext context = new MsgpackReaderContext();
   private MsgpackReader messageReader;
-
-  private boolean unionEnabled = false; // ????
-
   private boolean hasMore = true;
+  private final MsgpackSchema msgpackSchema;
+
+  private boolean unionEnabled = false; // jccote, not sure what enabling union means for msgpack reader?
 
   /**
    * Create a msgpack Record Reader that uses a file based input stream.
@@ -66,22 +62,23 @@ public class MsgpackRecordReader extends AbstractRecordReader {
    * @param fragmentContext
    * @param inputPath
    * @param fileSystem
-   * @param columns         pathnames of columns/subfields to read
+   * @param columns
+   *                          pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */
   public MsgpackRecordReader(MsgpackFormatConfig config, final FragmentContext fragmentContext, final String inputPath,
       final DrillFileSystem fileSystem, final List<SchemaPath> columns) {
 
     Preconditions.checkArgument((inputPath != null), "InputPath must be set.");
-    context.hadoopPath = new Path(inputPath);
-
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
-    this.context.readBinaryAsString = config.isReadBinaryAsString();
-    this.context.lenient = config.isLenient();
-    this.context.printToConsole = config.isPrintToConsole();
-    this.learnSchema = config.isLearnSchema();
-    this.useSchema = config.isUseSchema();
+    context.hadoopPath = new Path(inputPath);
+    context.readBinaryAsString = config.isReadBinaryAsString();
+    context.lenient = config.isLenient();
+    context.printToConsole = config.isPrintToConsole();
+    learnSchema = config.isLearnSchema();
+    useSchema = config.isUseSchema();
+    msgpackSchema = new MsgpackSchema(fileSystem, context.hadoopPath.getParent());
     setColumns(columns);
   }
 
@@ -93,11 +90,14 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   @Override
   public void setup(final OperatorContext operatorContext, final OutputMutator output) throws ExecutionSetupException {
     try {
-      this.stream = fileSystem.openPossiblyCompressedStream(context.hadoopPath);
-      this.writer = new VectorContainerWriter(output, unionEnabled);
-      this.messageReader = new MsgpackReader(stream, Lists.newArrayList(getColumns()), isSkipQuery());
-      this.context.workBuf = fragmentContext.getManagedBuffer();
-      this.messageReader.setup(this.context);
+      stream = fileSystem.openPossiblyCompressedStream(context.hadoopPath);
+      writer = new VectorContainerWriter(output, unionEnabled);
+      messageReader = new MsgpackReader(stream, Lists.newArrayList(getColumns()), isSkipQuery());
+      context.workBuf = fragmentContext.getManagedBuffer();
+      messageReader.setup(context);
+      if (useSchema) {
+        msgpackSchema.load();
+      }
     } catch (final Exception e) {
       context.handleAndRaise("Failure reading mgspack file", e);
     }
@@ -111,18 +111,6 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   @Override
   public int next() {
 
-    MaterializedField schema = null;
-    Path schemaLocation = null;
-    try {
-      if (!this.learnSchema && this.useSchema) {
-        MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
-        schemaLocation = msgpackSchema.findSchemaFile(context.hadoopPath.getParent());
-        schema = msgpackSchema.load(schemaLocation);
-      }
-    } catch (IOException e) {
-      context.warn("Failed to load schema file: " + schemaLocation + " " + e.getMessage());
-    }
-
     writer.allocate();
     writer.reset();
     context.recordCount = 0;
@@ -132,7 +120,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     while (context.recordCount < DEFAULT_ROWS_PER_BATCH) {
       try {
         writer.setPosition(context.recordCount);
-        hasMore = messageReader.write(writer, schema);
+        hasMore = messageReader.write(writer, msgpackSchema.getSchema());
         if (!hasMore) {
           break;
         } else {
@@ -150,69 +138,32 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     }
 
     if (learnSchema) {
-      learnSchema();
+      if (isStarQuery()) {
+        try {
+          msgpackSchema.learnSchema(writer);
+        } catch (Exception e) {
+          context.handleAndRaise("Error merging msgpack schema", e);
+        }
+      } else {
+        context.warn("Msgpack reader is in learning mode but the query is not a select star. Learning skipped.");
+      }
     }
-    // Since we know the schema of the msgpack records we will create
-    // all the fields even if that means they are empty.
-    if (learnSchema || useSchema) {
-      applySchemaIfAny();
+
+    if (useSchema) {
+      // Since we know the schema of the msgpack records we will create
+      // all the fields even if that means they are empty.
+      try {
+        msgpackSchema.applySchemaIfAny(writer);
+      } catch (Exception e) {
+        context.handleAndRaise("Error applying msgpack schema to writer.", e);
+      }
     } else {
       messageReader.ensureAtLeastOneField(writer);
     }
 
     writer.setValueCount(context.recordCount);
-    updateRunningCount();
+    context.updateRunningCount();
     return context.recordCount;
-
-  }
-
-  private void applySchemaIfAny() {
-    try {
-      MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
-      Path schemaLocation = msgpackSchema.findSchemaFile(context.hadoopPath.getParent());
-      MaterializedField schema = msgpackSchema.load(schemaLocation);
-      if (schema != null) {
-        logger.debug("Applying schema to fill in missing fields.");
-        schemaWriter.applySchema(schema, writer);
-      }
-    } catch (Exception e) {
-      context.handleAndRaise("Error applying msgpack schema to writer.", e);
-    }
-  }
-
-  private void learnSchema() {
-    if (this.isStarQuery()) {
-      try {
-        MsgpackSchema msgpackSchema = new MsgpackSchema(fileSystem);
-        Path schemaLocation = msgpackSchema.findSchemaFile(context.hadoopPath.getParent());
-        MaterializedField previous = msgpackSchema.load(schemaLocation);
-        if (previous != null) {
-          logger.debug("Found previous schema. Merging.");
-          MaterializedField current = writer.getMapVector().getField();
-          MaterializedField merged = msgpackSchema.merge(previous, current);
-          if (schemaLocation == null) {
-            schemaLocation = new Path(context.hadoopPath.getParent(), MsgpackSchema.SCHEMA_FILE_NAME);
-          }
-          logger.debug("Saving {} merged schema content is: {}", schemaLocation, merged);
-          msgpackSchema.save(merged, schemaLocation);
-        } else {
-          MaterializedField current = writer.getMapVector().getField();
-          if (schemaLocation == null) {
-            schemaLocation = new Path(context.hadoopPath.getParent(), MsgpackSchema.SCHEMA_FILE_NAME);
-          }
-          logger.debug("Saving {} schema content is: {}", schemaLocation, current);
-          msgpackSchema.save(current, schemaLocation);
-        }
-      } catch (Exception e) {
-        context.handleAndRaise("Error merging msgpack schema", e);
-      }
-    } else {
-      context.warn("Msgpack reader is in learning mode but the query is not a select star. Learning skipped.");
-    }
-  }
-
-  private void updateRunningCount() {
-    context.runningRecordCount += context.recordCount;
   }
 
   @Override

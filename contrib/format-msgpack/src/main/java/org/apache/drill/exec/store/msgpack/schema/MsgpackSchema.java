@@ -15,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.msgpack;
+package org.apache.drill.exec.store.msgpack.schema;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import com.google.protobuf.TextFormat;
+import com.google.protobuf.TextFormat.ParseException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -28,51 +30,88 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.AccessControlException;
-
-import com.google.protobuf.TextFormat;
-import com.google.protobuf.TextFormat.ParseException;
 
 public class MsgpackSchema {
-  public static final String SCHEMA_FILE_NAME = ".schema.proto";
-
-  @SuppressWarnings("unused")
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackSchema.class);
 
-  private DrillFileSystem fileSystem;
+  public static final String SCHEMA_FILE_NAME = ".schema.proto";
+  private final MsgpackSchemaWriter schemaWriter = new MsgpackSchemaWriter();
+  private final DrillFileSystem dfs;
+  private final Path schemaLocation;
+  private MaterializedField schema = null;
 
-  public MsgpackSchema(DrillFileSystem fileSystem) {
-    this.fileSystem = fileSystem;
+  public MsgpackSchema(DrillFileSystem dfs, Path dirLocation) {
+    this.dfs = dfs;
+    this.schemaLocation = new Path(dirLocation, SCHEMA_FILE_NAME);
   }
 
-  public MaterializedField load(Path schemaLocation) throws AccessControlException, FileNotFoundException, IOException {
+  public MsgpackSchema delete() throws IOException {
+    dfs.delete(schemaLocation, false);
+    schema = null;
+    return this;
+  }
+
+  public MsgpackSchema learnSchema(VectorContainerWriter writer) throws Exception {
+    load();
+    if (schema != null) {
+      logger.debug("Found previous schema. Merging.");
+      MaterializedField current = writer.getMapVector().getField();
+      MaterializedField merged = merge(schema, current);
+      logger.debug("Saving {} merged schema content is: {}", schemaLocation, merged);
+      save(merged);
+    } else {
+      MaterializedField current = writer.getMapVector().getField();
+      logger.debug("Saving {} schema content is: {}", schemaLocation, current);
+      save(current);
+    }
+    return this;
+  }
+
+  public MsgpackSchema applySchemaIfAny(VectorContainerWriter writer) throws Exception {
+    load();
+    if (schema != null) {
+      logger.debug("Applying schema to fill in missing fields.");
+      schemaWriter.applySchema(schema, writer);
+    }
+    return this;
+  }
+
+  public MaterializedField getSchema() {
+    return schema;
+  }
+
+  public MsgpackSchema save(MaterializedField mapField) throws IOException {
+    try (FSDataOutputStream out = dfs.create(schemaLocation, true)) {
+      SerializedField serializedMapField = mapField.getSerializedField();
+      String data = TextFormat.printToString(serializedMapField);
+      IOUtils.write(data, out);
+    }
+    this.schema = mapField;
+    return this;
+  }
+
+  public MsgpackSchema load() throws Exception {
     MaterializedField previousMapField = null;
-    if (schemaLocation != null && fileSystem.exists(schemaLocation)) {
-      try (FSDataInputStream in = fileSystem.open(schemaLocation)) {
+    if (schemaLocation != null && dfs.exists(schemaLocation)) {
+      try (FSDataInputStream in = dfs.open(schemaLocation)) {
         String schemaData = IOUtils.toString(in);
         Builder newBuilder = SerializedField.newBuilder();
         try {
           TextFormat.merge(schemaData, newBuilder);
         } catch (ParseException e) {
-          throw new DrillRuntimeException("Failed to read schema file: " + schemaLocation, e);
+          throw new DrillRuntimeException("Failed to merge schema files: " + schemaLocation, e);
         }
         SerializedField read = newBuilder.build();
         previousMapField = MaterializedField.create(read);
       }
     }
-    return previousMapField;
-  }
-
-  public void save(MaterializedField mapField, Path schemaLocation) throws IOException {
-    try (FSDataOutputStream out = fileSystem.create(schemaLocation, true)) {
-      SerializedField serializedMapField = mapField.getSerializedField();
-      String data = TextFormat.printToString(serializedMapField);
-      IOUtils.write(data, out);
-    }
+    schema = previousMapField;
+    return this;
   }
 
   public MaterializedField merge(MaterializedField existingField, MaterializedField newField) {
@@ -118,17 +157,4 @@ public class MsgpackSchema {
     return null;
   }
 
-  public Path findSchemaFile(Path dir) throws IOException {
-    int MAX_DEPTH = 5;
-    int depth = 0;
-    while (dir != null && depth < MAX_DEPTH) {
-      Path schemaLocation = new Path(dir, SCHEMA_FILE_NAME);
-      if (fileSystem.exists(schemaLocation)) {
-        return schemaLocation;
-      }
-      dir = dir.getParent();
-      depth++;
-    }
-    return null;
-  }
 }

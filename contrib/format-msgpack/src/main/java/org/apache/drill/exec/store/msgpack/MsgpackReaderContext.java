@@ -48,6 +48,11 @@ public class MsgpackReaderContext {
     return parseErrorCount + runningRecordCount + recordCount + 1;
   }
 
+  public void updateRunningCount() {
+    this.runningRecordCount += this.recordCount;
+  }
+
+
   public void handleAndRaise(String suffix, Exception e) throws UserException {
 
     String message = e.getMessage();
