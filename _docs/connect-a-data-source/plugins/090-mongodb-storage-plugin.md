@@ -41,6 +41,7 @@ Drill must be running in order to access the Web Console to configure a storage 
         }
 
      {% include startnote.html %}27017 is the default port for `mongodb` instances.{% include endnote.html %} 
+     {% include startnote.html %}In some cases you will need an authentication to perform certain `mongodb` queries. You can add login and password directly to connection URL: 'mongodb://root:password@localhost:27017/'{% include endnote.html %} 
   6. Click **Enable** to enable the storage plugin.
 
 ## Querying MongoDB
