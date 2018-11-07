@@ -18,6 +18,7 @@
     {intervals: ["Interval", "IntervalDay", "IntervalYear", "Int", "BigInt"] },
     {truncInputTypes: ["Date", "TimeStamp", "Time", "Interval", "IntervalDay", "IntervalYear"] },
     {truncUnits : ["Second", "Minute", "Hour", "Day", "Month", "Year", "Week", "Quarter", "Decade", "Century", "Millennium" ] },
+    {timestampDiffUnits : ["Nanosecond", "Microsecond", "Second", "Minute", "Hour", "Day", "Month", "Year", "Week", "Quarter"] },
 
     {
         varCharToDate: [
