@@ -1,10 +1,10 @@
 ---
 title: "SHOW FILES"
-date: 2018-11-02
+date: 2018-11-08
 parent: "SQL Commands"
 ---
 The SHOW FILES command provides a quick report of the file systems that are
-visible to Drill for query purposes. This command is unique to Apache Drill.
+visible to Drill for query purposes. This command is unique to Apache Drill. Starting in Drill 1.15, the INFORMATION_SCHEMA includes a FILES table that you can query. See [Querying the INFORMATION_SCHEMA]({{site.baseurl}}/docs/querying-the-information-schema/). 
 
 ## Syntax
 
