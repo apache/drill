@@ -334,6 +334,7 @@ fi
 # provided in drill-env.sh.
 
 export DRILL_PID_DIR=${DRILL_PID_DIR:-$DRILL_HOME}
+export GRACEFUL_SIGFILE=${GRACEFUL_SIGFILE:-"graceful"}
 
 # Prepare log file prefix and the main Drillbit log file.
 
