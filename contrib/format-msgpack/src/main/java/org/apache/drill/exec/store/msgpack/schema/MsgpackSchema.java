@@ -36,6 +36,34 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 
+/**
+ * <p>
+ * This class handles loading, merging and saving the schema of msgpack files.
+ * Note, at the moment this class does not handle concurency. In "learning" mode
+ * the user is expected to issue "select * from `datafile.mp`" statements until
+ * the schema is satisfactory. What this class handles is merging schema between
+ * batches of that single file.
+ * </p>
+ * <p>
+ * The merging is not sofisticated and only works if the types are the same. It
+ * does not handle promoting an INTEGER to FLAOT for example. However you
+ * probably want to run in "lenient" mode so that if a DOUBLE is encoutered
+ * after the reader has learned it was an INTEGER it will simply skip over it
+ * and not fail processing any other fields it might discover. The same applies
+ * for arrays of INTEGER but then sees some arrays with DOUBLE values, it will
+ * just skip them.
+ * </p>
+ * <p>
+ * After learing the model logs can be analized the see if anything got skipped
+ * and why. You can then manually modify the schema file to get the desired
+ * affect. For example coercing the values to DOUBLE.
+ * </p>
+ * <p>
+ * Another example is an array of STRING, DOUBLE, BINARY values. The discovered
+ * schema would be STRING but you can manually change that to BINARY so that all
+ * types of values coereced into BINARY are stored in the array.
+ * </p>
+ */
 public class MsgpackSchema {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackSchema.class);
 
@@ -50,13 +78,30 @@ public class MsgpackSchema {
     this.schemaLocation = new Path(dirLocation, SCHEMA_FILE_NAME);
   }
 
+  /**
+   * Delete the schema file on disk.
+   *
+   * @return
+   * @throws IOException
+   */
   public MsgpackSchema delete() throws IOException {
     dfs.delete(schemaLocation, false);
     schema = null;
     return this;
   }
 
+  /**
+   * In "learning" mode this method is called after a batch is read from the
+   * msgpack file. The drill vector writer contains the schema of that batch. This
+   * method will extract the schema from it and merge it with any prior schema it
+   * had.
+   *
+   * @param writer
+   * @return
+   * @throws Exception
+   */
   public MsgpackSchema learnSchema(VectorContainerWriter writer) throws Exception {
+    // Load any previous schema if any.
     load();
     if (schema != null) {
       logger.debug("Found previous schema. Merging.");
@@ -72,6 +117,18 @@ public class MsgpackSchema {
     return this;
   }
 
+  /**
+   * When in "useSchema" mode this method is called after a batch is read from the
+   * msgpack file. The writer has the schema of that batch but it might not have
+   * encoutered all the possible fields. This method will use the desired schema
+   * from disk and apply it to the writer. Filling in any missing field in the
+   * schema of the writer. Effectively making sure that the schema of the writer
+   * is always the same accross batches.
+   *
+   * @param writer
+   * @return
+   * @throws Exception
+   */
   public MsgpackSchema applySchema(VectorContainerWriter writer) throws Exception {
     load();
     if (schema != null) {
@@ -81,10 +138,22 @@ public class MsgpackSchema {
     return this;
   }
 
+  /**
+   * Get the current state of the desired schema.
+   *
+   * @return
+   */
   public MaterializedField getSchema() {
     return schema;
   }
 
+  /**
+   * Save the current state of the schema to disk.
+   *
+   * @param mapField
+   * @return
+   * @throws IOException
+   */
   public MsgpackSchema save(MaterializedField mapField) throws IOException {
     try (FSDataOutputStream out = dfs.create(schemaLocation, true)) {
       SerializedField serializedMapField = mapField.getSerializedField();
@@ -95,44 +164,53 @@ public class MsgpackSchema {
     return this;
   }
 
+  /**
+   * Load the schema from disk.
+   */
   public MsgpackSchema load() throws Exception {
-    MaterializedField previousMapField = null;
+    MaterializedField newlyLoadedSchema = null;
     if (schemaLocation != null && dfs.exists(schemaLocation)) {
       try (FSDataInputStream in = dfs.open(schemaLocation)) {
         String schemaData = IOUtils.toString(in);
         Builder newBuilder = SerializedField.newBuilder();
         try {
+          // Calling merge here is strange but that's the only way I found out how to read
+          // the schema from disk.
           TextFormat.merge(schemaData, newBuilder);
         } catch (ParseException e) {
           throw new DrillRuntimeException("Failed to merge schema files: " + schemaLocation, e);
         }
         SerializedField read = newBuilder.build();
-        previousMapField = MaterializedField.create(read);
+        newlyLoadedSchema = MaterializedField.create(read);
       }
     }
-    schema = previousMapField;
+    schema = newlyLoadedSchema;
     return this;
   }
 
-  public MaterializedField merge(MaterializedField existingField, MaterializedField newField) {
-    if (existingField.getType().getMinorType() != MinorType.MAP) {
-      return newField;
-    }
+  /**
+   * Merge two schema together.
+   *
+   * @param currentSchema
+   * @param newSchema
+   * @return
+   */
+  public MaterializedField merge(MaterializedField currentSchema, MaterializedField newSchema) {
+    Preconditions.checkArgument(currentSchema.hasSameTypeAndMode(newSchema),
+        "Field " + currentSchema + " and " + newSchema + " not same.");
 
-    Preconditions.checkArgument(existingField.hasSameTypeAndMode(newField),
-        "Field " + existingField + " and " + newField + " not same.");
-
-    MaterializedField merged = existingField.clone();
-    privateMerge(merged, newField);
-    return merged;
+    MaterializedField merged = currentSchema.clone();
+    return privateMerge(merged, newSchema);
   }
 
-  private void privateMerge(MaterializedField existingField, MaterializedField newField) {
-    Preconditions.checkArgument(existingField.getType().getMinorType() == MinorType.MAP,
-        "Field " + existingField + " is not a MAP type.");
-    for (MaterializedField newChild : newField.getChildren()) {
+  private MaterializedField privateMerge(MaterializedField currentSchema, MaterializedField newSchema) {
+    if (currentSchema.getType().getMinorType() != MinorType.MAP) {
+      return newSchema;
+    }
+
+    for (MaterializedField newChild : newSchema.getChildren()) {
       String newChildName = newChild.getName();
-      MaterializedField foundExistingChild = getFieldByName(newChildName, existingField);
+      MaterializedField foundExistingChild = getFieldByName(newChildName, currentSchema);
       if (foundExistingChild != null) {
         if (foundExistingChild.hasSameTypeAndMode(newChild)) {
           if (foundExistingChild.getType().getMinorType() == MinorType.MAP) {
@@ -143,12 +221,14 @@ public class MsgpackSchema {
           throw new SchemaChangeRuntimeException("Not the same schema for " + foundExistingChild + " and " + newChild);
         }
       } else {
-        existingField.addChild(newChild.clone());
+        currentSchema.addChild(newChild.clone());
       }
     }
+    return currentSchema;
   }
 
   private MaterializedField getFieldByName(String newChildName, MaterializedField existingField) {
+    // TODO look at using the TupleSchema instead.
     for (MaterializedField f : existingField.getChildren()) {
       if (newChildName.equalsIgnoreCase(f.getName())) {
         return f;
