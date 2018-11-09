@@ -15,18 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.msgpack.valuewriter;
+package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
 import java.nio.ByteBuffer;
 
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.complex.fn.FieldSelection;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.msgpack.value.ExtensionValue;
 import org.msgpack.value.Value;
+import org.msgpack.value.ValueType;
 
-public class TimestampValueWriter extends ScalarValueWriter implements ExtensionValueHandler {
+public class TimestampValueWriter extends AbstractScalarValueWriter implements ExtensionValueWriter {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TimestampValueWriter.class);
 
@@ -36,8 +37,18 @@ public class TimestampValueWriter extends ScalarValueWriter implements Extension
   }
 
   @Override
+  public ValueType getMsgpackValueType() {
+    return ValueType.EXTENSION;
+  }
+
+  @Override
   public byte getExtensionTypeNumber() {
     return 0;
+  }
+
+  @Override
+  public MinorType getDefaultType(Value v) {
+    return MinorType.TIMESTAMP;
   }
 
   /**
@@ -67,8 +78,8 @@ public class TimestampValueWriter extends ScalarValueWriter implements Extension
    *</code>
    */
   @Override
-  public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
-      MaterializedField schema) {
+  public void doWrite(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) {
 
     ExtensionValue value = v.asExtensionValue();
     long epochMilliSeconds = 0;

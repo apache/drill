@@ -72,7 +72,7 @@ public class MsgpackSchema {
     return this;
   }
 
-  public MsgpackSchema applySchemaIfAny(VectorContainerWriter writer) throws Exception {
+  public MsgpackSchema applySchema(VectorContainerWriter writer) throws Exception {
     load();
     if (schema != null) {
       logger.debug("Applying schema to fill in missing fields.");

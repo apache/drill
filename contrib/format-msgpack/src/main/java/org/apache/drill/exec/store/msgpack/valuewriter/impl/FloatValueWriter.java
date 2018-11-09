@@ -15,42 +15,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.msgpack.valuewriter;
+package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.StringValue;
+import org.msgpack.value.FloatValue;
 import org.msgpack.value.Value;
+import org.msgpack.value.ValueType;
 
-public class StringValueWriter extends ScalarValueWriter {
+public class FloatValueWriter extends AbstractScalarValueWriter {
 
-  public StringValueWriter() {
+  public FloatValueWriter() {
+    super();
   }
 
   @Override
-  public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
-      MaterializedField schema) {
-    StringValue value = v.asStringValue();
-    MinorType targetSchemaType = getTargetType(MinorType.VARCHAR, schema);
-    if (logger.isDebugEnabled()) {
-      log(v,mapWriter, fieldName, listWriter, selection, targetSchemaType);
-    }
+  public MinorType getDefaultType(Value v) {
+    return MinorType.FLOAT8;
+  }
+
+  @Override
+  public ValueType getMsgpackValueType() {
+    return ValueType.FLOAT;
+  }
+  @Override
+  public void doWrite(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) {
+    FloatValue value = v.asFloatValue();
     switch (targetSchemaType) {
     case VARCHAR:
-      byte[] buff = value.asByteArray();
-      writeAsVarChar(buff, mapWriter, fieldName, listWriter);
+      writeAsVarChar(value.toString().getBytes(), mapWriter, fieldName, listWriter);
       break;
     case VARBINARY:
-      byte[] binBuff = value.asByteArray();
-      writeAsVarBinary(binBuff, mapWriter, fieldName, listWriter);
+      writeAsVarBinary(value.toDouble(), mapWriter, fieldName, listWriter);
+      break;
+    case FLOAT8:
+      writeAsFloat8(value.toDouble(), mapWriter, fieldName, listWriter);
+      break;
+    case BIGINT:
+      writeAsBigInt((long) value.toDouble(), mapWriter, fieldName, listWriter);
       break;
     default:
       throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
     }
   }
-
 }

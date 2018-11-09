@@ -15,27 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.msgpack.valuewriter;
+package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
 import java.math.BigInteger;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.msgpack.value.IntegerValue;
 import org.msgpack.value.Value;
+import org.msgpack.value.ValueType;
 
-public class IntegerValueWriter extends ScalarValueWriter {
+public class IntegerValueWriter extends AbstractScalarValueWriter {
 
   public IntegerValueWriter() {
   }
 
   @Override
-  public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
-      MaterializedField schema) {
+  public MinorType getDefaultType(Value v) {
+    return MinorType.BIGINT;
+  }
+
+  @Override
+  public ValueType getMsgpackValueType() {
+    return ValueType.INTEGER;
+  }
+
+  @Override
+  public void doWrite(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) {
 
     IntegerValue value = v.asIntegerValue();
     if (!value.isInLongRange()) {
@@ -44,23 +53,18 @@ public class IntegerValueWriter extends ScalarValueWriter {
           "UnSupported messagepack type: " + value.getValueType() + " with BigInteger value: " + i);
     }
 
-    MinorType targetSchemaType = getTargetType(MinorType.BIGINT, schema);
-    if (logger.isDebugEnabled()) {
-      log(v,mapWriter, fieldName, listWriter, selection, targetSchemaType);
-    }
-   switch (targetSchemaType) {
+    switch (targetSchemaType) {
     case VARCHAR:
-      String s = value.toString();
-      writeAsVarChar(s.getBytes(), mapWriter, fieldName, listWriter);
+      writeAsVarChar(value.toString().getBytes(), mapWriter, fieldName, listWriter);
       break;
     case VARBINARY:
-      long longValue = value.toLong();
-      ensure(8);
-      context.workBuf.setLong(0, longValue);
-      writeAsVarBinary(mapWriter, fieldName, listWriter, 8);
+      writeAsVarBinary(value.toLong(), mapWriter, fieldName, listWriter);
       break;
     case BIGINT:
       writeAsBigInt(value.toLong(), mapWriter, fieldName, listWriter);
+      break;
+    case FLOAT8:
+      writeAsFloat8(value.toLong(), mapWriter, fieldName, listWriter);
       break;
     default:
       throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);

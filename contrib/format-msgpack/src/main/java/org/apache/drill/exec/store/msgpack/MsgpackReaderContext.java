@@ -17,32 +17,69 @@
  */
 package org.apache.drill.exec.store.msgpack;
 
+import com.fasterxml.jackson.core.JsonParseException;
+
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.helpers.MessageFormatter;
 
-import com.fasterxml.jackson.core.JsonParseException;
-
-import io.netty.buffer.DrillBuf;
 import jline.internal.Log;
 
 public class MsgpackReaderContext {
+
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackReaderContext.class);
 
-  // Data we're consuming
-  public Path hadoopPath;
-  public long runningRecordCount = 0;
-  public long parseErrorCount;
-  public int recordCount;
-  public DrillBuf workBuf;
+  /**
+   * Keep track of the navigation inside the msgpack message. We use this to help
+   * track down issues with the data files.
+   */
+  private final FieldPathTracker fieldPathTracker = new FieldPathTracker();
 
-  public boolean printToConsole;
+  private final boolean hasSchema;
+  private final Path filePath;
+  private final MsgpackFormatConfig config;
+  private long runningRecordCount = 0;
+  private long parseErrorCount = 0;
+  private int recordCount = 0;
 
-  public boolean lenient;
+  public MsgpackReaderContext(Path filePath, MsgpackFormatConfig config, boolean hasSchema) {
+    this.filePath = filePath;
+    this.config = config;
+    this.hasSchema = hasSchema;
+  }
 
-  public boolean readBinaryAsString;
+  public FieldPathTracker getFieldPathTracker() {
+    return fieldPathTracker;
+  }
 
-  public boolean useSchema;
+  public boolean hasSchema() {
+    return hasSchema;
+  }
+
+  public boolean isLenient() {
+    return config.isLenient();
+  }
+
+  public void incrementParseErrorCount() {
+    parseErrorCount++;
+  }
+
+  public int getRecordCount() {
+    return this.recordCount;
+  }
+
+  public void resetRecordCount() {
+    this.recordCount = 0;
+  }
+
+  public void incrementRecordCount() {
+    recordCount++;
+  }
+
+  public Path getFilePath() {
+    return this.filePath;
+  }
 
   public long currentRecordNumberInFile() {
     return parseErrorCount + runningRecordCount + recordCount + 1;
@@ -52,8 +89,10 @@ public class MsgpackReaderContext {
     this.runningRecordCount += this.recordCount;
   }
 
-
   public void handleAndRaise(String suffix, Exception e) throws UserException {
+    // TODO: use UserException here
+    // throw UserException.unsupportedError().message("FIXED type not supported
+    // yet").build(logger);
 
     String message = e.getMessage();
     int columnNr = -1;
@@ -69,22 +108,16 @@ public class MsgpackReaderContext {
       exceptionBuilder.pushContext("Column ", columnNr);
     }
 
-    if (hadoopPath != null) {
+    if (filePath != null) {
       exceptionBuilder.pushContext("Record ", currentRecordNumberInFile()).pushContext("File ",
-          hadoopPath.toUri().getPath());
+          filePath.toUri().getPath());
     }
 
     throw exceptionBuilder.build(logger);
   }
 
-  @Override
-  public String toString() {
-    return super.toString() + "[hadoopPath = " + hadoopPath + ", recordCount = " + recordCount + ", parseErrorCount = "
-        + parseErrorCount + ", runningRecordCount = " + runningRecordCount + ", ...]";
-  }
-
   public void warn(String message) {
-    if (printToConsole) {
+    if (config.isPrintToConsole()) {
       Log.warn(message);
     } else {
       logger.warn(message);
@@ -92,7 +125,7 @@ public class MsgpackReaderContext {
   }
 
   public void warn(String message, Exception e) {
-    if (printToConsole) {
+    if (config.isPrintToConsole()) {
       Log.warn(message, e.getMessage());
     } else {
       logger.warn(message, e);
@@ -100,16 +133,17 @@ public class MsgpackReaderContext {
   }
 
   public void parseWarn() {
-    warn("Parsing msgpack in " + hadoopPath.getName() + " : line nos :" + currentRecordNumberInFile());
+    warn("Parsing msgpack in " + filePath.getName() + " : line nos :" + currentRecordNumberInFile());
   }
 
   public void parseWarn(Exception e) {
     String message = MessageFormatter.arrayFormat("Parsing msgpack file '{}' at line number '{}' error is '{}'\n",
-        new Object[] { this.hadoopPath.getName(), this.currentRecordNumberInFile(), e.getMessage() }).getMessage();
-    if (printToConsole) {
+        new Object[] { this.filePath.getName(), this.currentRecordNumberInFile(), e.getMessage() }).getMessage();
+    if (config.isPrintToConsole()) {
       Log.warn(message);
     } else {
       logger.warn(message);
     }
   }
+
 }

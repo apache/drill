@@ -26,15 +26,15 @@ import java.util.List;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.store.msgpack.valuewriter.AbstractValueWriter;
-import org.apache.drill.exec.store.msgpack.valuewriter.ArrayValueWriter;
-import org.apache.drill.exec.store.msgpack.valuewriter.BinaryValueWriter;
-import org.apache.drill.exec.store.msgpack.valuewriter.BooleanValueWriter;
-import org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter;
-import org.apache.drill.exec.store.msgpack.valuewriter.FloatValueWriter;
-import org.apache.drill.exec.store.msgpack.valuewriter.IntegerValueWriter;
-import org.apache.drill.exec.store.msgpack.valuewriter.MapValueWriter;
-import org.apache.drill.exec.store.msgpack.valuewriter.StringValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.AbstractValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.ArrayValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.BinaryValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.BooleanValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.DelegatingExtensionValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.FloatValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.IntegerValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.MapValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.StringValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
@@ -47,81 +47,129 @@ import org.msgpack.value.MapValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
 
+import io.netty.buffer.DrillBuf;
+
 public class MsgpackReader {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackReader.class);
   private final List<SchemaPath> columns;
   private final FieldSelection rootSelection;
-  protected MessageUnpacker unpacker;
-  protected MsgpackReaderContext context;
-  private final boolean skipQuery;
+  private final MessageUnpacker unpacker;
+  private final boolean isSelectCount;
 
   /**
    * Collection for tracking empty array writers during reading and storing them
    * for initializing empty arrays
    */
   private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
-  private boolean allTextMode = false;
   private MapValueWriter mapValueWriter;
   private EnumMap<ValueType, AbstractValueWriter> valueWriterMap = new EnumMap<>(ValueType.class);
 
-  public MsgpackReader(InputStream stream, List<SchemaPath> columns, boolean skipQuery) {
+  public MsgpackReader(InputStream stream, List<SchemaPath> columns, boolean isSelectCount) {
+    // TODO: how to handle splits? can msgpack be split?
 
     this.unpacker = MessagePack.newDefaultUnpacker(stream);
     this.columns = columns;
-    this.skipQuery = skipQuery;
-    rootSelection = FieldSelection.getFieldSelection(columns);
-    valueWriterMap.put(ValueType.ARRAY, new ArrayValueWriter(valueWriterMap, emptyArrayWriters));
-    valueWriterMap.put(ValueType.FLOAT, new FloatValueWriter());
-    valueWriterMap.put(ValueType.INTEGER, new IntegerValueWriter());
-    valueWriterMap.put(ValueType.BOOLEAN, new BooleanValueWriter());
-    valueWriterMap.put(ValueType.STRING, new StringValueWriter());
-    valueWriterMap.put(ValueType.BINARY, new BinaryValueWriter());
-    valueWriterMap.put(ValueType.EXTENSION, new ExtensionValueWriter());
+    this.isSelectCount = isSelectCount;
+    this.rootSelection = FieldSelection.getFieldSelection(columns);
+  }
+
+  public void setup(MsgpackReaderContext context, DrillBuf drillBuf) {
+    // Pass the drillBuf to all value type writers they need to write to it.
+    // Also passing in the context which has the lenient flag, record count, file
+    // name which are used to print detailed error messages.
+
+    // Create a value writer for each type supported by the msgpack library.
+    FloatValueWriter fvw = new FloatValueWriter();
+    fvw.setup(context, drillBuf);
+    valueWriterMap.put(fvw.getMsgpackValueType(), fvw);
+    IntegerValueWriter ivw = new IntegerValueWriter();
+    ivw.setup(context, drillBuf);
+    valueWriterMap.put(ivw.getMsgpackValueType(), ivw);
+    BooleanValueWriter bvw = new BooleanValueWriter();
+    bvw.setup(context, drillBuf);
+    valueWriterMap.put(bvw.getMsgpackValueType(), bvw);
+    StringValueWriter svw = new StringValueWriter();
+    svw.setup(context, drillBuf);
+    valueWriterMap.put(svw.getMsgpackValueType(), svw);
+    BinaryValueWriter bbvw = new BinaryValueWriter();
+    bbvw.setup(context, drillBuf);
+    valueWriterMap.put(bbvw.getMsgpackValueType(), bbvw);
+    DelegatingExtensionValueWriter devw = new DelegatingExtensionValueWriter();
+    devw.setup(context, drillBuf);
+    valueWriterMap.put(devw.getMsgpackValueType(), devw);
+    // The array and map value writers use this map to retrieve the child value
+    // writer. See ComplexValueWriter.
+    // We also want to keep track of empty arrays we encounter. This is used by the
+    // ensureAtLeastOneField method below.
+    ArrayValueWriter avw = new ArrayValueWriter(valueWriterMap, emptyArrayWriters);
+    avw.setup(context);
+    valueWriterMap.put(avw.getMsgpackValueType(), avw);
+    // We are keeping a reference on the map value writer since the root is a map.
+    // See writeRecord() below.
     mapValueWriter = new MapValueWriter(valueWriterMap);
-    valueWriterMap.put(ValueType.MAP, mapValueWriter);
+    mapValueWriter.setup(context);
+    valueWriterMap.put(mapValueWriter.getMsgpackValueType(), mapValueWriter);
   }
 
-  public void setup(MsgpackReaderContext context) {
-    this.context = context;
-    for (AbstractValueWriter w : valueWriterMap.values()) {
-      w.setup(this.context);
-    }
-  }
-
-
+  /**
+   * Write a single message from the msgpack file into the given writer.
+   *
+   * @param writer
+   *                 writer to write a single message to.
+   * @param schema
+   *                 schema of the messages.
+   * @return true if there are more messages in the msgpack file.
+   * @throws IOException
+   * @throws MessageInsufficientBufferException
+   */
   public boolean write(ComplexWriter writer, MaterializedField schema)
       throws IOException, MessageInsufficientBufferException {
     if (!unpacker.hasNext()) {
+      // The unpacker has no more messages, we reached the end of the file.
       return false;
     }
 
-    context.useSchema = schema != null;
-
     try {
+      // unpack a single message (a map with all it's children)
       Value v = unpacker.unpackValue();
       ValueType type = v.getValueType();
       if (type == ValueType.MAP) {
-        writeRecord(v.asMapValue(), writer, schema);
+        writeOneMessage(v.asMapValue(), writer, schema);
       } else {
         throw new MsgpackParsingException(
             "Value in root of message pack file is not of type MAP. Skipping type found: " + type);
       }
     } catch (MessageInsufficientBufferException e) {
+      // When the msgpack library encounters a message which contains a map with an
+      // odd number of entries
+      // it cannot pair the key and the values. It will throw this exception.
       throw new MsgpackParsingException("Failed to unpack MAP, possibly because key/value tuples do not match.");
     }
     return true;
   }
 
-  protected void writeRecord(MapValue value, ComplexWriter writer, MaterializedField schema) throws IOException {
-    if (skipQuery) {
+  /**
+   * Write a single message (a map). Possibly skipping over the actuall writing if
+   * the query is a select count(*).
+   *
+   * @param value
+   * @param writer
+   * @param schema
+   * @throws IOException
+   */
+  private void writeOneMessage(MapValue value, ComplexWriter writer, MaterializedField schema) throws IOException {
+    if (isSelectCount) {
       writer.rootAsMap().bit("count").writeBit(1);
     } else {
       mapValueWriter.writeMapValue(value, writer.rootAsMap(), this.rootSelection, schema);
     }
   }
 
-  @SuppressWarnings("resource")
+  /**
+   * This method was taken from the JSON format plugin. Same idea as in JSON if
+   * arrays are empty we want to write a single integer into them.
+   */
   public void ensureAtLeastOneField(ComplexWriter writer) {
     List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
     List<PathSegment> fieldPathList = Lists.newArrayList();
@@ -141,7 +189,7 @@ public class MsgpackReader {
       if (fieldWriter.isEmptyMap()) {
         emptyStatus.set(i, true);
       }
-      if (i == 0 && !allTextMode) {
+      if (i == 0) {
         // when allTextMode is false, there is not much benefit to producing all
         // the empty fields; just produce 1 field. The reason is that the type of the
         // fields is unknown, so if we produce multiple Integer fields by default, a
@@ -163,22 +211,14 @@ public class MsgpackReader {
       BaseWriter.MapWriter fieldWriter = writerList.get(j);
       PathSegment fieldPath = fieldPathList.get(j);
       if (emptyStatus.get(j)) {
-        if (allTextMode) {
-          fieldWriter.varChar(fieldPath.getNameSegment().getPath());
-        } else {
-          fieldWriter.integer(fieldPath.getNameSegment().getPath());
-        }
+        fieldWriter.integer(fieldPath.getNameSegment().getPath());
       }
     }
 
     for (BaseWriter.ListWriter field : emptyArrayWriters) {
       // checks that array has not been initialized
       if (field.getValueCapacity() == 0) {
-        if (allTextMode) {
-          field.varChar();
-        } else {
-          field.integer();
-        }
+        field.integer();
       }
     }
   }

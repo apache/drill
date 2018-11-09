@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.msgpack.valuewriter;
+package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -33,17 +33,30 @@ import org.msgpack.value.MapValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
 
+/**
+ * This writer handles the msgpack value type MAP.
+ */
 public class MapValueWriter extends ComplexValueWriter {
+
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapValueWriter.class);
 
   public MapValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap) {
     super(valueWriterMap);
   }
 
   @Override
+  public ValueType getMsgpackValueType() {
+    return ValueType.MAP;
+  }
+
+  /**
+   * Write the given map value into drill's map or list writers.
+   */
+  @Override
   public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
       MaterializedField schema) {
 
-    if (context.useSchema) {
+    if (context.hasSchema()) {
       if (schema == null) {
         logger.debug("------no schema for map value -> skipping.");
         return;
@@ -54,24 +67,29 @@ public class MapValueWriter extends ComplexValueWriter {
     }
 
     MapValue value = v.asMapValue();
-    MapWriter subMapWriter;
     if (mapWriter != null) {
-      // Write map in a map.
-      subMapWriter = mapWriter.map(fieldName);
-      push(fieldName);
+      // We are inside a mapWriter (inside a map) and we encoutered a field of type
+      // MAP. Write map in a map.
+      MapWriter subMapWriter = mapWriter.map(fieldName);
+      context.getFieldPathTracker().enter(fieldName);
+      writeMapValue(value, subMapWriter, selection, schema);
+      context.getFieldPathTracker().leave();
     } else {
-      // Write map in a list.
-      subMapWriter = listWriter.map();
-      push("list");
+      // We are inside a listWriter (inside an array) and we encoutered an element of
+      // type MAP. Write map in a list.
+      MapWriter subMapWriter = listWriter.map();
+      context.getFieldPathTracker().enter("[]");
+      writeMapValue(value, subMapWriter, selection, schema);
+      context.getFieldPathTracker().leave();
     }
-    writeMapValue(value, subMapWriter, selection, schema);
-    pop();
   }
 
   public void writeMapValue(MapValue value, MapWriter writer, FieldSelection selection, MaterializedField schema) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("      map value schema is: '{}'", schema);
-    }
+    // if (logger.isDebugEnabled()) {
+    // logger.debug("write map value at: '{}' schema is: type: '{}' mode: '{}'",
+    // context.getFieldPathTracker(),
+    // getTypeSafe(schema), getDataModeSafe(schema));
+    // }
 
     writer.start();
     try {
@@ -84,7 +102,7 @@ public class MapValueWriter extends ComplexValueWriter {
         }
         String fieldName = getFieldName(key);
         if (fieldName == null) {
-          if (context.lenient) {
+          if (context.isLenient()) {
             context.parseWarn();
             continue;
           } else {
@@ -93,7 +111,7 @@ public class MapValueWriter extends ComplexValueWriter {
         }
         FieldSelection childSelection = selection.getChild(fieldName);
         if (childSelection.isNeverValid()) {
-          logger.debug("Skipping none selected field: {}", fieldName);
+          logger.debug("Skipping not selected field: {}.{}", context.getFieldPathTracker(), fieldName);
           continue;
         }
         MaterializedField childSchema = getChildSchema(schema, fieldName);
@@ -104,10 +122,21 @@ public class MapValueWriter extends ComplexValueWriter {
     }
   }
 
+  /**
+   * Get the schema of the given field
+   *
+   * @param schema
+   *                    the schema of the map we are writing.
+   * @param fieldName
+   *                    the name of the field we want to write.
+   * @return the schema of the field
+   */
   private MaterializedField getChildSchema(MaterializedField schema, String fieldName) {
-    if (!context.useSchema) {
+    if (!context.hasSchema()) {
+      // Not using a schema.
       return null;
     }
+    // Find the schema of the field.
     for (MaterializedField c : schema.getChildren()) {
       if (fieldName.equalsIgnoreCase(c.getName())) {
         return c;
@@ -116,6 +145,15 @@ public class MapValueWriter extends ComplexValueWriter {
     throw new MsgpackParsingException("Field name: " + fieldName + " has no child schema.");
   }
 
+  /**
+   * In message pack the field names (key) are msgpack values. That is they can be
+   * string or number etc. This method tries coerce the msgpack value into a
+   * string so it can write the key into drill's MapWriter.
+   *
+   * @param v
+   *            the value (key)
+   * @return the key represented as a java string.
+   */
   private String getFieldName(Value v) {
 
     String fieldName = null;

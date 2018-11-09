@@ -15,43 +15,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.msgpack.valuewriter;
+package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.BooleanValue;
+import org.msgpack.value.StringValue;
 import org.msgpack.value.Value;
+import org.msgpack.value.ValueType;
 
-public class BooleanValueWriter extends ScalarValueWriter {
+public class StringValueWriter extends AbstractScalarValueWriter {
 
-  public BooleanValueWriter() {
+  public StringValueWriter() {
   }
 
   @Override
-  public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
-      MaterializedField schema) {
-    BooleanValue value = v.asBooleanValue();
-    MinorType targetSchemaType = getTargetType(MinorType.BIT, schema);
-    if (logger.isDebugEnabled()) {
-      log(v,mapWriter, fieldName, listWriter, selection, targetSchemaType);
-    }
+  public MinorType getDefaultType(Value v) {
+    return MinorType.VARCHAR;
+  }
+
+  @Override
+  public ValueType getMsgpackValueType() {
+    return ValueType.STRING;
+  }
+
+  @Override
+  public void doWrite(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) {
+    StringValue value = v.asStringValue();
     switch (targetSchemaType) {
     case VARCHAR:
-      String s = value.toString();
-      writeAsVarChar(s.getBytes(), mapWriter, fieldName, listWriter);
+      writeAsVarChar(value.asByteArray(), mapWriter, fieldName, listWriter);
       break;
     case VARBINARY:
-      boolean b = value.getBoolean();
-      ensure(1);
-      context.workBuf.setBoolean(0, b);
-      writeAsVarBinary(mapWriter, fieldName, listWriter, 1);
-      break;
-    case BIT:
-      writeAsBit(value.getBoolean(), mapWriter, fieldName, listWriter);
+      writeAsVarBinary(value.asByteArray(), mapWriter, fieldName, listWriter);
       break;
     default:
       throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);

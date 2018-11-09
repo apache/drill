@@ -43,21 +43,23 @@ public class MsgpackRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackRecordReader.class);
 
   public static final long DEFAULT_ROWS_PER_BATCH = 0x4000;
-  private VectorContainerWriter writer;
-  private InputStream stream;
+  private final MsgpackFormatConfig config;
+  private final Path filePath;
   private final DrillFileSystem fileSystem;
   private final FragmentContext fragmentContext;
-  private final boolean learnSchema;
-  private final boolean useSchema;
-  private final MsgpackReaderContext context = new MsgpackReaderContext();
-  private MsgpackReader messageReader;
-  private boolean hasMore = true;
   private final MsgpackSchema msgpackSchema;
+  private VectorContainerWriter writer;
+  private InputStream stream;
+  private MsgpackReaderContext context;
+  private MsgpackReader msgpackReader;
+  private boolean hasMore = true;
 
-  private boolean unionEnabled = false; // jccote, not sure what enabling union means for msgpack reader?
+  private boolean unionEnabled = false; // TODO: not sure what enabling union means for msgpack reader?
 
   /**
    * Create a msgpack Record Reader that uses a file based input stream.
+   *
+   *
    *
    * @param fragmentContext
    * @param inputPath
@@ -68,36 +70,30 @@ public class MsgpackRecordReader extends AbstractRecordReader {
    */
   public MsgpackRecordReader(MsgpackFormatConfig config, final FragmentContext fragmentContext, final String inputPath,
       final DrillFileSystem fileSystem, final List<SchemaPath> columns) {
-
     Preconditions.checkArgument((inputPath != null), "InputPath must be set.");
+    this.filePath = new Path(inputPath);
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
-    context.hadoopPath = new Path(inputPath);
-    context.readBinaryAsString = config.isReadBinaryAsString();
-    context.lenient = config.isLenient();
-    context.printToConsole = config.isPrintToConsole();
-    learnSchema = config.isLearnSchema();
-    useSchema = config.isUseSchema();
-    msgpackSchema = new MsgpackSchema(fileSystem, context.hadoopPath.getParent());
+    this.config = config;
+    this.msgpackSchema = new MsgpackSchema(fileSystem, filePath.getParent());
     setColumns(columns);
-  }
-
-  @Override
-  public String toString() {
-    return super.toString() + context.toString() + ", ...]";
   }
 
   @Override
   public void setup(final OperatorContext operatorContext, final OutputMutator output) throws ExecutionSetupException {
     try {
-      stream = fileSystem.openPossiblyCompressedStream(context.hadoopPath);
+      stream = fileSystem.openPossiblyCompressedStream(filePath);
       writer = new VectorContainerWriter(output, unionEnabled);
-      messageReader = new MsgpackReader(stream, Lists.newArrayList(getColumns()), isSkipQuery());
-      context.workBuf = fragmentContext.getManagedBuffer();
-      messageReader.setup(context);
-      if (useSchema) {
+      boolean hasSchema = false;
+      if (config.isUseSchema()) {
         msgpackSchema.load();
+        if (msgpackSchema.getSchema() != null) {
+          hasSchema = true;
+        }
       }
+      context = new MsgpackReaderContext(filePath, config, hasSchema);
+      msgpackReader = new MsgpackReader(stream, Lists.newArrayList(getColumns()), isSkipQuery());
+      msgpackReader.setup(context, fragmentContext.getManagedBuffer());
     } catch (final Exception e) {
       context.handleAndRaise("Failure reading mgspack file", e);
     }
@@ -113,31 +109,32 @@ public class MsgpackRecordReader extends AbstractRecordReader {
 
     writer.allocate();
     writer.reset();
-    context.recordCount = 0;
+    context.resetRecordCount();
     if (!hasMore) {
-      return context.recordCount;
+      return context.getRecordCount();
     }
-    while (context.recordCount < DEFAULT_ROWS_PER_BATCH) {
+    while (context.getRecordCount() < DEFAULT_ROWS_PER_BATCH) {
       try {
-        writer.setPosition(context.recordCount);
-        hasMore = messageReader.write(writer, msgpackSchema.getSchema());
+        writer.setPosition(context.getRecordCount());
+        context.getFieldPathTracker().reset();
+        hasMore = msgpackReader.write(writer, msgpackSchema.getSchema());
         if (!hasMore) {
           break;
         } else {
-          context.recordCount++;
+          context.incrementRecordCount();
         }
       } catch (MsgpackParsingException e) {
-        if (!context.lenient) {
+        if (!context.isLenient()) {
           context.handleAndRaise("Error parsing msgpack", e);
         }
-        ++context.parseErrorCount;
+        context.incrementParseErrorCount();
         context.parseWarn(e);
       } catch (IOException e) {
         context.handleAndRaise("Error parsing msgpack", e);
       }
     }
 
-    if (learnSchema) {
+    if (config.isLearnSchema()) {
       if (isStarQuery()) {
         try {
           msgpackSchema.learnSchema(writer);
@@ -149,21 +146,21 @@ public class MsgpackRecordReader extends AbstractRecordReader {
       }
     }
 
-    if (useSchema) {
+    if (config.isUseSchema()) {
       // Since we know the schema of the msgpack records we will create
       // all the fields even if that means they are empty.
       try {
-        msgpackSchema.applySchemaIfAny(writer);
+        msgpackSchema.applySchema(writer);
       } catch (Exception e) {
         context.handleAndRaise("Error applying msgpack schema to writer.", e);
       }
     } else {
-      messageReader.ensureAtLeastOneField(writer);
+      msgpackReader.ensureAtLeastOneField(writer);
     }
 
-    writer.setValueCount(context.recordCount);
+    writer.setValueCount(context.getRecordCount());
     context.updateRunningCount();
-    return context.recordCount;
+    return context.getRecordCount();
   }
 
   @Override

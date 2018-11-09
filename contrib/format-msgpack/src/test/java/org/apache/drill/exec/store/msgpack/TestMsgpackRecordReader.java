@@ -92,7 +92,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
   @Before
   public void before() {
-    LogFixtureBuilder logBuilder = LogFixture.builder().logger("org.apache.drill.exec.store.msgpack", Level.ERROR);
+    LogFixtureBuilder logBuilder = LogFixture.builder().logger("org.apache.drill.exec.store.msgpack", Level.DEBUG);
     logs = logBuilder.build();
 
     if (schemaLocation.exists()) {
