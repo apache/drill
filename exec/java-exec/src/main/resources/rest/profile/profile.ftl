@@ -50,6 +50,34 @@
         "info": false
       }
     );} );
+
+    //Show cancellation status
+    function showCancelPopup(queryId) {
+        document.getElementById("cancelText").innerHTML = "Issued cancellation for query ID: <br>"+queryId+"<br>Click to continue";
+        document.getElementById("cancelPopup").style.display = "block";
+    }
+
+    //Close the cancellation status popup
+    function closePopup() {
+        document.getElementById("cancelPopup").style.display = "none";
+        location.reload(true);
+    }
+
+    //Cancel query
+    function cancelQuery(queryId) {
+        var cancelRestURL = location.protocol + "//" + location.hostname + "/profiles/cancel/" + queryId;
+        let restPort = location.port;
+        if (restPort != 0) {
+            cancelRestURL = location.protocol + "//" + location.hostname + ":" + restPort + "/profiles/cancel/" + queryId;
+        }
+        $.get(cancelRestURL, function(data, status){
+            //dBug
+            console.log("Cancelled >--> " + cancelRestURL);
+        });
+        var result = showCancelPopup(queryId);
+    };
+
+
 </script>
 <style>
 /* DataTables Sorting: inherited via sortable class */
@@ -63,6 +91,36 @@ table.sortable thead .sorting { background-image: url("/static/img/black-unsorte
 table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
 table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
 </style>
+
+<!-- CSS to control Floating Cancel Popup -->
+<style type="text/css" class="init">
+  /* Overlay on Cancel Popup */
+  #cancelPopup {
+    position: fixed; /* Sit on top of the page content */
+    display: none; /* Hidden by default */
+    width: 100%; /* Full width (cover the whole page) */
+    height: 100%; /* Full height (cover the whole page) */
+    top: 0; 
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+    z-index: 100; /* Specify a stack order in case you're using a different order for other elements */
+    cursor: pointer; /* Add a pointer on hover */
+  }
+
+  #cancelText{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 25px;
+    line-height: 2;
+    color: white;
+    transform: translate(-50%,-50%);
+    -ms-transform: translate(-50%,-50%);
+}
+</style>
+
 </#macro>
 
 <#macro page_body>
@@ -171,7 +229,17 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
   <#assign queued = queueName != "" && queueName != "-" />
 
   <div class="page-header"></div>
-  <h3>Query Profile : <span style='font-size:85%'>${model.getQueryId()}</span></h3>
+  <h3>Query Profile : <span style='font-size:85%'>${model.getQueryId()}</span>
+  <#if model.getQueryStateDisplayName() == "Running" || model.getQueryStateDisplayName() == "Planning">
+  <div id="cancelPopup"  onclick="closePopup()">
+    <div id="cancelText" align="center">Issued cancellation for query<br>Click to continue</div>
+  </div>
+  <div  style="display: inline-block;">
+    <button type="button" class="btn btn-warning btn-sm" onClick="cancelQuery('${model.queryId}');">
+    <span class="glyphicon glyphicon-remove"></span> Cancel </button>  
+  </div>
+  </#if>
+  </h3>
   <div class="panel-group" id="query-profile-accordion">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -214,7 +282,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
-          <a data-toggle="collapse" href="#query-profile-duration">
+          <a data-toggle="collapse" href="#query-profile-duration in">
              Duration
           </a>
         </h4>
