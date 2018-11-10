@@ -45,37 +45,59 @@ public class MessagePackExample {
   }
 
   public static void main(String[] args) throws Exception {
-    MessagePackExample.writeTest();
-    MessageUnpacker unpacker = makeMessageUnpacker("test.mp");
-    while(unpacker.hasNext()) {
-      ImmutableValue value = unpacker.unpackValue();
-      ValueType type = value.getValueType();
-      if(type==ValueType.MAP) {
-        MapValue mapValue = value.asMapValue();
-        Set<Map.Entry<Value, Value>> valueEntries = mapValue.entrySet();
-        for (Map.Entry<Value, Value> valueEntry : valueEntries) {
-          Value key = valueEntry.getKey();
-          Value element = valueEntry.getValue();
-          if(key.isStringValue() && key.asStringValue().asString().equals("big")) {
-            NumberValue numberValue = element.asNumberValue();
-            String string = numberValue.toString();
-            System.out.println(string);
-            long long1 = numberValue.toLong();
 
-            System.err.println(long1);
+    try (MessagePacker packer = MessagePack.newDefaultPacker(new FileOutputStream(new File("test.mp")))) {
+      // Alice, write map with 3 fields.
+      packer.packMapHeader(3);
+      packer.packString("name");
+      packer.packString("Alice");
+      packer.packString("age");
+      packer.packInt(21);
+      packer.packString("height");
+      packer.packFloat(1.67f);
+      // Bob, write map with 3 fields.
+      packer.packMapHeader(3);
+      packer.packString("name");
+      packer.packString("Bog");
+      packer.packString("age");
+      packer.packInt(32);
+      packer.packString("height");
+      packer.packFloat(1.79f);
+    }
 
-          BinaryValue asBinaryValue = numberValue.asRawValue().asBinaryValue();
+    try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test.mp")))) {
+      while (unpacker.hasNext()) {
+        ImmutableValue msg = unpacker.unpackValue();
+        ValueType type = msg.getValueType();
+        if (type == ValueType.MAP) {
+          System.out.println("Printing message");
+          MapValue mapValue = msg.asMapValue();
+          Set<Map.Entry<Value, Value>> valueEntries = mapValue.entrySet();
+          for (Map.Entry<Value, Value> valueEntry : valueEntries) {
+            Value key = valueEntry.getKey();
+            Value value = valueEntry.getValue();
+            String k = key.asStringValue().asString();
+            if (value.getValueType() == ValueType.STRING) {
+              String strValue = value.asStringValue().toString();
+              System.out.println(String.format("key: '%s' value: '%s'", k, strValue));
+            } else if (value.getValueType() == ValueType.INTEGER) {
+              int intValue = value.asNumberValue().toInt();
+              System.out.println(String.format("key: '%s' value: '%d'", k, intValue));
+            } else if (value.getValueType() == ValueType.FLOAT) {
+              float fValue = value.asFloatValue().toFloat();
+              System.out.println(String.format("key: '%s' value: '%f'", k, fValue));
+            }
           }
         }
       }
     }
-    MessagePackExample.write2Batchs();
   }
 
   public static MessagePacker makeMessagePacker(String fileName) throws IOException {
     File dst = new File(destinationFolder.getPath() + File.separator + fileName);
     return MessagePack.newDefaultPacker(new FileOutputStream(dst));
   }
+
   public static MessageUnpacker makeMessageUnpacker(String fileName) throws IOException {
     File dst = new File(destinationFolder.getPath() + File.separator + fileName);
     return MessagePack.newDefaultUnpacker(new FileInputStream(dst));

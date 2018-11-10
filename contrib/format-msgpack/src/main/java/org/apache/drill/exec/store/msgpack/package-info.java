@@ -47,5 +47,58 @@
  * It's an implementation of
  * {@link org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter}.
  * These implemenations are discovered via the Java Plugin Service.
+ * <p>
+ * Here's an example of using the msgpack java library to write a file and to
+ * read it back.
+ * </p>
+ * <code>
+ *     try (MessagePacker packer = MessagePack.newDefaultPacker(new FileOutputStream(new File("test.mp")))) {
+      // Alice, write map with 3 fields.
+      packer.packMapHeader(3);
+      packer.packString("name");
+      packer.packString("Alice");
+      packer.packString("age");
+      packer.packInt(21);
+      packer.packString("height");
+      packer.packFloat(1.67f);
+      // Bob, write map with 3 fields.
+      packer.packMapHeader(3);
+      packer.packString("name");
+      packer.packString("Bog");
+      packer.packString("age");
+      packer.packInt(32);
+      packer.packString("height");
+      packer.packFloat(1.79f);
+    }
+
+    try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test.mp")))) {
+      while (unpacker.hasNext()) {
+        ImmutableValue msg = unpacker.unpackValue();
+        ValueType type = msg.getValueType();
+        if (type == ValueType.MAP) {
+          System.out.println("Printing message");
+          MapValue mapValue = msg.asMapValue();
+          Set<Map.Entry<Value, Value>> valueEntries = mapValue.entrySet();
+          for (Map.Entry<Value, Value> valueEntry : valueEntries) {
+            Value key = valueEntry.getKey();
+            Value value = valueEntry.getValue();
+            String k = key.asStringValue().asString();
+            if (value.getValueType() == ValueType.STRING) {
+              String strValue = value.asStringValue().toString();
+              System.out.println(String.format("key: '%s' value: '%s'", k, strValue));
+            } else if (value.getValueType() == ValueType.INTEGER) {
+              int intValue = value.asNumberValue().toInt();
+              System.out.println(String.format("key: '%s' value: '%d'", k, intValue));
+            } else if (value.getValueType() == ValueType.FLOAT) {
+              float fValue = value.asFloatValue().toFloat();
+              System.out.println(String.format("key: '%s' value: '%f'", k, fValue));
+            }
+          }
+        }
+      }
+    }
+  }
+
+ * </code>
  */
 package org.apache.drill.exec.store.msgpack;
