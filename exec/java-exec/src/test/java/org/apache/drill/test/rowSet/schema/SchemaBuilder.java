@@ -36,32 +36,32 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * i: BIGINT[], j: VARCHAR[][][])</tt>
  * <p>
  * Code:<pre><code>
- *     BatchSchema batchSchema = new SchemaBuilder()
+ *     TupleMetadata schema = new SchemaBuilder()
  *        .add("c", MinorType.INT)
  *        .addMap("a")
  *          .addNullable("b", MinorType.VARCHAR)
  *          .add("d", MinorType.INT)
  *          .addMap("e") // or .addMapArray("e")
  *            .add("f", MinorType.VARCHAR)
- *            .buildMap()
+ *            .resumeMap()
  *          .add("g", MinorType.INT)
- *          .buildMap()
+ *          .resumeSchema()
  *        .addUnion("h") // or .addList("h")
  *          .addType(MinorType.INT)
  *          .addMap()
  *            .add("h1", MinorType.INT)
- *            .buildNested()
+ *            .resumeUnion()
  *          .addList()
  *            .addType(MinorType.BIGINT)
- *            .buildNested()
- *          .build()
+ *            .resumeUnion()
+ *          .resumeSchema()
  *        .addArray("i", MinorType.BIGINT)
  *        .addRepeatedList("j")
  *          .addDimension()
  *            .addArray(MinorType.VARCHAR)
- *            .endDimension()
- *         .build()
- *        .build();
+ *            .resumeList()
+ *         .resumeSchema()
+ *        .buildSchema();
  * </code</pre>
  */
 
