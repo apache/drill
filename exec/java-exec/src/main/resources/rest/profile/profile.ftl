@@ -60,7 +60,7 @@
 
     //Cancel query & show cancellation status
     function cancelQuery() {
-      document.getElementById("cancelTitle").innerHTML = location.hostname;
+      document.getElementById("cancelTitle").innerHTML = "Drillbit on " + location.hostname + " says";
       $.get("/profiles/cancel/"+globalconfig.queryid, function(data, status){/*Not Tracking Response*/});
       //Show PopUp Modal
       $("#queryCancelModal").modal("show");
