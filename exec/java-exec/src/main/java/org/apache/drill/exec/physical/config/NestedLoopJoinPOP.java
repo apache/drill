@@ -40,7 +40,7 @@ public class NestedLoopJoinPOP extends AbstractJoinPop {
       @JsonProperty("joinType") JoinRelType joinType,
       @JsonProperty("condition") LogicalExpression condition
   ) {
-    super(left, right, joinType, condition, null);
+    super(left, right, joinType, false, condition, null);
   }
 
   @Override

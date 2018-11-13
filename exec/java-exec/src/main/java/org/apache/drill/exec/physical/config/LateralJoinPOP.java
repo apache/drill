@@ -51,7 +51,7 @@ public class LateralJoinPOP extends AbstractJoinPop {
       @JsonProperty("joinType") JoinRelType joinType,
       @JsonProperty("implicitRIDColumn") String implicitRIDColumn,
       @JsonProperty("excludedColumns") List<SchemaPath> excludedColumns) {
-    super(left, right, joinType, null, null);
+    super(left, right, joinType, false, null, null);
     Preconditions.checkArgument(joinType != JoinRelType.FULL,
       "Full outer join is currently not supported with Lateral Join");
     Preconditions.checkArgument(joinType != JoinRelType.RIGHT,

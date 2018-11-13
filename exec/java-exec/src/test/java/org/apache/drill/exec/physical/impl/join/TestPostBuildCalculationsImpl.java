@@ -137,7 +137,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor, // fragmentationFactor
         safetyFactor, // safetyFactor
         .75, // loadFactor
-        false); // reserveHash
+        false, false); // reserveHash
 
     calc.initialize(true);
   }
@@ -181,7 +181,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor,
         safetyFactor,
         .75,
-        true);
+        true, false);
 
     calc.initialize(true);
 
@@ -241,7 +241,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor,
         safetyFactor,
         .75,
-        false);
+        false, false);
 
     calc.initialize(false);
 
@@ -307,7 +307,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor,
         safetyFactor,
         .75,
-        false);
+        false, false);
 
     calc.initialize(false);
 
@@ -373,7 +373,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor,
         safetyFactor,
         .75,
-        false);
+        false, false);
 
     calc.initialize(false);
 
@@ -445,7 +445,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor,
         safetyFactor,
         .75,
-        true);
+        true, false);
 
     calc.initialize(false);
 
@@ -509,7 +509,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor,
         safetyFactor,
         .75,
-        false);
+        false, false);
 
     calc.initialize(false);
 
@@ -583,7 +583,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor,
         safetyFactor,
         .75,
-        false);
+        false, false);
 
     calc.initialize(false);
 
@@ -650,7 +650,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor,
         safetyFactor,
         .75,
-        false);
+        false, false);
 
     calc.initialize(false);
     Assert.assertFalse(calc.shouldSpill());
@@ -705,7 +705,7 @@ public class TestPostBuildCalculationsImpl {
         fragmentationFactor,
         safetyFactor,
         .75,
-        false);
+        false, false);
 
     calc.initialize(false);
   }

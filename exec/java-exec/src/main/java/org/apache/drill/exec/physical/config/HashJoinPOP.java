@@ -54,15 +54,26 @@ public class HashJoinPOP extends AbstractJoinPop {
   public HashJoinPOP(@JsonProperty("left") PhysicalOperator left, @JsonProperty("right") PhysicalOperator right,
                      @JsonProperty("conditions") List<JoinCondition> conditions,
                      @JsonProperty("joinType") JoinRelType joinType,
+                     @JsonProperty("semiJoin") boolean semiJoin,
                      @JsonProperty("runtimeFilterDef") RuntimeFilterDef runtimeFilterDef,
                      @JsonProperty("isRowKeyJoin") boolean isRowKeyJoin,
                      @JsonProperty("joinControl") int joinControl) {
-    super(left, right, joinType, null, conditions);
+    super(left, right, joinType, semiJoin,null, conditions);
     Preconditions.checkArgument(joinType != null, "Join type is missing for HashJoin Pop");
     this.runtimeFilterDef = runtimeFilterDef;
     this.isRowKeyJoin = isRowKeyJoin;
     this.subScanForRowKeyJoin = null;
     this.joinControl = joinControl;
+  }
+
+  @VisibleForTesting
+  public HashJoinPOP(PhysicalOperator left, PhysicalOperator right,
+                     List<JoinCondition> conditions,
+                     JoinRelType joinType,
+                     RuntimeFilterDef runtimeFilterDef,
+                     boolean isRowKeyJoin,
+                     int joinControl){
+    this(left, right, conditions, joinType, false, runtimeFilterDef, isRowKeyJoin, joinControl);
   }
 
   @VisibleForTesting
@@ -84,7 +95,7 @@ public class HashJoinPOP extends AbstractJoinPop {
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
         Preconditions.checkArgument(children.size() == 2);
 
-        HashJoinPOP newHashJoin = new HashJoinPOP(children.get(0), children.get(1), conditions, joinType, runtimeFilterDef,
+        HashJoinPOP newHashJoin = new HashJoinPOP(children.get(0), children.get(1), conditions, joinType, semiJoin, runtimeFilterDef,
               isRowKeyJoin, joinControl);
         newHashJoin.setMaxAllocation(getMaxAllocation());
         newHashJoin.setSubScanForRowKeyJoin(this.getSubScanForRowKeyJoin());
@@ -116,7 +127,7 @@ public class HashJoinPOP extends AbstractJoinPop {
         for (JoinCondition c : conditions) {
           flippedConditions.add(c.flip());
         }
-        return new HashJoinPOP(right, left, flippedConditions, JoinRelType.LEFT, runtimeFilterDef, isRowKeyJoin, joinControl);
+        return new HashJoinPOP(right, left, flippedConditions, JoinRelType.LEFT, semiJoin, runtimeFilterDef, isRowKeyJoin, joinControl);
       } else {
         return this;
       }

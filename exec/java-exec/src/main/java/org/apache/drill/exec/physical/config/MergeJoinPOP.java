@@ -41,7 +41,7 @@ public class MergeJoinPOP extends AbstractJoinPop{
       @JsonProperty("conditions") List<JoinCondition> conditions,
       @JsonProperty("joinType") JoinRelType joinType
   ) {
-    super(left, right, joinType, null, conditions);
+    super(left, right, joinType, false, null, conditions);
     Preconditions.checkArgument(joinType != null, "Join type is missing!");
     Preconditions.checkArgument(joinType != JoinRelType.FULL,
       "Full outer join not currently supported with Merge Join");

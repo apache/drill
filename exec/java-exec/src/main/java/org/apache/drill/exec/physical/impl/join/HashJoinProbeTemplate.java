@@ -88,8 +88,9 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   private int numPartitions = 1; // must be 2 to the power of bitsInMask
   private int partitionMask = 0; // numPartitions - 1
   private int bitsInMask = 0; // number of bits in the MASK
-  private int rightHVColPosition;
+  private int numberOfBuildSideColumns;
   private int targetOutputRecords;
+  private boolean semiJoin;
 
   @Override
   public void setTargetOutputCount(int targetOutputRecords) {
@@ -106,6 +107,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
    * @param probeBatch
    * @param outgoing
    * @param joinRelType
+   * @param semiJoin
    * @param leftStartState
    * @param partitions
    * @param cycleNum
@@ -116,7 +118,10 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
    * @param rightHVColPosition
    */
   @Override
-  public void setupHashJoinProbe(RecordBatch probeBatch, HashJoinBatch outgoing, JoinRelType joinRelType, IterOutcome leftStartState, HashPartition[] partitions, int cycleNum, VectorContainer container, HashJoinBatch.HashJoinSpilledPartition[] spilledInners, boolean buildSideIsEmpty, int numPartitions, int rightHVColPosition) {
+  public void setupHashJoinProbe(RecordBatch probeBatch, HashJoinBatch outgoing, JoinRelType joinRelType, boolean semiJoin,
+                                 IterOutcome leftStartState, HashPartition[] partitions, int cycleNum,
+                                 VectorContainer container, HashJoinBatch.HashJoinSpilledPartition[] spilledInners,
+                                 boolean buildSideIsEmpty, int numPartitions, int rightHVColPosition) {
     this.container = container;
     this.spilledInners = spilledInners;
     this.probeBatch = probeBatch;
@@ -127,7 +132,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     this.cycleNum = cycleNum;
     this.buildSideIsEmpty = buildSideIsEmpty;
     this.numPartitions = numPartitions;
-    this.rightHVColPosition = rightHVColPosition;
+    this.numberOfBuildSideColumns = semiJoin ? 0 : rightHVColPosition; // position (0 based) of added column == #columns
+    this.semiJoin = semiJoin;
 
     partitionMask = numPartitions - 1; // e.g. 32 --> 0x1F
     bitsInMask = Integer.bitCount(partitionMask); // e.g. 0x1F -> 5
@@ -165,35 +171,31 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
    * Append the given build side row into the outgoing container
    * @param buildSrcContainer The container for the right/inner side
    * @param buildSrcIndex build side index
-   * @return The index for the last column (where the probe side would continue copying)
    */
-  private int appendBuild(VectorContainer buildSrcContainer, int buildSrcIndex) {
-    // "- 1" to skip the last "hash values" added column
-    int lastColIndex = buildSrcContainer.getNumberOfColumns() - 1;
-    for (int vectorIndex = 0; vectorIndex < lastColIndex; vectorIndex++) {
+  private void appendBuild(VectorContainer buildSrcContainer, int buildSrcIndex) {
+    for (int vectorIndex = 0; vectorIndex < numberOfBuildSideColumns; vectorIndex++) {
       ValueVector destVector = container.getValueVector(vectorIndex).getValueVector();
       ValueVector srcVector = buildSrcContainer.getValueVector(vectorIndex).getValueVector();
       destVector.copyEntry(container.getRecordCount(), srcVector, buildSrcIndex);
     }
-    return lastColIndex;
   }
   /**
    * Append the given probe side row into the outgoing container, following the build side part
    * @param probeSrcContainer The container for the left/outer side
    * @param probeSrcIndex probe side index
-   * @param baseIndex The column index to start copying into (following the build columns)
    */
-  private void appendProbe(VectorContainer probeSrcContainer, int probeSrcIndex, int baseIndex) {
-    for (int vectorIndex = baseIndex; vectorIndex < container.getNumberOfColumns(); vectorIndex++) {
+  private void appendProbe(VectorContainer probeSrcContainer, int probeSrcIndex) {
+    for (int vectorIndex = numberOfBuildSideColumns; vectorIndex < container.getNumberOfColumns(); vectorIndex++) {
       ValueVector destVector = container.getValueVector(vectorIndex).getValueVector();
-      ValueVector srcVector = probeSrcContainer.getValueVector(vectorIndex - baseIndex).getValueVector();
+      ValueVector srcVector = probeSrcContainer.getValueVector(vectorIndex - numberOfBuildSideColumns).getValueVector();
       destVector.copyEntry(container.getRecordCount(), srcVector, probeSrcIndex);
     }
   }
   /**
    *  A special version of the VectorContainer's appendRow for the HashJoin; (following a probe) it
    *  copies the build and probe sides into the outgoing container. (It uses a composite
-   *  index for the build side)
+   *  index for the build side). If any of the build/probe source containers is null, then that side
+   *  is not appended (effectively outputing nulls for that side's columns).
    * @param buildSrcContainers The containers list for the right/inner side
    * @param compositeBuildSrcIndex Composite build index
    * @param probeSrcContainer The single container for the left/outer side
@@ -202,29 +204,20 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
    */
   private int outputRow(ArrayList<VectorContainer> buildSrcContainers, int compositeBuildSrcIndex,
                         VectorContainer probeSrcContainer, int probeSrcIndex) {
-    int buildBatchIndex = compositeBuildSrcIndex >>> 16;
-    int buildOffset = compositeBuildSrcIndex & 65535;
-    int baseInd = 0;
-    if ( buildSrcContainers != null ) { baseInd = appendBuild(buildSrcContainers.get(buildBatchIndex), buildOffset); }
-    if ( probeSrcContainer != null ) { appendProbe(probeSrcContainer, probeSrcIndex, baseInd); }
+
+    if ( buildSrcContainers != null ) {
+      int buildBatchIndex = compositeBuildSrcIndex >>> 16;
+      int buildOffset = compositeBuildSrcIndex & 65535;
+      appendBuild(buildSrcContainers.get(buildBatchIndex), buildOffset);
+    }
+    if ( probeSrcContainer != null ) { appendProbe(probeSrcContainer, probeSrcIndex); }
     return container.incRecordCount();
   }
 
   /**
-   * A customised version of the VectorContainer's appendRow for HashJoin - used for Left
-   * Outer Join when there is no build side match - hence need a base index in
-   * this container's wrappers from where to start appending
-   * @param probeSrcContainer
-   * @param probeSrcIndex
-   * @param baseInd - index of this container's wrapper to start at
-   * @return
+   * After the "inner" probe phase, finish up a Right (of Full) Join by projecting the unmatched rows of the build side
+   * @param currBuildPart Which partition
    */
-  private int outputOuterRow(VectorContainer probeSrcContainer, int probeSrcIndex, int baseInd) {
-    appendProbe(probeSrcContainer, probeSrcIndex, baseInd);
-    return container.incRecordCount();
-  }
-
-
   private void executeProjectRightPhase(int currBuildPart) {
     while (outputRecords < targetOutputRecords && recordsProcessed < recordsToProcess) {
       outputRecords =
@@ -319,6 +312,16 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
         }
 
+        if ( semiJoin ) {
+          if ( probeIndex != -1 ) {
+            // output the probe side only
+            outputRecords =
+              outputRow(null, 0, probeBatch.getContainer(), recordsProcessed);
+          }
+          recordsProcessed++;
+          continue; // no build-side duplicates, go on to the next probe-side row
+        }
+
         if (probeIndex != -1) {
 
           /* The current probe record has a key that matches. Get the index
@@ -366,8 +369,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
           // If we have a left outer join, project the outer side
           if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
 
-            outputRecords =
-              outputOuterRow(probeBatch.getContainer(), recordsProcessed, rightHVColPosition);
+            outputRecords = // output only the probe side (the build side would be all nulls)
+              outputRow(null, 0, probeBatch.getContainer(), recordsProcessed);
           }
           recordsProcessed++;
         }
