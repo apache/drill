@@ -27,7 +27,7 @@ import org.apache.calcite.plan.Convention;
 public interface DrillRel extends DrillRelNode {
   /** Calling convention for relational expressions that are "implemented" by
    * generating Drill logical plans. */
-  public static final Convention DRILL_LOGICAL = new Convention.Impl("LOGICAL", DrillRel.class);
+  Convention DRILL_LOGICAL = new Convention.Impl("LOGICAL", DrillRel.class);
 
   LogicalOperator implement(DrillImplementor implementor);
 }

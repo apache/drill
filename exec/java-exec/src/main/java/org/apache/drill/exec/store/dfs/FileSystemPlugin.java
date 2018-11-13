@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import static org.apache.drill.exec.store.dfs.FileSystemSchemaFactory.DEFAULT_WS_NAME;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;

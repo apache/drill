@@ -55,6 +55,7 @@ import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillConnection;
@@ -65,7 +66,6 @@ import org.slf4j.Logger;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DEFAULT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
@@ -666,7 +666,7 @@ class DrillConnectionImpl extends AvaticaConnection
         if (dfsDefaultPath == null) {
           logger.warn(logMessage, UNIT_TEST_DFS_DEFAULT_PROP);
         } else {
-          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsDefaultPath), DEFAULT_SCHEMA);
+          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsDefaultPath), SchemaFactory.DEFAULT_WS_NAME);
         }
       }
     } catch(Throwable e) {

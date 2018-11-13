@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.hive.schema;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -44,9 +46,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.thrift.TException;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class HiveSchemaFactory extends AbstractSchemaFactory {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaFactory.class);
@@ -137,10 +136,10 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
     private HiveDatabaseSchema defaultSchema;
 
     HiveSchema(final SchemaConfig schemaConfig, final DrillHiveMetaStoreClient mClient, final String name) {
-      super(ImmutableList.<String>of(), name);
+      super(Collections.emptyList(), name);
       this.schemaConfig = schemaConfig;
       this.mClient = mClient;
-      getSubSchema("default");
+      getSubSchema(DEFAULT_WS_NAME);
     }
 
     @Override
@@ -152,7 +151,7 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
           return null;
         }
         HiveDatabaseSchema schema = getSubSchemaKnownExists(name);
-        if (name.equals("default")) {
+        if (DEFAULT_WS_NAME.equals(name)) {
           this.defaultSchema = schema;
         }
         return schema;
@@ -181,8 +180,8 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
     public Set<String> getSubSchemaNames() {
       try {
         List<String> dbs = mClient.getDatabases(schemaConfig.getIgnoreAuthErrors());
-        return Sets.newHashSet(dbs);
-      } catch (final TException e) {
+        return new HashSet<>(dbs);
+      } catch (TException e) {
         logger.warn("Failure while getting Hive database list.", e);
       }
       return super.getSubSchemaNames();
@@ -227,11 +226,11 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
 
     HiveReadEntry getSelectionBaseOnName(String dbName, String t) {
       if (dbName == null) {
-        dbName = "default";
+        dbName = DEFAULT_WS_NAME;
       }
-      try{
+      try {
         return mClient.getHiveReadEntry(dbName, t, schemaConfig.getIgnoreAuthErrors());
-      }catch(final TException e) {
+      } catch (TException e) {
         logger.warn("Exception occurred while trying to read table. {}.{}", dbName, t, e.getCause());
         return null;
       }
