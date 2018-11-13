@@ -40,5 +40,8 @@ public class TestHashJoinHelperSizeCalculatorImpl {
 
     long actual = HashJoinHelperSizeCalculatorImpl.INSTANCE.calculateSize(partitionStat, 1.0);
     Assert.assertEquals(expected, actual);
+
+    long shouldBeZero = HashJoinHelperUnusedSizeImpl.INSTANCE.calculateSize(partitionStat, 1.0);
+    Assert.assertEquals(0, shouldBeZero);
   }
 }
