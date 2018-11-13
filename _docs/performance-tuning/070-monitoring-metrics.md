@@ -15,11 +15,11 @@ A gauge is an instantaneous measure of a value. See [Gauges]({{site.baseurl}}/do
 * **Counters**  
 A counter is a snapshot of the count of metrics at a particular point in time. (A gauge for an [AtomicLong](https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/atomic/AtomicLong.html) instance.) See [Counters]({{site.baseurl}}/docs/monitoring-metrics/#counters).  
 * **Histograms**    
-A histogram measures the statistical distribution of values in a stream of data.  
+A histogram measures the statistical distribution of values in a stream of data. See [Histograms]({{site.baseurl}}/docs/monitoring-metrics/#histograms).  
 * **Meters**  
 A meter measures the rate of events over time, for example requests per second. Drill currently does not use meters to report system-level metrics.  
 * **Timers**  
-A timer measures the rate that a particular piece of code is called and the distribution of its duration.  
+A timer measures the rate that a particular piece of code is called and the distribution of its duration. See [Timers]({{site.baseurl}}/docs/monitoring-metrics/#timers).
 
 ## Remote Monitoring  
 You can enable the remote JMX Java feature to monitor a specific JVM from a remote location. You can enable remote JMX with or without authentication. See the [Java documentation](http://docs.oracle.com/javase/7/docs/technotes/guides/management/agent.html). 
