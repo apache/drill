@@ -254,12 +254,12 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
-          <a data-toggle="collapse" href="#query-profile-duration in">
+          <a data-toggle="collapse" href="#query-profile-duration">
              Duration
           </a>
         </h4>
       </div>
-      <div id="query-profile-duration" class="panel-collapse collapse">
+      <div id="query-profile-duration" class="panel-collapse collapse in">
         <div class="panel-body">
           <table class="table table-bordered">
             <thead>
