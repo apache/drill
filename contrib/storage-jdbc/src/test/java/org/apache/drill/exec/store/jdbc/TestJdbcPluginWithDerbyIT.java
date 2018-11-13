@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.jdbc;
 import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.proto.UserBitShared;
 
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.junit.BeforeClass;
@@ -126,14 +125,14 @@ public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
 
   @Test
   public void showTablesDefaultSchema() throws Exception {
-    test("use derby");
-    assertEquals(1, testRunAndPrint(UserBitShared.QueryType.SQL, "show tables like 'person'"));
+    testNoResult("use derby.drill_derby_test");
+    assertEquals(1, testSql("show tables like 'PERSON'"));
   }
 
   @Test
   public void describe() throws Exception {
-    test("use derby");
-    assertEquals(19, testRunAndPrint(UserBitShared.QueryType.SQL, "describe drill_derby_test.person"));
+    testNoResult("use derby.drill_derby_test");
+    assertEquals(19, testSql("describe PERSON"));
   }
 
   @Test
