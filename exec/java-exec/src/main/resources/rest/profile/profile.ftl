@@ -50,6 +50,22 @@
         "info": false
       }
     );} );
+
+    //Close the cancellation status popup
+    function refreshStatus() {
+      //Close PopUp Modal
+      $("#queryCancelModal").modal("hide");
+      location.reload(true);
+    }
+
+    //Cancel query & show cancellation status
+    function cancelQuery() {
+      document.getElementById("cancelTitle").innerHTML = "Drillbit on " + location.hostname + " says";
+      $.get("/profiles/cancel/"+globalconfig.queryid, function(data, status){/*Not Tracking Response*/});
+      //Show PopUp Modal
+      $("#queryCancelModal").modal("show");
+    };
+
 </script>
 <style>
 /* DataTables Sorting: inherited via sortable class */
@@ -63,6 +79,7 @@ table.sortable thead .sorting { background-image: url("/static/img/black-unsorte
 table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
 table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
 </style>
+
 </#macro>
 
 <#macro page_body>
@@ -171,7 +188,30 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
   <#assign queued = queueName != "" && queueName != "-" />
 
   <div class="page-header"></div>
-  <h3>Query Profile : <span style='font-size:85%'>${model.getQueryId()}</span></h3>
+  <h3>Query Profile: <span style='font-size:85%'>${model.getQueryId()}</span>
+  <#if model.getQueryStateDisplayName() == "Prepared" || model.getQueryStateDisplayName() == "Planning" || model.getQueryStateDisplayName() == "Enqueued" || model.getQueryStateDisplayName() == "Starting">
+    <div  style="display: inline-block;">
+      <button type="button" id="cancelBtn" class="btn btn-warning btn-sm" onclick="cancelQuery()" > Cancel </button>
+    </div>
+
+  <!-- Cancellation Modal -->
+  <div class="modal fade" id="queryCancelModal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" onclick="refreshStatus()">&times;</button>
+          <h4 class="modal-title" id="cancelTitle"></h4>
+        </div>
+        <div class="modal-body" style="line-height:2">
+          Cancellation issued for Query ID:<br>${model.getQueryId()}
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-default" onclick="refreshStatus()">Close</button></div>
+      </div>
+    </div>
+  </div>
+  </#if>
+  </h3>
+  
   <div class="panel-group" id="query-profile-accordion">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -214,7 +254,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
-          <a data-toggle="collapse" href="#query-profile-duration">
+          <a data-toggle="collapse" href="#query-profile-duration in">
              Duration
           </a>
         </h4>
