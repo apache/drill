@@ -378,12 +378,17 @@ public final class ExecConstants {
 
   // Controls the flat parquet reader batching constraints (number of record and memory limit)
   public static final String PARQUET_FLAT_BATCH_NUM_RECORDS = "store.parquet.flat.batch.num_records";
-  public static final OptionValidator PARQUET_FLAT_BATCH_NUM_RECORDS_VALIDATOR = new RangeLongValidator(PARQUET_FLAT_BATCH_NUM_RECORDS, 1, ValueVector.MAX_ROW_COUNT,
+  public static final OptionValidator PARQUET_FLAT_BATCH_NUM_RECORDS_VALIDATOR = new RangeLongValidator(PARQUET_FLAT_BATCH_NUM_RECORDS, 1, ValueVector.MAX_ROW_COUNT -1,
       new OptionDescription("Parquet Reader maximum number of records per batch."));
   public static final String PARQUET_FLAT_BATCH_MEMORY_SIZE = "store.parquet.flat.batch.memory_size";
   // This configuration is used to overwrite the common memory batch sizing configuration property
   public static final OptionValidator PARQUET_FLAT_BATCH_MEMORY_SIZE_VALIDATOR = new RangeLongValidator(PARQUET_FLAT_BATCH_MEMORY_SIZE, 0, Integer.MAX_VALUE,
-      new OptionDescription("Parquet Reader maximum memory size per batch."));
+      new OptionDescription("Flat Parquet Reader maximum memory size per batch."));
+
+  // Controls the complex parquet reader batch sizing configuration
+  public static final String PARQUET_COMPLEX_BATCH_NUM_RECORDS = "store.parquet.complex.batch.num_records";
+  public static final OptionValidator PARQUET_COMPLEX_BATCH_NUM_RECORDS_VALIDATOR = new RangeLongValidator(PARQUET_COMPLEX_BATCH_NUM_RECORDS, 1, ValueVector.MAX_ROW_COUNT -1,
+      new OptionDescription("Complex Parquet Reader maximum number of records per batch."));
 
   public static final String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
   public static final BooleanValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE,

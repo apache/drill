@@ -32,6 +32,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -82,6 +83,8 @@ public class DrillParquetReader extends AbstractRecordReader {
   private int recordCount;
   private OperatorContext operatorContext;
   private FragmentContext fragmentContext;
+  /** Configured Parquet records per batch */
+  private final int recordsPerBatch;
 
   // For columns not found in the file, we need to return a schema element with the correct number of values
   // at that position in the schema. Currently this requires a vector be present. Here is a list of all of these vectors
@@ -105,6 +108,7 @@ public class DrillParquetReader extends AbstractRecordReader {
     this.entry = entry;
     setColumns(columns);
     this.fragmentContext = fragmentContext;
+    this.recordsPerBatch = (int) fragmentContext.getOptions().getLong(ExecConstants.PARQUET_COMPLEX_BATCH_NUM_RECORDS);
   }
 
   public static MessageType getProjection(MessageType schema,
@@ -299,7 +303,7 @@ public class DrillParquetReader extends AbstractRecordReader {
       return (int) recordsToRead;
     }
 
-    while (count < 4000 && totalRead < recordCount) {
+    while (count < recordsPerBatch && totalRead < recordCount) {
       recordMaterializer.setPosition(count);
       recordReader.read();
       count++;
