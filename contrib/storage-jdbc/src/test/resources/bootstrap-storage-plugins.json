@@ -4,15 +4,22 @@
           type    : "jdbc",
           driver  : "org.apache.derby.jdbc.ClientDriver",
           url     : "jdbc:derby://localhost:${derby.reserved.port}/memory:${derby.database.name};user=root;password=root",
+          caseInsensitiveTableNames: true,
           enabled : true
         },
         mysql : {
           type    : "jdbc",
-          enabled : true,
           driver  : "com.mysql.jdbc.Driver",
           url     : "jdbc:mysql://localhost:${mysql.reserved.port}/${mysql.database.name}?user=root&password=root&useJDBCCompliantTimezoneShift=true",
           enabled : true
-      }
+        },
+        mysqlCaseInsensitive : {
+          type    : "jdbc",
+          driver  : "com.mysql.jdbc.Driver",
+          url     : "jdbc:mysql://localhost:${mysql.reserved.port}/${mysql.database.name}?user=root&password=root&useJDBCCompliantTimezoneShift=true",
+          caseInsensitiveTableNames: true,
+          enabled : true
+        }
     }
 }
 

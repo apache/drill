@@ -31,6 +31,10 @@
   <name>contrib/Parent Pom</name>
   <packaging>pom</packaging>
 
+  <properties>
+    <skipTests>false</skipTests>
+  </properties>
+
   <dependencies>
   </dependencies>
 

@@ -34,7 +34,6 @@
     <mysql.connector.version>8.0.13</mysql.connector.version>
     <derby.database.name>drill_derby_test</derby.database.name>
     <mysql.database.name>drill_mysql_test</mysql.database.name>
-    <skipTests>false</skipTests>
   </properties>
 
   <dependencies>
@@ -112,6 +111,7 @@
             <mysql.port>${mysql.reserved.port}</mysql.port>
             <mysql.name>${mysql.database.name}</mysql.name>
           </systemPropertyVariables>
+          <skipITs>${skipTests}</skipITs>
           <includes>
             <include>**/*IT.java</include>
           </includes>
@@ -120,6 +120,15 @@
           <execution>
             <id>run-IT-Tests</id>
             <phase>integration-test</phase>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+          </execution>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>verify</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

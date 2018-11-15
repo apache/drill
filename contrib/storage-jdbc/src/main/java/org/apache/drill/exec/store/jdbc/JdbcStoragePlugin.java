@@ -292,10 +292,24 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       if (table != null) {
         return table;
       }
-      return inner.getTable(name.toUpperCase());
+      if (!areTableNamesCaseSensitive()) {
+        // Oracle and H2 changes unquoted identifiers to uppercase.
+        table = inner.getTable(name.toUpperCase());
+        if (table != null) {
+          return table;
+        }
+        // Postgres changes unquoted identifiers to lowercase.
+        return inner.getTable(name.toLowerCase());
+      }
 
+      // no table was found.
+      return null;
     }
 
+    @Override
+    public boolean areTableNamesCaseSensitive() {
+      return !config.areTableNamesCaseInsensitive();
+    }
   }
 
   private class JdbcCatalogSchema extends AbstractSchema {
@@ -335,8 +349,6 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       }
 
       defaultSchema = schemaMap.values().iterator().next();
-
-
     }
 
     void setHolder(SchemaPlus plusOfThis) {
@@ -405,14 +417,9 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
       if (schema != null) {
         try {
-          Table t = schema.getTable(name);
-          if (t != null) {
-            return t;
-          }
-          return schema.getTable(name.toUpperCase());
+          return schema.getTable(name);
         } catch (RuntimeException e) {
           logger.warn("Failure while attempting to read table '{}' from JDBC source.", name, e);
-
         }
       }
 
@@ -425,6 +432,10 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       return defaultSchema.getTableNames();
     }
 
+    @Override
+    public boolean areTableNamesCaseSensitive() {
+      return defaultSchema.areTableNamesCaseSensitive();
+    }
   }
 
   @Override

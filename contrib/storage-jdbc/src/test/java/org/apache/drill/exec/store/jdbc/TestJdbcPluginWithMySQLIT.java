@@ -26,6 +26,8 @@ import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * JDBC storage plugin tests against MySQL.
  * Note: it requires libaio.so library in the system
@@ -141,5 +143,18 @@ public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
     test(query);
   }
 
+  @Test
+  public void testCaseSensitiveTableNames() throws Exception {
+    test("use mysqlCaseInsensitive.`drill_mysql_test`");
+    // two table names match the filter ignoring the case
+    assertEquals(2, testSql("show tables like 'caseSensitiveTable'"));
 
+    test("use mysql.`drill_mysql_test`");
+    // single table matches the filter considering table name the case
+    assertEquals(1, testSql("show tables like 'caseSensitiveTable'"));
+
+    // checks that tables with names in different case are recognized correctly
+    assertEquals(1, testSql("describe caseSensitiveTable"));
+    assertEquals(2, testSql("describe CASESENSITIVETABLE"));
+  }
 }
