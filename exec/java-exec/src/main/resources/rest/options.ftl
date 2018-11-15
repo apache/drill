@@ -21,6 +21,11 @@
 <#macro page_head>
     <script type="text/javascript" language="javascript"  src="/static/js/jquery.dataTables-1.10.16.min.js"> </script>
     <script type="text/javascript" language="javascript" src="/static/js/dataTables.colVis-1.1.0.min.js"></script>
+    <script>
+        function resetToDefault(optionName, optionValue, optionKind) {
+            $.post("/option/"+optionName, {kind: optionKind, name: optionName, value: optionValue}, function (status) { location.reload(true); } );
+        }
+    </script>
     <!-- List of Option Descriptions -->
     <script src="/dynamic/options.describe.js"></script>
     <link href="/static/css/dataTables.colVis-1.1.0.min.css" rel="stylesheet">
@@ -85,6 +90,9 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
                   </#if>
                     <div class="input-group-btn">
                       <button class="btn btn-default" type="submit">Update</button>
+                      <button class="btn btn-default" onClick="resetToDefault('${option.getName()}','${option.getDefaultValueAsString()}', '${option.getKind()}')" type="button"
+                              <#if option.getDefaultValueAsString() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
+                      title="Reset to ${option.getDefaultValueAsString()}"</#if>>Default</button>
                     </div>
                   </div>
                 </div>
