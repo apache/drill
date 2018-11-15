@@ -22,8 +22,23 @@
     <script type="text/javascript" language="javascript"  src="/static/js/jquery.dataTables-1.10.16.min.js"> </script>
     <script type="text/javascript" language="javascript" src="/static/js/dataTables.colVis-1.1.0.min.js"></script>
     <script>
-        function resetToDefault(optionName, optionValue, optionKind) {
-            $.post("/option/"+optionName, {kind: optionKind, name: optionName, value: optionValue}, function (status) { location.reload(true); } );
+        //Alter System Values
+        function alterSysOption(optionName, optionValue, optionKind) {
+            $.post("/option/"+optionName, {kind: optionKind, name: optionName, value: optionValue}, function () {
+                location.reload(true);
+            });
+        }
+
+        //Read Values and apply
+        function alterSysOptionUsingId(optionRawName) {
+            //Escaping '.' for id search
+            let optionName = optionRawName.replace(/\./gi, "\\.");
+            let optionKind = $("#"+optionName+" input[name='kind']").attr("value");
+            let optionValue = $("#"+optionName+" input[name='value']").val();
+            if (optionKind == "BOOLEAN") {
+                optionValue = $("#"+optionName+" select[name='value']").val();
+            }
+            alterSysOption(optionRawName, optionValue, optionKind);
         }
     </script>
     <!-- List of Option Descriptions -->
@@ -75,7 +90,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
           <tr id="row-${i}">
             <td style="font-family:Courier New; vertical-align:middle" id='optionName'>${option.getName()}</td>
             <td>
-              <form class="form-inline" role="form" action="/option/${option.getName()}" method="POST">
+              <form class="form-inline" role="form" id="${option.getName()}">
                 <div class="form-group">
                 <input type="hidden" class="form-control" name="kind" value="${option.getKind()}">
                 <input type="hidden" class="form-control" name="name" value="${option.getName()}">
@@ -89,9 +104,8 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
                     <input type="text" class="form-control" placeholder="${option.getValueAsString()}" name="value" value="${option.getValueAsString()}">
                   </#if>
                     <div class="input-group-btn">
-                      <button class="btn btn-default" type="submit">Update</button>
-                      <button class="btn btn-default" onClick="resetToDefault('${option.getName()}','${option.getDefaultValueAsString()}', '${option.getKind()}')" type="button"
-                              <#if option.getDefaultValueAsString() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
+                      <button class="btn btn-default" type="button" onclick="alterSysOptionUsingId('${option.getName()}')">Update</button>
+                      <button class="btn btn-default" type="button" onclick="alterSysOption('${option.getName()}','${option.getDefaultValueAsString()}', '${option.getKind()}')" <#if option.getDefaultValueAsString() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
                       title="Reset to ${option.getDefaultValueAsString()}"</#if>>Default</button>
                     </div>
                   </div>
