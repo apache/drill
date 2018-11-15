@@ -90,7 +90,7 @@ public class StatusResources {
     OptionList optionList = internal ? optionManager.getInternalOptionList(): optionManager.getPublicOptionList();
 
     for (OptionValue option : optionList) {
-      options.add(new OptionWrapper(option.name, option.getValue(), option.accessibleScopes, option.kind, option.scope));
+      options.add(new OptionWrapper(option.name, option.getValue(), optionManager.getDefault(option.name).getValue().toString(), option.accessibleScopes, option.kind, option.scope));
     }
 
     Collections.sort(options, new Comparator<OptionWrapper>() {
@@ -171,6 +171,7 @@ public class StatusResources {
 
     private String name;
     private Object value;
+    private String defaultValue;
     private OptionValue.AccessibleScopes accessibleScopes;
     private String kind;
     private String optionScope;
@@ -178,11 +179,13 @@ public class StatusResources {
     @JsonCreator
     public OptionWrapper(@JsonProperty("name") String name,
                          @JsonProperty("value") Object value,
+                         @JsonProperty("defaultValue") String defaultValue,
                          @JsonProperty("accessibleScopes") OptionValue.AccessibleScopes type,
                          @JsonProperty("kind") Kind kind,
                          @JsonProperty("optionScope") OptionValue.OptionScope scope) {
       this.name = name;
       this.value = value;
+      this.defaultValue = defaultValue;
       this.accessibleScopes = type;
       this.kind = kind.name();
       this.optionScope = scope.name();
@@ -201,6 +204,10 @@ public class StatusResources {
       return value;
     }
 
+    public String getDefaultValue() {
+      return defaultValue;
+    }
+
     public OptionValue.AccessibleScopes getAccessibleScopes() {
       return accessibleScopes;
     }
@@ -215,7 +222,7 @@ public class StatusResources {
 
     @Override
     public String toString() {
-      return "OptionWrapper{" + "name='" + name + '\'' + ", value=" + value + ", accessibleScopes=" + accessibleScopes + ", kind='" + kind + '\'' + ", scope='" + optionScope + '\'' +'}';
+      return "OptionWrapper{" + "name='" + name + '\'' + ", value=" + value + ", default=" + defaultValue + ", accessibleScopes=" + accessibleScopes + ", kind='" + kind + '\'' + ", scope='" + optionScope + '\'' +'}';
     }
   }
 }
