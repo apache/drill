@@ -92,7 +92,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
                       <button class="btn btn-default" type="submit">Update</button>
                       <button class="btn btn-default" onClick="resetToDefault('${option.getName()}','${option.getDefaultValueAsString()}', '${option.getKind()}')" type="button"
                               <#if option.getDefaultValueAsString() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
-                      title="Reset to ${option.getDefaultValueAsString()}"</#if>>Default</button>
+                      title="Reset to ${option.getDefaultValueAsString()}"</#if>>Reset</button>
                     </div>
                   </div>
                 </div>
