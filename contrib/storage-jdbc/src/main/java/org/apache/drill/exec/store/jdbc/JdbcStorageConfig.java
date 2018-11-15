@@ -34,18 +34,21 @@ public class JdbcStorageConfig extends StoragePluginConfig {
   private final String url;
   private final String username;
   private final String password;
+  private final boolean caseInsensitiveTableNames;
 
   @JsonCreator
   public JdbcStorageConfig(
       @JsonProperty("driver") String driver,
       @JsonProperty("url") String url,
       @JsonProperty("username") String username,
-      @JsonProperty("password") String password) {
+      @JsonProperty("password") String password,
+      @JsonProperty("caseInsensitiveTableNames") boolean caseInsensitiveTableNames) {
     super();
     this.driver = driver;
     this.url = url;
     this.username = username;
     this.password = password;
+    this.caseInsensitiveTableNames = caseInsensitiveTableNames;
   }
 
   public String getDriver() {
@@ -64,6 +67,11 @@ public class JdbcStorageConfig extends StoragePluginConfig {
     return password;
   }
 
+  @JsonProperty("caseInsensitiveTableNames")
+  public boolean areTableNamesCaseInsensitive() {
+    return caseInsensitiveTableNames;
+  }
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -72,6 +80,7 @@ public class JdbcStorageConfig extends StoragePluginConfig {
     result = prime * result + ((password == null) ? 0 : password.hashCode());
     result = prime * result + ((url == null) ? 0 : url.hashCode());
     result = prime * result + ((username == null) ? 0 : username.hashCode());
+    result = prime * result + (caseInsensitiveTableNames ? 1231 : 1237);
     return result;
   }
 
@@ -87,6 +96,9 @@ public class JdbcStorageConfig extends StoragePluginConfig {
       return false;
     }
     JdbcStorageConfig other = (JdbcStorageConfig) obj;
+    if (caseInsensitiveTableNames != other.caseInsensitiveTableNames) {
+      return false;
+    }
     if (driver == null) {
       if (other.driver != null) {
         return false;
@@ -117,6 +129,4 @@ public class JdbcStorageConfig extends StoragePluginConfig {
     }
     return true;
   }
-
-
 }

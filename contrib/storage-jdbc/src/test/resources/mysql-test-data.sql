@@ -3,12 +3,18 @@ set global time_zone = "+00:00";
 
 use drill_mysql_test;
 
-create table x (
+create table caseSensitiveTable (
   a   BLOB
 );
 
-insert into x (a) values ('this is a test');
+insert into caseSensitiveTable (a) values ('this is a test');
 
+create table CASESENSITIVETABLE (
+  a   BLOB,
+  b   BLOB
+);
+
+insert into CASESENSITIVETABLE (a, b) values ('this is a test', 'for case sensitive table names');
 
 create table person (
   person_id       INT NOT NULL AUTO_INCREMENT PRIMARY KEY,

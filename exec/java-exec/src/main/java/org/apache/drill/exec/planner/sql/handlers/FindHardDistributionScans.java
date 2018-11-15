@@ -53,6 +53,9 @@ class FindHardDistributionScans extends RelShuttleImpl {
     unwrap = scan.getTable().unwrap(DrillTable.class);
     if (unwrap == null) {
       DrillTranslatableTable drillTranslatableTable = scan.getTable().unwrap(DrillTranslatableTable.class);
+      // For the case, when the underlying Table was obtained from Calcite,
+      // it extends neither DrillTable nor DrillTranslatableTable.
+      // Therefore DistributionAffinity type cannot be determined and single mode is rejected.
       if (drillTranslatableTable == null) {
         contains = true; // it rejects single mode.
         return scan;

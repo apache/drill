@@ -41,7 +41,7 @@ public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
   private static final String TABLE_NAME = String.format("%s.`%s`", StoragePluginTestUtils.DFS_PLUGIN_NAME, TABLE_PATH);
 
   @BeforeClass
-  public static void copyData() throws Exception {
+  public static void copyData() {
     dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
   }
 
@@ -127,12 +127,18 @@ public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
   public void showTablesDefaultSchema() throws Exception {
     testNoResult("use derby.drill_derby_test");
     assertEquals(1, testSql("show tables like 'PERSON'"));
+
+    // check table names case insensitivity
+    assertEquals(1, testSql("show tables like 'person'"));
   }
 
   @Test
   public void describe() throws Exception {
     testNoResult("use derby.drill_derby_test");
     assertEquals(19, testSql("describe PERSON"));
+
+    // check table names case insensitivity
+    assertEquals(19, testSql("describe person"));
   }
 
   @Test
@@ -146,5 +152,17 @@ public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
   public void pushdownFilter() throws Exception {
     String query = "select * from derby.drill_derby_test.person where person_ID = 1";
     testPlanMatchingPatterns(query, new String[]{}, new String[]{"Filter"});
+  }
+
+  @Test
+  public void testCaseInsensitiveTableNames() throws Exception {
+    assertEquals(5, testSql("select * from derby.drill_derby_test.PeRsOn"));
+    assertEquals(5, testSql("select * from derby.drill_derby_test.PERSON"));
+    assertEquals(5, testSql("select * from derby.drill_derby_test.person"));
+  }
+
+  @Test
+  public void testJdbcStoragePluginSerDe() throws Exception {
+    testPhysicalPlanExecutionBasedOnQuery("select * from derby.drill_derby_test.PeRsOn");
   }
 }
