@@ -76,10 +76,6 @@ public class ArrayValueWriter extends ComplexValueWriter {
   }
 
   private void writeArrayValue(Value value, ListWriter listWriter, FieldSelection selection, MaterializedField schema) {
-    // if (logger.isDebugEnabled()) {
-    // logger.debug(" list value schema is: type: '{}' mode: '{}'",
-    // getTypeSafe(schema), getDataModeSafe(schema));
-    // }
     if (context.hasSchema()) {
       if (schema == null) {
         logger.debug("------no schema to write list value -> skipping");

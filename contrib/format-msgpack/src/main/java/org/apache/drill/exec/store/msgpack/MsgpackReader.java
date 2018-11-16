@@ -162,7 +162,9 @@ public class MsgpackReader {
     if (isSelectCount) {
       writer.rootAsMap().bit("count").writeBit(1);
     } else {
+      logger.debug("start writing message");
       mapValueWriter.writeMapValue(value, writer.rootAsMap(), this.rootSelection, schema);
+      logger.debug("end writing message");
     }
   }
 

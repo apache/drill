@@ -111,7 +111,7 @@ public class MapValueWriter extends ComplexValueWriter {
         }
         FieldSelection childSelection = selection.getChild(fieldName);
         if (childSelection.isNeverValid()) {
-          logger.debug("Skipping not selected field: {}.{}", context.getFieldPathTracker(), fieldName);
+          logger.trace("Skipping not selected field: {}.{}", context.getFieldPathTracker(), fieldName);
           continue;
         }
         MaterializedField childSchema = getChildSchema(schema, fieldName);

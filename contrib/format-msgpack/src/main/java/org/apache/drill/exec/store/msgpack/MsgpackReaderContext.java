@@ -90,9 +90,6 @@ public class MsgpackReaderContext {
   }
 
   public void handleAndRaise(String suffix, Exception e) throws UserException {
-    // TODO: use UserException here
-    // throw UserException.unsupportedError().message("FIXED type not supported
-    // yet").build(logger);
 
     String message = e.getMessage();
     int columnNr = -1;

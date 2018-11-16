@@ -63,8 +63,9 @@ import org.msgpack.core.MessagePacker;
 import ch.qos.logback.classic.Level;
 
 public class TestMsgpackRecordReader extends ClusterTest {
+  private static boolean RUN_PERFORMANCE_TESTS = false;
   private static int ALL_FIELD_TYPES_SIZE = 12;
-
+  private static String SQL_SELECT_ALL = "select * from `dfs.data`.`test.mp`";
   private static byte TIMESTAMP_TYPE = (byte) -1;
   private static final long BATCH_SIZE = MsgpackRecordReader.DEFAULT_ROWS_PER_BATCH;
   private static File testDir;
@@ -73,6 +74,12 @@ public class TestMsgpackRecordReader extends ClusterTest {
   private static String schemaName = "data";
   private static long epochSeconds;
   private static long nanoSeconds;
+
+  private RowSetBuilder rowSetBuilder;
+  private TupleMetadata expectedSchema;
+  private QueryRowSetIterator rowSetIterator;
+  private SchemaBuilder schemaBuilder;
+  LogFixture logs;
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -83,12 +90,6 @@ public class TestMsgpackRecordReader extends ClusterTest {
     epochSeconds = now.atStartOfDay(ZoneId.of("UTC")).toEpochSecond();
     nanoSeconds = 0;
   }
-
-  private RowSetBuilder rowSetBuilder;
-  private TupleMetadata expectedSchema;
-  private QueryRowSetIterator rowSetIterator;
-  private SchemaBuilder schemaBuilder;
-  LogFixture logs;
 
   @Before
   public void before() {
@@ -116,116 +117,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
     }
   }
 
-  // LogFixtureBuilder logBuilder = LogFixture.builder()
-  // // Log to the console for debugging convenience
-  // .toConsole().logger("org.apache.drill.exec", Level.TRACE);
-  // try (LogFixture logs = logBuilder.build()) {
-  // }
-
-  @Test
-  @Ignore
-  public void testPerformance() throws Exception {
-    Stopwatch stopwatch = Stopwatch.createStarted();
-    try (MessagePacker packer = testPacker()) {
-      for (int i = 0; i < 100_000; i++) {
-        packer.packMapHeader(10);
-        packer.packString("a").packString(UUID.randomUUID().toString());
-        packer.packString("b").packString(UUID.randomUUID().toString());
-        packer.packString("c").packString(UUID.randomUUID().toString());
-        packer.packString("d").packString(UUID.randomUUID().toString());
-        packer.packString("e").packString(UUID.randomUUID().toString());
-        packer.packString("f").packString(UUID.randomUUID().toString());
-        packer.packString("g").packString(UUID.randomUUID().toString());
-        packer.packString("h").packString(UUID.randomUUID().toString());
-        packer.packString("i");
-        int BUFFER_SIZE = 1024 + (int) (Math.random() * 1024 * 4);
-        byte[] bytes = new byte[BUFFER_SIZE];
-        for (int j = 0; j < bytes.length; j++) {
-          bytes[j] = (byte) (Math.random() * 255);
-        }
-        packer.packBinaryHeader(BUFFER_SIZE).addPayload(bytes);
-        packer.packString("j");
-        for (int j = 0; j < bytes.length; j++) {
-          bytes[j] = (byte) (Math.random() * 255);
-        }
-        packer.packBinaryHeader(BUFFER_SIZE).addPayload(bytes);
-      }
-    }
-    System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-
-    String sql = "select * from `dfs.data`.`test.mp` limit 1";
-    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
-    for (QueryDataBatch batch : results) {
-      batch.release();
-    }
-
-    for (int i = 0; i < 20; i++) {
-      stopwatch.reset().start();
-      sql = "select * from `dfs.data`.`test.mp`";
-      results = client.queryBuilder().sql(sql).results();
-      for (QueryDataBatch batch : results) {
-        batch.release();
-      }
-      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-    }
-  }
-
-  @Test
-  @Ignore
-  public void testPerformanceArrayOfElementsOfDifferentTypes() throws Exception {
-    Stopwatch stopwatch = Stopwatch.createStarted();
-
-    try (MessagePacker packer = testPacker()) {
-      packer.packMapHeader(1);
-      packer.packString("anArray").packArrayHeader(4);
-      packer.packString("first element");
-      byte[] bytes = new byte[] { 'A' };
-      packer.packBinaryHeader(1).addPayload(bytes);
-      packer.packDouble(123.456d);
-      packer.packLong(99L);
-    }
-    System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-
-    String sql = "select * from `dfs.data`.`test.mp`";
-
-    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, noSchemaConfig());
-
-    for (int i = 0; i < 10; i++) {
-      stopwatch.reset().start();
-      List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
-      for (QueryDataBatch batch : results) {
-        batch.release();
-      }
-      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-    }
-  }
-
-  @Test
-  @Ignore
-  public void testPerformanceExceptionHandling() throws Exception {
-    Stopwatch stopwatch = Stopwatch.createStarted();
-    try (MessagePacker packer = testPacker()) {
-      for (int i = 0; i < 10_000_000; i++) {
-        if (i % 10000 == 0) {
-          packer.packString("a").packString("A");
-        } else {
-          packer.packMapHeader(1);
-          packer.packString("a").packString("A");
-        }
-      }
-    }
-    System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-
-    for (int i = 0; i < 20; i++) {
-      stopwatch.reset().start();
-      String sql = "select * from `dfs.data`.`test.mp`";
-      List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
-      for (QueryDataBatch batch : results) {
-        batch.release();
-      }
-      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-    }
-  }
+  /////////////////////////////////////////////////////////////////////////////////////////////
 
   @Test
   public void testBasic() throws Exception {
@@ -241,7 +133,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.packString("banana").packInt(2);
       packer.packString("potato").packDouble(12.12);
     }
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -253,41 +145,6 @@ public class TestMsgpackRecordReader extends ClusterTest {
     // @formatter:off
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(1L, 2L, "infini!!!", null)
         .addRow(1L, 2L, null, 12.12d).build();
-    // @formatter:on
-    new RowSetComparison(expected).verifyAndClearAll(actual);
-  }
-
-  @Test
-  public void testSchemaArrayOfElementsOfDifferentTypes() throws Exception {
-
-    try (MessagePacker packer = testPacker()) {
-      packer.packMapHeader(1);
-      packer.packString("anArray").packArrayHeader(4);
-      packer.packString("first element");
-      byte[] bytes = new byte[] { 'A' };
-      packer.packBinaryHeader(1).addPayload(bytes);
-      packer.packDouble(123.456d);
-      packer.packLong(99L);
-    }
-
-    // schema learning mode.
-    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
-
-    String sql = "select * from `dfs.data`.`test.mp`";
-    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
-    for (QueryDataBatch batch : results) {
-      batch.release();
-    }
-    // schema using mode.
-    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
-
-    RowSet actual = client.queryBuilder().sql(sql).rowSet();
-
-    TupleMetadata expectedSchema = new SchemaBuilder().addArray("anArray", TypeProtos.MinorType.VARCHAR).buildSchema();
-
-    // @formatter:off
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(new Object[] { new String[] { "first element", "A", "123.456", "99" } }).build();
     // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
@@ -305,10 +162,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.packLong(99L);
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
-
-    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, noSchemaConfig());
-
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder().addArray("anArray", TypeProtos.MinorType.VARCHAR).buildSchema();
@@ -316,53 +170,6 @@ public class TestMsgpackRecordReader extends ClusterTest {
     // @formatter:off
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow(new Object[] { new String[] { "first element" } }).build();
-    // @formatter:on
-    new RowSetComparison(expected).verifyAndClearAll(actual);
-  }
-
-  @Test
-  public void testSchemaRepeatedMapWithFieldWithDifferentTypes() throws Exception {
-
-    // try (OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(new
-    // File(testDir, "test.json")))) {
-    // w.write("{\"arrayOfMap\":[{\"type\": 3, \"data\": 44}]}\n");
-    // }
-    try (MessagePacker packer = testPacker()) {
-      packer.packMapHeader(1);
-      packer.packString("arrayOfMap").packArrayHeader(3);
-      packer.packMapHeader(2);
-      packer.packString("type").packInt(2);
-      packer.packString("data").packString("data");
-      packer.packMapHeader(2);
-      packer.packString("type").packInt(1);
-      packer.packString("data");
-      byte[] bytes = new byte[] { 'A' };
-      packer.packBinaryHeader(1).addPayload(bytes);
-      packer.packMapHeader(2);
-      packer.packString("type").packInt(3);
-      packer.packString("data").packLong(44L);
-    }
-
-    // schema learning mode.
-    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
-
-    String sql = "select * from `dfs.data`.`test.mp`";
-    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
-
-    for (QueryDataBatch batch : results) {
-      batch.release();
-    }
-
-    // schema using mode.
-    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
-
-    sql = "select root.arrayOfMap[2].data as data from `dfs.data`.`test.mp` as root";
-    RowSet actual = client.queryBuilder().sql(sql).rowSet();
-
-    TupleMetadata expectedSchema = new SchemaBuilder().add("data", MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-        .buildSchema();
-    // @formatter:off
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow("44").build();
     // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
   }
@@ -433,7 +240,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.packString("stringVal");
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
@@ -458,7 +265,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.packInt(1);
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
@@ -550,7 +357,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.packInt(5);
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
@@ -759,7 +566,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.packString("z").packLong(3);
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
@@ -836,7 +643,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.addPayload(bytes);
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
@@ -862,7 +669,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.addPayload(bytes);
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
@@ -888,7 +695,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.addPayload(bytes);
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
@@ -915,7 +722,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.addPayload(bytes);
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
@@ -944,7 +751,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
       packer.packShort((short) 5).packLong(5);
     }
 
-    String sql = "select * from `dfs.data`.`test.mp`";
+    String sql = SQL_SELECT_ALL;
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
@@ -1212,6 +1019,207 @@ public class TestMsgpackRecordReader extends ClusterTest {
     rowSetBuilder.addRow("data");
     verify(rowSetBuilder.build(), nextRowSet());
   }
+
+  @Test
+  public void testSchemaArrayOfElementsOfDifferentTypes() throws Exception {
+
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("anArray").packArrayHeader(4);
+      packer.packString("first element");
+      byte[] bytes = new byte[] { 'A' };
+      packer.packBinaryHeader(1).addPayload(bytes);
+      packer.packDouble(123.456d);
+      packer.packLong(99L);
+    }
+
+    // schema learning mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
+
+    String sql = SQL_SELECT_ALL;
+    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+    for (QueryDataBatch batch : results) {
+      batch.release();
+    }
+    // schema using mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
+
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder().addArray("anArray", TypeProtos.MinorType.VARCHAR).buildSchema();
+
+    // @formatter:off
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(new Object[] { new String[] { "first element", "A", "123.456", "99" } }).build();
+    // @formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  @Test
+  public void testSchemaRepeatedMapWithFieldWithDifferentTypes() throws Exception {
+
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("arrayOfMap").packArrayHeader(3);
+      packer.packMapHeader(2);
+      packer.packString("type").packInt(2);
+      packer.packString("data").packString("data");
+      packer.packMapHeader(2);
+      packer.packString("type").packInt(1);
+      packer.packString("data");
+      byte[] bytes = new byte[] { 'A' };
+      packer.packBinaryHeader(1).addPayload(bytes);
+      packer.packMapHeader(2);
+      packer.packString("type").packInt(3);
+      packer.packString("data").packLong(44L);
+    }
+
+    // schema learning mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
+
+    String sql = SQL_SELECT_ALL;
+    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+
+    for (QueryDataBatch batch : results) {
+      batch.release();
+    }
+
+    // schema using mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
+
+    sql = "select root.arrayOfMap[2].data as data from `dfs.data`.`test.mp` as root";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder().add("data", MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
+    // @formatter:off
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow("44").build();
+    // @formatter:on
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  /////////////////// Performance tests
+  /////////////////// ////////////////////////////////////////////////////////////
+
+  /**
+   * Test reading 100k messages. All messages are well formed.
+   */
+  @Test
+  @Ignore
+  public void testPerformanceAllValidMessages() throws Exception {
+    if (!RUN_PERFORMANCE_TESTS) {
+      return;
+    }
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    try (MessagePacker packer = testPacker()) {
+      for (int i = 0; i < 100_000; i++) {
+        packer.packMapHeader(10);
+        packer.packString("a").packString(UUID.randomUUID().toString());
+        packer.packString("b").packString(UUID.randomUUID().toString());
+        packer.packString("c").packString(UUID.randomUUID().toString());
+        packer.packString("d").packString(UUID.randomUUID().toString());
+        packer.packString("e").packString(UUID.randomUUID().toString());
+        packer.packString("f").packString(UUID.randomUUID().toString());
+        packer.packString("g").packString(UUID.randomUUID().toString());
+        packer.packString("h").packString(UUID.randomUUID().toString());
+        packer.packString("i");
+        int BUFFER_SIZE = 1024 + (int) (Math.random() * 1024 * 4);
+        byte[] bytes = new byte[BUFFER_SIZE];
+        for (int j = 0; j < bytes.length; j++) {
+          bytes[j] = (byte) (Math.random() * 255);
+        }
+        packer.packBinaryHeader(BUFFER_SIZE).addPayload(bytes);
+        packer.packString("j");
+        for (int j = 0; j < bytes.length; j++) {
+          bytes[j] = (byte) (Math.random() * 255);
+        }
+        packer.packBinaryHeader(BUFFER_SIZE).addPayload(bytes);
+      }
+    }
+    System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+
+    for (int i = 0; i < 20; i++) {
+      stopwatch.reset().start();
+      String sql = SQL_SELECT_ALL;
+      List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+      for (QueryDataBatch batch : results) {
+        batch.release();
+      }
+      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    }
+  }
+
+  /**
+   * Skip elements in arrays of mix typed values. How fast is the linient mode.
+   */
+  @Test
+  @Ignore
+  public void testPerformanceSkippingElementsInArrayOfElementsOfDifferentTypes() throws Exception {
+    if (!RUN_PERFORMANCE_TESTS) {
+      return;
+    }
+    Stopwatch stopwatch = Stopwatch.createStarted();
+
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("anArray").packArrayHeader(4);
+      packer.packString("first element");
+      byte[] bytes = new byte[] { 'A' };
+      packer.packBinaryHeader(1).addPayload(bytes);
+      packer.packDouble(123.456d);
+      packer.packLong(99L);
+    }
+    System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+
+    String sql = SQL_SELECT_ALL;
+
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, noSchemaConfig());
+
+    for (int i = 0; i < 10; i++) {
+      stopwatch.reset().start();
+      List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+      for (QueryDataBatch batch : results) {
+        batch.release();
+      }
+      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    }
+  }
+
+  /**
+   * Skip root messages which are not maps. How fast the linient mode.
+   */
+  @Test
+  @Ignore
+  public void testPerformanceSkippingNoneMapRootMessages() throws Exception {
+    if (!RUN_PERFORMANCE_TESTS) {
+      return;
+    }
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    try (MessagePacker packer = testPacker()) {
+      for (int i = 0; i < 10_000_000; i++) {
+        // one out of 10k are not map messages.
+        if (i % 10000 == 0) {
+          packer.packString("a").packString("A");
+        } else {
+          packer.packMapHeader(1);
+          packer.packString("a").packString("A");
+        }
+      }
+    }
+    System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+
+    for (int i = 0; i < 20; i++) {
+      stopwatch.reset().start();
+      String sql = SQL_SELECT_ALL;
+      List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+      for (QueryDataBatch batch : results) {
+        batch.release();
+      }
+      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////
 
   private static byte[] getTimestampBytes(long epochSeconds, long nanoSeconds) {
     if (epochSeconds >> 34 == 0) {

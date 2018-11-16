@@ -110,23 +110,23 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
 
   private void logDebug(Value value, MapWriter mapWriter, String fieldName, MaterializedField schema) {
     if (schema != null) {
-      logger.debug("write type: '{}' into {} at '{}.{}' target type: '{}' mode: '{}'", value.getValueType(),
-          mapWriter == null ? "list" : "map", context.getFieldPathTracker(), fieldName, schema.getType().getMinorType(),
+      logger.debug("write type: '{}' into {} at '{}' target type: '{}' mode: '{}'", value.getValueType(),
+          mapWriter == null ? "list" : "map", context.getFieldPathTracker(), schema.getType().getMinorType(),
           schema.getDataMode());
     } else {
-      logger.debug("write type: '{}' into {} at '{}.{}'", value.getValueType(), mapWriter == null ? "list" : "map",
-          context.getFieldPathTracker(), fieldName);
+      logger.debug("write type: '{}' into {} at '{}'", value.getValueType(), mapWriter == null ? "list" : "map",
+          context.getFieldPathTracker());
     }
   }
 
   private void logTrace(Value value, MapWriter mapWriter, String fieldName, MaterializedField schema) {
     if (schema != null) {
-      logger.trace("write type: '{}' value: '{}' into {} at '{}.{}' target type: '{}' mode: '{}'", value.getValueType(),
-          value, mapWriter == null ? "list" : "map", context.getFieldPathTracker(), fieldName,
-          schema.getType().getMinorType(), schema.getDataMode());
+      logger.trace("write type: '{}' value: '{}' into {} at '{}' target type: '{}' mode: '{}'", value.getValueType(),
+          value, mapWriter == null ? "list" : "map", context.getFieldPathTracker(), schema.getType().getMinorType(),
+          schema.getDataMode());
     } else {
-      logger.trace("write type: '{}' value: '{}' into {} at '{}.{}'", value.getValueType(), value,
-          mapWriter == null ? "list" : "map", context.getFieldPathTracker(), fieldName);
+      logger.trace("write type: '{}' value: '{}' into {} at '{}'", value.getValueType(), value,
+          mapWriter == null ? "list" : "map", context.getFieldPathTracker());
     }
   }
 
