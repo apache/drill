@@ -90,9 +90,9 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
                   </#if>
                     <div class="input-group-btn">
                       <button class="btn btn-default" type="submit">Update</button>
-                      <button class="btn btn-default" onClick="resetToDefault('${option.getName()}','${option.getDefaultValueAsString()}', '${option.getKind()}')" type="button"
-                              <#if option.getDefaultValueAsString() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
-                      title="Reset to ${option.getDefaultValueAsString()}"</#if>>Reset</button>
+                      <button class="btn btn-default" onClick="resetToDefault('${option.getName()}','${option.getDefaultValue()}', '${option.getKind()}')" type="button"
+                              <#if option.getDefaultValue() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
+                      title="Reset to ${option.getDefaultValue()}"</#if>>Reset</button>
                     </div>
                   </div>
                 </div>

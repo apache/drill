@@ -90,7 +90,7 @@ public class StatusResources {
     OptionList optionList = internal ? optionManager.getInternalOptionList(): optionManager.getPublicOptionList();
 
     for (OptionValue option : optionList) {
-      options.add(new OptionWrapper(option.name, option.getValue(), optionManager.getDefault(option.name).getValue(), option.accessibleScopes, option.kind, option.scope));
+      options.add(new OptionWrapper(option.name, option.getValue(), optionManager.getDefault(option.name).getValue().toString(), option.accessibleScopes, option.kind, option.scope));
     }
 
     Collections.sort(options, new Comparator<OptionWrapper>() {
@@ -171,7 +171,7 @@ public class StatusResources {
 
     private String name;
     private Object value;
-    private Object defaultValue;
+    private String defaultValue;
     private OptionValue.AccessibleScopes accessibleScopes;
     private String kind;
     private String optionScope;
@@ -179,7 +179,7 @@ public class StatusResources {
     @JsonCreator
     public OptionWrapper(@JsonProperty("name") String name,
                          @JsonProperty("value") Object value,
-                         @JsonProperty("defaultValue") Object defaultValue,
+                         @JsonProperty("defaultValue") String defaultValue,
                          @JsonProperty("accessibleScopes") OptionValue.AccessibleScopes type,
                          @JsonProperty("kind") Kind kind,
                          @JsonProperty("optionScope") OptionValue.OptionScope scope) {
@@ -204,8 +204,8 @@ public class StatusResources {
       return value;
     }
 
-    public Object getDefaultValueAsString() {
-      return defaultValue.toString();
+    public String getDefaultValue() {
+      return defaultValue;
     }
 
     public OptionValue.AccessibleScopes getAccessibleScopes() {
