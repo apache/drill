@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>18</version>
+    <version>21</version>
     <relativePath />
   </parent>
 
@@ -45,7 +45,7 @@
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <dep.junit.version>4.12</dep.junit.version>
-    <dep.slf4j.version>1.7.6</dep.slf4j.version>
+    <dep.slf4j.version>1.7.25</dep.slf4j.version>
     <shaded.guava.version>23.0</shaded.guava.version>
     <guava.version>19.0</guava.version>
     <forkCount>2</forkCount>
@@ -89,7 +89,7 @@
     <excludedGroups />
     <memoryMb>4096</memoryMb>
     <directMemoryMb>4096</directMemoryMb>
-    <additionalparam>-Xdoclint:none</additionalparam>
+    <doclint>none</doclint>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
     <docker.repository>drill/apache-drill</docker.repository>
@@ -574,7 +574,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.1.0</version>
           <executions>
             <execution>
               <goals>
@@ -689,7 +688,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.0.0-M1</version>
+          <version>3.0.0-M2</version>
         </plugin>
         <plugin> <!-- classpath scanning  -->
           <groupId>org.codehaus.mojo</groupId>
@@ -714,7 +713,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.21.0</version>
           <executions>
             <execution>
               <id>default-test</id>
@@ -757,7 +755,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
-          <version>2.5.2</version>
           <configuration>
             <useReleaseProfile>false</useReleaseProfile>
             <pushChanges>false</pushChanges>
@@ -859,7 +856,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.1.0</version>
           <executions>
             <execution>
               <phase>package</phase>
@@ -946,7 +942,7 @@
            long as Mockito _contains_ older Hamcrest classes.  See DRILL-2130. -->
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>2.18.3</version>
+      <version>2.23.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -1667,11 +1663,11 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>net.ju-n.maven.plugins</groupId>
+            <groupId>net.nicoulaj.maven.plugins</groupId>
             <artifactId>checksum-maven-plugin</artifactId>
-            <version>1.2</version>
             <executions>
               <execution>
+                <id>source-release-checksum</id>
                 <goals>
                   <goal>artifacts</goal>
                 </goals>
@@ -1681,12 +1677,13 @@
               <algorithms>
                 <algorithm>SHA-512</algorithm>
               </algorithms>
-              <failOnError>false</failOnError>
             </configuration>
           </plugin>
+
           <!-- override the parent assembly execution to customize the assembly final name -->
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.1.0</version>
             <executions>
               <execution>
                 <id>source-release-assembly</id>
@@ -2369,7 +2366,7 @@
           <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
-            <version>1.52</version>
+            <version>1.60</version>
           </dependency>
 
           <!-- Test Dependencies -->
