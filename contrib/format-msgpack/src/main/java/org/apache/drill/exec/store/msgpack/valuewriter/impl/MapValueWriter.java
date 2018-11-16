@@ -85,11 +85,6 @@ public class MapValueWriter extends ComplexValueWriter {
   }
 
   public void writeMapValue(MapValue value, MapWriter writer, FieldSelection selection, MaterializedField schema) {
-    // if (logger.isDebugEnabled()) {
-    // logger.debug("write map value at: '{}' schema is: type: '{}' mode: '{}'",
-    // context.getFieldPathTracker(),
-    // getTypeSafe(schema), getDataModeSafe(schema));
-    // }
 
     writer.start();
     try {
