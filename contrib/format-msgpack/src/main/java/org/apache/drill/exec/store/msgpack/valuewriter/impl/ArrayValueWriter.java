@@ -21,8 +21,8 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackParsingException;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
@@ -55,29 +55,29 @@ public class ArrayValueWriter extends ComplexValueWriter {
    */
   @Override
   public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
-      MaterializedField schema) {
+      ColumnMetadata schema) {
 
     ArrayValue value = v.asArrayValue();
     if (mapWriter != null) {
       // Write the array in map.
       ListWriter subListWriter = mapWriter.list(fieldName);
-      MaterializedField subSchema = getArrayInMapSubSchema(schema);
+      ColumnMetadata subSchema = getArrayInMapSubSchema(schema);
       context.getFieldPathTracker().enter(fieldName);
       writeArrayValue(value, subListWriter, selection, subSchema);
       context.getFieldPathTracker().leave();
     } else {
       // Write the array in array.
       ListWriter subListWriter = listWriter.list();
-      MaterializedField subSchema = getArrayInArraySubSchema(schema);
+      ColumnMetadata subSchema = getArrayInArraySubSchema(schema);
       context.getFieldPathTracker().enter("[]");
       writeArrayValue(value, subListWriter, selection, subSchema);
       context.getFieldPathTracker().leave();
     }
   }
 
-  private void writeArrayValue(Value value, ListWriter listWriter, FieldSelection selection, MaterializedField schema) {
+  private void writeArrayValue(Value value, ListWriter listWriter, FieldSelection selection, ColumnMetadata subSchema) {
     if (context.hasSchema()) {
-      if (schema == null) {
+      if (subSchema == null) {
         logger.debug("------no schema to write list value -> skipping");
         return;
       }
@@ -88,7 +88,7 @@ public class ArrayValueWriter extends ComplexValueWriter {
       for (int i = 0; i < arrayValue.size(); i++) {
         Value element = arrayValue.get(i);
         if (!element.isNilValue()) {
-          writeElement(element, null, listWriter, null, selection, schema);
+          writeElement(element, null, listWriter, null, selection, subSchema);
         }
       }
     } finally {
@@ -105,24 +105,12 @@ public class ArrayValueWriter extends ComplexValueWriter {
    *                 the schema of the array
    * @return the type of the elements in the array
    */
-  private MaterializedField getArrayInMapSubSchema(MaterializedField schema) {
+  private ColumnMetadata getArrayInMapSubSchema(ColumnMetadata schema) {
     if (!context.hasSchema()) {
       // We don't have a shema to work with.
       return null;
     }
-    if (schema.getType().getMinorType() == MinorType.MAP) {
-      // If we are dealing with a MAP REPEATED, that is an array of map we know
-      // the schema of the elements are MAP.
-      return schema;
-    } else {
-      // TODO: give more details what we are doing here.
-      Collection<MaterializedField> children = schema.getChildren();
-      if (!children.isEmpty()) {
-        MaterializedField childSchema = children.iterator().next();
-        return childSchema;
-      }
-      return null;
-    }
+    return schema;
   }
 
   /**
@@ -133,13 +121,14 @@ public class ArrayValueWriter extends ComplexValueWriter {
    *                 the schema of the array
    * @return the type of the elements in the array
    */
-  private MaterializedField getArrayInArraySubSchema(MaterializedField schema) {
+  private ColumnMetadata getArrayInArraySubSchema(ColumnMetadata schema) {
     if (!context.hasSchema()) {
       // We don't have a shema to work with.
       return null;
     }
-    Collection<MaterializedField> children = schema.getChildren();
-    MaterializedField childSchema = children.iterator().next();
+    VariantMetadata s = schema.variantSchema();
+    Collection<ColumnMetadata> children = s.members();
+    ColumnMetadata childSchema = children.iterator().next();
     // TODO: give more details what we are doing here.
     if (childSchema == null) {
       throw new MsgpackParsingException("Array in array element has no child schema.");

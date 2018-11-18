@@ -29,6 +29,9 @@ import org.apache.drill.exec.exception.SchemaChangeRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -145,6 +148,17 @@ public class MsgpackSchema {
    */
   public MaterializedField getSchema() {
     return schema;
+  }
+
+  public TupleMetadata getTupleMetadata() {
+    if (schema == null) {
+      return null;
+    }
+    AbstractColumnMetadata s = MetadataUtils.fromField(schema);
+    if (!s.isMap()) {
+      return null;
+    }
+    return s.mapSchema();
   }
 
   /**

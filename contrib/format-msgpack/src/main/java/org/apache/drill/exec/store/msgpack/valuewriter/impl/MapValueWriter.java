@@ -22,8 +22,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackParsingException;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
@@ -54,13 +55,13 @@ public class MapValueWriter extends ComplexValueWriter {
    */
   @Override
   public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
-      MaterializedField schema) {
+      ColumnMetadata schema) {
 
     if (context.hasSchema()) {
       if (schema == null) {
         logger.debug("------no schema for map value -> skipping.");
         return;
-      } else if (schema.getType().getMinorType() != MinorType.MAP) {
+      } else if (schema.structureType() != StructureType.TUPLE) {
         logger.debug("------schema is not a MAP for map value -> skipping.");
         return;
       }
@@ -72,19 +73,19 @@ public class MapValueWriter extends ComplexValueWriter {
       // MAP. Write map in a map.
       MapWriter subMapWriter = mapWriter.map(fieldName);
       context.getFieldPathTracker().enter(fieldName);
-      writeMapValue(value, subMapWriter, selection, schema);
+      writeMapValue(value, subMapWriter, selection, schema == null ? null : schema.mapSchema());
       context.getFieldPathTracker().leave();
     } else {
       // We are inside a listWriter (inside an array) and we encoutered an element of
       // type MAP. Write map in a list.
       MapWriter subMapWriter = listWriter.map();
       context.getFieldPathTracker().enter("[]");
-      writeMapValue(value, subMapWriter, selection, schema);
+      writeMapValue(value, subMapWriter, selection, schema == null ? null : schema.mapSchema());
       context.getFieldPathTracker().leave();
     }
   }
 
-  public void writeMapValue(MapValue value, MapWriter writer, FieldSelection selection, MaterializedField schema) {
+  public void writeMapValue(MapValue value, MapWriter writer, FieldSelection selection, TupleMetadata tupleMetadata) {
 
     writer.start();
     try {
@@ -109,7 +110,7 @@ public class MapValueWriter extends ComplexValueWriter {
           logger.trace("Skipping not selected field: {}.{}", context.getFieldPathTracker(), fieldName);
           continue;
         }
-        MaterializedField childSchema = getChildSchema(schema, fieldName);
+        ColumnMetadata childSchema = getChildSchema(tupleMetadata, fieldName);
         writeElement(element, writer, null, fieldName, childSelection, childSchema);
       }
     } finally {
@@ -120,24 +121,23 @@ public class MapValueWriter extends ComplexValueWriter {
   /**
    * Get the schema of the given field
    *
-   * @param schema
-   *                    the schema of the map we are writing.
+   * @param tupleMetadata
+   *                        the schema of the map we are writing.
    * @param fieldName
-   *                    the name of the field we want to write.
+   *                        the name of the field we want to write.
    * @return the schema of the field
    */
-  private MaterializedField getChildSchema(MaterializedField schema, String fieldName) {
+  private ColumnMetadata getChildSchema(TupleMetadata tupleMetadata, String fieldName) {
     if (!context.hasSchema()) {
       // Not using a schema.
       return null;
     }
     // Find the schema of the field.
-    for (MaterializedField c : schema.getChildren()) {
-      if (fieldName.equalsIgnoreCase(c.getName())) {
-        return c;
-      }
+    ColumnMetadata c = tupleMetadata.metadata(fieldName);
+    if (c == null) {
+      throw new MsgpackParsingException("Field name: " + fieldName + " has no child schema.");
     }
-    throw new MsgpackParsingException("Field name: " + fieldName + " has no child schema.");
+    return c;
   }
 
   /**

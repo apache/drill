@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackReaderContext;
 import org.apache.drill.exec.store.msgpack.valuewriter.ValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
@@ -59,6 +59,6 @@ public abstract class AbstractValueWriter implements ValueWriter {
    *                     match we try to coerce the value into that desired type.
    */
   public abstract void write(Value value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
-      FieldSelection selection, MaterializedField schema);
+      FieldSelection selection, ColumnMetadata schema);
 
 }

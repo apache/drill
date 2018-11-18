@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.AbstractValueWriter;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.ArrayValueWriter;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.BinaryValueWriter;
@@ -123,7 +123,7 @@ public class MsgpackReader {
    * @throws IOException
    * @throws MessageInsufficientBufferException
    */
-  public boolean write(ComplexWriter writer, MaterializedField schema)
+  public boolean write(ComplexWriter writer, TupleMetadata schema)
       throws IOException, MessageInsufficientBufferException {
     if (!unpacker.hasNext()) {
       // The unpacker has no more messages, we reached the end of the file.
@@ -158,7 +158,7 @@ public class MsgpackReader {
    * @param schema
    * @throws IOException
    */
-  private void writeOneMessage(MapValue value, ComplexWriter writer, MaterializedField schema) throws IOException {
+  private void writeOneMessage(MapValue value, ComplexWriter writer, TupleMetadata schema) throws IOException {
     if (isSelectCount) {
       writer.rootAsMap().bit("count").writeBit(1);
     } else {

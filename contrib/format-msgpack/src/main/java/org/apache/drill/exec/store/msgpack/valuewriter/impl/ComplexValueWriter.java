@@ -22,6 +22,7 @@ import java.util.EnumMap;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackParsingException;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
@@ -72,7 +73,7 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
    *                     the desired schema for the given value
    */
   protected void writeElement(Value value, MapWriter mapWriter, ListWriter listWriter, String fieldName,
-      FieldSelection selection, MaterializedField schema) {
+      FieldSelection selection, ColumnMetadata schema) {
 
     if (logger.isDebugEnabled()) {
       logDebug(value, mapWriter, fieldName, schema);
@@ -108,22 +109,20 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
     }
   }
 
-  private void logDebug(Value value, MapWriter mapWriter, String fieldName, MaterializedField schema) {
+  private void logDebug(Value value, MapWriter mapWriter, String fieldName, ColumnMetadata schema) {
     if (schema != null) {
       logger.debug("write type: '{}' into {} at '{}' target type: '{}' mode: '{}'", value.getValueType(),
-          mapWriter == null ? "list" : "map", context.getFieldPathTracker(), schema.getType().getMinorType(),
-          schema.getDataMode());
+          mapWriter == null ? "list" : "map", context.getFieldPathTracker(), schema.type(), schema.mode());
     } else {
       logger.debug("write type: '{}' into {} at '{}'", value.getValueType(), mapWriter == null ? "list" : "map",
           context.getFieldPathTracker());
     }
   }
 
-  private void logTrace(Value value, MapWriter mapWriter, String fieldName, MaterializedField schema) {
+  private void logTrace(Value value, MapWriter mapWriter, String fieldName, ColumnMetadata schema) {
     if (schema != null) {
       logger.trace("write type: '{}' value: '{}' into {} at '{}' target type: '{}' mode: '{}'", value.getValueType(),
-          value, mapWriter == null ? "list" : "map", context.getFieldPathTracker(), schema.getType().getMinorType(),
-          schema.getDataMode());
+          value, mapWriter == null ? "list" : "map", context.getFieldPathTracker(), schema.type(), schema.mode());
     } else {
       logger.trace("write type: '{}' value: '{}' into {} at '{}'", value.getValueType(), value,
           mapWriter == null ? "list" : "map", context.getFieldPathTracker());

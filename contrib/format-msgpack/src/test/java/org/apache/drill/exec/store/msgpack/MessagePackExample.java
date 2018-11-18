@@ -28,10 +28,8 @@ import java.util.Set;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessageUnpacker;
-import org.msgpack.value.BinaryValue;
 import org.msgpack.value.ImmutableValue;
 import org.msgpack.value.MapValue;
-import org.msgpack.value.NumberValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
 

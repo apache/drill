@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackReaderContext;
 import org.apache.drill.exec.store.msgpack.valuewriter.ScalarValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
@@ -58,10 +58,10 @@ public abstract class AbstractScalarValueWriter extends AbstractValueWriter impl
    *                      the desired schema if any
    * @return the target type desired.
    */
-  protected MinorType getTargetType(MinorType defaultType, MaterializedField schema) {
+  protected MinorType getTargetType(MinorType defaultType, ColumnMetadata schema) {
     if (context.hasSchema()) {
       if (schema != null) {
-        return schema.getType().getMinorType();
+        return schema.type();
       }
     }
     return defaultType;
@@ -73,7 +73,7 @@ public abstract class AbstractScalarValueWriter extends AbstractValueWriter impl
    */
   @Override
   public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
-      MaterializedField schema) {
+      ColumnMetadata schema) {
 
     MinorType targetSchemaType = getTargetType(getDefaultType(v), schema);
     if (logger.isDebugEnabled()) {
