@@ -129,7 +129,6 @@ public class ArrayValueWriter extends ComplexValueWriter {
     VariantMetadata s = schema.variantSchema();
     Collection<ColumnMetadata> children = s.members();
     ColumnMetadata childSchema = children.iterator().next();
-    // TODO: give more details what we are doing here.
     if (childSchema == null) {
       throw new MsgpackParsingException("Array in array element has no child schema.");
     }

@@ -242,7 +242,6 @@ public class MsgpackSchema {
   }
 
   private MaterializedField getFieldByName(String newChildName, MaterializedField existingField) {
-    // TODO look at using the TupleSchema instead.
     for (MaterializedField f : existingField.getChildren()) {
       if (newChildName.equalsIgnoreCase(f.getName())) {
         return f;
