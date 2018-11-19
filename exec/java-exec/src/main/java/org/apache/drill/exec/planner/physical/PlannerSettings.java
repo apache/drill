@@ -126,24 +126,37 @@ public class PlannerSettings implements Context{
 
   // ------------------------------------------- Index planning related options BEGIN --------------------------------------------------------------
   public static final String USE_SIMPLE_OPTIMIZER_KEY = "planner.use_simple_optimizer";
-  public static final BooleanValidator USE_SIMPLE_OPTIMIZER = new BooleanValidator(USE_SIMPLE_OPTIMIZER_KEY, null);
-  public static final BooleanValidator INDEX_PLANNING = new BooleanValidator("planner.enable_index_planning", null);
-  public static final BooleanValidator ENABLE_STATS = new BooleanValidator("planner.enable_statistics", null);
-  public static final BooleanValidator DISABLE_FULL_TABLE_SCAN = new BooleanValidator("planner.disable_full_table_scan", null);
-  public static final RangeLongValidator INDEX_MAX_CHOSEN_INDEXES_PER_TABLE = new RangeLongValidator("planner.index.max_chosen_indexes_per_table", 0, 100, null);
-  public static final BooleanValidator INDEX_FORCE_SORT_NONCOVERING = new BooleanValidator("planner.index.force_sort_noncovering", null);
-  public static final BooleanValidator INDEX_USE_HASHJOIN_NONCOVERING = new BooleanValidator("planner.index.use_hashjoin_noncovering", null);
+  public static final BooleanValidator USE_SIMPLE_OPTIMIZER = new BooleanValidator(USE_SIMPLE_OPTIMIZER_KEY,
+      new OptionDescription("Simple optimizer applies fewer rules to reduce planning time and is meant to be used only for simple operational queries that use limit, sort, and filter."));
+  public static final BooleanValidator INDEX_PLANNING = new BooleanValidator("planner.enable_index_planning",
+      new OptionDescription("Enables or disables index planning."));
+  public static final BooleanValidator ENABLE_STATS = new BooleanValidator("planner.enable_statistics",
+      new OptionDescription("Enable or disable statistics for the filter conditions on indexed columns."));
+  public static final BooleanValidator DISABLE_FULL_TABLE_SCAN = new BooleanValidator("planner.disable_full_table_scan",
+      new OptionDescription("Disable generating a full table scan plan (only for internal testing use)"));
+  public static final RangeLongValidator INDEX_MAX_CHOSEN_INDEXES_PER_TABLE = new RangeLongValidator("planner.index.max_chosen_indexes_per_table", 0, 100,
+      new OptionDescription("The maximum number of 'chosen' indexes for a table after index costing and ranking."));
+  public static final BooleanValidator INDEX_FORCE_SORT_NONCOVERING = new BooleanValidator("planner.index.force_sort_noncovering",
+      new OptionDescription("Forces Drill to sort for non-covering indexes. If the query has an ORDER-BY on index columns and a non-covering index is chosen, by default Drill leverages the sortedness of the index columns and does not sort. Fast changing primary table data may produce a partial sort. This option forces a sort within Drill."));
+  public static final BooleanValidator INDEX_USE_HASHJOIN_NONCOVERING = new BooleanValidator("planner.index.use_hashjoin_noncovering",
+      new OptionDescription("Enable using HashJoin for non-covering index plans instead of RowKeyJoin (only for internal testing use)."));
   public static final RangeDoubleValidator INDEX_COVERING_SELECTIVITY_THRESHOLD =
-      new RangeDoubleValidator("planner.index.covering_selectivity_threshold", 0.0, 1.0, null);
+      new RangeDoubleValidator("planner.index.covering_selectivity_threshold", 0.0, 1.0,
+          new OptionDescription("For covering indexes, this option specifies the filter selectivity that corresponds to the leading prefix of the index below which the index is considered for planning."));
   public static final RangeDoubleValidator INDEX_NONCOVERING_SELECTIVITY_THRESHOLD =
-      new RangeDoubleValidator("planner.index.noncovering_selectivity_threshold", 0.0, 1.0, null);
+      new RangeDoubleValidator("planner.index.noncovering_selectivity_threshold", 0.0, 1.0,
+          new OptionDescription("For non-covering indexes, this option specifies the filter selectivity that corresponds to the leading prefix of the index below which the index is considered for planning."));
   public static final RangeDoubleValidator INDEX_ROWKEYJOIN_COST_FACTOR =
-      new RangeDoubleValidator("planner.index.rowkeyjoin_cost_factor", 0, Double.MAX_VALUE, null);
+      new RangeDoubleValidator("planner.index.rowkeyjoin_cost_factor", 0, Double.MAX_VALUE,
+          new OptionDescription("The cost factor that provides some control over the I/O cost for non-covering indexes when the rowkey join back to the primary table causes random I/O from the primary table."));
   // TODO: Deprecate the following 2 (also in SystemOptionManager.java)
-  public static final BooleanValidator INDEX_PREFER_INTERSECT_PLANS = new BooleanValidator("planner.index.prefer_intersect_plans", null);
-  public static final RangeLongValidator INDEX_MAX_INDEXES_TO_INTERSECT = new RangeLongValidator("planner.index.max_indexes_to_intersect", 2, 100, null);
+  public static final BooleanValidator INDEX_PREFER_INTERSECT_PLANS = new BooleanValidator("planner.index.prefer_intersect_plans",
+      new OptionDescription("Given 2 or more single column indexes, this option allows preferring index intersect plans compared to single column indexes (only for internal testing use)."));
+  public static final RangeLongValidator INDEX_MAX_INDEXES_TO_INTERSECT = new RangeLongValidator("planner.index.max_indexes_to_intersect", 2, 100,
+      new OptionDescription("The maximum number of indexes to intersect in a single query (only for internal testing use)."));
   public static final RangeDoubleValidator INDEX_STATS_ROWCOUNT_SCALING_FACTOR =
-      new RangeDoubleValidator("planner.index.statistics_rowcount_scaling_factor", 0.0, 1.0, null);
+      new RangeDoubleValidator("planner.index.statistics_rowcount_scaling_factor", 0.0, 1.0,
+          new OptionDescription("A factor that allows scaling the row count estimates returned from the storage/format plugin to compensate for under or over estimation."));
   // ------------------------------------------- Index planning related options END ----------------------------------------------------------------
 
   public static final OptionValidator IDENTIFIER_MAX_LENGTH =
