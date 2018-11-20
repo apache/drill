@@ -30,13 +30,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.parser.ExprLexer;
-import org.apache.drill.common.expression.parser.ExprParser;
+import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
@@ -159,15 +156,13 @@ public class TestBuilder {
   }
 
   public TestBuilder sqlQueryFromFile(String queryFile) throws IOException {
-    String query = BaseTestQuery.getFile(queryFile);
-    this.query = query;
+    this.query = BaseTestQuery.getFile(queryFile);
     queryType = UserBitShared.QueryType.SQL;
     return this;
   }
 
   public TestBuilder physicalPlanFromFile(String queryFile) throws IOException {
-    String query = BaseTestQuery.getFile(queryFile);
-    this.query = query;
+    this.query =  BaseTestQuery.getFile(queryFile);
     queryType = UserBitShared.QueryType.PHYSICAL;
     return this;
   }
@@ -226,20 +221,11 @@ public class TestBuilder {
 
   // modified code from SchemaPath.De class. This should be used sparingly and only in tests if absolutely needed.
   public static SchemaPath parsePath(String path) {
-    try {
-      ExprLexer lexer = new ExprLexer(new ANTLRStringStream(path));
-      CommonTokenStream tokens = new CommonTokenStream(lexer);
-      ExprParser parser = new ExprParser(tokens);
-
-      ExprParser.parse_return ret = parser.parse();
-
-      if (ret.e instanceof SchemaPath) {
-        return (SchemaPath) ret.e;
-      } else {
-        throw new IllegalStateException("Schema path is not a valid format.");
-      }
-    } catch (RecognitionException e) {
-      throw new RuntimeException(e);
+    LogicalExpression expr = LogicalExpressionParser.parse(path);
+    if (expr instanceof SchemaPath) {
+      return (SchemaPath) expr;
+    } else {
+      throw new IllegalStateException(String.format("Schema path is not a valid format: %s.", expr));
     }
   }
 
@@ -290,11 +276,7 @@ public class TestBuilder {
   }
 
   boolean typeInfoSet() {
-    if (baselineTypeMap != null) {
-      return true;
-    } else {
-      return false;
-    }
+    return baselineTypeMap != null;
   }
 
   /**
@@ -513,11 +495,7 @@ public class TestBuilder {
 
     @Override
     boolean typeInfoSet() {
-      if (super.typeInfoSet() || baselineTypes != null) {
-        return true;
-      } else {
-        return false;
-      }
+      return super.typeInfoSet() || baselineTypes != null;
     }
 
     @Override
@@ -683,7 +661,7 @@ public class TestBuilder {
   }
 
   /**
-   * Convenience method to create a {@link JsonStringHashMap<String, Object> map} instance with the given key value sequence.
+   * Convenience method to create a {@link JsonStringHashMap<String, Object>} map instance with the given key value sequence.
    *
    * Key value sequence consists of key - value pairs such that a key precedes its value. For instance:
    *

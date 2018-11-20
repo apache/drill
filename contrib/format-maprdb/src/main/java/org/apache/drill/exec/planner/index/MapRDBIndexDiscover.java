@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.planner.index;
 
+import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import com.mapr.db.Admin;
 import com.mapr.db.MapRDB;
@@ -25,16 +26,12 @@ import com.mapr.db.exceptions.DBException;
 import com.mapr.db.index.IndexDesc;
 import com.mapr.db.index.IndexDesc.MissingAndNullOrdering;
 import com.mapr.db.index.IndexFieldDesc;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.parser.ExprLexer;
-import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -67,8 +64,7 @@ import java.util.Set;
 
 public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDiscover {
 
-  static final String DEFAULT_STRING_CAST_LEN_STR = "256";
-  static final String FIELD_DELIMITER = ":";
+  public static final String DEFAULT_STRING_CAST_LEN_STR = "256";
 
   public MapRDBIndexDiscover(GroupScan inScan, DrillScanRelBase scanRel) {
     super((AbstractDbGroupScan) inScan, scanRel);
@@ -86,7 +82,7 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
   /**
    * For a given table name get the list of indexes defined on the table according to the visibility of
    * the indexes based on permissions.
-   * @param tableName
+   * @param tableName table name
    * @return an IndexCollection representing the list of indexes for that table
    */
   private IndexCollection getTableIndexFromMFS(String tableName) {
@@ -137,7 +133,7 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
         return null;
       }
       MapRDBFormatPlugin maprFormatPlugin = ((MapRDBGroupScan) origScan).getFormatPlugin();
-      FileSystemPlugin fsPlugin = (FileSystemPlugin) (((MapRDBGroupScan) origScan).getStoragePlugin());
+      FileSystemPlugin fsPlugin = (FileSystemPlugin) (origScan.getStoragePlugin());
 
       DrillFileSystem fs = ImpersonationUtil.createFileSystem(origScan.getUserName(), fsPlugin.getFsConf());
       MapRDBFormatMatcher matcher = (MapRDBFormatMatcher) (maprFormatPlugin.getMatcher());
@@ -240,14 +236,9 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
     }
     try {
       String castFunc = String.format("cast( %s as %s)", field, castTypeStr);
-      final ExprLexer lexer = new ExprLexer(new ANTLRStringStream(castFunc));
-      final CommonTokenStream tokens = new CommonTokenStream(lexer);
-      final ExprParser parser = new ExprParser(tokens);
-      final ExprParser.parse_return ret = parser.parse();
-      logger.trace("{}, {}", tokens, ret);
-      return ret.e;
-    }catch(Exception ex) {
-      logger.error("parse failed{}", ex);
+      return LogicalExpressionParser.parse(castFunc);
+    } catch (Exception ex) {
+      logger.error("parse failed: {}", ex);
     }
     return null;
   }
@@ -313,8 +304,7 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
     for (int i = 0; i < indexFieldCollations.size(); i++) {
       collationMap.put(indexFields.get(i), indexFieldCollations.get(i));
     }
-    CollationContext collationContext = new CollationContext(collationMap, indexFieldCollations);
-    return collationContext;
+    return new CollationContext(collationMap, indexFieldCollations);
   }
 
   private DrillIndexDescriptor buildIndexDescriptor(String tableName, IndexDesc desc)
@@ -363,11 +353,7 @@ public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDisco
 
     final Admin admin;
     try {
-      admin = currentUser.doAs(new PrivilegedExceptionAction<Admin>() {
-        public Admin run() throws Exception {
-          return MapRDB.getAdmin(conf);
-        }
-      });
+      admin = currentUser.doAs((PrivilegedExceptionAction<Admin>) () -> MapRDB.getAdmin(conf));
     } catch (Exception e) {
       throw new DrillRuntimeException("Failed to get Admin instance for user: " + currentUser.getUserName(), e);
     }
