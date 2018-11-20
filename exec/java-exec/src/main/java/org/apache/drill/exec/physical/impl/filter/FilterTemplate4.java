@@ -64,4 +64,10 @@ public abstract class FilterTemplate4 implements Filterer {
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
   public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
+  @Override
+  public String toString() {
+    return "FilterTemplate4[outgoingSelectionVector=" + outgoingSelectionVector
+        + ", incomingSelectionVector=" + incomingSelectionVector
+        + "]";
+  }
 }

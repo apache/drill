@@ -26,6 +26,7 @@ import javax.inject.Named;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
@@ -35,6 +36,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
+import org.apache.drill.exec.physical.impl.common.CodeGenMemberInjector;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec.Metric;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.BatchSchema;
@@ -62,6 +64,8 @@ public abstract class PartitionerTemplate implements Partitioner {
   private SelectionVector4 sv4;
   private RecordBatch incoming;
   private OperatorStats stats;
+  protected ClassGenerator<?> cg;
+  protected FragmentContext context;
   private int start;
   private int end;
   private List<OutgoingRecordBatch> outgoingBatches = Lists.newArrayList();
@@ -87,10 +91,13 @@ public abstract class PartitionerTemplate implements Partitioner {
                           HashPartitionSender popConfig,
                           OperatorStats stats,
                           OperatorContext oContext,
+                          ClassGenerator<?> cg,
                           int start, int end) throws SchemaChangeException {
 
     this.incoming = incoming;
     this.stats = stats;
+    this.context = context;
+    this.cg = cg;
     this.start = start;
     this.end = end;
     doSetup(context, incoming, null);
@@ -144,7 +151,12 @@ public abstract class PartitionerTemplate implements Partitioner {
   protected OutgoingRecordBatch newOutgoingRecordBatch(
                                OperatorStats stats, HashPartitionSender operator, AccountingDataTunnel tunnel,
                                FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId) {
-    return new OutgoingRecordBatch(stats, operator, tunnel, context, allocator, oppositeMinorFragmentId);
+    return this.injectMembers(new OutgoingRecordBatch(stats, operator, tunnel, context, allocator, oppositeMinorFragmentId));
+  }
+
+  protected OutgoingRecordBatch injectMembers(OutgoingRecordBatch outgoingRecordBatch) {
+    CodeGenMemberInjector.injectMembers(cg, outgoingRecordBatch, context);
+    return outgoingRecordBatch;
   }
 
   @Override

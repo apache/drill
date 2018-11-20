@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import io.netty.buffer.DrillBuf;
@@ -159,7 +160,9 @@ public class DrillConstExecutor implements RexExecutor {
             .message(message)
             .build(logger);
         }
-        reducedValues.add(rexBuilder.makeNullLiteral(typeFactory.createSqlType(sqlTypeName)));
+
+        RelDataType type = TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, sqlTypeName, true);
+        reducedValues.add(rexBuilder.makeNullLiteral(type));
         continue;
       }
 

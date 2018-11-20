@@ -59,6 +59,5 @@ public abstract class AbstractTableFunctionRecordBatch<T extends PhysicalOperato
     setIncoming(incoming.getIncoming());
     lateral = incoming;
   }
-
 }
 

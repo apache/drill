@@ -22,7 +22,6 @@
 </#macro>
 
 <#macro page_body>
-  <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
   <h2> Query Failed: An Error Occurred </h2>

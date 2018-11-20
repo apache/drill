@@ -761,4 +761,11 @@ public class LogRecordReader extends AbstractRecordReader {
       reader = null;
     }
   }
+
+  @Override
+  public String toString() {
+    return "LogRecordReader[File=" + fileWork.getPath()
+        + ", Line=" + rowIndex
+        + "]";
+  }
 }

@@ -47,6 +47,43 @@
         } );
       } );
     } );
+
+    //Close the cancellation status popup
+    function refreshStatus() {
+        $("#queryCancelModal").modal("hide");
+        console.log("location.reload(true);")
+        location.reload(true);
+    }
+
+    //Toggle Selection for canceling running queries
+    function toggleRunningSelection(source) {
+        let checkboxes = document.getElementsByName('cancelQ');
+        let toggleCount = checkboxes.length;
+        for(let i=0; i < toggleCount; i++) {
+            checkboxes[i].checked = source.checked;
+        }
+    }
+
+    //Submit Cancellations & show status
+    function cancelSelection() {
+        let checkedBoxes = document.querySelectorAll('input[name=cancelQ]:checked');
+        //dBug
+        console.log("Cancelling => " + checkedBoxes.length);
+        let checkedCount = checkedBoxes.length;
+        if (checkedCount == 0)  return;
+
+        for(var i=0; i < checkedCount; i++) {
+            let queryToCancel = checkedBoxes[i].value;
+            //Asynchronously cancel the query
+            $.get("/profiles/cancel/" + queryToCancel, function(data, status){
+                /*Not Tracking Response*/
+            });
+        }
+        document.getElementById("cancelTitle").innerHTML = "Drillbit on " + location.hostname + " says";
+        document.getElementById("cancelText").innerHTML = "Issued cancellation for "+checkedCount+" quer"+(checkedCount == 1 ? "y":"ies");
+        $("#queryCancelModal").modal("show");
+    }
+
 </script>
 
 <!-- CSS to control DataTable Elements -->
@@ -72,11 +109,9 @@
     float:left 
   }
 </style>
-
 </#macro>
 
 <#macro page_body>
-  <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
   <#if (model.getErrors()?size > 0) >
@@ -89,7 +124,25 @@
     </div>
   </#if>
   <#if (model.getRunningQueries()?size > 0) >
-    <h3>Running Queries</h3>
+    <h3>Running Queries 
+    <div  style="display: inline-block; line-height:2" >
+      <button type="button" class="btn btn-warning btn-sm" onClick="cancelSelection()">
+      Cancel Selected</button>
+    </div></h3>
+    <!-- Cancellation Modal -->
+    <div class="modal fade" id="queryCancelModal" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" onclick="refreshStatus()">&times;</button>
+            <h4 class="modal-title" id="cancelTitle"></h4>
+          </div>
+          <div class="modal-body" style="line-height:2" ><h3 id="cancelText">Cancellation Status</h3></div>
+          <div class="modal-footer"><button type="button" class="btn btn-default" onclick="refreshStatus()">Close</button></div>
+        </div>
+      </div>
+    </div>
+
     <@list_queries queries=model.getRunningQueries() stateList="running" />
     <div class="page-header">
     </div>
@@ -143,6 +196,9 @@
         <table id="profileList_${stateList}" class="table table-hover dataTable" role="grid">
             <thead>
             <tr role="row">
+                <#if stateList == "running" >
+                <th><input type="checkbox" name="selectToggle" onClick="toggleRunningSelection(this)" /></th>
+                </#if>
                 <th>Time</th>
                 <th>User</th>
                 <th>Query</th>
@@ -154,6 +210,9 @@
             <tbody>
             <#list queries as query>
             <tr>
+                <#if stateList == "running" >
+                <td><input type="checkbox" name="cancelQ" value="${query.getQueryId()}"/></td>
+                </#if>
                 <td>${query.getTime()}</td>
                 <td>${query.getUser()}</td>
                 <td>

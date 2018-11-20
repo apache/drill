@@ -22,10 +22,13 @@ import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.netty.buffer.DrillBuf;
+import org.apache.calcite.util.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
@@ -39,7 +42,9 @@ import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.compile.sig.SignatureHolder;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.WorkspaceReference;
+import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -65,6 +70,7 @@ public class ClassGenerator<T>{
 
   public static final GeneratorMapping DEFAULT_SCALAR_MAP = GM("doSetup", "doEval", null, null);
   public static final GeneratorMapping DEFAULT_CONSTANT_MAP = GM("doSetup", "doSetup", null, null);
+  public static final String INNER_CLASS_FIELD_NAME = "innerClassField";
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassGenerator.class);
 
@@ -76,6 +82,7 @@ public class ClassGenerator<T>{
   private final Map<String, ClassGenerator<T>> innerClasses = Maps.newHashMap();
   private final List<TypedFieldId> workspaceTypes = Lists.newArrayList();
   private final Map<WorkspaceReference, JVar> workspaceVectors = Maps.newHashMap();
+  private final Map<Pair<Integer, JVar>, Function<DrillBuf, ? extends ValueHolder>> constantVars;
   private final CodeGenerator<T> codeGenerator;
 
   public final JDefinedClass clazz;
@@ -86,6 +93,8 @@ public class ClassGenerator<T>{
   private ClassGenerator<T> innerClassGenerator;
   private LinkedList<SizedJBlock>[] blocks;
   private LinkedList<SizedJBlock>[] oldBlocks;
+
+  private JVar innerClassField;
 
   /**
    * Assumed that field has 3 indexes within the constant pull: index of the CONSTANT_Fieldref_info +
@@ -135,6 +144,7 @@ public class ClassGenerator<T>{
     this.evaluationVisitor = eval;
     this.model = model;
     this.optionManager = optionManager;
+    constantVars = new HashMap<>();
 
     blocks = (LinkedList<SizedJBlock>[]) new LinkedList[sig.size()];
     for (int i =0; i < sig.size(); i++) {
@@ -370,6 +380,7 @@ public class ClassGenerator<T>{
         innerClassGenerator.maxIndex += index;
         // blocks from the inner class should be used
         setupInnerClassBlocks();
+        innerClassField = clazz.field(JMod.NONE, model.ref(innerClassGenerator.clazz.name()), INNER_CLASS_FIELD_NAME);
         return true;
       }
       return innerClassGenerator.createNestedClass();
@@ -425,10 +436,8 @@ public class ClassGenerator<T>{
    * Creates methods from the signature {@code sig} with body from the appropriate {@code blocks}.
    */
   void flushCode() {
-    JVar innerClassField = null;
     if (innerClassGenerator != null) {
       blocks = oldBlocks;
-      innerClassField = clazz.field(JMod.NONE, model.ref(innerClassGenerator.clazz.name()), "innerClassField");
       innerClassGenerator.flushCode();
     }
     int i = 0;
@@ -531,9 +540,46 @@ public class ClassGenerator<T>{
 
   public JVar declareClassField(String prefix, JType t, JExpression init) {
     if (innerClassGenerator != null && hasMaxIndexValue()) {
-      return innerClassGenerator.clazz.field(JMod.NONE, t, prefix + index++, init);
+      return innerClassGenerator.declareClassField(prefix, t, init);
     }
     return clazz.field(JMod.NONE, t, prefix + index++, init);
+  }
+
+  public Pair<Integer, JVar> declareClassConstField(String prefix, JType t,
+                                                    Function<DrillBuf, ? extends ValueHolder> function) {
+    return declareClassConstField(prefix, t, null, function);
+  }
+
+  /**
+   * declare a constant field for the class.
+   * argument {@code function} holds the constant value which
+   * returns a value holder must be set to the class field when the class instance created.
+   * the class field innerClassField will be created if innerClassGenerator exists.
+   *
+   * @param prefix the prefix name of class field
+   * @param t the type of class field
+   * @param init init expression
+   * @param function the function holds the constant value
+   * @return the depth of nested class, class field
+   */
+  public Pair<Integer, JVar> declareClassConstField(String prefix, JType t, JExpression init,
+                                                    Function<DrillBuf, ? extends ValueHolder> function) {
+    JVar var;
+    int depth = 1;
+    if (innerClassGenerator != null) {
+      Pair<Integer, JVar> nested = innerClassGenerator.declareClassConstField(prefix, t, init, function);
+      depth = nested.getKey() + 1;
+      var = nested.getValue();
+    } else {
+      var = clazz.field(JMod.NONE, t, prefix + index++, init);
+    }
+    Pair<Integer, JVar> depthVar = Pair.of(depth, var);
+    constantVars.put(depthVar, function);
+    return depthVar;
+  }
+
+  public Map<Pair<Integer, JVar>, Function<DrillBuf, ? extends ValueHolder>> getConstantVars() {
+    return constantVars;
   }
 
   public HoldingContainer declare(MajorType t) {
@@ -646,7 +692,7 @@ public class ClassGenerator<T>{
         Class<?> p = params[i];
         childNew.arg(shim.param(model._ref(p), "arg" + i));
       }
-      shim.body()._return(childNew);
+      shim.body()._return(JExpr._this().invoke("injectMembers").arg(childNew));
     }
   }
 

@@ -22,6 +22,7 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.exec.planner.common.JoinControl;
 
 import java.util.List;
 
@@ -34,19 +35,37 @@ public class HashTableConfig  {
   private final List<NamedExpression> keyExprsBuild;
   private final List<NamedExpression> keyExprsProbe;
   private final List<Comparator> comparators;
+  private final int joinControl;
+
+  public HashTableConfig(
+      int initialCapacity,
+      float loadFactor,
+      List<NamedExpression> keyExprsBuild,
+      List<NamedExpression> keyExprsProbe,
+      List<Comparator> comparators
+  ) {
+    this(initialCapacity, false, loadFactor, keyExprsBuild, keyExprsProbe, comparators, JoinControl.DEFAULT);
+  }
 
   @JsonCreator
   public HashTableConfig(@JsonProperty("initialCapacity") int initialCapacity,
                          @JsonProperty("loadFactor") float loadFactor,
                          @JsonProperty("keyExprsBuild") List<NamedExpression> keyExprsBuild,
                          @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe,
-                         @JsonProperty("comparators") List<Comparator> comparators) {
-    this.initialCapacity = initialCapacity;
-    this.initialSizeIsFinal = false;
-    this.loadFactor = loadFactor;
-    this.keyExprsBuild = keyExprsBuild;
-    this.keyExprsProbe = keyExprsProbe;
-    this.comparators = comparators;
+                         @JsonProperty("comparators") List<Comparator> comparators,
+                         @JsonProperty("joinControl") int joinControl) {
+    this(initialCapacity, false, loadFactor, keyExprsBuild, keyExprsProbe, comparators, joinControl);
+  }
+
+  public HashTableConfig(
+      int initialCapacity,
+      boolean initialSizeIsFinal,
+      float loadFactor,
+      List<NamedExpression> keyExprsBuild,
+      List<NamedExpression> keyExprsProbe,
+      List<Comparator> comparators
+  ) {
+    this(initialCapacity, initialSizeIsFinal, loadFactor, keyExprsBuild, keyExprsProbe, comparators, JoinControl.DEFAULT);
   }
 
   @JsonCreator
@@ -55,13 +74,16 @@ public class HashTableConfig  {
                          @JsonProperty("loadFactor") float loadFactor,
                          @JsonProperty("keyExprsBuild") List<NamedExpression> keyExprsBuild,
                          @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe,
-                         @JsonProperty("comparators") List<Comparator> comparators) {
+                         @JsonProperty("comparators") List<Comparator> comparators,
+                         @JsonProperty("joinControl") int joinControl
+  ) {
     this.initialCapacity = initialCapacity;
     this.initialSizeIsFinal = initialSizeIsFinal;
     this.loadFactor = loadFactor;
     this.keyExprsBuild = keyExprsBuild;
     this.keyExprsProbe = keyExprsProbe;
     this.comparators = comparators;
+    this.joinControl = joinControl;
   }
 
   public HashTableConfig withInitialCapacity(int initialCapacity) {
@@ -70,7 +92,9 @@ public class HashTableConfig  {
       loadFactor,
       keyExprsBuild,
       keyExprsProbe,
-      comparators);
+      comparators,
+      JoinControl.DEFAULT
+    );
   }
 
   public int getInitialCapacity() {
@@ -97,4 +121,7 @@ public class HashTableConfig  {
     return comparators;
   }
 
+  public int getJoinControl() {
+    return joinControl;
+  }
 }

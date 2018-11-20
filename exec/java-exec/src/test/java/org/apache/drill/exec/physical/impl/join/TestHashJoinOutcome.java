@@ -209,4 +209,47 @@ public class TestHashJoinOutcome extends PhysicalOpUnitTestBase {
   public void testHashJoinNoneOutcomeUninitLeftSide() {
     testHashJoinOutcomes(UninitializedSide.Left, RecordBatch.IterOutcome.NONE, RecordBatch.IterOutcome.NONE);
   }
+
+  /**
+   * Testing for DRILL-6755: No Hash Table is built when the first probe batch is NONE
+   */
+  @Test
+  public void testHashJoinWhenProbeIsNONE() {
+
+    inputOutcomesLeft.add(RecordBatch.IterOutcome.NONE);
+
+    inputOutcomesRight.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomesRight.add(RecordBatch.IterOutcome.OK);
+    inputOutcomesRight.add(RecordBatch.IterOutcome.NONE);
+
+    // for the probe side input - use multiple batches (to check that they are all cleared/drained)
+    final List<VectorContainer> buildSideinputContainer = new ArrayList<>(5);
+    buildSideinputContainer.add(emptyInputRowSetRight.container());
+    buildSideinputContainer.add(nonEmptyInputRowSetRight.container());
+    RowSet.SingleRowSet secondInputRowSetRight = operatorFixture.rowSetBuilder(inputSchemaRight).addRow(456).build();
+    RowSet.SingleRowSet thirdInputRowSetRight = operatorFixture.rowSetBuilder(inputSchemaRight).addRow(789).build();
+    buildSideinputContainer.add(secondInputRowSetRight.container());
+    buildSideinputContainer.add(thirdInputRowSetRight.container());
+
+    final MockRecordBatch mockInputBatchRight = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext, buildSideinputContainer, inputOutcomesRight, batchSchemaRight);
+    final MockRecordBatch mockInputBatchLeft = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext, inputContainerLeft, inputOutcomesLeft, batchSchemaLeft);
+
+    List<JoinCondition> conditions = Lists.newArrayList();
+
+    conditions.add(new JoinCondition(SqlKind.EQUALS.toString(), FieldReference.getWithQuotedRef("leftcol"), FieldReference.getWithQuotedRef("rightcol")));
+
+    HashJoinPOP hjConf = new HashJoinPOP(null, null, conditions, JoinRelType.INNER);
+
+    HashJoinBatch hjBatch = new HashJoinBatch(hjConf, operatorFixture.getFragmentContext(), mockInputBatchLeft, mockInputBatchRight);
+
+    RecordBatch.IterOutcome gotOutcome = hjBatch.next();
+    assertTrue(gotOutcome == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+
+    gotOutcome = hjBatch.next();
+    assertTrue(gotOutcome == RecordBatch.IterOutcome.NONE);
+
+    secondInputRowSetRight.clear();
+    thirdInputRowSetRight.clear();
+    buildSideinputContainer.clear();
+  }
 }

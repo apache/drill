@@ -118,6 +118,7 @@ public class UnnestImpl implements Unnest {
     Preconditions.checkArgument(svMode == NONE, "Unnest does not support selection vector inputs.");
 
     final int initialInnerValueIndex = runningInnerValueIndex;
+    int nonEmptyArray = 0;
 
     outer:
     {
@@ -126,8 +127,12 @@ public class UnnestImpl implements Unnest {
 
       for (; valueIndex < valueCount; valueIndex++) {
         final int innerValueCount = accessor.getInnerValueCountAt(valueIndex);
-        logger.debug("Unnest: currentRecord: {}, innerValueCount: {}, record count: {}, output limit: {}",
-            innerValueCount, recordCount, outputLimit);
+        logger.trace("Unnest: CurrentRowId: {}, innerValueCount: {}, outputIndex: {},  output limit: {}",
+            valueIndex, innerValueCount, outputIndex, outputLimit);
+
+        if (innerValueCount > 0) {
+          ++nonEmptyArray;
+        }
 
         for (; innerValueIndex < innerValueCount; innerValueIndex++) {
           // If we've hit the batch size limit, stop and flush what we've got so far.
@@ -148,6 +153,9 @@ public class UnnestImpl implements Unnest {
       }  // forevery value in the array
     }  // for every incoming record
     final int delta = runningInnerValueIndex - initialInnerValueIndex;
+    logger.debug("Unnest: Finished processing current batch. [Details: LastProcessedRowIndex: {}, " +
+      "RowsWithNonEmptyArrays: {}, outputIndex: {}, outputLimit: {}, TotalIncomingRecords: {}]",
+      valueIndex, nonEmptyArray, delta, outputLimit, accessor.getValueCount());
     final SchemaChangeCallBack callBack = new SchemaChangeCallBack();
     for (TransferPair t : transfers) {
       t.splitAndTransfer(initialInnerValueIndex, delta);
@@ -190,5 +198,15 @@ public class UnnestImpl implements Unnest {
       }
       transfers = null;
     }
+  }
+
+  @Override
+  public String toString() {
+    return "UnnestImpl[svMode=" + svMode
+        + ", outputLimit=" + outputLimit
+        + ", valueIndex=" + valueIndex
+        + ", innerValueIndex=" + innerValueIndex
+        + ", runningInnerValueIndex=" + runningInnerValueIndex
+        + "]";
   }
 }

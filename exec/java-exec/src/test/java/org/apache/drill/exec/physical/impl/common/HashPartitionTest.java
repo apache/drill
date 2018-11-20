@@ -110,8 +110,7 @@ public class HashPartitionTest {
           context.getAllocator(),
           baseHashTable,
           buildBatch,
-          probeBatch,
-          10,
+          probeBatch, false, 10,
           spillSet,
           0,
           0,
@@ -132,7 +131,7 @@ public class HashPartitionTest {
 
         {
           int compositeIndex = hashPartition.probeForKey(1, 12);
-          int startIndex = hashPartition.getStartIndex(compositeIndex);
+          int startIndex = hashPartition.getStartIndex(compositeIndex).getLeft();
           int nextIndex = hashPartition.getNextIndex(startIndex);
 
           Assert.assertEquals(2, startIndex);
@@ -210,8 +209,7 @@ public class HashPartitionTest {
           context.getAllocator(),
           baseHashTable,
           buildBatch,
-          probeBatch,
-          10,
+          probeBatch, false, 10,
           spillSet,
           0,
           0,

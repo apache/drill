@@ -20,6 +20,7 @@ package org.apache.drill.exec.work.filter;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData;
 
 import java.util.ArrayList;
@@ -29,15 +30,20 @@ import java.util.List;
  * A binary wire transferable representation of the RuntimeFilter which contains
  * the runtime filter definition and its corresponding data.
  */
-public class RuntimeFilterWritable implements AutoCloseables.Closeable {
+public class RuntimeFilterWritable implements AutoCloseables.Closeable{
 
   private BitData.RuntimeFilterBDef runtimeFilterBDef;
 
   private DrillBuf[] data;
 
+  private String identifier;
+
   public RuntimeFilterWritable(BitData.RuntimeFilterBDef runtimeFilterBDef, DrillBuf... data) {
     this.runtimeFilterBDef = runtimeFilterBDef;
     this.data = data;
+    this.identifier = "majorFragmentId:" + runtimeFilterBDef.getMajorFragmentId()
+      + ",minorFragmentId:" + runtimeFilterBDef.getMinorFragmentId()
+      + ", srcOperatorId:" + runtimeFilterBDef.getHjOpId();
   }
 
 
@@ -81,11 +87,47 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable {
     }
   }
 
+  public RuntimeFilterWritable duplicate(BufferAllocator bufferAllocator) {
+    int len = data.length;
+    DrillBuf[] cloned = new DrillBuf[len];
+    int i = 0;
+    for (DrillBuf src : data) {
+      int capacity = src.readableBytes();
+      DrillBuf duplicateOne = bufferAllocator.buffer(capacity);
+      int readerIndex = src.readerIndex();
+      duplicateOne.writeBytes(src);
+      src.readerIndex(readerIndex);
+      cloned[i] = duplicateOne;
+      i++;
+    }
+    return new RuntimeFilterWritable(runtimeFilterBDef, cloned);
+  }
+
+  public String toString() {
+    return identifier;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other == null) {
+      return false;
+    }
+    if (other instanceof RuntimeFilterWritable) {
+      RuntimeFilterWritable otherRFW = (RuntimeFilterWritable) other;
+      return this.identifier.equals(otherRFW.identifier);
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return identifier.hashCode();
+  }
+
   @Override
   public void close() {
     for (DrillBuf buf : data) {
       buf.release();
     }
   }
-
 }

@@ -24,6 +24,7 @@ import java.io.InputStream;
 
 import org.apache.drill.exec.store.easy.json.JsonProcessor;
 
+import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,8 +50,12 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
 
   protected JsonParser parser;
   protected DrillBuf workBuf;
-  protected JsonToken lastSeenJsonToken = null;
-  boolean ignoreJSONParseErrors = false; // default False
+  protected JsonToken lastSeenJsonToken;
+  boolean ignoreJSONParseErrors;
+  /**
+   * The name of the current field being parsed. For Error messages.
+   */
+  protected String currentFieldName;
 
   /**
    *
@@ -90,26 +95,31 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
   }
 
   @Override
-  public UserException.Builder getExceptionWithContext(
-      UserException.Builder exceptionBuilder, String field, String msg,
-      Object... args) {
-    if (msg != null) {
-      exceptionBuilder.message(msg, args);
-    }
-    if (field != null) {
-      exceptionBuilder.pushContext("Field ", field);
-    }
-    exceptionBuilder.pushContext("Column ",
-        parser.getCurrentLocation().getColumnNr() + 1).pushContext("Line ",
-        parser.getCurrentLocation().getLineNr());
-    return exceptionBuilder;
+  public String toString() {
+    JsonLocation location = parser.getCurrentLocation();
+    return getClass().getSimpleName() + "[Line=" + location.getLineNr()
+        + ", Column=" + (location.getColumnNr() + 1)
+        + ", Field=" + getCurrentField()
+        + "]";
   }
 
   @Override
-  public UserException.Builder getExceptionWithContext(Throwable e,
-      String field, String msg, Object... args) {
+  public UserException.Builder getExceptionWithContext(UserException.Builder builder, String message) {
+    builder.message(message);
+    JsonLocation location = parser.getCurrentLocation();
+    builder.addContext("Line", location.getLineNr())
+        .addContext("Column", location.getColumnNr() + 1);
+    String fieldName = getCurrentField();
+    if (fieldName != null) {
+      builder.addContext("Field", fieldName);
+    }
+    return builder;
+  }
+
+  @Override
+  public UserException.Builder getExceptionWithContext(Throwable e, String message) {
     UserException.Builder exceptionBuilder = UserException.dataReadError(e);
-    return getExceptionWithContext(exceptionBuilder, field, msg, args);
+    return getExceptionWithContext(exceptionBuilder, message);
   }
 
   /*
@@ -137,5 +147,9 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
        }
     }
     return JsonExceptionProcessingState.PROC_SUCCEED;
+  }
+
+  protected String getCurrentField() {
+    return currentFieldName;
   }
 }

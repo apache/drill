@@ -222,15 +222,42 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testEmptyDirectoryAndFieldInQuery() throws Exception {
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
-    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
-        .setMinorType(TypeProtos.MinorType.INT) // field "key" is absent in schemaless table
-        .setMode(TypeProtos.DataMode.OPTIONAL)
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("key", TypeProtos.MinorType.INT)
         .build();
-    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
 
     testBuilder()
         .sqlQuery("select key from dfs.tmp.`%s`", EMPTY_DIR_NAME)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testRenameProjectEmptyDirectory() throws Exception {
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("WeekId", TypeProtos.MinorType.INT)
+        .addNullable("ProductName", TypeProtos.MinorType.INT)
+        .build();
+
+    testBuilder()
+        .sqlQuery("select WeekId, Product as ProductName from (select CAST(`dir0` as INT) AS WeekId, " +
+            "Product from dfs.tmp.`%s`)", EMPTY_DIR_NAME)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testRenameProjectEmptyJson() throws Exception {
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("WeekId", TypeProtos.MinorType.INT)
+        .addNullable("ProductName", TypeProtos.MinorType.INT)
+        .build();
+
+    testBuilder()
+        .sqlQuery("select WeekId, Product as ProductName from (select CAST(`dir0` as INT) AS WeekId, " +
+            "Product from cp.`%s`)", SINGLE_EMPTY_JSON)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();

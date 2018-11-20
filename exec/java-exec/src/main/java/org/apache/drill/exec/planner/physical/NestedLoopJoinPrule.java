@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
+import org.apache.drill.exec.planner.logical.DrillJoin;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.calcite.rel.InvalidRelException;
@@ -45,8 +46,8 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
   }
 
   @Override
-  protected boolean checkPreconditions(DrillJoinRel join, RelNode left, RelNode right,
-      PlannerSettings settings) {
+  protected boolean checkPreconditions(DrillJoin join, RelNode left, RelNode right,
+                                       PlannerSettings settings) {
     JoinRelType type = join.getJoinType();
 
     if (!(type == JoinRelType.INNER || type == JoinRelType.LEFT)) {
@@ -93,7 +94,7 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
 
       if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
         createBroadcastPlan(call, join, join.getCondition(), PhysicalJoinType.NESTEDLOOP_JOIN,
-            left, right, null /* left collation */, null /* right collation */);
+            left, right, null /* left collation */, null /* right collation */, false);
       }
 
     } catch (InvalidRelException e) {

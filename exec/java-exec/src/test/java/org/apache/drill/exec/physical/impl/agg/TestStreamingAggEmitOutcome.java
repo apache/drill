@@ -527,6 +527,232 @@ public class TestStreamingAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
     nonEmptyInputRowSet2.clear();
   }
 
+  /**
+   * Verifies scenario where multiple incoming batches received with OK_NEW_SCHEMA, OK, OK, EMIT whose output is split
+   * into multiple output batches is handled correctly such that first output is produced with OK_NEW_SCHEMA and then
+   * followed by EMIT outcome
+   */
+  @Test
+  public void t8_1_testStreamingAggr_InputSplitToMultipleOutputBatch() {
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(1, 20, "item1")
+      .build();
+    final RowSet.SingleRowSet nonEmptyInputRowSet3 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 30, "item2")
+      .build();
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet4 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 40, "item2")
+      .addRow(2, 50, "item2")
+      .addRow(2, 60, "item2")
+      .addRow(2, 70, "item2")
+      .addRow(3, 100, "item3")
+      .addRow(3, 200, "item3")
+      .addRow(3, 300, "item3")
+      .addRow(3, 400, "item3")
+      .build();
+
+    TupleMetadata resultSchema2 = new SchemaBuilder()
+      .add("name", TypeProtos.MinorType.VARCHAR)
+      .add("id", TypeProtos.MinorType.INT)
+      .add("total_count", TypeProtos.MinorType.BIGINT)
+      .buildSchema();
+
+    final RowSet.SingleRowSet expectedRowSet1 = operatorFixture.rowSetBuilder(resultSchema2)
+      .addRow("item1", 1, (long)2)
+      .addRow("item2", 2, (long)5)
+      .build();
+
+    final RowSet.SingleRowSet expectedRowSet2 = operatorFixture.rowSetBuilder(resultSchema2)
+      .addRow("item3", 3, (long)4)
+      .build();
+
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet2.container());
+    inputContainer.add(nonEmptyInputRowSet3.container());
+    inputContainer.add(nonEmptyInputRowSet4.container());
+
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
+
+    final MockRecordBatch mockInputBatch = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
+      inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
+
+    final StreamingAggregate streamAggrConfig = new StreamingAggregate(null,
+      parseExprs("name_left", "name", "id_left", "id"),
+      parseExprs("count(cost_left)", "total_count"),
+      1.0f);
+
+    final StreamingAggBatch strAggBatch = new StreamingAggBatch(streamAggrConfig, mockInputBatch,
+      operatorFixture.getFragmentContext());
+    strAggBatch.setMaxOutputRowCount(2);
+
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    // Expect OK_NEW_SCHEMA first for all the input batch from second batch onwards since output batch is full after
+    // producing 2 groups as output
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertEquals(2, strAggBatch.getRecordCount());
+
+    RowSet actualRowSet = DirectRowSet.fromContainer(strAggBatch.getContainer());
+    new RowSetComparison(expectedRowSet1).verify(actualRowSet);
+
+    // The last group was produced in different output batch with EMIT outcome
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.EMIT);
+    assertEquals(1, strAggBatch.getRecordCount());
+    actualRowSet = DirectRowSet.fromContainer(strAggBatch.getContainer());
+    new RowSetComparison(expectedRowSet2).verify(actualRowSet);
+
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.NONE);
+
+    nonEmptyInputRowSet2.clear();
+    nonEmptyInputRowSet3.clear();
+    nonEmptyInputRowSet4.clear();
+
+    expectedRowSet1.clear();
+    expectedRowSet2.clear();
+  }
+
+  /**
+   * Verifies scenario where multiple incoming batches received with OK_NEW_SCHEMA, OK, OK, EMIT whose output is split
+   * into multiple output batches and incoming batches received with OK,OK,EMIT whose output is also split across
+   * multiple output batches is handled correctly.
+   */
+  @Test
+  public void t8_2_testStreamingAggr_Inputs_OK_EMIT_SplitToMultipleOutputBatch() {
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(1, 20, "item1")
+      .build();
+    final RowSet.SingleRowSet nonEmptyInputRowSet3 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 30, "item2")
+      .build();
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet4 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 40, "item2")
+      .addRow(2, 50, "item2")
+      .addRow(2, 60, "item2")
+      .addRow(2, 70, "item2")
+      .addRow(3, 100, "item3")
+      .addRow(3, 200, "item3")
+      .addRow(3, 300, "item3")
+      .addRow(3, 400, "item3")
+      .build();
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet5 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 40, "item2")
+      .build();
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet6 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 50, "item2")
+      .build();
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet7 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(3, 130, "item3")
+      .addRow(3, 130, "item3")
+      .addRow(4, 140, "item4")
+      .addRow(4, 140, "item4")
+      .build();
+
+    TupleMetadata resultSchema2 = new SchemaBuilder()
+      .add("name", TypeProtos.MinorType.VARCHAR)
+      .add("id", TypeProtos.MinorType.INT)
+      .add("total_count", TypeProtos.MinorType.BIGINT)
+      .buildSchema();
+
+    final RowSet.SingleRowSet expectedRowSet1 = operatorFixture.rowSetBuilder(resultSchema2)
+      .addRow("item1", 1, (long)2)
+      .addRow("item2", 2, (long)5)
+      .build();
+
+    final RowSet.SingleRowSet expectedRowSet2 = operatorFixture.rowSetBuilder(resultSchema2)
+      .addRow("item3", 3, (long)4)
+      .build();
+
+    final RowSet.SingleRowSet expectedRowSet3 = operatorFixture.rowSetBuilder(resultSchema2)
+      .addRow("item2", 2, (long)2)
+      .addRow("item3", 3, (long)2)
+      .build();
+
+    final RowSet.SingleRowSet expectedRowSet4 = operatorFixture.rowSetBuilder(resultSchema2)
+      .addRow("item4", 4, (long)2)
+      .build();
+
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet2.container());
+    inputContainer.add(nonEmptyInputRowSet3.container());
+    inputContainer.add(nonEmptyInputRowSet4.container());
+    inputContainer.add(nonEmptyInputRowSet5.container());
+    inputContainer.add(nonEmptyInputRowSet6.container());
+    inputContainer.add(nonEmptyInputRowSet7.container());
+
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
+
+    final MockRecordBatch mockInputBatch = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
+      inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
+
+    final StreamingAggregate streamAggrConfig = new StreamingAggregate(null,
+      parseExprs("name_left", "name", "id_left", "id"),
+      parseExprs("count(cost_left)", "total_count"),
+      1.0f);
+
+    final StreamingAggBatch strAggBatch = new StreamingAggBatch(streamAggrConfig, mockInputBatch,
+      operatorFixture.getFragmentContext());
+    strAggBatch.setMaxOutputRowCount(2);
+
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+
+    // Output batches for input batch 2 to 5
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertEquals(2, strAggBatch.getRecordCount());
+
+    RowSet actualRowSet = DirectRowSet.fromContainer(strAggBatch.getContainer());
+    new RowSetComparison(expectedRowSet1).verify(actualRowSet);
+
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.EMIT);
+    assertEquals(1, strAggBatch.getRecordCount());
+    actualRowSet = DirectRowSet.fromContainer(strAggBatch.getContainer());
+    new RowSetComparison(expectedRowSet2).verify(actualRowSet);
+
+    // Output batches for input batch 6 to 8
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK);
+    // output batch is full after producing 2 rows
+    assertEquals(2, strAggBatch.getRecordCount());
+    actualRowSet = DirectRowSet.fromContainer(strAggBatch.getContainer());
+    new RowSetComparison(expectedRowSet3).verify(actualRowSet);
+
+    // output batch with pending rows
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.EMIT);
+    assertEquals(1, strAggBatch.getRecordCount());
+    actualRowSet = DirectRowSet.fromContainer(strAggBatch.getContainer());
+    new RowSetComparison(expectedRowSet4).verify(actualRowSet);
+
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.NONE);
+
+    nonEmptyInputRowSet2.clear();
+    nonEmptyInputRowSet3.clear();
+    nonEmptyInputRowSet4.clear();
+    nonEmptyInputRowSet5.clear();
+    nonEmptyInputRowSet6.clear();
+    nonEmptyInputRowSet7.clear();
+
+    expectedRowSet1.clear();
+    expectedRowSet2.clear();
+    expectedRowSet3.clear();
+    expectedRowSet4.clear();
+  }
 
   /*****************************************************************************************
    Tests for validating regular StreamingAggr behavior with no EMIT outcome
@@ -618,6 +844,88 @@ public class TestStreamingAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
 
     assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
     assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.NONE);
+  }
+
+  @Test
+  public void t10_1_testStreamingAggr_InputSplitToMultipleOutputBatch() {
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(1, 20, "item1")
+      .build();
+    final RowSet.SingleRowSet nonEmptyInputRowSet3 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 30, "item2")
+      .build();
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet4 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 40, "item2")
+      .addRow(2, 50, "item2")
+      .addRow(2, 60, "item2")
+      .addRow(2, 70, "item2")
+      .addRow(3, 100, "item3")
+      .addRow(3, 200, "item3")
+      .addRow(3, 300, "item3")
+      .addRow(3, 400, "item3")
+      .build();
+
+    TupleMetadata resultSchema2 = new SchemaBuilder()
+      .add("name", TypeProtos.MinorType.VARCHAR)
+      .add("id", TypeProtos.MinorType.INT)
+      .add("total_count", TypeProtos.MinorType.BIGINT)
+      .buildSchema();
+
+    final RowSet.SingleRowSet expectedRowSet1 = operatorFixture.rowSetBuilder(resultSchema2)
+      .addRow("item1", 1, (long)2)
+      .addRow("item2", 2, (long)5)
+      .build();
+
+    final RowSet.SingleRowSet expectedRowSet2 = operatorFixture.rowSetBuilder(resultSchema2)
+      .addRow("item3", 3, (long)4)
+      .build();
+
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet2.container());
+    inputContainer.add(nonEmptyInputRowSet3.container());
+    inputContainer.add(nonEmptyInputRowSet4.container());
+
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+
+    final MockRecordBatch mockInputBatch = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
+      inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
+
+    final StreamingAggregate streamAggrConfig = new StreamingAggregate(null,
+      parseExprs("name_left", "name", "id_left", "id"),
+      parseExprs("count(cost_left)", "total_count"),
+      1.0f);
+
+    final StreamingAggBatch strAggBatch = new StreamingAggBatch(streamAggrConfig, mockInputBatch,
+      operatorFixture.getFragmentContext());
+    strAggBatch.setMaxOutputRowCount(2);
+
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertEquals(2, strAggBatch.getRecordCount());
+
+    RowSet actualRowSet = DirectRowSet.fromContainer(strAggBatch.getContainer());
+    new RowSetComparison(expectedRowSet1).verify(actualRowSet);
+
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK);
+    assertEquals(1, strAggBatch.getRecordCount());
+    actualRowSet = DirectRowSet.fromContainer(strAggBatch.getContainer());
+    new RowSetComparison(expectedRowSet2).verify(actualRowSet);
+
+    assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.NONE);
+
+    nonEmptyInputRowSet2.clear();
+    nonEmptyInputRowSet3.clear();
+    nonEmptyInputRowSet4.clear();
+
+    expectedRowSet1.clear();
+    expectedRowSet2.clear();
   }
 
   /*******************************************************
@@ -813,14 +1121,15 @@ public class TestStreamingAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
 
     assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
     assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertEquals(1, strAggBatch.getRecordCount()); // special batch
     assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(0, strAggBatch.getRecordCount());
     assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.EMIT);
-    assertEquals(1, strAggBatch.getRecordCount());
+    assertEquals(1, strAggBatch.getRecordCount()); // special batch
     assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.EMIT);
-    assertEquals(1, strAggBatch.getRecordCount());
+    assertEquals(1, strAggBatch.getRecordCount()); // special batch
     assertTrue(strAggBatch.next() == RecordBatch.IterOutcome.EMIT);
-    assertEquals(1, strAggBatch.getRecordCount());
+    assertEquals(1, strAggBatch.getRecordCount()); // data batch
 
     RowSet actualRowSet = DirectRowSet.fromContainer(strAggBatch.getContainer());
     new RowSetComparison(expectedRowSet).verify(actualRowSet);

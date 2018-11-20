@@ -112,8 +112,15 @@ public enum SystemTable {
 
   THREADS("threads", true, ThreadsIterator.ThreadsInfo.class) {
     @Override
-  public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new ThreadsIterator(context);
+    }
+  },
+
+  FUNCTIONS("functions", false, FunctionsIterator.FunctionInfo.class) {
+    @Override
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
+      return new FunctionsIterator(context);
     }
   };
 

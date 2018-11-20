@@ -36,7 +36,9 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.work.filter.BloomFilter;
+import org.apache.drill.exec.work.filter.RuntimeFilterSink;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
+
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -56,6 +58,8 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
   private Map<String, Integer> field2id = new HashMap<>();
   private List<String> toFilterFields;
   private List<BloomFilter> bloomFilters;
+  private RuntimeFilterWritable current;
+  private RuntimeFilterWritable previous;
   private int originalRecordCount;
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RuntimeFilterRecordBatch.class);
 
@@ -102,6 +106,9 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
       sv2.clear();
     }
     super.close();
+    if (current != null) {
+      current.close();
+    }
   }
 
   @Override
@@ -148,30 +155,36 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
    * schema change hash64 should be reset and this method needs to be called again.
    */
   private void setupHashHelper() {
-    final RuntimeFilterWritable runtimeFilterWritable = context.getRuntimeFilter();
-
+    final RuntimeFilterSink runtimeFilterSink = context.getRuntimeFilterSink();
     // Check if RuntimeFilterWritable was received by the minor fragment or not
-    if (runtimeFilterWritable == null) {
+    if (!runtimeFilterSink.containOne()) {
       return;
     }
-
-    // Check if bloomFilters is initialized or not
-    if (bloomFilters == null) {
-      bloomFilters = runtimeFilterWritable.unwrap();
+    if (runtimeFilterSink.hasFreshOne()) {
+      RuntimeFilterWritable freshRuntimeFilterWritable = runtimeFilterSink.fetchLatestDuplicatedAggregatedOne();
+      if (current == null) {
+        current = freshRuntimeFilterWritable;
+        previous = freshRuntimeFilterWritable;
+      } else {
+        previous = current;
+        current = freshRuntimeFilterWritable;
+        previous.close();
+      }
+      bloomFilters = current.unwrap();
     }
-
     // Check if HashHelper is initialized or not
     if (hash64 == null) {
       ValueVectorHashHelper hashHelper = new ValueVectorHashHelper(incoming, context);
       try {
         //generate hash helper
-        this.toFilterFields = runtimeFilterWritable.getRuntimeFilterBDef().getProbeFieldsList();
+        this.toFilterFields = current.getRuntimeFilterBDef().getProbeFieldsList();
         List<LogicalExpression> hashFieldExps = new ArrayList<>();
         List<TypedFieldId> typedFieldIds = new ArrayList<>();
         for (String toFilterField : toFilterFields) {
           SchemaPath schemaPath = new SchemaPath(new PathSegment.NameSegment(toFilterField), ExpressionPosition.UNKNOWN);
           TypedFieldId typedFieldId = container.getValueVectorId(schemaPath);
-          this.field2id.put(toFilterField, typedFieldId.getFieldIds()[0]);
+          int[] fieldIds = typedFieldId.getFieldIds();
+          this.field2id.put(toFilterField, fieldIds[0]);
           typedFieldIds.add(typedFieldId);
           ValueVectorReadExpression toHashFieldExp = new ValueVectorReadExpression(typedFieldId);
           hashFieldExps.add(toHashFieldExp);
@@ -195,11 +208,9 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
       sv2.setRecordCount(0);
       return;
     }
-
-    final RuntimeFilterWritable runtimeFilterWritable = context.getRuntimeFilter();
+    final RuntimeFilterSink runtimeFilterSink = context.getRuntimeFilterSink();
     sv2.allocateNew(originalRecordCount);
-
-    if (runtimeFilterWritable == null) {
+    if (!runtimeFilterSink.containOne()) {
       // means none of the rows are filtered out hence set all the indexes
       for (int i = 0; i < originalRecordCount; ++i) {
         sv2.setIndex(i, i);
@@ -207,10 +218,8 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
       sv2.setRecordCount(originalRecordCount);
       return;
     }
-
-    // Setup a hash helper if need be
+    // Setup a hash helper if needed
     setupHashHelper();
-
     //To make each independent bloom filter work together to construct a final filter result: BitSet.
     BitSet bitSet = new BitSet(originalRecordCount);
     for (int i = 0; i < toFilterFields.size(); i++) {
@@ -246,5 +255,12 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
         bitSet.set(rowIndex, false);
       }
     }
+  }
+
+  @Override
+  public void dump() {
+    logger.error("RuntimeFilterRecordBatch[container={}, selectionVector={}, toFilterFields={}, "
+        + "originalRecordCount={}, batchSchema={}]",
+        container, sv2, toFilterFields, originalRecordCount, incoming.getSchema());
   }
 }

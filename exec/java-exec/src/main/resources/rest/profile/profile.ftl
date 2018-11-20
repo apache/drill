@@ -29,7 +29,8 @@
 </#if>
   <!-- Ace Libraries for Syntax Formatting -->
   <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8"></script>
+  <!-- Disabled in favour of dynamic: script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8" -->
+  <script src="/dynamic/mode-sql.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/theme-sqlserver.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/snippets/sql.js" type="text/javascript" charset="utf-8"></script>
@@ -49,6 +50,22 @@
         "info": false
       }
     );} );
+
+    //Close the cancellation status popup
+    function refreshStatus() {
+      //Close PopUp Modal
+      $("#queryCancelModal").modal("hide");
+      location.reload(true);
+    }
+
+    //Cancel query & show cancellation status
+    function cancelQuery() {
+      document.getElementById("cancelTitle").innerHTML = "Drillbit on " + location.hostname + " says";
+      $.get("/profiles/cancel/"+globalconfig.queryid, function(data, status){/*Not Tracking Response*/});
+      //Show PopUp Modal
+      $("#queryCancelModal").modal("show");
+    };
+
 </script>
 <style>
 /* DataTables Sorting: inherited via sortable class */
@@ -62,10 +79,10 @@ table.sortable thead .sorting { background-image: url("/static/img/black-unsorte
 table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
 table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
 </style>
+
 </#macro>
 
 <#macro page_body>
-  <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
   <h3>Query and Planning</h3>
@@ -106,6 +123,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
         <form role="form" id="queryForm" action="/query" method="POST">
           <div id="query-editor" class="form-group">${model.getProfile().query}</div>
           <input class="form-control" id="query" name="query" type="hidden" value="${model.getProfile().query}"/>
+          <div style="padding:5px"><b>Hint: </b>Use <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
           <div class="form-group">
             <div class="radio-inline">
               <label>
@@ -170,7 +188,30 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
   <#assign queued = queueName != "" && queueName != "-" />
 
   <div class="page-header"></div>
-  <h3>Query Profile : <span style='font-size:85%'>${model.getQueryId()}</span></h3>
+  <h3>Query Profile: <span style='font-size:85%'>${model.getQueryId()}</span>
+  <#if model.getQueryStateDisplayName() == "Prepared" || model.getQueryStateDisplayName() == "Planning" || model.getQueryStateDisplayName() == "Enqueued" || model.getQueryStateDisplayName() == "Starting">
+    <div  style="display: inline-block;">
+      <button type="button" id="cancelBtn" class="btn btn-warning btn-sm" onclick="cancelQuery()" > Cancel </button>
+    </div>
+
+  <!-- Cancellation Modal -->
+  <div class="modal fade" id="queryCancelModal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" onclick="refreshStatus()">&times;</button>
+          <h4 class="modal-title" id="cancelTitle"></h4>
+        </div>
+        <div class="modal-body" style="line-height:2">
+          Cancellation issued for Query ID:<br>${model.getQueryId()}
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-default" onclick="refreshStatus()">Close</button></div>
+      </div>
+    </div>
+  </div>
+  </#if>
+  </h3>
+  
   <div class="panel-group" id="query-profile-accordion">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -218,7 +259,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
           </a>
         </h4>
       </div>
-      <div id="query-profile-duration" class="panel-collapse collapse">
+      <div id="query-profile-duration" class="panel-collapse collapse in">
         <div class="panel-body">
           <table class="table table-bordered">
             <thead>
@@ -459,7 +500,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       enableLiveAutocompletion: false
     });
 
-    //Pops out a new window and provids prompt to print
+    //Pops out a new window and provide prompt to print
     var popUpAndPrintPlan = function() {
       var srcSvg = $('#query-visual-canvas');
       var screenRatio=0.9;
@@ -467,6 +508,21 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       printWindow.document.writeln($(srcSvg).parent().html());
       printWindow.print();
     };
+
+    //Provides hint based on OS
+    var browserOS = navigator.platform.toLowerCase();
+    if ((browserOS.indexOf("mac") > -1)) {
+      document.getElementById('keyboardHint').innerHTML="Meta+Enter";
+    } else {
+      document.getElementById('keyboardHint').innerHTML="Ctrl+Enter";
+    }
+
+    // meta+enter / ctrl+enter to submit query
+    document.getElementById('queryForm')
+            .addEventListener('keydown', function(e) {
+      if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
+      if (e.target.form) doSubmitQueryWithUserName();
+    });
     </script>
 
 </#macro>

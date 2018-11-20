@@ -32,6 +32,9 @@ import org.apache.calcite.rel.core.RelFactories.ProjectFactory;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.exec.planner.DrillRelBuilder;
+import org.apache.drill.exec.planner.physical.PrelFactories;
+
+import java.util.List;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -164,6 +167,35 @@ public class DrillMergeProjectRule extends RelOptRule {
       list.add(rex);
     }
     return list;
+  }
+
+  /**
+   * The purpose of the replace() method is to allow the caller to replace a 'top' and 'bottom' project with
+   * a single merged project with the assumption that caller knows exactly the semantics/correctness of merging
+   * the two projects. This is not applying the full fledged DrillMergeProjectRule.
+   * @param topProject
+   * @param bottomProject
+   * @return new project after replacement
+   */
+  public static Project replace(Project topProject, Project bottomProject) {
+    final List<RexNode> newProjects =
+        RelOptUtil.pushPastProject(topProject.getProjects(), bottomProject);
+
+    // replace the two projects with a combined projection
+    if (topProject instanceof DrillProjectRel) {
+      RelNode newProjectRel = DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY.createProject(
+          bottomProject.getInput(), newProjects,
+          topProject.getRowType().getFieldNames());
+
+      return (Project) newProjectRel;
+    }
+    else {
+      RelNode newProjectRel = PrelFactories.PROJECT_FACTORY.createProject(
+          bottomProject.getInput(), newProjects,
+          topProject.getRowType().getFieldNames());
+
+      return (Project) newProjectRel;
+    }
   }
 
 }

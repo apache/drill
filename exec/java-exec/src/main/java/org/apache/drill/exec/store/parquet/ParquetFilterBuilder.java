@@ -17,13 +17,15 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.expression.fn.CastFunctions;
+import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
@@ -145,6 +147,11 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
   }
 
   @Override
+  public LogicalExpression visitQuotedStringConstant(ValueExpressions.QuotedString quotedString, Set<LogicalExpression> value) throws RuntimeException {
+    return quotedString;
+  }
+
+  @Override
   public LogicalExpression visitBooleanOperator(BooleanOperator op, Set<LogicalExpression> value) {
     List<LogicalExpression> childPredicates = new ArrayList<>();
     String functionName = op.getName();
@@ -176,31 +183,35 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
 
   private LogicalExpression getValueExpressionFromConst(ValueHolder holder, TypeProtos.MinorType type) {
     switch (type) {
-    case INT:
-      return ValueExpressions.getInt(((IntHolder) holder).value);
-    case BIGINT:
-      return ValueExpressions.getBigInt(((BigIntHolder) holder).value);
-    case FLOAT4:
-      return ValueExpressions.getFloat4(((Float4Holder) holder).value);
-    case FLOAT8:
-      return ValueExpressions.getFloat8(((Float8Holder) holder).value);
-    case VARDECIMAL:
-      VarDecimalHolder decimalHolder = (VarDecimalHolder) holder;
-      return ValueExpressions.getVarDecimal(
-          DecimalUtility.getBigDecimalFromDrillBuf(decimalHolder.buffer,
-              decimalHolder.start, decimalHolder.end - decimalHolder.start, decimalHolder.scale),
-          decimalHolder.precision,
-          decimalHolder.scale);
-    case DATE:
-      return ValueExpressions.getDate(((DateHolder) holder).value);
-    case TIMESTAMP:
-      return ValueExpressions.getTimeStamp(((TimeStampHolder) holder).value);
-    case TIME:
-      return ValueExpressions.getTime(((TimeHolder) holder).value);
-    case BIT:
-      return ValueExpressions.getBit(((BitHolder) holder).value == 1);
-    default:
-      return null;
+      case INT:
+        return ValueExpressions.getInt(((IntHolder) holder).value);
+      case BIGINT:
+        return ValueExpressions.getBigInt(((BigIntHolder) holder).value);
+      case FLOAT4:
+        return ValueExpressions.getFloat4(((Float4Holder) holder).value);
+      case FLOAT8:
+        return ValueExpressions.getFloat8(((Float8Holder) holder).value);
+      case VARDECIMAL:
+        VarDecimalHolder decimalHolder = (VarDecimalHolder) holder;
+        return ValueExpressions.getVarDecimal(
+            DecimalUtility.getBigDecimalFromDrillBuf(decimalHolder.buffer,
+                decimalHolder.start, decimalHolder.end - decimalHolder.start, decimalHolder.scale),
+            decimalHolder.precision,
+            decimalHolder.scale);
+      case DATE:
+        return ValueExpressions.getDate(((DateHolder) holder).value);
+      case TIMESTAMP:
+        return ValueExpressions.getTimeStamp(((TimeStampHolder) holder).value);
+      case TIME:
+        return ValueExpressions.getTime(((TimeHolder) holder).value);
+      case BIT:
+        return ValueExpressions.getBit(((BitHolder) holder).value == 1);
+      case VARCHAR:
+        VarCharHolder varCharHolder = (VarCharHolder) holder;
+        String value = StringFunctionHelpers.toStringFromUTF8(varCharHolder.start, varCharHolder.end, varCharHolder.buffer);
+        return ValueExpressions.getChar(value, value.length());
+      default:
+        return null;
     }
   }
 
@@ -236,7 +247,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
       return handleIsFunction(funcHolderExpr, value);
     }
 
-    if (CastFunctions.isCastFunction(funcName)) {
+    if (FunctionReplacementUtils.isCastFunction(funcName)) {
       List<LogicalExpression> newArgs = generateNewExpressions(funcHolderExpr.args, value);
       if (newArgs == null) {
         return null;

@@ -338,4 +338,9 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     return rowCount < TARGET_RECORD_COUNT &&
         operatorContext.getAllocator().getAllocatedMemory() < MAX_ALLOCATED_MEMORY_PER_BATCH;
   }
+
+  @Override
+  public String toString() {
+    return "HBaseRecordReader[Table=" + hbaseTableName.getNamespaceAsString() + "]";
+  }
 }

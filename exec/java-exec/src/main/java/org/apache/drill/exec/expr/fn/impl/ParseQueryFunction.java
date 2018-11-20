@@ -23,65 +23,165 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 import javax.inject.Inject;
 
-@FunctionTemplate(
-        name="parse_query",
-        scope= FunctionTemplate.FunctionScope.SIMPLE,
-        nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
-)
+/**
+ * The {@code parse_query} function splits up a query string and returns a map of the key-value pairs.
+ * If input string contains one or more {@code '?'} characters the string will be
+ * split by the first occurrence of the character and key-value mapping will be performed for
+ * the second part of split string (the part starting after {@code '?'} character) only.
+ *
+ * <p>For example, {@code parse_query('url?arg1=x&arg2=y')} will return:
+ * <pre>
+ * {
+ *   "arg1": "x",
+ *   "arg2": "y"
+ * }
+ * </pre>
+ */
+public class ParseQueryFunction {
 
-public class ParseQueryFunction implements DrillSimpleFunc {
+  @FunctionTemplate(name = "parse_query", scope = FunctionTemplate.FunctionScope.SIMPLE)
+  public static class ParseQuery implements DrillSimpleFunc {
 
     @Param
-    NullableVarCharHolder input;
-
+    VarCharHolder in;
     @Output
     BaseWriter.ComplexWriter outWriter;
-
     @Inject
     DrillBuf outBuffer;
 
+    @Override
     public void setup() {
     }
 
+    @Override
     public void eval() {
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = outWriter.rootAsMap();
 
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter queryMapWriter = outWriter.rootAsMap();
+      String queryString =
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
+      // Check if input string contains '?' character. If it does - split the string by the first occurrence
+      // of the character and preserve the part starting from the '?' exclusively so that only part with query
+      // parameters is left.
+      int questionMarkIndex = queryString.indexOf("?");
+      if (questionMarkIndex > -1) {
+        queryString = queryString.substring(questionMarkIndex + 1);
+      }
 
-        String queryString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      if (queryString.trim().isEmpty() || queryString.equalsIgnoreCase("null")) {
+        queryString = "";
+      }
 
-        if( queryString.isEmpty() || queryString.equals("null")){
-            queryString = "";
+      if (!queryString.isEmpty()) {
+        char firstLetter = queryString.charAt(0);
+
+        // If the first character is a &, it doesn't split properly.
+        // This checks if the first character is an & and if so, removes it.
+        if (firstLetter == '&') {
+          queryString = queryString.substring(1);
+        }
+      }
+
+      String[] queryParameters = queryString.split("&");
+      mapWriter.start();
+      for (String parameter : queryParameters) {
+        String[] keyValue = parameter.split("=", 2);
+        if (keyValue.length != 2) {
+          // Ignore malformed key-value pair
+          continue;
         }
 
-        String firstLetter = queryString.substring(0, 1);
+        byte[] valueBytes = keyValue[1].getBytes();
+        outBuffer.reallocIfNeeded(valueBytes.length);
+        outBuffer.setBytes(0, valueBytes);
 
-        //If the first character is a &, it doesn't split properly.  This checks to see if the first character is an & and if so, removes it.
-        if(firstLetter.equals("&")){
-            queryString = queryString.substring(1);
-        }
+        org.apache.drill.exec.expr.holders.VarCharHolder valueHolder =
+            new org.apache.drill.exec.expr.holders.VarCharHolder();
+        valueHolder.start = 0;
+        valueHolder.end = valueBytes.length;
+        valueHolder.buffer = outBuffer;
 
-        String[] arguments = queryString.split("&");
-
-        for (int i = 0; i < arguments.length; i++) {
-            String[] queryParts = arguments[i].split("=");
-
-            org.apache.drill.exec.expr.holders.VarCharHolder rowHolder = new org.apache.drill.exec.expr.holders.VarCharHolder();
-
-            byte[] rowStringBytes = queryParts[1].getBytes();
-
-            outBuffer.reallocIfNeeded(rowStringBytes.length);
-            outBuffer.setBytes(0, rowStringBytes);
-
-            rowHolder.start = 0;
-            rowHolder.end = rowStringBytes.length;
-            rowHolder.buffer = outBuffer;
-
-            queryMapWriter.varChar(queryParts[0]).write(rowHolder);
-
-        }
+        mapWriter.varChar(keyValue[0]).write(valueHolder);
+      }
+      mapWriter.end();
     }
+  }
+
+  @FunctionTemplate(name = "parse_query", scope = FunctionTemplate.FunctionScope.SIMPLE)
+  public static class ParseQueryNullableInput implements DrillSimpleFunc {
+
+    @Param
+    NullableVarCharHolder in;
+    @Output
+    BaseWriter.ComplexWriter outWriter;
+    @Inject
+    DrillBuf outBuffer;
+
+    @Override
+    public void setup() {
+    }
+
+    @Override
+    public void eval() {
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = outWriter.rootAsMap();
+
+      if (in.isSet == 0) {
+        // Return empty map
+        mapWriter.start();
+        mapWriter.end();
+        return;
+      }
+
+      String queryString =
+            org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
+      // Check if input string contains '?' character. If it does - split the string by the first occurrence
+      // of the character and preserve the part starting from the '?' exclusively so that only part with query
+      // parameters is left.
+      int questionMarkIndex = queryString.indexOf("?");
+      if (questionMarkIndex > -1) {
+        queryString = queryString.substring(questionMarkIndex + 1);
+      }
+
+      if (queryString.trim().isEmpty() || queryString.equalsIgnoreCase("null")) {
+        queryString = "";
+      }
+
+      if (!queryString.isEmpty()) {
+        char firstLetter = queryString.charAt(0);
+
+        // If the first character is a &, it doesn't split properly.
+        // This checks if the first character is an & and if so, removes it.
+        if (firstLetter == '&') {
+          queryString = queryString.substring(1);
+        }
+      }
+
+      String[] queryParameters = queryString.split("&");
+      mapWriter.start();
+      for (String parameter : queryParameters) {
+        String[] keyValue = parameter.split("=", 2);
+        if (keyValue.length != 2) {
+          // Ignore malformed key-value pair
+          continue;
+        }
+
+        byte[] valueBytes = keyValue[1].getBytes();
+        outBuffer.reallocIfNeeded(valueBytes.length);
+        outBuffer.setBytes(0, valueBytes);
+
+        org.apache.drill.exec.expr.holders.VarCharHolder valueHolder =
+            new org.apache.drill.exec.expr.holders.VarCharHolder();
+        valueHolder.start = 0;
+        valueHolder.end = valueBytes.length;
+        valueHolder.buffer = outBuffer;
+
+        mapWriter.varChar(keyValue[0]).write(valueHolder);
+      }
+      mapWriter.end();
+    }
+  }
 }

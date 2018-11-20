@@ -28,6 +28,7 @@ import org.apache.drill.common.logical.data.LateralJoin;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillLateralJoinRelBase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -48,12 +49,14 @@ public class DrillLateralJoinRel extends DrillLateralJoinRelBase implements Dril
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    final List<String> fields = getRowType().getFieldNames();
+    List<String> fields = new ArrayList<>();
+    fields.addAll(getInput(0).getRowType().getFieldNames());
+    fields.addAll(getInput(1).getRowType().getFieldNames());
     assert DrillJoinRel.isUnique(fields);
     final int leftCount = getInputSize(0);
 
-    final LogicalOperator leftOp = DrillJoinRel.implementInput(implementor, 0, 0, left, this);
-    final LogicalOperator rightOp = DrillJoinRel.implementInput(implementor, 1, leftCount, right, this);
+    final LogicalOperator leftOp = DrillJoinRel.implementInput(implementor, 0, 0, left, this, fields);
+    final LogicalOperator rightOp = DrillJoinRel.implementInput(implementor, 1, leftCount, right, this, fields);
 
     return new LateralJoin(leftOp, rightOp);
   }

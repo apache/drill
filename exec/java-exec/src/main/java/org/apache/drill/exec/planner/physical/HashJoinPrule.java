@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import org.apache.drill.exec.planner.logical.DrillJoin;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
+import org.apache.drill.exec.planner.logical.DrillSemiJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
@@ -30,10 +32,14 @@ import org.slf4j.Logger;
 public class HashJoinPrule extends JoinPruleBase {
   public static final RelOptRule DIST_INSTANCE = new HashJoinPrule("Prel.HashJoinDistPrule", RelOptHelper.any(DrillJoinRel.class), true);
   public static final RelOptRule BROADCAST_INSTANCE = new HashJoinPrule("Prel.HashJoinBroadcastPrule", RelOptHelper.any(DrillJoinRel.class), false);
+  public static final RelOptRule SEMI_DIST_INSTANCE = new HashJoinPrule("Prel.HashSemiJoinDistPrule", RelOptHelper.any(DrillSemiJoinRel.class), true);
+  public static final RelOptRule SEMI_BROADCAST_INSTANCE = new HashJoinPrule("Prel.HashSemiJoinBroadcastPrule", RelOptHelper.any(DrillSemiJoinRel.class), false);
+
 
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private final boolean isDist;
+  private boolean isSemi = false;
   private HashJoinPrule(String name, RelOptRuleOperand operand, boolean isDist) {
     super(operand, name);
     this.isDist = isDist;
@@ -42,17 +48,18 @@ public class HashJoinPrule extends JoinPruleBase {
   @Override
   public boolean matches(RelOptRuleCall call) {
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
+    isSemi = call.rel(0) instanceof DrillSemiJoinRel;
     return settings.isMemoryEstimationEnabled() || settings.isHashJoinEnabled();
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
-    if (!settings.isHashJoinEnabled()) {
+    if (!settings.isHashJoinEnabled() || isSemi && !settings.isSemiJoinEnabled()) {
       return;
     }
 
-    final DrillJoinRel join = call.rel(0);
+    final DrillJoin join = call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
 
@@ -66,11 +73,11 @@ public class HashJoinPrule extends JoinPruleBase {
 
       if(isDist){
         createDistBothPlan(call, join, PhysicalJoinType.HASH_JOIN,
-            left, right, null /* left collation */, null /* right collation */, hashSingleKey);
+            left, right, null /* left collation */, null /* right collation */, hashSingleKey, isSemi);
       }else{
         if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
           createBroadcastPlan(call, join, join.getCondition(), PhysicalJoinType.HASH_JOIN,
-              left, right, null /* left collation */, null /* right collation */);
+              left, right, null /* left collation */, null /* right collation */, isSemi);
         }
       }
 

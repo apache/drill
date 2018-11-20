@@ -17,9 +17,12 @@
  */
 package org.apache.drill.exec.physical.impl.common;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.common.exceptions.RetryAfterSpillException;
@@ -47,17 +50,19 @@ public interface HashTable {
   int BATCH_MASK = 0x0000FFFF;
 
   /**
-   * {@link HashTable#setup(HashTableConfig, BufferAllocator, VectorContainer, RecordBatch, RecordBatch, VectorContainer)} must be called before anything can be done to the
-   * {@link HashTable}.
+   * {@link HashTable#setup} must be called before anything can be done to the {@link HashTable}.
+   *
    * @param htConfig
    * @param allocator
    * @param incomingBuild
    * @param incomingProbe
    * @param outgoing
    * @param htContainerOrig
+   * @param context
+   * @param cg
    */
   void setup(HashTableConfig htConfig, BufferAllocator allocator, VectorContainer incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing,
-             VectorContainer htContainerOrig);
+             VectorContainer htContainerOrig, FragmentContext context, ClassGenerator<?> cg);
 
   /**
    * Updates the incoming (build and probe side) value vectors references in the {@link HashTableTemplate.BatchHolder}s.
@@ -150,6 +155,8 @@ public interface HashTable {
   void setTargetBatchRowCount(int batchRowCount);
 
   int getTargetBatchRowCount();
+
+  Pair<VectorContainer, Integer> nextBatch();
 }
 
 

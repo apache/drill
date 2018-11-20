@@ -21,11 +21,15 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
@@ -41,14 +45,19 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexVisitor;
 import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.planner.logical.FieldsReWriterUtil;
 import org.apache.drill.exec.resolver.TypeCastRules;
+import org.apache.drill.exec.util.Utilities;
 
 /**
  * Utility class that is a subset of the RelOptUtil class and is a placeholder for Drill specific
@@ -393,6 +402,151 @@ public abstract class DrillRelOptUtil {
         return rexBuilder.makeInputRef(var.getType(), inputRefMap.get(index));
       } else {
         return rex;
+      }
+    }
+  }
+
+  public static boolean isProjectFlatten(RelNode project) {
+
+    assert project instanceof Project : "Rel is NOT an instance of project!";
+
+    for (RexNode rex : project.getChildExps()) {
+      RexNode newExpr = rex;
+      if (rex instanceof RexCall) {
+        RexCall function = (RexCall) rex;
+        String functionName = function.getOperator().getName();
+        if (functionName.equalsIgnoreCase("flatten") ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Stores information about fields, their names and types.
+   * Is responsible for creating mapper which used in field re-writer visitor.
+   */
+  public static class ProjectPushInfo {
+    private final List<SchemaPath> fields;
+    private final FieldsReWriterUtil.FieldsReWriter reWriter;
+    private final List<String> fieldNames;
+    private final List<RelDataType> types;
+
+    public ProjectPushInfo(List<SchemaPath> fields, Map<String, FieldsReWriterUtil.DesiredField> desiredFields) {
+      this.fields = fields;
+      this.fieldNames = new ArrayList<>();
+      this.types = new ArrayList<>();
+
+      Map<RexNode, Integer> mapper = new HashMap<>();
+
+      int index = 0;
+      for (Map.Entry<String, FieldsReWriterUtil.DesiredField> entry : desiredFields.entrySet()) {
+        fieldNames.add(entry.getKey());
+        FieldsReWriterUtil.DesiredField desiredField = entry.getValue();
+        types.add(desiredField.getType());
+        for (RexNode node : desiredField.getNodes()) {
+          mapper.put(node, index);
+        }
+        index++;
+      }
+      this.reWriter = new FieldsReWriterUtil.FieldsReWriter(mapper);
+    }
+
+    public List<SchemaPath> getFields() {
+      return fields;
+    }
+
+    public FieldsReWriterUtil.FieldsReWriter getInputReWriter() {
+      return reWriter;
+    }
+
+    /**
+     * Creates new row type based on stores types and field names.
+     *
+     * @param factory factory for data type descriptors.
+     * @return new row type
+     */
+    public RelDataType createNewRowType(RelDataTypeFactory factory) {
+      return factory.createStructType(types, fieldNames);
+    }
+  }
+
+  public static ProjectPushInfo getFieldsInformation(RelDataType rowType, List<RexNode> projects) {
+    ProjectFieldsVisitor fieldsVisitor = new ProjectFieldsVisitor(rowType);
+    for (RexNode exp : projects) {
+      PathSegment segment = exp.accept(fieldsVisitor);
+      fieldsVisitor.addField(segment);
+    }
+
+    return fieldsVisitor.getInfo();
+  }
+
+  /**
+   * Visitor that finds the set of inputs that are used.
+   */
+  private static class ProjectFieldsVisitor extends RexVisitorImpl<PathSegment> {
+    private final List<String> fieldNames;
+    private final List<RelDataTypeField> fields;
+
+    private final Set<SchemaPath> newFields = Sets.newLinkedHashSet();
+    private final Map<String, FieldsReWriterUtil.DesiredField> desiredFields = new LinkedHashMap<>();
+
+    ProjectFieldsVisitor(RelDataType rowType) {
+      super(true);
+      this.fieldNames = rowType.getFieldNames();
+      this.fields = rowType.getFieldList();
+    }
+
+    void addField(PathSegment segment) {
+      if (segment != null && segment instanceof PathSegment.NameSegment) {
+        newFields.add(new SchemaPath((PathSegment.NameSegment) segment));
+      }
+    }
+
+    ProjectPushInfo getInfo() {
+      return new ProjectPushInfo(ImmutableList.copyOf(newFields), ImmutableMap.copyOf(desiredFields));
+    }
+
+    @Override
+    public PathSegment visitInputRef(RexInputRef inputRef) {
+      int index = inputRef.getIndex();
+      String name = fieldNames.get(index);
+      RelDataTypeField field = fields.get(index);
+      addDesiredField(name, field.getType(), inputRef);
+      return new PathSegment.NameSegment(name);
+    }
+
+    @Override
+    public PathSegment visitCall(RexCall call) {
+      String itemStarFieldName = FieldsReWriterUtil.getFieldNameFromItemStarField(call, fieldNames);
+      if (itemStarFieldName != null) {
+        addDesiredField(itemStarFieldName, call.getType(), call);
+        return new PathSegment.NameSegment(itemStarFieldName);
+      }
+
+      if (SqlStdOperatorTable.ITEM.equals(call.getOperator())) {
+        PathSegment mapOrArray = call.operands.get(0).accept(this);
+        if (mapOrArray != null) {
+          if (call.operands.get(1) instanceof RexLiteral) {
+            return mapOrArray.cloneWithNewChild(Utilities.convertLiteral((RexLiteral) call.operands.get(1)));
+          }
+          return mapOrArray;
+        }
+      } else {
+        for (RexNode operand : call.operands) {
+          addField(operand.accept(this));
+        }
+      }
+      return null;
+    }
+
+    private void addDesiredField(String name, RelDataType type, RexNode originalNode) {
+      FieldsReWriterUtil.DesiredField desiredField = desiredFields.get(name);
+      if (desiredField == null) {
+        desiredFields.put(name, new FieldsReWriterUtil.DesiredField(name, type, originalNode));
+      } else {
+        desiredField.addNode(originalNode);
       }
     }
   }

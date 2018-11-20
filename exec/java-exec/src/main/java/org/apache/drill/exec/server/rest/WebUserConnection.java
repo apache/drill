@@ -75,20 +75,20 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
 
   @Override
   public void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result) {
-    // Check if there is any data or not. There can be overflow here but DrillBuf doesn't support allocating with
+    // There can be overflow here but DrillBuf doesn't support allocating with
     // bytes in long. Hence we are just preserving the earlier behavior and logging debug log for the case.
     final int dataByteCount = (int) result.getByteCount();
 
-    if (dataByteCount <= 0) {
+    if (dataByteCount < 0) {
       if (logger.isDebugEnabled()) {
-        logger.debug("Either no data received in this batch or there is BufferOverflow in dataByteCount: {}",
+        logger.debug("There is BufferOverflow in dataByteCount: {}",
             dataByteCount);
       }
       listener.success(Acks.OK, null);
       return;
     }
 
-    // If here that means there is some data for sure. Create a ByteBuf with all the data in it.
+    // Create a ByteBuf with all the data in it.
     final int rows = result.getHeader().getRowCount();
     final BufferAllocator allocator = webSessionResources.getAllocator();
     final DrillBuf bufferWithData = allocator.buffer(dataByteCount);

@@ -17,9 +17,13 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.volcano.AbstractConverter;
+import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalCalc;
 import org.apache.calcite.rel.logical.LogicalJoin;
@@ -39,12 +43,13 @@ import org.apache.calcite.rel.rules.ProjectSetOpTransposeRule;
 import org.apache.calcite.rel.rules.ProjectToWindowRule;
 import org.apache.calcite.rel.rules.ProjectWindowTransposeRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
+import org.apache.calcite.rel.rules.SemiJoinRule;
 import org.apache.calcite.rel.rules.SortRemoveRule;
 import org.apache.calcite.rel.rules.SubQueryRemoveRule;
 import org.apache.calcite.rel.rules.UnionToDistinctRule;
 import org.apache.drill.exec.planner.logical.DrillConditions;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
-
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 /**
  * Contains rule instances which use custom RelBuilder.
  */
@@ -57,6 +62,15 @@ public interface RuleInstance {
   UnionToDistinctRule UNION_TO_DISTINCT_RULE =
       new UnionToDistinctRule(LogicalUnion.class,
           DrillRelFactories.LOGICAL_BUILDER);
+
+  SemiJoinRule SEMI_JOIN_PROJECT_RULE = new SemiJoinRule.ProjectToSemiJoinRule(Project.class, Join.class, Aggregate.class,
+          DrillRelFactories.LOGICAL_BUILDER, "DrillSemiJoinRule:project") {
+    public boolean matches(RelOptRuleCall call) {
+      Preconditions.checkArgument(call.rel(1) instanceof Join);
+      Join join = call.rel(1);
+      return !(join.getCondition().isAlwaysTrue() || join.getCondition().isAlwaysFalse());
+    }
+  };
 
   JoinPushExpressionsRule JOIN_PUSH_EXPRESSIONS_RULE =
       new JoinPushExpressionsRule(Join.class,

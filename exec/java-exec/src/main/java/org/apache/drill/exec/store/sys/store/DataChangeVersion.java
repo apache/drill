@@ -17,9 +17,17 @@
  */
 package org.apache.drill.exec.store.sys.store;
 
+/**
+ * Holder for store version. By default version is {@link DataChangeVersion#UNDEFINED}.
+ */
 public class DataChangeVersion {
 
-  private int version;
+  // is used when store in unreachable
+  public static final int NOT_AVAILABLE = -1;
+  // is used when store does not support versioning
+  public static final int UNDEFINED = -2;
+
+  private int version = UNDEFINED;
 
   public void setVersion(int version) {
     this.version = version;

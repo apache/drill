@@ -129,20 +129,22 @@ public class ${intervaltype}${numerictype}Functions {
         }
     }
 
-    @SuppressWarnings("unused")
-    @FunctionTemplate(names = {"divide", "div"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
-    public static class ${intervaltype}${numerictype}DivideFunction implements DrillSimpleFunc {
+  @SuppressWarnings("unused")
+  @FunctionTemplate(names = {"divide", "div"<#if numerictype == "Int">, "/int"</#if>},
+                    scope = FunctionTemplate.FunctionScope.SIMPLE,
+                    nulls = NullHandling.NULL_IF_NULL)
+  public static class ${intervaltype}${numerictype}DivideFunction implements DrillSimpleFunc {
     @Param ${intervaltype}Holder left;
     @Param ${numerictype}Holder right;
     @Output IntervalHolder out;
 
-        public void setup() {
-        }
-
-        public void eval() {
-            <@intervalNumericArithmeticBlock left="left" right="right" temp = "temp" op = "/" out = "out" intervaltype=intervaltype />
-        }
+    public void setup() {
     }
+
+    public void eval() {
+      <@intervalNumericArithmeticBlock left="left" right="right" temp = "temp" op = "/" out = "out" intervaltype=intervaltype />
+    }
+  }
 }
 </#list>
 </#list>

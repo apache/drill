@@ -82,9 +82,32 @@ class UserProperties;
                     return boost::asio::ssl::context::tlsv11;
                 } else if (version == "tlsv1") {
                     return boost::asio::ssl::context::tlsv1;
+                } else if ((version == "tlsv1+") || (version == "tlsv11+") || (version == "tlsv12+")) {
+                    // SSLv2 and SSLv3 are disabled, so this is the equivalent of 'tls' only mode.
+                    // In boost version 1.64+, they've added support for context::tls; method.
+                    return boost::asio::ssl::context::sslv23;
                 } else {
                     return boost::asio::ssl::context::tlsv12;
                 }
+            }
+
+            /// @brief Applies Minimum TLS protocol restrictions. 
+            ///         tlsv11+ means restrict to TLS version 1.1 and higher.
+            ///         tlsv12+ means restrict to TLS version 1.2 and higher.
+            ///  Please note that SSL_OP_NO_TLSv tags are depreecated in openSSL 1.1.0.
+            /// 
+            /// @param in_ver               The protocol version.
+            /// 
+            /// @return The SSL context options.
+            static long ApplyMinTLSRestriction(const std::string & in_ver){
+#if defined(IS_SSL_ENABLED)
+                if (in_ver == "tlsv11+") {
+                    return SSL_OP_NO_TLSv1;
+                } else if (in_ver == "tlsv12+") {
+                    return (SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1);
+                } 
+#endif
+                return SSL_OP_NO_SSLv3;
             }
 
         SSLChannelContext(DrillUserProperties *props,
@@ -255,6 +278,12 @@ class UserProperties;
                     return handleError(
                         CONN_HANDSHAKE_FAILED,
                         getMessage(ERR_CONN_SSL_CERTVERIFY, in_err.what()));
+                }
+                else if (boost::asio::error::get_ssl_category() == errcode.category() &&
+                    SSL_R_UNSUPPORTED_PROTOCOL == ERR_GET_REASON(errcode.value())){
+                    return handleError(
+                        CONN_HANDSHAKE_FAILED,
+                        getMessage(ERR_CONN_SSL_PROTOVER, in_err.what()));
                 }
                 else{
                     return handleError(

@@ -20,9 +20,12 @@ package org.apache.drill.exec.expr.fn;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.fun.OracleSqlOperatorTable;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.config.DrillConfig;
@@ -38,6 +41,7 @@ import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.HiveUDFOperator;
 import org.apache.drill.exec.planner.sql.HiveUDFOperatorWithoutInference;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.udf.UDFType;
@@ -48,8 +52,18 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
-public class HiveFunctionRegistry implements PluggableFunctionRegistry{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveFunctionRegistry.class);
+public class HiveFunctionRegistry implements PluggableFunctionRegistry {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveFunctionRegistry.class);
+
+  /**
+   * Map for renaming UDFs. Keys of the map represent UDF names which should be replaced
+   * and its values represent target UDF names.
+   */
+  private static final Map<String, String> FUNCTION_REPLACE_MAP = ImmutableMap.<String, String> builder()
+      // renames Hive's TRANSLATE UDF to TRANSLATE3 due to CALCITE-1115
+      .put(SqlStdOperatorTable.TRANSLATE.getName().toLowerCase(),
+          OracleSqlOperatorTable.TRANSLATE3.getName().toLowerCase())
+      .build();
 
   private ArrayListMultimap<String, Class<? extends GenericUDF>> methodsGenericUDF = ArrayListMultimap.create();
   private ArrayListMultimap<String, Class<? extends UDF>> methodsUDF = ArrayListMultimap.create();
@@ -102,26 +116,27 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     }
   }
 
-  private <C,I> void register(Class<? extends I> clazz, ArrayListMultimap<String,Class<? extends I>> methods) {
+  private <I> void register(Class<? extends I> clazz, ArrayListMultimap<String, Class<? extends I>> methods) {
     Description desc = clazz.getAnnotation(Description.class);
-    String[] names;
+    Stream<String> namesStream;
     if (desc != null) {
-      names = desc.name().split(",");
-      for (int i=0; i<names.length; i++) {
-        names[i] = names[i].trim();
-      }
-    }else{
-      names = new String[]{clazz.getName().replace('.', '_')};
+      namesStream = Stream.of(desc.name().split(","))
+          .map(String::trim);
+    } else {
+      namesStream = Stream.of(clazz)
+          .map(Class::getName)
+          .map(name -> name.replace('.', '_'));
     }
+
+    // Checks specified array of function names whether they should be replaced
+    // using FUNCTION_REPLACE_MAP map.
+    namesStream.map(String::toLowerCase)
+        .map(functionName -> FUNCTION_REPLACE_MAP.getOrDefault(functionName, functionName))
+        .forEach(name -> methods.put(name, clazz));
 
     UDFType type = clazz.getAnnotation(UDFType.class);
     if (type != null && !type.deterministic()) {
       nonDeterministicUDFs.add(clazz);
-    }
-
-
-    for(int i=0; i<names.length;i++) {
-      methods.put(names[i].toLowerCase(), clazz);
     }
   }
 

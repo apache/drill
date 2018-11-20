@@ -19,11 +19,11 @@
 
 <#list cast.types as type>
 
-<#if type.major == "VarCharDecimalComplex" || type.major == "EmptyStringVarCharDecimalComplex">  <#-- Cast function template for conversion from VarChar to VarDecimal -->
+<#if type.major == "VarCharDecimalComplex" || type.major == "NullableVarCharDecimalComplex">  <#-- Cast function template for conversion from VarChar to VarDecimal -->
 
 <#if type.major == "VarCharDecimalComplex">
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java"/>
-<#elseif type.major == "EmptyStringVarCharDecimalComplex">
+<#elseif type.major == "NullableVarCharDecimalComplex">
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/CastEmptyString${type.from}To${type.to}.java"/>
 </#if>
 
@@ -58,7 +58,7 @@ import java.nio.ByteBuffer;
                   returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
                   nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
-<#elseif type.major == "EmptyStringVarCharDecimalComplex">
+<#elseif type.major == "NullableVarCharDecimalComplex">
 @FunctionTemplate(name = "castEmptyString${type.from}To${type.to?upper_case}",
                   scope = FunctionTemplate.FunctionScope.SIMPLE,
                   returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
@@ -76,7 +76,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
   }
 
   public void eval() {
-    <#if type.major == "EmptyStringVarCharDecimalComplex">
+    <#if type.major == "NullableVarCharDecimalComplex">
     // Check if the input is null or empty string
     if (<#if type.from == "NullableVarChar"> in.isSet == 0 || </#if> in.end == in.start) {
       out.isSet = 0;

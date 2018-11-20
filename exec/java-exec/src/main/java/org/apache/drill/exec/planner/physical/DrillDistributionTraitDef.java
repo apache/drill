@@ -86,7 +86,16 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
         return new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel,
                                              toDist.getFields());
       case RANGE_DISTRIBUTED:
-        return new OrderedPartitionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
+        // NOTE: earlier, for Range Distribution we were creating an OrderedPartitionExchange; however that operator is not actually
+        // used in any of the query plans because Drill's Sort does not do range based sorting (it does a HashToRandomExchange followed
+        // by a Sort).  Here, we are generating a RangePartitionExchange instead of OrderedPartitionExchange. The run-time implementation
+        // of RPE is a much simpler operator..it just does 'bucketing' based on ranges.  Also, it allows a parameter to specify the
+        // partitioning function whereas the OPE does a much more complex inferencing to determine which partition goes where. In future,
+        // if we do want to leverage OPE then we could create a new type of distribution trait or make the DistributionType a
+        // class instead of a simple enum and then we can distinguish whether an OPE or RPE is needed.
+        return new RangePartitionExchangePrel(rel.getCluster(),
+            planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel,
+            toDist.getFields(), toDist.getPartitionFunction());
       case BROADCAST_DISTRIBUTED:
         return new BroadcastExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
       case ANY:

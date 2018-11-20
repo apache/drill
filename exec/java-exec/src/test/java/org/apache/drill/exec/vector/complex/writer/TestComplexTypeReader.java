@@ -24,6 +24,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -31,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.apache.drill.test.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.mapOf;
 
 public class TestComplexTypeReader extends BaseTestQuery {
   @BeforeClass
@@ -229,6 +231,35 @@ public class TestComplexTypeReader extends BaseTestQuery {
   // Test SplitUpComplexExpressions rule which splits complex expression into multiple projects
   public void testComplexAndSimpleColumnSelection() throws Exception {
     test("select t.a.b, kvgen(t.a.c) from cp.`jsoninput/input4.json` t");
+  }
+
+  @Test
+  public void testKVGenWithNullableInput() throws Exception {
+    // Contents of the generated file:
+    /*
+      {"foo": {"obj":1, "bar":10}}
+      {"foo": {"obj":2, "bar":20}}
+      {"foo": null}
+      {"foo": {"obj": null, "bar": 30}}
+     */
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(
+        new File(dirTestWatcher.getRootDir(), "input_nested.json")))) {
+      String[] fieldValue = {"{\"obj\":1, \"bar\":10}", "{\"obj\":2, \"bar\":20}", null, "{\"obj\": null, \"bar\": 30}"};
+      for (String value : fieldValue) {
+        String entry = String.format("{\"foo\": %s}\n", value);
+        writer.write(entry);
+      }
+    }
+
+    testBuilder()
+        .sqlQuery("select kvgen(foo) kv from dfs.`input_nested.json`")
+        .unOrdered()
+        .baselineColumns("kv")
+        .baselineValues(listOf(mapOf("key", "obj", "value", 1L), mapOf("key", "bar", "value", 10L)))
+        .baselineValues(listOf(mapOf("key", "obj", "value", 2L), mapOf("key", "bar", "value", 20L)))
+        .baselineValues(listOf())
+        .baselineValues(listOf(mapOf("key", "bar", "value", 30L)))
+        .go();
   }
 
   @Test

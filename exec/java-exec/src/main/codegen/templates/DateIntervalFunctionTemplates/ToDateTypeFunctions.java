@@ -19,9 +19,9 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <@pp.dropOutputFile />
 
-<#list dateIntervalFunc.dates as type>
+<#list dateIntervalFunc.varCharToDate as convert>
 
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/GTo${type}.java" />
+<@pp.changeOutputFile name = "/org/apache/drill/exec/expr/fn/impl/G${convert.from}To${convert.to}.java" />
 
 <#include "/@includes/license.ftl" />
 
@@ -34,43 +34,56 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.RecordBatch;
 
 /*
  * This class is generated using freemarker and the ${.template_name} template.
  */
+<#if convert.to?contains("Nullable")>
+@FunctionTemplate(name = "convert${convert.from}To${convert.to}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = NullHandling.INTERNAL,
+    isInternal = true)
+<#else>
+@FunctionTemplate(name = "to_${convert.to?lower_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = NullHandling.NULL_IF_NULL)
+</#if>
+public class G${convert.from}To${convert.to} implements DrillSimpleFunc {
 
-@FunctionTemplate(name = "to_${type?lower_case}" , scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-public class GTo${type} implements DrillSimpleFunc {
+  @Param  ${convert.from}Holder left;
+  @Param  VarCharHolder right;
+  @Workspace org.joda.time.format.DateTimeFormatter format;
+  @Output ${convert.to}Holder out;
 
+  public void setup() {
+    // Get the desired output format
+    byte[] buf = new byte[right.end - right.start];
+    right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
+    String formatString = new String(buf, com.google.common.base.Charsets.UTF_8);
+    format = org.joda.time.format.DateTimeFormat.forPattern(formatString);
+  }
 
-    @Param  VarCharHolder left;
-    @Param  VarCharHolder right;
-    @Workspace org.joda.time.format.DateTimeFormatter format;
-    @Output ${type}Holder out;
-
-    public void setup() {
-        // Get the desired output format
-        byte[] buf = new byte[right.end - right.start];
-        right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
-        String formatString = new String(buf, com.google.common.base.Charsets.UTF_8);
-        format = org.joda.time.format.DateTimeFormat.forPattern(formatString);
+  public void eval() {
+    <#if convert.to?contains("Nullable")>
+    if (<#if convert.from == "NullableVarChar">left.isSet == 0 || </#if>left.start == left.end) {
+      out.isSet = 0;
+      return;
     }
+    out.isSet = 1;
 
-    public void eval() {
+    </#if>
+    // Get the input
+    byte[] buf1 = new byte[left.end - left.start];
+    left.buffer.getBytes(left.start, buf1, 0, left.end - left.start);
+    String input = new String(buf1, com.google.common.base.Charsets.UTF_8);
 
-        // Get the input
-        byte[] buf1 = new byte[left.end - left.start];
-        left.buffer.getBytes(left.start, buf1, 0, left.end - left.start);
-        String input = new String(buf1, com.google.common.base.Charsets.UTF_8);
-
-        <#if type == "Date">
-        out.value = (org.joda.time.DateMidnight.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC)).getMillis();
-        <#elseif type == "TimeStamp">
-        out.value = org.joda.time.DateTime.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
-        <#elseif type == "Time">
-        out.value = (int) ((format.parseDateTime(input)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
-        </#if>
-    }
+    <#if convert.to == "Date" || convert.to == "NullableDate">
+    out.value = (org.joda.time.DateMidnight.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC)).getMillis();
+    <#elseif convert.to == "TimeStamp" || convert.to == "NullableTimeStamp">
+    out.value = org.joda.time.DateTime.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
+    <#elseif convert.to == "Time" || convert.to == "NullableTime">
+    out.value = (int) ((format.parseDateTime(input)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
+    </#if>
+  }
 }
 </#list>

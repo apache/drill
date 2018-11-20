@@ -37,6 +37,7 @@
     pop : "hash-aggregate",
     @id : 3,
     child : 2,
+    phase : "PHASE_1of1",
     keys : [ {
       ref : "$f0",
       expr : "$f0"

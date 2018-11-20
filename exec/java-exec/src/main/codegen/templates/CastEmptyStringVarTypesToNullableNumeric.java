@@ -48,7 +48,7 @@
  */
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "castEmptyString${type.from}To${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+@FunctionTemplate(name = "castEmptyString${type.from}To${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL, isInternal=true)
 public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;

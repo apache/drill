@@ -295,6 +295,17 @@ public abstract class FrameSupportTemplate implements WindowFramer {
     internal.clear();
   }
 
+  @Override
+  public String toString() {
+    return "FrameSupportTemplate[internal=" + internal
+        + ", outputCount=" + outputCount
+        + ", current=" + current
+        + ", frameLastRow=" + frameLastRow
+        + ", remainingRows=" + remainingRows
+        + ", partialPartition=" + partialPartition
+        + "]";
+  }
+
   /**
    * called once for each peer row of the current frame.
    * @param index of row to aggregate

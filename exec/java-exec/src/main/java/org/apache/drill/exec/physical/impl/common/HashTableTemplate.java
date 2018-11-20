@@ -23,7 +23,10 @@ import java.util.Set;
 
 import javax.inject.Named;
 
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -109,9 +112,15 @@ public abstract class HashTableTemplate implements HashTable {
 
   private MaterializedField dummyIntField;
 
+  protected FragmentContext context;
+
+  protected ClassGenerator<?> cg;
+
   private int numResizing = 0;
 
   private int resizingTime = 0;
+
+  private Iterator<BatchHolder> htIter = null;
 
   // This class encapsulates the links, keys and values for up to BATCH_SIZE
   // *unique* records. Thus, suppose there are N incoming record batches, each
@@ -445,7 +454,9 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   @Override
-  public void setup(HashTableConfig htConfig, BufferAllocator allocator, VectorContainer incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing, VectorContainer htContainerOrig) {
+  public void setup(HashTableConfig htConfig, BufferAllocator allocator, VectorContainer incomingBuild,
+                    RecordBatch incomingProbe, RecordBatch outgoing, VectorContainer htContainerOrig,
+                    FragmentContext context, ClassGenerator<?> cg) {
     float loadf = htConfig.getLoadFactor();
     int initialCap = htConfig.getInitialCapacity();
 
@@ -469,6 +480,8 @@ public abstract class HashTableTemplate implements HashTable {
     this.incomingProbe = incomingProbe;
     this.outgoing = outgoing;
     this.htContainerOrig = htContainerOrig;
+    this.context = context;
+    this.cg = cg;
     this.allocationTracker = new HashTableAllocationTracker(htConfig);
 
     // round up the initial capacity to nearest highest power of 2
@@ -761,7 +774,12 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   protected BatchHolder newBatchHolder(int index, int newBatchHolderSize) { // special method to allow debugging of gen code
-    return new BatchHolder(index, newBatchHolderSize);
+    return this.injectMembers(new BatchHolder(index, newBatchHolderSize));
+  }
+
+  protected BatchHolder injectMembers(BatchHolder batchHolder) {
+    CodeGenMemberInjector.injectMembers(cg, batchHolder, context);
+    return batchHolder;
   }
 
   // Resize the hash table if needed by creating a new one with double the number of buckets.
@@ -887,6 +905,26 @@ public abstract class HashTableTemplate implements HashTable {
     }
     vector.getMutator().setValueCount(size);
     return vector;
+  }
+
+  public Pair<VectorContainer, Integer> nextBatch() {
+    if (batchHolders == null || batchHolders.size() == 0) {
+      return null;
+    }
+    if (htIter == null) {
+      htIter = batchHolders.iterator();
+    }
+    if (htIter.hasNext()) {
+      BatchHolder bh = htIter.next();
+      // set the value count for the vectors in the batch
+      // TODO: investigate why the value count is not already set in the
+      // batch.. it seems even outputKeys() sets the value count explicitly
+      if (bh != null) {
+        bh.setValueCount();
+        return Pair.of(bh.htContainer, bh.maxOccupiedIdx);
+      }
+    }
+    return null;
   }
 
   // These methods will be code-generated in the context of the outer class

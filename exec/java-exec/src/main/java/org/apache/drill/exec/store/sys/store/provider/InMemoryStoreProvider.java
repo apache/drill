@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.store.sys.store.provider;
 
-import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
+import org.apache.drill.exec.store.sys.VersionedPersistentStore;
 import org.apache.drill.exec.store.sys.store.InMemoryStore;
+import org.apache.drill.exec.store.sys.store.VersionedDelegatingStore;
 
 public class InMemoryStoreProvider implements PersistentStoreProvider {
 
@@ -35,10 +36,15 @@ public class InMemoryStoreProvider implements PersistentStoreProvider {
   public void close() throws Exception { }
 
   @Override
-  public <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> config) throws StoreException {
+  public <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> config) {
     return new InMemoryStore<>(capacity);
   }
 
   @Override
-  public void start() throws Exception { }
+  public <V> VersionedPersistentStore<V> getOrCreateVersionedStore(PersistentStoreConfig<V> config) {
+    return new VersionedDelegatingStore<>(getOrCreateStore(config));
+  }
+
+  @Override
+  public void start() { }
 }

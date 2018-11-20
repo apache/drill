@@ -133,7 +133,7 @@ class RepeatedVarCharOutput extends TextOutput {
         for (SchemaPath path : columns) {
           assert path.getRootSegment().isNamed() : "root segment should be named";
           pathStr = path.getRootSegment().getPath();
-          Preconditions.checkArgument(COL_NAME.equals(pathStr) || (SchemaPath.DYNAMIC_STAR.equals(pathStr) && path.getRootSegment().getChild() == null),
+          Preconditions.checkArgument(COL_NAME.equalsIgnoreCase(pathStr) || (SchemaPath.DYNAMIC_STAR.equals(pathStr) && path.getRootSegment().getChild() == null),
               String.format("Selected column '%s' must have name 'columns' or must be plain '*'", pathStr));
 
           if (path.getRootSegment().getChild() != null) {

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.stat;
 
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -29,10 +30,12 @@ import org.apache.parquet.column.statistics.FloatStatistics;
 import org.apache.parquet.column.statistics.IntStatistics;
 import org.apache.parquet.column.statistics.LongStatistics;
 import org.apache.parquet.column.statistics.Statistics;
+import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.joda.time.DateTimeConstants;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +53,6 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector {
   private final ParquetTableMetadataBase parquetTableMetadata;
   private final List<? extends ColumnMetadata> columnMetadataList;
   private final Map<String, String> implicitColValues;
-
   public ParquetMetaStatCollector(ParquetTableMetadataBase parquetTableMetadata,
       List<? extends ColumnMetadata> columnMetadataList, Map<String, String> implicitColValues) {
     this.parquetTableMetadata = parquetTableMetadata;
@@ -86,30 +88,26 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector {
       columnMetadataMap.put(schemaPath, columnMetadata);
     }
 
-    for (final SchemaPath field : fields) {
-      final PrimitiveType.PrimitiveTypeName primitiveType;
-      final OriginalType originalType;
-
-      final ColumnMetadata columnMetadata = columnMetadataMap.get(field.getUnIndexed());
-
+    for (SchemaPath field : fields) {
+      ColumnMetadata columnMetadata = columnMetadataMap.get(field.getUnIndexed());
       if (columnMetadata != null) {
-        final Object min = columnMetadata.getMinValue();
-        final Object max = columnMetadata.getMaxValue();
-        final long numNulls = columnMetadata.getNulls() == null ? -1 : columnMetadata.getNulls();
+        ColumnStatisticsBuilder statisticsBuilder = ColumnStatisticsBuilder.builder()
+          .setMin(columnMetadata.getMinValue())
+          .setMax(columnMetadata.getMaxValue())
+          .setNumNulls(columnMetadata.getNulls() == null ? GroupScan.NO_COLUMN_STATS: columnMetadata.getNulls())
+          .setPrimitiveType(parquetTableMetadata.getPrimitiveType(columnMetadata.getName()))
+          .setOriginalType(parquetTableMetadata.getOriginalType(columnMetadata.getName()));
 
-        primitiveType = this.parquetTableMetadata.getPrimitiveType(columnMetadata.getName());
-        originalType = this.parquetTableMetadata.getOriginalType(columnMetadata.getName());
-        int precision = 0;
-        int scale = 0;
         // ColumnTypeMetadata_v3 stores information about scale and precision
         if (parquetTableMetadata instanceof ParquetTableMetadata_v3) {
           ColumnTypeMetadata_v3 columnTypeInfo = ((ParquetTableMetadata_v3) parquetTableMetadata)
                                                                           .getColumnTypeInfo(columnMetadata.getName());
-          scale = columnTypeInfo.scale;
-          precision = columnTypeInfo.precision;
+          statisticsBuilder.setScale(columnTypeInfo.scale);
+          statisticsBuilder.setPrecision(columnTypeInfo.precision);
         }
 
-        statMap.put(field, getStat(min, max, numNulls, primitiveType, originalType, scale, precision));
+        statMap.put(field, statisticsBuilder.build());
+
       } else {
         final String columnName = field.getRootSegment().getPath();
         if (implicitColValues.containsKey(columnName)) {
@@ -132,62 +130,172 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector {
   }
 
   /**
-   * Builds column statistics using given primitiveType, originalType, scale,
-   * precision, numNull, min and max values.
+   * Helper class that creates parquet {@link ColumnStatistics} based on given
+   * min and max values, type, number of nulls, precision and scale.
    *
-   * @param min             min value for statistics
-   * @param max             max value for statistics
-   * @param numNulls        num_nulls for statistics
-   * @param primitiveType   type that determines statistics class
-   * @param originalType    type that determines statistics class
-   * @param scale           scale value (used for DECIMAL type)
-   * @param precision       precision value (used for DECIMAL type)
-   * @return column statistics
    */
-  private ColumnStatistics getStat(Object min, Object max, long numNulls,
-                                   PrimitiveType.PrimitiveTypeName primitiveType, OriginalType originalType,
-                                   int scale, int precision) {
-    Statistics stat = Statistics.getStatsBasedOnType(primitiveType);
-    Statistics convertedStat = stat;
+  private static class ColumnStatisticsBuilder {
 
-    TypeProtos.MajorType type = ParquetReaderUtility.getType(primitiveType, originalType, scale, precision);
-    stat.setNumNulls(numNulls);
+    private Object min;
+    private Object max;
+    private long numNulls;
+    private PrimitiveType.PrimitiveTypeName primitiveType;
+    private OriginalType originalType;
+    private int scale;
+    private int precision;
 
-    if (min != null && max != null ) {
-      switch (type.getMinorType()) {
-      case INT :
-      case TIME:
-        ((IntStatistics) stat).setMinMax(Integer.parseInt(min.toString()), Integer.parseInt(max.toString()));
-        break;
-      case BIGINT:
-      case TIMESTAMP:
-        ((LongStatistics) stat).setMinMax(Long.parseLong(min.toString()), Long.parseLong(max.toString()));
-        break;
-      case FLOAT4:
-        ((FloatStatistics) stat).setMinMax(Float.parseFloat(min.toString()), Float.parseFloat(max.toString()));
-        break;
-      case FLOAT8:
-        ((DoubleStatistics) stat).setMinMax(Double.parseDouble(min.toString()), Double.parseDouble(max.toString()));
-        break;
-      case DATE:
-        convertedStat = new LongStatistics();
-        convertedStat.setNumNulls(stat.getNumNulls());
-        final long minMS = convertToDrillDateValue(Integer.parseInt(min.toString()));
-        final long maxMS = convertToDrillDateValue(Integer.parseInt(max.toString()));
-        ((LongStatistics) convertedStat ).setMinMax(minMS, maxMS);
-        break;
-      case BIT:
-        ((BooleanStatistics) stat).setMinMax(Boolean.parseBoolean(min.toString()), Boolean.parseBoolean(max.toString()));
-        break;
-      default:
-      }
+    static ColumnStatisticsBuilder builder() {
+      return new ColumnStatisticsBuilder();
     }
 
-    return new ColumnStatistics(convertedStat, type);
-  }
+    ColumnStatisticsBuilder setMin(Object min) {
+      this.min = min;
+      return this;
+    }
 
-  private static long convertToDrillDateValue(int dateValue) {
+    ColumnStatisticsBuilder setMax(Object max) {
+      this.max = max;
+      return this;
+    }
+
+    ColumnStatisticsBuilder setNumNulls(long numNulls) {
+      this.numNulls = numNulls;
+      return this;
+    }
+
+    ColumnStatisticsBuilder setPrimitiveType(PrimitiveType.PrimitiveTypeName primitiveType) {
+      this.primitiveType = primitiveType;
+      return this;
+    }
+
+    ColumnStatisticsBuilder setOriginalType(OriginalType originalType) {
+      this.originalType = originalType;
+      return this;
+    }
+
+    ColumnStatisticsBuilder setScale(int scale) {
+      this.scale = scale;
+      return this;
+    }
+
+    ColumnStatisticsBuilder setPrecision(int precision) {
+      this.precision = precision;
+      return this;
+    }
+
+
+    /**
+     * Builds column statistics using given primitive and original types,
+     * scale, precision, number of nulls, min and max values.
+     * Min and max values for binary statistics are set only if allowed.
+     *
+     * @return column statistics
+     */
+    ColumnStatistics build() {
+      Statistics stat = Statistics.getStatsBasedOnType(primitiveType);
+      Statistics convertedStat = stat;
+
+      TypeProtos.MajorType type = ParquetReaderUtility.getType(primitiveType, originalType, scale, precision);
+      stat.setNumNulls(numNulls);
+
+      if (min != null && max != null) {
+        switch (type.getMinorType()) {
+          case INT :
+          case TIME:
+            ((IntStatistics) stat).setMinMax(Integer.parseInt(min.toString()), Integer.parseInt(max.toString()));
+            break;
+          case BIGINT:
+          case TIMESTAMP:
+            ((LongStatistics) stat).setMinMax(Long.parseLong(min.toString()), Long.parseLong(max.toString()));
+            break;
+          case FLOAT4:
+            ((FloatStatistics) stat).setMinMax(Float.parseFloat(min.toString()), Float.parseFloat(max.toString()));
+            break;
+          case FLOAT8:
+            ((DoubleStatistics) stat).setMinMax(Double.parseDouble(min.toString()), Double.parseDouble(max.toString()));
+            break;
+          case DATE:
+            convertedStat = new LongStatistics();
+            convertedStat.setNumNulls(stat.getNumNulls());
+            long minMS = convertToDrillDateValue(Integer.parseInt(min.toString()));
+            long maxMS = convertToDrillDateValue(Integer.parseInt(max.toString()));
+            ((LongStatistics) convertedStat ).setMinMax(minMS, maxMS);
+            break;
+          case BIT:
+            ((BooleanStatistics) stat).setMinMax(Boolean.parseBoolean(min.toString()), Boolean.parseBoolean(max.toString()));
+            break;
+          case VARCHAR:
+            if (min instanceof Binary && max instanceof Binary) { // when read directly from parquet footer
+              ((BinaryStatistics) stat).setMinMaxFromBytes(((Binary) min).getBytes(), ((Binary) max).getBytes());
+            } else if (min instanceof byte[] && max instanceof byte[]) { // when deserialized from Drill metadata file
+              ((BinaryStatistics) stat).setMinMaxFromBytes((byte[]) min, (byte[]) max);
+            } else {
+              logger.trace("Unexpected class for Varchar statistics for min / max values. Min: {}. Max: {}.",
+                min.getClass(), max.getClass());
+            }
+            break;
+          case VARDECIMAL:
+            byte[] minBytes = null;
+            byte[] maxBytes = null;
+            boolean setLength = false;
+
+            switch (primitiveType) {
+              case INT32:
+              case INT64:
+                minBytes = new BigInteger(min.toString()).toByteArray();
+                maxBytes = new BigInteger(max.toString()).toByteArray();
+                break;
+              case FIXED_LEN_BYTE_ARRAY:
+                setLength = true;
+                // fall through
+              case BINARY:
+                // wrap up into BigInteger to avoid PARQUET-1417
+                if (min instanceof Binary && max instanceof Binary) { // when read directly from parquet footer
+                  minBytes = new BigInteger(((Binary) min).getBytes()).toByteArray();
+                  maxBytes = new BigInteger(((Binary) max).getBytes()).toByteArray();
+                } else if (min instanceof byte[] && max instanceof byte[]) {  // when deserialized from Drill metadata file
+                  minBytes = new BigInteger((byte[]) min).toByteArray();
+                  maxBytes = new BigInteger((byte[]) max).toByteArray();
+                } else {
+                  logger.trace("Unexpected class for Binary Decimal statistics for min / max values. Min: {}. Max: {}.",
+                    min.getClass(), max.getClass());
+                }
+                break;
+              default:
+                logger.trace("Unexpected primitive type [{}] for Decimal statistics.", primitiveType);
+            }
+
+            if (minBytes == null || maxBytes == null) {
+              break;
+            }
+
+            int length = setLength ? maxBytes.length : 0;
+
+            PrimitiveType decimalType = org.apache.parquet.schema.Types.optional(PrimitiveType.PrimitiveTypeName.BINARY)
+              .as(OriginalType.DECIMAL)
+              .length(length)
+              .precision(precision)
+              .scale(scale)
+              .named("decimal_type");
+
+            convertedStat = Statistics.getBuilderForReading(decimalType)
+              .withMin(minBytes)
+              .withMax(maxBytes)
+              .withNumNulls(numNulls)
+              .build();
+            break;
+
+          default:
+            logger.trace("Unsupported minor type [{}] for parquet statistics.", type.getMinorType());
+        }
+      }
+      return new ColumnStatistics(convertedStat, type);
+    }
+
+    private long convertToDrillDateValue(int dateValue) {
       return dateValue * (long) DateTimeConstants.MILLIS_PER_DAY;
+    }
+
   }
 
 }

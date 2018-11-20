@@ -77,6 +77,18 @@ public class TestSystemTable extends PlanTestBase {
   }
 
   @Test
+  public void functionsTable() throws Exception {
+    test("select * from sys.functions");
+  }
+
+  @Test
+  public void testInternalFunctionsTable() throws Exception {
+    String query = "select internal, count(*) from sys.functions group by internal";
+    //Testing a mix of public and internal functions defined in FunctionTemplate
+    assertEquals(2, testSql(query));
+  }
+
+  @Test
   public void profilesTable() throws Exception {
     test("select * from sys.profiles");
   }

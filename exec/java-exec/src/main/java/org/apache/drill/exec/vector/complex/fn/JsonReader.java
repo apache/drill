@@ -70,10 +70,6 @@ public class JsonReader extends BaseJsonProcessor {
    * outer list.
    */
   private boolean inOuterList;
-  /**
-   * The name of the current field being parsed. For Error messages.
-   */
-  private String currentFieldName;
 
   private FieldSelection selection;
 
@@ -214,10 +210,9 @@ public class JsonReader extends BaseJsonProcessor {
       case WRITE_SUCCEED:
         break;
       default:
-        throw getExceptionWithContext(UserException.dataReadError(),
-            currentFieldName, null).message(
-            "Failure while reading JSON. (Got an invalid read state %s )",
-            readState.toString()).build(logger);
+        throw getExceptionWithContext(UserException.dataReadError(), null).message(
+            "Failure while reading JSON. (Got an invalid read state %s )", readState.toString())
+            .build(logger);
       }
     } catch (com.fasterxml.jackson.core.JsonParseException ex) {
       if (ignoreJSONParseError()) {
@@ -236,13 +231,10 @@ public class JsonReader extends BaseJsonProcessor {
   private void confirmLast() throws IOException {
     parser.nextToken();
     if (!parser.isClosed()) {
-      throw getExceptionWithContext(UserException.dataReadError(),
-          currentFieldName, null)
-          .message(
-              "Drill attempted to unwrap a toplevel list "
-                  + "in your document.  However, it appears that there is trailing content after this top level list.  Drill only "
-                  + "supports querying a set of distinct maps or a single json array with multiple inner maps.")
-          .build(logger);
+      String message = "Drill attempted to unwrap a toplevel list in your document. "
+          + "However, it appears that there is trailing content after this top level list.  Drill only "
+          + "supports querying a set of distinct maps or a single json array with multiple inner maps.";
+      throw getExceptionWithContext(UserException.dataReadError(), message).build(logger);
     }
   }
 
@@ -255,11 +247,9 @@ public class JsonReader extends BaseJsonProcessor {
       break;
     case START_ARRAY:
       if (inOuterList) {
-        throw getExceptionWithContext(UserException.dataReadError(),
-            currentFieldName, null)
-            .message(
-                "The top level of your document must either be a single array of maps or a set "
-                    + "of white space delimited maps.").build(logger);
+        String message = "The top level of your document must either be a single array of maps or a set "
+            + "of white space delimited maps.";
+        throw getExceptionWithContext(UserException.dataReadError(), message).build(logger);
       }
 
       if (skipOuterList) {
@@ -268,11 +258,9 @@ public class JsonReader extends BaseJsonProcessor {
           inOuterList = true;
           writeDataSwitch(writer.rootAsMap());
         } else {
-          throw getExceptionWithContext(UserException.dataReadError(),
-              currentFieldName, null)
-              .message(
-                  "The top level of your document must either be a single array of maps or a set "
-                      + "of white space delimited maps.").build(logger);
+          String message = "The top level of your document must either be a single array of maps or a set "
+              + "of white space delimited maps.";
+          throw getExceptionWithContext(UserException.dataReadError(), message).build(logger);
         }
 
       } else {
@@ -285,17 +273,14 @@ public class JsonReader extends BaseJsonProcessor {
         confirmLast();
         return ReadState.END_OF_STREAM;
       } else {
-        throw getExceptionWithContext(UserException.dataReadError(),
-            currentFieldName, null).message(
-            "Failure while parsing JSON.  Ran across unexpected %s.",
-            JsonToken.END_ARRAY).build(logger);
+        throw getExceptionWithContext(UserException.dataReadError(), null).message(
+            "Failure while parsing JSON.  Ran across unexpected %s.", JsonToken.END_ARRAY).build(logger);
       }
 
     case NOT_AVAILABLE:
       return ReadState.END_OF_STREAM;
     default:
-      throw getExceptionWithContext(UserException.dataReadError(),
-          currentFieldName, null)
+      throw getExceptionWithContext(UserException.dataReadError(), null)
           .message(
               "Failure while parsing JSON.  Found token of [%s].  Drill currently only supports parsing "
                   + "json strings that contain either lists or maps.  The root object cannot be a scalar.",
@@ -412,9 +397,9 @@ public class JsonReader extends BaseJsonProcessor {
           break;
 
         default:
-          throw getExceptionWithContext(UserException.dataReadError(),
-              currentFieldName, null).message("Unexpected token %s",
-              parser.getCurrentToken()).build(logger);
+          throw getExceptionWithContext(UserException.dataReadError(), null)
+              .message("Unexpected token %s", parser.getCurrentToken())
+              .build(logger);
         }
 
       }
@@ -478,8 +463,7 @@ public class JsonReader extends BaseJsonProcessor {
         break;
 
       default:
-        throw getExceptionWithContext(UserException.dataReadError(),
-            currentFieldName, null).message("Unexpected token %s",
+        throw getExceptionWithContext(UserException.dataReadError(), null).message("Unexpected token %s",
             parser.getCurrentToken()).build(logger);
       }
     }
@@ -591,8 +575,7 @@ public class JsonReader extends BaseJsonProcessor {
               .build(logger);
         }
       } catch (Exception e) {
-        throw getExceptionWithContext(e, this.currentFieldName, null).build(
-            logger);
+        throw getExceptionWithContext(e, null).build(logger);
       }
     }
     list.endList();
@@ -637,8 +620,7 @@ public class JsonReader extends BaseJsonProcessor {
         handleString(parser, list);
         break;
       default:
-        throw getExceptionWithContext(UserException.dataReadError(),
-            currentFieldName, null).message("Unexpected token %s",
+        throw getExceptionWithContext(UserException.dataReadError(), null).message("Unexpected token %s",
             parser.getCurrentToken()).build(logger);
       }
     }

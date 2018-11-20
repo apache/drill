@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.ops.ExchangeFragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -29,11 +30,17 @@ import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.record.RecordBatch;
 
 public interface Partitioner {
+  // Keep the recordCount as (2^x) - 1 to better utilize the memory allocation in ValueVectors; however
+  // other criteria such as batch sizing in terms of actual MBytes rather than record count could also be applied
+  // by the operator.
+  int DEFAULT_RECORD_BATCH_SIZE = (1 << 10) - 1;
+
   void setup(ExchangeFragmentContext context,
              RecordBatch incoming,
              HashPartitionSender popConfig,
              OperatorStats stats,
              OperatorContext oContext,
+             ClassGenerator<?> cg,
              int start, int count) throws SchemaChangeException;
 
   void partitionBatch(RecordBatch incoming) throws IOException;

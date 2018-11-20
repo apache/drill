@@ -32,39 +32,38 @@ import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.calcite.rel.AbstractRelNode;
+import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.type.RelDataType;
 
-public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
+public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionAffinity {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger(ScanPrel.class);
 
-  protected final GroupScan groupScan;
   private final RelDataType rowType;
 
   public ScanPrel(RelOptCluster cluster, RelTraitSet traits,
-      GroupScan groupScan, RelDataType rowType) {
-    super(cluster, traits);
-    this.groupScan = getCopy(groupScan);
+                  GroupScan groupScan, RelDataType rowType, RelOptTable table) {
+    super(cluster, traits, getCopy(groupScan), table);
     this.rowType = rowType;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new ScanPrel(this.getCluster(), traitSet, groupScan,
-        this.rowType);
+    return new ScanPrel(this.getCluster(), traitSet, this.getGroupScan(),
+        this.rowType, this.getTable());
   }
 
   @Override
   protected Object clone() throws CloneNotSupportedException {
-    return new ScanPrel(this.getCluster(), this.getTraitSet(), getCopy(groupScan),
-        this.rowType);
+    return new ScanPrel(this.getCluster(), this.getTraitSet(), getCopy(this.getGroupScan()),
+        this.rowType, this.getTable());
   }
 
   private static GroupScan getCopy(GroupScan scan){
@@ -78,22 +77,12 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator)
       throws IOException {
-    return creator.addMetadata(this, groupScan);
-  }
-
-  @Override
-  public GroupScan getGroupScan() {
-    return groupScan;
-  }
-
-  public static ScanPrel create(RelNode old, RelTraitSet traitSets,
-      GroupScan scan, RelDataType rowType) {
-    return new ScanPrel(old.getCluster(), traitSets, getCopy(scan), rowType);
+    return creator.addMetadata(this, this.getGroupScan());
   }
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
-    return super.explainTerms(pw).item("groupscan", groupScan.getDigest());
+    return super.explainTerms(pw).item("groupscan", this.getGroupScan().getDigest());
   }
 
   @Override
@@ -104,13 +93,17 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   @Override
   public double estimateRowCount(RelMetadataQuery mq) {
     final PlannerSettings settings = PrelUtil.getPlannerSettings(getCluster());
-    return this.groupScan.getScanStats(settings).getRecordCount();
+
+    double rowCount = this.getGroupScan().getScanStats(settings).getRecordCount();
+    logger.debug("#{}.estimateRowCount get rowCount {} from  groupscan {}",
+        this.getId(), rowCount, System.identityHashCode(this.getGroupScan()));
+    return rowCount;
   }
 
   @Override
   public RelOptCost computeSelfCost(final RelOptPlanner planner, RelMetadataQuery mq) {
     final PlannerSettings settings = PrelUtil.getPlannerSettings(planner);
-    final ScanStats stats = this.groupScan.getScanStats(settings);
+    final ScanStats stats = this.getGroupScan().getScanStats(settings);
     final int columnCount = this.getRowType().getFieldCount();
 
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
@@ -129,12 +122,7 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
       cpuCost *= stats.getCpuCost();
     }
 
-    // Even though scan is reading from disk, in the currently generated plans all plans will
-    // need to read the same amount of data, so keeping the disk io cost 0 is ok for now.
-    // In the future we might consider alternative scans that go against projections or
-    // different compression schemes etc that affect the amount of data read. Such alternatives
-    // would affect both cpu and io cost.
-    double ioCost = 0;
+    double ioCost = stats.getDiskCost();
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);
   }
@@ -166,7 +154,7 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
 
   @Override
   public DistributionAffinity getDistributionAffinity() {
-    return groupScan.getDistributionAffinity();
+    return this.getGroupScan().getDistributionAffinity();
   }
 
 }

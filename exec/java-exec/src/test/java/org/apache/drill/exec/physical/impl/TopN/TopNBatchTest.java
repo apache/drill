@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
+import org.apache.drill.exec.ops.FragmentContextImpl;
+import org.apache.drill.exec.proto.BitControl;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixtureBuilder;
@@ -31,7 +34,6 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -50,6 +52,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import static org.mockito.Mockito.when;
+
 @Category(OperatorTest.class)
 public class TopNBatchTest extends PopUnitTestBase {
   @Rule
@@ -63,6 +67,8 @@ public class TopNBatchTest extends PopUnitTestBase {
   public void priorityQueueOrderingTest() throws Exception {
     Properties properties = new Properties();
     DrillConfig drillConfig = DrillConfig.create(properties);
+    DrillbitContext drillbitContext = mockDrillbitContext();
+    when(drillbitContext.getFunctionImplementationRegistry()).thenReturn(new FunctionImplementationRegistry(drillConfig));
 
     FieldReference expr = FieldReference.getWithQuotedRef("colA");
     Order.Ordering ordering = new Order.Ordering(Order.Ordering.ORDER_DESC, expr, Order.Ordering.NULLS_FIRST);
@@ -73,6 +79,9 @@ public class TopNBatchTest extends PopUnitTestBase {
 
     List<MaterializedField> cols = Lists.newArrayList(colA, colB);
     BatchSchema batchSchema = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, cols);
+    FragmentContextImpl context = new FragmentContextImpl(drillbitContext,
+      BitControl.PlanFragment.getDefaultInstance(), null,
+      drillbitContext.getFunctionImplementationRegistry());
     RowSet expectedRowSet;
 
     try (RootAllocator allocator = new RootAllocator(100_000_000)) {
@@ -100,12 +109,10 @@ public class TopNBatchTest extends PopUnitTestBase {
 
         queue = TopNBatch.createNewPriorityQueue(
           TopNBatch.createMainMappingSet(), TopNBatch.createLeftMappingSet(),
-          TopNBatch.createRightMappingSet(), optionManager,
-          new FunctionImplementationRegistry(drillConfig),
-          new CodeCompiler(drillConfig, optionManager),
+          TopNBatch.createRightMappingSet(),
           orderings, hyperContainer, false,
           true, 10, allocator,
-          batchSchema.getSelectionVectorMode());
+          batchSchema.getSelectionVectorMode(), context);
       }
 
       List<RecordBatchData> testBatches = Lists.newArrayList();

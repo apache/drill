@@ -101,8 +101,12 @@ public abstract class AbstractRecordReader implements RecordReader {
     }
   }
 
+  @Override
+  public boolean hasNext() {
+    return false;
+  }
+
   protected List<SchemaPath> getDefaultColumnsToRead() {
     return GroupScan.ALL_COLUMNS;
   }
-
 }

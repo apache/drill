@@ -1248,7 +1248,9 @@ public class TestUnionAll extends BaseTestQuery {
 
   @Test
   public void testUnionAllBothEmptyDirs() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder().build();
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("key", TypeProtos.MinorType.INT)
+        .build();
 
     testBuilder()
         .sqlQuery("SELECT key FROM dfs.tmp.`%1$s` UNION ALL SELECT key FROM dfs.tmp.`%1$s`", EMPTY_DIR_NAME)

@@ -17,12 +17,12 @@
  */
 package com.mapr.drill.maprdb.tests;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.hbase.HBaseTestsSuite;
 import org.apache.hadoop.conf.Configuration;
@@ -31,25 +31,23 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.ojai.Document;
-import org.ojai.DocumentStream;
-import org.ojai.json.Json;
 
 import com.mapr.db.Admin;
 import com.mapr.db.MapRDB;
-import com.mapr.db.Table;
 import com.mapr.drill.maprdb.tests.binary.TestMapRDBFilterPushDown;
 import com.mapr.drill.maprdb.tests.binary.TestMapRDBSimple;
+import com.mapr.drill.maprdb.tests.json.TestScanRanges;
 import com.mapr.drill.maprdb.tests.json.TestSimpleJson;
 
 @RunWith(Suite.class)
 @SuiteClasses({
   TestMapRDBSimple.class,
   TestMapRDBFilterPushDown.class,
-  TestSimpleJson.class
+  TestSimpleJson.class,
+  TestScanRanges.class
 })
 public class MaprDBTestsSuite {
-  private static final String TMP_BUSINESS_TABLE = "/tmp/business";
+  public static final int INDEX_FLUSH_TIMEOUT = 60000;
 
   private static final boolean IS_DEBUG = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
@@ -65,13 +63,13 @@ public class MaprDBTestsSuite {
         if (initCount.get() == 0) {
           HBaseTestsSuite.configure(false /*manageHBaseCluster*/, true /*createTables*/);
           HBaseTestsSuite.initCluster();
-          createJsonTables();
 
           // Sleep to allow table data to be flushed to tables.
           // Without this, the row count stats to return 0,
           // causing the planner to reject optimized plans.
           Thread.sleep(5000);
 
+          admin = MapRDB.newAdmin();
           conf = HBaseTestsSuite.getConf();
           initCount.incrementAndGet(); // must increment while inside the synchronized block
           return;
@@ -87,17 +85,19 @@ public class MaprDBTestsSuite {
     synchronized (MaprDBTestsSuite.class) {
       if (initCount.decrementAndGet() == 0) {
         HBaseTestsSuite.tearDownCluster();
-        deleteJsonTables();
+        admin.close();
       }
     }
   }
 
-  private static volatile boolean pluginCreated;
+  private static volatile boolean pluginsUpdated;
 
   public static Configuration createPluginAndGetConf(DrillbitContext ctx) throws Exception {
-    if (!pluginCreated) {
+    if (!pluginsUpdated) {
       synchronized (MaprDBTestsSuite.class) {
-        if (!pluginCreated) {
+        if (!pluginsUpdated) {
+          StoragePluginRegistry pluginRegistry = ctx.getStorage();
+
           String pluginConfStr = "{" +
               "  \"type\": \"file\"," +
               "  \"enabled\": true," +
@@ -107,6 +107,11 @@ public class MaprDBTestsSuite {
               "      \"location\": \"/tmp\"," +
               "      \"writable\": false," +
               "      \"defaultInputFormat\": \"maprdb\"" +
+              "    }," +
+              "    \"tmp\": {" +
+              "      \"location\": \"/tmp\"," +
+              "      \"writable\": true," +
+              "      \"defaultInputFormat\": \"parquet\"" +
               "    }," +
               "    \"root\": {" +
               "      \"location\": \"/\"," +
@@ -121,6 +126,9 @@ public class MaprDBTestsSuite {
               "      \"readAllNumbersAsDouble\": false," +
               "      \"enablePushdown\": true" +
               "    }," +
+              "   \"parquet\": {" +
+              "      \"type\": \"parquet\"" +
+              "    }," +
               "   \"streams\": {" +
               "      \"type\": \"streams\"" +
               "    }" +
@@ -129,7 +137,7 @@ public class MaprDBTestsSuite {
 
           FileSystemConfig pluginConfig = ctx.getLpPersistence().getMapper().readValue(pluginConfStr, FileSystemConfig.class);
           // create the plugin with "hbase" name so that we can run HBase unit tests against them
-          ctx.getStorage().createOrUpdate("hbase", pluginConfig, true);
+          pluginRegistry.createOrUpdate("hbase", pluginConfig, true);
         }
       }
     }
@@ -140,33 +148,12 @@ public class MaprDBTestsSuite {
     return IS_DEBUG;
   }
 
+  public static Admin getAdmin() {
+    return admin;
+  }
+
   public static InputStream getJsonStream(String resourceName) {
-    return MaprDBTestsSuite.class.getClassLoader().getResourceAsStream(resourceName);
-  }
-
-  public static void createJsonTables() throws IOException {
-    admin = MapRDB.newAdmin();
-    if (admin.tableExists(TMP_BUSINESS_TABLE)) {
-      admin.deleteTable(TMP_BUSINESS_TABLE);
-    }
-
-    try (Table table = admin.createTable(TMP_BUSINESS_TABLE);
-         InputStream in = getJsonStream("json/business.json");
-         DocumentStream stream = Json.newDocumentStream(in)) {
-      for (Document document : stream) {
-        table.insert(document, "business_id");
-      }
-      table.flush();
-    }
-  }
-
-  public static void deleteJsonTables() {
-    if (admin != null) {
-      if (admin.tableExists(TMP_BUSINESS_TABLE)) {
-        admin.deleteTable(TMP_BUSINESS_TABLE);
-      }
-      admin.close();
-    }
+    return MaprDBTestsSuite.class.getResourceAsStream(resourceName);
   }
 
 }

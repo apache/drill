@@ -18,7 +18,6 @@
 
 -->
 <html>
-<a href="/queries">back</a><br />
 
 <pre>
 ${model.printStackTrace()}

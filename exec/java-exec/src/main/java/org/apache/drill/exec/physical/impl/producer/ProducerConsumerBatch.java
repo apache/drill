@@ -247,4 +247,9 @@ public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer>
     }
   }
 
+  @Override
+  public void dump() {
+    logger.error("ProducerConsumerBatch[container={}, recordCount={}, schema={}, stop={}]",
+        container, recordCount, schema, stop);
+  }
 }

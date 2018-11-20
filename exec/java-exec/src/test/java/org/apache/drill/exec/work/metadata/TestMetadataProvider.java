@@ -149,7 +149,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(18, tables.size());
+    assertEquals(19, tables.size());
 
     verifyTable("information_schema", "CATALOGS", tables);
     verifyTable("information_schema", "COLUMNS", tables);
@@ -157,15 +157,10 @@ public class TestMetadataProvider extends BaseTestQuery {
     verifyTable("information_schema", "TABLES", tables);
     verifyTable("information_schema", "VIEWS", tables);
     verifyTable("information_schema", "FILES", tables);
-    verifyTable("sys", "boot", tables);
-    verifyTable("sys", "drillbits", tables);
-    verifyTable("sys", "memory", tables);
-    verifyTable("sys", SystemTable.OPTIONS_OLD.getTableName(), tables);
-    verifyTable("sys", SystemTable.OPTIONS.getTableName(), tables);
-    verifyTable("sys", "threads", tables);
-    verifyTable("sys", "version", tables);
-    verifyTable("sys", SystemTable.INTERNAL_OPTIONS_OLD.getTableName(), tables);
-    verifyTable("sys", SystemTable.INTERNAL_OPTIONS.getTableName(), tables);
+    //Verify System Tables
+    for (SystemTable sysTbl : SystemTable.values()) {
+      verifyTable("sys", sysTbl.getTableName(), tables);
+    }
   }
 
   @Test
@@ -187,7 +182,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(18, tables.size());
+    assertEquals(19, tables.size());
 
     verifyTable("information_schema", "CATALOGS", tables);
     verifyTable("information_schema", "COLUMNS", tables);
@@ -195,15 +190,10 @@ public class TestMetadataProvider extends BaseTestQuery {
     verifyTable("information_schema", "TABLES", tables);
     verifyTable("information_schema", "VIEWS", tables);
     verifyTable("information_schema", "FILES", tables);
-    verifyTable("sys", "boot", tables);
-    verifyTable("sys", "drillbits", tables);
-    verifyTable("sys", "memory", tables);
-    verifyTable("sys", SystemTable.OPTIONS_OLD.getTableName(), tables);
-    verifyTable("sys", SystemTable.OPTIONS.getTableName(), tables);
-    verifyTable("sys", "threads", tables);
-    verifyTable("sys", "version", tables);
-    verifyTable("sys", SystemTable.INTERNAL_OPTIONS_OLD.getTableName(), tables);
-    verifyTable("sys", SystemTable.INTERNAL_OPTIONS.getTableName(), tables);
+    //Verify System Tables
+    for (SystemTable sysTbl : SystemTable.values()) {
+      verifyTable("sys", sysTbl.getTableName(), tables);
+    }
   }
 
   @Test
@@ -216,15 +206,15 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(10, tables.size());
+    assertEquals(11, tables.size());
 
-    verifyTable("sys", "boot", tables);
-    verifyTable("sys", "memory", tables);
-    verifyTable("sys", SystemTable.OPTIONS_OLD.getTableName(), tables);
-    verifyTable("sys", SystemTable.OPTIONS.getTableName(), tables);
-    verifyTable("sys", "version", tables);
-    verifyTable("sys", SystemTable.INTERNAL_OPTIONS_OLD.getTableName(), tables);
-    verifyTable("sys", SystemTable.INTERNAL_OPTIONS.getTableName(), tables);
+    //Verify System Tables
+    for (SystemTable sysTbl : SystemTable.values()) {
+      String sysTblName = sysTbl.getTableName();
+      if (sysTblName.contains("o")) {
+        verifyTable("sys", sysTblName, tables);
+      }
+    }
   }
 
   @Test
@@ -250,7 +240,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(135, columns.size());
+    assertEquals(140, columns.size());
     // too many records to verify the output.
   }
 
@@ -265,11 +255,11 @@ public class TestMetadataProvider extends BaseTestQuery {
     List<ColumnMetadata> columns = resp.getColumnsList();
     assertEquals(6, columns.size());
 
-    verifyColumn("sys", "drillbits", "user_port", columns);
-    verifyColumn("sys", "drillbits", "control_port", columns);
-    verifyColumn("sys", "drillbits", "data_port", columns);
-    verifyColumn("sys", "memory", "user_port", columns);
-    verifyColumn("sys", "threads", "user_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "user_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "control_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "data_port", columns);
+    verifyColumn("sys", SystemTable.MEMORY.getTableName(), "user_port", columns);
+    verifyColumn("sys", SystemTable.THREADS.getTableName(), "user_port", columns);
   }
 
   @Test
@@ -285,9 +275,9 @@ public class TestMetadataProvider extends BaseTestQuery {
     List<ColumnMetadata> columns = resp.getColumnsList();
     assertEquals(4, columns.size());
 
-    verifyColumn("sys", "drillbits", "user_port", columns);
-    verifyColumn("sys", "drillbits", "control_port", columns);
-    verifyColumn("sys", "drillbits", "data_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "user_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "control_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "data_port", columns);
   }
 
   @Test
@@ -306,10 +296,10 @@ public class TestMetadataProvider extends BaseTestQuery {
     List<ColumnMetadata> columns = resp.getColumnsList();
     assertEquals(4, columns.size());
 
-    verifyColumn("sys", "drillbits", "user_port", columns);
-    verifyColumn("sys", "drillbits", "control_port", columns);
-    verifyColumn("sys", "drillbits", "data_port", columns);
-    verifyColumn("sys", "drillbits", "http_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "user_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "control_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "data_port", columns);
+    verifyColumn("sys", SystemTable.DRILLBITS.getTableName(), "http_port", columns);
   }
 
   /** Helper method to verify schema contents */

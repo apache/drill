@@ -42,7 +42,8 @@ import org.apache.drill.exec.record.RecordBatch;
     <#elseif minor.class.startsWith("Var")>
     returnType = FunctionTemplate.ReturnType.SAME_IN_OUT_LENGTH,
     </#if>
-    nulls = FunctionTemplate.NullHandling.INTERNAL)
+    nulls = FunctionTemplate.NullHandling.INTERNAL,
+    isInternal = true)
 public class ${className} implements DrillSimpleFunc {
 
   @Param ${minor.class}Holder input;

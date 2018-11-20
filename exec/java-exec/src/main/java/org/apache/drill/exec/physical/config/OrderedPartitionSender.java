@@ -106,4 +106,15 @@ public class OrderedPartitionSender extends AbstractSender {
   public int getOperatorType() {
     return CoreOperatorType.ORDERED_PARTITION_SENDER_VALUE;
   }
+
+  @Override
+  public String toString() {
+    return "OrderedPartitionSender[orderings=" + orderings
+        + ", ref=" + ref
+        + ", sendingWidth=" + sendingWidth
+        + ", recordsToSample=" + recordsToSample
+        + ", samplingFactor=" + samplingFactor
+        + ", completionFactor=" + completionFactor
+        + "]";
+  }
 }

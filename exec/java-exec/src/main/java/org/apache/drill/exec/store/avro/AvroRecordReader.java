@@ -66,7 +66,7 @@ import org.joda.time.DateTimeConstants;
 /**
  * A RecordReader implementation for Avro data files.
  *
- * @see RecordReader
+ * @see org.apache.drill.exec.store.RecordReader
  */
 public class AvroRecordReader extends AbstractRecordReader {
 
@@ -397,5 +397,20 @@ public class AvroRecordReader extends AbstractRecordReader {
         reader = null;
       }
     }
+  }
+
+  @Override
+  public String toString() {
+    long currentPosition = -1L;
+    try {
+      if (reader != null) {
+        currentPosition = reader.tell();
+      }
+    } catch (IOException e) {
+      logger.trace("Unable to obtain reader position.", e);
+    }
+    return "AvroRecordReader[File=" + hadoop
+        + ", Position=" + currentPosition
+        + "]";
   }
 }

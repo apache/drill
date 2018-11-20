@@ -60,9 +60,12 @@ public class PlannerSettings implements Context{
       new OptionDescription("Enable hash aggregation; otherwise, Drill does a sort-based aggregation. Writes to disk. Enable is recommended."));
   public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg",
       new OptionDescription("Sort-based operation. Writes to disk."));
-  public static final OptionValidator TOPN = new BooleanValidator("planner.enable_topn", null);
+  public static final OptionValidator TOPN = new BooleanValidator("planner.enable_topn",
+      new OptionDescription("Generates the topN plan for queries with the ORDER BY and LIMIT clauses."));
   public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin",
       new OptionDescription("Enable the memory hungry hash join. Drill assumes that a query will have adequate memory to complete and tries to use the fastest operations possible to complete the planned inner, left, right, or full outer joins using a hash table. Does not write to disk. Disabling hash join allows Drill to manage arbitrarily large data in a small memory footprint."));
+  public static final OptionValidator SEMIJOIN = new BooleanValidator("planner.enable_semijoin",
+          new OptionDescription("Enable the semi join optimization. Planner removes the distinct processing below the hash join and sets the semi join flag in hash join."));
   public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin",
       new OptionDescription("Sort-based operation. A merge join is used for inner join, left and right outer joins. Inputs to the merge join must be sorted. It reads the sorted input streams from both sides and finds matching rows. Writes to disk."));
   public static final OptionValidator NESTEDLOOPJOIN = new BooleanValidator("planner.enable_nestedloopjoin",
@@ -83,8 +86,8 @@ public class PlannerSettings implements Context{
       new OptionDescription("The factor for adjusting the estimated row count when considering multiple join order sequences during the planning phase."));
   public static final OptionValidator MUX_EXCHANGE = new BooleanValidator("planner.enable_mux_exchange",
       new OptionDescription("Toggles the state of hashing to a multiplexed exchange."));
-  public static final OptionValidator ORDERED_MUX_EXCHANGE = new BooleanValidator("planner.enable_ordered_mux_exchange",
-      null);
+  public static final OptionValidator ORDERED_MUX_EXCHANGE = new BooleanValidator(ExecConstants.ORDERED_MUX_EXCHANGE,
+      new OptionDescription("Generates the MUX exchange operator for ORDER BY queries with many minor fragments."));
   public static final OptionValidator DEMUX_EXCHANGE = new BooleanValidator("planner.enable_demux_exchange",
       new OptionDescription("Toggles the state of hashing to a demulitplexed exchange."));
   public static final OptionValidator PARTITION_SENDER_THREADS_FACTOR = new LongValidator("planner.partitioner_sender_threads_factor",
@@ -108,11 +111,40 @@ public class PlannerSettings implements Context{
       new OptionDescription("False disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive."));
   public static final OptionValidator HEP_OPT = new BooleanValidator("planner.enable_hep_opt", null);
   public static final OptionValidator HEP_PARTITION_PRUNING = new BooleanValidator("planner.enable_hep_partition_pruning", null);
+  public static final OptionValidator ROWKEYJOIN_CONVERSION = new BooleanValidator("planner.enable_rowkeyjoin_conversion",
+      new OptionDescription("Enables runtime filter pushdown(via rowkey-join) for queries that only filter on rowkeys"));
+  public static final RangeDoubleValidator ROWKEYJOIN_CONVERSION_SELECTIVITY_THRESHOLD =
+      new RangeDoubleValidator("planner.rowkeyjoin_conversion_selectivity_threshold", 0.0, 1.0,
+          new OptionDescription("Sets the selectivity (as a percentage) under which Drill uses a rowkey join for queries that only filter on rowkeys"));
+  public static final OptionValidator ROWKEYJOIN_CONVERSION_USING_HASHJOIN = new BooleanValidator("planner.rowkeyjoin_conversion_using_hashjoin",
+      new OptionDescription("Enables runtime filter pushdown(via hash-join) for queries that only filter on rowkeys"));
   public static final OptionValidator PLANNER_MEMORY_LIMIT = new RangeLongValidator("planner.memory_limit",
       INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES, MAX_OFF_HEAP_ALLOCATION_IN_BYTES,
       new OptionDescription("Defines the maximum amount of direct memory allocated to a query for planning. When multiple queries run concurrently, each query is allocated the amount of memory set by this parameter.Increase the value of this parameter and rerun the query if partition pruning failed due to insufficient memory."));
   public static final String UNIONALL_DISTRIBUTE_KEY = "planner.enable_unionall_distribute";
   public static final BooleanValidator UNIONALL_DISTRIBUTE = new BooleanValidator(UNIONALL_DISTRIBUTE_KEY, null);
+
+  // ------------------------------------------- Index planning related options BEGIN --------------------------------------------------------------
+  public static final String USE_SIMPLE_OPTIMIZER_KEY = "planner.use_simple_optimizer";
+  public static final BooleanValidator USE_SIMPLE_OPTIMIZER = new BooleanValidator(USE_SIMPLE_OPTIMIZER_KEY, null);
+  public static final BooleanValidator INDEX_PLANNING = new BooleanValidator("planner.enable_index_planning", null);
+  public static final BooleanValidator ENABLE_STATS = new BooleanValidator("planner.enable_statistics", null);
+  public static final BooleanValidator DISABLE_FULL_TABLE_SCAN = new BooleanValidator("planner.disable_full_table_scan", null);
+  public static final RangeLongValidator INDEX_MAX_CHOSEN_INDEXES_PER_TABLE = new RangeLongValidator("planner.index.max_chosen_indexes_per_table", 0, 100, null);
+  public static final BooleanValidator INDEX_FORCE_SORT_NONCOVERING = new BooleanValidator("planner.index.force_sort_noncovering", null);
+  public static final BooleanValidator INDEX_USE_HASHJOIN_NONCOVERING = new BooleanValidator("planner.index.use_hashjoin_noncovering", null);
+  public static final RangeDoubleValidator INDEX_COVERING_SELECTIVITY_THRESHOLD =
+      new RangeDoubleValidator("planner.index.covering_selectivity_threshold", 0.0, 1.0, null);
+  public static final RangeDoubleValidator INDEX_NONCOVERING_SELECTIVITY_THRESHOLD =
+      new RangeDoubleValidator("planner.index.noncovering_selectivity_threshold", 0.0, 1.0, null);
+  public static final RangeDoubleValidator INDEX_ROWKEYJOIN_COST_FACTOR =
+      new RangeDoubleValidator("planner.index.rowkeyjoin_cost_factor", 0, Double.MAX_VALUE, null);
+  // TODO: Deprecate the following 2 (also in SystemOptionManager.java)
+  public static final BooleanValidator INDEX_PREFER_INTERSECT_PLANS = new BooleanValidator("planner.index.prefer_intersect_plans", null);
+  public static final RangeLongValidator INDEX_MAX_INDEXES_TO_INTERSECT = new RangeLongValidator("planner.index.max_indexes_to_intersect", 2, 100, null);
+  public static final RangeDoubleValidator INDEX_STATS_ROWCOUNT_SCALING_FACTOR =
+      new RangeDoubleValidator("planner.index.statistics_rowcount_scaling_factor", 0.0, 1.0, null);
+  // ------------------------------------------- Index planning related options END ----------------------------------------------------------------
 
   public static final OptionValidator IDENTIFIER_MAX_LENGTH =
       new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
@@ -130,24 +162,28 @@ public class PlannerSettings implements Context{
 
   public static final String TYPE_INFERENCE_KEY = "planner.enable_type_inference";
   public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY, null);
-  public static final LongValidator IN_SUBQUERY_THRESHOLD =
-      new PositiveLongValidator("planner.in_subquery_threshold", Integer.MAX_VALUE, null); /* Same as Calcite's default IN List subquery size */
+  public static final LongValidator IN_SUBQUERY_THRESHOLD = new PositiveLongValidator("planner.in_subquery_threshold", Integer.MAX_VALUE,
+      new OptionDescription("Defines the threshold of values in the IN list of the query to generate a hash join instead of an OR predicate.")); /* Same as Calcite's default IN List subquery size */
 
   public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY = "planner.store.parquet.rowgroup.filter.pushdown.enabled";
-  public static final BooleanValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING = new BooleanValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY, null);
+  public static final BooleanValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING = new BooleanValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY,
+      new OptionDescription("Enables filter pushdown optimization for Parquet files. Drill reads the file metadata, stored in the footer, to eliminate row groups based on the filter condition. Default is true. (Drill 1.9+)"));
   public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY = "planner.store.parquet.rowgroup.filter.pushdown.threshold";
-  public static final PositiveLongValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD = new PositiveLongValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY,
-      Long.MAX_VALUE, null);
+  public static final PositiveLongValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD = new PositiveLongValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY, Long.MAX_VALUE,
+      new OptionDescription("Sets the number of row groups that a table can have. You can increase the threshold if the filter can prune many row groups. However, if this setting is too high, the filter evaluation overhead increases. Base this setting on the data set. Reduce this setting if the planning time is significant or you do not see any benefit at runtime. (Drill 1.9+)"));
 
   public static final String QUOTING_IDENTIFIERS_KEY = "planner.parser.quoting_identifiers";
   public static final EnumeratedStringValidator QUOTING_IDENTIFIERS = new EnumeratedStringValidator(
-      QUOTING_IDENTIFIERS_KEY, null, Quoting.BACK_TICK.string, Quoting.DOUBLE_QUOTE.string, Quoting.BRACKET.string);
+      QUOTING_IDENTIFIERS_KEY,
+      new OptionDescription("Sets the type of identifier quotes for the SQL parser. Default is backticks ('`'). The SQL parser accepts double quotes ('\"') and square brackets ('['). (Drill 1.11+)"),
+      Quoting.BACK_TICK.string, Quoting.DOUBLE_QUOTE.string, Quoting.BRACKET.string);
 
   /*
     "planner.enable_unnest_lateral" is to allow users to choose enable unnest+lateraljoin feature.
    */
   public static final String ENABLE_UNNEST_LATERAL_KEY = "planner.enable_unnest_lateral";
-  public static final BooleanValidator ENABLE_UNNEST_LATERAL = new BooleanValidator(ENABLE_UNNEST_LATERAL_KEY, null);
+  public static final BooleanValidator ENABLE_UNNEST_LATERAL = new BooleanValidator(ENABLE_UNNEST_LATERAL_KEY,
+      new OptionDescription("Enables lateral join functionality. Default is false. (Drill 1.14+)"));
 
   /*
      Enables rules that re-write query joins in the most optimal way.
@@ -171,10 +207,12 @@ public class PlannerSettings implements Context{
      Note: once hash and merge joins will allow non-equi join conditions,
      the need to turn off join optimization may go away.
    */
-  public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization", null);
+  public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization",
+      new OptionDescription("Enables join ordering optimization."));
   // for testing purpose
   public static final String FORCE_2PHASE_AGGR_KEY = "planner.force_2phase_aggr";
-  public static final BooleanValidator FORCE_2PHASE_AGGR = new BooleanValidator(FORCE_2PHASE_AGGR_KEY, null);
+  public static final BooleanValidator FORCE_2PHASE_AGGR = new BooleanValidator(FORCE_2PHASE_AGGR_KEY,
+      new OptionDescription("Forces the cost-based query planner to generate a two phase aggregation for an aggregate operator."));
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
@@ -244,6 +282,10 @@ public class PlannerSettings implements Context{
     return options.getOption(HASHJOIN.getOptionName()).bool_val;
   }
 
+  public boolean isSemiJoinEnabled() {
+    return options.getOption(SEMIJOIN.getOptionName()).bool_val;
+  }
+
   public boolean isMergeJoinEnabled() {
     return options.getOption(MERGEJOIN.getOptionName()).bool_val;
   }
@@ -269,6 +311,12 @@ public class PlannerSettings implements Context{
   }
 
   public boolean isHepPartitionPruningEnabled() { return options.getOption(HEP_PARTITION_PRUNING.getOptionName()).bool_val;}
+
+  public boolean isRowKeyJoinConversionEnabled() { return options.getOption(ROWKEYJOIN_CONVERSION.getOptionName()).bool_val;}
+
+  public boolean isRowKeyJoinConversionUsingHashJoin() { return options.getOption(ROWKEYJOIN_CONVERSION_USING_HASHJOIN.getOptionName()).bool_val;}
+
+  public double getRowKeyJoinConversionSelThreshold() { return options.getOption(ROWKEYJOIN_CONVERSION_SELECTIVITY_THRESHOLD);}
 
   public boolean isHepOptEnabled() { return options.getOption(HEP_OPT.getOptionName()).bool_val;}
 
@@ -356,6 +404,54 @@ public class PlannerSettings implements Context{
 
   public boolean isUnnestLateralEnabled() {
     return options.getOption(ENABLE_UNNEST_LATERAL);
+  }
+
+  public boolean isIndexPlanningEnabled() {
+    return options.getOption(INDEX_PLANNING);
+  }
+
+  public boolean isStatisticsEnabled() {
+    return options.getOption(ENABLE_STATS);
+  }
+
+  public boolean isDisableFullTableScan() {
+    return options.getOption(DISABLE_FULL_TABLE_SCAN);
+  }
+
+  public long getIndexMaxChosenIndexesPerTable() {
+    return options.getOption(INDEX_MAX_CHOSEN_INDEXES_PER_TABLE);
+  }
+
+  public boolean isIndexForceSortNonCovering() {
+    return options.getOption(INDEX_FORCE_SORT_NONCOVERING);
+  }
+
+  public boolean isIndexUseHashJoinNonCovering() {
+    return options.getOption(INDEX_USE_HASHJOIN_NONCOVERING);
+  }
+
+  public double getIndexCoveringSelThreshold() {
+    return options.getOption(INDEX_COVERING_SELECTIVITY_THRESHOLD);
+  }
+
+  public double getIndexNonCoveringSelThreshold() {
+    return options.getOption(INDEX_NONCOVERING_SELECTIVITY_THRESHOLD);
+  }
+
+  public double getIndexRowKeyJoinCostFactor() {
+    return options.getOption(INDEX_ROWKEYJOIN_COST_FACTOR);
+  }
+
+  public boolean isIndexIntersectPlanPreferred() {
+    return options.getOption(INDEX_PREFER_INTERSECT_PLANS);
+  }
+
+  public long getMaxIndexesToIntersect() {
+    return options.getOption(INDEX_MAX_INDEXES_TO_INTERSECT);
+  }
+
+  public double getIndexStatsRowCountScalingFactor() {
+    return options.getOption(INDEX_STATS_ROWCOUNT_SCALING_FACTOR);
   }
 
   @Override

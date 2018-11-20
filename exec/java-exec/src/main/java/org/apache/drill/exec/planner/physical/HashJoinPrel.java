@@ -20,13 +20,20 @@ package org.apache.drill.exec.planner.physical;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.logical.data.JoinCondition;
+
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
+import org.apache.drill.exec.planner.common.JoinControl;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -36,7 +43,7 @@ import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexNode;
-
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.work.filter.RuntimeFilterDef;
 
@@ -44,24 +51,64 @@ public class HashJoinPrel  extends JoinPrel {
 
   private boolean swapped = false;
   private RuntimeFilterDef runtimeFilterDef;
+  protected boolean isRowKeyJoin = false;
+  private int joinControl;
 
   public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-                      JoinRelType joinType) throws InvalidRelException {
-    this(cluster, traits, left, right, condition, joinType, false, null);
+                      JoinRelType joinType, boolean semiJoin) throws InvalidRelException {
+    this(cluster, traits, left, right, condition, joinType, false, null, false, JoinControl.DEFAULT, semiJoin);
   }
 
   public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType, boolean swapped, RuntimeFilterDef runtimeFilterDef) throws InvalidRelException {
-    super(cluster, traits, left, right, condition, joinType);
+                      JoinRelType joinType, boolean swapped, RuntimeFilterDef runtimeFilterDef,
+                      boolean isRowKeyJoin, int joinControl) throws InvalidRelException {
+    this(cluster, traits, left, right, condition, joinType, swapped, runtimeFilterDef, isRowKeyJoin, joinControl, false);
+  }
+
+  public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+      JoinRelType joinType, boolean swapped, RuntimeFilterDef runtimeFilterDef,
+      boolean isRowKeyJoin, int joinControl, boolean semiJoin) throws InvalidRelException {
+    super(cluster, traits, left, right, condition, joinType, semiJoin);
+    Preconditions.checkArgument(isSemiJoin && !swapped || swapped && !isSemiJoin || (!swapped && !isSemiJoin));
+    if (isSemiJoin) {
+      Preconditions.checkArgument(!swapped, "swapping of inputs is not allowed for semi-joins");
+      Preconditions.checkArgument(validateTraits(traitSet, left, right));
+    }
     this.swapped = swapped;
+    this.isRowKeyJoin = isRowKeyJoin;
     joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
     this.runtimeFilterDef = runtimeFilterDef;
+    this.joinControl = joinControl;
+  }
+
+  private static boolean validateTraits(RelTraitSet traitSet, RelNode left, RelNode right) {
+    ImmutableBitSet bitSet = ImmutableBitSet.range(left.getRowType().getFieldCount(),
+            left.getRowType().getFieldCount() + right.getRowType().getFieldCount());
+    for (RelTrait trait: traitSet) {
+      if (trait.getTraitDef().getTraitClass().equals(RelCollation.class)) {
+        RelCollation collationTrait = (RelCollation)trait;
+        for (RelFieldCollation field : collationTrait.getFieldCollations()) {
+          if (bitSet.indexOf(field.getFieldIndex()) > 0) {
+            return false;
+          }
+        }
+      } else if (trait.getTraitDef().getTraitClass().equals(DrillDistributionTrait.class)) {
+        DrillDistributionTrait distributionTrait = (DrillDistributionTrait) trait;
+        for (DrillDistributionTrait.DistributionField field : distributionTrait.getFields()) {
+          if (bitSet.indexOf(field.getFieldId()) > 0) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
   }
 
   @Override
   public Join copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
     try {
-      return new HashJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType, this.swapped, this.runtimeFilterDef);
+      return new HashJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType, this.swapped, this.runtimeFilterDef,
+          this.isRowKeyJoin, this.joinControl, this.isSemiJoin);
     }catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
@@ -79,13 +126,13 @@ public class HashJoinPrel  extends JoinPrel {
   }
 
   @Override
-  public org.apache.drill.exec.physical.base.PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
+  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     // Depending on whether the left/right is swapped for hash inner join, pass in different
     // combinations of parameters.
     if (! swapped) {
-      return getHashJoinPop(creator, left, right, leftKeys, rightKeys);
+      return getHashJoinPop(creator, left, right, leftKeys, rightKeys, isRowKeyJoin, joinControl);
     } else {
-      return getHashJoinPop(creator, right, left, rightKeys, leftKeys);
+      return getHashJoinPop(creator, right, left, rightKeys, leftKeys, isRowKeyJoin, joinControl);
     }
   }
 
@@ -100,7 +147,8 @@ public class HashJoinPrel  extends JoinPrel {
   }
 
   private PhysicalOperator getHashJoinPop(PhysicalPlanCreator creator, RelNode left, RelNode right,
-                                          List<Integer> leftKeys, List<Integer> rightKeys) throws IOException{
+                                          List<Integer> leftKeys, List<Integer> rightKeys,
+                                          boolean isRowKeyJoin, int htControl) throws IOException{
     final List<String> fields = getRowType().getFieldNames();
     assert isUnique(fields);
 
@@ -117,7 +165,7 @@ public class HashJoinPrel  extends JoinPrel {
     buildJoinConditions(conditions, leftFields, rightFields, leftKeys, rightKeys);
 
     RuntimeFilterDef runtimeFilterDef = this.getRuntimeFilterDef();
-    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype, runtimeFilterDef);
+    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype, isSemiJoin, runtimeFilterDef, isRowKeyJoin, htControl);
     return creator.addMetadata(this, hjoin);
   }
 
@@ -137,5 +185,12 @@ public class HashJoinPrel  extends JoinPrel {
     this.runtimeFilterDef = runtimeFilterDef;
   }
 
+  public boolean isRowKeyJoin() {
+    return this.isRowKeyJoin;
+  }
 
+  @Override
+  public RelWriter explainTerms(RelWriter pw) {
+    return super.explainTerms(pw).item("semi-join: ", isSemiJoin);
+  }
 }

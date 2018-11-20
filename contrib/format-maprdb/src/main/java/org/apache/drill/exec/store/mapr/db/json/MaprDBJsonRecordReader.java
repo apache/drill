@@ -17,18 +17,16 @@
  */
 package org.apache.drill.exec.store.mapr.db.json;
 
-import static org.ojai.DocumentConstants.ID_KEY;
-import static org.ojai.DocumentConstants.ID_FIELD;
 
-import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
+import com.mapr.db.Table;
+import com.mapr.db.Table.TableOption;
+import com.mapr.db.exceptions.DBException;
+import com.mapr.db.impl.IdCodec;
+import com.mapr.db.impl.MapRDBImpl;
+import com.mapr.db.index.IndexDesc;
+import com.mapr.db.ojai.DBDocumentReaderBase;
+import com.mapr.db.util.ByteBufs;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
@@ -40,56 +38,80 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig;
+import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
 import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
-import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.exec.util.EncodedSchemaPathSet;
 import org.apache.drill.exec.vector.BaseValueVector;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderUtils;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.apache.hadoop.fs.Path;
+import org.ojai.Document;
 import org.ojai.DocumentReader;
-import org.ojai.DocumentReader.EventType;
 import org.ojai.DocumentStream;
 import org.ojai.FieldPath;
 import org.ojai.FieldSegment;
-import org.ojai.Value;
 import org.ojai.store.QueryCondition;
+import org.ojai.util.FieldProjector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
-import com.mapr.db.MapRDB;
-import com.mapr.db.Table;
-import com.mapr.db.Table.TableOption;
-import com.mapr.db.exceptions.DBException;
-import com.mapr.db.impl.IdCodec;
-import com.mapr.db.ojai.DBDocumentReaderBase;
-import com.mapr.db.util.ByteBufs;
-import com.mapr.org.apache.hadoop.hbase.util.Bytes;
+import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
 
-import io.netty.buffer.DrillBuf;
+import com.mapr.db.MapRDB;
+import com.mapr.org.apache.hadoop.hbase.util.Bytes;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.TimeUnit;
+
+import static org.apache.drill.exec.store.mapr.PluginConstants.DOCUMENT_SCHEMA_PATH;
+import static org.apache.drill.exec.store.mapr.PluginErrorHandler.dataReadError;
+import static org.ojai.DocumentConstants.ID_FIELD;
 
 public class MaprDBJsonRecordReader extends AbstractRecordReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MaprDBJsonRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(MaprDBJsonRecordReader.class);
+  protected enum SchemaState {SCHEMA_UNKNOWN, SCHEMA_INIT, SCHEMA_CHANGE};
 
-  private final long MILLISECONDS_IN_A_DAY  = (long)1000 * 60 * 60 * 24;
+  protected static final FieldPath[] ID_ONLY_PROJECTION = { ID_FIELD };
 
-  private Table table;
-  private QueryCondition condition;
-  private FieldPath[] projectedFields;
+  protected Table table;
+  protected QueryCondition condition;
 
-  private final String tableName;
+  /**
+   * A set of projected FieldPaths that are pushed into MapR-DB Scanner.
+   * This set is a superset of the fields returned by {@link #getColumns()} when
+   * projection pass-through is in effect. In such cases, {@link #getColumns()}
+   * returns only those fields which are required by Drill to run its operators.
+   */
+  private FieldPath[] scannedFields;
+
   private OperatorContext operatorContext;
-  private VectorContainerWriter vectorWriter;
+  protected VectorContainerWriter vectorWriter;
+  private DBDocumentReaderBase reader;
+  Document document;
+  protected OutputMutator vectorWriterMutator;
 
   private DrillBuf buffer;
 
   private DocumentStream documentStream;
 
   private Iterator<DocumentReader> documentReaderIterators;
+  private Iterator<Document> documentIterator;
 
   private boolean includeId;
   private boolean idOnly;
+  private SchemaState schemaState;
+  private boolean projectWholeDocument;
+  private FieldProjector projector;
+
   private final boolean unionEnabled;
   private final boolean readNumbersAsDouble;
   private boolean disablePushdown;
@@ -98,15 +120,32 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private final boolean disableCountOptimization;
   private final boolean nonExistentColumnsProjection;
 
-  public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec,
-      MapRDBFormatPluginConfig formatPluginConfig,
-      List<SchemaPath> projectedColumns, FragmentContext context) {
+  protected final MapRDBSubScanSpec subScanSpec;
+  protected final MapRDBFormatPlugin formatPlugin;
+
+  protected OjaiValueWriter valueWriter;
+  protected DocumentReaderVectorWriter documentWriter;
+  protected int maxRecordsToRead = -1;
+  protected DBDocumentReaderBase lastDocumentReader;
+  protected Document lastDocument;
+
+  public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec, MapRDBFormatPlugin formatPlugin,
+                                List<SchemaPath> projectedColumns, FragmentContext context, int maxRecords) {
+    this(subScanSpec, formatPlugin, projectedColumns, context);
+    this.maxRecordsToRead = maxRecords;
+    this.lastDocumentReader = null;
+    this.lastDocument = null;
+    this.schemaState = SchemaState.SCHEMA_UNKNOWN;
+  }
+
+  protected MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec, MapRDBFormatPlugin formatPlugin,
+                                List<SchemaPath> projectedColumns, FragmentContext context) {
     buffer = context.getManagedBuffer();
-    projectedFields = null;
-    tableName = Preconditions.checkNotNull(subScanSpec, "MapRDB reader needs a sub-scan spec").getTableName();
-    documentReaderIterators = null;
-    includeId = false;
-    idOnly    = false;
+    final Path tablePath = new Path(Preconditions.checkNotNull(subScanSpec,
+      "MapRDB reader needs a sub-scan spec").getTableName());
+    this.subScanSpec = subScanSpec;
+    this.formatPlugin = formatPlugin;
+    final IndexDesc indexDesc = subScanSpec.getIndexDesc();
     byte[] serializedFilter = subScanSpec.getSerializedFilter();
     condition = null;
 
@@ -114,75 +153,159 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(serializedFilter));
     }
 
-    disableCountOptimization = formatPluginConfig.disableCountOptimization();
+    disableCountOptimization = formatPlugin.getConfig().disableCountOptimization();
+    // Below call will set the scannedFields and includeId correctly
     setColumns(projectedColumns);
-    unionEnabled = context.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
-    readNumbersAsDouble = formatPluginConfig.isReadAllNumbersAsDouble();
-    allTextMode = formatPluginConfig.isAllTextMode();
-    ignoreSchemaChange = formatPluginConfig.isIgnoreSchemaChange();
-    disablePushdown = !formatPluginConfig.isEnablePushdown();
-    nonExistentColumnsProjection = formatPluginConfig.isNonExistentFieldSupport();
+    unionEnabled = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
+    readNumbersAsDouble = formatPlugin.getConfig().isReadAllNumbersAsDouble();
+    allTextMode = formatPlugin.getConfig().isAllTextMode();
+    ignoreSchemaChange = formatPlugin.getConfig().isIgnoreSchemaChange();
+    disablePushdown = !formatPlugin.getConfig().isEnablePushdown();
+    nonExistentColumnsProjection = formatPlugin.getConfig().isNonExistentFieldSupport();
+
+    // Do not use cached table handle for two reasons.
+    // cached table handles default timeout is 60 min after which those handles will become stale.
+    // Since execution can run for longer than 60 min, we want to get a new table handle and use it
+    // instead of the one from cache.
+    // Since we are setting some table options, we do not want to use shared handles.
+    //
+    // Call it here instead of setup since this will make sure it's called under correct UGI block when impersonation
+    // is enabled and table is used with and without views.
+    table = (indexDesc == null ? MapRDBImpl.getTable(tablePath) : MapRDBImpl.getIndexTable(indexDesc));
+
+    if (condition != null) {
+      logger.debug("Created record reader with query condition {}", condition.toString());
+    } else {
+      logger.debug("Created record reader with query condition NULL");
+    }
   }
 
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    Set<SchemaPath> encodedSchemaPathSet = Sets.newLinkedHashSet();
+
     if (disablePushdown) {
       transformed.add(SchemaPath.STAR_COLUMN);
       includeId = true;
-      return transformed;
-    }
-
-    if (isStarQuery()) {
-      transformed.add(SchemaPath.STAR_COLUMN);
-      includeId = true;
-      if (isSkipQuery()) {
-    	// `SELECT COUNT(*)` query
-    	if (!disableCountOptimization) {
-          projectedFields = new FieldPath[1];
-          projectedFields[0] = ID_FIELD;
-        }
-      }
-      return transformed;
-    }
-
-    Set<FieldPath> projectedFieldsSet = Sets.newTreeSet();
-    for (SchemaPath column : columns) {
-      if (column.getRootSegment().getPath().equalsIgnoreCase(ID_KEY)) {
+    } else {
+      if (isStarQuery()) {
+        transformed.add(SchemaPath.STAR_COLUMN);
         includeId = true;
-        if (!disableCountOptimization) {
-          projectedFieldsSet.add(ID_FIELD);
+        if (isSkipQuery() && !disableCountOptimization) {
+          // `SELECT COUNT(*)` query
+          idOnly = true;
+          scannedFields = ID_ONLY_PROJECTION;
         }
       } else {
-        projectedFieldsSet.add(getFieldPathForProjection(column));
+        Set<FieldPath> scannedFieldsSet = Sets.newTreeSet();
+        Set<FieldPath> projectedFieldsSet = null;
+
+        for (SchemaPath column : columns) {
+          if (EncodedSchemaPathSet.isEncodedSchemaPath(column)) {
+            encodedSchemaPathSet.add(column);
+          } else {
+            transformed.add(column);
+            if (!DOCUMENT_SCHEMA_PATH.equals(column)) {
+              FieldPath fp = getFieldPathForProjection(column);
+              scannedFieldsSet.add(fp);
+            } else {
+              projectWholeDocument = true;
+            }
+          }
+        }
+        if (projectWholeDocument) {
+          // we do not want to project the fields from the encoded field path list
+          // hence make a copy of the scannedFieldsSet here for projection.
+          projectedFieldsSet = new ImmutableSet.Builder<FieldPath>()
+              .addAll(scannedFieldsSet).build();
+        }
+
+        if (encodedSchemaPathSet.size() > 0) {
+          Collection<SchemaPath> decodedSchemaPaths = EncodedSchemaPathSet.decode(encodedSchemaPathSet);
+          // now we look at the fields which are part of encoded field set and either
+          // add them to scanned set or clear the scanned set if all fields were requested.
+          for (SchemaPath column : decodedSchemaPaths) {
+            if (column.equals(SchemaPath.STAR_COLUMN)) {
+              includeId = true;
+              scannedFieldsSet.clear();
+              break;
+            }
+            scannedFieldsSet.add(getFieldPathForProjection(column));
+          }
+        }
+
+        if (scannedFieldsSet.size() > 0) {
+          if (includesIdField(scannedFieldsSet)) {
+            includeId = true;
+          }
+          scannedFields = scannedFieldsSet.toArray(new FieldPath[scannedFieldsSet.size()]);
+        }
+
+        if (disableCountOptimization) {
+          idOnly = (scannedFields == null);
+        }
+
+        if (projectWholeDocument) {
+          projector = new FieldProjector(projectedFieldsSet);
+        }
+
       }
-
-      transformed.add(column);
     }
-
-    if (projectedFieldsSet.size() > 0) {
-      projectedFields = projectedFieldsSet.toArray(new FieldPath[projectedFieldsSet.size()]);
-    }
-
-    if (disableCountOptimization) {
-      idOnly = (projectedFields == null);
-    }
-
     return transformed;
+  }
+
+  protected FieldPath[] getScannedFields() {
+    return scannedFields;
+  }
+
+  protected boolean getIdOnly() {
+    return idOnly;
+  }
+
+  protected Table getTable() {
+    return table;
+  }
+
+  protected boolean getIgnoreSchemaChange() {
+    return ignoreSchemaChange;
   }
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     this.vectorWriter = new VectorContainerWriter(output, unionEnabled);
+    this.vectorWriterMutator = output;
     this.operatorContext = context;
 
     try {
-      table = MapRDB.getTable(tableName);
       table.setOption(TableOption.EXCLUDEID, !includeId);
-      documentStream = table.find(condition, projectedFields);
-      documentReaderIterators = documentStream.documentReaders().iterator();
-    } catch (DBException e) {
-      throw new ExecutionSetupException(e);
+      documentStream = table.find(condition, scannedFields);
+      documentIterator = documentStream.iterator();
+      setupWriter();
+    } catch (DBException ex) {
+      throw new ExecutionSetupException(ex);
+    }
+  }
+  /*
+   * Setup the valueWriter and documentWriters based on config options
+   */
+  private void setupWriter() {
+    if (allTextMode) {
+      valueWriter = new AllTextValueWriter(buffer);
+    } else if (readNumbersAsDouble) {
+      valueWriter = new NumbersAsDoubleValueWriter(buffer);
+    } else {
+      valueWriter = new OjaiValueWriter(buffer);
+    }
+
+    if (projectWholeDocument) {
+      documentWriter = new ProjectionPassthroughVectorWriter(valueWriter, projector, includeId);
+    } else if (isSkipQuery()) {
+      documentWriter = new RowCountVectorWriter(valueWriter);
+    } else if (idOnly) {
+      documentWriter = new IdOnlyVectorWriter(valueWriter);
+    } else {
+      documentWriter = new FieldTransferVectorWriter(valueWriter);
     }
   }
 
@@ -195,40 +318,72 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     vectorWriter.reset();
 
     int recordCount = 0;
-    DBDocumentReaderBase reader = null;
+    reader = null;
+    document = null;
 
-    while(recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION) {
+    int maxRecordsForThisBatch = this.maxRecordsToRead >= 0?
+        Math.min(BaseValueVector.INITIAL_VALUE_ALLOCATION, this.maxRecordsToRead) : BaseValueVector.INITIAL_VALUE_ALLOCATION;
+
+    try {
+      // If the last document caused a SchemaChange create a new output schema for this scan batch
+      if (schemaState == SchemaState.SCHEMA_CHANGE && !ignoreSchemaChange) {
+        // Clear the ScanBatch vector container writer/mutator in order to be able to generate the new schema
+        vectorWriterMutator.clear();
+        vectorWriter = new VectorContainerWriter(vectorWriterMutator, unionEnabled);
+        logger.debug("Encountered schema change earlier use new writer {}", vectorWriter.toString());
+        document = lastDocument;
+        setupWriter();
+        if (recordCount < maxRecordsForThisBatch) {
+          vectorWriter.setPosition(recordCount);
+          if (document != null) {
+            reader = (DBDocumentReaderBase) document.asReader();
+            documentWriter.writeDBDocument(vectorWriter, reader);
+            recordCount++;
+          }
+        }
+      }
+    } catch (SchemaChangeException e) {
+      String err_row = reader.getId().asJsonString();
+      if (ignoreSchemaChange) {
+        logger.warn("{}. Dropping row '{}' from result.", e.getMessage(), err_row);
+        logger.debug("Stack trace:", e);
+      } else {
+          /* We should not encounter a SchemaChangeException here since this is the first document for this
+           * new schema. Something is very wrong - cannot handle any further!
+           */
+        throw dataReadError(logger, e, "SchemaChangeException for row '%s'.", err_row);
+      }
+    }
+    schemaState = SchemaState.SCHEMA_INIT;
+    while(recordCount < maxRecordsForThisBatch) {
       vectorWriter.setPosition(recordCount);
       try {
-        reader = nextDocumentReader();
-        if (reader == null) {
-          break; // no more documents for this scanner
-        } else if (isSkipQuery()) {
-          vectorWriter.rootAsMap().bit("count").writeBit(1);
+        document = nextDocument();
+        if (document == null) {
+          break; // no more documents for this reader
         } else {
-          MapOrListWriterImpl writer = new MapOrListWriterImpl(vectorWriter.rootAsMap());
-          if (idOnly) {
-            writeId(writer, reader.getId());
-          } else {
-            if (reader.next() != EventType.START_MAP) {
-              throw dataReadError("The document did not start with START_MAP!");
-            }
-            writeToListOrMap(writer, reader);
-          }
+          documentWriter.writeDBDocument(vectorWriter, (DBDocumentReaderBase) document.asReader());
         }
         recordCount++;
       } catch (UserException e) {
         throw UserException.unsupportedError(e)
             .addContext(String.format("Table: %s, document id: '%s'",
                 table.getPath(),
-                reader == null ? null : IdCodec.asString(reader.getId())))
+                    document.asReader() == null ? null :
+                        IdCodec.asString(((DBDocumentReaderBase)document.asReader()).getId())))
             .build(logger);
       } catch (SchemaChangeException e) {
+        String err_row = ((DBDocumentReaderBase)document.asReader()).getId().asJsonString();
         if (ignoreSchemaChange) {
-          logger.warn("{}. Dropping the row from result.", e.getMessage());
+          logger.warn("{}. Dropping row '{}' from result.", e.getMessage(), err_row);
           logger.debug("Stack trace:", e);
         } else {
-          throw dataReadError(e);
+          /* Save the current document reader for next iteration. The recordCount is not updated so we
+           * would start from this reader on the next next() call
+           */
+          lastDocument = document;
+          schemaState = SchemaState.SCHEMA_CHANGE;
+          break;
         }
       }
     }
@@ -237,243 +392,14 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       JsonReaderUtils.ensureAtLeastOneField(vectorWriter, getColumns(), allTextMode, Collections.EMPTY_LIST);
     }
     vectorWriter.setValueCount(recordCount);
+    if (maxRecordsToRead > 0) {
+      maxRecordsToRead -= recordCount;
+    }
     logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), recordCount);
     return recordCount;
   }
 
-  private void writeId(MapOrListWriterImpl writer, Value id) throws SchemaChangeException {
-    try {
-      switch(id.getType()) {
-      case STRING:
-        writeString(writer, ID_KEY, id.getString());
-        break;
-      case BINARY:
-        writeBinary(writer, ID_KEY, id.getBinary());
-        break;
-      default:
-        throw new UnsupportedOperationException(id.getType() +
-            " is not a supported type for _id field.");
-      }
-    } catch (IllegalStateException | IllegalArgumentException e) {
-      throw schemaChangeException(e, "Possible schema change at _id: '%s'", IdCodec.asString(id));
-    }
-  }
-
-  private void writeToListOrMap(MapOrListWriterImpl writer, DBDocumentReaderBase reader) throws SchemaChangeException {
-    String fieldName = null;
-    writer.start();
-    outside: while (true) {
-      EventType event = reader.next();
-      if (event == null
-          || event == EventType.END_MAP
-          || event == EventType.END_ARRAY) {
-        break outside;
-      } else if (reader.inMap()) {
-        fieldName = reader.getFieldName();
-      }
-
-      try {
-        switch (event) {
-        case NULL:
-          break; // not setting the field will leave it as null
-        case BINARY:
-          writeBinary(writer, fieldName, reader.getBinary());
-          break;
-        case BOOLEAN:
-          writeBoolean(writer, fieldName, reader);
-          break;
-        case STRING:
-          writeString(writer, fieldName, reader.getString());
-          break;
-        case BYTE:
-          writeByte(writer, fieldName, reader);
-          break;
-        case SHORT:
-          writeShort(writer, fieldName, reader);
-          break;
-        case INT:
-          writeInt(writer, fieldName, reader);
-          break;
-        case LONG:
-          writeLong(writer, fieldName, reader);
-          break;
-        case FLOAT:
-          writeFloat(writer, fieldName, reader);
-          break;
-        case DOUBLE:
-          writeDouble(writer, fieldName, reader);
-          break;
-        case DECIMAL:
-          writeDecimal(writer, fieldName, reader);
-        case DATE:
-          writeDate(writer, fieldName, reader);
-          break;
-        case TIME:
-          writeTime(writer, fieldName, reader);
-          break;
-        case TIMESTAMP:
-          writeTimeStamp(writer, fieldName, reader);
-          break;
-        case INTERVAL:
-          throw unsupportedError("Interval type is currently not supported.");
-        case START_MAP:
-          writeToListOrMap((MapOrListWriterImpl) (reader.inMap() ? writer.map(fieldName) : writer.listoftmap(fieldName)), reader);
-          break;
-        case START_ARRAY:
-          writeToListOrMap((MapOrListWriterImpl) writer.list(fieldName), reader);
-          break;
-        default:
-          throw unsupportedError("Unsupported type: %s encountered during the query.", event);
-        }
-      } catch (IllegalStateException | IllegalArgumentException e) {
-        throw schemaChangeException(e, "Possible schema change at _id: '%s', field: '%s'", IdCodec.asString(reader.getId()), fieldName);
-      }
-    }
-    writer.end();
-  }
-
-  private void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, reader.getTimestamp().toUTCString());
-    } else {
-      ((writer.map != null) ? writer.map.timeStamp(fieldName) : writer.list.timeStamp()).writeTimeStamp(reader.getTimestampLong());
-    }
-  }
-
-  private void writeTime(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, reader.getTime().toTimeStr());
-    } else {
-      ((writer.map != null) ? writer.map.time(fieldName) : writer.list.time()).writeTime(reader.getTimeInt());
-    }
-  }
-
-  private void writeDate(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, reader.getDate().toDateStr());
-    } else {
-      long milliSecondsSinceEpoch = reader.getDateInt() * MILLISECONDS_IN_A_DAY;
-      ((writer.map != null) ? writer.map.date(fieldName) : writer.list.date()).writeDate(milliSecondsSinceEpoch);
-    }
-  }
-
-  private void writeDouble(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, String.valueOf(reader.getDouble()));
-    } else {
-      writer.float8(fieldName).writeFloat8(reader.getDouble());
-    }
-  }
-
-  private void writeDecimal(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, String.valueOf(reader.getDecimal()));
-    } else {
-      writer.varDecimal(fieldName, reader.getDecimalScale(), reader.getDecimalPrecision())
-          .writeVarDecimal(reader.getDecimal());
-    }
-  }
-
-  private void writeFloat(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, String.valueOf(reader.getFloat()));
-    } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getFloat());
-    } else {
-      writer.float4(fieldName).writeFloat4(reader.getFloat());
-    }
-  }
-
-  private void writeLong(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, String.valueOf(reader.getLong()));
-    } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getLong());
-    } else {
-      writer.bigInt(fieldName).writeBigInt(reader.getLong());
-    }
-  }
-
-  private void writeInt(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, String.valueOf(reader.getInt()));
-    } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getInt());
-    } else {
-      writer.integer(fieldName).writeInt(reader.getInt());
-    }
-  }
-
-  private void writeShort(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, String.valueOf(reader.getShort()));
-    } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getShort());
-    } else {
-      ((writer.map != null) ? writer.map.smallInt(fieldName) : writer.list.smallInt()).writeSmallInt(reader.getShort());
-    }
-  }
-
-  private void writeByte(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, String.valueOf(reader.getByte()));
-    } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getByte());
-    } else {
-      ((writer.map != null) ? writer.map.tinyInt(fieldName) : writer.list.tinyInt()).writeTinyInt(reader.getByte());
-    }
-  }
-
-  private void writeBoolean(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
-    if (allTextMode) {
-      writeString(writer, fieldName, String.valueOf(reader.getBoolean()));
-    } else {
-      writer.bit(fieldName).writeBit(reader.getBoolean() ? 1 : 0);
-    }
-  }
-
-  private void writeBinary(MapOrListWriterImpl writer, String fieldName, ByteBuffer buf) {
-    if (allTextMode) {
-      writeString(writer, fieldName, Bytes.toString(buf));
-    } else {
-      buffer = buffer.reallocIfNeeded(buf.remaining());
-      buffer.setBytes(0, buf, buf.position(), buf.remaining());
-      writer.binary(fieldName).writeVarBinary(0, buf.remaining(), buffer);
-    }
-  }
-
-  private void writeString(MapOrListWriterImpl writer, String fieldName, String value) {
-    final byte[] strBytes = Bytes.toBytes(value);
-    buffer = buffer.reallocIfNeeded(strBytes.length);
-    buffer.setBytes(0, strBytes);
-    writer.varChar(fieldName).writeVarChar(0, strBytes.length, buffer);
-  }
-
-  private UserException unsupportedError(String format, Object... args) {
-    return UserException.unsupportedError()
-        .message(String.format(format, args))
-        .build(logger);
-  }
-
-  private UserException dataReadError(Throwable t) {
-    return dataReadError(t, null);
-  }
-
-  private UserException dataReadError(String format, Object... args) {
-    return dataReadError(null, format, args);
-  }
-
-  private UserException dataReadError(Throwable t, String format, Object... args) {
-    return UserException.dataReadError(t)
-        .message(format == null ? null : String.format(format, args))
-        .build(logger);
-  }
-
-  private SchemaChangeException schemaChangeException(Throwable t, String format, Object... args) {
-    return new SchemaChangeException(format, t, args);
-  }
-
-  private DBDocumentReaderBase nextDocumentReader() {
+  protected DBDocumentReaderBase nextDocumentReader() {
     final OperatorStats operatorStats = operatorContext == null ? null : operatorContext.getStats();
     try {
       if (operatorStats != null) {
@@ -491,10 +417,31 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         }
       }
     } catch (DBException e) {
-      throw dataReadError(e);
+      throw dataReadError(logger, e);
     }
   }
 
+  protected Document nextDocument() {
+    final OperatorStats operatorStats = operatorContext == null ? null : operatorContext.getStats();
+    try {
+      if (operatorStats != null) {
+        operatorStats.startWait();
+      }
+      try {
+        if (!documentIterator.hasNext()) {
+          return null;
+        } else {
+          return documentIterator.next();
+        }
+      } finally {
+        if (operatorStats != null) {
+          operatorStats.stopWait();
+        }
+      }
+    } catch (DBException e) {
+      throw dataReadError(logger, e);
+    }
+  }
   /*
    * Extracts contiguous named segments from the SchemaPath, starting from the
    * root segment and build the FieldPath from it for projection.
@@ -504,7 +451,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
    * first encountered ARRAY field and let Drill handle the projection.
    */
   private static FieldPath getFieldPathForProjection(SchemaPath column) {
-    Stack<PathSegment.NameSegment> pathSegments = new Stack<PathSegment.NameSegment>();
+    Stack<PathSegment.NameSegment> pathSegments = new Stack<>();
     PathSegment seg = column.getRootSegment();
     while (seg != null && seg.isNamed()) {
       pathSegments.push((PathSegment.NameSegment) seg);
@@ -517,6 +464,15 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     return new FieldPath(child);
   }
 
+  public static boolean includesIdField(Collection<FieldPath> projected) {
+    return Iterables.tryFind(projected, new Predicate<FieldPath>() {
+      @Override
+      public boolean apply(FieldPath path) {
+        return Preconditions.checkNotNull(path).equals(ID_FIELD);
+      }
+    }).isPresent();
+  }
+
   @Override
   public void close() {
     if (documentStream != null) {
@@ -525,5 +481,19 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (table != null) {
       table.close();
     }
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder("MaprDBJsonRecordReader[Table=")
+        .append(table != null ? table.getPath() : null);
+    if (reader != null) {
+      sb.append(", Document ID=")
+          .append(IdCodec.asString(reader.getId()));
+    }
+    sb.append(", reader=")
+        .append(reader)
+        .append(']');
+    return sb.toString();
   }
 }

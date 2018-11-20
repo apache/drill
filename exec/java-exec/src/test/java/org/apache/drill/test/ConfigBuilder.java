@@ -142,7 +142,7 @@ public class ConfigBuilder {
   private static Properties createDefaultProperties()
   {
     Properties properties = new Properties();
-    properties.put(ExecConstants.CAST_TO_NULLABLE_NUMERIC, "false");
+    properties.put(ExecConstants.CAST_EMPTY_STRING_TO_NULL, "false");
     properties.put(ExecConstants.USE_DYNAMIC_UDFS_KEY, "false");
     properties.put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
 

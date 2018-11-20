@@ -17,36 +17,59 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import java.io.IOException;
+import java.util.List;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.drill.exec.util.Utilities;
 
 /**
- * Base class for logical scan rel implemented in Drill.
- * NOTE: we should eventually make this class independent of TableAccessRelBase and then
- * make it the base class for logical and physical scan rels.
+ * Base class for logical/physical scan rel implemented in Drill.
  */
 public abstract class DrillScanRelBase extends TableScan implements DrillRelNode {
+  protected GroupScan groupScan;
   protected final DrillTable drillTable;
 
-  public DrillScanRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
+  public DrillScanRelBase(RelOptCluster cluster,
+                          RelTraitSet traits,
+                          RelOptTable table,
+                          final List<SchemaPath> columns) {
     super(cluster, traits, table);
     this.drillTable = Utilities.getDrillTable(table);
     assert drillTable != null;
+    try {
+      this.groupScan = drillTable.getGroupScan().clone(columns);
+    } catch (final IOException e) {
+      throw new DrillRuntimeException("Failure creating scan.", e);
+    }
   }
 
-  public DrillScanRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelOptTable table,
-      DrillTable drillTable) {
+  public DrillScanRelBase(RelOptCluster cluster,
+                          RelTraitSet traits,
+                          GroupScan grpScan,
+                          RelOptTable table) {
     super(cluster, traits, table);
-    this.drillTable = drillTable;
+    DrillTable unwrap = table.unwrap(DrillTable.class);
+    if (unwrap == null) {
+      unwrap = table.unwrap(DrillTranslatableTable.class).getDrillTable();
+    }
+    this.drillTable = unwrap;
+    assert drillTable != null;
+    this.groupScan = grpScan;
   }
 
   public DrillTable getDrillTable() {
     return drillTable;
   }
 
+  public GroupScan getGroupScan() {
+    return groupScan;
+  }
 }

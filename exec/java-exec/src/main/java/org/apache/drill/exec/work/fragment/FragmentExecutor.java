@@ -207,6 +207,10 @@ public class FragmentExecutor implements Runnable {
   }
 
   private void cleanup(FragmentState state) {
+    if (root != null && fragmentState.get() == FragmentState.FAILED) {
+      root.dumpBatches();
+    }
+
     closeOutResources();
 
     updateState(state);

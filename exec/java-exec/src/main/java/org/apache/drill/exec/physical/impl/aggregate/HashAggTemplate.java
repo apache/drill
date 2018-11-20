@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
 
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.drill.common.exceptions.RetryAfterSpillException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -37,6 +38,7 @@ import org.apache.drill.exec.compile.sig.RuntimeOverridden;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
 
 import org.apache.drill.exec.memory.BaseAllocator;
@@ -47,12 +49,15 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.config.HashAggregate;
+import org.apache.drill.exec.physical.impl.common.AbstractSpilledPartitionMetadata;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
+import org.apache.drill.exec.physical.impl.common.CodeGenMemberInjector;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.IndexPointer;
 
+import org.apache.drill.exec.physical.impl.common.SpilledState;
 import org.apache.drill.exec.record.RecordBatchSizer;
 
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
@@ -79,6 +84,7 @@ import org.apache.drill.exec.vector.ObjectVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import static org.apache.drill.exec.physical.impl.common.HashTable.BATCH_MASK;
 import static org.apache.drill.exec.record.RecordBatch.MAX_BATCH_ROW_COUNT;
@@ -94,9 +100,6 @@ public abstract class HashAggTemplate implements HashAggregator {
   private static final boolean EXTRA_DEBUG_SPILL = false;
 
   // Fields needed for partitioning (the groups into partitions)
-  private int numPartitions = 0; // must be 2 to the power of bitsInMask (set in setup())
-  private int partitionMask; // numPartitions - 1
-  private int bitsInMask; // number of bits in the MASK
   private int nextPartitionToReturn = 0; // which partition to return the next batch from
   // The following members are used for logging, metrics, etc.
   private int rowsInPartition = 0; // counts #rows in each partition
@@ -105,9 +108,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   private int rowsSpilledReturned = 0;
   private int rowsReturnedEarly = 0;
 
-  private boolean isTwoPhase = false; // 1 phase or 2 phase aggr?
-  private boolean is2ndPhase = false;
-  private boolean is1stPhase = false;
+  private AggPrelBase.OperatorPhase phase;
   private boolean canSpill = true; // make it false in case can not spill/return-early
   private ChainedHashTable baseHashTable;
   private boolean earlyOutput = false; // when 1st phase returns a partition due to no memory
@@ -138,7 +139,8 @@ public abstract class HashAggTemplate implements HashAggregator {
   private HashAggBatch outgoing;
   private VectorContainer outContainer;
 
-  private FragmentContext context;
+  protected FragmentContext context;
+  protected ClassGenerator<?> cg;
   private OperatorContext oContext;
   private BufferAllocator allocator;
 
@@ -147,24 +149,14 @@ public abstract class HashAggTemplate implements HashAggregator {
   private int outBatchIndex[];
 
   // For handling spilling
+  private HashAggUpdater updater = new HashAggUpdater();
+  private SpilledState<HashAggSpilledPartition> spilledState = new SpilledState<>();
   private SpillSet spillSet;
   SpilledRecordbatch newIncoming; // when reading a spilled file - work like an "incoming"
   private Writer writers[]; // a vector writer for each spilled partition
   private int spilledBatchesCount[]; // count number of batches spilled, in each partition
   private String spillFiles[];
-  private int cycleNum = 0; // primary, secondary, tertiary, etc.
   private int originalPartition = -1; // the partition a secondary reads from
-
-  private static class SpilledPartition {
-    public int spilledBatches;
-    public String spillFile;
-    int cycleNum;
-    int origPartn;
-    int prevOrigPartn;
-  }
-
-  private ArrayList<SpilledPartition> spilledPartitionsList;
-  private int operatorId; // for the spill file name
 
   private IndexPointer htIdxHolder; // holder for the Hashtable's internal index returned by put()
   private int numGroupByOutFields = 0; // Note: this should be <= number of group-by fields
@@ -178,6 +170,59 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   private OperatorStats stats = null;
   private HashTableStats htStats = new HashTableStats();
+
+  public static class HashAggSpilledPartition extends AbstractSpilledPartitionMetadata {
+    private final int spilledBatches;
+    private final String spillFile;
+
+    public HashAggSpilledPartition(final int cycle,
+                                   final int originPartition,
+                                   final int prevOriginPartition,
+                                   final int spilledBatches,
+                                   final String spillFile) {
+      super(cycle, originPartition, prevOriginPartition);
+
+      this.spilledBatches = spilledBatches;
+      this.spillFile = Preconditions.checkNotNull(spillFile);
+    }
+
+    public int getSpilledBatches() {
+      return spilledBatches;
+    }
+
+    public String getSpillFile() {
+      return spillFile;
+    }
+
+    @Override
+    public String makeDebugString() {
+      return String.format("Start reading spilled partition %d (prev %d) from cycle %d.",
+        this.getOriginPartition(), this.getPrevOriginPartition(), this.getCycle());
+    }
+  }
+
+  public class HashAggUpdater implements SpilledState.Updater {
+
+    @Override
+    public void cleanup() {
+      this.cleanup();
+    }
+
+    @Override
+    public String getFailureMessage() {
+      return null;
+    }
+
+    @Override
+    public long getMemLimit() {
+      return allocator.getLimit();
+    }
+
+    @Override
+    public boolean hasPartitionLimit() {
+      return false;
+    }
+  }
 
   public enum Metric implements MetricDef {
 
@@ -318,7 +363,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   @Override
   public void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext,
                     RecordBatch incoming, HashAggBatch outgoing, LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds,
-                    TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException {
+                    ClassGenerator<?> cg, TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException {
 
     if (valueExprs == null || valueFieldIds == null) {
       throw new IllegalArgumentException("Invalid aggr value exprs or workspace variables.");
@@ -333,14 +378,11 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.oContext = oContext;
     this.incoming = incoming;
     this.outgoing = outgoing;
+    this.cg = cg;
     this.outContainer = outContainer;
-    this.operatorId = hashAggrConfig.getOperatorId();
     this.useMemoryPrediction = context.getOptions().getOption(ExecConstants.HASHAGG_USE_MEMORY_PREDICTION_VALIDATOR);
-
-    is2ndPhase = hashAggrConfig.getAggPhase() == AggPrelBase.OperatorPhase.PHASE_2of2;
-    isTwoPhase = hashAggrConfig.getAggPhase() != AggPrelBase.OperatorPhase.PHASE_1of1;
-    is1stPhase = isTwoPhase && !is2ndPhase;
-    canSpill = isTwoPhase; // single phase can not spill
+    this.phase = hashAggrConfig.getAggPhase();
+    canSpill = phase.hasTwo(); // single phase can not spill
 
     // Typically for testing - force a spill after a partition has more than so many batches
     minBatchesPerPartition = context.getOptions().getOption(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR);
@@ -403,8 +445,8 @@ public abstract class HashAggTemplate implements HashAggregator {
     final boolean fallbackEnabled = context.getOptions().getOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY).bool_val;
 
     // Set the number of partitions from the configuration (raise to a power of two, if needed)
-    numPartitions = (int)context.getOptions().getOption(ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR);
-    if ( numPartitions == 1 && is2ndPhase  ) { // 1st phase can still do early return with 1 partition
+    int numPartitions = (int)context.getOptions().getOption(ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR);
+    if ( numPartitions == 1 && phase.is2nd() ) { // 1st phase can still do early return with 1 partition
       canSpill = false;
       logger.warn("Spilling is disabled due to configuration setting of num_partitions to 1");
     }
@@ -430,7 +472,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       while ( numPartitions * ( estMaxBatchSize * minBatchesPerPartition + 2 * 1024 * 1024) > memAvail ) {
         numPartitions /= 2;
         if ( numPartitions < 2) {
-          if (is2ndPhase) {
+          if (phase.is2nd()) {
             canSpill = false;  // 2nd phase needs at least 2 to make progress
 
             if (fallbackEnabled) {
@@ -449,7 +491,7 @@ public abstract class HashAggTemplate implements HashAggregator {
         }
       }
     }
-    logger.debug("{} phase. Number of partitions chosen: {}. {} spill", isTwoPhase?(is2ndPhase?"2nd":"1st"):"Single",
+    logger.debug("{} phase. Number of partitions chosen: {}. {} spill", phase.getName(),
         numPartitions, canSpill ? "Can" : "Cannot");
 
     // The following initial safety check should be revisited once we can lower the number of rows in a batch
@@ -459,9 +501,8 @@ public abstract class HashAggTemplate implements HashAggregator {
       // (but 1st phase can still spill, so it will maintain the original memory limit)
       allocator.setLimit(AbstractBase.MAX_ALLOCATION);  // 10_000_000_000L
     }
-    // Based on the number of partitions: Set the mask and bit count
-    partitionMask = numPartitions - 1; // e.g. 32 --> 0x1F
-    bitsInMask = Integer.bitCount(partitionMask); // e.g. 0x1F -> 5
+
+    spilledState.initialize(numPartitions);
 
     // Create arrays (one entry per partition)
     htables = new HashTable[numPartitions];
@@ -470,7 +511,6 @@ public abstract class HashAggTemplate implements HashAggregator {
     writers = new Writer[numPartitions];
     spilledBatchesCount = new int[numPartitions];
     spillFiles = new String[numPartitions];
-    spilledPartitionsList = new ArrayList<SpilledPartition>();
 
     plannedBatches = numPartitions; // each partition should allocate its first batch
 
@@ -510,7 +550,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.incoming = newIncoming;
     currentBatchRecordCount = newIncoming.getRecordCount(); // first batch in this spill file
     nextPartitionToReturn = 0;
-    for (int i = 0; i < numPartitions; i++ ) {
+    for (int i = 0; i < spilledState.getNumPartitions(); i++ ) {
       htables[i].updateIncoming(newIncoming.getContainer(), null);
       htables[i].reset();
       if ( batchHolders[i] != null) {
@@ -575,7 +615,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     estOutgoingAllocSize = estValuesBatchSize; // initially assume same size
 
     logger.trace("{} phase. Estimated internal row width: {} Values row width: {} batch size: {}  memory limit: {}  max column width: {}",
-        isTwoPhase?(is2ndPhase?"2nd":"1st"):"Single",estRowWidth,estValuesRowWidth,estMaxBatchSize,allocator.getLimit(),maxColumnWidth);
+      phase.getName(),estRowWidth,estValuesRowWidth,estMaxBatchSize,allocator.getLimit(),maxColumnWidth);
 
     if ( estMaxBatchSize > allocator.getLimit() ) {
       logger.warn("HashAggregate: Estimated max batch size {} is larger than the memory limit {}",estMaxBatchSize,allocator.getLimit());
@@ -828,7 +868,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   @Override
   public void adjustOutputCount(int outputBatchSize, int oldRowWidth, int newRowWidth) {
-    for (int i = 0; i < numPartitions; i++ ) {
+    for (int i = 0; i < spilledState.getNumPartitions(); i++ ) {
       if (batchHolders[i] == null || batchHolders[i].size() == 0) {
         continue;
       }
@@ -845,12 +885,12 @@ public abstract class HashAggTemplate implements HashAggregator {
   @Override
   public void cleanup() {
     if ( schema == null ) { return; } // not set up; nothing to clean
-    if ( is2ndPhase && spillSet.getWriteBytes() > 0 ) {
+    if ( phase.is2nd() && spillSet.getWriteBytes() > 0 ) {
       stats.setLongStat(Metric.SPILL_MB, // update stats - total MB spilled
           (int) Math.round(spillSet.getWriteBytes() / 1024.0D / 1024.0));
     }
     // clean (and deallocate) each partition
-    for ( int i = 0; i < numPartitions; i++) {
+    for ( int i = 0; i < spilledState.getNumPartitions(); i++) {
           if (htables[i] != null) {
               htables[i].clear();
               htables[i] = null;
@@ -876,12 +916,12 @@ public abstract class HashAggTemplate implements HashAggregator {
           }
     }
     // delete any spill file left in unread spilled partitions
-    while ( ! spilledPartitionsList.isEmpty() ) {
-        SpilledPartition sp = spilledPartitionsList.remove(0);
+    while (!spilledState.isEmpty()) {
+        HashAggSpilledPartition sp = spilledState.getNextSpilledPartition();
         try {
-          spillSet.delete(sp.spillFile);
+          spillSet.delete(sp.getSpillFile());
         } catch(IOException e) {
-          logger.warn("Cleanup: Failed to delete spill file {}",sp.spillFile);
+          logger.warn("Cleanup: Failed to delete spill file {}",sp.getSpillFile());
         }
     }
     // Delete the currently handled (if any) spilled file
@@ -941,13 +981,13 @@ public abstract class HashAggTemplate implements HashAggregator {
    * @return The partition (number) chosen to be spilled
    */
   private int chooseAPartitionToFlush(int currPart, boolean tryAvoidCurr) {
-    if ( is1stPhase && ! tryAvoidCurr) { return currPart; } // 1st phase: just use the current partition
+    if ( phase.is1st() && ! tryAvoidCurr) { return currPart; } // 1st phase: just use the current partition
     int currPartSize = batchHolders[currPart].size();
     if ( currPartSize == 1 ) { currPartSize = -1; } // don't pick current if size is 1
     // first find the largest spilled partition
     int maxSizeSpilled = -1;
     int indexMaxSpilled = -1;
-    for (int isp = 0; isp < numPartitions; isp++ ) {
+    for (int isp = 0; isp < spilledState.getNumPartitions(); isp++ ) {
       if ( isSpilled(isp) && maxSizeSpilled < batchHolders[isp].size() ) {
         maxSizeSpilled = batchHolders[isp].size();
         indexMaxSpilled = isp;
@@ -966,7 +1006,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       indexMax = indexMaxSpilled;
       maxSize = 4 * maxSizeSpilled;
     }
-    for ( int insp = 0; insp < numPartitions; insp++) {
+    for ( int insp = 0; insp < spilledState.getNumPartitions(); insp++) {
       if ( ! isSpilled(insp) && maxSize < batchHolders[insp].size() ) {
         indexMax = insp;
         maxSize = batchHolders[insp].size();
@@ -992,7 +1032,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     ArrayList<BatchHolder> currPartition = batchHolders[part];
     rowsInPartition = 0;
     if ( EXTRA_DEBUG_SPILL ) {
-      logger.debug("HashAggregate: Spilling partition {} current cycle {} part size {}", part, cycleNum, currPartition.size());
+      logger.debug("HashAggregate: Spilling partition {} current cycle {} part size {}", part, spilledState.getCycle(), currPartition.size());
     }
 
     if ( currPartition.size() == 0 ) { return; } // in case empty - nothing to spill
@@ -1000,7 +1040,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     // If this is the first spill for this partition, create an output stream
     if ( ! isSpilled(part) ) {
 
-      spillFiles[part] = spillSet.getNextSpillFile(cycleNum > 0 ? Integer.toString(cycleNum) : null);
+      spillFiles[part] = spillSet.getNextSpillFile(spilledState.getCycle() > 0 ? Integer.toString(spilledState.getCycle()) : null);
 
       try {
         writers[part] = spillSet.writer(spillFiles[part]);
@@ -1024,21 +1064,8 @@ public abstract class HashAggTemplate implements HashAggregator {
       this.htables[part].outputKeys(currOutBatchIndex, this.outContainer, numOutputRecords);
 
       // set the value count for outgoing batch value vectors
-      /* int i = 0; */
       for (VectorWrapper<?> v : outgoing) {
         v.getValueVector().getMutator().setValueCount(numOutputRecords);
-        /*
-        // print out the first row to be spilled ( varchar, varchar, bigint )
-        try {
-          if (i++ < 2) {
-            NullableVarCharVector vv = ((NullableVarCharVector) v.getValueVector());
-            logger.info("FIRST ROW = {}", vv.getAccessor().get(0));
-          } else {
-            NullableBigIntVector vv = ((NullableBigIntVector) v.getValueVector());
-            logger.info("FIRST ROW = {}", vv.getAccessor().get(0));
-          }
-        } catch (Exception e) { logger.info("While printing the first row - Got an exception = {}",e); }
-        */
       }
 
       outContainer.setRecordCount(numOutputRecords);
@@ -1074,7 +1101,12 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   // These methods are overridden in the generated class when created as plain Java code.
   protected BatchHolder newBatchHolder(int batchRowCount) {
-    return new BatchHolder(batchRowCount);
+    return this.injectMembers(new BatchHolder(batchRowCount));
+  }
+
+  protected BatchHolder injectMembers(BatchHolder batchHolder) {
+    CodeGenMemberInjector.injectMembers(cg, batchHolder, context);
+    return batchHolder;
   }
 
   /**
@@ -1118,19 +1150,20 @@ public abstract class HashAggTemplate implements HashAggregator {
     if ( ! earlyOutput ) {
       // Update the next partition to return (if needed)
       // skip fully returned (or spilled) partitions
-      while (nextPartitionToReturn < numPartitions) {
+      while (nextPartitionToReturn < spilledState.getNumPartitions()) {
         //
         // If this partition was spilled - spill the rest of it and skip it
         //
         if ( isSpilled(nextPartitionToReturn) ) {
           spillAPartition(nextPartitionToReturn); // spill the rest
-          SpilledPartition sp = new SpilledPartition();
-          sp.spillFile = spillFiles[nextPartitionToReturn];
-          sp.spilledBatches = spilledBatchesCount[nextPartitionToReturn];
-          sp.cycleNum = cycleNum; // remember the current cycle
-          sp.origPartn = nextPartitionToReturn; // for debugging / filename
-          sp.prevOrigPartn = originalPartition; // for debugging / filename
-          spilledPartitionsList.add(sp);
+          HashAggSpilledPartition sp = new HashAggSpilledPartition(
+            spilledState.getCycle(),
+            nextPartitionToReturn,
+            originalPartition,
+            spilledBatchesCount[nextPartitionToReturn],
+            spillFiles[nextPartitionToReturn]);
+
+          spilledState.addPartition(sp);
 
           reinitPartition(nextPartitionToReturn); // free the memory
           try {
@@ -1154,12 +1187,12 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
 
       // if passed the last partition - either done or need to restart and read spilled partitions
-      if (nextPartitionToReturn >= numPartitions) {
+      if (nextPartitionToReturn >= spilledState.getNumPartitions()) {
         // The following "if" is probably never used; due to a similar check at the end of this method
-        if ( spilledPartitionsList.isEmpty() ) { // and no spilled partitions
+        if (spilledState.isEmpty()) { // and no spilled partitions
           allFlushed = true;
           this.outcome = IterOutcome.NONE;
-          if ( is2ndPhase && spillSet.getWriteBytes() > 0 ) {
+          if ( phase.is2nd() && spillSet.getWriteBytes() > 0 ) {
             stats.setLongStat(Metric.SPILL_MB, // update stats - total MB spilled
                 (int) Math.round(spillSet.getWriteBytes() / 1024.0D / 1024.0));
           }
@@ -1169,10 +1202,10 @@ public abstract class HashAggTemplate implements HashAggregator {
         buildComplete = false; // go back and call doWork() again
         handlingSpills = true; // beginning to work on the spill files
         // pick a spilled partition; set a new incoming ...
-        SpilledPartition sp = spilledPartitionsList.remove(0);
+        HashAggSpilledPartition sp = spilledState.getNextSpilledPartition();
         // Create a new "incoming" out of the spilled partition spill file
-        newIncoming = new SpilledRecordbatch(sp.spillFile, sp.spilledBatches, context, schema, oContext, spillSet);
-        originalPartition = sp.origPartn; // used for the filename
+        newIncoming = new SpilledRecordbatch(sp.getSpillFile(), sp.getSpilledBatches(), context, schema, oContext, spillSet);
+        originalPartition = sp.getOriginPartition(); // used for the filename
         logger.trace("Reading back spilled original partition {} as an incoming",originalPartition);
         // Initialize .... new incoming, new set of partitions
         try {
@@ -1180,22 +1213,8 @@ public abstract class HashAggTemplate implements HashAggregator {
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
-        // update the cycle num if needed
-        // The current cycle num should always be one larger than in the spilled partition
-        if ( cycleNum == sp.cycleNum ) {
-          cycleNum = 1 + sp.cycleNum;
-          stats.setLongStat(Metric.SPILL_CYCLE, cycleNum); // update stats
-          // report first spill or memory stressful situations
-          if ( cycleNum == 1 ) { logger.info("Started reading spilled records "); }
-          if ( cycleNum == 2 ) { logger.info("SECONDARY SPILLING "); }
-          if ( cycleNum == 3 ) { logger.warn("TERTIARY SPILLING "); }
-          if ( cycleNum == 4 ) { logger.warn("QUATERNARY SPILLING "); }
-          if ( cycleNum == 5 ) { logger.warn("QUINARY SPILLING "); }
-        }
-        if ( EXTRA_DEBUG_SPILL ) {
-          logger.debug("Start reading spilled partition {} (prev {}) from cycle {} (with {} batches). More {} spilled partitions left.",
-              sp.origPartn, sp.prevOrigPartn, sp.cycleNum, sp.spilledBatches, spilledPartitionsList.size());
-        }
+
+        spilledState.updateCycle(stats, sp, updater);
         return AggIterOutcome.AGG_RESTART;
       }
 
@@ -1228,7 +1247,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     this.outcome = IterOutcome.OK;
 
-    if ( EXTRA_DEBUG_SPILL && is2ndPhase ) {
+    if ( EXTRA_DEBUG_SPILL && phase.is2nd() ) {
       logger.debug("So far returned {} + SpilledReturned {}  total {} (spilled {})",rowsNotSpilled,rowsSpilledReturned,
         rowsNotSpilled+rowsSpilledReturned,
         rowsSpilled);
@@ -1264,7 +1283,7 @@ public abstract class HashAggTemplate implements HashAggregator {
         outBatchIndex[partitionToReturn] = 0; // reset, for the next EMIT
         return AggIterOutcome.AGG_EMIT;
       }
-      else if ( (partitionToReturn + 1 == numPartitions) && spilledPartitionsList.isEmpty() ) { // last partition ?
+      else if ((partitionToReturn + 1 == spilledState.getNumPartitions()) && spilledState.isEmpty()) { // last partition ?
 
         allFlushed = true; // next next() call will return NONE
 
@@ -1307,12 +1326,12 @@ public abstract class HashAggTemplate implements HashAggregator {
    */
   private String getOOMErrorMsg(String prefix) {
     String errmsg;
-    if (!isTwoPhase) {
+    if (!phase.hasTwo()) {
       errmsg = "Single Phase Hash Aggregate operator can not spill.";
     } else if (!canSpill) {  // 2nd phase, with only 1 partition
       errmsg = "Too little memory available to operator to facilitate spilling.";
     } else { // a bug ?
-      errmsg = prefix + " OOM at " + (is2ndPhase ? "Second Phase" : "First Phase") + ". Partitions: " + numPartitions +
+      errmsg = prefix + " OOM at " + phase.getName() + " Phase. Partitions: " + spilledState.getNumPartitions() +
       ". Estimated batch size: " + estMaxBatchSize + ". values size: " + estValuesBatchSize + ". Output alloc size: " + estOutgoingAllocSize;
       if ( plannedBatches > 0 ) { errmsg += ". Planned batches: " + plannedBatches; }
       if ( rowsSpilled > 0 ) { errmsg += ". Rows spilled so far: " + rowsSpilled; }
@@ -1333,32 +1352,6 @@ public abstract class HashAggTemplate implements HashAggregator {
     assert incomingRowIdx >= 0;
     assert ! earlyOutput;
 
-    /** for debugging
-     Object tmp = (incoming).getValueAccessorById(0, BigIntVector.class).getValueVector();
-     BigIntVector vv0 = null;
-     BigIntHolder holder = null;
-
-     if (tmp != null) {
-     vv0 = ((BigIntVector) tmp);
-     holder = new BigIntHolder();
-     holder.value = vv0.getAccessor().get(incomingRowIdx) ;
-     }
-     */
-    /*
-    if ( handlingSpills && ( incomingRowIdx == 0 ) ) {
-      // for debugging -- show the first row from a spilled batch
-      Object tmp0 = (incoming).getValueAccessorById(NullableVarCharVector.class, 0).getValueVector();
-      Object tmp1 = (incoming).getValueAccessorById(NullableVarCharVector.class, 1).getValueVector();
-      Object tmp2 = (incoming).getValueAccessorById(NullableBigIntVector.class, 2).getValueVector();
-
-      if (tmp0 != null && tmp1 != null && tmp2 != null) {
-        NullableVarCharVector vv0 = ((NullableVarCharVector) tmp0);
-        NullableVarCharVector vv1 = ((NullableVarCharVector) tmp1);
-        NullableBigIntVector  vv2 = ((NullableBigIntVector) tmp2);
-        logger.debug("The first row = {} , {} , {}", vv0.getAccessor().get(incomingRowIdx), vv1.getAccessor().get(incomingRowIdx), vv2.getAccessor().get(incomingRowIdx));
-      }
-    }
-    */
     // The hash code is computed once, then its lower bits are used to determine the
     // partition to use, and the higher bits determine the location in the hash table.
     int hashCode;
@@ -1370,19 +1363,19 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
 
     // right shift hash code for secondary (or tertiary...) spilling
-    for (int i = 0; i < cycleNum; i++) {
-      hashCode >>>= bitsInMask;
+    for (int i = 0; i < spilledState.getCycle(); i++) {
+      hashCode >>>= spilledState.getBitsInMask();
     }
 
-    int currentPartition = hashCode & partitionMask;
-    hashCode >>>= bitsInMask;
+    int currentPartition = hashCode & spilledState.getPartitionMask();
+    hashCode >>>= spilledState.getBitsInMask();
     HashTable.PutStatus putStatus = null;
     long allocatedBeforeHTput = allocator.getAllocatedMemory();
+    String tryingTo = phase.is1st() ? "early return" : "spill";
 
     // Proactive spill - in case there is no reserve memory - spill and retry putting later
     if ( reserveValueBatchMemory == 0 && canSpill ) {
-      logger.trace("Reserved memory runs short, trying to {} a partition and retry Hash Table put() again.",
-        is1stPhase ? "early return" : "spill");
+      logger.trace("Reserved memory runs short, trying to {} a partition and retry Hash Table put() again.", tryingTo);
 
       doSpill(currentPartition); // spill to free some memory
 
@@ -1400,8 +1393,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     } catch (RetryAfterSpillException re) {
       if ( ! canSpill ) { throw new OutOfMemoryException(getOOMErrorMsg("Can not spill")); }
 
-      logger.trace("HT put failed with an OOM, trying to {} a partition and retry Hash Table put() again.",
-            is1stPhase ? "early return" : "spill");
+      logger.trace("HT put failed with an OOM, trying to {} a partition and retry Hash Table put() again.", tryingTo);
 
       // for debugging - in case there's a leak
       long memDiff = allocator.getAllocatedMemory() - allocatedBeforeHTput;
@@ -1497,14 +1489,14 @@ public abstract class HashAggTemplate implements HashAggregator {
       maxMemoryNeeded = minBatchesPerPartition * Math.max(1, plannedBatches) * (estMaxBatchSize + MAX_BATCH_ROW_COUNT * (4 + 4 /* links + hash-values */));
       // Add the (max) size of the current hash table, in case it will double
       int maxSize = 1;
-      for (int insp = 0; insp < numPartitions; insp++) {
+      for (int insp = 0; insp < spilledState.getNumPartitions(); insp++) {
         maxSize = Math.max(maxSize, batchHolders[insp].size());
       }
       maxMemoryNeeded += MAX_BATCH_ROW_COUNT * 2 * 2 * 4 * maxSize; // 2 - double, 2 - max when %50 full, 4 - Uint4
 
       // log a detailed debug message explaining why a spill may be needed
       logger.trace("MEMORY CHECK: Allocated mem: {}, agg phase: {}, trying to add to partition {} with {} batches. " + "Max memory needed {}, Est batch size {}, mem limit {}",
-          allocator.getAllocatedMemory(), isTwoPhase ? (is2ndPhase ? "2ND" : "1ST") : "Single", currentPartition, batchHolders[currentPartition].size(), maxMemoryNeeded,
+          allocator.getAllocatedMemory(), phase.getName(), currentPartition, batchHolders[currentPartition].size(), maxMemoryNeeded,
           estMaxBatchSize, allocator.getLimit());
     }
     //
@@ -1527,7 +1519,7 @@ public abstract class HashAggTemplate implements HashAggregator {
         return;
       }
 
-      if ( is2ndPhase ) {
+      if ( phase.is2nd() ) {
         long before = allocator.getAllocatedMemory();
 
         spillAPartition(victimPartition);
@@ -1576,12 +1568,12 @@ public abstract class HashAggTemplate implements HashAggregator {
    * @param htables
    */
   private void updateStats(HashTable[] htables) {
-    if ( cycleNum > 0 ||  // These stats are only for before processing spilled files
+    if (!spilledState.isFirstCycle() ||  // These stats are only for before processing spilled files
       handleEmit ) { return; } // and no stats collecting when handling an EMIT
     long numSpilled = 0;
     HashTableStats newStats = new HashTableStats();
     // sum the stats from all the partitions
-    for (int ind = 0; ind < numPartitions; ind++) {
+    for (int ind = 0; ind < spilledState.getNumPartitions(); ind++) {
       htables[ind].getStats(newStats);
       htStats.addStats(newStats);
       if (isSpilled(ind)) {
@@ -1592,15 +1584,23 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.stats.setLongStat(Metric.NUM_ENTRIES, htStats.numEntries);
     this.stats.setLongStat(Metric.NUM_RESIZING, htStats.numResizing);
     this.stats.setLongStat(Metric.RESIZING_TIME_MS, htStats.resizingTime);
-    this.stats.setLongStat(Metric.NUM_PARTITIONS, numPartitions);
-    this.stats.setLongStat(Metric.SPILL_CYCLE, cycleNum); // Put 0 in case no spill
-    if ( is2ndPhase ) {
+    this.stats.setLongStat(Metric.NUM_PARTITIONS, spilledState.getNumPartitions());
+    this.stats.setLongStat(Metric.SPILL_CYCLE, spilledState.getCycle()); // Put 0 in case no spill
+    if ( phase.is2nd() ) {
       this.stats.setLongStat(Metric.SPILLED_PARTITIONS, numSpilled);
     }
     if ( rowsReturnedEarly > 0 ) {
       stats.setLongStat(Metric.SPILL_MB, // update stats - est. total MB returned early
           (int) Math.round( rowsReturnedEarly * estOutputRowWidth / 1024.0D / 1024.0));
     }
+  }
+
+  @Override
+  public String toString() {
+    // The fields are excluded because they are passed from HashAggBatch
+    String[] excludedFields = new String[] {
+        "baseHashTable", "incoming", "outgoing", "context", "oContext", "allocator", "htables", "newIncoming"};
+    return ReflectionToStringBuilder.toStringExclude(this, excludedFields);
   }
 
   // Code-generated methods (implemented in HashAggBatch)

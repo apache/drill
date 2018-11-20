@@ -39,6 +39,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
   private final double fragmentationFactor;
   private final double hashTableDoublingFactor;
   private final String hashTableCalculatorType;
+  private final boolean semiJoin;
 
   private boolean initialized = false;
   private boolean doMemoryCalculation;
@@ -46,11 +47,13 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
   public HashJoinMemoryCalculatorImpl(final double safetyFactor,
                                       final double fragmentationFactor,
                                       final double hashTableDoublingFactor,
-                                      final String hashTableCalculatorType) {
+                                      final String hashTableCalculatorType,
+                                      boolean semiJoin) {
     this.safetyFactor = safetyFactor;
     this.fragmentationFactor = fragmentationFactor;
     this.hashTableDoublingFactor = hashTableDoublingFactor;
     this.hashTableCalculatorType = hashTableCalculatorType;
+    this.semiJoin = semiJoin;
   }
 
   public void initialize(boolean doMemoryCalculation) {
@@ -76,8 +79,8 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       return new BuildSidePartitioningImpl(
         BatchSizePredictorImpl.Factory.INSTANCE,
         hashTableSizeCalculator,
-        HashJoinHelperSizeCalculatorImpl.INSTANCE,
-        fragmentationFactor, safetyFactor);
+        semiJoin ? HashJoinHelperUnusedSizeImpl.INSTANCE : HashJoinHelperSizeCalculatorImpl.INSTANCE,
+        fragmentationFactor, safetyFactor, semiJoin);
     } else {
       return new NoopBuildSidePartitioningImpl();
     }
@@ -184,6 +187,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     private final HashJoinHelperSizeCalculator hashJoinHelperSizeCalculator;
     private final double fragmentationFactor;
     private final double safetyFactor;
+    private final boolean semiJoin;
 
     private int maxBatchNumRecordsBuild;
     private int maxBatchNumRecordsProbe;
@@ -217,12 +221,14 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
                                      final HashTableSizeCalculator hashTableSizeCalculator,
                                      final HashJoinHelperSizeCalculator hashJoinHelperSizeCalculator,
                                      final double fragmentationFactor,
-                                     final double safetyFactor) {
+                                     final double safetyFactor,
+                                     boolean semiJoin) {
       this.batchSizePredictorFactory = Preconditions.checkNotNull(batchSizePredictorFactory);
       this.hashTableSizeCalculator = Preconditions.checkNotNull(hashTableSizeCalculator);
       this.hashJoinHelperSizeCalculator = Preconditions.checkNotNull(hashJoinHelperSizeCalculator);
       this.fragmentationFactor = fragmentationFactor;
       this.safetyFactor = safetyFactor;
+      this.semiJoin = semiJoin;
     }
 
     @Override
@@ -470,7 +476,8 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
         fragmentationFactor,
         safetyFactor,
         loadFactor,
-        reserveHash);
+        reserveHash,
+        semiJoin);
     }
 
     @Override
@@ -575,6 +582,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     private final double safetyFactor;
     private final double loadFactor;
     private final boolean reserveHash;
+    private final boolean semiJoin;
 
     private boolean initialized;
     private long consumedMemory;
@@ -596,7 +604,8 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
                                      final double fragmentationFactor,
                                      final double safetyFactor,
                                      final double loadFactor,
-                                     final boolean reserveHash) {
+                                     final boolean reserveHash,
+                                     boolean semiJoin) {
       this.firstCycle = firstCycle;
       this.probeSizePredictor = Preconditions.checkNotNull(probeSizePredictor);
       this.memoryAvailable = memoryAvailable;
@@ -609,6 +618,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       this.safetyFactor = safetyFactor;
       this.loadFactor = loadFactor;
       this.reserveHash = reserveHash;
+      this.semiJoin = semiJoin;
       this.recordsPerPartitionBatchProbe = recordsPerPartitionBatchProbe;
       this.computedProbeRecordsPerBatch = recordsPerPartitionBatchProbe;
     }
@@ -774,7 +784,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
 
       // Some of our probe side batches were spilled so we have to recursively process the partitions.
       return new HashJoinMemoryCalculatorImpl(
-        safetyFactor, fragmentationFactor, hashTableSizeCalculator.getDoublingFactor(), hashTableSizeCalculator.getType());
+        safetyFactor, fragmentationFactor, hashTableSizeCalculator.getDoublingFactor(), hashTableSizeCalculator.getType(), semiJoin);
     }
 
     @Override

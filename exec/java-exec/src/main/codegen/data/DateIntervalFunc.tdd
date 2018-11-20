@@ -18,4 +18,19 @@
     {intervals: ["Interval", "IntervalDay", "IntervalYear", "Int", "BigInt"] },
     {truncInputTypes: ["Date", "TimeStamp", "Time", "Interval", "IntervalDay", "IntervalYear"] },
     {truncUnits : ["Second", "Minute", "Hour", "Day", "Month", "Year", "Week", "Quarter", "Decade", "Century", "Millennium" ] },
+    {timestampDiffUnits : ["Nanosecond", "Microsecond", "Second", "Minute", "Hour", "Day", "Month", "Year", "Week", "Quarter"] },
+
+    {
+        varCharToDate: [
+            {from: "VarChar", to: "Date"},
+            {from: "VarChar", to: "NullableDate"},
+            {from: "NullableVarChar", to: "NullableDate"},
+            {from: "VarChar", to: "Time"},
+            {from: "VarChar", to: "NullableTime"},
+            {from: "NullableVarChar",  to: "NullableTime"},
+            {from: "VarChar", to: "TimeStamp"},
+            {from: "VarChar", to: "NullableTimeStamp"},
+            {from: "NullableVarChar", to: "NullableTimeStamp"}
+        ]
+    }
 }

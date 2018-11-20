@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.DeferredException;
@@ -121,6 +122,32 @@ public abstract class BaseRootExec implements RootExec {
   @Override
   public void receivingFragmentFinished(final FragmentHandle handle) {
     logger.warn("Currently not handling FinishedFragment message");
+  }
+
+  @Override
+  public void dumpBatches() {
+    if (operators == null) {
+      return;
+    }
+
+    final int numberOfBatchesToDump = 2;
+    logger.error("Batch dump started: dumping last {} failed batches", numberOfBatchesToDump);
+    // As batches are stored in a 'flat' List there is a need to filter out the failed batch
+    // and a few of its parent (actual number of batches is set by a constant defined above)
+    List<CloseableRecordBatch> failedBatchStack = new LinkedList<>();
+    for (int i = operators.size() - 1; i >= 0; i--) {
+      CloseableRecordBatch batch = operators.get(i);
+      if (batch.hasFailed()) {
+        failedBatchStack.add(0, batch);
+        if (failedBatchStack.size() == numberOfBatchesToDump) {
+          break;
+        }
+      }
+    }
+    for (CloseableRecordBatch batch : failedBatchStack) {
+      batch.dump();
+    }
+    logger.error("Batch dump completed.");
   }
 
   @Override

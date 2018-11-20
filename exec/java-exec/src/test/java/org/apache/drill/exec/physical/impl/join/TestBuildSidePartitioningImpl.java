@@ -45,7 +45,7 @@ public class TestBuildSidePartitioningImpl {
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
         fragmentationFactor,
-        safetyFactor);
+        safetyFactor, false);
 
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
     final long accountedProbeBatchSize = firstCycle? 0: 10;
@@ -90,7 +90,7 @@ public class TestBuildSidePartitioningImpl {
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
         fragmentationFactor,
-        safetyFactor);
+        safetyFactor, false);
 
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
@@ -134,7 +134,7 @@ public class TestBuildSidePartitioningImpl {
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
         fragmentationFactor,
-        safetyFactor);
+        safetyFactor, false);
 
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
@@ -179,7 +179,7 @@ public class TestBuildSidePartitioningImpl {
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
         fragmentationFactor,
-        safetyFactor);
+        safetyFactor, false);
 
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
@@ -225,7 +225,7 @@ public class TestBuildSidePartitioningImpl {
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
         fragmentationFactor,
-        safetyFactor);
+        safetyFactor, false);
 
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
@@ -258,7 +258,7 @@ public class TestBuildSidePartitioningImpl {
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
         fragmentationFactor,
-        safetyFactor);
+        safetyFactor, false);
 
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
@@ -302,7 +302,7 @@ public class TestBuildSidePartitioningImpl {
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
         fragmentationFactor,
-        safetyFactor);
+        safetyFactor, false);
 
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
@@ -357,7 +357,7 @@ public class TestBuildSidePartitioningImpl {
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
         fragmentationFactor,
-        safetyFactor);
+        safetyFactor, false);
 
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 
@@ -407,7 +407,7 @@ public class TestBuildSidePartitioningImpl {
         new HashTableSizeCalculatorConservativeImpl(RecordBatch.MAX_BATCH_ROW_COUNT, HashTableSizeCalculatorConservativeImpl.HASHTABLE_DOUBLING_FACTOR),
         HashJoinHelperSizeCalculatorImpl.INSTANCE,
         fragmentationFactor,
-        safetyFactor);
+        safetyFactor, false);
 
     final CaseInsensitiveMap<Long> keySizes = CaseInsensitiveMap.newHashMap();
 

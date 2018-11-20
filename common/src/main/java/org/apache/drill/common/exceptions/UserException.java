@@ -742,6 +742,9 @@ public class UserException extends DrillRuntimeException {
     if (getCause() != null) {
       // some unit tests use this information to make sure a specific exception was thrown in the server
       builder.setException(ErrorHelper.getWrapper(getCause()));
+    } else {
+      // not a wrapper exception
+      builder.setException(ErrorHelper.getWrapper(this));
     }
     return builder.build();
   }
@@ -771,8 +774,10 @@ public class UserException extends DrillRuntimeException {
    * @return generated user error message
    */
   private String generateMessage(boolean includeErrorIdAndIdentity) {
+    boolean seeLogsMessage = errorType == DrillPBError.ErrorType.INTERNAL_ERROR
+        || errorType == DrillPBError.ErrorType.SYSTEM;
     return errorType + " ERROR: " + super.getMessage() + "\n\n" +
-        context.generateContextMessage(includeErrorIdAndIdentity);
+        context.generateContextMessage(includeErrorIdAndIdentity, seeLogsMessage);
   }
 
 }

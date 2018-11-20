@@ -24,11 +24,16 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.hamcrest.CoreMatchers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -976,5 +981,31 @@ public class TestFunctionsQuery extends BaseTestQuery {
             .baselineColumns("col1")
             .baselineValues(new BigDecimal("-1.1"))
             .go();
+  }
+
+  @Test
+  public void testBooleanConditionsMode() throws Exception {
+    List<String> conditions = Arrays.asList(
+        "employee_id IS NULL",
+        "employee_id IS NOT NULL",
+        "employee_id > 0 IS TRUE",
+        "employee_id > 0 IS NOT TRUE",
+        "employee_id > 0 IS FALSE",
+        "employee_id > 0 IS NOT FALSE",
+        "employee_id IS NULL OR position_id IS NULL",
+        "employee_id IS NULL AND position_id IS NULL",
+        "isdate(employee_id)",
+        "NOT (employee_id IS NULL)");
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+        .add("col1", TypeProtos.MinorType.BIT)
+        .build();
+
+    for (String condition : conditions) {
+      testBuilder()
+          .sqlQuery("SELECT %s AS col1 FROM cp.`employee.json` LIMIT 0", condition)
+          .schemaBaseLine(expectedSchema)
+          .go();
+    }
   }
 }

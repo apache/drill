@@ -169,10 +169,13 @@ public class ValueHolderHelper {
   }
 
   public static Decimal28SparseHolder getDecimal28Holder(DrillBuf buf, String decimal) {
-
-    Decimal28SparseHolder dch = new Decimal28SparseHolder();
-
     BigDecimal bigDecimal = new BigDecimal(decimal);
+
+    return getDecimal28Holder(buf, bigDecimal);
+  }
+
+  public static Decimal28SparseHolder getDecimal28Holder(DrillBuf buf, BigDecimal bigDecimal) {
+    Decimal28SparseHolder dch = new Decimal28SparseHolder();
 
     dch.scale = bigDecimal.scale();
     dch.precision = bigDecimal.precision();
@@ -180,32 +183,39 @@ public class ValueHolderHelper {
     dch.start = 0;
     dch.buffer = buf.reallocIfNeeded(5 * DecimalUtility.INTEGER_SIZE);
     DecimalUtility
-        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, Decimal28SparseHolder.nDecimalDigits);
+      .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, Decimal28SparseHolder.nDecimalDigits);
 
     return dch;
   }
 
   public static Decimal38SparseHolder getDecimal38Holder(DrillBuf buf, String decimal) {
-
-      Decimal38SparseHolder dch = new Decimal38SparseHolder();
-
       BigDecimal bigDecimal = new BigDecimal(decimal);
 
-      dch.scale = bigDecimal.scale();
-      dch.precision = bigDecimal.precision();
-      Decimal38SparseHolder.setSign(bigDecimal.signum() == -1, dch.start, dch.buffer);
-      dch.start = 0;
+      return getDecimal38Holder(buf, bigDecimal);
+  }
+
+  public static Decimal38SparseHolder getDecimal38Holder(DrillBuf buf, BigDecimal bigDecimal) {
+    Decimal38SparseHolder dch = new Decimal38SparseHolder();
+
+    dch.scale = bigDecimal.scale();
+    dch.precision = bigDecimal.precision();
+    Decimal38SparseHolder.setSign(bigDecimal.signum() == -1, dch.start, dch.buffer);
+    dch.start = 0;
     dch.buffer = buf.reallocIfNeeded(Decimal38SparseHolder.maxPrecision * DecimalUtility.INTEGER_SIZE);
     DecimalUtility
-        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, Decimal38SparseHolder.nDecimalDigits);
+      .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, Decimal38SparseHolder.nDecimalDigits);
 
-      return dch;
+    return dch;
   }
 
   public static VarDecimalHolder getVarDecimalHolder(DrillBuf buf, String decimal) {
-    VarDecimalHolder dch = new VarDecimalHolder();
-
     BigDecimal bigDecimal = new BigDecimal(decimal);
+
+    return getVarDecimalHolder(buf, bigDecimal);
+  }
+
+  public static VarDecimalHolder getVarDecimalHolder(DrillBuf buf, BigDecimal bigDecimal) {
+    VarDecimalHolder dch = new VarDecimalHolder();
 
     byte[] bytes = bigDecimal.unscaledValue().toByteArray();
     int length = bytes.length;

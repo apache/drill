@@ -44,6 +44,29 @@ public class CastExpression extends LogicalExpressionBase implements Iterable<Lo
   }
 
   @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (!(obj instanceof CastExpression)) {
+      return false;
+    }
+
+    CastExpression other = (CastExpression) obj;
+
+    return this.input.equals(other.input) && (this.getMajorType().hasMinorType() == other.getMajorType().hasMinorType());
+  }
+
+  @Override
+  public int hashCode() {
+    //for now we ignore type's other attributes
+    return (input.hashCode() << 8) + (0x00ff & type.getMinorType().getNumber());
+  }
+
+  @Override
   public Iterator<LogicalExpression> iterator() {
     return Collections.singleton(input).iterator();
   }

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
@@ -385,7 +384,7 @@ public class StringFunctions{
 
 
   @FunctionTemplate(name = "split_part", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class SplitPart implements DrillSimpleFunc {
     @Param  VarCharHolder str;
     @Param  VarCharHolder splitter;
@@ -492,14 +491,13 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer = buffer.reallocIfNeeded(input.end- input.start);
-      out.start = 0;
-      out.end = input.end - input.start;
+      String str = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      byte[] result = str.toLowerCase().getBytes(com.google.common.base.Charsets.UTF_8);
 
-      for (int id = input.start; id < input.end; id++) {
-        byte  currentByte = input.buffer.getByte(id);
-        out.buffer.setByte(id - input.start, Character.toLowerCase(currentByte));
-      }
+      out.buffer = buffer = buffer.reallocIfNeeded(result.length);
+      out.start = 0;
+      out.end = result.length;
+      out.buffer.setBytes(0, result);
     }
   }
 
@@ -523,14 +521,13 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer = buffer.reallocIfNeeded(input.end- input.start);
-      out.start = 0;
-      out.end = input.end - input.start;
+      String str = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      byte[] result = str.toUpperCase().getBytes(com.google.common.base.Charsets.UTF_8);
 
-      for (int id = input.start; id < input.end; id++) {
-        byte currentByte = input.buffer.getByte(id);
-        out.buffer.setByte(id - input.start, Character.toUpperCase(currentByte));
-      }
+      out.buffer = buffer = buffer.reallocIfNeeded(result.length);
+      out.start = 0;
+      out.end = result.length;
+      out.buffer.setBytes(0, result);
     }
   }
 
@@ -645,7 +642,7 @@ public class StringFunctions{
   }
 
   @FunctionTemplate(names = {"substring", "substr" }, scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL,
-                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class SubstringRegexNullable implements DrillSimpleFunc {
     @Param NullableVarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;
@@ -688,7 +685,7 @@ public class StringFunctions{
   // If length = 0, return empty
   // If length < 0, and |length| > total charcounts, return empty.
   @FunctionTemplate(name = "left", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class Left implements DrillSimpleFunc {
     @Param VarCharHolder string;
     @Param BigIntHolder length;
@@ -726,7 +723,7 @@ public class StringFunctions{
 
   //Return last 'length' characters in the string. When 'length' is negative, return all but first |length| characters.
   @FunctionTemplate(name = "right", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class Right implements DrillSimpleFunc {
     @Param VarCharHolder string;
     @Param BigIntHolder length;
@@ -786,10 +783,13 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer = buffer.reallocIfNeeded(input.end - input.start);
+      String source = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      String result = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.initCap(source);
+      byte[] bytes = result.getBytes(com.google.common.base.Charsets.UTF_8);
+      out.buffer = buffer = buffer.reallocIfNeeded(bytes.length);
       out.start = 0;
-      out.end = input.end - input.start;
-      org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.initCap(input.start, input.end, input.buffer, out.buffer);
+      out.end = bytes.length;
+      out.buffer.setBytes(0, bytes);
     }
 
   }
@@ -864,7 +864,7 @@ public class StringFunctions{
       scope = FunctionScope.SIMPLE,
       returnType = ReturnType.PAD,
       nulls = NullHandling.NULL_IF_NULL,
-      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class Lpad implements DrillSimpleFunc {
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
@@ -943,7 +943,7 @@ public class StringFunctions{
       scope = FunctionScope.SIMPLE,
       returnType = ReturnType.PAD,
       nulls = NullHandling.NULL_IF_NULL,
-      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class LpadTwoArg implements DrillSimpleFunc {
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
@@ -1006,7 +1006,7 @@ public class StringFunctions{
       scope = FunctionScope.SIMPLE,
       returnType = ReturnType.PAD,
       nulls = NullHandling.NULL_IF_NULL,
-      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class Rpad implements DrillSimpleFunc {
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
@@ -1088,7 +1088,7 @@ public class StringFunctions{
       scope = FunctionScope.SIMPLE,
       returnType = ReturnType.PAD,
       nulls = NullHandling.NULL_IF_NULL,
-      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class RpadTwoArg implements DrillSimpleFunc {
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
@@ -1372,11 +1372,11 @@ public class StringFunctions{
     } // end of eval
   }
 
-  @FunctionTemplate(name = "split", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+  @FunctionTemplate(name = "split", scope = FunctionScope.SIMPLE,
+      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class Split implements DrillSimpleFunc {
-    @Param  VarCharHolder input;
-    @Param  VarCharHolder delimiter;
+    @Param VarCharHolder in;
+    @Param VarCharHolder delimiter;
 
     @Workspace com.google.common.base.Splitter splitter;
     @Inject DrillBuf buffer;
@@ -1396,20 +1396,66 @@ public class StringFunctions{
 
     @Override
     public void eval() {
+      String inputString =
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
       // Convert the iterable to an array as Janino will not handle generics.
-      Object[] tokens = com.google.common.collect.Iterables.toArray(splitter.split(
-          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer)), String.class);
+      Object[] tokens = com.google.common.collect.Iterables.toArray(splitter.split(inputString), String.class);
       org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter list = writer.rootAsList();
       list.startList();
-      for(int i = 0; i < tokens.length; i++ ) {
-        final byte[] strBytes = ((String)tokens[i]).getBytes(com.google.common.base.Charsets.UTF_8);
+      for (Object token : tokens) {
+        final byte[] strBytes = ((String) token).getBytes(com.google.common.base.Charsets.UTF_8);
         buffer = buffer.reallocIfNeeded(strBytes.length);
         buffer.setBytes(0, strBytes);
         list.varChar().writeVarChar(0, strBytes.length, buffer);
       }
       list.endList();
     }
+  }
 
+  @FunctionTemplate(name = "split", scope = FunctionScope.SIMPLE,
+      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
+  public static class SplitNullableInput implements DrillSimpleFunc {
+    @Param NullableVarCharHolder in;
+    @Param VarCharHolder delimiter;
+
+    @Workspace com.google.common.base.Splitter splitter;
+    @Inject DrillBuf buffer;
+
+    @Output org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter writer;
+
+    @Override
+    public void setup() {
+      int len = delimiter.end - delimiter.start;
+      if (len != 1) {
+        throw new IllegalArgumentException("Only single character delimiters are supported for split()");
+      }
+      char splitChar = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.
+          toStringFromUTF8(delimiter.start, delimiter.end, delimiter.buffer).charAt(0);
+      splitter = com.google.common.base.Splitter.on(splitChar);
+    }
+
+    @Override
+    public void eval() {
+      Object[] tokens;
+      if (in.isSet == 1) {
+        String inputString =
+            org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
+        // Convert the iterable to an array as Janino will not handle generics.
+        tokens = com.google.common.collect.Iterables.toArray(splitter.split(inputString), String.class);
+      } else {
+        tokens = new Object[0];
+      }
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter list = writer.rootAsList();
+      list.startList();
+      org.apache.drill.exec.vector.complex.writer.VarCharWriter varCharWriter = list.varChar();
+      for (Object token : tokens) {
+        final byte[] strBytes = ((String) token).getBytes(com.google.common.base.Charsets.UTF_8);
+        buffer = buffer.reallocIfNeeded(strBytes.length);
+        buffer.setBytes(0, strBytes);
+        varCharWriter.writeVarChar(0, strBytes.length, buffer);
+      }
+      list.endList();
+    }
   }
 
   @FunctionTemplate(name = "concatOperator",
@@ -1670,7 +1716,7 @@ public class StringFunctions{
   * Returns the input char sequences repeated nTimes.
   */
   @FunctionTemplate(names = {"repeat", "repeatstr"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFUALT)
+                    outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class RepeatString implements DrillSimpleFunc {
 
     @Param  VarCharHolder in;

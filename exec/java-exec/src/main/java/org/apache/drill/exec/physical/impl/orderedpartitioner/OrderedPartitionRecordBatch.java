@@ -646,4 +646,10 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     }
   }
 
+  @Override
+  public void dump() {
+    logger.error("OrderedPartitionRecordBatch[container={}, popConfig={}, partitionVectors={}, partitions={}, " +
+            "recordsSampled={}, recordCount={}]",
+        container, popConfig, partitionVectors, partitions, recordsSampled, recordCount);
+  }
 }

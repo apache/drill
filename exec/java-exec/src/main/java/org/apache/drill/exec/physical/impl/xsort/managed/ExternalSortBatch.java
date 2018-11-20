@@ -698,4 +698,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     SpilledRuns spilledRuns = new SpilledRuns(oContext, spillSet, copierHolder);
     return new SortImpl(oContext, sortConfig, spilledRuns, outputWrapperContainer);
   }
+
+  @Override
+  public void dump() {
+    logger.error("ExternalSortBatch[schema={}, sortState={}, sortConfig={}, outputWrapperContainer={}, "
+            + "outputSV4={}, container={}]",
+        schema, sortState, sortConfig, outputWrapperContainer, outputSV4, container);
+  }
 }

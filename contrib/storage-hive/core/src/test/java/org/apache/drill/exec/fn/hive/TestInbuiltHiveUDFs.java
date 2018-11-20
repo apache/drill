@@ -184,4 +184,17 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .go();
   }
 
+  @Test // DRILL-4456
+  public void testTranslate3() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT translate(string_field, 's', 'S') as ts," +
+            "translate(varchar_field, 'v', 'V') as tv,\n" +
+            "translate('literal', 'l', 'L') as tl from hive.readtest")
+        .unOrdered()
+        .baselineColumns("ts", "tv", "tl")
+        .baselineValues("Stringfield", "Varcharfield", "LiteraL")
+        .baselineValues(null, null, "LiteraL")
+        .go();
+  }
+
 }

@@ -38,13 +38,20 @@ public class MappifyUtility {
   public static final String fieldValue = "value";
 
   public static DrillBuf mappify(FieldReader reader, BaseWriter.ComplexWriter writer, DrillBuf buffer, String caller) {
-    // Currently we expect single map as input
-    if (DataMode.REPEATED == reader.getType().getMode() || !(reader.getType().getMinorType() == TypeProtos.MinorType.MAP)) {
+    // Currently we expect single map or null as input
+    if (reader.getType().getMode() == DataMode.REPEATED
+        || (reader.isSet() && reader.getType().getMinorType() != TypeProtos.MinorType.MAP)) {
       throw new DrillRuntimeException("kvgen function only supports Simple maps as input");
     }
     BaseWriter.ListWriter listWriter = writer.rootAsList();
     listWriter.startList();
     BaseWriter.MapWriter mapWriter = listWriter.map();
+
+    if (!reader.isSet()) {
+      // Return empty list
+      listWriter.endList();
+      return buffer;
+    }
 
     // Iterate over the fields in the map
     Iterator<String> fieldIterator = reader.iterator();
@@ -53,7 +60,7 @@ public class MappifyUtility {
       FieldReader fieldReader = reader.reader(str);
 
       // Skip the field if its null
-      if (fieldReader.isSet() == false) {
+      if (!fieldReader.isSet()) {
         mapWriter.end();
         continue;
       }

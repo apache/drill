@@ -50,15 +50,18 @@ public class Mappify {
    * scalar value fields
    * value fields need to be of the same data type
    */
-  @FunctionTemplate(names = {"mappify", "kvgen"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL, isRandom = true)
+  @FunctionTemplate(names = {"mappify", "kvgen"}, scope = FunctionTemplate.FunctionScope.SIMPLE, isRandom = true)
   public static class ConvertMapToKeyValuePairs implements DrillSimpleFunc {
+
     @Param  FieldReader reader;
     @Inject DrillBuf buffer;
     @Output ComplexWriter writer;
 
+    @Override
     public void setup() {
     }
 
+    @Override
     public void eval() {
       buffer = org.apache.drill.exec.expr.fn.impl.MappifyUtility.mappify(reader, writer, buffer, "Mappify/kvgen");
     }

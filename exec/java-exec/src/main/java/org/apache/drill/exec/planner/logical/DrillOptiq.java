@@ -18,11 +18,14 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.calcite.avatica.util.TimeUnit;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -42,6 +45,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -57,6 +61,7 @@ import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.NlsString;
 
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.work.ExecErrorConstants;
@@ -94,17 +99,32 @@ public class DrillOptiq {
     final RexToDrill visitor = new RexToDrill(context, inputs);
     return expr.accept(visitor);
   }
+  public static LogicalExpression toDrill(DrillParseContext context, RelDataType type,
+                                          RexBuilder builder, RexNode expr) {
+    final RexToDrill visitor = new RexToDrill(context, type, builder);
+    return expr.accept(visitor);
+  }
 
-  private static class RexToDrill extends RexVisitorImpl<LogicalExpression> {
+  public static class RexToDrill extends RexVisitorImpl<LogicalExpression> {
     private final List<RelNode> inputs;
     private final DrillParseContext context;
     private final List<RelDataTypeField> fieldList;
+    private final RelDataType rowType;
+    private final RexBuilder builder;
 
     RexToDrill(DrillParseContext context, List<RelNode> inputs) {
       super(true);
       this.context = context;
       this.inputs = inputs;
       this.fieldList = Lists.newArrayList();
+      if (inputs.size() > 0 && inputs.get(0)!=null) {
+        this.rowType = inputs.get(0).getRowType();
+        this.builder = inputs.get(0).getCluster().getRexBuilder();
+      }
+      else {
+        this.rowType = null;
+        this.builder = null;
+      }
       /*
          Fields are enumerated by their presence order in input. Details {@link org.apache.calcite.rex.RexInputRef}.
          Thus we can merge field list from several inputs by adding them into the list in order of appearance.
@@ -124,12 +144,31 @@ public class DrillOptiq {
         }
       }
     }
+    public RexToDrill(DrillParseContext context, RelNode input) {
+      this(context, Lists.newArrayList(input));
+    }
+
+    public RexToDrill(DrillParseContext context, RelDataType rowType, RexBuilder builder) {
+      super(true);
+      this.context = context;
+      this.rowType = rowType;
+      this.builder = builder;
+      this.inputs = Lists.newArrayList();
+      this.fieldList = rowType.getFieldList();
+    }
+
+    protected RelDataType getRowType() {
+      return rowType;
+    }
+
+    protected RexBuilder getRexBuilder() {
+      return builder;
+    }
 
     @Override
     public LogicalExpression visitInputRef(RexInputRef inputRef) {
       final int index = inputRef.getIndex();
       final RelDataTypeField field = fieldList.get(index);
-      Preconditions.checkNotNull(field, "Unable to find field using input reference");
       return FieldReference.getWithQuotedRef(field.getName());
     }
 
@@ -161,7 +200,6 @@ public class DrillOptiq {
         }
         throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       case PREFIX:
-        logger.debug("Prefix");
         LogicalExpression arg = call.getOperands().get(0).accept(this);
         switch(call.getKind()){
           case NOT:
@@ -174,7 +212,6 @@ public class DrillOptiq {
         }
         throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       case SPECIAL:
-        logger.debug("Special");
         switch(call.getKind()){
         case CAST:
           return getDrillCastFunctionFromOptiq(call);
@@ -362,7 +399,7 @@ public class DrillOptiq {
     }
 
     private LogicalExpression getDrillFunctionFromOptiqCall(RexCall call) {
-      List<LogicalExpression> args = Lists.newArrayList();
+      List<LogicalExpression> args = new ArrayList<>();
 
       for(RexNode n : call.getOperands()){
         args.add(n.accept(this));
@@ -375,114 +412,158 @@ public class DrillOptiq {
       /* Rewrite extract functions in the following manner
        * extract(year, date '2008-2-23') ---> extractYear(date '2008-2-23')
        */
-      if (functionName.equals("extract")) {
+      switch (functionName) {
+        case "extract": {
 
-        // Assert that the first argument to extract is a QuotedString
-        assert args.get(0) instanceof ValueExpressions.QuotedString;
+          // Assert that the first argument to extract is a QuotedString
+          assert args.get(0) instanceof ValueExpressions.QuotedString;
 
-        // Get the unit of time to be extracted
-        String timeUnitStr = ((ValueExpressions.QuotedString)args.get(0)).value;
+          // Get the unit of time to be extracted
+          String timeUnitStr = ((ValueExpressions.QuotedString) args.get(0)).value;
 
-        switch (timeUnitStr){
-          case ("YEAR"):
-          case ("MONTH"):
-          case ("DAY"):
-          case ("HOUR"):
-          case ("MINUTE"):
-          case ("SECOND"):
-            String functionPostfix = timeUnitStr.substring(0, 1).toUpperCase() + timeUnitStr.substring(1).toLowerCase();
-            functionName += functionPostfix;
-            return FunctionCallFactory.createExpression(functionName, args.subList(1, 2));
-          default:
-            throw new UnsupportedOperationException("extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
+          TimeUnit timeUnit = TimeUnit.valueOf(timeUnitStr);
+
+          switch (timeUnit) {
+            case YEAR:
+            case MONTH:
+            case DAY:
+            case HOUR:
+            case MINUTE:
+            case SECOND:
+              String functionPostfix = StringUtils.capitalize(timeUnitStr.toLowerCase());
+              functionName += functionPostfix;
+              return FunctionCallFactory.createExpression(functionName, args.subList(1, 2));
+            default:
+              throw new UnsupportedOperationException("extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
+          }
         }
-      } else if (functionName.equals("trim")) {
-        String trimFunc = null;
-        List<LogicalExpression> trimArgs = Lists.newArrayList();
+        case "timestampdiff": {
 
-        assert args.get(0) instanceof ValueExpressions.QuotedString;
-        switch (((ValueExpressions.QuotedString)args.get(0)).value.toUpperCase()) {
-        case "LEADING":
-          trimFunc = "ltrim";
-          break;
-        case "TRAILING":
-          trimFunc = "rtrim";
-          break;
-        case "BOTH":
-          trimFunc = "btrim";
-          break;
-        default:
-          assert 1 == 0;
+          // Assert that the first argument to extract is a QuotedString
+          Preconditions.checkArgument(args.get(0) instanceof ValueExpressions.QuotedString,
+            "The first argument of TIMESTAMPDIFF function should be QuotedString");
+
+          String timeUnitStr = ((ValueExpressions.QuotedString) args.get(0)).value;
+
+          TimeUnit timeUnit = TimeUnit.valueOf(timeUnitStr);
+
+          switch (timeUnit) {
+            case YEAR:
+            case MONTH:
+            case DAY:
+            case HOUR:
+            case MINUTE:
+            case SECOND:
+            case QUARTER:
+            case WEEK:
+            case MICROSECOND:
+            case NANOSECOND:
+              String functionPostfix = StringUtils.capitalize(timeUnitStr.toLowerCase());
+              functionName += functionPostfix;
+              return FunctionCallFactory.createExpression(functionName, args.subList(1, 3));
+            default:
+              throw new UnsupportedOperationException("TIMESTAMPDIFF function supports the following time units: " +
+                  "YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, QUARTER, WEEK, MICROSECOND, NANOSECOND");
+          }
         }
+        case "trim": {
+          String trimFunc;
+          List<LogicalExpression> trimArgs = new ArrayList<>();
 
-        trimArgs.add(args.get(2));
-        trimArgs.add(args.get(1));
-
-        return FunctionCallFactory.createExpression(trimFunc, trimArgs);
-      } else if (functionName.equals("date_part")) {
-        // Rewrite DATE_PART functions as extract functions
-        // assert that the function has exactly two arguments
-        assert argsSize == 2;
-
-        /* Based on the first input to the date_part function we rewrite the function as the
-         * appropriate extract function. For example
-         * date_part('year', date '2008-2-23') ------> extractYear(date '2008-2-23')
-         */
-        assert args.get(0) instanceof QuotedString;
-
-        QuotedString extractString = (QuotedString) args.get(0);
-        String functionPostfix = extractString.value.substring(0, 1).toUpperCase() + extractString.value.substring(1).toLowerCase();
-        return FunctionCallFactory.createExpression("extract" + functionPostfix, args.subList(1, 2));
-      } else if (functionName.equals("concat")) {
-
-        if (argsSize == 1) {
-          /*
-           * We treat concat with one argument as a special case. Since we don't have a function
-           * implementation of concat that accepts one argument. We simply add another dummy argument
-           * (empty string literal) to the list of arguments.
-           */
-          List<LogicalExpression> concatArgs = new LinkedList<>(args);
-          concatArgs.add(QuotedString.EMPTY_STRING);
-
-          return FunctionCallFactory.createExpression(functionName, concatArgs);
-
-        } else if (argsSize > 2) {
-          List<LogicalExpression> concatArgs = Lists.newArrayList();
-
-          /* stack concat functions on top of each other if we have more than two arguments
-           * Eg: concat(col1, col2, col3) => concat(concat(col1, col2), col3)
-           */
-          concatArgs.add(args.get(0));
-          concatArgs.add(args.get(1));
-
-          LogicalExpression first = FunctionCallFactory.createExpression(functionName, concatArgs);
-
-          for (int i = 2; i < argsSize; i++) {
-            concatArgs = Lists.newArrayList();
-            concatArgs.add(first);
-            concatArgs.add(args.get(i));
-            first = FunctionCallFactory.createExpression(functionName, concatArgs);
+          assert args.get(0) instanceof ValueExpressions.QuotedString;
+          switch (((ValueExpressions.QuotedString) args.get(0)).value.toUpperCase()) {
+            case "LEADING":
+              trimFunc = "ltrim";
+              break;
+            case "TRAILING":
+              trimFunc = "rtrim";
+              break;
+            case "BOTH":
+              trimFunc = "btrim";
+              break;
+            default:
+              throw new UnsupportedOperationException("Invalid argument for TRIM function. " +
+                  "Expected one of the following: LEADING, TRAILING, BOTH");
           }
 
-          return first;
-        }
-      } else if (functionName.equals("length")) {
+          trimArgs.add(args.get(2));
+          trimArgs.add(args.get(1));
 
+          return FunctionCallFactory.createExpression(trimFunc, trimArgs);
+        }
+        case "date_part": {
+          // Rewrite DATE_PART functions as extract functions
+          // assert that the function has exactly two arguments
+          assert argsSize == 2;
+
+          /* Based on the first input to the date_part function we rewrite the function as the
+           * appropriate extract function. For example
+           * date_part('year', date '2008-2-23') ------> extractYear(date '2008-2-23')
+           */
+          assert args.get(0) instanceof QuotedString;
+
+          QuotedString extractString = (QuotedString) args.get(0);
+          String functionPostfix = StringUtils.capitalize(extractString.value.toLowerCase());
+          return FunctionCallFactory.createExpression("extract" + functionPostfix, args.subList(1, 2));
+        }
+        case "concat": {
+
+          if (argsSize == 1) {
+            /*
+             * We treat concat with one argument as a special case. Since we don't have a function
+             * implementation of concat that accepts one argument. We simply add another dummy argument
+             * (empty string literal) to the list of arguments.
+             */
+            List<LogicalExpression> concatArgs = new LinkedList<>(args);
+            concatArgs.add(QuotedString.EMPTY_STRING);
+
+            return FunctionCallFactory.createExpression(functionName, concatArgs);
+
+          } else if (argsSize > 2) {
+            List<LogicalExpression> concatArgs = new ArrayList<>();
+
+            /* stack concat functions on top of each other if we have more than two arguments
+             * Eg: concat(col1, col2, col3) => concat(concat(col1, col2), col3)
+             */
+            concatArgs.add(args.get(0));
+            concatArgs.add(args.get(1));
+
+            LogicalExpression first = FunctionCallFactory.createExpression(functionName, concatArgs);
+
+            for (int i = 2; i < argsSize; i++) {
+              concatArgs = new ArrayList<>();
+              concatArgs.add(first);
+              concatArgs.add(args.get(i));
+              first = FunctionCallFactory.createExpression(functionName, concatArgs);
+            }
+
+            return first;
+          }
+          break;
+        }
+        case "length": {
           if (argsSize == 2) {
 
-              // Second argument should always be a literal specifying the encoding format
-              assert args.get(1) instanceof ValueExpressions.QuotedString;
+            // Second argument should always be a literal specifying the encoding format
+            assert args.get(1) instanceof ValueExpressions.QuotedString;
 
-              String encodingType = ((ValueExpressions.QuotedString) args.get(1)).value;
-              functionName += encodingType.substring(0, 1).toUpperCase() + encodingType.substring(1).toLowerCase();
+            String encodingType = ((ValueExpressions.QuotedString) args.get(1)).value;
+            functionName += StringUtils.capitalize(encodingType.toLowerCase());
 
-              return FunctionCallFactory.createExpression(functionName, args.subList(0, 1));
+            return FunctionCallFactory.createExpression(functionName, args.subList(0, 1));
           }
-      } else if ((functionName.equals("convert_from") || functionName.equals("convert_to"))
-                    && args.get(1) instanceof QuotedString) {
-        return FunctionCallFactory.createConvert(functionName, ((QuotedString)args.get(1)).value, args.get(0), ExpressionPosition.UNKNOWN);
-      } else if (functionName.equals("date_trunc")) {
-        return handleDateTruncFunction(args);
+          break;
+        }
+        case "convert_from":
+        case "convert_to": {
+          if (args.get(1) instanceof QuotedString) {
+            return FunctionCallFactory.createConvert(functionName, ((QuotedString) args.get(1)).value, args.get(0), ExpressionPosition.UNKNOWN);
+          }
+          break;
+        }
+        case "date_trunc": {
+          return handleDateTruncFunction(args);
+        }
       }
 
       return FunctionCallFactory.createExpression(functionName, args);
@@ -493,21 +574,23 @@ public class DrillOptiq {
       assert args.get(0) instanceof ValueExpressions.QuotedString;
 
       // Get the unit of time to be extracted
-      String timeUnitStr = ((ValueExpressions.QuotedString)args.get(0)).value.toUpperCase();
+      String timeUnitStr = ((ValueExpressions.QuotedString) args.get(0)).value.toUpperCase();
 
-      switch (timeUnitStr){
-        case ("YEAR"):
-        case ("MONTH"):
-        case ("DAY"):
-        case ("HOUR"):
-        case ("MINUTE"):
-        case ("SECOND"):
-        case ("WEEK"):
-        case ("QUARTER"):
-        case ("DECADE"):
-        case ("CENTURY"):
-        case ("MILLENNIUM"):
-          final String functionPostfix = timeUnitStr.substring(0, 1).toUpperCase() + timeUnitStr.substring(1).toLowerCase();
+      TimeUnit timeUnit = TimeUnit.valueOf(timeUnitStr);
+
+      switch (timeUnit) {
+        case YEAR:
+        case MONTH:
+        case DAY:
+        case HOUR:
+        case MINUTE:
+        case SECOND:
+        case WEEK:
+        case QUARTER:
+        case DECADE:
+        case CENTURY:
+        case MILLENNIUM:
+          final String functionPostfix = StringUtils.capitalize(timeUnitStr.toLowerCase());
           return FunctionCallFactory.createExpression("date_trunc_" + functionPostfix, args.subList(1, 2));
       }
 

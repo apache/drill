@@ -103,5 +103,9 @@ public class FunctionAttributes {
     return template.isNiladic();
   }
 
+  public boolean isInternal() {
+    return template.isInternal();
+  }
+
   public boolean checkPrecisionRange() { return template.checkPrecisionRange(); }
 }

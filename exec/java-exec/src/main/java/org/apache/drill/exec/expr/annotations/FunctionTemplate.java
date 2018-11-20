@@ -91,6 +91,11 @@ public @interface FunctionTemplate {
   boolean checkPrecisionRange() default false;
 
   /**
+   * Defines if a function is internal and not intended for public use [e.g. castEmptyStringNullableVarBinaryToNullableVarDecimal(..) ]
+   */
+  boolean isInternal() default false;
+
+  /**
    * This enum will be used to estimate the average size of the output
    * produced by a function that produces variable length output
    */
@@ -98,13 +103,13 @@ public @interface FunctionTemplate {
     DEFAULT(OutputWidthCalculators.DefaultOutputWidthCalculator.INSTANCE),
     CLONE(OutputWidthCalculators.CloneOutputWidthCalculator.INSTANCE),
     CONCAT(OutputWidthCalculators.ConcatOutputWidthCalculator.INSTANCE),
-    // Custom calculator are required for functions that don't fall in to any pre-defined
+    // Custom calculator is required for functions that don't fall into any predefined
     // calculator categories - like replace and lpad
     // place holder markers on functions until support
     // for CUSTOM calculators is implemented
-    // CUSTOM_FIXED_WIDTH_DEFUALT will default to a fixed size - for functions like
+    // CUSTOM_FIXED_WIDTH_DEFAULT will default to a fixed size - for functions like
     // lpad() where the ouput size does not easily map to the input size
-    CUSTOM_FIXED_WIDTH_DEFUALT(OutputWidthCalculators.DefaultOutputWidthCalculator.INSTANCE),
+    CUSTOM_FIXED_WIDTH_DEFAULT(OutputWidthCalculators.DefaultOutputWidthCalculator.INSTANCE),
     // CUSTOM CLONE will default to CLONE - for functions like replace() where the output
     // size  does not easily map to the input size but is likely to be at most the size of the input.
     CUSTOM_CLONE_DEFAULT(OutputWidthCalculators.CloneOutputWidthCalculator.INSTANCE);
@@ -133,6 +138,9 @@ public @interface FunctionTemplate {
      * Indicates that a method's associated logical operation returns NULL if
      * either input is NULL, and therefore that the method must not be called
      * with null inputs.  (The calling framework must handle NULLs.)
+     *
+     * <p>Not Supported for aggregate functions and for functions with {@link Output} of type
+     * {@link org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter}.</p>
      */
     NULL_IF_NULL
   }

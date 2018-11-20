@@ -288,6 +288,15 @@ public class MockRecordBatch implements CloseableRecordBatch {
     this.limitWithUnnest = limitWithUnnest;
   }
 
+  @Override
+  public boolean hasFailed() {
+    return false;
+  }
+
+  @Override
+  public void dump() {
+  }
+
   public static class Builder {
     private final List<RowSet> rowSets = new ArrayList<>();
     private final List<IterOutcome> iterOutcomes = new ArrayList<>();

@@ -19,8 +19,6 @@ package org.apache.drill.exec.expr.fn.registry;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.junit.Before;
@@ -29,10 +27,16 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -45,19 +49,23 @@ public class FunctionRegistryHolderTest {
 
   private static final String built_in = "built-in";
   private static final String udf_jar = "DrillUDF-1.0.jar";
+  private static final String LOWER_FUNC_NAME = "lower";
+  private static final String SHUFFLE_FUNC_NAME = "shuffle";
 
   private static Map<String, List<FunctionHolder>> newJars;
   private FunctionRegistryHolder registryHolder;
 
   @BeforeClass
   public static void init() {
-    newJars = Maps.newHashMap();
-    FunctionHolder lower = new FunctionHolder("lower", "lower(VARCHAR-REQUIRED)", mock(DrillFuncHolder.class));
+    newJars = new HashMap<>();
+    FunctionHolder lower = new FunctionHolder(LOWER_FUNC_NAME, "lower(VARCHAR-REQUIRED)", mock(DrillFuncHolder.class));
     FunctionHolder upper = new FunctionHolder("upper", "upper(VARCHAR-REQUIRED)", mock(DrillFuncHolder.class));
-    newJars.put(built_in, Lists.newArrayList(lower, upper));
+    FunctionHolder shuffle = new FunctionHolder(SHUFFLE_FUNC_NAME, "shuffle()", mock(DrillFuncHolder.class));
+    newJars.put(built_in, new ArrayList<>(Arrays.asList(lower, upper, shuffle)));
     FunctionHolder custom_lower = new FunctionHolder("custom_lower", "lower(VARCHAR-REQUIRED)", mock(DrillFuncHolder.class));
     FunctionHolder custom_upper = new FunctionHolder("custom_upper", "custom_upper(VARCHAR-REQUIRED)", mock(DrillFuncHolder.class));
-    newJars.put(udf_jar, Lists.newArrayList(custom_lower, custom_upper));
+    FunctionHolder overloaded_shuffle = new FunctionHolder(SHUFFLE_FUNC_NAME, "shuffle(FLOAT8-REQUIRED,FLOAT8-OPTIONAL)", mock(DrillFuncHolder.class));
+    newJars.put(udf_jar, new ArrayList<>(Arrays.asList(custom_lower, custom_upper, overloaded_shuffle)));
   }
 
   @Before
@@ -69,9 +77,9 @@ public class FunctionRegistryHolderTest {
   @Test
   public void testVersion() {
     resetRegistry();
-    long expectedVersion = 0;
+    int expectedVersion = 0;
     assertEquals("Initial version should be 0", expectedVersion, registryHolder.getVersion());
-    registryHolder.addJars(Maps.<String, List<FunctionHolder>>newHashMap(), ++expectedVersion);
+    registryHolder.addJars(new HashMap<>(), ++expectedVersion);
     assertEquals("Version can change if no jars were added.", expectedVersion, registryHolder.getVersion());
     fillInRegistry(++expectedVersion);
     assertEquals("Version should have incremented by 1", expectedVersion, registryHolder.getVersion());
@@ -86,24 +94,24 @@ public class FunctionRegistryHolderTest {
   @Test
   public void testAddJars() {
     resetRegistry();
-    int functionsSize = 0;
-    List<String> jars = Lists.newArrayList();
+    List<String> jars = new ArrayList<>();
     ListMultimap<String, DrillFuncHolder> functionsWithHolders = ArrayListMultimap.create();
     ListMultimap<String, String> functionsWithSignatures = ArrayListMultimap.create();
+    Set<String> functionsSet = new HashSet<>();
     for (Map.Entry<String, List<FunctionHolder>> jar : newJars.entrySet()) {
       jars.add(jar.getKey());
       for (FunctionHolder functionHolder : jar.getValue()) {
         functionsWithHolders.put(functionHolder.getName(), functionHolder.getHolder());
         functionsWithSignatures.put(functionHolder.getName(), functionHolder.getSignature());
-        functionsSize++;
+        functionsSet.add(functionHolder.getName()); //Track unique function names
       }
     }
 
-    long expectedVersion = 0;
+    int expectedVersion = 0;
     registryHolder.addJars(newJars, ++expectedVersion);
     assertEquals("Version number should match", expectedVersion, registryHolder.getVersion());
     compareTwoLists(jars, registryHolder.getAllJarNames());
-    assertEquals(functionsSize, registryHolder.functionsSize());
+    assertEquals(functionsSet.size(), registryHolder.functionsSize());
     compareListMultimaps(functionsWithHolders, registryHolder.getAllFunctionsWithHolders());
     compareListMultimaps(functionsWithSignatures, registryHolder.getAllFunctionsWithSignatures());
   }
@@ -111,8 +119,8 @@ public class FunctionRegistryHolderTest {
   @Test
   public void testAddTheSameJars() {
     resetRegistry();
-    int functionsSize = 0;
-    List<String> jars = Lists.newArrayList();
+    Set<String> functionsSet = new HashSet<>();
+    List<String> jars = new ArrayList<>();
     ListMultimap<String, DrillFuncHolder> functionsWithHolders = ArrayListMultimap.create();
     ListMultimap<String, String> functionsWithSignatures = ArrayListMultimap.create();
     for (Map.Entry<String, List<FunctionHolder>> jar : newJars.entrySet()) {
@@ -120,14 +128,14 @@ public class FunctionRegistryHolderTest {
       for (FunctionHolder functionHolder : jar.getValue()) {
         functionsWithHolders.put(functionHolder.getName(), functionHolder.getHolder());
         functionsWithSignatures.put(functionHolder.getName(), functionHolder.getSignature());
-        functionsSize++;
+        functionsSet.add(functionHolder.getName()); //Track unique function names
       }
     }
-    long expectedVersion = 0;
+    int expectedVersion = 0;
     registryHolder.addJars(newJars, ++expectedVersion);
     assertEquals("Version number should match", expectedVersion, registryHolder.getVersion());
     compareTwoLists(jars, registryHolder.getAllJarNames());
-    assertEquals(functionsSize, registryHolder.functionsSize());
+    assertEquals(functionsSet.size(), registryHolder.functionsSize());
     compareListMultimaps(functionsWithHolders, registryHolder.getAllFunctionsWithHolders());
     compareListMultimaps(functionsWithSignatures, registryHolder.getAllFunctionsWithSignatures());
 
@@ -135,7 +143,7 @@ public class FunctionRegistryHolderTest {
     registryHolder.addJars(newJars, ++expectedVersion);
     assertEquals("Version number should match", expectedVersion, registryHolder.getVersion());
     compareTwoLists(jars, registryHolder.getAllJarNames());
-    assertEquals(functionsSize, registryHolder.functionsSize());
+    assertEquals(functionsSet.size(), registryHolder.functionsSize());
     compareListMultimaps(functionsWithHolders, registryHolder.getAllFunctionsWithHolders());
     compareListMultimaps(functionsWithSignatures, registryHolder.getAllFunctionsWithSignatures());
   }
@@ -150,16 +158,56 @@ public class FunctionRegistryHolderTest {
 
   @Test
   public void testGetAllJarNames() {
-    ArrayList<String> expectedResult = Lists.newArrayList(newJars.keySet());
+    List<String> expectedResult = new ArrayList<>(newJars.keySet());
     compareTwoLists(expectedResult, registryHolder.getAllJarNames());
   }
 
   @Test
-  public void testGetFunctionNamesByJar() {
-    ArrayList<String> expectedResult = Lists.newArrayList();
-    for (FunctionHolder functionHolder : newJars.get(built_in)) {
-      expectedResult.add(functionHolder.getName());
+  public void testGetAllJarsWithFunctionHolders() {
+    Map<String, List<FunctionHolder>> fnHoldersInRegistry = registryHolder.getAllJarsWithFunctionHolders();
+    //Iterate and confirm lists are same
+    for (String jarName : newJars.keySet()) {
+      List<DrillFuncHolder> expectedHolderList = newJars.get(jarName).stream()
+          .map(FunctionHolder::getHolder) //Extract DrillFuncHolder
+          .collect(Collectors.toList());
+      List<DrillFuncHolder> testHolderList = fnHoldersInRegistry.get(jarName).stream()
+          .map(FunctionHolder::getHolder) //Extract DrillFuncHolder
+          .collect(Collectors.toList());
+
+      compareTwoLists(expectedHolderList, testHolderList);
     }
+
+    Map<String, String> shuffleFunctionMap = new HashMap<>();
+    // Confirm that same function spans multiple jars with different signatures
+    //Init: Expected Map of items
+    for (String jarName : newJars.keySet()) {
+      for (FunctionHolder funcHolder : newJars.get(jarName)) {
+        if (SHUFFLE_FUNC_NAME.equals(funcHolder.getName())) {
+          shuffleFunctionMap.put(funcHolder.getSignature(), jarName);
+        }
+      }
+    }
+
+    //Test: Remove items from ExpectedMap based on match from testJar's functionHolder items
+    for (String testJar : registryHolder.getAllJarNames()) {
+      for (FunctionHolder funcHolder : fnHoldersInRegistry.get(testJar)) {
+        if (SHUFFLE_FUNC_NAME.equals(funcHolder.getName())) {
+          String testSignature = funcHolder.getSignature();
+          String expectedJar = shuffleFunctionMap.get(testSignature);
+          if (testJar.equals(expectedJar)) {
+            shuffleFunctionMap.remove(testSignature);
+          }
+        }
+      }
+    }
+    assertTrue(shuffleFunctionMap.isEmpty());
+  }
+
+  @Test
+  public void testGetFunctionNamesByJar() {
+    List<String> expectedResult = newJars.get(built_in).stream()
+        .map(FunctionHolder::getName)
+        .collect(Collectors.toList());
     compareTwoLists(expectedResult, registryHolder.getFunctionNamesByJar(built_in));
   }
 
@@ -171,7 +219,7 @@ public class FunctionRegistryHolderTest {
         expectedResult.put(functionHolder.getName(), functionHolder.getHolder());
       }
     }
-    AtomicLong version = new AtomicLong();
+    AtomicInteger version = new AtomicInteger();
     compareListMultimaps(expectedResult, registryHolder.getAllFunctionsWithHolders(version));
     assertEquals("Version number should match", version.get(), registryHolder.getVersion());
   }
@@ -200,32 +248,40 @@ public class FunctionRegistryHolderTest {
 
   @Test
   public void testGetHoldersByFunctionNameWithVersion() {
-    List<DrillFuncHolder> expectedResult = Lists.newArrayList();
-    for (List<FunctionHolder> functionHolders : newJars.values()) {
-      for (FunctionHolder functionHolder : functionHolders) {
-        if ("lower".equals(functionHolder.getName())) {
-          expectedResult.add(functionHolder.getHolder());
-        }
-      }
-    }
+    List<DrillFuncHolder> expectedResult = newJars.values().stream()
+        .flatMap(Collection::stream)
+        .filter(f -> LOWER_FUNC_NAME.equals(f.getName()))
+        .map(FunctionHolder::getHolder)
+        .collect(Collectors.toList());
+
     assertFalse(expectedResult.isEmpty());
-    AtomicLong version = new AtomicLong();
-    compareTwoLists(expectedResult, registryHolder.getHoldersByFunctionName("lower", version));
+    AtomicInteger version = new AtomicInteger();
+    compareTwoLists(expectedResult, registryHolder.getHoldersByFunctionName(LOWER_FUNC_NAME, version));
     assertEquals("Version number should match", version.get(), registryHolder.getVersion());
   }
 
   @Test
   public void testGetHoldersByFunctionName() {
-    List<DrillFuncHolder> expectedResult = Lists.newArrayList();
+    List<DrillFuncHolder> expectedUniqueResult = new ArrayList<>();
+    List<DrillFuncHolder> expectedMultipleResult = new ArrayList<>();
     for (List<FunctionHolder> functionHolders : newJars.values()) {
       for (FunctionHolder functionHolder : functionHolders) {
-        if ("lower".equals(functionHolder.getName())) {
-          expectedResult.add(functionHolder.getHolder());
-        }
+        if (LOWER_FUNC_NAME.equals(functionHolder.getName())) {
+          expectedUniqueResult.add(functionHolder.getHolder());
+        } else
+          if (SHUFFLE_FUNC_NAME.equals(functionHolder.getName())) {
+            expectedMultipleResult.add(functionHolder.getHolder());
+          }
       }
     }
-    assertFalse(expectedResult.isEmpty());
-    compareTwoLists(expectedResult, registryHolder.getHoldersByFunctionName("lower"));
+
+    //Test for function with one signature
+    assertFalse(expectedUniqueResult.isEmpty());
+    compareTwoLists(expectedUniqueResult, registryHolder.getHoldersByFunctionName(LOWER_FUNC_NAME));
+
+    //Test for function with multiple signatures
+    assertFalse(expectedMultipleResult.isEmpty());
+    compareTwoLists(expectedMultipleResult, registryHolder.getHoldersByFunctionName(SHUFFLE_FUNC_NAME));
   }
 
   @Test
@@ -236,11 +292,23 @@ public class FunctionRegistryHolderTest {
 
   @Test
   public void testFunctionsSize() {
-    int count = 0;
+    int fnCountInRegistryHolder = 0;
+    int fnCountInNewJars = 0;
+
+    Set<String> functionNameSet = new HashSet<>();
     for (List<FunctionHolder> functionHolders : newJars.values()) {
-      count += functionHolders.size();
+      for (FunctionHolder functionHolder : functionHolders) {
+        functionNameSet.add(functionHolder.getName()); //Track unique function names
+        fnCountInNewJars++; //Track all functions
+      }
     }
-    assertEquals("Functions size should match", count, registryHolder.functionsSize());
+    assertEquals("Unique function name count should match", functionNameSet.size(), registryHolder.functionsSize());
+
+    for (String jarName : registryHolder.getAllJarNames()) {
+      fnCountInRegistryHolder += registryHolder.getFunctionNamesByJar(jarName).size();
+    }
+
+    assertEquals("Function count should match", fnCountInNewJars, fnCountInRegistryHolder);
   }
 
   @Test
@@ -256,7 +324,7 @@ public class FunctionRegistryHolderTest {
     registryHolder = new FunctionRegistryHolder();
   }
 
-  private void fillInRegistry(long version) {
+  private void fillInRegistry(int version) {
     registryHolder.addJars(newJars, version);
   }
 
@@ -266,7 +334,7 @@ public class FunctionRegistryHolderTest {
     assertEquals("Multimaps size should match", m1.size(), m2.size());
     for (Map.Entry<String, Collection<T>> entry : m1.entrySet()) {
       try {
-        compareTwoLists(Lists.newArrayList(entry.getValue()), Lists.newArrayList(m2.get(entry.getKey())));
+        compareTwoLists(new ArrayList<>(entry.getValue()), new ArrayList<>(m2.get(entry.getKey())));
       } catch (AssertionError e) {
         throw new AssertionError("Multimaps values should match", e);
       }
@@ -275,9 +343,7 @@ public class FunctionRegistryHolderTest {
 
   private <T> void compareTwoLists(List<T> l1, List<T> l2) {
     assertEquals("Lists size should match", l1.size(), l2.size());
-    for (T item : l1) {
-      assertTrue("Two lists should have the same values", l2.contains(item));
-    }
+    l1.forEach(i -> assertTrue("Two lists should have the same values", l2.contains(i)));
   }
 
 }

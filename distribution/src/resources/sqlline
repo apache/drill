@@ -91,7 +91,7 @@ if [ -n "$_DRILL_WRAPPER_" ]; then
 fi
 
 if [ -n "$QUERY" ] ; then
-  echo $QUERY | exec $CMD "${SLARGS[@]}"
+  echo "$QUERY" | exec $CMD "${SLARGS[@]}"
 elif [ -n "$FILE" ] ; then
   exec $CMD "${SLARGS[@]}" --run=$FILE
 else

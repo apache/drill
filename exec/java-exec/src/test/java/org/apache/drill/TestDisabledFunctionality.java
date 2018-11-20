@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package org.apache.drill;
+
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -87,15 +88,6 @@ public class TestDisabledFunctionality extends BaseTestQuery {
   public void testDisabledNaturalJoin() throws Exception {
     try {
       test("select * from cp.`tpch/nation.parquet` NATURAL JOIN cp.`tpch/region.parquet`");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
-
-  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
-  public void testDisabledCrossJoin() throws Exception {
-    try {
-      test("select * from cp.`tpch/nation.parquet` CROSS JOIN cp.`tpch/region.parquet`");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }

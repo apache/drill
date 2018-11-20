@@ -41,7 +41,6 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
 </#macro>
 
 <#macro page_body>
-  <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
   <div class="btn-group btn-group-sm" style="display:inline-block;">

@@ -47,4 +47,5 @@ message RuntimeFilterBDef{
   optional bool to_foreman = 4; // true means sending to foreman,false means sending to scan nodes
   repeated int32 bloom_filter_size_in_bytes = 5;
   repeated string probe_fields = 6; // probe fields with corresponding BloomFilters
+  optional int32 hj_op_id = 7; // the operator id of the HashJoin which generates this RuntimeFilter
 }

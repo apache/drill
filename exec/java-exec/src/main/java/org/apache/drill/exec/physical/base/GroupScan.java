@@ -55,6 +55,9 @@ public interface GroupScan extends Scan, HasAffinity{
   @JsonIgnore
   int getMaxParallelizationWidth();
 
+  @JsonIgnore
+  boolean isDistributed();
+
   /**
    * At minimum, the GroupScan requires these many fragments to run.
    * Currently, this is used in {@link org.apache.drill.exec.planner.fragment.SimpleParallelizer}

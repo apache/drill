@@ -29,6 +29,7 @@ import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
+import org.apache.drill.exec.store.mapr.PluginConstants;
 import org.apache.drill.exec.store.mapr.TableFormatPlugin;
 import org.apache.drill.exec.store.mapr.db.binary.BinaryTableGroupScan;
 import org.apache.drill.exec.store.mapr.db.json.JsonScanSpec;
@@ -41,6 +42,7 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.mapr.db.index.IndexDesc;
 import com.mapr.fs.tables.TableProperties;
 
 public class MapRDBFormatPlugin extends TableFormatPlugin {
@@ -49,6 +51,11 @@ public class MapRDBFormatPlugin extends TableFormatPlugin {
   private final MapRDBFormatMatcher matcher;
   private final Configuration hbaseConf;
   private final Connection connection;
+  private final MapRDBTableCache jsonTableCache;
+  private final int scanRangeSizeMB;
+  private final String mediaType;
+  private final MapRDBCost pluginCostModel;
+  private final int restrictedScanRangeSizeMB;
 
   public MapRDBFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
       StoragePluginConfig storageConfig, MapRDBFormatPluginConfig formatConfig) throws IOException {
@@ -57,6 +64,31 @@ public class MapRDBFormatPlugin extends TableFormatPlugin {
     hbaseConf = HBaseConfiguration.create(fsConf);
     hbaseConf.set(ConnectionFactory.DEFAULT_DB, ConnectionFactory.MAPR_ENGINE2);
     connection = ConnectionFactory.createConnection(hbaseConf);
+    jsonTableCache = new MapRDBTableCache(context.getConfig());
+    int scanRangeSizeMBConfig = context.getConfig().getInt(PluginConstants.JSON_TABLE_SCAN_SIZE_MB);
+    if (scanRangeSizeMBConfig < PluginConstants.JSON_TABLE_SCAN_SIZE_MB_MIN ||
+        scanRangeSizeMBConfig > PluginConstants.JSON_TABLE_SCAN_SIZE_MB_MAX) {
+      logger.warn("Invalid scan size {} for MapR-DB tables, using default", scanRangeSizeMBConfig);
+      scanRangeSizeMBConfig = PluginConstants.JSON_TABLE_SCAN_SIZE_MB_DEFAULT;
+    }
+
+    int restrictedScanRangeSizeMBConfig = context.getConfig().getInt(PluginConstants.JSON_TABLE_RESTRICTED_SCAN_SIZE_MB);
+    if (restrictedScanRangeSizeMBConfig < PluginConstants.JSON_TABLE_SCAN_SIZE_MB_MIN ||
+        restrictedScanRangeSizeMBConfig > PluginConstants.JSON_TABLE_SCAN_SIZE_MB_MAX) {
+      logger.warn("Invalid restricted scan size {} for MapR-DB tables, using default", restrictedScanRangeSizeMBConfig);
+      restrictedScanRangeSizeMBConfig = PluginConstants.JSON_TABLE_RESTRICTED_SCAN_SIZE_MB_DEFAULT;
+    }
+
+    String mediaTypeConfig = context.getConfig().getString(PluginConstants.JSON_TABLE_MEDIA_TYPE);
+    if (!(mediaTypeConfig.equals(PluginConstants.SSD) ||
+        mediaTypeConfig.equals(PluginConstants.HDD))) {
+      logger.warn("Invalid media Type {} for MapR-DB JSON tables, using default 'SSD'", mediaTypeConfig);
+      mediaTypeConfig = PluginConstants.JSON_TABLE_MEDIA_TYPE_DEFAULT;
+    }
+    mediaType = mediaTypeConfig;
+    scanRangeSizeMB = scanRangeSizeMBConfig;
+    restrictedScanRangeSizeMB = restrictedScanRangeSizeMBConfig;
+    pluginCostModel = new MapRDBCost(context.getConfig(), mediaType);
   }
 
   @Override
@@ -65,24 +97,41 @@ public class MapRDBFormatPlugin extends TableFormatPlugin {
   }
 
   @Override
-  @JsonIgnore
-  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-    return ImmutableSet.of(MapRDBPushFilterIntoScan.FILTER_ON_SCAN, MapRDBPushFilterIntoScan.FILTER_ON_PROJECT);
+  public MapRDBFormatPluginConfig getConfig() {
+    return (MapRDBFormatPluginConfig)(super.getConfig());
+  }
+
+  public MapRDBTableCache getJsonTableCache() {
+    return jsonTableCache;
   }
 
   @Override
+  @JsonIgnore
+  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+    return ImmutableSet.of(MapRDBPushFilterIntoScan.FILTER_ON_SCAN, MapRDBPushFilterIntoScan.FILTER_ON_PROJECT,
+        MapRDBPushProjectIntoScan.PROJECT_ON_SCAN, MapRDBPushLimitIntoScan.LIMIT_ON_PROJECT,
+        MapRDBPushLimitIntoScan.LIMIT_ON_SCAN, MapRDBPushLimitIntoScan.LIMIT_ON_RKJOIN);
+  }
+
+
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
-      List<SchemaPath> columns) throws IOException {
+      List<SchemaPath> columns, IndexDesc indexDesc) throws IOException {
     String tableName = getTableName(selection);
     TableProperties props = getMaprFS().getTableProperties(new Path(tableName));
 
     if (props.getAttr().getJson()) {
-      JsonScanSpec scanSpec = new JsonScanSpec(tableName, null/*condition*/);
+      JsonScanSpec scanSpec = new JsonScanSpec(tableName, indexDesc, null/*condition*/);
       return new JsonTableGroupScan(userName, getStoragePlugin(), this, scanSpec, columns);
     } else {
       HBaseScanSpec scanSpec = new HBaseScanSpec(tableName);
       return new BinaryTableGroupScan(userName, getStoragePlugin(), this, scanSpec, columns);
     }
+  }
+
+  @Override
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
+      List<SchemaPath> columns) throws IOException {
+    return getGroupScan(userName, selection, columns, (IndexDesc) null /* indexDesc */);
   }
 
   @JsonIgnore
@@ -93,6 +142,18 @@ public class MapRDBFormatPlugin extends TableFormatPlugin {
   @JsonIgnore
   public Connection getConnection() {
     return connection;
+  }
+
+  public int getScanRangeSizeMB() {
+    return scanRangeSizeMB;
+  }
+
+  public int getRestrictedScanRangeSizeMB() {
+    return restrictedScanRangeSizeMB;
+  }
+
+  public MapRDBCost getPluginCostModel() {
+    return pluginCostModel;
   }
 
   /**

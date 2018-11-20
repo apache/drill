@@ -25,7 +25,7 @@ public interface TransientStoreFactory extends AutoCloseable {
   /**
    * Returns a {@link TransientStore transient store} instance for the given configuration.
    *
-   * Note that implementors have liberty to cache previous {@link PersistentStore store} instances.
+   * Note that implementors have liberty to cache previous {@link TransientStore store} instances.
    *
    * @param config  store configuration
    * @param <V>  store value type

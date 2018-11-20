@@ -19,18 +19,20 @@ package org.apache.drill.exec.expr.fn.registry;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 import org.apache.drill.common.AutoCloseables.Closeable;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -45,9 +47,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Holder is designed to allow concurrent reads and single writes to keep data consistent.
  * This is achieved by {@link ReadWriteLock} implementation usage.
  * Holder has number version which indicates remote function registry version number it is in sync with.
- *
+ * <p/>
  * Structure example:
  *
+ * <pre>
  * JARS
  * built-in   -> upper          -> upper(VARCHAR-REQUIRED)
  *            -> lower          -> lower(VARCHAR-REQUIRED)
@@ -72,12 +75,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * custom_lower -> custom_lower(VARCHAR-REQUIRED) -> function holder for custom_lower(VARCHAR-REQUIRED)
  *              -> custom_lower(VARCHAR-OPTIONAL) -> function holder for custom_lower(VARCHAR-OPTIONAL)
- *
+ * </pre>
  * where
- * First.jar is jar name represented by String
- * upper is function name represented by String
- * upper(VARCHAR-REQUIRED) is signature name represented by String which consist of function name, list of input parameters
- * function holder for upper(VARCHAR-REQUIRED) is {@link DrillFuncHolder} initiated for each function.
+ * <li><b>First.jar</b> is jar name represented by {@link String}.</li>
+ * <li><b>upper</b> is function name represented by {@link String}.</li>
+ * <li><b>upper(VARCHAR-REQUIRED)</b> is signature name represented by String which consist of function name, list of input parameters.</li>
+ * <li><b>function holder for upper(VARCHAR-REQUIRED)</b> is {@link DrillFuncHolder} initiated for each function.</li>
  *
  */
 public class FunctionRegistryHolder {
@@ -88,7 +91,7 @@ public class FunctionRegistryHolder {
   private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
   // remote function registry number, it is in sync with
-  private long version;
+  private int version;
 
   // jar name, Map<function name, Queue<function signature>
   private final Map<String, Map<String, Queue<String>>> jars;
@@ -97,15 +100,15 @@ public class FunctionRegistryHolder {
   private final Map<String, Map<String, DrillFuncHolder>> functions;
 
   public FunctionRegistryHolder() {
-    this.functions = Maps.newConcurrentMap();
-    this.jars = Maps.newConcurrentMap();
+    this.functions = new ConcurrentHashMap<>();
+    this.jars = new ConcurrentHashMap<>();
   }
 
   /**
    * This is read operation, so several users at a time can get this data.
    * @return local function registry version number
    */
-  public long getVersion() {
+  public int getVersion() {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       return version;
     }
@@ -122,12 +125,12 @@ public class FunctionRegistryHolder {
    *
    * @param newJars jars and list of their function holders, each contains function name, signature and holder
    */
-  public void addJars(Map<String, List<FunctionHolder>> newJars, long version) {
+  public void addJars(Map<String, List<FunctionHolder>> newJars, int version) {
     try (@SuppressWarnings("unused") Closeable lock = writeLock.open()) {
       for (Map.Entry<String, List<FunctionHolder>> newJar : newJars.entrySet()) {
         String jarName = newJar.getKey();
         removeAllByJar(jarName);
-        Map<String, Queue<String>> jar = Maps.newConcurrentMap();
+        Map<String, Queue<String>> jar = new ConcurrentHashMap<>();
         jars.put(jarName, jar);
         addFunctions(jar, newJar.getValue());
       }
@@ -156,8 +159,40 @@ public class FunctionRegistryHolder {
    */
   public List<String> getAllJarNames() {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
-      return Lists.newArrayList(jars.keySet());
+      return new ArrayList<>(jars.keySet());
     }
+  }
+
+  /**
+   * Retrieves all functions (holders) associated with all the jars
+   * This is read operation, so several users can perform this operation at the same time.
+   * @return list of all functions, mapped by their sources
+   */
+  public Map<String, List<FunctionHolder>> getAllJarsWithFunctionHolders() {
+    Map<String, List<FunctionHolder>> allFunctionHoldersByJar = new HashMap<>();
+
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
+      for (String jarName : jars.keySet()) {
+        //Capture functionHolders here
+        List<FunctionHolder> drillFuncHolderList = new LinkedList<>();
+
+        Map<String, Queue<String>> functionsInJar = jars.get(jarName);
+        for (Map.Entry<String, Queue<String>> functionEntry : functionsInJar.entrySet()) {
+          String fnName = functionEntry.getKey();
+          Queue<String> fnSignatureList = functionEntry.getValue();
+          //Get all FunctionHolders (irrespective of source)
+          Map<String, DrillFuncHolder> functionHolders = functions.get(fnName);
+          //Iterate for matching entries and populate new Map
+          for (Map.Entry<String, DrillFuncHolder> entry : functionHolders.entrySet()) {
+            if (fnSignatureList.contains(entry.getKey())) {
+              drillFuncHolderList.add(new FunctionHolder(fnName, entry.getKey(), entry.getValue()));
+            }
+          }
+        }
+        allFunctionHoldersByJar.put(jarName, drillFuncHolderList);
+      }
+    }
+    return allFunctionHoldersByJar;
   }
 
   /**
@@ -171,7 +206,7 @@ public class FunctionRegistryHolder {
   public List<String> getFunctionNamesByJar(String jarName) {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()){
       Map<String, Queue<String>> functions = jars.get(jarName);
-      return functions == null ? Lists.<String>newArrayList() : Lists.newArrayList(functions.keySet());
+      return functions == null ? new ArrayList<>() : new ArrayList<>(functions.keySet());
     }
   }
 
@@ -185,14 +220,14 @@ public class FunctionRegistryHolder {
    * @param version version holder
    * @return all functions which their holders
    */
-  public ListMultimap<String, DrillFuncHolder> getAllFunctionsWithHolders(AtomicLong version) {
+  public ListMultimap<String, DrillFuncHolder> getAllFunctionsWithHolders(AtomicInteger version) {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       if (version != null) {
         version.set(this.version);
       }
       ListMultimap<String, DrillFuncHolder> functionsWithHolders = ArrayListMultimap.create();
       for (Map.Entry<String, Map<String, DrillFuncHolder>> function : functions.entrySet()) {
-        functionsWithHolders.putAll(function.getKey(), Lists.newArrayList(function.getValue().values()));
+        functionsWithHolders.putAll(function.getKey(), new ArrayList<>(function.getValue().values()));
       }
       return functionsWithHolders;
     }
@@ -220,7 +255,7 @@ public class FunctionRegistryHolder {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       ListMultimap<String, String> functionsWithSignatures = ArrayListMultimap.create();
       for (Map.Entry<String, Map<String, DrillFuncHolder>> function : functions.entrySet()) {
-        functionsWithSignatures.putAll(function.getKey(), Lists.newArrayList(function.getValue().keySet()));
+        functionsWithSignatures.putAll(function.getKey(), new ArrayList<>(function.getValue().keySet()));
       }
       return functionsWithSignatures;
     }
@@ -236,13 +271,13 @@ public class FunctionRegistryHolder {
    * @param version version holder
    * @return list of function holders
    */
-  public List<DrillFuncHolder> getHoldersByFunctionName(String functionName, AtomicLong version) {
+  public List<DrillFuncHolder> getHoldersByFunctionName(String functionName, AtomicInteger version) {
     try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       if (version != null) {
         version.set(this.version);
       }
       Map<String, DrillFuncHolder> holders = functions.get(functionName);
-      return holders == null ? Lists.<DrillFuncHolder>newArrayList() : Lists.newArrayList(holders.values());
+      return holders == null ? new ArrayList<>() : new ArrayList<>(holders.values());
     }
   }
 
@@ -316,17 +351,13 @@ public class FunctionRegistryHolder {
       final String functionName = function.getName();
       Queue<String> jarFunctions = jar.get(functionName);
       if (jarFunctions == null) {
-        jarFunctions = Queues.newConcurrentLinkedQueue();
+        jarFunctions = new ConcurrentLinkedQueue<>();
         jar.put(functionName, jarFunctions);
       }
       final String functionSignature = function.getSignature();
       jarFunctions.add(functionSignature);
 
-      Map<String, DrillFuncHolder> signatures = functions.get(functionName);
-      if (signatures == null) {
-        signatures = Maps.newConcurrentMap();
-        functions.put(functionName, signatures);
-      }
+      Map<String, DrillFuncHolder> signatures = functions.computeIfAbsent(functionName, k -> new ConcurrentHashMap<>());
       signatures.put(functionSignature, function.getHolder());
     }
   }

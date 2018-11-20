@@ -23,7 +23,7 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.expression.fn.CastFunctions;
+import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
@@ -39,24 +39,28 @@ import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.store.parquet.stat.ColumnStatistics;
 import org.apache.drill.exec.vector.ValueHolderHelper;
+import org.apache.parquet.column.statistics.BinaryStatistics;
 import org.apache.parquet.column.statistics.BooleanStatistics;
 import org.apache.parquet.column.statistics.DoubleStatistics;
 import org.apache.parquet.column.statistics.FloatStatistics;
 import org.apache.parquet.column.statistics.IntStatistics;
 import org.apache.parquet.column.statistics.LongStatistics;
 import org.apache.parquet.column.statistics.Statistics;
+import org.apache.parquet.schema.DecimalMetadata;
+import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVisitor<Statistics<T>, Void, RuntimeException> {
-  static final Logger logger = LoggerFactory.getLogger(RangeExprEvaluator.class);
+  private static final Logger logger = LoggerFactory.getLogger(RangeExprEvaluator.class);
 
   private final Map<SchemaPath, ColumnStatistics<T>> columnStatMap;
   private final long rowCount;
@@ -135,6 +139,18 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
   }
 
   @Override
+  public Statistics<T> visitQuotedStringConstant(ValueExpressions.QuotedString quotedString, Void value) throws RuntimeException {
+    String stringValue = quotedString.getString();
+    return getStatistics(stringValue);
+  }
+
+  @Override
+  public Statistics<T> visitVarDecimalConstant(ValueExpressions.VarDecimalExpression decExpr, Void value) throws RuntimeException {
+    DecimalMetadata decimalMeta = new DecimalMetadata(decExpr.getMajorType().getPrecision(), decExpr.getMajorType().getScale());
+    return getStatistics(decExpr.getBigDecimal(), decimalMeta);
+  }
+
+  @Override
   public Statistics<T> visitFunctionHolderExpression(FunctionHolderExpression holderExpr, Void value) throws RuntimeException {
     FuncHolder funcHolder = holderExpr.getHolder();
 
@@ -145,7 +161,7 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
 
     final String funcName = ((DrillSimpleFuncHolder) funcHolder).getRegisteredNames()[0];
 
-    if (CastFunctions.isCastFunction(funcName)) {
+    if (FunctionReplacementUtils.isCastFunction(funcName)) {
       Statistics stat = holderExpr.args.get(0).accept(this, null);
       if (stat != null && ! stat.isEmpty()) {
         return evalCastFunc(holderExpr, stat);
@@ -161,7 +177,7 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
   @SuppressWarnings("unchecked")
   private Statistics<T> getStatistics(int min, int max) {
     final Statistics<T> statistics = Statistics.getStatsBasedOnType(PrimitiveType.PrimitiveTypeName.INT32);
-    ((IntStatistics)statistics).setMinMax(min, max);
+    ((IntStatistics) statistics).setMinMax(min, max);
     return statistics;
   }
 
@@ -172,7 +188,7 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
   @SuppressWarnings("unchecked")
   private Statistics<T> getStatistics(boolean min, boolean max) {
     Statistics<T> statistics = Statistics.getStatsBasedOnType(PrimitiveType.PrimitiveTypeName.BOOLEAN);
-    ((BooleanStatistics)statistics).setMinMax(min, max);
+    ((BooleanStatistics) statistics).setMinMax(min, max);
     return statistics;
   }
 
@@ -183,7 +199,7 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
   @SuppressWarnings("unchecked")
   private Statistics<T> getStatistics(long min, long max) {
     final Statistics statistics = Statistics.getStatsBasedOnType(PrimitiveType.PrimitiveTypeName.INT64);
-    ((LongStatistics)statistics).setMinMax(min, max);
+    ((LongStatistics) statistics).setMinMax(min, max);
     return statistics;
   }
 
@@ -194,7 +210,7 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
   @SuppressWarnings("unchecked")
   private Statistics<T> getStatistics(double min, double max) {
     final Statistics<T> statistics = Statistics.getStatsBasedOnType(PrimitiveType.PrimitiveTypeName.DOUBLE);
-    ((DoubleStatistics)statistics).setMinMax(min, max);
+    ((DoubleStatistics) statistics).setMinMax(min, max);
     return statistics;
   }
 
@@ -205,8 +221,38 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
   @SuppressWarnings("unchecked")
   private Statistics<T> getStatistics(float min, float max) {
     final Statistics<T> statistics = Statistics.getStatsBasedOnType(PrimitiveType.PrimitiveTypeName.FLOAT);
-    ((FloatStatistics)statistics).setMinMax(min, max);
+    ((FloatStatistics) statistics).setMinMax(min, max);
     return statistics;
+  }
+
+  private Statistics<T> getStatistics(String value) {
+    return getStatistics(value, value);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Statistics<T> getStatistics(String min, String max) {
+    final Statistics<T> statistics = Statistics.getStatsBasedOnType(PrimitiveType.PrimitiveTypeName.BINARY);
+    ((BinaryStatistics) statistics).setMinMaxFromBytes(min.getBytes(), max.getBytes());
+    return statistics;
+  }
+
+  private Statistics<T> getStatistics(BigDecimal value, DecimalMetadata decimalMetadata) {
+    return getStatistics(value, value, decimalMetadata);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Statistics<T> getStatistics(BigDecimal min, BigDecimal max, DecimalMetadata decimalMetadata) {
+    PrimitiveType decimalType = org.apache.parquet.schema.Types.optional(PrimitiveType.PrimitiveTypeName.BINARY)
+      .as(OriginalType.DECIMAL)
+      .precision(decimalMetadata.getPrecision())
+      .scale(decimalMetadata.getScale())
+      .named("decimal_type");
+
+    return (Statistics<T>) Statistics.getBuilderForReading(decimalType)
+        .withMin(min.unscaledValue().toByteArray())
+        .withMax(max.unscaledValue().toByteArray())
+        .withNumNulls(0)
+        .build();
   }
 
   private Statistics<T> evalCastFunc(FunctionHolderExpression holderExpr, Statistics input) {
@@ -288,31 +334,31 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
   private static final Map<TypeProtos.MinorType, Set<TypeProtos.MinorType>> CAST_FUNC = new HashMap<>();
   static {
     // float -> double , int, bigint
-    CAST_FUNC.put(TypeProtos.MinorType.FLOAT4, new HashSet<TypeProtos.MinorType>());
+    CAST_FUNC.put(TypeProtos.MinorType.FLOAT4, new HashSet<>());
     CAST_FUNC.get(TypeProtos.MinorType.FLOAT4).add(TypeProtos.MinorType.FLOAT8);
     CAST_FUNC.get(TypeProtos.MinorType.FLOAT4).add(TypeProtos.MinorType.INT);
     CAST_FUNC.get(TypeProtos.MinorType.FLOAT4).add(TypeProtos.MinorType.BIGINT);
 
     // double -> float, int, bigint
-    CAST_FUNC.put(TypeProtos.MinorType.FLOAT8, new HashSet<TypeProtos.MinorType>());
+    CAST_FUNC.put(TypeProtos.MinorType.FLOAT8, new HashSet<>());
     CAST_FUNC.get(TypeProtos.MinorType.FLOAT8).add(TypeProtos.MinorType.FLOAT4);
     CAST_FUNC.get(TypeProtos.MinorType.FLOAT8).add(TypeProtos.MinorType.INT);
     CAST_FUNC.get(TypeProtos.MinorType.FLOAT8).add(TypeProtos.MinorType.BIGINT);
 
     // int -> float, double, bigint
-    CAST_FUNC.put(TypeProtos.MinorType.INT, new HashSet<TypeProtos.MinorType>());
+    CAST_FUNC.put(TypeProtos.MinorType.INT, new HashSet<>());
     CAST_FUNC.get(TypeProtos.MinorType.INT).add(TypeProtos.MinorType.FLOAT4);
     CAST_FUNC.get(TypeProtos.MinorType.INT).add(TypeProtos.MinorType.FLOAT8);
     CAST_FUNC.get(TypeProtos.MinorType.INT).add(TypeProtos.MinorType.BIGINT);
 
     // bigint -> int, float, double
-    CAST_FUNC.put(TypeProtos.MinorType.BIGINT, new HashSet<TypeProtos.MinorType>());
+    CAST_FUNC.put(TypeProtos.MinorType.BIGINT, new HashSet<>());
     CAST_FUNC.get(TypeProtos.MinorType.BIGINT).add(TypeProtos.MinorType.INT);
     CAST_FUNC.get(TypeProtos.MinorType.BIGINT).add(TypeProtos.MinorType.FLOAT4);
     CAST_FUNC.get(TypeProtos.MinorType.BIGINT).add(TypeProtos.MinorType.FLOAT8);
 
     // date -> timestamp
-    CAST_FUNC.put(TypeProtos.MinorType.DATE, new HashSet<TypeProtos.MinorType>());
+    CAST_FUNC.put(TypeProtos.MinorType.DATE, new HashSet<>());
     CAST_FUNC.get(TypeProtos.MinorType.DATE).add(TypeProtos.MinorType.TIMESTAMP);
   }
 
