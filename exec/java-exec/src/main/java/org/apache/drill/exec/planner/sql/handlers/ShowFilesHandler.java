@@ -32,7 +32,6 @@ import org.apache.drill.exec.util.FileSystemUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.hadoop.fs.Path;
 
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +45,7 @@ public class ShowFilesHandler extends DefaultSqlHandler {
   }
 
   @Override
-  public PhysicalPlan getPlan(SqlNode sqlNode) throws ForemanSetupException, IOException {
+  public PhysicalPlan getPlan(SqlNode sqlNode) throws ForemanSetupException {
     SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
     SchemaPlus drillSchema = defaultSchema;
     SqlShowFiles showFiles = unwrap(sqlNode, SqlShowFiles.class);
@@ -83,7 +82,7 @@ public class ShowFilesHandler extends DefaultSqlHandler {
     }
 
     Path path = new Path(wsSchema.getDefaultLocation(), fromDir);
-    List<ShowFilesCommandResult> records = FileSystemUtil.listAll(wsSchema.getFS(), path, false).stream()
+    List<ShowFilesCommandResult> records = FileSystemUtil.listAllSafe(wsSchema.getFS(), path, false).stream()
         // use ShowFilesCommandResult for backward compatibility
         .map(fileStatus -> new ShowFilesCommandResult(new Records.File(wsSchema.getFullSchemaName(), wsSchema, fileStatus)))
         .collect(Collectors.toList());
