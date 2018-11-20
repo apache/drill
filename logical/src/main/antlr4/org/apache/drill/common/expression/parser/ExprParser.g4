@@ -1,14 +1,9 @@
 parser grammar ExprParser;
 
 options{
-  output=AST;
   language=Java;
   tokenVocab=ExprLexer;
-  backtrack=true;
-  memoize=true;
 }
-
-
 
 @header {
 /*
@@ -28,11 +23,8 @@ options{
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.apache.drill.common.expression.parser;
   
 //Explicit import...
-import org.antlr.runtime.BitSet;
 import java.util.*;
 import org.apache.drill.common.expression.*;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
@@ -55,25 +47,20 @@ import org.apache.drill.common.exceptions.ExpressionParsingException;
   public ExpressionPosition pos(Token token){
     return new ExpressionPosition(fullExpression, token.getTokenIndex());
   }
-  
-  @Override    
-  public void displayRecognitionError(String[] tokenNames, RecognitionException e) {
-	String hdr = getErrorHeader(e);
-    String msg = getErrorMessage(e, tokenNames);
-    throw new ExpressionParsingException("Expression has syntax error! " + hdr + ":" + msg);
-  }
 }
 
 parse returns [LogicalExpression e]
   :  expression EOF {
-    $e = $expression.e; 
-    if(fullExpression == null) fullExpression = $expression.text;
+    $e = $expression.e;
+    if (fullExpression == null) fullExpression = $expression.text;
     tokenPos = $expression.start.getTokenIndex();
   }
   ;
  
 functionCall returns [LogicalExpression e]
-  :  Identifier OParen exprList? CParen {$e = FunctionCallFactory.createExpression($Identifier.text, pos($Identifier), $exprList.listE);  }
+  :  Identifier OParen exprList? CParen {$e =
+      FunctionCallFactory.createExpression($Identifier.text, pos($Identifier),
+        ($exprList.ctx == null ? new ArrayList<>() : $exprList.listE)); }
   ;
 
 convertCall returns [LogicalExpression e]
@@ -82,16 +69,18 @@ convertCall returns [LogicalExpression e]
   ;
 
 anyValueCall returns [LogicalExpression e]
-  :  AnyValue OParen exprList? CParen {$e = FunctionCallFactory.createExpression($AnyValue.text, pos($AnyValue), $exprList.listE);  }
+  :  AnyValue OParen exprList? CParen {$e =
+      FunctionCallFactory.createExpression($AnyValue.text, pos($AnyValue),
+       ($exprList.ctx == null ? new ArrayList<>() : $exprList.listE)); }
   ;
 
 castCall returns [LogicalExpression e]
 	@init{
-  	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
+	  List<LogicalExpression> exprs = new ArrayList<>();
 	  ExpressionPosition p = null;
 	}  
   :  Cast OParen expression As dataType repeat? CParen 
-      {  if ($repeat.isRep!=null && $repeat.isRep.compareTo(Boolean.TRUE)==0)
+      {  if ($repeat.ctx != null && $repeat.isRep.compareTo(Boolean.TRUE)==0)
            $e = FunctionCallFactory.createCast(TypeProtos.MajorType.newBuilder().mergeFrom($dataType.type).setMode(DataMode.REPEATED).build(), pos($Cast), $expression.e);
          else
            $e = FunctionCallFactory.createCast($dataType.type, pos($Cast), $expression.e);}
@@ -190,7 +179,7 @@ caseElseStat returns [LogicalExpression e]
   
 exprList returns [List<LogicalExpression> listE]
 	@init{
-	  $listE = new ArrayList<LogicalExpression>();
+	  $listE = new ArrayList<>();
 	}
   :  e1=expression {$listE.add($e1.e); } (Comma e2=expression {$listE.add($e2.e); } )*
   ;
@@ -207,7 +196,7 @@ condExpr returns [LogicalExpression e]
 
 orExpr returns [LogicalExpression e]
 	@init{
-	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
+	  List<LogicalExpression> exprs = new ArrayList<>();
 	  ExpressionPosition p = null;
 	}
 	@after{
@@ -222,7 +211,7 @@ orExpr returns [LogicalExpression e]
 
 andExpr returns [LogicalExpression e]
 	@init{
-	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
+	  List<LogicalExpression> exprs = new ArrayList<>();
 	  ExpressionPosition p = null;
 	}
 	@after{
@@ -237,8 +226,8 @@ andExpr returns [LogicalExpression e]
 
 equExpr returns [LogicalExpression e]
 	@init{
-	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
-	  List<String> cmps = new ArrayList();
+	  List<LogicalExpression> exprs = new ArrayList<>();
+	  List<String> cmps = new ArrayList<>();
 	  ExpressionPosition p = null;
 	}
 	@after{
@@ -254,8 +243,8 @@ relExpr returns [LogicalExpression e]
 
 addExpr returns [LogicalExpression e]
 	@init{
-	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
-	  List<String> ops = new ArrayList();
+	  List<LogicalExpression> exprs = new ArrayList<>();
+	  List<String> ops = new ArrayList<>();
 	  ExpressionPosition p = null;
 	}
 	@after{
@@ -266,8 +255,8 @@ addExpr returns [LogicalExpression e]
 
 mulExpr returns [LogicalExpression e]
 	@init{
-	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
-	  List<String> ops = new ArrayList();
+	  List<LogicalExpression> exprs = new ArrayList<>();
+	  List<String> ops = new ArrayList<>();
 	  ExpressionPosition p = null;
 	}
 	@after{
@@ -278,8 +267,8 @@ mulExpr returns [LogicalExpression e]
 
 xorExpr returns [LogicalExpression e]
 	@init{
-	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
-	  List<String> ops = new ArrayList();
+    List<LogicalExpression> exprs = new ArrayList<>();
+    List<String> ops = new ArrayList<>();
 	  ExpressionPosition p = null;
 	}
 	@after{
@@ -305,14 +294,34 @@ pathSegment returns [NameSegment seg]
   ;
 
 nameSegment returns [NameSegment seg]
-  : QuotedIdentifier ( (Period s1=pathSegment) | s2=arraySegment)? {$seg = new NameSegment($QuotedIdentifier.text, ($s1.seg == null ? $s2.seg : $s1.seg) ); }
-  | Identifier ( (Period s1=pathSegment) | s2=arraySegment)? {$seg = new NameSegment($Identifier.text, ($s1.seg == null ? $s2.seg : $s1.seg) ); }
+  : QuotedIdentifier ( (Period s1=pathSegment) | s2=arraySegment)?
+  {
+    if ($s1.ctx == null && $s2.ctx == null) {
+      $seg = new NameSegment($QuotedIdentifier.text);
+    } else {
+      $seg = new NameSegment($QuotedIdentifier.text, ($s1.ctx == null ? $s2.seg : $s1.seg));
+    }
+  }
+  | Identifier ( (Period s1=pathSegment) | s2=arraySegment)?
+  {
+    if ($s1.ctx == null && $s2.ctx == null) {
+      $seg = new NameSegment($Identifier.text);
+    } else {
+      $seg = new NameSegment($Identifier.text, ($s1.ctx == null ? $s2.seg : $s1.seg));
+    }
+   }
   ;
   
 arraySegment returns [PathSegment seg]
-  :  OBracket Number CBracket ( (Period s1=pathSegment) | s2=arraySegment)? {$seg = new ArraySegment($Number.text, ($s1.seg == null ? $s2.seg : $s1.seg) ); }
+  :  OBracket Number CBracket ( (Period s1=pathSegment) | s2=arraySegment)?
+  {
+    if ($s1.ctx == null && $s2.ctx == null) {
+      $seg = new ArraySegment($Number.text);
+    } else {
+      $seg = new ArraySegment($Number.text, ($s1.ctx == null ? $s2.seg : $s1.seg));
+    }
+  }
   ;
-
 
 lookup returns [LogicalExpression e]
   :  functionCall {$e = $functionCall.e ;}
