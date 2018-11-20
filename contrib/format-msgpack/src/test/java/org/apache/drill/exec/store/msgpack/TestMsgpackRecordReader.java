@@ -63,7 +63,7 @@ import org.msgpack.core.MessagePacker;
 import ch.qos.logback.classic.Level;
 
 public class TestMsgpackRecordReader extends ClusterTest {
-  private static boolean RUN_PERFORMANCE_TESTS = false;
+  private static boolean RUN_PERFORMANCE_TESTS = true;
   private static int ALL_FIELD_TYPES_SIZE = 12;
   private static String SQL_SELECT_ALL = "select * from `dfs.data`.`test.mp`";
   private static byte TIMESTAMP_TYPE = (byte) -1;
@@ -93,7 +93,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
   @Before
   public void before() {
-    LogFixtureBuilder logBuilder = LogFixture.builder().logger("org.apache.drill.exec.store.msgpack", Level.DEBUG);
+    LogFixtureBuilder logBuilder = LogFixture.builder().logger("org.apache.drill.exec.store.msgpack", Level.ERROR);
     logs = logBuilder.build();
 
     if (schemaLocation.exists()) {
@@ -1105,7 +1105,6 @@ public class TestMsgpackRecordReader extends ClusterTest {
    * Test reading 100k messages. All messages are well formed.
    */
   @Test
-  @Ignore
   public void testPerformanceAllValidMessages() throws Exception {
     if (!RUN_PERFORMANCE_TESTS) {
       return;
@@ -1153,7 +1152,6 @@ public class TestMsgpackRecordReader extends ClusterTest {
    * Skip elements in arrays of mix typed values. How fast is the linient mode.
    */
   @Test
-  @Ignore
   public void testPerformanceSkippingElementsInArrayOfElementsOfDifferentTypes() throws Exception {
     if (!RUN_PERFORMANCE_TESTS) {
       return;
@@ -1161,27 +1159,45 @@ public class TestMsgpackRecordReader extends ClusterTest {
     Stopwatch stopwatch = Stopwatch.createStarted();
 
     try (MessagePacker packer = testPacker()) {
-      packer.packMapHeader(1);
-      packer.packString("anArray").packArrayHeader(4);
-      packer.packString("first element");
-      byte[] bytes = new byte[] { 'A' };
-      packer.packBinaryHeader(1).addPayload(bytes);
-      packer.packDouble(123.456d);
-      packer.packLong(99L);
+      for (int j = 0; j < 1000; j++) {
+        packer.packMapHeader(1);
+        packer.packString("anArray").packArrayHeader(400);
+        for (int i = 0; i < 100; i++) {
+          packer.packString("first element");
+          byte[] bytes = new byte[] { 'A' };
+          packer.packBinaryHeader(1).addPayload(bytes);
+          packer.packDouble(123.456d);
+          packer.packLong(99L);
+        }
+      }
     }
     System.out.println("writing took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
 
-    String sql = SQL_SELECT_ALL;
+    // schema learning mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
+    stopwatch.reset().start();
+    List<QueryDataBatch> results = client.queryBuilder().sql(SQL_SELECT_ALL).results();
+    for (QueryDataBatch batch : results) {
+      batch.release();
+    }
+    System.out.println("learning took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
 
-    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, noSchemaConfig());
-
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 5; i++) {
+      cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
       stopwatch.reset().start();
-      List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+      results = client.queryBuilder().sql(SQL_SELECT_ALL).results();
       for (QueryDataBatch batch : results) {
         batch.release();
       }
-      System.out.println("reading took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+      System.out.println("reading using schema took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+
+      cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, noSchemaConfig());
+      stopwatch.reset().start();
+      results = client.queryBuilder().sql(SQL_SELECT_ALL).results();
+      for (QueryDataBatch batch : results) {
+        batch.release();
+      }
+      System.out.println("reading without schema took: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 
@@ -1189,7 +1205,6 @@ public class TestMsgpackRecordReader extends ClusterTest {
    * Skip root messages which are not maps. How fast the linient mode.
    */
   @Test
-  @Ignore
   public void testPerformanceSkippingNoneMapRootMessages() throws Exception {
     if (!RUN_PERFORMANCE_TESTS) {
       return;
@@ -1404,7 +1419,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
   private static MsgpackFormatConfig buildConfig(boolean learnSchema, boolean useSchema) {
     MsgpackFormatConfig msgFormat = new MsgpackFormatConfig();
     msgFormat.setLenient(true);
-    msgFormat.setPrintToConsole(true);
+    msgFormat.setPrintToConsole(false);
     msgFormat.setLearnSchema(learnSchema);
     msgFormat.setUseSchema(useSchema);
     msgFormat.setExtensions(ImmutableList.of("mp"));
