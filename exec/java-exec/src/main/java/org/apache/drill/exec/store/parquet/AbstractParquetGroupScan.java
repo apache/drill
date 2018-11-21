@@ -247,7 +247,11 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
 
     final List<RowGroupInfo> qualifiedRGs = new ArrayList<>(rowGroupInfos.size());
 
-    ParquetFilterPredicate filterPredicate = null;
+    ParquetFilterPredicate filterPredicate = getParquetFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager, true);
+
+    if (filterPredicate == null) {
+      return null;
+    }
 
     for (RowGroupInfo rowGroup : rowGroupInfos) {
       final ColumnExplorer columnExplorer = new ColumnExplorer(optionManager, columns);
@@ -261,27 +265,8 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
 
       Map<SchemaPath, ColumnStatistics> columnStatisticsMap = statCollector.collectColStat(schemaPathsInExpr);
 
-      if (filterPredicate == null) {
-        ErrorCollector errorCollector = new ErrorCollectorImpl();
-        LogicalExpression materializedFilter = ExpressionTreeMaterializer.materializeFilterExpr(
-            filterExpr, columnStatisticsMap, errorCollector, functionImplementationRegistry);
-
-        if (errorCollector.hasErrors()) {
-          logger.error("{} error(s) encountered when materialize filter expression : {}",
-              errorCollector.getErrorCount(), errorCollector.toErrorString());
-          return null;
-        }
-        logger.debug("materializedFilter : {}", ExpressionStringBuilder.toString(materializedFilter));
-
-        Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(materializedFilter);
-        filterPredicate = ParquetFilterBuilder.buildParquetFilterPredicate(materializedFilter, constantBoundaries, udfUtilities);
-
-        if (filterPredicate == null) {
-          return null;
-        }
-      }
-
-      ParquetFilterPredicate.RowsMatch match = ParquetRGFilterEvaluator.matches(filterPredicate, columnStatisticsMap, rowGroup.getRowCount(), parquetTableMetadata, rowGroup.getColumns(), schemaPathsInExpr);
+      ParquetFilterPredicate.RowsMatch match = ParquetRGFilterEvaluator.matches(filterPredicate,
+          columnStatisticsMap, rowGroup.getRowCount(), parquetTableMetadata, rowGroup.getColumns(), schemaPathsInExpr);
       if (match == ParquetFilterPredicate.RowsMatch.NONE) {
         continue; // No row comply to the filter => drop the row group
       }
@@ -309,6 +294,53 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
       logger.warn("Could not apply filter prune due to Exception : {}", e);
       return null;
     }
+  }
+
+  /**
+   * Returns parquet filter predicate built from specified {@code filterExpr}.
+   *
+   * @param filterExpr                     filter expression to build
+   * @param udfUtilities                   udf utilities
+   * @param functionImplementationRegistry context to find drill function holder
+   * @param optionManager                  option manager
+   * @param omitUnsupportedExprs           whether expressions which cannot be converted
+   *                                       may be omitted from the resulting expression
+   * @return parquet filter predicate
+   */
+  public ParquetFilterPredicate getParquetFilterPredicate(LogicalExpression filterExpr,
+      UdfUtilities udfUtilities, FunctionImplementationRegistry functionImplementationRegistry,
+      OptionManager optionManager, boolean omitUnsupportedExprs) {
+    // used first row group to receive fields list
+    assert rowGroupInfos.size() > 0 : "row groups count cannot be 0";
+    RowGroupInfo rowGroup = rowGroupInfos.iterator().next();
+    ColumnExplorer columnExplorer = new ColumnExplorer(optionManager, columns);
+
+    Map<String, String> implicitColValues = columnExplorer.populateImplicitColumns(
+        rowGroup.getPath(),
+        getPartitionValues(rowGroup),
+        supportsFileImplicitColumns());
+
+    ParquetMetaStatCollector statCollector = new ParquetMetaStatCollector(
+        parquetTableMetadata,
+        rowGroup.getColumns(),
+        implicitColValues);
+
+    Set<SchemaPath> schemaPathsInExpr = filterExpr.accept(new ParquetRGFilterEvaluator.FieldReferenceFinder(), null);
+    Map<SchemaPath, ColumnStatistics> columnStatisticsMap = statCollector.collectColStat(schemaPathsInExpr);
+
+    ErrorCollector errorCollector = new ErrorCollectorImpl();
+    LogicalExpression materializedFilter = ExpressionTreeMaterializer.materializeFilterExpr(
+        filterExpr, columnStatisticsMap, errorCollector, functionImplementationRegistry);
+
+    if (errorCollector.hasErrors()) {
+      logger.error("{} error(s) encountered when materialize filter expression : {}",
+          errorCollector.getErrorCount(), errorCollector.toErrorString());
+      return null;
+    }
+    logger.debug("materializedFilter : {}", ExpressionStringBuilder.toString(materializedFilter));
+
+    Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(materializedFilter);
+    return ParquetFilterBuilder.buildParquetFilterPredicate(materializedFilter, constantBoundaries, udfUtilities, omitUnsupportedExprs);
   }
   // filter push down methods block end
 

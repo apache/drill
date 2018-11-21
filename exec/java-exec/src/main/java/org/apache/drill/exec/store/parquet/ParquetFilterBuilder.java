@@ -63,6 +63,12 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
   static final Logger logger = LoggerFactory.getLogger(ParquetFilterBuilder.class);
 
   private final UdfUtilities udfUtilities;
+  // Flag to check whether predicate cannot be fully converted
+  // to parquet filter predicate without omitting its parts.
+  // It should be set to false for the case when we want to
+  // verify that predicate is fully convertible to parquet filter predicate,
+  // otherwise null is returned instead of the converted expression.
+  private final boolean omitUnsupportedExprs;
 
   /**
    * @param expr materialized filter expression
@@ -71,18 +77,24 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
    *
    * @return parquet filter predicate
    */
-  public static ParquetFilterPredicate buildParquetFilterPredicate(LogicalExpression expr, final Set<LogicalExpression> constantBoundaries, UdfUtilities udfUtilities) {
-    LogicalExpression logicalExpression = expr.accept(new ParquetFilterBuilder(udfUtilities), constantBoundaries);
+  public static ParquetFilterPredicate buildParquetFilterPredicate(LogicalExpression expr,
+      Set<LogicalExpression> constantBoundaries, UdfUtilities udfUtilities, boolean omitUnsupportedExprs) {
+    LogicalExpression logicalExpression =
+        expr.accept(new ParquetFilterBuilder(udfUtilities, omitUnsupportedExprs), constantBoundaries);
     if (logicalExpression instanceof ParquetFilterPredicate) {
       return (ParquetFilterPredicate) logicalExpression;
+    } else if (logicalExpression instanceof TypedFieldExpr) {
+      // Calcite simplifies `= true` expression to field name, wrap it with is true predicate
+      return (ParquetFilterPredicate) ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, logicalExpression);
     }
     logger.debug("Logical expression {} was not qualified for filter push down", logicalExpression);
     return null;
   }
 
 
-  private ParquetFilterBuilder(UdfUtilities udfUtilities) {
+  private ParquetFilterBuilder(UdfUtilities udfUtilities, boolean omitUnsupportedExprs) {
     this.udfUtilities = udfUtilities;
+    this.omitUnsupportedExprs = omitUnsupportedExprs;
   }
 
   @Override
@@ -159,8 +171,9 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     for (LogicalExpression arg : op.args) {
       LogicalExpression childPredicate = arg.accept(this, value);
       if (childPredicate == null) {
-        if (functionName.equals("booleanOr")) {
+        if (functionName.equals("booleanOr") || !omitUnsupportedExprs) {
           // we can't include any leg of the OR if any of the predicates cannot be converted
+          // or prohibited omitting of unconverted operands
           return null;
         }
       } else {
