@@ -140,6 +140,9 @@ message RecordBatchDef {
   optional int32 record_count = 1;
   repeated SerializedField field = 2;
   optional bool carries_two_byte_selection_vector = 3;
+  // The value is set when result set is disabled and its value corresponds to number
+  // of rows affected by query (see JDBC java.sql.ResultSet#getUpdateCount())
+  optional int32 affected_rows_count = 4;
 }
 
 message NamePart{
@@ -197,6 +200,7 @@ message QueryData {
   optional QueryId query_id = 1;
   optional int32 row_count = 2;
   optional RecordBatchDef def = 3;
+  optional int32 affected_rows_count = 4;
 }
 
 message QueryInfo {

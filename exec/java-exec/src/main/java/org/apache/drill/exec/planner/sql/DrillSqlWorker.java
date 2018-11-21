@@ -20,10 +20,12 @@ package org.apache.drill.exec.planner.sql;
 import java.io.IOException;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
@@ -35,7 +37,6 @@ import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
-import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
@@ -110,7 +111,7 @@ public class DrillSqlWorker {
     final AbstractSqlHandler handler;
     final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
 
-    switch(sqlNode.getKind()){
+    switch(sqlNode.getKind()) {
     case EXPLAIN:
       handler = new ExplainHandler(config, textPlan);
       break;
@@ -127,20 +128,28 @@ public class DrillSqlWorker {
         handler = new DescribeSchemaHandler(config);
         break;
       }
+    case CREATE_TABLE:
+      handler = ((DrillSqlCall) sqlNode).getSqlHandler(config, textPlan);
+      break;
+    case DROP_TABLE:
+    case CREATE_VIEW:
+    case DROP_VIEW:
+    case OTHER_DDL:
     case OTHER:
-      if(sqlNode instanceof SqlCreateTable) {
-        handler = ((DrillSqlCall)sqlNode).getSqlHandler(config, textPlan);
-        break;
-      }
-
       if (sqlNode instanceof DrillSqlCall) {
-        handler = ((DrillSqlCall)sqlNode).getSqlHandler(config);
+        handler = ((DrillSqlCall) sqlNode).getSqlHandler(config);
         break;
       }
       // fallthrough
     default:
       handler = new DefaultSqlHandler(config, textPlan);
     }
+
+    boolean returnResultSet = context.getOptions().getBoolean(ExecConstants.RETURN_RESULT_SET_FOR_DDL);
+    // Determine whether result set should be returned for the query based on `exec.return_result_set_for_ddl`
+    // and sql node kind. Overrides the option on a query level.
+    context.getOptions().setLocalOption(ExecConstants.RETURN_RESULT_SET_FOR_DDL,
+        returnResultSet || !SqlKind.DDL.contains(sqlNode.getKind()));
 
     try {
       return handler.getPlan(sqlNode);
