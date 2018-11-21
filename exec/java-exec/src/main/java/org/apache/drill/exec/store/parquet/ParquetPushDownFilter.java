@@ -134,13 +134,32 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
 
     // get a conjunctions of the filter condition. For each conjunction, if it refers to ITEM or FLATTEN expression
     // then we could not pushed down. Otherwise, it's qualified to be pushed down.
-    final List<RexNode> predList = RelOptUtil.conjunctions(condition);
+    final List<RexNode> predList = RelOptUtil.conjunctions(RexUtil.toCnf(filter.getCluster().getRexBuilder(), condition));
 
     final List<RexNode> qualifiedPredList = new ArrayList<>();
 
-    for (final RexNode pred : predList) {
+    // list of predicates which cannot be converted to parquet filter predicate
+    List<RexNode> nonConvertedPredList = new ArrayList<>();
+
+    for (RexNode pred : predList) {
       if (DrillRelOptUtil.findOperators(pred, Collections.emptyList(), BANNED_OPERATORS) == null) {
+        LogicalExpression drillPredicate = DrillOptiq.toDrill(
+            new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, pred);
+
+        // checks whether predicate may be used for filter pushdown
+        ParquetFilterPredicate parquetFilterPredicate =
+            groupScan.getParquetFilterPredicate(drillPredicate,
+                optimizerContext,
+                optimizerContext.getFunctionRegistry(),
+                optimizerContext.getPlannerSettings().getOptions(), false);
+        // collects predicates that contain unsupported for filter pushdown expressions
+        // to build filter with them
+        if (parquetFilterPredicate == null) {
+          nonConvertedPredList.add(pred);
+        }
         qualifiedPredList.add(pred);
+      } else {
+        nonConvertedPredList.add(pred);
       }
     }
 
@@ -155,7 +174,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
 
 
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
-    final GroupScan newGroupScan = groupScan.applyFilter(conditionExp,optimizerContext,
+    final GroupScan newGroupScan = groupScan.applyFilter(conditionExp, optimizerContext,
         optimizerContext.getFunctionRegistry(), optimizerContext.getPlannerSettings().getOptions());
     if (timer != null) {
       logger.debug("Took {} ms to apply filter on parquet row groups. ", timer.elapsed(TimeUnit.MILLISECONDS));
@@ -166,10 +185,10 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       return;
     }
 
-    RelNode newScan = new ScanPrel(scan.getCluster(), scan.getTraitSet(), newGroupScan, scan.getRowType(), scan.getTable());
+    RelNode newNode = new ScanPrel(scan.getCluster(), scan.getTraitSet(), newGroupScan, scan.getRowType(), scan.getTable());
 
     if (project != null) {
-      newScan = project.copy(project.getTraitSet(), Collections.singletonList(newScan));
+      newNode = project.copy(project.getTraitSet(), Collections.singletonList(newNode));
     }
 
     if (newGroupScan instanceof AbstractParquetGroupScan) {
@@ -182,12 +201,20 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
         }
       }
       if (matchAll == ParquetFilterPredicate.RowsMatch.ALL) {
-        call.transformTo(newScan);
+        // creates filter from the expressions which can't be pushed to the scan
+        if (nonConvertedPredList.size() > 0) {
+          newNode = filter.copy(filter.getTraitSet(), newNode,
+              RexUtil.composeConjunction(
+                  filter.getCluster().getRexBuilder(),
+                  nonConvertedPredList,
+                  true));
+        }
+        call.transformTo(newNode);
         return;
       }
     }
 
-    final RelNode newFilter = filter.copy(filter.getTraitSet(), Collections.singletonList(newScan));
+    final RelNode newFilter = filter.copy(filter.getTraitSet(), Collections.singletonList(newNode));
     call.transformTo(newFilter);
   }
 }
