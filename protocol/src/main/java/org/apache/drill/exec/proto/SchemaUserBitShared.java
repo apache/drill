@@ -830,6 +830,8 @@ public final class SchemaUserBitShared
 
                 if(message.hasCarriesTwoByteSelectionVector())
                     output.writeBool(3, message.getCarriesTwoByteSelectionVector(), false);
+                if(message.hasAffectedRowsCount())
+                    output.writeInt32(4, message.getAffectedRowsCount(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.RecordBatchDef message)
             {
@@ -879,6 +881,9 @@ public final class SchemaUserBitShared
                         case 3:
                             builder.setCarriesTwoByteSelectionVector(input.readBool());
                             break;
+                        case 4:
+                            builder.setAffectedRowsCount(input.readInt32());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -922,6 +927,7 @@ public final class SchemaUserBitShared
                 case 1: return "recordCount";
                 case 2: return "field";
                 case 3: return "carriesTwoByteSelectionVector";
+                case 4: return "affectedRowsCount";
                 default: return null;
             }
         }
@@ -936,6 +942,7 @@ public final class SchemaUserBitShared
             fieldMap.put("recordCount", 1);
             fieldMap.put("field", 2);
             fieldMap.put("carriesTwoByteSelectionVector", 3);
+            fieldMap.put("affectedRowsCount", 4);
         }
     }
 
@@ -1484,6 +1491,8 @@ public final class SchemaUserBitShared
                 if(message.hasDef())
                     output.writeObject(3, message.getDef(), org.apache.drill.exec.proto.SchemaUserBitShared.RecordBatchDef.WRITE, false);
 
+                if(message.hasAffectedRowsCount())
+                    output.writeInt32(4, message.getAffectedRowsCount(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryData message)
             {
@@ -1534,6 +1543,9 @@ public final class SchemaUserBitShared
                             builder.setDef(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.RecordBatchDef.MERGE));
 
                             break;
+                        case 4:
+                            builder.setAffectedRowsCount(input.readInt32());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1577,6 +1589,7 @@ public final class SchemaUserBitShared
                 case 1: return "queryId";
                 case 2: return "rowCount";
                 case 3: return "def";
+                case 4: return "affectedRowsCount";
                 default: return null;
             }
         }
@@ -1591,6 +1604,7 @@ public final class SchemaUserBitShared
             fieldMap.put("queryId", 1);
             fieldMap.put("rowCount", 2);
             fieldMap.put("def", 3);
+            fieldMap.put("affectedRowsCount", 4);
         }
     }
 

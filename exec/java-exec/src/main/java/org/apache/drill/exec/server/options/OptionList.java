@@ -18,9 +18,17 @@
 package org.apache.drill.exec.server.options;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 @SuppressWarnings("serial")
 public class OptionList extends ArrayList<OptionValue>{
+
+  public OptionList() {
+  }
+
+  public OptionList(Collection<OptionValue> options) {
+    super(options);
+  }
 
   public void merge(OptionList list){
     this.addAll(list);

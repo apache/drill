@@ -35,7 +35,7 @@ import org.apache.drill.exec.store.pojo.NonNullable;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
-/*
+/**
  * Extends the original Option iterator. The idea is to hide the implementation details and present the
  * user with the rows which have values set at the top level of hierarchy and exclude the values set
  * at lower levels. This is done by examining the scope and the precedence order of scope is session - system - default.
@@ -55,22 +55,16 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  *  only the value set at SESSION level.
  */
 public class ExtendedOptionIterator implements Iterator<Object> {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExtendedOptionIterator.class);
 
   private final OptionManager fragmentOptions;
   private final Iterator<OptionValue> mergedOptions;
   private Map<OptionValue.Kind, String> typeMapping;
-  private Map<OptionScope, Integer> preference;
   private static final int SHORT_DESCRIP_MAX_SIZE = 110;
 
   public ExtendedOptionIterator(FragmentContext context, boolean internal) {
     fragmentOptions = context.getOptions();
-    preference = new HashMap<OptionScope, Integer>();
-    preference.put(OptionScope.SESSION, 0);
-    preference.put(OptionScope.SYSTEM, 1);
-    preference.put(OptionScope.BOOT, 2);
 
-    typeMapping = new HashMap<Kind, String>();
+    typeMapping = new HashMap<>();
     typeMapping.put(Kind.STRING, "VARCHAR");
     typeMapping.put(Kind.DOUBLE, "FLOAT");
     typeMapping.put(Kind.LONG, "BIGINT");
@@ -92,9 +86,14 @@ public class ExtendedOptionIterator implements Iterator<Object> {
     HashMap<String, OptionValue> optionsmap = new HashMap<>();
 
     for (OptionValue option : optionslist) {
+      if (option.scope == OptionScope.QUERY) {
+        // Option set on query level should be ignored here as its value should not be shown to user
+        continue;
+      }
+
       if (optionsmap.containsKey(option.getName())) {
 
-        if (preference.get(option.scope) < preference.get(optionsmap.get(option.getName()).scope)) {
+        if (option.scope.compareTo(optionsmap.get(option.getName()).scope) > 0) {
           optionsmap.put(option.getName(), option);
         }
 

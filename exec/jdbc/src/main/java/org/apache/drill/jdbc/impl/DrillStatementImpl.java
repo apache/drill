@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
+import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Meta.StatementHandle;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -258,5 +259,15 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
     } catch (UnsupportedOperationException e) {
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
+  }
+
+  @Override
+  public void setResultSet(AvaticaResultSet resultSet) {
+    openResultSet = resultSet;
+  }
+
+  @Override
+  public void setUpdateCount(int value) {
+    updateCount = value;
   }
 }

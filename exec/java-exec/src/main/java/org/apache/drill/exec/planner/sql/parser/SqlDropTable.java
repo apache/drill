@@ -35,7 +35,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class SqlDropTable extends DrillSqlCall {
-  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("DROP_TABLE", SqlKind.OTHER) {
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("DROP_TABLE", SqlKind.DROP_TABLE) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlDropTable(pos, (SqlIdentifier) operands[0], (SqlLiteral) operands[1]);

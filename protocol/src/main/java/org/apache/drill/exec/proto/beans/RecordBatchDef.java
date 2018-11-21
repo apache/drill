@@ -52,6 +52,7 @@ public final class RecordBatchDef implements Externalizable, Message<RecordBatch
     private int recordCount;
     private List<SerializedField> field;
     private Boolean carriesTwoByteSelectionVector;
+    private int affectedRowsCount;
 
     public RecordBatchDef()
     {
@@ -96,6 +97,19 @@ public final class RecordBatchDef implements Externalizable, Message<RecordBatch
     public RecordBatchDef setCarriesTwoByteSelectionVector(Boolean carriesTwoByteSelectionVector)
     {
         this.carriesTwoByteSelectionVector = carriesTwoByteSelectionVector;
+        return this;
+    }
+
+    // affectedRowsCount
+
+    public int getAffectedRowsCount()
+    {
+        return affectedRowsCount;
+    }
+
+    public RecordBatchDef setAffectedRowsCount(int affectedRowsCount)
+    {
+        this.affectedRowsCount = affectedRowsCount;
         return this;
     }
 
@@ -165,6 +179,9 @@ public final class RecordBatchDef implements Externalizable, Message<RecordBatch
                 case 3:
                     message.carriesTwoByteSelectionVector = input.readBool();
                     break;
+                case 4:
+                    message.affectedRowsCount = input.readInt32();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -189,6 +206,9 @@ public final class RecordBatchDef implements Externalizable, Message<RecordBatch
 
         if(message.carriesTwoByteSelectionVector != null)
             output.writeBool(3, message.carriesTwoByteSelectionVector, false);
+
+        if(message.affectedRowsCount != 0)
+            output.writeInt32(4, message.affectedRowsCount, false);
     }
 
     public String getFieldName(int number)
@@ -198,6 +218,7 @@ public final class RecordBatchDef implements Externalizable, Message<RecordBatch
             case 1: return "recordCount";
             case 2: return "field";
             case 3: return "carriesTwoByteSelectionVector";
+            case 4: return "affectedRowsCount";
             default: return null;
         }
     }
@@ -214,6 +235,7 @@ public final class RecordBatchDef implements Externalizable, Message<RecordBatch
         __fieldMap.put("recordCount", 1);
         __fieldMap.put("field", 2);
         __fieldMap.put("carriesTwoByteSelectionVector", 3);
+        __fieldMap.put("affectedRowsCount", 4);
     }
     
 }
