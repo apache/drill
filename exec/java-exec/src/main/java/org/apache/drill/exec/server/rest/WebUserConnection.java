@@ -37,10 +37,12 @@ import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.vector.ValueVector.Accessor;
+import org.apache.drill.exec.record.MaterializedField;
 
 import java.net.SocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.Set;
 
 /**
@@ -63,6 +65,8 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
   public final List<Map<String, String>> results = Lists.newArrayList();
 
   public final Set<String> columns = Sets.newLinkedHashSet();
+
+  public final List<String> metadata = new ArrayList<>();
 
   WebUserConnection(WebSessionResources webSessionResources) {
     this.webSessionResources = webSessionResources;
@@ -106,7 +110,29 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
         // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
         // SchemaChangeException, so check/clean catch clause below.
         for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
-          columns.add(loader.getSchema().getColumn(i).getName());
+          //DRILL-6847:  This section adds query metadata to the REST results
+          MaterializedField col = loader.getSchema().getColumn(i);
+          columns.add(col.getName());
+          StringBuilder dataType = new StringBuilder(col.getType().getMinorType().name());
+
+          //For DECIMAL type
+          if (col.getType().hasPrecision()) {
+            dataType.append("(");
+            dataType.append(col.getType().getPrecision());
+
+            if (col.getType().hasScale()) {
+              dataType.append(", ");
+              dataType.append(col.getType().getScale());
+            }
+
+            dataType.append(")");
+          } else if (col.getType().hasWidth()) {
+            //Case for VARCHAR columns with specified width
+            dataType.append("(");
+            dataType.append(col.getType().getWidth());
+            dataType.append(")");
+          }
+          metadata.add(dataType.toString());
         }
         ValueVectorElementFormatter formatter = new ValueVectorElementFormatter(webSessionResources.getSession().getOptions());
         for (int i = 0; i < rows; ++i) {
