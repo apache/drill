@@ -58,13 +58,13 @@ import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 /**
  * Drill's implementation of {@link java.sql.ResultSet}.
  */
-class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
+public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @SuppressWarnings("unused")
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(DrillResultSetImpl.class);
 
   private final DrillConnectionImpl connection;
-  private volatile boolean hasPendingCancelationNotification = false;
+  private volatile boolean hasPendingCancellationNotification = false;
 
   //Timeout Support Variables
   private Stopwatch elapsedTimer;
@@ -90,8 +90,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   protected void checkOpen() throws SQLException {
     if (isClosed()) {
-      if (cursor instanceof DrillCursor && hasPendingCancelationNotification) {
-        hasPendingCancelationNotification = false;
+      if (cursor instanceof DrillCursor && hasPendingCancellationNotification) {
+        hasPendingCancellationNotification = false;
         throw new ExecutionCanceledSqlException(
             "SQL statement execution canceled; ResultSet now closed.");
       } else {
@@ -119,7 +119,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   protected void cancel() {
     if (cursor instanceof DrillCursor) {
-      hasPendingCancelationNotification = true;
+      hasPendingCancellationNotification = true;
       ((DrillCursor) cursor).cancel();
     } else {
       super.cancel();
