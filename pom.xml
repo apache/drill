@@ -49,7 +49,7 @@
     <calcite.version>1.17.0-drill-r1</calcite.version>
     <avatica.version>1.12.0</avatica.version>
     <janino.version>3.0.11</janino.version>
-    <sqlline.version>1.5.0</sqlline.version>
+    <sqlline.version>1.6.0</sqlline.version>
     <jackson.version>2.9.5</jackson.version>
     <jackson.databind.version>2.9.5</jackson.databind.version>
     <zookeeper.version>3.4.12</zookeeper.version>

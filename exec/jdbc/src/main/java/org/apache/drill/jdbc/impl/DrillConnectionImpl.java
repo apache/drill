@@ -81,7 +81,7 @@ import static org.apache.drill.exec.util.StoragePluginTestUtils.updateSchemaLoca
 // (Was abstract to avoid errors _here_ if newer versions of JDBC added
 // interface methods, but now newer versions would probably use Java 8's default
 // methods for compatibility.)
-class DrillConnectionImpl extends AvaticaConnection
+public class DrillConnectionImpl extends AvaticaConnection
                           implements DrillConnection {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
@@ -95,7 +95,7 @@ class DrillConnectionImpl extends AvaticaConnection
   private RemoteServiceSet serviceSet;
 
 
-  protected DrillConnectionImpl(DriverImpl driver, AvaticaFactory factory,
+  public DrillConnectionImpl(DriverImpl driver, AvaticaFactory factory,
                                 String url, Properties info) throws SQLException {
     super(driver, factory, url, info);
 

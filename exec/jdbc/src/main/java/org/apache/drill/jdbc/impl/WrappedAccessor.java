@@ -42,7 +42,7 @@ import org.apache.calcite.avatica.util.Cursor.Accessor;
  * instead
  *
  */
-class WrappedAccessor implements Accessor {
+public class WrappedAccessor implements Accessor {
   private final Accessor delegate;
 
   public WrappedAccessor(Accessor delegate) {

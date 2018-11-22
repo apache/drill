@@ -59,7 +59,7 @@ import org.slf4j.Logger;
 import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 
-class DrillCursor implements Cursor {
+public class DrillCursor implements Cursor {
 
   ////////////////////////////////////////
   // ResultsListener:

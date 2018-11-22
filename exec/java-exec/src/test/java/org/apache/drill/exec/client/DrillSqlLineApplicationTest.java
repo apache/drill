@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.client;
 
+import org.apache.drill.common.util.DrillVersionInfo;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import sqlline.Application;
 import sqlline.CommandHandler;
 import sqlline.OutputFormat;
 import sqlline.SqlLine;
@@ -38,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 
 public class DrillSqlLineApplicationTest {
 
-  private static DrillSqlLineApplication application;
+  private static Application application;
 
   @BeforeClass
   public static void init() {
@@ -48,9 +50,14 @@ public class DrillSqlLineApplicationTest {
   }
 
   @Test
-  public void testInfoMessage() throws Exception {
+  public void testInfoMessage() {
     String infoMessage = application.getInfoMessage();
     assertThat(infoMessage, containsString("\"All code is guilty until proven innocent.\""));
+  }
+
+  @Test
+  public void testVersion() {
+    assertEquals(DrillVersionInfo.getVersion(), application.getVersion());
   }
 
   @Test
@@ -92,8 +99,10 @@ public class DrillSqlLineApplicationTest {
     SqlLineOpts opts = application.getOpts(sqlLine);
     assertFalse(opts.getIncremental());
     assertEquals("TRANSACTION_NONE", opts.getIsolation());
-    assertEquals(20_000, opts.getMaxWidth());
+    assertEquals(80, opts.getMaxColumnWidth());
     assertEquals(200, opts.getTimeout());
+    assertEquals("obsidian", opts.getColorScheme());
+    assertEquals("null", opts.getNullValue());
   }
 
   @Test

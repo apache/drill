@@ -56,9 +56,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 /**
  * Drill's implementation of {@link java.sql.DatabaseMetaData}.
  */
-class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
-                                implements DrillDatabaseMetaData {
-
+public class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData implements DrillDatabaseMetaData {
 
   /**
    * Holds allowed conversion between SQL types
