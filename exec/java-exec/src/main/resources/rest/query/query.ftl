@@ -103,7 +103,7 @@
     editor.$blockScrolling = "Infinity";
     //CSS Formatting
     document.getElementById('query-editor-format').style.fontSize='13px';
-    document.getElementById('query-editor-format').style.fontFamily='courier';
+    document.getElementById('query-editor-format').style.fontFamily='courier,monospace';
     document.getElementById('query-editor-format').style.lineHeight='1.5';
     document.getElementById('query-editor-format').style.width='98%';
     document.getElementById('query-editor-format').style.margin='auto';
