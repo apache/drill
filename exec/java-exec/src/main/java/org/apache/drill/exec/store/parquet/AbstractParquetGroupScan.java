@@ -85,6 +85,8 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
 
   private List<EndpointAffinity> endpointAffinities;
   private ParquetGroupScanStatistics parquetGroupScanStatistics;
+  // whether all row groups of this group scan fully match the filter
+  private boolean matchAllRowGroups = false;
 
   protected AbstractParquetGroupScan(String userName,
                                      List<SchemaPath> columns,
@@ -111,6 +113,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
     this.fileSet = that.fileSet == null ? null : new HashSet<>(that.fileSet);
     this.entries = that.entries == null ? null : new ArrayList<>(that.entries);
     this.readerConfig = that.readerConfig;
+    this.matchAllRowGroups = that.matchAllRowGroups;
   }
 
   @JsonProperty
@@ -133,6 +136,11 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
   @JsonIgnore
   public ParquetReaderConfig getReaderConfig() {
     return readerConfig;
+  }
+
+  @JsonIgnore
+  public boolean isMatchAllRowGroups() {
+    return matchAllRowGroups;
   }
 
   @JsonIgnore
@@ -229,15 +237,12 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
   }
 
   @Override
-  public GroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
-                               FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
+  public AbstractParquetGroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
+      FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
 
-    if (rowGroupInfos.size() == 1 ||
-        ! (parquetTableMetadata.isRowGroupPrunable()) ||
-        rowGroupInfos.size() > optionManager.getOption(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD)
-        ) {
-      // Stop pruning for 3 cases:
-      //    -  1 single parquet file,
+    if (!parquetTableMetadata.isRowGroupPrunable() ||
+        rowGroupInfos.size() > optionManager.getOption(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD)) {
+      // Stop pruning for 2 cases:
       //    -  metadata does not have proper format to support row group level filter pruning,
       //    -  # of row groups is beyond PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD.
       return null;
@@ -253,6 +258,8 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
     if (filterPredicate == null) {
       return null;
     }
+
+    boolean matchAllRowGroupsLocal = true;
 
     for (RowGroupInfo rowGroup : rowGroupInfos) {
       final ColumnExplorer columnExplorer = new ColumnExplorer(optionManager, columns);
@@ -271,17 +278,28 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
       if (match == ParquetFilterPredicate.RowsMatch.NONE) {
         continue; // No row comply to the filter => drop the row group
       }
-      rowGroup.setRowsMatch(match);
+      // for the case when any of row groups partially matches the filter,
+      // matchAllRowGroupsLocal should be set to false
+      if (matchAllRowGroupsLocal) {
+        matchAllRowGroupsLocal = match == ParquetFilterPredicate.RowsMatch.ALL;
+      }
 
       qualifiedRGs.add(rowGroup);
       qualifiedFilePath.add(rowGroup.getPath());
     }
 
-    if (qualifiedRGs.size() == rowGroupInfos.size() ) {
+    if (qualifiedRGs.size() == rowGroupInfos.size()) {
       // There is no reduction of rowGroups. Return the original groupScan.
       logger.debug("applyFilter does not have any pruning!");
+      matchAllRowGroups = matchAllRowGroupsLocal;
       return null;
     } else if (qualifiedFilePath.size() == 0) {
+      if (rowGroupInfos.size() == 1) {
+        // For the case when group scan has single row group and it was filtered,
+        // no need to create new group scan with the same row group.
+        return null;
+      }
+      matchAllRowGroupsLocal = false;
       logger.debug("All rowgroups have been filtered out. Add back one to get schema from scannner");
       RowGroupInfo rg = rowGroupInfos.iterator().next();
       qualifiedFilePath.add(rg.getPath());
@@ -295,6 +313,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
       AbstractParquetGroupScan cloneGroupScan = cloneWithFileSelection(qualifiedFilePath);
       cloneGroupScan.rowGroupInfos = qualifiedRGs;
       cloneGroupScan.parquetGroupScanStatistics.collect(cloneGroupScan.rowGroupInfos, cloneGroupScan.parquetTableMetadata);
+      cloneGroupScan.matchAllRowGroups = matchAllRowGroupsLocal;
       return cloneGroupScan;
 
     } catch (IOException e) {
