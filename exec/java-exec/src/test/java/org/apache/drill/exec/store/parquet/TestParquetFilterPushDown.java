@@ -649,6 +649,15 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     assertEquals(RowsMatch.ALL, isNotFalse.matches(re));
   }
 
+  @Test
+  public void testParquetSingleRowGroupFilterRemoving() throws Exception {
+    test("create table dfs.tmp.`singleRowGroupTable` as select * from cp.`tpch/nation.parquet`");
+
+    String query = "select * from dfs.tmp.`singleRowGroupTable` where n_nationkey > -1";
+
+    testParquetFilterPruning(query, 25, 1, new String[]{"Filter\\("});
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Some test helper functions.
   //////////////////////////////////////////////////////////////////////////////////////////////////

@@ -28,9 +28,7 @@ import org.apache.calcite.rex.RexUtil;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.exec.expr.stat.ParquetFilterPredicate;
-import org.apache.drill.exec.expr.stat.ParquetFilterPredicate.RowsMatch;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
@@ -174,14 +172,35 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
 
 
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
-    final GroupScan newGroupScan = groupScan.applyFilter(conditionExp, optimizerContext,
+    AbstractParquetGroupScan newGroupScan = groupScan.applyFilter(conditionExp, optimizerContext,
         optimizerContext.getFunctionRegistry(), optimizerContext.getPlannerSettings().getOptions());
     if (timer != null) {
       logger.debug("Took {} ms to apply filter on parquet row groups. ", timer.elapsed(TimeUnit.MILLISECONDS));
       timer.stop();
     }
 
-    if (newGroupScan == null ) {
+    // For the case when newGroupScan wasn't created, the old one may
+    // fully match the filter for the case when row group pruning did not happen.
+    if (newGroupScan == null) {
+      if (groupScan.isMatchAllRowGroups()) {
+        RelNode child = project == null ? scan : project;
+        // If current row group fully matches filter,
+        // but row group pruning did not happen, remove the filter.
+        if (nonConvertedPredList.size() == 0) {
+          call.transformTo(child);
+        } else if (nonConvertedPredList.size() == predList.size()) {
+          // None of the predicates participated in filter pushdown.
+          return;
+        } else {
+          // If some of the predicates weren't used in the filter, creates new filter with them
+          // on top of current scan. Excludes the case when all predicates weren't used in the filter.
+          call.transformTo(filter.copy(filter.getTraitSet(), child,
+              RexUtil.composeConjunction(
+                  filter.getCluster().getRexBuilder(),
+                  nonConvertedPredList,
+                  true)));
+        }
+      }
       return;
     }
 
@@ -191,27 +210,17 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       newNode = project.copy(project.getTraitSet(), Collections.singletonList(newNode));
     }
 
-    if (newGroupScan instanceof AbstractParquetGroupScan) {
-      RowsMatch matchAll = RowsMatch.ALL;
-      List<RowGroupInfo> rowGroupInfos = ((AbstractParquetGroupScan) newGroupScan).rowGroupInfos;
-      for (RowGroupInfo rowGroup : rowGroupInfos) {
-        if (rowGroup.getRowsMatch() != RowsMatch.ALL) {
-          matchAll = RowsMatch.SOME;
-          break;
-        }
+    if (newGroupScan.isMatchAllRowGroups()) {
+      // creates filter from the expressions which can't be pushed to the scan
+      if (nonConvertedPredList.size() > 0) {
+        newNode = filter.copy(filter.getTraitSet(), newNode,
+            RexUtil.composeConjunction(
+                filter.getCluster().getRexBuilder(),
+                nonConvertedPredList,
+                true));
       }
-      if (matchAll == ParquetFilterPredicate.RowsMatch.ALL) {
-        // creates filter from the expressions which can't be pushed to the scan
-        if (nonConvertedPredList.size() > 0) {
-          newNode = filter.copy(filter.getTraitSet(), newNode,
-              RexUtil.composeConjunction(
-                  filter.getCluster().getRexBuilder(),
-                  nonConvertedPredList,
-                  true));
-        }
-        call.transformTo(newNode);
-        return;
-      }
+      call.transformTo(newNode);
+      return;
     }
 
     final RelNode newFilter = filter.copy(filter.getTraitSet(), Collections.singletonList(newNode));
