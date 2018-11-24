@@ -40,7 +40,7 @@
     <dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack-core</artifactId>
-      <version>0.8.16</version>
+      <version>0.8.17-SNAPSHOT</version>
     </dependency>
 
     <!-- Test dependencie -->

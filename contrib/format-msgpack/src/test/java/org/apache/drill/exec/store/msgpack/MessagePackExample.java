@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessageUnpacker;
@@ -44,31 +46,39 @@ public class MessagePackExample {
 
   public static void main(String[] args) throws Exception {
 
-    try (MessagePacker packer = MessagePack.newDefaultPacker(new FileOutputStream(new File("test.mp")))) {
-      // Alice, write map with 3 fields.
-      packer.packMapHeader(3);
-      packer.packString("name");
-      packer.packString("Alice");
-      packer.packString("age");
-      packer.packInt(21);
-      packer.packString("height");
-      packer.packFloat(1.67f);
-      // Bob, write map with 3 fields.
-      packer.packMapHeader(3);
-      packer.packString("name");
-      packer.packString("Bog");
-      packer.packString("age");
-      packer.packInt(32);
-      packer.packString("height");
-      packer.packFloat(1.79f);
+    for (int i = 0; i < 1; i++) {
+
+      try (MessagePacker packer = MessagePack.newDefaultPacker(new FileOutputStream(new File("test" + i + ".mp")))) {
+        for (int j = 0; j < 1_000_000; j++) {
+          writeCompleteModel(packer);
+          // // Alice, write map with 3 fields.
+          // packer.packMapHeader(3);
+          // packer.packString("name");
+          // packer.packString("Alice");
+          // packer.packString("age");
+          // packer.packInt(21);
+          // packer.packString("height");
+          // packer.packFloat(1.67f);
+          // // Bob, write map with 3 fields.
+          // packer.packMapHeader(3);
+          // packer.packString("name");
+          // packer.packString("Bog");
+          // packer.packString("age");
+          // packer.packInt(32);
+          // packer.packString("height");
+          // packer.packFloat(1.79f);
+        }
+      }
     }
 
-    try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test.mp")))) {
+    Stopwatch s = Stopwatch.createStarted();
+
+    try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test0.mp")))) {
       while (unpacker.hasNext()) {
         ImmutableValue msg = unpacker.unpackValue();
         ValueType type = msg.getValueType();
         if (type == ValueType.MAP) {
-          System.out.println("Printing message");
+          // Sdystem.out.println("Printing message");
           MapValue mapValue = msg.asMapValue();
           Set<Map.Entry<Value, Value>> valueEntries = mapValue.entrySet();
           for (Map.Entry<Value, Value> valueEntry : valueEntries) {
@@ -77,18 +87,19 @@ public class MessagePackExample {
             String k = key.asStringValue().asString();
             if (value.getValueType() == ValueType.STRING) {
               String strValue = value.asStringValue().toString();
-              System.out.println(String.format("key: '%s' value: '%s'", k, strValue));
+              // System.out.println(String.format("key: '%s' value: '%s'", k, strValue));
             } else if (value.getValueType() == ValueType.INTEGER) {
               int intValue = value.asNumberValue().toInt();
-              System.out.println(String.format("key: '%s' value: '%d'", k, intValue));
+              // System.out.println(String.format("key: '%s' value: '%d'", k, intValue));
             } else if (value.getValueType() == ValueType.FLOAT) {
               float fValue = value.asFloatValue().toFloat();
-              System.out.println(String.format("key: '%s' value: '%f'", k, fValue));
+              // System.out.println(String.format("key: '%s' value: '%f'", k, fValue));
             }
           }
         }
       }
     }
+    System.out.println("reading took " + s.elapsed(TimeUnit.MILLISECONDS));
   }
 
   public static MessagePacker makeMessagePacker(String fileName) throws IOException {

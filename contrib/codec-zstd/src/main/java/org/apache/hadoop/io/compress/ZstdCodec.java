@@ -35,10 +35,10 @@ import org.apache.hadoop.io.compress.zstd.ZstdDecompressor;
  *
  * The java binding for zstandard is provided by
  * https://github.com/luben/zstd-jni
- * 
+ *
  * Example code taken from hadoop
  * http://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-common/api/src-html/org/apache/hadoop/io/compress/SnappyCodec.html
- * 
+ *
  * The ZstdCodec implementation is registered with the Hadoop framework via the
  * Java Plugin mechanism. look at
  * META-INF/services/org.apache.hadoop.io.compress.CompressionCodec

@@ -21,12 +21,12 @@ package org.apache.hadoop.io.compress.zstd;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.compress.Compressor;
-
 import com.github.luben.zstd.Zstd;
 import com.github.luben.zstd.ZstdDirectBufferCompressingStream;
 import com.github.luben.zstd.util.Native;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.compress.Compressor;
 
 /**
  * A {@link Compressor} based on the zstandard compression algorithm.
@@ -35,7 +35,7 @@ import com.github.luben.zstd.util.Native;
  * jccote !!!DID NOT TEST THIS CLASS, JUST RENAMED SNAPPY FOR ZSTD!!! code taken
  * from hadoop
  * http://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-common/api/src-html/org/apache/hadoop/io/compress/SnappyCodec.html
- * 
+ *
  */
 public class ZstdCompressor implements Compressor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZstdCompressor.class);

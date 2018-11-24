@@ -20,19 +20,17 @@ package org.apache.hadoop.io.compress.zstd;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.io.compress.Decompressor;
-
 import com.github.luben.zstd.ZstdDirectBufferDecompressingStream;
 import com.github.luben.zstd.util.Native;
+
+import org.apache.hadoop.io.compress.Decompressor;
 
 /**
  * A {@link Decompressor} based on the zstandard compression algorithm.
  *
  * Example code taken from hadoop
  * http://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-common/api/src-html/org/apache/hadoop/io/compress/SnappyCodec.html
- * 
+ *
  */
 public class ZstdDecompressor implements Decompressor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZstdDecompressor.class);

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
@@ -156,7 +157,9 @@ public class MapValueWriter extends ComplexValueWriter {
     ValueType valueType = v.getValueType();
     switch (valueType) {
     case STRING:
-      fieldName = v.asStringValue().asString();
+      // not using StringValue.asString() because it does decoding slower than the
+      // java String constructor
+      fieldName = new String(v.asStringValue().asByteArray(), StandardCharsets.UTF_8);
       break;
     case BINARY:
       byte[] bytes = v.asBinaryValue().asByteArray();
