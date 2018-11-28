@@ -34,6 +34,7 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.dfs.FileSelection;
 
 // SqlHandler for dropping a table.
 public class DropTableHandler extends DefaultSqlHandler {
@@ -56,7 +57,7 @@ public class DropTableHandler extends DefaultSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
     SqlDropTable dropTableNode = ((SqlDropTable) sqlNode);
-    String originalTableName = dropTableNode.getName();
+    String originalTableName = FileSelection.removeLeadingSlash(dropTableNode.getName());
     SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
     List<String> tableSchema = dropTableNode.getSchema();
     DrillConfig drillConfig = context.getConfig();
