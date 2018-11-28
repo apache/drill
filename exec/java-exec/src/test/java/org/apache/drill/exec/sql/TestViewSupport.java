@@ -751,4 +751,53 @@ public class TestViewSupport extends TestBaseViewSupport {
         .baselineValues("HeadQuarters")
         .go();
   }
+
+  @Test
+  public void testDropViewNameStartsWithSlash() throws Exception {
+    String viewName = "view_name_starts_with_slash_drop";
+    try {
+      test("CREATE VIEW `%s`.`%s` AS SELECT * FROM cp.`region.json`", DFS_TMP_SCHEMA, viewName);
+      testBuilder()
+          .sqlQuery("DROP VIEW `%s`.`%s`", DFS_TMP_SCHEMA, "/" + viewName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true,
+              String.format("View [%s] deleted successfully from schema [%s].", viewName, DFS_TMP_SCHEMA))
+          .go();
+    } finally {
+      test("DROP VIEW IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, viewName);
+    }
+  }
+
+  @Test
+  public void testViewIsCreatedWithinWorkspace() throws Exception {
+    String viewName = "view_created_within_workspace";
+    try {
+      test("CREATE VIEW `%s`.`%s` AS SELECT * FROM cp.`region.json`", DFS_TMP_SCHEMA, "/" + viewName);
+      testBuilder()
+          .sqlQuery("SELECT region_id FROM `%s`.`%s` LIMIT 1", DFS_TMP_SCHEMA, viewName)
+          .unOrdered()
+          .baselineColumns("region_id")
+          .baselineValues(0L)
+          .go();
+    } finally {
+      test("DROP VIEW IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, viewName);
+    }
+  }
+
+  @Test
+  public void testViewIsFoundWithinWorkspaceWhenNameStartsWithSlash() throws Exception {
+    String viewName = "view_found_within_workspace";
+    try {
+      test("CREATE VIEW `%s`.`%s` AS SELECT * FROM cp.`region.json`", DFS_TMP_SCHEMA, viewName);
+      testBuilder()
+          .sqlQuery("SELECT region_id FROM `%s`.`%s` LIMIT 1", DFS_TMP_SCHEMA, "/" + viewName)
+          .unOrdered()
+          .baselineColumns("region_id")
+          .baselineValues(0L)
+          .go();
+    } finally {
+      test("DROP VIEW IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, viewName);
+    }
+  }
 }

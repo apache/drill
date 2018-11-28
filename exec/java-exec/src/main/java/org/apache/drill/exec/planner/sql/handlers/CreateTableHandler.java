@@ -55,6 +55,7 @@ import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
@@ -72,7 +73,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
     final SqlCreateTable sqlCreateTable = unwrap(sqlNode, SqlCreateTable.class);
-    final String originalTableName = sqlCreateTable.getName();
+    final String originalTableName = FileSelection.removeLeadingSlash(sqlCreateTable.getName());
 
     final ConvertedRelNode convertedRelNode = validateAndConvert(sqlCreateTable.getQuery());
     final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
