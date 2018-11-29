@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackParsingException;
+import org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -40,8 +41,8 @@ public class ArrayValueWriter extends ComplexValueWriter {
 
   private List<ListWriter> emptyArrayWriters;
 
-  public ArrayValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap, List<ListWriter> emptyArrayWriters) {
-    super(valueWriterMap);
+  public ArrayValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap, ExtensionValueWriter[] extensionReaders, List<ListWriter> emptyArrayWriters) {
+    super(valueWriterMap, extensionReaders);
     this.emptyArrayWriters = emptyArrayWriters;
   }
 

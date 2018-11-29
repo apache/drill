@@ -22,15 +22,17 @@ import java.io.InputStream;
 import java.util.BitSet;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.ServiceLoader;
 
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.AbstractValueWriter;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.ArrayValueWriter;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.BinaryValueWriter;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.BooleanValueWriter;
-import org.apache.drill.exec.store.msgpack.valuewriter.impl.DelegatingExtensionValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.impl.FallbackExtensionValueWriter;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.FloatValueWriter;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.IntegerValueWriter;
 import org.apache.drill.exec.store.msgpack.valuewriter.impl.MapValueWriter;
@@ -79,6 +81,22 @@ public class MsgpackReader {
     // Also passing in the context which has the lenient flag, record count, file
     // name which are used to print detailed error messages.
 
+    ExtensionValueWriter[] extensionWriters = new ExtensionValueWriter[128];
+
+    FallbackExtensionValueWriter fallbackExtensionValueWriter = new FallbackExtensionValueWriter();
+    fallbackExtensionValueWriter.setup(context, drillBuf);
+    for (int i = 0; i < extensionWriters.length; i++) {
+      extensionWriters[i] = fallbackExtensionValueWriter;
+    }
+
+    ServiceLoader<ExtensionValueWriter> loader = ServiceLoader.load(ExtensionValueWriter.class);
+    for (ExtensionValueWriter msgpackExtensionWriter : loader) {
+      logger.debug("Loaded msgpack extension reader: " + msgpackExtensionWriter.getClass());
+      msgpackExtensionWriter.setup(context, drillBuf);
+      byte idx = msgpackExtensionWriter.getExtensionTypeNumber();
+      extensionWriters[idx] = msgpackExtensionWriter;
+    }
+
     // Create a value writer for each type supported by the msgpack library.
     FloatValueWriter fvw = new FloatValueWriter();
     fvw.setup(context, drillBuf);
@@ -95,19 +113,17 @@ public class MsgpackReader {
     BinaryValueWriter bbvw = new BinaryValueWriter();
     bbvw.setup(context, drillBuf);
     valueWriterMap.put(bbvw.getMsgpackValueType(), bbvw);
-    DelegatingExtensionValueWriter devw = new DelegatingExtensionValueWriter();
-    devw.setup(context, drillBuf);
-    valueWriterMap.put(devw.getMsgpackValueType(), devw);
+
     // The array and map value writers use this map to retrieve the child value
     // writer. See ComplexValueWriter.
     // We also want to keep track of empty arrays we encounter. This is used by the
     // ensureAtLeastOneField method below.
-    ArrayValueWriter avw = new ArrayValueWriter(valueWriterMap, emptyArrayWriters);
+    ArrayValueWriter avw = new ArrayValueWriter(valueWriterMap, extensionWriters, emptyArrayWriters);
     avw.setup(context);
     valueWriterMap.put(avw.getMsgpackValueType(), avw);
     // We are keeping a reference on the map value writer since the root is a map.
     // See writeRecord() below.
-    mapValueWriter = new MapValueWriter(valueWriterMap);
+    mapValueWriter = new MapValueWriter(valueWriterMap, extensionWriters);
     mapValueWriter.setup(context);
     valueWriterMap.put(mapValueWriter.getMsgpackValueType(), mapValueWriter);
   }

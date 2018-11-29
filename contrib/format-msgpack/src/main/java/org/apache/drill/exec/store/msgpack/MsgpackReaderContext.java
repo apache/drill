@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.store.msgpack;
 
-import com.fasterxml.jackson.core.JsonParseException;
-
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.helpers.MessageFormatter;
+
+import com.fasterxml.jackson.core.JsonParseException;
 
 import jline.internal.Log;
 

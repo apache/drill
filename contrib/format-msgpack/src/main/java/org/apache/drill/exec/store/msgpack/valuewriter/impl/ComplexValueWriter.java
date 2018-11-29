@@ -24,6 +24,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackParsingException;
+import org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter;
+import org.apache.drill.exec.store.msgpack.valuewriter.ValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -39,11 +41,14 @@ import org.slf4j.helpers.MessageFormatter;
 public abstract class ComplexValueWriter extends AbstractValueWriter {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexValueWriter.class);
 
-  protected EnumMap<ValueType, AbstractValueWriter> valueWriterMap;
+  protected final EnumMap<ValueType, AbstractValueWriter> valueWriterMap;
+  protected final ExtensionValueWriter[] extensionWriters;
 
-  public ComplexValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap) {
+  public ComplexValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap,
+      ExtensionValueWriter[] extensionWriters) {
     super();
     this.valueWriterMap = valueWriterMap;
+    this.extensionWriters = extensionWriters;
   }
 
   protected MinorType getTypeSafe(MaterializedField schema) {
@@ -84,8 +89,19 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
       // Get the type of the value. It can be any of the MAP, ARRAY, FLOAT, BOOLEAN,
       // STRING, INTEGER.
       ValueType valueType = value.getValueType();
-      // We use that type to retrieve the corresponding writer.
-      AbstractValueWriter writer = valueWriterMap.get(valueType);
+      ValueWriter writer = null;
+      if (valueType == ValueType.EXTENSION) {
+        byte extType = value.asExtensionValue().getType();
+        if (extType == -1) {
+          extType = 0;
+        }
+
+        // Try to find extension type reader for given type.
+        writer = extensionWriters[extType];
+      } else {
+        // We use that type to retrieve the corresponding writer.
+        writer = valueWriterMap.get(valueType);
+      }
       // Use writer to write the value into the drill map or list writers.
       writer.write(value, mapWriter, fieldName, listWriter, selection, schema);
     } catch (Exception e) {

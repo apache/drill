@@ -63,7 +63,7 @@ import org.msgpack.core.MessagePacker;
 import ch.qos.logback.classic.Level;
 
 public class TestMsgpackRecordReader extends ClusterTest {
-  private static boolean RUN_PERFORMANCE_TESTS = true;
+  private static boolean RUN_PERFORMANCE_TESTS = false;
   private static int ALL_FIELD_TYPES_SIZE = 12;
   private static String SQL_SELECT_ALL = "select * from `dfs.data`.`test.mp`";
   private static byte TIMESTAMP_TYPE = (byte) -1;

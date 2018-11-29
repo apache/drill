@@ -19,9 +19,6 @@ package org.apache.drill.exec.store.msgpack.schema;
 
 import java.io.IOException;
 
-import com.google.protobuf.TextFormat;
-import com.google.protobuf.TextFormat.ParseException;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -38,6 +35,9 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
+
+import com.google.protobuf.TextFormat;
+import com.google.protobuf.TextFormat.ParseException;
 
 /**
  * <p>

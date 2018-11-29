@@ -17,16 +17,18 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackParsingException;
+import org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -42,8 +44,10 @@ public class MapValueWriter extends ComplexValueWriter {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapValueWriter.class);
 
-  public MapValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap) {
-    super(valueWriterMap);
+  private Map<ByteBuffer, String> fieldNames = new HashMap<>();
+
+  public MapValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap, ExtensionValueWriter[] extensionReaders) {
+    super(valueWriterMap, extensionReaders);
   }
 
   @Override
@@ -154,31 +158,28 @@ public class MapValueWriter extends ComplexValueWriter {
 
     String fieldName = null;
 
-    ValueType valueType = v.getValueType();
-    switch (valueType) {
-    case STRING:
-      // not using StringValue.asString() because it does decoding slower than the
-      // java String constructor
-      fieldName = new String(v.asStringValue().asByteArray(), StandardCharsets.UTF_8);
-      break;
-    case BINARY:
-      byte[] bytes = v.asBinaryValue().asByteArray();
-      fieldName = new String(bytes);
-      break;
-    case INTEGER:
+    if (v.isStringValue()) {
+      ByteBuffer keyBytes = ByteBuffer.wrap(v.asStringValue().asByteArray());
+      fieldName = fieldNames.get(keyBytes);
+      if (fieldName == null) {
+        fieldName = new String(keyBytes.array(), StandardCharsets.UTF_8);
+        fieldNames.put(keyBytes, fieldName);
+      }
+      return fieldName;
+    } else if (v.isBinaryValue()) {
+      ByteBuffer keyBytes = ByteBuffer.wrap(v.asBinaryValue().asByteArray());
+      fieldName = fieldNames.get(keyBytes);
+      if (fieldName == null) {
+        fieldName = new String(keyBytes.array(), StandardCharsets.UTF_8);
+        fieldNames.put(keyBytes, fieldName);
+      }
+      return fieldName;
+    } else if (v.isIntegerValue()) {
       IntegerValue iv = v.asIntegerValue();
       fieldName = iv.toString();
-      break;
-    case ARRAY:
-    case BOOLEAN:
-    case MAP:
-    case FLOAT:
-    case EXTENSION:
-    case NIL:
-      break;
-    default:
-      throw new DrillRuntimeException("UnSupported msgpack type: " + valueType);
+      return fieldName;
     }
+
     return fieldName;
   }
 }
