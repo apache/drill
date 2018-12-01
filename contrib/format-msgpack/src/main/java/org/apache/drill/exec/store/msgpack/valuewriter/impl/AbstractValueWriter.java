@@ -17,13 +17,8 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackReaderContext;
 import org.apache.drill.exec.store.msgpack.valuewriter.ValueWriter;
-import org.apache.drill.exec.vector.complex.fn.FieldSelection;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.Value;
 
 /**
  * An abstract base class to hold the MsgpackReaderContext.
@@ -39,26 +34,5 @@ public abstract class AbstractValueWriter implements ValueWriter {
   public void setup(MsgpackReaderContext context) {
     this.context = context;
   }
-
-  /**
-   * This method is used to write a msgpack value (ARRAY, FLOAT, etc) into either
-   * a MapWriter or ListWriter.
-   *
-   * @param value
-   *                     the msgpack value to write into the drill structures
-   * @param mapWriter
-   * @param fieldName
-   *                     field name used when writing to a map writer, it will be
-   *                     null when writing to a list writer.
-   * @param listWriter
-   * @param selection
-   *                     the selection from the select statement, used to skip
-   *                     over the fields that are not of interest.
-   * @param schema
-   *                     the desired type for the value, if it's not an exact
-   *                     match we try to coerce the value into that desired type.
-   */
-  public abstract void write(Value value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
-      FieldSelection selection, ColumnMetadata schema);
 
 }

@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter;
 
+import org.msgpack.core.ExtensionTypeHeader;
+
 /**
  * This interface handles msgpack extended types. You can implemented your own
  * handler. You register your handler via the Java Plugin Service. That is using
@@ -31,5 +33,7 @@ public interface ExtensionValueWriter extends ScalarValueWriter {
    * @return 0 to 127 are application specific types.
    */
   public byte getExtensionTypeNumber();
+
+  public void setExtensionTypeHeader(ExtensionTypeHeader header);
 
 }

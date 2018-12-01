@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter;
 
+import java.io.IOException;
+
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.store.msgpack.MsgpackReaderContext;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.Value;
+import org.msgpack.core.MessageUnpacker;
 
 import io.netty.buffer.DrillBuf;
 
@@ -39,29 +41,25 @@ public interface ScalarValueWriter extends ValueWriter {
    * which makes it possible for extended types to be contributed and discovered
    * at runtime.
    */
-  public MinorType getDefaultType(Value v);
+  public MinorType getDefaultType();
 
   /**
    * This method is used to write a msgpack value (ARRAY, FLOAT, etc) into either
    * a MapWriter or ListWriter.
    *
-   * @param value
-   *                           the msgpack value to write into the drill
-   *                           structures
+   * @param unpacker         the msgpack value to write into the drill structures
    * @param mapWriter
-   * @param fieldName
-   *                           field name used when writing to a map writer, it
-   *                           will be null when writing to a list writer.
+   * @param fieldName        field name used when writing to a map writer, it will
+   *                         be null when writing to a list writer.
    * @param listWriter
-   * @param selection
-   *                           the selection from the select statement, used to
-   *                           skip over the fields that are not of interest.
-   * @param targetSchemaType
-   *                           the desired type for the value, if it's not an
-   *                           exact match we try to coerce the value into that
-   *                           desired type.
+   * @param selection        the selection from the select statement, used to skip
+   *                         over the fields that are not of interest.
+   * @param targetSchemaType the desired type for the value, if it's not an exact
+   *                         match we try to coerce the value into that desired
+   *                         type.
+   * @throws IOException
    */
-  public void doWrite(Value value, MapWriter mapWriter, String fieldName, ListWriter listWriter,
-      MinorType targetSchemaType);
+  public void doWrite(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) throws IOException;
 
 }

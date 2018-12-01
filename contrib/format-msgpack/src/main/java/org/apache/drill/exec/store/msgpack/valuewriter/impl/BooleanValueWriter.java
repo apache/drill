@@ -17,21 +17,26 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.BooleanValue;
-import org.msgpack.value.Value;
+import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.ValueType;
 
 public class BooleanValueWriter extends AbstractScalarValueWriter {
+
+  private final ByteBuffer trueBuffer = ByteBuffer.wrap("True".getBytes());
+  private final ByteBuffer falseBuffer = ByteBuffer.wrap("False".getBytes());
 
   public BooleanValueWriter() {
   }
 
   @Override
-  public MinorType getDefaultType(Value v) {
+  public MinorType getDefaultType() {
     return MinorType.BIT;
   }
 
@@ -41,21 +46,33 @@ public class BooleanValueWriter extends AbstractScalarValueWriter {
   }
 
   @Override
-  public void doWrite(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter,
-      MinorType targetSchemaType) {
-    BooleanValue value = v.asBooleanValue();
+  public void doWrite(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) throws IOException {
+    boolean unpackBoolean = unpacker.unpackBoolean();
     switch (targetSchemaType) {
     case VARCHAR:
-      writeAsVarChar(value.toString().getBytes(), mapWriter, fieldName, listWriter);
+      if (unpackBoolean) {
+        trueBuffer.position(0);
+        writeAsVarChar(trueBuffer, mapWriter, fieldName, listWriter);
+      } else {
+        falseBuffer.position(0);
+        writeAsVarChar(falseBuffer, mapWriter, fieldName, listWriter);
+      }
       break;
     case VARBINARY:
-      writeAsVarBinary(value.getBoolean(), mapWriter, fieldName, listWriter);
+      if (unpackBoolean) {
+        trueBuffer.position(0);
+        writeAsVarBinary(trueBuffer, mapWriter, fieldName, listWriter);
+      } else {
+        falseBuffer.position(0);
+        writeAsVarBinary(falseBuffer, mapWriter, fieldName, listWriter);
+      }
       break;
     case BIT:
-      writeAsBit(value.getBoolean(), mapWriter, fieldName, listWriter);
+      writeAsBit(unpackBoolean, mapWriter, fieldName, listWriter);
       break;
     default:
-      throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
+      throw new DrillRuntimeException("Can't cast " + getDefaultType() + " into " + targetSchemaType);
     }
   }
 

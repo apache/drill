@@ -42,11 +42,10 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.msgpack.core.MessageFormat;
 import org.msgpack.core.MessageInsufficientBufferException;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
-import org.msgpack.value.MapValue;
-import org.msgpack.value.Value;
 import org.msgpack.value.ValueType;
 
 import io.netty.buffer.DrillBuf;
@@ -131,10 +130,8 @@ public class MsgpackReader {
   /**
    * Write a single message from the msgpack file into the given writer.
    *
-   * @param writer
-   *                 writer to write a single message to.
-   * @param schema
-   *                 schema of the messages.
+   * @param writer writer to write a single message to.
+   * @param schema schema of the messages.
    * @return true if there are more messages in the msgpack file.
    * @throws IOException
    * @throws MessageInsufficientBufferException
@@ -148,11 +145,12 @@ public class MsgpackReader {
 
     try {
       // unpack a single message (a map with all it's children)
-      Value v = unpacker.unpackValue();
-      ValueType type = v.getValueType();
+      MessageFormat nextFormat = unpacker.getNextFormat();
+      ValueType type = nextFormat.getValueType();
       if (type == ValueType.MAP) {
-        writeOneMessage(v.asMapValue(), writer, schema);
+        writeOneMessage(unpacker, writer, schema);
       } else {
+        unpacker.skipValue();
         throw new MsgpackParsingException(
             "Value in root of message pack file is not of type MAP. Skipping type found: " + type);
       }
@@ -174,12 +172,15 @@ public class MsgpackReader {
    * @param schema
    * @throws IOException
    */
-  private void writeOneMessage(MapValue value, ComplexWriter writer, TupleMetadata schema) throws IOException {
+  private void writeOneMessage(MessageUnpacker unpacker, ComplexWriter writer, TupleMetadata schema)
+      throws IOException {
     if (isSelectCount) {
+      int n = unpacker.unpackMapHeader();
+      unpacker.skipValue(n);
       writer.rootAsMap().bit("count").writeBit(1);
     } else {
       logger.debug("start writing message");
-      mapValueWriter.writeMapValue(value, writer.rootAsMap(), this.rootSelection, schema);
+      mapValueWriter.writeMapValue(unpacker, writer.rootAsMap(), this.rootSelection, schema);
       logger.debug("end writing message");
     }
   }

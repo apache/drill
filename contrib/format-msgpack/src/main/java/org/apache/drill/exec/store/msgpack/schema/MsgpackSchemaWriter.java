@@ -120,8 +120,8 @@ public class MsgpackSchemaWriter {
   private void writeElement(MaterializedField schema, MapWriter mapWriter, ListWriter listWriter, String name)
       throws IOException {
 
-    logger.debug("filling field path: '{}' with type: '{}' mode: '{}'", fieldPathTracker, schema.getType().getMinorType(),
-        schema.getDataMode());
+    logger.debug("filling field path: '{}' with type: '{}' mode: '{}'", fieldPathTracker,
+        schema.getType().getMinorType(), schema.getDataMode());
 
     if (schema.getDataMode() == DataMode.REPEATED) {
       // If the schema type is repeated we want to create a sub list.

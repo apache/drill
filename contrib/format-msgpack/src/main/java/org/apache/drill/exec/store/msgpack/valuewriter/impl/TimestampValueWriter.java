@@ -17,14 +17,16 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.ExtensionValue;
-import org.msgpack.value.Value;
+import org.msgpack.core.ExtensionTypeHeader;
+import org.msgpack.core.MessageUnpacker;
+import org.msgpack.core.buffer.MessageBuffer;
 import org.msgpack.value.ValueType;
 
 public class TimestampValueWriter extends AbstractScalarValueWriter implements ExtensionValueWriter {
@@ -33,7 +35,14 @@ public class TimestampValueWriter extends AbstractScalarValueWriter implements E
 
   private final ByteBuffer timestampReadBuffer = ByteBuffer.allocate(12);
 
+  private ExtensionTypeHeader header;
+
   public TimestampValueWriter() {
+  }
+
+  @Override
+  public void setExtensionTypeHeader(ExtensionTypeHeader header) {
+    this.header = header;
   }
 
   @Override
@@ -47,7 +56,7 @@ public class TimestampValueWriter extends AbstractScalarValueWriter implements E
   }
 
   @Override
-  public MinorType getDefaultType(Value v) {
+  public MinorType getDefaultType() {
     return MinorType.TIMESTAMP;
   }
 
@@ -78,13 +87,14 @@ public class TimestampValueWriter extends AbstractScalarValueWriter implements E
    *</code>
    */
   @Override
-  public void doWrite(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter,
-      MinorType targetSchemaType) {
+  public void doWrite(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) throws IOException {
 
-    ExtensionValue value = v.asExtensionValue();
+    int size = header.getLength();
+    MessageBuffer messageBuffer = unpacker.readPayloadAsReference(size);
+    byte[] data = messageBuffer.toByteArray();
     long epochMilliSeconds = 0;
     byte zero = 0;
-    byte[] data = value.getData();
     switch (data.length) {
     case 4: {
       timestampReadBuffer.position(0);

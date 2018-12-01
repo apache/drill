@@ -17,12 +17,15 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.BinaryValue;
-import org.msgpack.value.Value;
+import org.msgpack.core.MessageUnpacker;
+import org.msgpack.core.buffer.MessageBuffer;
 import org.msgpack.value.ValueType;
 
 public class BinaryValueWriter extends AbstractScalarValueWriter {
@@ -31,7 +34,7 @@ public class BinaryValueWriter extends AbstractScalarValueWriter {
   }
 
   @Override
-  public MinorType getDefaultType(Value v) {
+  public MinorType getDefaultType() {
     return MinorType.VARBINARY;
   }
 
@@ -39,19 +42,22 @@ public class BinaryValueWriter extends AbstractScalarValueWriter {
   public ValueType getMsgpackValueType() {
     return ValueType.BINARY;
   }
+
   @Override
-  public void doWrite(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter,
-      MinorType targetSchemaType) {
-    BinaryValue value = v.asBinaryValue();
+  public void doWrite(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) throws IOException {
+    int size = unpacker.unpackBinaryHeader();
+    MessageBuffer messageBuffer = unpacker.readPayloadAsReference(size);
+    ByteBuffer byteBuffer = messageBuffer.sliceAsByteBuffer();
     switch (targetSchemaType) {
     case VARCHAR:
-      writeAsVarChar(value.asByteArray(), mapWriter, fieldName, listWriter);
+      writeAsVarChar(byteBuffer, mapWriter, fieldName, listWriter);
       break;
     case VARBINARY:
-      writeAsVarBinary(value.asByteArray(), mapWriter, fieldName, listWriter);
+      writeAsVarBinary(byteBuffer, mapWriter, fieldName, listWriter);
       break;
     default:
-      throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
+      throw new DrillRuntimeException("Can't cast " + getDefaultType() + " into " + targetSchemaType);
     }
   }
 

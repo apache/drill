@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
@@ -32,9 +32,8 @@ import org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.IntegerValue;
-import org.msgpack.value.MapValue;
-import org.msgpack.value.Value;
+import org.msgpack.core.MessageUnpacker;
+import org.msgpack.core.buffer.MessageBuffer;
 import org.msgpack.value.ValueType;
 
 /**
@@ -46,7 +45,8 @@ public class MapValueWriter extends ComplexValueWriter {
 
   private Map<ByteBuffer, String> fieldNames = new HashMap<>();
 
-  public MapValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap, ExtensionValueWriter[] extensionReaders) {
+  public MapValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap,
+      ExtensionValueWriter[] extensionReaders) {
     super(valueWriterMap, extensionReaders);
   }
 
@@ -59,8 +59,8 @@ public class MapValueWriter extends ComplexValueWriter {
    * Write the given map value into drill's map or list writers.
    */
   @Override
-  public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
-      ColumnMetadata schema) {
+  public void write(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      FieldSelection selection, ColumnMetadata schema) throws IOException {
 
     if (context.hasSchema()) {
       if (schema == null) {
@@ -72,39 +72,36 @@ public class MapValueWriter extends ComplexValueWriter {
       }
     }
 
-    MapValue value = v.asMapValue();
     if (mapWriter != null) {
       // We are inside a mapWriter (inside a map) and we encoutered a field of type
       // MAP. Write map in a map.
       MapWriter subMapWriter = mapWriter.map(fieldName);
       context.getFieldPathTracker().enter(fieldName);
-      writeMapValue(value, subMapWriter, selection, schema == null ? null : schema.mapSchema());
+      writeMapValue(unpacker, subMapWriter, selection, schema == null ? null : schema.mapSchema());
       context.getFieldPathTracker().leave();
     } else {
       // We are inside a listWriter (inside an array) and we encoutered an element of
       // type MAP. Write map in a list.
       MapWriter subMapWriter = listWriter.map();
       context.getFieldPathTracker().enter("[]");
-      writeMapValue(value, subMapWriter, selection, schema == null ? null : schema.mapSchema());
+      writeMapValue(unpacker, subMapWriter, selection, schema == null ? null : schema.mapSchema());
       context.getFieldPathTracker().leave();
     }
   }
 
-  public void writeMapValue(MapValue value, MapWriter writer, FieldSelection selection, TupleMetadata tupleMetadata) {
+  public void writeMapValue(MessageUnpacker unpacker, MapWriter writer, FieldSelection selection,
+      TupleMetadata tupleMetadata) throws IOException {
 
     writer.start();
     try {
-      Set<Map.Entry<Value, Value>> valueEntries = value.entrySet();
-      for (Map.Entry<Value, Value> valueEntry : valueEntries) {
-        Value key = valueEntry.getKey();
-        Value element = valueEntry.getValue();
-        if (element.isNilValue()) {
-          continue;
-        }
-        String fieldName = getFieldName(key);
+      int n = unpacker.unpackMapHeader();
+      for (int i = 0; i < n; i++) {
+        String fieldName = getFieldName(unpacker);
         if (fieldName == null) {
           if (context.isLenient()) {
             context.parseWarn();
+            // skip the value associated with this key (the key we can't read)
+            unpacker.skipValue();
             continue;
           } else {
             throw new MsgpackParsingException("Failed to parse fieldname.");
@@ -112,11 +109,18 @@ public class MapValueWriter extends ComplexValueWriter {
         }
         FieldSelection childSelection = selection.getChild(fieldName);
         if (childSelection.isNeverValid()) {
-          logger.trace("Skipping not selected field: {}.{}", context.getFieldPathTracker(), fieldName);
+          logger.debug("Skipping not selected field: {}.{}", context.getFieldPathTracker(), fieldName);
+          unpacker.skipValue();
           continue;
         }
+
+        if(unpacker.getNextFormat().getValueType() == ValueType.NIL){
+          unpacker.skipValue();
+          continue;
+        }
+
         ColumnMetadata childSchema = getChildSchema(tupleMetadata, fieldName);
-        writeElement(element, writer, null, fieldName, childSelection, childSchema);
+        writeElement(unpacker, writer, null, fieldName, childSelection, childSchema);
       }
     } finally {
       writer.end();
@@ -150,34 +154,44 @@ public class MapValueWriter extends ComplexValueWriter {
    * string or number etc. This method tries coerce the msgpack value into a
    * string so it can write the key into drill's MapWriter.
    *
-   * @param v
-   *            the value (key)
+   * @param unpacker
+   *                   the value (key)
    * @return the key represented as a java string.
    */
-  private String getFieldName(Value v) {
+  private String getFieldName(MessageUnpacker unpacker) throws IOException {
 
     String fieldName = null;
-
-    if (v.isStringValue()) {
-      ByteBuffer keyBytes = ByteBuffer.wrap(v.asStringValue().asByteArray());
-      fieldName = fieldNames.get(keyBytes);
+    ValueType type = unpacker.getNextFormat().getValueType();
+    if (type == ValueType.STRING) {
+      int size = unpacker.unpackRawStringHeader();
+      MessageBuffer messageBuffer = unpacker.readPayloadAsReference(size);
+      ByteBuffer byteBuffer = messageBuffer.sliceAsByteBuffer();
+      fieldName = fieldNames.get(byteBuffer);
       if (fieldName == null) {
-        fieldName = new String(keyBytes.array(), StandardCharsets.UTF_8);
-        fieldNames.put(keyBytes, fieldName);
+        byte[] bytes = new byte[byteBuffer.remaining()];
+        byteBuffer.get(bytes);
+        fieldName = new String(bytes, StandardCharsets.UTF_8);
+        fieldNames.put(byteBuffer, fieldName);
       }
       return fieldName;
-    } else if (v.isBinaryValue()) {
-      ByteBuffer keyBytes = ByteBuffer.wrap(v.asBinaryValue().asByteArray());
-      fieldName = fieldNames.get(keyBytes);
+    } else if (type == ValueType.BINARY) {
+      int size = unpacker.unpackBinaryHeader();
+      MessageBuffer messageBuffer = unpacker.readPayloadAsReference(size);
+      ByteBuffer byteBuffer = messageBuffer.sliceAsByteBuffer();
+      fieldName = fieldNames.get(byteBuffer);
       if (fieldName == null) {
-        fieldName = new String(keyBytes.array(), StandardCharsets.UTF_8);
-        fieldNames.put(keyBytes, fieldName);
+        byte[] bytes = new byte[byteBuffer.remaining()];
+        byteBuffer.get(bytes);
+        fieldName = new String(bytes, StandardCharsets.UTF_8);
+        fieldNames.put(byteBuffer, fieldName);
       }
       return fieldName;
-    } else if (v.isIntegerValue()) {
-      IntegerValue iv = v.asIntegerValue();
-      fieldName = iv.toString();
+    } else if (type == ValueType.INTEGER) {
+      long longValue = unpacker.unpackLong();
+      fieldName = Long.toString(longValue);
       return fieldName;
+    } else {
+      unpacker.skipValue();
     }
 
     return fieldName;

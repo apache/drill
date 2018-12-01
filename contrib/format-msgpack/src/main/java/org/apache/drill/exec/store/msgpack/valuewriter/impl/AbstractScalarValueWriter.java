@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackReaderContext;
@@ -24,7 +27,7 @@ import org.apache.drill.exec.store.msgpack.valuewriter.ScalarValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.Value;
+import org.msgpack.core.MessageUnpacker;
 
 import io.netty.buffer.DrillBuf;
 
@@ -52,10 +55,8 @@ public abstract class AbstractScalarValueWriter extends AbstractValueWriter impl
    * says otherwise. In which case the value writer will try to coerce the msgpack
    * value into the desired drill type.
    *
-   * @param defaultType
-   *                      default type if no using a schema.
-   * @param schema
-   *                      the desired schema if any
+   * @param defaultType default type if no using a schema.
+   * @param schema      the desired schema if any
    * @return the target type desired.
    */
   protected MinorType getTargetType(MinorType defaultType, ColumnMetadata schema) {
@@ -72,23 +73,23 @@ public abstract class AbstractScalarValueWriter extends AbstractValueWriter impl
    * any logging and dispatches to the doWrite method.
    */
   @Override
-  public void write(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter, FieldSelection selection,
-      ColumnMetadata schema) {
+  public void write(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      FieldSelection selection, ColumnMetadata schema) throws IOException {
 
-    MinorType targetSchemaType = getTargetType(getDefaultType(v), schema);
+    MinorType targetSchemaType = getTargetType(getDefaultType(), schema);
     if (logger.isDebugEnabled()) {
-      if (targetSchemaType != getDefaultType(v)) {
-        logger.debug("type: '{}' ---> coerced to: '{}'", v.getValueType(), targetSchemaType);
+      if (targetSchemaType != getDefaultType()) {
+        logger.debug("type: '{}' ---> coerced to: '{}'", getDefaultType(), targetSchemaType);
       }
     }
 
-    doWrite(v, mapWriter, fieldName, listWriter, targetSchemaType);
+    doWrite(unpacker, mapWriter, fieldName, listWriter, targetSchemaType);
   }
 
-  protected void writeAsVarBinary(byte[] bytes, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
-    int length = bytes.length;
+  protected void writeAsVarBinary(ByteBuffer byteBuffer, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+    int length = byteBuffer.remaining();
     ensure(length);
-    drillBuf.setBytes(0, bytes);
+    drillBuf.setBytes(0, byteBuffer);
     writeAsVarBinary(mapWriter, fieldName, listWriter, length);
   }
 
@@ -100,10 +101,10 @@ public abstract class AbstractScalarValueWriter extends AbstractValueWriter impl
     }
   }
 
-  protected void writeAsVarChar(byte[] readString, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
-    int length = readString.length;
+  protected void writeAsVarChar(ByteBuffer byteBuffer, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+    int length = byteBuffer.remaining();
     ensure(length);
-    drillBuf.setBytes(0, readString);
+    drillBuf.setBytes(0, byteBuffer);
     writeAsVarChar(mapWriter, fieldName, listWriter, length);
   }
 
@@ -140,23 +141,23 @@ public abstract class AbstractScalarValueWriter extends AbstractValueWriter impl
     }
   }
 
-  protected void writeAsVarBinary(long longValue, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
-    ensure(8);
-    drillBuf.setLong(0, longValue);
-    writeAsVarBinary(mapWriter, fieldName, listWriter, 8);
-  }
-
-  protected void writeAsVarBinary(boolean boolValue, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
-    ensure(1);
-    drillBuf.setBoolean(0, boolValue);
-    writeAsVarBinary(mapWriter, fieldName, listWriter, 1);
-  }
-
-  protected void writeAsVarBinary(double douvleValue, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
-    ensure(8);
-    drillBuf.setDouble(0, douvleValue);
-    writeAsVarBinary(mapWriter, fieldName, listWriter, 8);
-  }
+//  protected void writeAsVarBinary(long longValue, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+//    ensure(8);
+//    drillBuf.setLong(0, longValue);
+//    writeAsVarBinary(mapWriter, fieldName, listWriter, 8);
+//  }
+//
+//  protected void writeAsVarBinary(boolean boolValue, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+//    ensure(1);
+//    drillBuf.setBoolean(0, boolValue);
+//    writeAsVarBinary(mapWriter, fieldName, listWriter, 1);
+//  }
+//
+//  protected void writeAsVarBinary(double douvleValue, MapWriter mapWriter, String fieldName, ListWriter listWriter) {
+//    ensure(8);
+//    drillBuf.setDouble(0, douvleValue);
+//    writeAsVarBinary(mapWriter, fieldName, listWriter, 8);
+//  }
 
   protected void ensure(final int length) {
     drillBuf = drillBuf.reallocIfNeeded(length);

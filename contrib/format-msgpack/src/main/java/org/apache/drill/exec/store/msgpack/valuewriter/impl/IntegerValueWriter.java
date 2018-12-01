@@ -17,23 +17,25 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
-import java.math.BigInteger;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.IntegerValue;
-import org.msgpack.value.Value;
+import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.ValueType;
 
 public class IntegerValueWriter extends AbstractScalarValueWriter {
+
+  private final ByteBuffer integerBuffer = ByteBuffer.allocate(32);
 
   public IntegerValueWriter() {
   }
 
   @Override
-  public MinorType getDefaultType(Value v) {
+  public MinorType getDefaultType() {
     return MinorType.BIGINT;
   }
 
@@ -43,31 +45,38 @@ public class IntegerValueWriter extends AbstractScalarValueWriter {
   }
 
   @Override
-  public void doWrite(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter,
-      MinorType targetSchemaType) {
+  public void doWrite(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) throws IOException {
 
-    IntegerValue value = v.asIntegerValue();
-    if (!value.isInLongRange()) {
-      BigInteger i = value.toBigInteger();
-      throw new DrillRuntimeException(
-          "UnSupported messagepack type: " + value.getValueType() + " with BigInteger value: " + i);
-    }
+    long unpackLong = unpacker.unpackLong();
 
     switch (targetSchemaType) {
-    case VARCHAR:
-      writeAsVarChar(value.toString().getBytes(), mapWriter, fieldName, listWriter);
+    case VARCHAR: {
+      byte[] bytes = Long.toString(unpackLong).getBytes();
+      integerBuffer.position(0);
+      integerBuffer.put(bytes);
+      integerBuffer.position(0);
+      integerBuffer.limit(bytes.length);
+      writeAsVarChar(integerBuffer, mapWriter, fieldName, listWriter);
+    }
       break;
-    case VARBINARY:
-      writeAsVarBinary(value.toLong(), mapWriter, fieldName, listWriter);
+    case VARBINARY: {
+      byte[] bytes = Long.toString(unpackLong).getBytes();
+      integerBuffer.position(0);
+      integerBuffer.put(bytes);
+      integerBuffer.position(0);
+      integerBuffer.limit(bytes.length);
+      writeAsVarBinary(integerBuffer, mapWriter, fieldName, listWriter);
+    }
       break;
     case BIGINT:
-      writeAsBigInt(value.toLong(), mapWriter, fieldName, listWriter);
+      writeAsBigInt(unpackLong, mapWriter, fieldName, listWriter);
       break;
     case FLOAT8:
-      writeAsFloat8(value.toLong(), mapWriter, fieldName, listWriter);
+      writeAsFloat8(unpackLong, mapWriter, fieldName, listWriter);
       break;
     default:
-      throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
+      throw new DrillRuntimeException("Can't cast " + getDefaultType() + " into " + targetSchemaType);
     }
   }
 

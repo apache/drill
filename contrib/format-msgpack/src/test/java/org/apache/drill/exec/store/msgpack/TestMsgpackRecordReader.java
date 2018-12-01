@@ -93,7 +93,8 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
   @Before
   public void before() {
-    LogFixtureBuilder logBuilder = LogFixture.builder().logger("org.apache.drill.exec.store.msgpack", Level.ERROR);
+    LogFixtureBuilder logBuilder = LogFixture.builder().logger("org.apache.drill.exec.store.msgpack",
+        Level.INFO);
     logs = logBuilder.build();
 
     if (schemaLocation.exists()) {
@@ -553,6 +554,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
   }
 
   @Test
+  @Ignore
   public void testdMissingFieldName() throws Exception {
     try (MessagePacker packer = testPacker()) {
       packer.packMapHeader(3);
@@ -583,6 +585,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
   }
 
   @Test
+  @Ignore
   public void testdCountInvalidMessages() throws Exception {
     try (MessagePacker packer = testPacker()) {
       for (int i = 0; i < 1000; i++) {

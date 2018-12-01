@@ -64,8 +64,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
    * @param fragmentContext
    * @param inputPath
    * @param fileSystem
-   * @param columns
-   *                          pathnames of columns/subfields to read
+   * @param columns         pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */
   public MsgpackRecordReader(MsgpackFormatConfig config, final FragmentContext fragmentContext, final String inputPath,

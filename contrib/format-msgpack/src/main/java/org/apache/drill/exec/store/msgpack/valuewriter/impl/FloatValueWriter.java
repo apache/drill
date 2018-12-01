@@ -17,22 +17,26 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.FloatValue;
-import org.msgpack.value.Value;
+import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.ValueType;
 
 public class FloatValueWriter extends AbstractScalarValueWriter {
+
+  private final ByteBuffer floatBuffer = ByteBuffer.allocate(32);
 
   public FloatValueWriter() {
     super();
   }
 
   @Override
-  public MinorType getDefaultType(Value v) {
+  public MinorType getDefaultType() {
     return MinorType.FLOAT8;
   }
 
@@ -40,25 +44,38 @@ public class FloatValueWriter extends AbstractScalarValueWriter {
   public ValueType getMsgpackValueType() {
     return ValueType.FLOAT;
   }
+
   @Override
-  public void doWrite(Value v, MapWriter mapWriter, String fieldName, ListWriter listWriter,
-      MinorType targetSchemaType) {
-    FloatValue value = v.asFloatValue();
+  public void doWrite(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
+      MinorType targetSchemaType) throws IOException {
+    double unpackDouble = unpacker.unpackDouble();
     switch (targetSchemaType) {
-    case VARCHAR:
-      writeAsVarChar(value.toString().getBytes(), mapWriter, fieldName, listWriter);
+    case VARCHAR: {
+      byte[] bytes = Double.toString(unpackDouble).getBytes();
+      floatBuffer.position(0);
+      floatBuffer.put(bytes);
+      floatBuffer.position(0);
+      floatBuffer.limit(bytes.length);
+      writeAsVarChar(floatBuffer, mapWriter, fieldName, listWriter);
+    }
       break;
-    case VARBINARY:
-      writeAsVarBinary(value.toDouble(), mapWriter, fieldName, listWriter);
+    case VARBINARY: {
+      byte[] bytes = Double.toString(unpackDouble).getBytes();
+      floatBuffer.position(0);
+      floatBuffer.put(bytes);
+      floatBuffer.position(0);
+      floatBuffer.limit(bytes.length);
+      writeAsVarBinary(floatBuffer, mapWriter, fieldName, listWriter);
+    }
       break;
     case FLOAT8:
-      writeAsFloat8(value.toDouble(), mapWriter, fieldName, listWriter);
+      writeAsFloat8(unpackDouble, mapWriter, fieldName, listWriter);
       break;
     case BIGINT:
-      writeAsBigInt((long) value.toDouble(), mapWriter, fieldName, listWriter);
+      writeAsBigInt((long) unpackDouble, mapWriter, fieldName, listWriter);
       break;
     default:
-      throw new DrillRuntimeException("Can't cast " + value.getValueType() + " into " + targetSchemaType);
+      throw new DrillRuntimeException("Can't cast " + getDefaultType() + " into " + targetSchemaType);
     }
   }
 }

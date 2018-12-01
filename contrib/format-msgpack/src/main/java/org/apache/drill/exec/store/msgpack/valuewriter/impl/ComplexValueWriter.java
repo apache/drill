@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
+import java.io.IOException;
 import java.util.EnumMap;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -29,7 +30,9 @@ import org.apache.drill.exec.store.msgpack.valuewriter.ValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.msgpack.value.Value;
+import org.msgpack.core.ExtensionTypeHeader;
+import org.msgpack.core.MessageFormatException;
+import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.ValueType;
 import org.slf4j.helpers.MessageFormatter;
 
@@ -68,53 +71,56 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
   /**
    * Writes a value into the given map or list.
    *
-   * @param value
-   *                     the value to write
+   * @param unpacker   the value to write
    * @param mapWriter
    * @param listWriter
    * @param fieldName
    * @param selection
-   * @param schema
-   *                     the desired schema for the given value
+   * @param schema     the desired schema for the given value
+   * @throws IOException
+   * @throws MessageFormatException
    */
-  protected void writeElement(Value value, MapWriter mapWriter, ListWriter listWriter, String fieldName,
-      FieldSelection selection, ColumnMetadata schema) {
+  protected void writeElement(MessageUnpacker unpacker, MapWriter mapWriter, ListWriter listWriter, String fieldName,
+      FieldSelection selection, ColumnMetadata schema) throws MessageFormatException, IOException {
+
+    // Get the type of the value. It can be any of the MAP, ARRAY, FLOAT, BOOLEAN,
+    // STRING, INTEGER.
+    ValueType valueType = unpacker.getNextFormat().getValueType();
 
     if (logger.isDebugEnabled()) {
-      logDebug(value, mapWriter, fieldName, schema);
-    } else if (logger.isTraceEnabled()) {
-      logTrace(value, mapWriter, fieldName, schema);
+      logDebug(valueType, mapWriter, fieldName, schema);
     }
+
     try {
-      // Get the type of the value. It can be any of the MAP, ARRAY, FLOAT, BOOLEAN,
-      // STRING, INTEGER.
-      ValueType valueType = value.getValueType();
       ValueWriter writer = null;
+
       if (valueType == ValueType.EXTENSION) {
-        byte extType = value.asExtensionValue().getType();
+        ExtensionTypeHeader header = unpacker.unpackExtensionTypeHeader();
+        byte extType = header.getType();
         if (extType == -1) {
           extType = 0;
         }
 
         // Try to find extension type reader for given type.
+        extensionWriters[extType].setExtensionTypeHeader(header);
         writer = extensionWriters[extType];
       } else {
         // We use that type to retrieve the corresponding writer.
         writer = valueWriterMap.get(valueType);
       }
       // Use writer to write the value into the drill map or list writers.
-      writer.write(value, mapWriter, fieldName, listWriter, selection, schema);
+      writer.write(unpacker, mapWriter, fieldName, listWriter, selection, schema);
     } catch (Exception e) {
       String message = null;
       if (mapWriter != null) {
         message = MessageFormatter
             .arrayFormat("failed to write type: '{}' value: '{}' into map at '{}.{}' target schema: '{}'\n",
-                new Object[] { value.getValueType(), value, context.getFieldPathTracker(), fieldName, schema })
+                new Object[] { valueType, unpacker, context.getFieldPathTracker(), fieldName, schema })
             .getMessage();
       } else {
         message = MessageFormatter
             .arrayFormat("failed to write type: '{}' value: '{}' into list at '{}.[]' target schema: '{}'\n",
-                new Object[] { value.getValueType(), value, context.getFieldPathTracker(), schema })
+                new Object[] { valueType, unpacker, context.getFieldPathTracker(), schema })
             .getMessage();
       }
       if (context.isLenient()) {
@@ -125,24 +131,13 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
     }
   }
 
-  private void logDebug(Value value, MapWriter mapWriter, String fieldName, ColumnMetadata schema) {
+  private void logDebug(ValueType valueType, MapWriter mapWriter, String fieldName, ColumnMetadata schema) {
     if (schema != null) {
-      logger.debug("write type: '{}' into {} at '{}' target type: '{}' mode: '{}'", value.getValueType(),
+      logger.debug("write type: '{}' into {} at '{}' target type: '{}' mode: '{}'", valueType,
           mapWriter == null ? "list" : "map", context.getFieldPathTracker(), schema.type(), schema.mode());
     } else {
-      logger.debug("write type: '{}' into {} at '{}'", value.getValueType(), mapWriter == null ? "list" : "map",
-          context.getFieldPathTracker());
+      logger.debug("write type: '{}' into {} at '{}{}'", valueType, mapWriter == null ? "list" : "map",
+          context.getFieldPathTracker(), mapWriter == null ? "[]" : "." + fieldName);
     }
   }
-
-  private void logTrace(Value value, MapWriter mapWriter, String fieldName, ColumnMetadata schema) {
-    if (schema != null) {
-      logger.trace("write type: '{}' value: '{}' into {} at '{}' target type: '{}' mode: '{}'", value.getValueType(),
-          value, mapWriter == null ? "list" : "map", context.getFieldPathTracker(), schema.type(), schema.mode());
-    } else {
-      logger.trace("write type: '{}' value: '{}' into {} at '{}'", value.getValueType(), value,
-          mapWriter == null ? "list" : "map", context.getFieldPathTracker());
-    }
-  }
-
 }
