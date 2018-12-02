@@ -183,6 +183,13 @@ public class TupleSchema implements TupleMetadata {
   public boolean isRoot() { return parentMap == null; }
 
   @Override
+  public String schemaString() {
+    return nameSpace.entries().stream()
+      .map(ColumnMetadata::columnString)
+      .collect(Collectors.joining(", "));
+  }
+
+  @Override
   public String toString() {
     StringBuilder builder = new StringBuilder()
         .append("[")

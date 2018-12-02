@@ -118,4 +118,18 @@ public class MapColumnMetadata extends AbstractColumnMetadata {
           .setMode(mode)
           .build());
   }
+
+  @Override
+  public String typeString() {
+    StringBuilder builder = new StringBuilder();
+    if (isArray()) {
+      builder.append("ARRAY<");
+    }
+    builder.append("MAP<").append(mapSchema.schemaString()).append(">");
+    if (isArray()) {
+      builder.append(">");
+    }
+    return builder.toString();
+  }
+
 }

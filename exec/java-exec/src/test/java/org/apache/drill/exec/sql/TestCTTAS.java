@@ -465,28 +465,28 @@ public class TestCTTAS extends BaseTestQuery {
 
   @Test
   public void testSelectFromTemporaryTableWithAndWithoutLeadingSlash() throws Exception {
-    String tablename = "select_from_table_with_and_without_slash";
+    String tableName = "select_from_table_with_and_without_slash";
 
     try {
-      test("CREATE TEMPORARY TABLE %s AS SELECT * FROM cp.`region.json`", tablename);
+      test("CREATE TEMPORARY TABLE %s AS SELECT * FROM cp.`region.json`", tableName);
 
       String query = "SELECT region_id FROM `%s` LIMIT 1";
 
       testBuilder()
-          .sqlQuery(query, tablename)
+          .sqlQuery(query, tableName)
           .unOrdered()
           .baselineColumns("region_id")
           .baselineValues(0L)
           .go();
 
       testBuilder()
-          .sqlQuery(query, "/" + tablename)
+          .sqlQuery(query, "/" + tableName)
           .unOrdered()
           .baselineColumns("region_id")
           .baselineValues(0L)
           .go();
     } finally {
-      test("DROP TABLE IF EXISTS %s", tablename);
+      test("DROP TABLE IF EXISTS %s", tableName);
     }
   }
 

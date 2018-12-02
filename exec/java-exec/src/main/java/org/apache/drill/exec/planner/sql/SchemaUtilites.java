@@ -217,7 +217,7 @@ public class SchemaUtilites {
     final AbstractSchema drillSchema = unwrapAsDrillSchemaInstance(schema);
     if (!drillSchema.isMutable()) {
       throw UserException.validationError()
-          .message("Unable to create or drop tables/views. Schema [%s] is immutable.", getSchemaPath(schema))
+          .message("Unable to create or drop objects. Schema [%s] is immutable.", getSchemaPath(schema))
           .build(logger);
     }
 
@@ -288,6 +288,23 @@ public class SchemaUtilites {
           .message("Temporary workspace [%s] must be file-based, instance of " +
               "WorkspaceSchemaFactory.WorkspaceSchema", schema)
           .build(logger);
+    }
+  }
+
+  /**
+   * If table schema is not indicated in sql call, returns temporary workspace.
+   * If schema is indicated, resolves to mutable table schema.
+   *
+   * @param tableSchema table schema
+   * @param defaultSchema default schema
+   * @param config drill config
+   * @return resolved schema
+   */
+  public static AbstractSchema resolveToTemporarySchema(List<String> tableSchema, SchemaPlus defaultSchema, DrillConfig config) {
+    if (tableSchema.size() == 0) {
+      return SchemaUtilites.getTemporaryWorkspace(defaultSchema, config);
+    } else {
+      return SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
     }
   }
 

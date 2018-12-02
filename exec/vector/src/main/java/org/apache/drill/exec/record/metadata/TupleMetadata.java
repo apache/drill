@@ -93,4 +93,12 @@ public interface TupleMetadata extends Iterable<ColumnMetadata> {
 
   String fullName(ColumnMetadata column);
   String fullName(int index);
+
+  /**
+   * Converts schema metadata into string representation
+   * accepted by the table schema parser.
+   *
+   * @return schema metadata string representation
+   */
+  String schemaString();
 }

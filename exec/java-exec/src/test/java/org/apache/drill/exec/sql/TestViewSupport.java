@@ -663,7 +663,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   @Category(UnlikelyTest.class)
   public void showProperMsgWhenTryingToDropAViewInImmutableSchema() throws Exception{
     errorMsgTestHelper("DROP VIEW cp.nonExistentView",
-        "Unable to create or drop tables/views. Schema [cp] is immutable.");
+        "Unable to create or drop objects. Schema [cp] is immutable.");
   }
 
   @Test // DRILL-2423
