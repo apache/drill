@@ -246,4 +246,21 @@ public interface ColumnMetadata {
   void bind(TupleMetadata parentTuple);
 
   ColumnMetadata copy();
+
+  /**
+   * Converts type metadata into string representation
+   * accepted by the table schema parser.
+   *
+   * @return type metadata string representation
+   */
+  String typeString();
+
+  /**
+   * Converts column metadata into string representation
+   * accepted by the table schema parser.
+   *
+   * @return column metadata string representation
+   */
+  String columnString();
+
 }

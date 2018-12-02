@@ -180,4 +180,50 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public MaterializedField emptySchema() { return schema(); }
+
+  @Override
+  public String typeString() {
+    StringBuilder builder = new StringBuilder();
+    if (isArray()) {
+      builder.append("ARRAY<");
+    }
+
+    switch (type) {
+      case VARDECIMAL:
+        builder.append("DECIMAL");
+        break;
+      case FLOAT4:
+        builder.append("FLOAT");
+        break;
+      case FLOAT8:
+        builder.append("DOUBLE");
+        break;
+      case BIT:
+        builder.append("BOOLEAN");
+        break;
+      case INTERVALYEAR:
+        builder.append("INTERVAL YEAR");
+        break;
+      case INTERVALDAY:
+        builder.append("INTERVAL DAY");
+        break;
+      default:
+        // other minor types names correspond to SQL-like equivalents
+        builder.append(type.name());
+    }
+
+    if (precision() > 0) {
+      builder.append("(").append(precision());
+      if (scale() > 0) {
+        builder.append(", ").append(scale());
+      }
+      builder.append(")");
+    }
+
+    if (isArray()) {
+      builder.append(">");
+    }
+    return builder.toString();
+  }
+
 }

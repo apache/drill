@@ -111,7 +111,7 @@ public class DrillSqlWorker {
     } catch (Exception e) {
       logger.trace("There was an error during conversion into physical plan. " +
           "Will sync remote and local function registries if needed and retry " +
-          "in case if issue was due to missing function implementation.");
+          "in case if issue was due to missing function implementation.", e);
       if (context.getFunctionRegistry().syncWithRemoteRegistry(
           context.getDrillOperatorTable().getFunctionRegistryVersion())) {
         context.reloadDrillOperatorTable();

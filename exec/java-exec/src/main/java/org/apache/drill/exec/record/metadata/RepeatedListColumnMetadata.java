@@ -99,4 +99,10 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
     return childSchema == null ? UNKNOWN_DIMENSIONS
         : childSchema.dimensions() + 1;
   }
+
+  @Override
+  public String typeString() {
+    return "ARRAY<" + childSchema.typeString() + ">";
+  }
+
 }

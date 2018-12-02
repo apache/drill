@@ -220,4 +220,34 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
         .append("]")
         .toString();
   }
+
+  @Override
+  public String typeString() {
+    return majorType().toString();
+  }
+
+  @Override
+  public String columnString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("`").append(escapeSpecialSymbols(name())).append("`");
+    builder.append(" ");
+    builder.append(typeString());
+
+    // Drill does not have nullability notion for complex types
+    if (!isNullable() && !isArray() && !isMap()) {
+      builder.append(" NOT NULL");
+    }
+
+    return builder.toString();
+  }
+
+  /**
+   * If given value contains backticks (`) or backslashes (\), escapes them.
+   *
+   * @param value string value
+   * @return updated value
+   */
+  private String escapeSpecialSymbols(String value) {
+    return value.replaceAll("(\\\\)|(`)", "\\\\$0");
+  }
 }
