@@ -87,7 +87,7 @@ export args
 
 # Set default scheduling priority
 DRILL_NICENESS=${DRILL_NICENESS:-0}
-GRACEFUL_FILE=$DRILL_PID_DIR/$GRACEFUL_SIGFILE
+GRACEFUL_FILE=$DRILL_HOME/$GRACEFUL_SIGFILE
 
 waitForProcessEnd()
 {

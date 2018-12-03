@@ -18,8 +18,9 @@
 package org.apache.drill.exec.server;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -373,18 +374,33 @@ public class Drillbit implements AutoCloseable {
       }
     }
 
+    /*
+     * Poll for the graceful file, if the file is found cloase the drillbit. In case if the DRILL_HOME path is not
+     * set, graceful shutdown will not be supported from the command line.
+     */
     private void pollShutdown(Drillbit drillbit) throws IOException, InterruptedException {
-      final Path drillPidDirPath = FileSystems.getDefault().getPath(System.getenv("DRILL_PID_DIR"));
-      final String gracefulFileName = System.getenv("GRACEFUL_SIGFILE");
+      final String drillHome = System.getenv("DRILL_HOME");
+      final String gracefulFile = System.getenv("GRACEFUL_SIGFILE");
+      final Path drillHomePath;
+      if (drillHome == null || gracefulFile == null) {
+        logger.warn("Cannot access graceful file. Graceful shutdown from command line will not be supported.");
+        return;
+      }
+      try {
+        drillHomePath = Paths.get(drillHome);
+      } catch (InvalidPathException e) {
+        logger.warn("Cannot access graceful file. Graceful shutdown from command line will not be supported.");
+        return;
+      }
       boolean triggered_shutdown = false;
       WatchKey wk = null;
-      try (final WatchService watchService = FileSystems.getDefault().newWatchService()) {
-        drillPidDirPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE);
+      try (final WatchService watchService = drillHomePath.getFileSystem().newWatchService()) {
+        drillHomePath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE);
         while (!triggered_shutdown) {
           wk = watchService.take();
           for (WatchEvent<?> event : wk.pollEvents()) {
             final Path changed = (Path) event.context();
-            if (changed != null && changed.endsWith(gracefulFileName)) {
+            if (changed != null && changed.endsWith(gracefulFile)) {
               drillbit.interruptPollShutdown = false;
               triggered_shutdown = true;
               drillbit.close();
