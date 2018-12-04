@@ -47,6 +47,12 @@ public class RowKeyJoinPrel extends JoinPrel implements Prel {
     Preconditions.checkArgument(joinType == JoinRelType.INNER);
   }
 
+  public RowKeyJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right,
+                        RexNode condition, JoinRelType joinType, boolean isSemiJoin) throws InvalidRelException {
+    super(cluster, traits, left, right, condition, joinType, isSemiJoin);
+    Preconditions.checkArgument(joinType == JoinRelType.INNER);
+  }
+
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     PhysicalOperator leftPop = ((Prel)left).getPhysicalOperator(creator);
@@ -67,7 +73,8 @@ public class RowKeyJoinPrel extends JoinPrel implements Prel {
   public Join copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right,
       JoinRelType joinType, boolean semiJoinDone) {
     try {
-      RowKeyJoinPrel rkj = new RowKeyJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType);
+      RowKeyJoinPrel rkj = new RowKeyJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr,
+          joinType, isSemiJoin());
       rkj.setEstimatedRowCount(this.estimatedRowCount);
       return rkj;
     } catch (InvalidRelException e) {
