@@ -1130,6 +1130,7 @@ public class IndexPlanTest extends BaseJsonTest {
     );
   }
 
+  @Ignore
   @Test
   public void testCastTimestampPlan() throws Exception {
     String query = "SELECT  t.id.ssn as ssn FROM hbase.`index_test_primary` as t " +
@@ -1698,8 +1699,7 @@ public class IndexPlanTest extends BaseJsonTest {
   public void testRowkeyJoinPushdown_1() throws Exception {
     // _id IN (select col ...)
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where _id in (select t2._id " +
-        " from hbase.`index_test_primary` t2 where cast(t2.activity.irs.firstlogin as timestamp) = " +
-        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+        " from hbase.`index_test_primary` t2 where t2.address.city = 'pfrrs' and t2.address.state = 'pc')";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
@@ -1707,6 +1707,7 @@ public class IndexPlanTest extends BaseJsonTest {
           .sqlQuery(query)
           .ordered()
           .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100008861")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
@@ -1717,8 +1718,7 @@ public class IndexPlanTest extends BaseJsonTest {
   public void testRowkeyJoinPushdown_2() throws Exception {
     // _id = col
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
-        " where t1._id = t2._id and cast(t2.activity.irs.firstlogin as timestamp) = " +
-        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+        " where t1._id = t2._id and t2.address.city = 'pfrrs' and t2.address.state = 'pc'";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
@@ -1726,6 +1726,7 @@ public class IndexPlanTest extends BaseJsonTest {
           .sqlQuery(query)
           .ordered()
           .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100008861")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
@@ -1736,9 +1737,7 @@ public class IndexPlanTest extends BaseJsonTest {
   public void testRowkeyJoinPushdown_3() throws Exception {
     // filters on both sides of the join
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
-        " where t1._id = t2._id and cast(t2.activity.irs.firstlogin as timestamp) = " +
-        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S') and cast(t1.activity.irs.firstlogin as timestamp) = " +
-        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S') ";
+        " where t1._id = t2._id and t1.address.city = 'pfrrs' and t2.address.city = 'pfrrs'";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
@@ -1746,6 +1745,7 @@ public class IndexPlanTest extends BaseJsonTest {
           .sqlQuery(query)
           .ordered()
           .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100008861")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
@@ -1756,8 +1756,7 @@ public class IndexPlanTest extends BaseJsonTest {
   public void testRowkeyJoinPushdown_4() throws Exception {
     // _id = cast(col as int) works since the rowids are internally cast to string!
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
-        " where t1._id = cast(t2.rowid as int) and cast(t2.activity.irs.firstlogin as timestamp) = " +
-        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+        " where t1._id = cast(t2.rowid as int) and t2.address.city = 'pfrrs'";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
@@ -1765,6 +1764,7 @@ public class IndexPlanTest extends BaseJsonTest {
           .sqlQuery(query)
           .ordered()
           .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100008861")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
@@ -1775,8 +1775,7 @@ public class IndexPlanTest extends BaseJsonTest {
   public void testRowkeyJoinPushdown_5() throws Exception {
     // _id = cast(cast(col as int) as varchar(10)
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
-        " where t1._id = cast(cast(t2.rowid as int) as varchar(10)) " +
-        " and cast(t2.activity.irs.firstlogin as timestamp) = to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+        " where t1._id = cast(cast(t2.rowid as int) as varchar(10)) and t2.address.city = 'pfrrs'";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
@@ -1784,6 +1783,7 @@ public class IndexPlanTest extends BaseJsonTest {
           .sqlQuery(query)
           .ordered()
           .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100008861")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
@@ -1795,15 +1795,14 @@ public class IndexPlanTest extends BaseJsonTest {
     // _id IN (select cast(cast(col as int) as varchar(10) ... JOIN ...)
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where _id in " +
         "(select cast(cast(t2.rowid as int) as varchar(10)) from hbase.`index_test_primary` t2, hbase.`index_test_primary` t3 " +
-        "where t2.address.city = t3.address.city and cast(t2.activity.irs.firstlogin as timestamp) =  " +
-        "to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+        "where t2.address.city = t3.address.city and t2.name.fname = 'ubar')";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
       testBuilder()
           .sqlQuery(query)
           .ordered()
-          .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100001382")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
@@ -1814,17 +1813,17 @@ public class IndexPlanTest extends BaseJsonTest {
   public void testRowkeyJoinPushdown_7() throws Exception {
     // with non-covering index
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
-        "where t1._id = t2.rowid and cast(t2.activity.irs.firstlogin as timestamp) = " +
-        "to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+        "where t1._id = t2.rowid and t2.address.city = 'pfrrs'";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + incrnonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query,
-          new String[] {"RowKeyJoin", "RestrictedJsonTableGroupScan", "RowKeyJoin", "indexName=hash_i_cast_timestamp_firstlogin"},
+          new String[] {"RowKeyJoin", "RestrictedJsonTableGroupScan", "RowKeyJoin", "Scan.*condition=\\(address.city = \"pfrrs\"\\)"},
           new String[] {});
       testBuilder()
           .sqlQuery(query)
           .ordered()
           .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100008861")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
@@ -1855,8 +1854,7 @@ public class IndexPlanTest extends BaseJsonTest {
   public void testRowkeyJoinPushdown_9() throws Exception {
     // Negative test - rowkey join should not be present
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where cast(_id as varchar(10)) in " +
-        "(select t2._id from hbase.`index_test_primary` t2 where cast(t2.activity.irs.firstlogin as timestamp) = " +
-        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+        "(select t2._id from hbase.`index_test_primary` t2 where t2.address.city = 'pfrrs')";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[] {}, new String[] {"RowKeyJoin"});
@@ -1864,6 +1862,7 @@ public class IndexPlanTest extends BaseJsonTest {
           .sqlQuery(query)
           .ordered()
           .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100008861")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
@@ -1874,8 +1873,7 @@ public class IndexPlanTest extends BaseJsonTest {
   public void testRowkeyJoinPushdown_10() throws Exception {
     // Negative test - rowkey join should not be present
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
-        " where cast(t1._id as varchar(10)) = cast(t2._id as varchar(10)) and cast(t2.activity.irs.firstlogin as timestamp) = " +
-        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+        " where cast(t1._id as varchar(10)) = cast(t2._id as varchar(10)) and t2.address.city = 'pfrrs'";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[] {}, new String[] {"RowKeyJoin"});
@@ -1883,6 +1881,7 @@ public class IndexPlanTest extends BaseJsonTest {
           .sqlQuery(query)
           .ordered()
           .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100008861")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
@@ -1894,7 +1893,7 @@ public class IndexPlanTest extends BaseJsonTest {
     // Negative test - rowkey join should not be present
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where cast(_id as varchar(10)) in " +
         "(select t2._id from hbase.`index_test_primary` t2, hbase.`index_test_primary` t3 where t2.address.city = t3.address.city " +
-        "and cast(t2.activity.irs.firstlogin as timestamp) =  to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+        "and t2.address.city = 'pfrrs')";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[] {}, new String[] {"RowKeyJoin"});
@@ -1902,20 +1901,21 @@ public class IndexPlanTest extends BaseJsonTest {
           .sqlQuery(query)
           .ordered()
           .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100008861")
           .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
     }
   }
 
+  @Ignore
   @Test
   public void testRowkeyJoinPushdown_12() throws Exception {
     // JOIN _id IN (select cast(cast(col as int) as varchar(10) ... JOIN ...) - rowkey join appears in intermediate join order
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t4 " +
         "where t1.address.city = t4.address.city and t1._id in (select cast(cast(t2.rowid as int) as varchar(10)) " +
         "from hbase.`index_test_primary` t2, hbase.`index_test_primary` t3 where t2.address.city = t3.address.city " +
-        "and cast(t2.activity.irs.firstlogin as timestamp) = to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')) " +
-        "and t4.address.state = 'pc'";
+        "and t2.address.state = 'pc') and t4.address.state = 'pc'";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query,
@@ -1932,12 +1932,12 @@ public class IndexPlanTest extends BaseJsonTest {
     }
   }
 
+  @Ignore
   @Test
   public void testRowkeyJoinPushdown_13() throws Exception {
     // Check option planner.rowkeyjoin_conversion_using_hashjoin works as expected!
     String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where _id in (select t2._id " +
-            " from hbase.`index_test_primary` t2 where cast(t2.activity.irs.firstlogin as timestamp) = " +
-            " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+            " from hbase.`index_test_primary` t2 where t2.address.city = 'pfrrs')";
     try {
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
       PlanTestBase.testPlanMatchingPatterns(query, new String[]{"RowKeyJoin"}, new String[]{});
@@ -1945,6 +1945,7 @@ public class IndexPlanTest extends BaseJsonTest {
               .sqlQuery(query)
               .ordered()
               .baselineColumns("ssn").baselineValues("100007423")
+              .baselineColumns("ssn").baselineValues("100008861")
               .go();
       test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";" +
               forceRowKeyJoinConversionUsingHashJoin + ";");
@@ -1953,6 +1954,7 @@ public class IndexPlanTest extends BaseJsonTest {
               .sqlQuery(query)
               .ordered()
               .baselineColumns("ssn").baselineValues("100007423")
+              .baselineColumns("ssn").baselineValues("100008861")
               .go();
     } finally {
       test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";" +

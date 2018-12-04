@@ -70,11 +70,11 @@ public class MergeJoinPrule extends JoinPruleBase {
       RelCollation collationRight = getCollation(join.getRightKeys());
 
       if(isDist){
-        createDistBothPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight, hashSingleKey, false);
+        createDistBothPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight, hashSingleKey);
       }else{
         if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
           createBroadcastPlan(call, join, join.getCondition(), PhysicalJoinType.MERGE_JOIN,
-              left, right, collationLeft, collationRight, false);
+              left, right, collationLeft, collationRight);
         }
       }
 

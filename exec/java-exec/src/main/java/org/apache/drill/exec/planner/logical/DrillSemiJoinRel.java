@@ -98,4 +98,9 @@ public class DrillSemiJoinRel extends SemiJoin implements DrillJoin, DrillRel {
 
     return new LogicalSemiJoin(leftOp, rightOp, conditions, joinType);
   }
+
+  @Override
+  public boolean isSemiJoin() {
+    return true;
+  }
 }

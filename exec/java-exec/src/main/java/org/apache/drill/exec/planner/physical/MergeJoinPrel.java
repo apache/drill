@@ -50,6 +50,11 @@ public class MergeJoinPrel  extends JoinPrel {
     joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
   }
 
+  public MergeJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+                       JoinRelType joinType, boolean semijoin) throws InvalidRelException {
+    super(cluster, traits, left, right, condition, joinType, semijoin);
+    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
+  }
 
   @Override
   public Join copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
