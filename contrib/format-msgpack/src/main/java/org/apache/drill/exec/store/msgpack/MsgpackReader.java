@@ -175,8 +175,7 @@ public class MsgpackReader {
   private void writeOneMessage(MessageUnpacker unpacker, ComplexWriter writer, TupleMetadata schema)
       throws IOException {
     if (isSelectCount) {
-      int n = unpacker.unpackMapHeader();
-      unpacker.skipValue(n);
+      unpacker.skipValue();
       writer.rootAsMap().bit("count").writeBit(1);
     } else {
       logger.debug("start writing message");

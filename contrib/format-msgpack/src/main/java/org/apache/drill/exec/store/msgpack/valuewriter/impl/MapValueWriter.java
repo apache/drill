@@ -168,8 +168,7 @@ public class MapValueWriter extends ComplexValueWriter {
       ByteBuffer byteBuffer = messageBuffer.sliceAsByteBuffer();
       fieldName = fieldNames.get(byteBuffer);
       if (fieldName == null) {
-        byte[] bytes = new byte[byteBuffer.remaining()];
-        byteBuffer.get(bytes);
+        byte[] bytes = messageBuffer.toByteArray();
         fieldName = new String(bytes, StandardCharsets.UTF_8);
         fieldNames.put(byteBuffer, fieldName);
       }
@@ -180,8 +179,7 @@ public class MapValueWriter extends ComplexValueWriter {
       ByteBuffer byteBuffer = messageBuffer.sliceAsByteBuffer();
       fieldName = fieldNames.get(byteBuffer);
       if (fieldName == null) {
-        byte[] bytes = new byte[byteBuffer.remaining()];
-        byteBuffer.get(bytes);
+        byte[] bytes = messageBuffer.toByteArray();
         fieldName = new String(bytes, StandardCharsets.UTF_8);
         fieldNames.put(byteBuffer, fieldName);
       }
