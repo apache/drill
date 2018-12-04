@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
@@ -95,7 +96,7 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
    *   </li>
    * </ul>
    */
-  interface BuildSidePartitioning extends HashJoinStateCalculator<PostBuildCalculations> {
+  interface BuildSidePartitioning extends HashJoinStateCalculator<PostBuildCalculations>, HashJoinSpillControl {
     void initialize(boolean firstCycle,
                     boolean reserveHash,
                     RecordBatch buildSideBatch,
@@ -119,8 +120,6 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
 
     long getMaxReservedMemory();
 
-    boolean shouldSpill();
-
     String makeDebugString();
   }
 
@@ -128,7 +127,7 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
    * The interface representing the {@link HashJoinStateCalculator} corresponding to the
    * {@link HashJoinState#POST_BUILD_CALCULATIONS} state.
    */
-  interface PostBuildCalculations extends HashJoinStateCalculator<HashJoinMemoryCalculator> {
+  interface PostBuildCalculations extends HashJoinStateCalculator<HashJoinMemoryCalculator>, HashJoinSpillControl {
     /**
      * Initializes the calculator with additional information needed.
      * @param probeEmty True if the probe is empty. False otherwise.
@@ -136,8 +135,6 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
     void initialize(boolean probeEmty);
 
     int getProbeRecordsPerBatch();
-
-    boolean shouldSpill();
 
     String makeDebugString();
   }
@@ -154,6 +151,9 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
     long getInMemorySize();
   }
 
+  interface HashJoinSpillControl {
+    boolean shouldSpill(VectorContainer currentVectorContainer);
+  }
   /**
    * This class represents the memory size statistics for an entire set of partitions.
    */

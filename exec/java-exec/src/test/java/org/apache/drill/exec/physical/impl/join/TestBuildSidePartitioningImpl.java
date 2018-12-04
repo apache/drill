@@ -392,7 +392,7 @@ public class TestBuildSidePartitioningImpl {
     Assert.assertEquals(2, calc.getNumPartitions());
 
     partition1.add(new HashJoinMemoryCalculator.BatchStat(10, 8));
-    Assert.assertTrue(calc.shouldSpill());
+    Assert.assertTrue(calc.shouldSpill(null));
   }
 
   @Test
@@ -437,32 +437,32 @@ public class TestBuildSidePartitioningImpl {
     // Add to partition 1, no spill needed
     {
       partition1.add(new HashJoinMemoryCalculator.BatchStat(10, 7));
-      Assert.assertFalse(calc.shouldSpill());
+      Assert.assertFalse(calc.shouldSpill(null));
     }
 
     // Add to partition 2, no spill needed
     {
       partition2.add(new HashJoinMemoryCalculator.BatchStat(10, 8));
-      Assert.assertFalse(calc.shouldSpill());
+      Assert.assertFalse(calc.shouldSpill(null));
     }
 
     // Add to partition 1, and partition 1 spilled
     {
       partition1.add(new HashJoinMemoryCalculator.BatchStat(10, 8));
-      Assert.assertTrue(calc.shouldSpill());
+      Assert.assertTrue(calc.shouldSpill(null));
       partition1.spill();
     }
 
     // Add to partition 2, no spill needed
     {
       partition2.add(new HashJoinMemoryCalculator.BatchStat(10, 7));
-      Assert.assertFalse(calc.shouldSpill());
+      Assert.assertFalse(calc.shouldSpill(null));
     }
 
     // Add to partition 2, and partition 2 spilled
     {
       partition2.add(new HashJoinMemoryCalculator.BatchStat(10, 8));
-      Assert.assertTrue(calc.shouldSpill());
+      Assert.assertTrue(calc.shouldSpill(null));
       partition2.spill();
     }
 

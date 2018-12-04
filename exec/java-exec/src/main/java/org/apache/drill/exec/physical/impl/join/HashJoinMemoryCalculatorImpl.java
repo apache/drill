@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.map.CaseInsensitiveMap;
@@ -135,7 +136,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     }
 
     @Override
-    public boolean shouldSpill() {
+    public boolean shouldSpill(VectorContainer currentVectorContainer) {
       return false;
     }
 
@@ -174,7 +175,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
    *     <li><b>Step 0:</b> Call {@link #initialize(boolean, boolean, RecordBatch, RecordBatch, Set, boolean, long, int, int, int, int, int, int, double)}.
    *     This will initialize the StateCalculate with the additional information it needs.</li>
    *     <li><b>Step 1:</b> Call {@link #getNumPartitions()} to see the number of partitions that fit in memory.</li>
-   *     <li><b>Step 2:</b> Call {@link #shouldSpill()} To determine if spilling needs to occurr.</li>
+   *     <li><b>Step 2:</b> Call {@link HashJoinSpillControl#shouldSpill(VectorContainer)} To determine if spilling needs to occurr.</li>
    *     <li><b>Step 3:</b> Call {@link #next()} and get the next memory calculator associated with your next state.</li>
    *   </ul>
    * </p>
@@ -444,7 +445,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     }
 
     @Override
-    public boolean shouldSpill() {
+    public boolean shouldSpill(VectorContainer currentVectorContainer) {
       Preconditions.checkState(initialized);
 
       long consumedMemory = reservedMemory;
@@ -523,7 +524,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     }
 
     @Override
-    public boolean shouldSpill() {
+    public boolean shouldSpill(VectorContainer currentVectorContainer) {
       return false;
     }
 
@@ -557,7 +558,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
    *   <ul>
    *     <li><b>Step 1:</b> Call {@link #initialize(boolean)}. This
    *     gives the {@link HashJoinStateCalculator} additional information it needs to compute memory requirements.</li>
-   *     <li><b>Step 2:</b> Call {@link #shouldSpill()}. This tells
+   *     <li><b>Step 2:</b> Call {@link HashJoinSpillControl#shouldSpill(VectorContainer)}. This tells
    *     you which build side partitions need to be spilled in order to make room for probing.</li>
    *     <li><b>Step 3:</b> Call {@link #next()}. After you are done probing
    *     and partitioning the probe side, get the next calculator.</li>
@@ -730,7 +731,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     }
 
     @Override
-    public boolean shouldSpill() {
+    public boolean shouldSpill(VectorContainer currentVectorContainer) {
       Preconditions.checkState(initialized);
 
       if (probeEmpty) {
