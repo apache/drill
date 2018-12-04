@@ -138,9 +138,11 @@ If the input row count for an aggregate function is larger than the value set fo
    * Joined columns must have comparable data types.
    * A join with the ON syntax retains both joining columns in its intermediate result set.  
 
-## Example  
+## Examples   
 
-       0: jdbc:drill:zk=local> SELECT tbl1.id, tbl1.type 
+The following example joins two tables on the table id: 
+
+       SELECT tbl1.id, tbl1.type 
        FROM dfs.`/Users/brumsby/drill/donuts.json` 
        AS tbl1
        JOIN
@@ -151,8 +153,50 @@ If the input row count for an aggregate function is larger than the value set fo
        |     id     |    type    |
        +------------+------------+
        | 0001       | donut      |
-       +------------+------------+
-       
-       1 row selected (0.395 seconds)
+       +------------+------------+  
+  
+
+In the following example, assume you have the following two tables that you want to join using a cross join:
+
+**Note:** These tables were created from the region.parquet and nation.parquet files from the sample-data folder included with the Drill installation.
+
+	SELECT * FROM tmp.`n_name`;
+	+----------+-----------------------+
+	|  R_NAME  |       R_COMMENT   	|
+	+----------+-----------------------+
+	| AFRICA   | lar deposits. blithe  |
+	| AMERICA  | hs use ironic, even   |
+	| ASIA 	| ges. thinly even pin  |
+	+----------+-----------------------+
+	 
+	SELECT * FROM tmp.`n_key`;
+	+---------+--------------+
+	| N_NAME  | N_NATIONKEY  |
+	+---------+--------------+
+	| 0   	  | ALGERIA  	 |
+	| 1   	  | ARGENTINA	 |
+	| 2   	  | BRAZIL   	 |
+	+---------+--------------+
+ 
+Using CROSS JOIN to join the two tables produces the following results:
+ 
+	SELECT * FROM tmp.`n_key` CROSS JOIN tmp.`n_name`;
+	+---------+--------------+----------+----------------------------+
+	| N_NAME  | N_NATIONKEY  |  R_NAME  |   	R_COMMENT   	     |
+	+---------+--------------+----------+----------------------------+
+	| 0   	  | ALGERIA  	 | AFRICA   | lar deposits. blithe       |
+	| 0   	  | ALGERIA  	 | AMERICA  | hs use ironic, even        |
+	| 0   	  | ALGERIA  	 | ASIA     | ges. thinly even pin       |
+	| 1   	  | ARGENTINA	 | AFRICA   | lar deposits. blithe       |
+	| 1   	  | ARGENTINA	 | AMERICA  | hs use ironic, even        |
+	| 1   	  | ARGENTINA	 | ASIA     | ges. thinly even pin       |
+	| 2   	  | BRAZIL   	 | AFRICA   | lar deposits. blithe       |
+	| 2   	  | BRAZIL   	 | AMERICA  | hs use ironic, even        |
+	| 2   	  | BRAZIL   	 | ASIA 	| ges. thinly even pin       |
+	+---------+--------------+----------+----------------------------+
+	  
+
+
+
        
 
