@@ -18,8 +18,8 @@
 package org.apache.drill.exec.server;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -380,10 +380,10 @@ public class Drillbit implements AutoCloseable {
         logger.warn("Cannot access graceful file. Graceful shutdown from command line will not be supported.");
         return;
       }
-      final Path drillHomePath = FileSystems.getDefault().getPath(drillHome);
+      final Path drillHomePath = Paths.get(drillHome);
       boolean triggered_shutdown = false;
       WatchKey wk = null;
-      try (final WatchService watchService = FileSystems.getDefault().newWatchService()) {
+      try (final WatchService watchService = drillHomePath.getFileSystem().newWatchService()) {
         drillHomePath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE);
         while (!triggered_shutdown) {
           wk = watchService.take();
