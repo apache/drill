@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.msgpack.schema;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -69,7 +70,6 @@ public class MsgpackSchemaWriter {
    * @throws IOException
    */
   public void applySchema(MaterializedField schema, ComplexWriter writer) throws IOException {
-    fieldPathTracker.reset();
     writeToMap(schema, writer.rootAsMap());
   }
 
@@ -77,7 +77,7 @@ public class MsgpackSchemaWriter {
    * Fill in missing fields in an array.
    */
   private void writeToList(MaterializedField schema, ListWriter listWriter) throws IOException {
-    fieldPathTracker.enter("[]");
+    fieldPathTracker.enterArray();
     if (schema.getType().getMinorType() == MinorType.MAP) {
       // If the array contains elements of type MAP. We create map writer inside the
       // list, and ask to fill in the missing fields in the map.
@@ -91,19 +91,20 @@ public class MsgpackSchemaWriter {
       MaterializedField element = children.iterator().next();
       writeElement(element, null, listWriter, null);
     }
-    fieldPathTracker.leave();
+    fieldPathTracker.leaveArray();
   }
 
   /**
    * Fill in missing fields in a map.
    */
   private void writeToMap(MaterializedField schema, MapWriter writer) throws IOException {
+    fieldPathTracker.enterMap();
     for (MaterializedField schemaOfField : schema.getChildren()) {
       String name = schemaOfField.getName();
-      fieldPathTracker.enter(name);
+      fieldPathTracker.select(ByteBuffer.wrap(name.getBytes()));
       writeElement(schemaOfField, writer, null, name);
-      fieldPathTracker.leave();
     }
+    fieldPathTracker.leaveMap();
   }
 
   /**
@@ -120,7 +121,7 @@ public class MsgpackSchemaWriter {
   private void writeElement(MaterializedField schema, MapWriter mapWriter, ListWriter listWriter, String name)
       throws IOException {
 
-    logger.debug("filling field path: '{}' with type: '{}' mode: '{}'", fieldPathTracker,
+    logger.debug("filling field path: '{}' with type: '{}' mode: '{}'", fieldPathTracker.toString(),
         schema.getType().getMinorType(), schema.getDataMode());
 
     if (schema.getDataMode() == DataMode.REPEATED) {

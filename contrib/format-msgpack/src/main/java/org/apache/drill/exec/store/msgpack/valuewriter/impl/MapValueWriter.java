@@ -19,10 +19,7 @@ package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
@@ -42,8 +39,6 @@ import org.msgpack.value.ValueType;
 public class MapValueWriter extends ComplexValueWriter {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapValueWriter.class);
-
-  private Map<ByteBuffer, String> fieldNames = new HashMap<>();
 
   public MapValueWriter(EnumMap<ValueType, AbstractValueWriter> valueWriterMap,
       ExtensionValueWriter[] extensionReaders) {
@@ -76,24 +71,22 @@ public class MapValueWriter extends ComplexValueWriter {
       // We are inside a mapWriter (inside a map) and we encoutered a field of type
       // MAP. Write map in a map.
       MapWriter subMapWriter = mapWriter.map(fieldName);
-      context.getFieldPathTracker().enter(fieldName);
       writeMapValue(unpacker, subMapWriter, selection, schema == null ? null : schema.mapSchema());
-      context.getFieldPathTracker().leave();
     } else {
       // We are inside a listWriter (inside an array) and we encoutered an element of
       // type MAP. Write map in a list.
       MapWriter subMapWriter = listWriter.map();
-      context.getFieldPathTracker().enter("[]");
       writeMapValue(unpacker, subMapWriter, selection, schema == null ? null : schema.mapSchema());
-      context.getFieldPathTracker().leave();
     }
   }
 
   public void writeMapValue(MessageUnpacker unpacker, MapWriter writer, FieldSelection selection,
       TupleMetadata tupleMetadata) throws IOException {
 
-    writer.start();
     try {
+      context.getFieldPathTracker().enterMap();
+      writer.start();
+
       int n = unpacker.unpackMapHeader();
       for (int i = 0; i < n; i++) {
         String fieldName = getFieldName(unpacker);
@@ -109,12 +102,12 @@ public class MapValueWriter extends ComplexValueWriter {
         }
         FieldSelection childSelection = selection.getChild(fieldName);
         if (childSelection.isNeverValid()) {
-          logger.debug("Skipping not selected field: {}.{}", context.getFieldPathTracker(), fieldName);
+          logger.debug("Skipping not selected field: {}", context.getFieldPathTracker(), fieldName);
           unpacker.skipValue();
           continue;
         }
 
-        if(unpacker.getNextFormat().getValueType() == ValueType.NIL){
+        if (unpacker.getNextFormat().getValueType() == ValueType.NIL) {
           unpacker.skipValue();
           continue;
         }
@@ -124,6 +117,7 @@ public class MapValueWriter extends ComplexValueWriter {
       }
     } finally {
       writer.end();
+      context.getFieldPathTracker().leaveMap();
     }
   }
 
@@ -159,39 +153,24 @@ public class MapValueWriter extends ComplexValueWriter {
    * @return the key represented as a java string.
    */
   private String getFieldName(MessageUnpacker unpacker) throws IOException {
-
-    String fieldName = null;
     ValueType type = unpacker.getNextFormat().getValueType();
     if (type == ValueType.STRING) {
       int size = unpacker.unpackRawStringHeader();
       MessageBuffer messageBuffer = unpacker.readPayloadAsReference(size);
       ByteBuffer byteBuffer = messageBuffer.sliceAsByteBuffer();
-      fieldName = fieldNames.get(byteBuffer);
-      if (fieldName == null) {
-        byte[] bytes = messageBuffer.toByteArray();
-        fieldName = new String(bytes, StandardCharsets.UTF_8);
-        fieldNames.put(byteBuffer, fieldName);
-      }
-      return fieldName;
+      return context.getFieldPathTracker().select(byteBuffer);
     } else if (type == ValueType.BINARY) {
       int size = unpacker.unpackBinaryHeader();
       MessageBuffer messageBuffer = unpacker.readPayloadAsReference(size);
       ByteBuffer byteBuffer = messageBuffer.sliceAsByteBuffer();
-      fieldName = fieldNames.get(byteBuffer);
-      if (fieldName == null) {
-        byte[] bytes = messageBuffer.toByteArray();
-        fieldName = new String(bytes, StandardCharsets.UTF_8);
-        fieldNames.put(byteBuffer, fieldName);
-      }
-      return fieldName;
+      return context.getFieldPathTracker().select(byteBuffer);
     } else if (type == ValueType.INTEGER) {
       long longValue = unpacker.unpackLong();
-      fieldName = Long.toString(longValue);
-      return fieldName;
+      String fieldName = Long.toString(longValue);
+      return context.getFieldPathTracker().select(ByteBuffer.wrap(fieldName.getBytes()));
     } else {
       unpacker.skipValue();
+      return null;
     }
-
-    return fieldName;
   }
 }

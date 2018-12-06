@@ -62,6 +62,16 @@ public class MessagePackExample {
     }
   }
 
+  public static class FieldEntryByteBuffer {
+    public ByteBuffer keyBytes;
+    public String keyString;
+
+    public FieldEntryByteBuffer(ByteBuffer b, String s) {
+      this.keyBytes = b;
+      this.keyString = s;
+    }
+  }
+
   public static class KeyWrapper {
     public byte[] keyBytes;
 
@@ -84,25 +94,33 @@ public class MessagePackExample {
   private MessagePackExample() {
   }
 
+  static Map<ByteBuffer, String> bytebufferEntries = new HashMap<>();
+
   public static void main(String[] args) throws Exception {
 
     for (int i = 0; i < 1; i++) {
 
       try (MessagePacker packer = MessagePack.newDefaultPacker(new FileOutputStream(new File("test" + i + ".mp")))) {
-        for (int j = 0; j < 1_000; j++) {
+        for (int j = 0; j < 5_000_000; j++) {
           writeCompleteModel(packer);
         }
       }
     }
-    for (int k = 0; k < 11; k++) {
-      runTest();
+    for (int k = 0; k < 10; k++) {
+      fieldTracker();
+      // value();
+      // valueMap();
+      // bytes();
+      // byteList();
+      // byteMap();
+
+      // byteBufferList();
+      //bytebufferMap();
     }
   }
 
-  public static void runTest() throws Exception {
+  public static void value() throws Exception {
     Stopwatch s = Stopwatch.createStarted();
-
-    s = Stopwatch.createStarted();
     try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test0.mp")))) {
       while (unpacker.hasNext()) {
         ImmutableValue msg = unpacker.unpackValue();
@@ -113,53 +131,21 @@ public class MessagePackExample {
           Set<Map.Entry<Value, Value>> valueEntries = mapValue.entrySet();
           for (Map.Entry<Value, Value> valueEntry : valueEntries) {
             Value key = valueEntry.getKey();
-            Value value = valueEntry.getValue();
             String k = null;
 
             if (k == null) {
               k = key.asStringValue().asString();
             }
-          }
-        }
-      }
-    }
-    System.out.println("reading no optimization took " + s.elapsed(TimeUnit.MILLISECONDS));
-
-    s = Stopwatch.createStarted();
-    List<StringValue> fieldNames = new ArrayList<>();
-
-    try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test0.mp")))) {
-      while (unpacker.hasNext()) {
-        ImmutableValue msg = unpacker.unpackValue();
-        ValueType type = msg.getValueType();
-        if (type == ValueType.MAP) {
-          // Sdystem.out.println("Printing message");
-          MapValue mapValue = msg.asMapValue();
-          Set<Map.Entry<Value, Value>> valueEntries = mapValue.entrySet();
-          for (Map.Entry<Value, Value> valueEntry : valueEntries) {
-            Value key = valueEntry.getKey();
             Value value = valueEntry.getValue();
-            String k = null;
-
-            for (int i = 0; i < fieldNames.size(); i++) {
-              StringValue sv = fieldNames.get(i);
-              if (sv.equals(key)) {
-                k = sv.asString();
-                break;
-              }
-            }
-
-            if (k == null) {
-              k = key.asStringValue().asString();
-              fieldNames.add(key.asStringValue());
-            }
           }
         }
       }
     }
-    System.out.println("reading list optimization took " + s.elapsed(TimeUnit.MILLISECONDS));
+    System.out.println("reading decode string took " + s.elapsed(TimeUnit.MILLISECONDS));
+  }
 
-    s = Stopwatch.createStarted();
+  public static void valueMap() throws Exception {
+    Stopwatch s = Stopwatch.createStarted();
 
     Map<StringValue, StringValue> fieldNamesMap = new HashMap<>();
 
@@ -173,7 +159,6 @@ public class MessagePackExample {
           Set<Map.Entry<Value, Value>> valueEntries = mapValue.entrySet();
           for (Map.Entry<Value, Value> valueEntry : valueEntries) {
             Value key = valueEntry.getKey();
-            Value value = valueEntry.getValue();
             String k = null;
 
             StringValue sv = fieldNamesMap.get(key);
@@ -183,13 +168,16 @@ public class MessagePackExample {
               k = key.asStringValue().asString();
               fieldNamesMap.put(key.asStringValue(), key.asStringValue());
             }
+            Value value = valueEntry.getValue();
           }
         }
       }
     }
-    System.out.println("reading map optimization " + s.elapsed(TimeUnit.MILLISECONDS));
+    System.out.println("decode string, map optimization " + s.elapsed(TimeUnit.MILLISECONDS));
+  }
 
-    s = Stopwatch.createStarted();
+  public static void bytes() throws Exception {
+    Stopwatch s = Stopwatch.createStarted();
     try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test0.mp")))) {
       while (unpacker.hasNext()) {
         MessageFormat mf = unpacker.getNextFormat();
@@ -201,23 +189,26 @@ public class MessagePackExample {
             byte[] keyBytes = unpacker.readPayload(keySize);
             // Value key = unpacker.unpackValue();
             i++;
-            Value value = unpacker.unpackValue();
-            i++;
             String k = null;
 
             if (k == null) {
               k = new String(keyBytes, CharsetNames.UTF_8);
             }
+            unpacker.skipValue();
+            i++;
           }
         }
       }
     }
 
-    System.out.println("reading with format optimization took " + s.elapsed(TimeUnit.MILLISECONDS));
+    System.out.println("byte took       " + s.elapsed(TimeUnit.MILLISECONDS));
+  }
 
+  public static void byteList() throws Exception {
+    Stopwatch s = Stopwatch.createStarted();
     List<FieldEntry> fieldEntries = new ArrayList<>();
-    s = Stopwatch.createStarted();
     try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test0.mp")))) {
+      int lastFieldMatched = 0;
       while (unpacker.hasNext()) {
         MessageFormat mf = unpacker.getNextFormat();
         ValueType type = mf.getValueType();
@@ -227,31 +218,43 @@ public class MessagePackExample {
             int keySize = unpacker.unpackRawStringHeader();
             byte[] keyBytes = unpacker.readPayload(keySize);
             i++;
-            Value value = unpacker.unpackValue();
-            i++;
 
             String k = null;
-            for (int j = 0; j < fieldEntries.size(); j++) {
-              FieldEntry f = fieldEntries.get(j);
-              if (Arrays.equals(f.keyBytes, keyBytes)) {
-                k = f.keyString;
-                break;
+            if (fieldEntries.size() > 0) {
+              int numEntries = fieldEntries.size();
+              int upperBound = numEntries + lastFieldMatched;
+              int startBound = (lastFieldMatched + 1) % numEntries;
+              for (int j = startBound; j < upperBound; j++) {
+                int idx = j % numEntries;
+                FieldEntry f = fieldEntries.get(idx);
+                if (Arrays.equals(f.keyBytes, keyBytes)) {
+                  k = f.keyString;
+                  // System.out.println(idx);
+                  lastFieldMatched = idx;
+                  break;
+                }
               }
             }
             if (k == null) {
               k = new String(keyBytes, CharsetNames.UTF_8);
+              // System.out.println("adding key: " + k);
               fieldEntries.add(new FieldEntry(keyBytes, k));
             }
+            unpacker.skipValue();
+            i++;
           }
         }
       }
     }
 
-    System.out.println("reading with format and list optimization took " + s.elapsed(TimeUnit.MILLISECONDS));
+    System.out.println("byte list       " + s.elapsed(TimeUnit.MILLISECONDS));
+  }
+
+  public static void byteMap() throws Exception {
+    Stopwatch s = Stopwatch.createStarted();
 
     Map<KeyWrapper, String> mapEntries = new HashMap<>();
     KeyWrapper wrapper = new KeyWrapper(null);
-    s = Stopwatch.createStarted();
     try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test0.mp")))) {
       while (unpacker.hasNext()) {
         MessageFormat mf = unpacker.getNextFormat();
@@ -261,26 +264,31 @@ public class MessagePackExample {
           for (int i = 0; i < size * 2;) {
             int keySize = unpacker.unpackRawStringHeader();
             byte[] keyBytes = unpacker.readPayload(keySize);
-            i++;
-            Value value = unpacker.unpackValue();
             i++;
 
             wrapper.keyBytes = keyBytes;
             String k = mapEntries.get(wrapper);
             if (k == null) {
               k = new String(keyBytes, CharsetNames.UTF_8);
+              // System.out.println("adding key: " + k);
               mapEntries.put(new KeyWrapper(keyBytes), k);
             }
+            unpacker.skipValue();
+            i++;
           }
         }
       }
     }
 
-    System.out.println("reading with format and map optimization took " + s.elapsed(TimeUnit.MILLISECONDS));
+    System.out.println("byte map        " + s.elapsed(TimeUnit.MILLISECONDS));
+  }
 
-    Map<ByteBuffer, String> bytebufferEntries = new HashMap<>();
-    s = Stopwatch.createStarted();
+  public static void byteBufferList() throws Exception {
+    Stopwatch s = Stopwatch.createStarted();
+
+    List<FieldEntryByteBuffer> list = new ArrayList<>();
     try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test0.mp")))) {
+      int lastFieldMatched = 0;
       while (unpacker.hasNext()) {
         MessageFormat mf = unpacker.getNextFormat();
         ValueType type = mf.getValueType();
@@ -291,22 +299,167 @@ public class MessagePackExample {
             MessageBuffer keyBytes = unpacker.readPayloadAsReference(keySize);
             ByteBuffer buff = keyBytes.sliceAsByteBuffer();
             i++;
-            Value value = unpacker.unpackValue();
-            i++;
 
-            String k = bytebufferEntries.get(buff);
-            if (k == null) {
-              k = new String(buff.array(), CharsetNames.UTF_8);
-              ByteBuffer bb = ByteBuffer.wrap(keyBytes.toByteArray());
-              bytebufferEntries.put(bb, k);
+            String k = null;
+            int numEntries = list.size();
+            if (numEntries > 0) {
+              int upperBound = numEntries + lastFieldMatched;
+              int startBound = (lastFieldMatched + 1) % numEntries;
+              for (int j = startBound; j < upperBound; j++) {
+                int idx = j % numEntries;
+                FieldEntryByteBuffer f = list.get(idx);
+                if (f.keyBytes.equals(buff)) {
+                  k = f.keyString;
+                  // System.out.println(idx);
+                  lastFieldMatched = idx;
+                  break;
+                }
+              }
             }
+            if (k == null) {
+              byte[] theBytes = keyBytes.toByteArray();
+              k = new String(theBytes, CharsetNames.UTF_8);
+              // System.out.println("adding key: " + k);
+              ByteBuffer bb = ByteBuffer.wrap(theBytes);
+              list.add(new FieldEntryByteBuffer(bb, k));
+            }
+
+            unpacker.skipValue();
+            i++;
           }
         }
       }
     }
 
-    System.out.println("reading with format and map and buffer optimization took " + s.elapsed(TimeUnit.MILLISECONDS));
+    System.out.println("bytebuffer list " + s.elapsed(TimeUnit.MILLISECONDS));
+  }
 
+  public static void unpackValue(FieldPathTracker tracker, MessageUnpacker unpacker) throws Exception {
+
+    MessageFormat mf = unpacker.getNextFormat();
+    ValueType type = mf.getValueType();
+    switch (type) {
+    case MAP: {
+      try {
+        tracker.enterMap();
+        // System.out.println(tracker.toString());
+
+        int size = unpacker.unpackMapHeader();
+        for (int i = 0; i < size * 2;) {
+          int keySize = unpacker.unpackRawStringHeader();
+          MessageBuffer keyBytes = unpacker.readPayloadAsReference(keySize);
+          ByteBuffer buff = keyBytes.sliceAsByteBuffer();
+          String fieldName = tracker.select(buff);
+          i++;
+
+          unpackValue(tracker, unpacker);
+          i++;
+        }
+      } finally {
+        tracker.leaveMap();
+      }
+    }
+      break;
+    case ARRAY: {
+      try {
+        tracker.enterArray();
+        // System.out.println(tracker.toString());
+        int arraySize = unpacker.unpackArrayHeader();
+        for (int i = 0; i < arraySize; i++) {
+          unpackValue(tracker, unpacker);
+        }
+      } finally {
+        tracker.leaveArray();
+      }
+    }
+      break;
+    case BINARY:
+    case BOOLEAN:
+    case EXTENSION:
+    case FLOAT:
+    case INTEGER:
+    case NIL:
+    case STRING: {
+      // System.out.println(tracker.toString());
+      unpacker.skipValue();
+    }
+      break;
+    }
+  }
+
+  public static void fieldTracker() throws Exception {
+    Stopwatch s = Stopwatch.createStarted();
+
+    FieldPathTracker tracker = new FieldPathTracker();
+
+    try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test0.mp")))) {
+      while (unpacker.hasNext()) {
+        unpackValue(tracker, unpacker);
+      }
+    }
+
+    System.out.println("fieldTracker     " + s.elapsed(TimeUnit.MILLISECONDS));
+  }
+
+  public static void unpackValueSimpleMap(Map<ByteBuffer, String> bytebufferEntries, MessageUnpacker unpacker)
+      throws Exception {
+
+    MessageFormat mf = unpacker.getNextFormat();
+    ValueType type = mf.getValueType();
+    switch (type) {
+    case MAP: {
+      int size = unpacker.unpackMapHeader();
+      for (int i = 0; i < size * 2;) {
+        int keySize = unpacker.unpackRawStringHeader();
+        MessageBuffer keyBytes = unpacker.readPayloadAsReference(keySize);
+        ByteBuffer buff = keyBytes.sliceAsByteBuffer();
+        i++;
+
+        String k = bytebufferEntries.get(buff);
+        if (k == null) {
+          k = new String(keyBytes.toByteArray(), CharsetNames.UTF_8);
+          // System.out.println("adding key: " + k);
+          ByteBuffer bb = ByteBuffer.wrap(keyBytes.toByteArray());
+          bytebufferEntries.put(bb, k);
+        }
+        unpackValueSimpleMap(bytebufferEntries, unpacker);
+        i++;
+      }
+    }
+      break;
+    case ARRAY: {
+      // System.out.println(tracker.toString());
+      int arraySize = unpacker.unpackArrayHeader();
+      for (int i = 0; i < arraySize; i++) {
+        unpackValueSimpleMap(bytebufferEntries, unpacker);
+      }
+    }
+      break;
+    case BINARY:
+    case BOOLEAN:
+    case EXTENSION:
+    case FLOAT:
+    case INTEGER:
+    case NIL:
+    case STRING: {
+      unpacker.skipValue();
+    }
+      break;
+    }
+  }
+
+  public static void bytebufferMap() throws Exception {
+    Stopwatch s = Stopwatch.createStarted();
+
+    Map<ByteBuffer, String> bytebufferEntries = new HashMap<>(64);
+
+    try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(new FileInputStream(new File("test0.mp")))) {
+      while (unpacker.hasNext()) {
+        unpackValueSimpleMap(bytebufferEntries, unpacker);
+      }
+    }
+
+    System.out.println("bytebuffer map  " + s.elapsed(TimeUnit.MILLISECONDS));
   }
 
   private static String getFieldName(Value v) {
@@ -413,7 +566,7 @@ public class MessagePackExample {
   }
 
   private static void writeCompleteModel(MessagePacker packer) throws IOException {
-    packer.packMapHeader(16);
+    packer.packMapHeader(16 - 2);
 
     // 0
     packer.packString("arrayOfArray");
@@ -429,20 +582,20 @@ public class MessagePackExample {
     packer.packInt(1);
     packer.packInt(1);
     // 1
-    packer.packString("arrayOfMap");
-    packer.packArrayHeader(2);
-    packer.packMapHeader(10);
+    // packer.packString("arrayOfMap");
+    // packer.packArrayHeader(2);
+    // packer.packMapHeader(10);
     // 10 sub fields
-    addAllFieldTypes(packer);
-    packer.packMapHeader(10);
+    // addAllFieldTypes(packer);
+    // packer.packMapHeader(10);
     // 10 sub fields
-    addAllFieldTypes(packer);
+    // addAllFieldTypes(packer);
 
     // 2
-    packer.packString("mapOfMap");
-    packer.packMapHeader(1).packString("aMap").packMapHeader(10);
+    // packer.packString("mapOfMapa");
+    // packer.packMapHeader(1).packString("aMap").packMapHeader(10);
     // 10 sub fields
-    addAllFieldTypes(packer);
+    // addAllFieldTypes(packer);
 
     // 3
     packer.packString("mapWithArray");

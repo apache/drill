@@ -114,12 +114,12 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
       String message = null;
       if (mapWriter != null) {
         message = MessageFormatter
-            .arrayFormat("failed to write type: '{}' value: '{}' into map at '{}.{}' target schema: '{}'\n",
+            .arrayFormat("failed to write type: '{}' value: '{}' into map at '{}' target schema: '{}'\n",
                 new Object[] { valueType, unpacker, context.getFieldPathTracker(), fieldName, schema })
             .getMessage();
       } else {
         message = MessageFormatter
-            .arrayFormat("failed to write type: '{}' value: '{}' into list at '{}.[]' target schema: '{}'\n",
+            .arrayFormat("failed to write type: '{}' value: '{}' into list at '{}' target schema: '{}'\n",
                 new Object[] { valueType, unpacker, context.getFieldPathTracker(), schema })
             .getMessage();
       }
@@ -136,8 +136,8 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
       logger.debug("write type: '{}' into {} at '{}' target type: '{}' mode: '{}'", valueType,
           mapWriter == null ? "list" : "map", context.getFieldPathTracker(), schema.type(), schema.mode());
     } else {
-      logger.debug("write type: '{}' into {} at '{}{}'", valueType, mapWriter == null ? "list" : "map",
-          context.getFieldPathTracker(), mapWriter == null ? "[]" : "." + fieldName);
+      logger.debug("write type: '{}' into {} at '{}'", valueType, mapWriter == null ? "list" : "map",
+          context.getFieldPathTracker());
     }
   }
 }

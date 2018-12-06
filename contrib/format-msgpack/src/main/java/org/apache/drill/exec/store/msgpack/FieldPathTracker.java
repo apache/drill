@@ -17,48 +17,48 @@
  */
 package org.apache.drill.exec.store.msgpack;
 
-import java.util.Stack;
-
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 
 public class FieldPathTracker {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldPathTracker.class);
 
-  /**
-   * Keep track of the navigation inside the msgpack message. We use this to help
-   * track down issues with the data files.
-   */
-  private final Stack<String> currentFieldPath = new Stack<>();
+  private Field current;
+
+  private final Field rootField;
 
   public FieldPathTracker() {
+    this.rootField = new Field();
+    this.current = null;
   }
 
-  public void reset() {
-    // Remove all previous elements in case did not come out of the last message in
-    // an orderly fashion.
-    currentFieldPath.removeAllElements();
-    // To start push a "root" in our field path.
-    currentFieldPath.push("root");
+  public String select(ByteBuffer byteBuffer) throws UnsupportedEncodingException {
+    return current.select(byteBuffer);
   }
 
-  /**
-   * Add the field name to our current field path.
-   */
-  public void enter(String fieldName) {
-    currentFieldPath.push(fieldName);
+  public void enterMap() {
+    if (current == null) {
+      current = rootField;
+    } else {
+      current = current.enterMap();
+    }
   }
 
-  /**
-   * When we return from writing a field we need to remove it from our current
-   * field path.
-   */
-  public void leave() {
-    currentFieldPath.pop();
+  public void enterArray() {
+    current = current.enterArray();
+  }
+
+  public void leaveMap() {
+    current = current.leaveMap();
+  }
+
+  public void leaveArray() {
+    current = current.leaveArray();
   }
 
   @Override
   public String toString() {
-    return Joiner.on(".").join(currentFieldPath);
+    return rootField.toString();
   }
 }

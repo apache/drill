@@ -63,16 +63,12 @@ public class ArrayValueWriter extends ComplexValueWriter {
       // Write the array in map.
       ListWriter subListWriter = mapWriter.list(fieldName);
       ColumnMetadata subSchema = getArrayInMapSubSchema(schema);
-      context.getFieldPathTracker().enter(fieldName);
       writeArrayValue(unpacker, subListWriter, selection, subSchema);
-      context.getFieldPathTracker().leave();
     } else {
       // Write the array in array.
       ListWriter subListWriter = listWriter.list();
       ColumnMetadata subSchema = getArrayInArraySubSchema(schema);
-      context.getFieldPathTracker().enter("[]");
       writeArrayValue(unpacker, subListWriter, selection, subSchema);
-      context.getFieldPathTracker().leave();
     }
   }
 
@@ -84,8 +80,9 @@ public class ArrayValueWriter extends ComplexValueWriter {
         return;
       }
     }
-    listWriter.startList();
     try {
+      listWriter.startList();
+      context.getFieldPathTracker().enterArray();
       int size = unpacker.unpackArrayHeader();
       for (int i = 0; i < size; i++) {
         writeElement(unpacker, null, listWriter, null, selection, subSchema);
@@ -93,6 +90,7 @@ public class ArrayValueWriter extends ComplexValueWriter {
     } finally {
       addIfNotInitialized(listWriter);
       listWriter.endList();
+      context.getFieldPathTracker().leaveArray();
     }
   }
 
@@ -100,7 +98,8 @@ public class ArrayValueWriter extends ComplexValueWriter {
    * This method is used to determine the type contained in an array when that
    * array is a field of a map.
    *
-   * @param schema the schema of the array
+   * @param schema
+   *                 the schema of the array
    * @return the type of the elements in the array
    */
   private ColumnMetadata getArrayInMapSubSchema(ColumnMetadata schema) {
@@ -115,7 +114,8 @@ public class ArrayValueWriter extends ComplexValueWriter {
    * This method is used to determine the type contained in an array when that
    * array is within an array.
    *
-   * @param schema the schema of the array
+   * @param schema
+   *                 the schema of the array
    * @return the type of the elements in the array
    */
   private ColumnMetadata getArrayInArraySubSchema(ColumnMetadata schema) {
@@ -136,7 +136,8 @@ public class ArrayValueWriter extends ComplexValueWriter {
    * Checks that list has not been initialized and adds it to the
    * emptyArrayWriters collection.
    *
-   * @param list ListWriter that should be checked
+   * @param list
+   *               ListWriter that should be checked
    */
   private void addIfNotInitialized(ListWriter list) {
     if (list.getValueCapacity() == 0) {
