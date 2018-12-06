@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server;
 
 import java.io.IOException;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -373,14 +374,24 @@ public class Drillbit implements AutoCloseable {
       }
     }
 
+    /*
+     * Poll for the graceful file, if the file is found cloase the drillbit. Incase if the DRILL_HOME path is not
+     * set, graceful shutdown will not be supported from the command line.
+     */
     private void pollShutdown(Drillbit drillbit) throws IOException, InterruptedException {
       final String drillHome = System.getenv("DRILL_HOME");
       final String gracefulFile = System.getenv("GRACEFUL_SIGFILE");
+      final Path drillHomePath;
       if (drillHome == null || gracefulFile == null) {
         logger.warn("Cannot access graceful file. Graceful shutdown from command line will not be supported.");
         return;
       }
-      final Path drillHomePath = Paths.get(drillHome);
+      try {
+        drillHomePath = Paths.get(drillHome);
+      } catch (InvalidPathException e) {
+        logger.warn("Cannot access graceful file. Graceful shutdown from command line will not be supported.");
+        return;
+      }
       boolean triggered_shutdown = false;
       WatchKey wk = null;
       try (final WatchService watchService = drillHomePath.getFileSystem().newWatchService()) {
