@@ -99,6 +99,8 @@
         <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
         <include>org.apache.drill.contrib:drill-mongo-storage</include>
         <include>org.apache.drill.contrib:drill-storage-hbase</include>
+        <include>org.apache.drill.contrib:drill-format-msgpack</include>
+        <include>org.apache.drill.contrib:drill-codec-zstd</include>
         <include>org.apache.drill.contrib:drill-format-mapr</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage</include>
         <include>org.apache.drill.contrib:drill-kudu-storage</include>

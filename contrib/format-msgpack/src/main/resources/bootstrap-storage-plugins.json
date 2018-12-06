@@ -1,0 +1,7 @@
+{
+  "storage":{
+    msgpack : {
+      type:"file"
+    }
+  }
+}
