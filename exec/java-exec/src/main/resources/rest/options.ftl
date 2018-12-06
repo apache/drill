@@ -23,7 +23,7 @@
     <script type="text/javascript" language="javascript" src="/static/js/dataTables.colVis-1.1.0.min.js"></script>
     <script>
         function resetToDefault(optionName, optionValue, optionKind) {
-            $.post("/option/"+optionName, {kind: optionKind, name: optionName, value: optionValue}, function (status) { location.reload(true); } );
+            $.post("/option/"+optionName, {kind: optionKind, name: optionName, value: optionValue}, function (status) { window.location=location.protocol+"//"+location.host+"/options"; } );
         }
     </script>
     <!-- List of Option Descriptions -->
