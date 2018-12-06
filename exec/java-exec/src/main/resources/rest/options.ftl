@@ -22,9 +22,32 @@
     <script type="text/javascript" language="javascript"  src="/static/js/jquery.dataTables-1.10.16.min.js"> </script>
     <script type="text/javascript" language="javascript" src="/static/js/dataTables.colVis-1.1.0.min.js"></script>
     <script>
-        function resetToDefault(optionName, optionValue, optionKind) {
-            $.post("/option/"+optionName, {kind: optionKind, name: optionName, value: optionValue}, function (status) { location.reload(true); } );
+    //Alter System Values
+    function alterSysOption(optionName, optionValue, optionKind) {
+        $.post("/option/"+optionName, {kind: optionKind, name: optionName, value: optionValue}, function () {
+            location.reload(true);
+        });
+    }
+
+    //Read Values and apply
+    function alterSysOptionUsingId(optionRawName) {
+        //Escaping '.' for id search
+        let optionName = optionRawName.replace(/\./gi, "\\.");
+        //Extracting datatype from the form
+        let optionKind = $("#"+optionName+" input[name='kind']").attr("value");
+        //Extracting value from the form's INPUT element
+        let optionValue = $("#"+optionName+" input[name='value']").val();
+        if (optionKind == "BOOLEAN") {
+            //Extracting boolean value from the form's SELECT element (since this is a dropdown input)
+            optionValue = $("#"+optionName+" select[name='value']").val();
+        } else if (optionKind != "STRING") { //i.e. it is a number (FLOAT/DOUBLE/LONG)
+            if (isNaN(optionValue)) {
+                alert(optionValue+" is not a valid number for option: "+optionName);
+                return;
+            }
         }
+        alterSysOption(optionRawName, optionValue, optionKind);
+    }
     </script>
     <!-- List of Option Descriptions -->
     <script src="/dynamic/options.describe.js"></script>
@@ -75,7 +98,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
           <tr id="row-${i}">
             <td style="font-family:Courier New; vertical-align:middle" id='optionName'>${option.getName()}</td>
             <td>
-              <form class="form-inline" role="form" action="/option/${option.getName()}" method="POST">
+              <form class="form-inline" role="form" id="${option.getName()}">
                 <div class="form-group">
                 <input type="hidden" class="form-control" name="kind" value="${option.getKind()}">
                 <input type="hidden" class="form-control" name="name" value="${option.getName()}">
@@ -89,10 +112,9 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
                     <input type="text" class="form-control" placeholder="${option.getValueAsString()}" name="value" value="${option.getValueAsString()}">
                   </#if>
                     <div class="input-group-btn">
-                      <button class="btn btn-default" type="submit">Update</button>
-                      <button class="btn btn-default" onClick="resetToDefault('${option.getName()}','${option.getDefaultValue()}', '${option.getKind()}')" type="button"
-                              <#if option.getDefaultValue() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
-                      title="Reset to ${option.getDefaultValue()}"</#if>>Reset</button>
+                      <button class="btn btn-default" type="button" onclick="alterSysOptionUsingId('${option.getName()}')">Update</button>
+                      <button class="btn btn-default" type="button" onclick="alterSysOption('${option.getName()}','${option.getDefaultValue()}', '${option.getKind()}')" <#if option.getDefaultValue() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
+                      title="Reset to ${option.getDefaultValue()}"</#if>>Default</button>
                     </div>
                   </div>
                 </div>
@@ -127,7 +149,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       //Inject Descriptions for table
       let size = $('#optionsTbl tbody tr').length;
       for (i = 1; i <= size; i++) {
-      let currRow = $("#row-"+i);
+        let currRow = $("#row-"+i);
         let optionName = currRow.find("#optionName").text();
         let setOptDescrip = currRow.find("#description").text(getDescription(optionName));
       }
