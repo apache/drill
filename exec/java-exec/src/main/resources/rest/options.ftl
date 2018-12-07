@@ -33,9 +33,12 @@
     function alterSysOptionUsingId(optionRawName) {
         //Escaping '.' for id search
         let optionName = optionRawName.replace(/\./gi, "\\.");
+        //Extracting datatype from the form
         let optionKind = $("#"+optionName+" input[name='kind']").attr("value");
+        //Extracting value from the form's INPUT element
         let optionValue = $("#"+optionName+" input[name='value']").val();
         if (optionKind == "BOOLEAN") {
+            //Extracting boolean value from the form's SELECT element (since this is a dropdown input)
             optionValue = $("#"+optionName+" select[name='value']").val();
         } else if (optionKind != "STRING") { //i.e. it is a number (FLOAT/DOUBLE/LONG)
             if (isNaN(optionValue)) {
