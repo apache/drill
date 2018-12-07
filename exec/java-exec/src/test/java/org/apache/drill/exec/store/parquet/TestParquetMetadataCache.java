@@ -176,6 +176,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testFix4449() throws Exception {
     runSQL("CREATE TABLE dfs.tmp.`4449` PARTITION BY(l_discount) AS SELECT l_orderkey, l_discount FROM cp.`tpch/lineitem.parquet`");
     runSQL("REFRESH TABLE METADATA dfs.tmp.`4449`");
@@ -642,6 +643,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testInnerMetadataFilesAreAbsent() throws Exception {
     final String innerMetaCorruptedTable = "inner_meta_corrupted_table";
     File dataDir = dirTestWatcher.copyResourceToRoot(
@@ -814,6 +816,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4139
+  @Category(UnlikelyTest.class)
   public void testPartitionPruningWithIsNull() throws Exception {
     try {
       test("create table dfs.tmp.`t6/a` as\n" +
