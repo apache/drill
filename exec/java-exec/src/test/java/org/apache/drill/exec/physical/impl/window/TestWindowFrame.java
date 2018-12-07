@@ -283,6 +283,7 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testLeadWithPby() throws Exception {
     testBuilder()
       .sqlQuery(getFile("window/lead.pby.oby.sql"))

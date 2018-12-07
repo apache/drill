@@ -857,6 +857,12 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>travis</id>
+      <properties>
+        <skipTests>true</skipTests>
+      </properties>
+    </profile>
   </profiles>
 
 </project>
