@@ -167,8 +167,7 @@ final class FormatPluginOptionsDescriptor {
         .build(logger);
       }
       try {
-        Field field = pluginConfigClass.getField(paramDef.name);
-        field.setAccessible(true);
+        Field field = pluginConfigClass.getDeclaredField(paramDef.name);
         if (field.getType() == char.class && param instanceof String) {
           String stringParam = (String) param;
           if (stringParam.length() != 1) {
@@ -180,7 +179,10 @@ final class FormatPluginOptionsDescriptor {
           }
           param = stringParam.charAt(0);
         }
+        boolean defaultFieldAccess = field.isAccessible();
+        field.setAccessible(true);
         field.set(config, param);
+        field.setAccessible(defaultFieldAccess);
       } catch (IllegalAccessException | NoSuchFieldException | SecurityException e) {
         throw UserException.parseError(e)
             .message("can not set value %s to parameter %s: %s", param, paramDef.name, paramDef.type)
