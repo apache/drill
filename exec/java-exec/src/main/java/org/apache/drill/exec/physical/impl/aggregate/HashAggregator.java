@@ -71,6 +71,4 @@ public interface HashAggregator {
   boolean earlyOutput();
 
   RecordBatch getNewIncoming();
-
-  void adjustOutputCount(int outputBatchSize, int oldRowWidth, int newRowWidth);
 }
