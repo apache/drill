@@ -1,6 +1,6 @@
 ---
 title: "MongoDB Storage Plugin"
-date: 2018-11-02
+date: 2018-12-08
 parent: "Connect a Data Source"
 ---
 ## Overview
@@ -25,12 +25,12 @@ To query MongoDB with Drill, you install Drill and MongoDB, and then you import 
 
 ## Configuring MongoDB
 
-Drill must be running in order to access the Web Console to configure a storage plugin configuration. Start Drill and view and enable the MongoDB storage plugin configuration as described in the following procedure: 
+Drill must be running in order to access the Web UI to configure a storage plugin configuration. Start Drill and view and enable the MongoDB storage plugin configuration as described in the following procedure: 
 
   1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
 
-     The Drill shell needs to be running to access the Drill Web Console.
-  2. In the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), select the **Storage** tab.
+     The Drill shell needs to be running to access the Drill Web UI.
+  2. In the [Drill Web UI]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), select the **Storage** tab.
   4. Under Disabled Storage Plugins, select **Update** to choose the `mongo` storage plugin configuration.
   5. In the Configuration window, take a look at the default configuration:
      

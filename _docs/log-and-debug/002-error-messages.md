@@ -1,6 +1,6 @@
 ---
 title: "Error Messages"
-date: 2018-11-02
+date: 2018-12-08
 parent: "Log and Debug"
 ---
 
@@ -21,6 +21,6 @@ The following table provides descriptions for the IDs included in a thread:
 
 | ID Type         | Description                                                                                                                                                                                                                                  |
 |-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| QueryID         | The identifier assigned to the query. You can locate a query in Drill Web Console by the QueryID and then cancel the query if needed. See [Query Profiles]({{ site.baseurl }}/docs/query-profiles/).                                                                    |
-| MajorFragmentID | The identifier assigned to a major fragment. Major fragments map to the physical plan. You can see major fragment activity for a query in the Drill Web Console. See [Query Profiles]({{ site.baseurl }}/docs/query-profiles) for more information. |
+| QueryID         | The identifier assigned to the query. You can locate a query in Drill Web UI by the QueryID and then cancel the query if needed. See [Query Profiles]({{ site.baseurl }}/docs/query-profiles/).                                                                    |
+| MajorFragmentID | The identifier assigned to a major fragment. Major fragments map to the physical plan. You can see major fragment activity for a query in the Drill Web UI. See [Query Profiles]({{ site.baseurl }}/docs/query-profiles) for more information. |
 | MinorFragmentID | The identifier assigned to the minor fragment. Minor fragments map to the parallelization of major fragments. See [Query Profiles]({{ site.baseurl }}/docs/query-profiles).                                                                                       |

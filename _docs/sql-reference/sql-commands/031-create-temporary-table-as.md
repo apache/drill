@@ -1,6 +1,6 @@
 ---
 title: "CREATE TEMPORARY TABLE AS (CTTAS)"
-date: 2017-03-27 18:12:49 UTC
+date: 2018-12-08
 parent: "SQL Commands"
 ---
 As of Drill 1.10, you can use the CREATE TEMPORARY TABLE AS (CTTAS) command to store the results of a query in a temporary table. You can reference the temporary table in subsequent queries within the same session, thereby improving query performance. Data written to the temporary table is not permanently stored on the filesystem. Drill automatically drops the temporary table once the session ends or the Drillbit process fails. Therefore, you do not have to manually drop the table.
@@ -46,7 +46,7 @@ Example dfs.tmp workspace in the dfs storage plugin:
 	} ...
 To override the default temporary workspace, define `drill.exec.default_temporary_workspace` in the `drill-override.conf file` and then restart the Drillbit. For more information, see [Configuration Option Introduction]({{site.baseurl}}/docs/configuration-options-introduction/#system-options).
 
-To change the default temporary workspace connection or directory path, update the dfs storage plugin on the Storage page in the Drill Web Console. For example, dfs connection attribute can be `file:///` or `maprfs:///` and the `dfs.tmp` location attribute can be `/tmp` or `/tmp2`. For more information, see [Plugin Configuration Basics]({{site.baseurl}}/docs/plugin-configuration-basics).
+To change the default temporary workspace connection or directory path, update the dfs storage plugin on the Storage page in the Drill Web UI. For example, dfs connection attribute can be `file:///` or `maprfs:///` and the `dfs.tmp` location attribute can be `/tmp` or `/tmp2`. For more information, see [Plugin Configuration Basics]({{site.baseurl}}/docs/plugin-configuration-basics).
 
 Note: When you run Drill in distributed mode, verify that the default temporary workspace connection points to a distributed filesystem. If temporary tables are created on the local filesystem, they can only be accessed by the local Drillbit that created the temporary table.
 ###Setting the Storage Format

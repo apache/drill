@@ -1,6 +1,6 @@
 ---
 title: "Configuring Storage Plugins"
-date: 2018-07-18 22:29:15 UTC
+date: 2018-12-08
 parent: "Storage Plugin Configuration"
 ---  
 
@@ -19,7 +19,7 @@ You can use the Drill Web UI to update or add a new storage plugin configuration
 To create a name and new configuration:
 
 1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
-2. [Start the Web Console]({{site.baseurl}}/docs/starting-the-web-console/). The Storage tab appears in the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins. 
+2. [Start the Web UI]({{site.baseurl}}/docs/starting-the-web-console/). The Storage tab appears in the Web UI if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins. 
 3. On the Storage tab, enter a name in **New Storage Plugin**.
    Each configuration registered with Drill must have a distinct
 name. Names are case-sensitive.  
@@ -51,7 +51,7 @@ If you need to add a storage plugin configuration to Drill and do not want to us
   The storage plugin configuration name. 
 
 * config  
-  The attribute settings as entered in the Web Console.
+  The attribute settings as entered in the Web UI.
 
 For example, this command creates a storage plugin named myplugin for reading files of an unknown type located on the root of the file system:
 

@@ -1,6 +1,6 @@
 ---
 title: "Asynchronous Parquet Reader"
-date: 2016-11-21 21:25:59 UTC
+date: 2018-12-08
 parent: "Performance Tuning"
 ---
 
@@ -13,7 +13,7 @@ Typically, the Drill default settings provide the best performance for a wide va
 ##Tuning the Parquet Scan Operator  
 The `store.parquet.reader.pagereader.async` option turns the asynchronous Parquet reader on or off. The option is turned on by default. You can use the [ALTER SESSION SET command]({{site.baseurl}}/docs/alter-session-command/) to enable the asynchronous Parquet reader option, as well as the options that control buffering and parallel decoding.  
 
-When the asynchronous Page reader option is enabled, the Parquet Scan operator no longer reports operator wait time. Instead, it reports additional operator metrics that you can view in the query profile in the Drill Web Console.  
+When the asynchronous Page reader option is enabled, the Parquet Scan operator no longer reports operator wait time. Instead, it reports additional operator metrics that you can view in the query profile in the Drill Web UI.  
 
 The `drill.exec.scan.threadpool_size` and `drill.exec.scan.decode_threadpool_size` parameters in the `drill-override.conf` file control the size of the threadpools that read and decode Parquet data when the asynchronous Parquet reader is enabled.  
 
@@ -44,7 +44,7 @@ The following table lists and describes the drillbit configuration parameters in
 | drill.exec.scan.decode_threadpool_size | The size of the thread pool used for decoding   Parquet data.                                                                                                                                                                                                                                                                                                                                                                     | (number of cores+1)/2 |  
 
 ###Operator Metrics
-When the asynchronous Parquet reader option is enabled, Drill provides the following additional operator metrics, which you can access in the query profile from the Drill Web Console:  
+When the asynchronous Parquet reader option is enabled, Drill provides the following additional operator metrics, which you can access in the query profile from the Drill Web UI:  
 
 **Note:** Time is measured in nanoseconds.   
 

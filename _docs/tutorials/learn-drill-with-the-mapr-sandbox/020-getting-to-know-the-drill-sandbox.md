@@ -1,6 +1,6 @@
 ---
 title: "Getting to Know the Drill Sandbox"
-date: 2018-08-20 18:59:28 UTC
+date: 2018-12-08
 parent: "Learn Drill with the MapR Sandbox"
 ---
 This section covers key information about the Apache Drill tutorial. After [installing the Drill sandbox]({{ site.baseurl }}/docs/installing-the-apache-drill-sandbox) and starting the sandbox, you can open another terminal window (Linux) or Command Prompt (Windows) and use the secure shell (ssh) to connect to the VM, assuming ssh is installed. Use the following login name and password: mapr/mapr.   
@@ -24,7 +24,7 @@ Drill includes a shell for connecting to relational databases and executing SQL 
 In this tutorial you query a number of data sets, including Hive and HBase, and files on the file system, such as CSV, JSON, and Parquet files. To access these diverse data sources, you connect Drill to storage plugins. 
 
 ## Storage Plugin Overview
-You use a [storage plugin]({{ site.baseurl }}/docs/connect-a-data-source-introduction) to connect to a data source, such as a file or the Hive metastore. Take a look at the storage plugin definitions by opening the Storage tab in the Drill Web Console. Launch a web browser and go to: `http://<IP address>:8047/storage`. 
+You use a [storage plugin]({{ site.baseurl }}/docs/connect-a-data-source-introduction) to connect to a data source, such as a file or the Hive metastore. Take a look at the storage plugin definitions by opening the Storage tab in the Drill Web UI. Launch a web browser and go to: `http://<IP address>:8047/storage`. 
 
 The control panel for managing storage plugins appears.
 

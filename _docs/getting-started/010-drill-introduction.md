@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2018-08-05 04:52:48 UTC
+date: 2018-12-08
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -69,7 +69,7 @@ Drill 1.12 provides the following new features and improvements:
 - System options improvements, including a new internal system options table (DRILL-5723)
 - Ability to prevent users from accessing a path outside the current workspace (DRILL-5964)
 - Ability to put the server in quiescent mode for a graceful shutdown (DRILL-4286)
-- The Drill Web Console lists the completion of successfully completed queries as "successful" (DRILL-5923)
+- The Drill Web UI lists the completion of successfully completed queries as "successful" (DRILL-5923)
 
 
 ## What's New in Apache Drill 1.11  
@@ -93,7 +93,7 @@ Drill 1.10 provides the following new features and improvements:
 
 * Support for the [CREATE TEMPORARY TABLE AS (CTTAS)]({{site.baseurl}}/docs/create-temporary-table-as-cttas//) command.
 * A [JDBC connection option]({{site.baseurl}}/docs/using-the-jdbc-driver/#using-the-jdbc-url-format-for-a-direct-drillbit-connection) that improves fault tolerance when connecting directly to a Drill node from a client.
-* The [Web Console]({{site.baseurl}}/docs/identifying-multiple-drill-versions-in-a-cluster) displays the Drill version and additional query profile statistics.
+* The [Web UI]({{site.baseurl}}/docs/identifying-multiple-drill-versions-in-a-cluster) displays the Drill version and additional query profile statistics.
 * Drill implicitly interprets the [INT96]({{site.baseurl}}/docs/parquet-format/#about-int96-support/) timestamp data type in Parquet files.
 * Support for Kerberos authentication between the client and drillbit.  
   
@@ -178,7 +178,7 @@ Javadocs and better application dependency compatibility
   * NTILE  
   * LAG and LEAD  
   * FIRST_VALUE and LAST_VALUE  
-* [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) for Web Console operations  
+* [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) for Web UI operations  
 * Performance improvements for [querying HBase]({{site.baseurl}}/docs/querying-hbase/#querying-big-endian-encoded-data), which includes leveraging [ordered byte encoding]({{site.baseurl}}/docs/querying-hbase/#leveraging-hbase-ordered-byte-encoding)  
 * [Optimized reads]({{site.baseurl}}/docs/querying-hive/#optimizing-reads-of-parquet-backed-tables) of Parquet-backed, Hive tables  
 * Read support for the [Parquet INT96 type]({{site.baseurl}}/docs/parquet-format/#about-int96-support) and a new TIMESTAMP_IMPALA type used with the [CONVERT_FROM]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) function decodes a timestamp from Hive or Impala.  

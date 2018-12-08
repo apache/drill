@@ -1,6 +1,6 @@
 ---
 title: "Persistent Configuration Storage"
-date: 2018-07-01 23:48:26 UTC
+date: 2018-12-08
 parent: "Configuration Options"
 ---
 Drill stores persistent configuration data in a persistent configuration store
@@ -23,11 +23,11 @@ store persistent configuration data. The ZooKeeper PStore provider stores all
 of the persistent configuration data in ZooKeeper except for query profile
 data. The ZooKeeper PStore provider offloads query profile data to the Drill log directory on Drill nodes. 
 
-You need to configure the ZooKeeper PStore to use the Drill Web Console when running multiple Drillbits. 
+You need to configure the ZooKeeper PStore to use the Drill Web UI when running multiple Drillbits. 
 
 ### Why Configure the ZooKeeper PStore
 
-When you run multiple DrillBits, configure a specific location for ZooKeeper to offload the query profile data instead of accepting the default temporary location. All Drillbits in the cluster cannot access the temporary location. Consequently, when you do not configure a location on the distributed file system, queries sent to some Drillbits do not appear in the Completed section of the Drill Web Console. Also, some Running links that you click to get information about running queries are broken links.
+When you run multiple DrillBits, configure a specific location for ZooKeeper to offload the query profile data instead of accepting the default temporary location. All Drillbits in the cluster cannot access the temporary location. Consequently, when you do not configure a location on the distributed file system, queries sent to some Drillbits do not appear in the Completed section of the Drill Web UI. Also, some Running links that you click to get information about running queries are broken links.
 
 ### How to Configure the ZooKeeper PStore
 

@@ -1,6 +1,6 @@
 ---
 title: "Lesson 1: Learn about the Data Set"
-date: 2018-02-08 02:32:57 UTC
+date: 2018-12-08
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal
@@ -33,7 +33,7 @@ the Drill shell, type:
 
 `0: jdbc:drill:> !quit`
 
-Examples in this tutorial use the Drill shell. You can also execute queries using the Drill Web Console.
+Examples in this tutorial use the Drill shell. You can also execute queries using the Drill Web UI.
 
 ### Enable the DECIMAL Data Type
 

@@ -1,6 +1,6 @@
 ---
 title: "DESCRIBE"
-date: 2018-04-19 23:14:01 UTC
+date: 2018-12-08
 parent: "SQL Commands"
 ---
 The DESCRIBE command returns information about columns in a table, view, or schema.
@@ -50,7 +50,7 @@ Drill only supports SQL data types. Verify that all data types in an external da
 
 ###DESCRIBE SCHEMA  
 - You can issue the DESCRIBE SCHEMA command on any schema. However, you can only include workspaces for file schemas, such as `dfs.myworkspace`.  
-- When you issue the DESCRIBE SCHEMA command on a particular schema, Drill returns all of the schema properties. The schema properties correlate with the configuration information in the Storage tab of the Drill Web Console for that schema.  
+- When you issue the DESCRIBE SCHEMA command on a particular schema, Drill returns all of the schema properties. The schema properties correlate with the configuration information in the Storage tab of the Drill Web UI for that schema.  
 - When you issue DESCRIBE SCHEMA against a schema and workspace, such as `dfs.myworkspace`, Drill returns the workspace properties in addition to all of the schema properties.  
 - When you issue DESCRIBE SCHEMA against the `dfs` schema, Drill also returns the properties of the “default” workspace. Issuing DESCRIBE SCHEMA against `dfs` or `` dfs.`default` `` returns the same results. 
 

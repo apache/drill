@@ -1,10 +1,10 @@
 ---
 title: "Kafka Storage Plugin"
-date: 2018-07-18 22:29:15 UTC
+date: 2018-12-08
 parent: "Connect a Data Source"
 ---
 
-As of Drill 1.12, Drill provides a storage plugin for Kafka. The Kafka storage plugin enables you to run SQL queries on Apache Kafka and perform interactive analysis on the data. When you install Drill, a preconfigured Kafka storage plugin is available on the Storage page in the Drill Web Console. Once you enable and configure the storage plugin, you can query Kafka from Drill. 
+As of Drill 1.12, Drill provides a storage plugin for Kafka. The Kafka storage plugin enables you to run SQL queries on Apache Kafka and perform interactive analysis on the data. When you install Drill, a preconfigured Kafka storage plugin is available on the Storage page in the Drill Web UI. Once you enable and configure the storage plugin, you can query Kafka from Drill. 
 
 The following sections provide information about the Kafka storage plugin, how to enable and configure the Kafka storage plugin in Drill, options that you can set at the system or session level, and example queries on a Kafka data source. You can refer to the [README](https://github.com/apache/drill/tree/master/contrib/storage-kafka#drill-kafka-plugin) and [Apache Kafka](https://kafka.apache.org/) for additional information.  
 
@@ -84,11 +84,11 @@ This API is used to determine the startOffset for each partition in a topic. Not
 
 ## Enabling and Configuring the Kafka Storage Plugin  
 
-Enable the Kafka storage plugin on the Storage page of the Drill Web Console and then edit the configuration as needed. 
+Enable the Kafka storage plugin on the Storage page of the Drill Web UI and then edit the configuration as needed. 
 
 The Kafka storage plugin configuration contains the `kafkaConsumerProps` property which  supports typical Kafka consumer properties, as described in [Kafka Consumer Configs](https://kafka.apache.org/documentation/#consumerconfigs).  
 
-To enable the Kafka storage plugin, enter the following URL in the address bar of your browser to access the Storage page in the Drill Web Console:  
+To enable the Kafka storage plugin, enter the following URL in the address bar of your browser to access the Storage page in the Drill Web UI:  
 
        http://<drill-node-ip-address>:8047/storage/  
 

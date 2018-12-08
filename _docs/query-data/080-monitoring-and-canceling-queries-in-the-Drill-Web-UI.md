@@ -1,17 +1,17 @@
 ---
-title: "Monitoring and Canceling Queries in the Drill Web Console"
-date: 2018-11-02
+title: "Monitoring and Canceling Queries in the Drill Web UI"
+date: 2018-12-08
 parent: "Query Data"
 ---
-You can monitor and cancel queries from the Drill Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to do so. To access the Drill
-Web Console, the Drillbit process must be running on the Drill node that you use to
-access the Drill Web Console.
+You can monitor and cancel queries from the Drill Web UI if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to do so. To access the Drill
+Web UI, the Drillbit process must be running on the Drill node that you use to
+access the Drill Web UI.
 
-To monitor or cancel a query from the Drill Web Console, complete the following
+To monitor or cancel a query from the Drill Web UI, complete the following
 steps:
 
-  1. Navigate to the Drill Web Console at `<drill_node_ip_address>:8047.`  
-When you access the Drill Web Console, you see some general information about Drill
+  1. Navigate to the Drill Web UI at `<drill_node_ip_address>:8047.`  
+When you access the Drill Web UI, you see some general information about Drill
 running in your cluster, such as the nodes running the Drillbit process, the
 various ports Drill is using, and the amount of direct memory assigned to
 Drill.  

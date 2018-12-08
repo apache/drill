@@ -1,6 +1,6 @@
 ---
 title: "Ports Used by Drill"
-date: 2016-04-14 00:51:25 UTC
+date: 2018-12-08
 parent: "Configure Drill"
 ---
 
@@ -9,8 +9,8 @@ The table below lists the default ports that Drill uses and provides description
 
 | Default Port | Type | Configuration Option               | Description                                                                                                                                                                         |
 |--------------|------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 8047         | TCP  | drill.exec.http.port               | Needed for the Drill Web Console.                                                                                                                                                   |
-| 31010        | TCP  | drill.exec.rpc.user.server.port    | User port address. Used between nodes in a Drill cluster. Needed for an external client, such as Tableau, to connect into the cluster nodes. Also needed for the Drill Web Console. |
+| 8047         | TCP  | drill.exec.http.port               | Needed for the Drill Web UI.                                                                                                                                                   |
+| 31010        | TCP  | drill.exec.rpc.user.server.port    | User port address. Used between nodes in a Drill cluster. Needed for an external client, such as Tableau, to connect into the cluster nodes. Also needed for the Drill Web UI. |
 | 31011        | TCP  | drill.exec.rpc.bit.server.port     | Control port address. Used between nodes in a Drill cluster. Needed for multi-node installation of Apache Drill.                                                                    |
 | 31012        | TCP  | drill.exec.rpc.bit.server.port + 1 | Data port address. Used between nodes in a Drill cluster. Needed for multi-node installation of Apache Drill.                                                                       |
 

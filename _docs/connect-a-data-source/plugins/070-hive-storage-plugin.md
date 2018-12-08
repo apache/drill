@@ -1,6 +1,6 @@
 ---
 title: "Hive Storage Plugin"
-date: 2018-07-11 21:37:17 UTC
+date: 2018-12-08
 parent: "Connect a Data Source"
 ---
 Prior to Drill 1.13, Drill supported Hive 1.0. Drill 1.13 and later includes version 2.3.2 of the Hive client, which adds support for queries on transactional (ACID) and non-transactional Hive bucketed ORC tables. The updated Hive libraries are backward compatible with earlier versions of the Hive server and metastore.   
@@ -69,8 +69,8 @@ To connect Drill to a remote Hive metastore:
 
 1. Issue the following command to start the Hive metastore service on the system specified in the `hive.metastore.uris`:  
    `hive --service metastore`
-2. In the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), select the **Storage** tab.
-3. In the list of disabled storage plugins in the Drill Web Console, click **Update** next to `hive`.  
+2. In the [Drill Web UI]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), select the **Storage** tab.
+3. In the list of disabled storage plugins in the Drill Web UI, click **Update** next to `hive`.  
 4. In the configuration window, add the `Thrift URI` and port to `hive.metastore.uris`. For example:
 
           ...
@@ -110,7 +110,7 @@ To connect Drill to a remote Hive metastore:
 
 The Hive metastore configuration is embedded within the Drill process. Configure an embedded metastore only in a cluster that runs a single Drillbit and only for testing purposes. Do not embed the Hive metastore in production systems.
 
-Provide the metastore database configuration settings in the Drill Web Console. Before you configure an embedded Hive metastore, verify that the driver you use to connect to the Hive metastore is in the Drill classpath located in `/<drill installation directory>/lib/.` If the driver is not there, copy the driver to `/<drill
+Provide the metastore database configuration settings in the Drill Web UI. Before you configure an embedded Hive metastore, verify that the driver you use to connect to the Hive metastore is in the Drill classpath located in `/<drill installation directory>/lib/.` If the driver is not there, copy the driver to `/<drill
 installation directory>/lib` on the Drill node. For more information about storage types and configurations, refer to ["Hive Metastore Administration"](https://cwiki.apache.org/confluence/display/Hive/AdminManual+MetastoreAdmin).
 
 ### Hive Embedded Metastore Configuration
@@ -118,7 +118,7 @@ installation directory>/lib` on the Drill node. For more information about stora
 To configure an embedded Hive metastore, complete the following
 steps:
 
-1. In the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), and select the **Storage** tab.
+1. In the [Drill Web UI]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), and select the **Storage** tab.
 2. In the disabled storage plugin configurations section, click **Update** next to `hive`.
 3. In the configuration window, add the database configuration settings.
 

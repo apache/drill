@@ -1,12 +1,12 @@
 ---
 title: "REST API Introduction"
-date: 2018-02-09 00:16:00 UTC
+date: 2018-12-08
 parent: "REST API"
 ---
 
-The Drill REST API provides programmatic access to Drill through the [Web Console]({{site.baseurl}}/docs/starting-the-web-console/). Using HTTP requests, you can run queries, perform storage plugin tasks, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
+The Drill REST API provides programmatic access to Drill through the [Web UI]({{site.baseurl}}/docs/starting-the-web-console/). Using HTTP requests, you can run queries, perform storage plugin tasks, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
 
-AN HTTP request uses the familiar Web Console URI:
+AN HTTP request uses the familiar Web UI URI:
 
 `http://<IP address or host name>:8047`
 
@@ -16,7 +16,7 @@ Before making HTTP requests, [start Drill]({{site.baseurl}}/docs/starting-drill-
 
 Several examples in the document use the donuts.json file. To download this file, go to [Drill test resources](https://github.com/apache/drill/blob/master/exec/java-exec/src/test/resources) page, locate donuts.json in the list of files, and download it. When using cURL, use unicode \u0027 for the single quotation mark as shown in the Query example.
 
-This documentation presents HTTP methods in the same order as functions appear in the Web Console:
+This documentation presents HTTP methods in the same order as functions appear in the Web UI:
 
 [**Query**]({{site.baseurl}}/docs/rest-api-introduction/#query)
 

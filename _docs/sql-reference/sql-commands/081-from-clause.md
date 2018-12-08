@@ -1,6 +1,6 @@
 ---
 title: "FROM Clause"
-date: 2018-12-04
+date: 2018-12-08
 parent: "SQL Commands"
 ---
 The FROM clause lists the references (tables, views, and subqueries) that data is selected from. Drill expands the traditional concept of a “table reference” in a standard SQL FROM clause to refer to files and directories in a local or distributed file system.
@@ -158,7 +158,7 @@ The following example joins two tables on the table id:
 
 In the following example, assume you have the following two tables that you want to join using a cross join:
 
-**Note:** These tables were created from the region.parquet and nation.parquet files from the sample-data folder included with the Drill installation.
+**Note:** These tables were created from the region.parquet and nation.parquet files in the sample-data folder included with the Drill installation.
 
 	SELECT * FROM tmp.`n_name`;
 	+----------+-----------------------+

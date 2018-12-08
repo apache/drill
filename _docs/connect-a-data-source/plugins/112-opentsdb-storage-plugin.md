@@ -1,18 +1,18 @@
 ---
 title: "OpenTSDB Storage Plugin"
-date: 2018-02-08 02:32:57 UTC
+date: 2018-12-08
 parent: "Connect a Data Source"
 ---
 
 As of Drill 1.12, Drill provides a storage plugin for OpenTSDB. The OpenTSDB storage plugin uses the REST API with OpenTSDB. 
 
-When you install Drill, a preconfigured OpenTSDB storage plugin is available on the Storage page in the Drill Web Console. Once you enable the storage plugin, you can query OpenTSDB from Drill.
+When you install Drill, a preconfigured OpenTSDB storage plugin is available on the Storage page in the Drill Web UI. Once you enable the storage plugin, you can query OpenTSDB from Drill.
 
 The following sections describe how to enable the OpenTSDB storage plugin in Drill and the types of queries Drill currently supports on OpenTSDB. You can refer to the [README](https://github.com/apache/drill/blob/master/contrib/storage-opentsdb/README.md) and [OpenTSDB](http://opentsdb.net/) for additional information.  
 
 ##Enabling the OpenTSDB Storage Plugin  
 
-To enable the OpenTSDB storage plugin, enter the following URL in the address bar of your browser to access the Storage page in the Drill Web Console:  
+To enable the OpenTSDB storage plugin, enter the following URL in the address bar of your browser to access the Storage page in the Drill Web UI:  
 
        http://<drill-node-ip-address>:8047/storage/
 

@@ -1,6 +1,6 @@
 ---
 title: "Query Data Introduction"
-date: 2018-03-21 01:38:37 UTC
+date: 2018-12-08
 parent: "Query Data"
 ---
 You can query local and distributed file systems, Hive, HBase data, complex data, INFORMATION SCHEMA, and system tables as described in the subtopics of this section. 
@@ -55,7 +55,7 @@ In addition to syntax highlighting, an autocomplete feature enables you to use s
   
 **Using the Autocomplete Feature**  
 
-On the Query page in the Drill Web Console, place your cursor in the Query window and press `ctrl+space`. A drop-down menu of Drill keywords, functions, and templates appears. Use the up and down arrows on the keyboard to scroll through the list.  
+On the Query page in the Drill Web UI, place your cursor in the Query window and press `ctrl+space`. A drop-down menu of Drill keywords, functions, and templates appears. Use the up and down arrows on the keyboard to scroll through the list.  
  
 **Note:** The `s*` option provides the template for a SELECT query.  
 

@@ -1,6 +1,6 @@
 ---
 title: "RDBMS Storage Plugin"
-date: 2018-06-08 02:01:23 UTC
+date: 2018-12-08
 parent: "Connect a Data Source"
 ---
 Apache Drill supports querying a number of RDBMS instances. This allows you to connect your traditional databases to your Drill cluster so you can have a single view of both your relational and NoSQL datasources in a single system. 
@@ -14,18 +14,18 @@ Drill is designed to work with any relational datastore that provides a JDBC dri
   1. [Install Drill]({{ site.baseurl }}/docs/installing-drill-in-embedded-mode), if you do not already have it installed.
   2. Copy your database's JDBC driver into the jars/3rdparty directory. (You'll need to do this on every node.)  
   3. Restart Drill. See [Starting Drill in Distributed Mode]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/).
-  4. Add a new storage configuration to Drill through the Web Console. Example configurations for [Oracle](#Example-Oracle-Configuration), [SQL Server](#Example-SQL-Server-Configuration), [MySQL](#Example-MySQL-Configuration) and [Postgres](#Example-Postgres-Configuration) are provided below.
+  4. Add a new storage configuration to Drill through the Web UI. Example configurations for [Oracle](#Example-Oracle-Configuration), [SQL Server](#Example-SQL-Server-Configuration), [MySQL](#Example-MySQL-Configuration) and [Postgres](#Example-Postgres-Configuration) are provided below.
   
 **Example: Working with MySQL**
 
-Drill communicates with MySQL through the JDBC driver using the configuration that you specify in the Web Console or through the [REST API]({{site.baseurl}}/docs/plugin-configuration-basics/#storage-plugin-rest-api).  
+Drill communicates with MySQL through the JDBC driver using the configuration that you specify in the Web UI or through the [REST API]({{site.baseurl}}/docs/plugin-configuration-basics/#storage-plugin-rest-api).  
 
 {% include startnote.html %}Verify that MySQL is running and the MySQL driver is in place before you configure the JDBC storage plugin.{% include endnote.html %}  
 
 To configure the JDBC storage plugin:
 
 1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).  
-1. [Start the Web Console]({{site.baseurl}}/docs/starting-the-web-console/).  
+1. [Start the Web UI]({{site.baseurl}}/docs/starting-the-web-console/).  
 1. On the Storage tab, enter a name in **New Storage Plugin**. For example, enter `myplugin`.
    Each configuration registered with Drill must have a distinct name. Names are case-sensitive.  
 

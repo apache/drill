@@ -1,10 +1,9 @@
 ---
 title: "GROUP BY Clause"
-date: 2018-11-02
+date: 2018-12-08
 parent: "SQL Commands"
 ---
-The GROUP BY clause identifies the grouping columns for the query. You typically use a GROUP BY clause in conjunction with an aggregate expression. Grouping columns must be declared when the query computes aggregates with standard functions such as SUM, AVG, and COUNT. Currently, Drill does not support grouping on aliases.
-
+The GROUP BY clause identifies the grouping columns for the query. You typically use a GROUP BY clause in conjunction with an aggregate expression. Grouping columns must be declared when the query computes aggregates with standard functions such as SUM, AVG, and COUNT. Starting in 1.15, Drill supports aliases in the GROUP BY clause.
 
 ## Syntax
 The GROUP BY clause supports the following syntax:  
@@ -45,8 +44,28 @@ The following query returns sales totals grouped by month:
        | February | 532901 |
        | September | 373100 |
        | January | 346536 |
-       +------------+------------+
+       +------------+------------+  
 
+The following query extracts the year from the date\_hired column and groups the years in an aliased column, yrs\_hired:  
 
+	USE cp;
+	+-------+---------------------------------+
+	|  ok   |             summary             |
+	+-------+---------------------------------+
+	| true  | Default schema changed to [cp]  |
+	+-------+---------------------------------+  	
+	
+	SELECT EXTRACT(year FROM hire_date) AS yrs_hired FROM `employee.json` GROUP BY yrs_hired;
+	+------------+
+	| yrs_hired  |
+	+------------+
+	| 1994       |
+	| 1998       |
+	| 1996       |
+	| 1995       |
+	| 1997       |
+	| 1993       |
+	+------------+
+	
 
 

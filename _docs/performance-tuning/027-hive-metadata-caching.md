@@ -1,6 +1,6 @@
 ---
 title: "Hive Metadata Caching"
-date: 2016-02-02 23:56:57 UTC
+date: 2018-12-08
 parent: "Performance Tuning"
 ---
 
@@ -22,7 +22,7 @@ As of Drill 1.5, you can modify the Hive storage plugin to change the rate at wh
 
 To configure the Hive metastore client cache in Drill, complete the following steps:  
 
-1. Start the [Drill Web Console]({{site.baseurl}}/docs/starting-the-web-console/).
+1. Start the [Drill Web UI]({{site.baseurl}}/docs/starting-the-web-console/).
 2. Select the **Storage** tab.
 3. Click **Update** next to the “hive” storage plugin.
 4. Add the following parameters:  

@@ -1,6 +1,6 @@
 ---
 title: "Configure Drill Introduction"
-date: 2016-11-21 22:42:09 UTC
+date: 2018-12-08
 parent: "Configure Drill"
 ---
 
@@ -26,4 +26,4 @@ statements is Parquet. Using a configuration option, you can modify Drill to sto
 
 ## Query Profile Data Storage Configuration
 
-To avoid problems working with the Web Console, you need to [configure the ZooKeeper PStore]({{site.baseurl}}/docs/persistent-configuration-storage/#configuring-zookeeper-pstore).
+To avoid problems working with the Web UI, you need to [configure the ZooKeeper PStore]({{site.baseurl}}/docs/persistent-configuration-storage/#configuring-zookeeper-pstore).

@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill to use SPNEGO for HTTP Authentication"
-date: 2018-06-08 02:01:22 UTC
+date: 2018-12-08
 parent: "Securing Drill"
 ---  
 
@@ -85,7 +85,7 @@ To configure SPNEGO on the web server, complete the following steps:
 
 An administrator or user can configure SPNEGO on the client (web browser or client tools, such as curl). To configure SPNEGO on the client, a Kerberos Ticket Granting Ticket must exist for the user accessing the web server. The Kerberos Ticket Granting Ticket generated on the client side is used by the web client to get a service ticket from the KDC. This service ticket is used to generate a SPNEGO token, which is presented to the web server for authentication.
 
-The client should use the same web server hostname (as configured in the server-side principal) to access the Drill Web Console. If the server hostname differs, SPNEGO authentication will fail. For example, if the server principal is `"HTTP/example.QA.LAB@QA.LAB”`, the client should use `http://example.QA.LAB:8047` as the Drill Web Console URL.
+The client should use the same web server hostname (as configured in the server-side principal) to access the Drill Web UI. If the server hostname differs, SPNEGO authentication will fail. For example, if the server principal is `"HTTP/example.QA.LAB@QA.LAB”`, the client should use `http://example.QA.LAB:8047` as the Drill Web UI URL.
 
 The following sections provide instructions for configuring the supported client-side browsers:   
 
@@ -134,15 +134,15 @@ Issue the following `curl` command to log in using SPNEGO, and save the authenti
  
        curl -v --negotiate -c cookie.txt -u : http://<hostname>:8047/spnegoLogin
  
-Use the authenticated session cookie stored in the file, for example `cookie.txt`, to access the Drill Web Console pages, as shown in the following example:
+Use the authenticated session cookie stored in the file, for example `cookie.txt`, to access the Drill Web UI pages, as shown in the following example:
  
        curl -v --negotiate -b cookie.txt -u : http://<hostname>:8047/query       
        Example: curl -v --negotiate -b cookie.txt -u : http://example.QA.LAB:8047/query  
 
-##Logging in to the Drill Web Console
-With the addition of SPNEGO authentication in Drill 1.13, an administrator can configure FORM and/or SPNEGO authentication mechanisms. The Drill Web Console provides two possible log in options for a user depending on the configuration. 
+##Logging in to the Drill Web UI
+With the addition of SPNEGO authentication in Drill 1.13, an administrator can configure FORM and/or SPNEGO authentication mechanisms. The Drill Web UI provides two possible log in options for a user depending on the configuration. 
 
-If a user selects FORM, he/she must enter their username and password to access restricted pages in the Drill Web Console. The user is authenticated through PAM. 
+If a user selects FORM, he/she must enter their username and password to access restricted pages in the Drill Web UI. The user is authenticated through PAM. 
 
 If the user selects SPNEGO, the user is automatically logged in if they are an authenticated Kerberos user. 
 

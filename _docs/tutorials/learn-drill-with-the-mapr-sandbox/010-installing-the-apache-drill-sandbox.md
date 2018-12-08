@@ -1,6 +1,6 @@
 ---
 title: "Installing the Apache Drill Sandbox"
-date: 2018-11-02
+date: 2018-12-08
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Prerequisites
@@ -55,7 +55,7 @@ VMware Player or VMware Fusion:
               Open a browser on your host machine and enter the URL in the browser's address field.
               You can access the host via SSH by ssh mapr@localhost -p 2222
               Log in to this virtual machine: Linux/Windows <Alt+F2>, Mac OS X <Options+F5>
-**Note:** The URL provided corresponds to the Web Console in Apache Drill.  
+**Note:** The URL provided corresponds to the Web UI in Apache Drill.  
      
 6. Verify that a DNS entry was created on the host machine for the virtual machine. If not, create the entry.
     * For Linux and Mac, create the entry in `/etc/hosts`.  
@@ -63,7 +63,7 @@ VMware Player or VMware Fusion:
      
            Example: `127.0.1.1 <vm_hostname>`
 
-7. Navigate to [localhost:8047](http://localhost:8047) to experience the Drill Web Console, or log in to the sandbox through the command line.  
+7. Navigate to [localhost:8047](http://localhost:8047) to experience the Drill Web UI, or log in to the sandbox through the command line.  
 
    * Login using ssh as described in ["Getting to Know the Sandbox"]({{site.baseurl}}/docs/getting-to-know-the-drill-sandbox). When prompted, enter `mapr` as the login name and password.  
    * Alternatively, access the command line on the VM: Press Alt+F2 on Windows or Option+F5 on Mac.  
@@ -110,9 +110,9 @@ VirtualBox:
               You can access the host via SSH by ssh mapr@localhost -p 2222
               Log in to this virtual machine: Linux/Windows <Alt+F2>, Mac OS X <Options+F5>  
 
-       **Note:** The URL provided corresponds to the Web Console in Apache Drill.        
+       **Note:** The URL provided corresponds to the Web UI in Apache Drill.        
 
-10. Navigate to [localhost:8047](http://localhost:8047) to experience the Drill Web Console, or log into the sandbox through the command line.  
+10. Navigate to [localhost:8047](http://localhost:8047) to experience the Drill Web UI, or log into the sandbox through the command line.  
        * Login using ssh as described in ["Getting to Know the Sandbox"]({{site.baseurl}}/docs/getting-to-know-the-drill-sandbox). When prompted, enter `mapr` as the login name and password.  
        * Alternatively, access the command line on the VM: Press Alt+F2 on Windows or Option+F5 on Mac.   
 

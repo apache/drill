@@ -1,6 +1,6 @@
 ---
 title: "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled"
-date: 2018-02-08 00:38:56 UTC
+date: 2018-12-08
 parent: "REST API"
 ---  
 
@@ -11,12 +11,12 @@ Prior to Drill 1.12, there was no way to provide a username when running queries
  
 This feature only works when impersonation is enabled and authentication is disabled. If impersonation and authentication are both disabled, a user cannot enter a username and all queries run as the anonymous user.  
 
-A user can issue queries through the Drill Web Console, SQLLine, using curl commands, or Java code, as follows:  
+A user can issue queries through the Drill Web UI, SQLLine, using curl commands, or Java code, as follows:  
 
-##Drill Web Console  
-You can submit a query through the Query page in the Drill Web Console after entering a valid username in the Username field. The Drill Web Console is accessible through the URL http(s)://<ip-address>:8047.
+##Drill Web UI  
+You can submit a query through the Query page in the Drill Web UI after entering a valid username in the Username field. The Drill Web UI is accessible through the URL http(s)://<ip-address>:8047.
 
-To re-run a query from the Profiles page in the Drill Web Console, you must submit a username prior to re-running the query.
+To re-run a query from the Profiles page in the Drill Web UI, you must submit a username prior to re-running the query.
   
 
 ##SQLLine  

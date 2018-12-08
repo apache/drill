@@ -1,6 +1,6 @@
 ---
 title: "Throttling"
-date: 2017-11-14 21:36:24 UTC
+date: 2018-12-08
 parent: "Query Plans and Tuning"
 --- 
 
@@ -11,7 +11,7 @@ If throttling is disabled, you most likely need to increase the amount of memory
 
 ## Configuring Throttling  
 
-You can enable and configure query queuing using system options that you set in the Drill Web Console or through SQL statements. The examples in this document use SQL statements. 
+You can enable and configure query queuing using system options that you set in the Drill Web UI or through SQL statements. The examples in this document use SQL statements. 
 
 **Note:** The memory for the small and large query queues is calculated as:  
 
@@ -26,7 +26,7 @@ You can turn throttling on and off using the exec.queue.enable option, as shown:
 
        ALTER SYSTEM SET `exec.queue.enable` = true
 
-The main page of the Drill Web Console shows the current queue configuration when throttling is enabled.  
+The main page of the Drill Web UI shows the current queue configuration when throttling is enabled.  
 
 ![](https://i.imgur.com/qfzE2pR.png)  
 
@@ -60,7 +60,7 @@ The queue threshold tells Drill how to sort queries into the small and large que
 
 The value that you set represents the total query cost, as computed by the planner. The value does not directly map to physical numbers, however it is derived from row count, CPU, network cost, and so on. 
 
-Before you set the value, experiment by running queries that you consider small and large, then look at the total cost per query in the Drill Web Console, and pick a number in between when setting the threshold option.  
+Before you set the value, experiment by running queries that you consider small and large, then look at the total cost per query in the Drill Web UI, and pick a number in between when setting the threshold option.  
 
 ![](https://i.imgur.com/5kpdkCy.png)  
 

@@ -1,21 +1,21 @@
 ---
-title: "Configuring Web Console and REST API Security"
-date: 2018-09-28 23:05:25 UTC
+title: "Configuring Web UI and REST API Security"
+date: 2018-12-08
 parent: "Securing Drill"
 ---
-Drill 1.5 extends [Drill user security]({{site.baseurl}}/docs/configuring-user-security/) to the Web Console and underlying REST API. As administrator, you can control the extent of access to the Web Console and REST API client applications. For example,
-you can limit the access of certain users to Web Console functionality, such as viewing the in-progress or completed queries of other users. You can limit users from viewing other users' query profiles, who can cancel queries of other users, and other functionality.
+Drill 1.5 extends [Drill user security]({{site.baseurl}}/docs/configuring-user-security/) to the Web UI and underlying REST API. As administrator, you can control the extent of access to the Web UI and REST API client applications. For example,
+you can limit the access of certain users to Web UI functionality, such as viewing the in-progress or completed queries of other users. You can limit users from viewing other users' query profiles, who can cancel queries of other users, and other functionality.
 
-With Web Console security in place, users who do not have administrator privileges need to use the SHOW SCHEMAS command instead of the Web Console for storage plugin configuration information.
+With Web UI security in place, users who do not have administrator privileges need to use the SHOW SCHEMAS command instead of the Web UI for storage plugin configuration information.
 
 ## HTTPS Support
-Drill 1.2 uses code-level support for transport layer security (TLS) to secure the Web Console and REST API. By default, the Web Console and REST API support the HTTP protocol. You set the following start-up option to TRUE to enable HTTPS support:
+Drill 1.2 uses code-level support for transport layer security (TLS) to secure the Web UI and REST API. By default, the Web UI and REST API support the HTTP protocol. You set the following start-up option to TRUE to enable HTTPS support:
 
 `drill.exec.http.ssl_enabled`
 
 By default this start-up option is set to FALSE.
 
-Drill generates a self-signed certificate that works with SSL for HTTPS access to the Web Console. Because Drill uses a self-signed certificate, you see a warning in the browser when you go to `https://<node IP address>:8047`. The Chrome browser, for example, requires you to click `Advanced`, and then `Proceed to <address> (unsafe)`. If you have a signed certificate by an authority, you can set up a custom SSL to avoid this warning. You can set up SSL to specify the keystore or truststore, or both, for your organization, as described in the next section.
+Drill generates a self-signed certificate that works with SSL for HTTPS access to the Web UI. Because Drill uses a self-signed certificate, you see a warning in the browser when you go to `https://<node IP address>:8047`. The Chrome browser, for example, requires you to click `Advanced`, and then `Proceed to <address> (unsafe)`. If you have a signed certificate by an authority, you can set up a custom SSL to avoid this warning. You can set up SSL to specify the keystore or truststore, or both, for your organization, as described in the next section.
 
 ## Setting Up a Custom SSL Configuration
 
@@ -32,15 +32,15 @@ As cluster administrator, you can set the following SSL configuration parameters
 
 See [SSL Certificates in a Drill Cluster]({{site.baseurl}}/docs/configuring-ssl-tls-for-encryption/#ssl-certificates-in-a-drill-cluster) for more information. 
  
-## Prerequisites for Web Console and REST API Security
+## Prerequisites for Web UI and REST API Security
 
-You need to perform the following configuration tasks using Web Console and REST API security.  
+You need to perform the following configuration tasks using Web UI and REST API security.  
 
 * Configure [user security]({{site.baseurl}}/docs/configuring-user-security/)  
-* Set up Web Console administrators  
-  Optionally, you can set up Web Console administrator-user groups to facilitate management of multiple Web Console administrators.
+* Set up Web UI administrators  
+  Optionally, you can set up Web UI administrator-user groups to facilitate management of multiple Web UI administrators.
 
-## Setting up Web Console Administrators and Administrator-User Groups
+## Setting up Web UI Administrators and Administrator-User Groups
 
 Configure the following system options using the [ALTER SYSTEM]({{site.baseurl}}/docs/alter-system/) command:
 
@@ -49,11 +49,11 @@ Configure the following system options using the [ALTER SYSTEM]({{site.baseurl}}
 * security.admin.user_groups  
   Set the value of this option to a comma-separated list of administrator groups.
 
-Any user who is a member of any group listed in security.admin.user.groups is a Drill cluster administrator. Any user for whom you have configured Drill user authentication, but not set up as a Drill cluster administrator, has only user privileges to access the Web Console and REST API client applications.
+Any user who is a member of any group listed in security.admin.user.groups is a Drill cluster administrator. Any user for whom you have configured Drill user authentication, but not set up as a Drill cluster administrator, has only user privileges to access the Web UI and REST API client applications.
 
-## Web Console and REST API Privileges
+## Web UI and REST API Privileges
 
-The following table and subsections describe the privilege levels for accessing the REST API methods and corresponding Web Console functions:
+The following table and subsections describe the privilege levels for accessing the REST API methods and corresponding Web UI functions:
 
 * Administrator (ADMIN)  
 * User (USER)  
