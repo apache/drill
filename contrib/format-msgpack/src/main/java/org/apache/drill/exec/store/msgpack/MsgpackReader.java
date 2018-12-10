@@ -75,7 +75,7 @@ public class MsgpackReader {
     this.rootSelection = FieldSelection.getFieldSelection(columns);
   }
 
-  public void setup(MsgpackReaderContext context, DrillBuf drillBuf) {
+  public void setup(MsgpackReaderContext context) {
     // Pass the drillBuf to all value type writers they need to write to it.
     // Also passing in the context which has the lenient flag, record count, file
     // name which are used to print detailed error messages.
@@ -83,7 +83,7 @@ public class MsgpackReader {
     ExtensionValueWriter[] extensionWriters = new ExtensionValueWriter[128];
 
     FallbackExtensionValueWriter fallbackExtensionValueWriter = new FallbackExtensionValueWriter();
-    fallbackExtensionValueWriter.setup(context, drillBuf);
+    fallbackExtensionValueWriter.setup(context);
     for (int i = 0; i < extensionWriters.length; i++) {
       extensionWriters[i] = fallbackExtensionValueWriter;
     }
@@ -91,26 +91,26 @@ public class MsgpackReader {
     ServiceLoader<ExtensionValueWriter> loader = ServiceLoader.load(ExtensionValueWriter.class);
     for (ExtensionValueWriter msgpackExtensionWriter : loader) {
       logger.debug("Loaded msgpack extension reader: " + msgpackExtensionWriter.getClass());
-      msgpackExtensionWriter.setup(context, drillBuf);
+      msgpackExtensionWriter.setup(context);
       byte idx = msgpackExtensionWriter.getExtensionTypeNumber();
       extensionWriters[idx] = msgpackExtensionWriter;
     }
 
     // Create a value writer for each type supported by the msgpack library.
     FloatValueWriter fvw = new FloatValueWriter();
-    fvw.setup(context, drillBuf);
+    fvw.setup(context);
     valueWriterMap.put(fvw.getMsgpackValueType(), fvw);
     IntegerValueWriter ivw = new IntegerValueWriter();
-    ivw.setup(context, drillBuf);
+    ivw.setup(context);
     valueWriterMap.put(ivw.getMsgpackValueType(), ivw);
     BooleanValueWriter bvw = new BooleanValueWriter();
-    bvw.setup(context, drillBuf);
+    bvw.setup(context);
     valueWriterMap.put(bvw.getMsgpackValueType(), bvw);
     StringValueWriter svw = new StringValueWriter();
-    svw.setup(context, drillBuf);
+    svw.setup(context);
     valueWriterMap.put(svw.getMsgpackValueType(), svw);
     BinaryValueWriter bbvw = new BinaryValueWriter();
-    bbvw.setup(context, drillBuf);
+    bbvw.setup(context);
     valueWriterMap.put(bbvw.getMsgpackValueType(), bbvw);
 
     // The array and map value writers use this map to retrieve the child value

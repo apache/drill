@@ -59,6 +59,9 @@ public class FieldPathTracker {
 
   @Override
   public String toString() {
+    if(current == null){
+      return "root";
+    }
     return rootField.toString();
   }
 }

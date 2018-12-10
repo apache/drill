@@ -90,9 +90,9 @@ public class MsgpackRecordReader extends AbstractRecordReader {
           hasSchema = true;
         }
       }
-      context = new MsgpackReaderContext(filePath, config, hasSchema);
+      context = new MsgpackReaderContext(filePath, config, hasSchema, fragmentContext.getManagedBuffer());
       msgpackReader = new MsgpackReader(stream, Lists.newArrayList(getColumns()), isSkipQuery());
-      msgpackReader.setup(context, fragmentContext.getManagedBuffer());
+      msgpackReader.setup(context);
     } catch (final Exception e) {
       context.handleAndRaise("Failure reading mgspack file", e);
     }

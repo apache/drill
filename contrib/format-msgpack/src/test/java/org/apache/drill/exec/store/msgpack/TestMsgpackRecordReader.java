@@ -94,7 +94,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
   @Before
   public void before() {
     LogFixtureBuilder logBuilder = LogFixture.builder().logger("org.apache.drill.exec.store.msgpack",
-        Level.DEBUG);
+        Level.WARN);
     logs = logBuilder.build();
 
     if (schemaLocation.exists()) {
@@ -814,6 +814,66 @@ public class TestMsgpackRecordReader extends ClusterTest {
   ////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
+
+  @Test
+  public void testAddingFieldToSchema() throws Exception{
+
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("f1");
+      packer.packString("learns that f1 exists");
+    }
+
+    // schema learning mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
+
+    String sql = "select * from `dfs.data`.`test.mp`";
+    List<QueryDataBatch> results = client.queryBuilder().sql(sql).results();
+    for (QueryDataBatch batch : results) {
+      batch.release();
+    }
+
+    try (MessagePacker packer = testPacker()) {
+      packer.packMapHeader(1);
+      packer.packString("yyz");
+      packer.packString("this field did not exits in first discovery process");
+    }
+
+    // schema using mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
+
+    sql = "select yyz from `dfs.data`.`test.mp`";
+    rowSetIterator = client.queryBuilder().sql(sql).rowSetIterator();
+    // when a field does not exits it is defaulted to INT
+    schemaBuilder.add("yyz", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
+    expectedSchema = schemaBuilder.buildSchema();
+ 
+    rowSetBuilder = newRowSetBuilder();
+    rowSetBuilder.addRow(new Object[]{null});
+    verify(rowSetBuilder.build(), nextRowSet());
+
+    // schema learning mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, learnSchemaConfig());
+
+    sql = "select * from `dfs.data`.`test.mp`";
+    results = client.queryBuilder().sql(sql).results();
+    for (QueryDataBatch batch : results) {
+      batch.release();
+    }
+
+    // schema using mode.
+    cluster.defineWorkspace("dfs", schemaName, testDir.getAbsolutePath(), defaultFormat, useSchemaConfig());
+
+    sql = "select yyz from `dfs.data`.`test.mp`";
+    rowSetIterator = client.queryBuilder().sql(sql).rowSetIterator();
+    schemaBuilder = new SchemaBuilder();
+    schemaBuilder.add("yyz", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
+    expectedSchema = schemaBuilder.buildSchema();
+ 
+    rowSetBuilder = newRowSetBuilder();
+    rowSetBuilder.addRow("this field did not exits in first discovery process");
+    verify(rowSetBuilder.build(), nextRowSet());
+  }
 
   @Test
   public void testSchemaVarcharColumn() throws Exception {

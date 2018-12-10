@@ -123,11 +123,11 @@ public class ArrayValueWriter extends ComplexValueWriter {
       // We don't have a shema to work with.
       return null;
     }
-    VariantMetadata s = schema.variantSchema();
-    Collection<ColumnMetadata> children = s.members();
-    ColumnMetadata childSchema = children.iterator().next();
-    if (childSchema == null) {
-      throw new MsgpackParsingException("Array in array element has no child schema.");
+    ColumnMetadata childSchema = schema.childSchema();
+    if (!context.isLearningSchema()) {
+      if (childSchema == null) {
+        throw new MsgpackParsingException("Array in array element has no child schema.");
+      }
     }
     return childSchema;
   }

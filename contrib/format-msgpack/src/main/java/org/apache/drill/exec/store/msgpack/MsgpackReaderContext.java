@@ -22,6 +22,8 @@ import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConf
 import org.apache.hadoop.fs.Path;
 import org.slf4j.helpers.MessageFormatter;
 
+import io.netty.buffer.DrillBuf;
+
 import com.fasterxml.jackson.core.JsonParseException;
 
 import jline.internal.Log;
@@ -42,11 +44,22 @@ public class MsgpackReaderContext {
   private long runningRecordCount = 0;
   private long parseErrorCount = 0;
   private int recordCount = 0;
+  private DrillBuf drillBuf;
 
-  public MsgpackReaderContext(Path filePath, MsgpackFormatConfig config, boolean hasSchema) {
+  public MsgpackReaderContext(Path filePath, MsgpackFormatConfig config, boolean hasSchema, DrillBuf drillBuf) {
     this.filePath = filePath;
     this.config = config;
     this.hasSchema = hasSchema;
+    this.drillBuf = drillBuf;
+  }
+
+  public DrillBuf getDrillBuf() {
+    return drillBuf;
+  }
+
+  public DrillBuf getDrillBuf(final int length) {
+    drillBuf = drillBuf.reallocIfNeeded(length);
+    return drillBuf;
   }
 
   public FieldPathTracker getFieldPathTracker() {
@@ -59,6 +72,10 @@ public class MsgpackReaderContext {
 
   public boolean isLenient() {
     return config.isLenient();
+  }
+
+  public boolean isLearningSchema(){
+    return config.isLearnSchema();
   }
 
   public void incrementParseErrorCount() {

@@ -25,8 +25,6 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.msgpack.core.MessageUnpacker;
 
-import io.netty.buffer.DrillBuf;
-
 /**
  * This interface is implemented for all the types supported by the msgpack java
  * library. That is all of the types in {@link org.msgpack.value.ValueType}.
@@ -34,7 +32,7 @@ import io.netty.buffer.DrillBuf;
  */
 public interface ScalarValueWriter extends ValueWriter {
 
-  public void setup(MsgpackReaderContext context, DrillBuf drillBuf);
+  public void setup(MsgpackReaderContext context);
 
   /**
    * Get the Drill type handled by this value writer. Note the value is passed in

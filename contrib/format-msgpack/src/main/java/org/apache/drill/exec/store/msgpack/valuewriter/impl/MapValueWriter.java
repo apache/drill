@@ -91,10 +91,10 @@ public class MapValueWriter extends ComplexValueWriter {
       for (int i = 0; i < n; i++) {
         String fieldName = getFieldName(unpacker);
         if (fieldName == null) {
+          // skip the value associated with this key (the key we can't read)
+          unpacker.skipValue();
           if (context.isLenient()) {
             context.parseWarn();
-            // skip the value associated with this key (the key we can't read)
-            unpacker.skipValue();
             continue;
           } else {
             throw new MsgpackParsingException("Failed to parse fieldname.");
@@ -112,7 +112,21 @@ public class MapValueWriter extends ComplexValueWriter {
           continue;
         }
 
-        ColumnMetadata childSchema = getChildSchema(tupleMetadata, fieldName);
+        ColumnMetadata childSchema = null;
+        if (context.hasSchema()) {
+          childSchema = tupleMetadata.metadata(fieldName);
+          if (!context.isLearningSchema()) {
+            if (childSchema == null) {
+              unpacker.skipValue();
+              if (context.isLenient()) {
+                logger.debug("Skipping field with no schema: {}", context.getFieldPathTracker(), fieldName);
+                continue;
+              } else {
+                throw new MsgpackParsingException(context.getFieldPathTracker() + " has no child schema.");
+              }
+            }
+          }
+        }
         writeElement(unpacker, writer, null, fieldName, childSelection, childSchema);
       }
     } finally {
