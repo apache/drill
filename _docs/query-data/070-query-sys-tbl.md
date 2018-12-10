@@ -67,7 +67,7 @@ When you run the `SHOW TABLES` command against the sys database, Drill returns t
 
 ## Querying System Tables
 
-The following sections show examples of queries against the system tables available in the sys database/schema.
+The following sections show examples of queries against the system tables available in the sys database.
 
 ###Querying the drillbits Table
 
@@ -118,46 +118,6 @@ example.
   * **build_time**  
 The time that the release was built.
 
-### Querying the options Table
-
-The options table contains system, session, and boot options that you can query.
-
-The following example shows a query on the options table that returns ten of the system options:
-
-    SELECT * FROM options WHERE type='SYSTEM' LIMIT 10;
-    +-------------------------------------------------+----------+---------+----------+-------------+-------------+-----------+------------+
-    |                      name                       |   kind   |  type   |  status  |   num_val   | string_val  | bool_val  | float_val  |
-    +-------------------------------------------------+----------+---------+----------+-------------+-------------+-----------+------------+
-    | drill.exec.functions.cast_empty_string_to_null  | BOOLEAN  | SYSTEM  | DEFAULT  | null        | null        | false     | null       |
-    | drill.exec.storage.file.partition.column.label  | STRING   | SYSTEM  | DEFAULT  | null        | dir         | null      | null       |
-    | exec.errors.verbose                             | BOOLEAN  | SYSTEM  | DEFAULT  | null        | null        | false     | null       |
-    | exec.java_compiler                              | STRING   | SYSTEM  | DEFAULT  | null        | DEFAULT     | null      | null       |
-    | exec.java_compiler_debug                        | BOOLEAN  | SYSTEM  | DEFAULT  | null        | null        | true      | null       |
-    | exec.java_compiler_janino_maxsize               | LONG     | SYSTEM  | DEFAULT  | 262144      | null        | null      | null       |
-    | exec.max_hash_table_size                        | LONG     | SYSTEM  | DEFAULT  | 1073741824  | null        | null      | null       |
-    | exec.min_hash_table_size                        | LONG     | SYSTEM  | DEFAULT  | 65536       | null        | null      | null       |
-    | exec.queue.enable                               | BOOLEAN  | SYSTEM  | DEFAULT  | null        | null        | false     | null       |
-    | exec.queue.large                                | LONG     | SYSTEM  | DEFAULT  | 10          | null        | null      | null       |
-    +-------------------------------------------------+----------+---------+----------+-------------+-------------+-----------+------------+
-    10 rows selected (0.216 seconds)
-
-  * **name**  
-The name of the option.
-  * **kind**  
-The data type of the option value.
-  * **type**  
-The type of options in the output: system or session.
-  * **status**
-The status of the option: default or changed.
-  * **num_val**  
-The default value, which is of the long or int data type; otherwise, null.
-  * **string_val**  
-The default value, which is a string; otherwise, null.
-  * **bool_val**  
-The default value, which is true or false; otherwise, null.
-  * **float_val**  
-The default value, which is of the double, float, or long double data type;
-otherwise, null.
 
 ### Querying the boot Table
 
@@ -281,7 +241,7 @@ The profiles_json table provides the query profile in JSON format for all querie
 
 ### Querying the options Table  
 
-The options table contains configuration options available in Drill that you can set at the system or session level. Starting in Drill 1.15, a new options table lists option descriptions. You can query the latest and previous options table, as shown in the examples below.  
+The options table contains system, session, and boot configuration options available in Drill. Starting in Drill 1.15, a new options table lists option descriptions. You can query the latest and previous options table, as shown in the examples below.  
 
 **Note:** Option names are case-sensitive.
 
