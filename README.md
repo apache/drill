@@ -74,7 +74,7 @@ jekyll build --config _config.yml,_config-prod.yml
 Apache project websites use a system called svnpubsub for publishing. Basically, the static HTML needs to be pushed by one of the committers into the Apache SVN.
 
 ```bash
-git clone -b asf-site https://git-wip-us.apache.org/repos/asf/drill-site.git ../drill-site
+git clone -b asf-site https://gitbox.apache.org/repos/asf/drill-site.git ../drill-site
 cp -R _site/* ../drill-site/
 cd ../drill-site
 git status
