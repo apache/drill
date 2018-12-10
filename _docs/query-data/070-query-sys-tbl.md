@@ -1,14 +1,14 @@
 ---
 title: "Querying System Tables"
-date: 2018-12-08
+date: 2018-12-10
 parent: "Query Data"
 ---  
 
-Drill has a sys database that contains system tables. You can query the system tables for information about Drill, such as available configuration options and the Drill version running on the system. Starting in Drill 1.15, you can query the functions table expose the available built-in SQL functions and user-defined functions. 
+Drill has a sys database that contains system tables. You can query the system tables for information about Drill, such as available configuration options and the Drill version running on the system. Starting in Drill 1.15, you can query the functions table to expose built-in SQL functions and user-defined functions. 
 
 ## Viewing Drill Databases
 
-When you run the `SHOW DATABASES` command, Drill returns the list of available databases/schemas that you can query. In the following example, you can see that Drill returns the sys database/schema:  
+When you run the `SHOW DATABASES` command, Drill returns the list of available databases that you can query. In the following example, you can see that Drill returns the sys database:  
 
     SHOW DATABASES;
     +--------------------+
@@ -28,7 +28,7 @@ When you run the `SHOW DATABASES` command, Drill returns the list of available d
     +--------------------+  
 
 
-## Switching to the System Database/Schema  
+## Switching to the sys Database 
 
 The USE command changes the schema context to the specified schema. When you switch to the sys schema, as shown, Drill issues all subsequent queries against that schema only:  
  
@@ -43,7 +43,7 @@ The USE command changes the schema context to the specified schema. When you swi
 
 ## Viewing System Tables
 
-When you run the `SHOW TABLES` command, Drill returns the list of system tables that you can query for information about Drill:
+When you run the `SHOW TABLES` command against the sys database, Drill returns the list of system tables that you can query for information about Drill:
 
 	SHOW TABLES;
 	+---------------+-----------------------+
@@ -69,7 +69,7 @@ When you run the `SHOW TABLES` command, Drill returns the list of system tables 
 
 The following sections show examples of queries against the system tables available in the sys database/schema.
 
-###Querying the drillbits table
+###Querying the drillbits Table
 
     SELECT * FROM drillbits;
     +-------------------+------------+--------------+------------+---------+
@@ -96,7 +96,7 @@ Apache Drill.
 True means the Drillbit is connected to the session or client running the
 query. This Drillbit is the Foreman for the current session.  
 
-### Querying the version table
+### Querying the version Table
 
     SELECT * FROM version;
     +-------------------------------------------+--------------------------------------------------------------------+----------------------------+--------------+----------------------------+
@@ -118,11 +118,11 @@ example.
   * **build_time**  
 The time that the release was built.
 
-### Querying the options table
+### Querying the options Table
 
-Drill provides system, session, and boot options that you can query.
+The options table contains system, session, and boot options that you can query.
 
-The following example shows a query on the system options:
+The following example shows a query on the options table that returns ten of the system options:
 
     SELECT * FROM options WHERE type='SYSTEM' LIMIT 10;
     +-------------------------------------------------+----------+---------+----------+-------------+-------------+-----------+------------+
@@ -159,7 +159,7 @@ The default value, which is true or false; otherwise, null.
 The default value, which is of the double, float, or long double data type;
 otherwise, null.
 
-### Querying the boot table
+### Querying the boot Table
 
     SELECT * FROM boot LIMIT 10;
     +--------------------------------------+----------+-------+---------+------------+-------------------------+-----------+------------+
@@ -196,7 +196,7 @@ The default value, which is true or false; otherwise, null.
 The default value, which is of the double, float, or long double data type;
 otherwise, null.
 
-### Querying the threads table
+### Querying the threads Table
 
     SELECT * FROM threads;
     +--------------------+------------+----------------+---------------+
@@ -218,7 +218,7 @@ The peak thread count on the node.
   * **busy_threads**
 The current number of live threads (daemon and non-daemon) on the node.
 
-### Querying the memory table
+### Querying the memory Table
 
     SELECT * FROM memory;
     +--------------------+------------+---------------+-------------+-----------------+---------------------+-------------+
@@ -247,7 +247,7 @@ The current JVM direct memory allocation, in bytes.
 The maximum direct memory available to the allocator, in bytes.  
 
 
-### Querying the connections table  
+### Querying the connections Table  
 
 	SELECT * FROM connections limit 3;
 	+------------+--------------+------------+--------------------------+------------------------+----------+------------------+--------------+-----------+---------------------------------------+
@@ -268,7 +268,7 @@ The connections table provides the following information about the connection to
 - security for the connection
 - session ID   
 
-### Querying the profiles_json table 
+### Querying the profiles_json Table 
 
 		SELECT * FROM profiles_json LIMIT 1;
 		+---------------------------------------+----------------------------------------------------------------------------------+
@@ -277,15 +277,16 @@ The connections table provides the following information about the connection to
 		| 23f4e2a7-5d60-a766-0b03-d7a03e99033e  | {"id":{"part1":2590944894098909030,"part2":793715042592293694},"type":1,"start":1544232280280,"end":1544232280309,"query":"SELECT * FROM profiles_json LIMIT 0","plan":"00-00    Screen : rowType = RecordType(VARCHAR(65536) queryId, VARCHAR(65536) json): rowcount = 1.0, cumulative cost = {1.1 rows, 2.1 cpu, 1.0 io, 0.0 network, 0.0 memory}, id = 2115\n00-01      Project(queryId=[$0], json=[$1]) : rowType = RecordType(VARCHAR(65536) queryId, VARCHAR(65536) json): rowcount = 1.0, cumulative cost = {1.0 rows, 2.0 cpu, 1.0 io, 0.0 network, 0.0 memory}, id = 2114\n00-02        DirectScan(groupscan=[RelDataTypeReader{columnNames=[queryId, json], columnTypes=[VARCHAR-REQUIRED, VARCHAR-OPTIONAL]}]) : rowType = RecordType(VARCHAR(65536) queryId, VARCHAR(65536) json): rowcount = 1.0, cumulative cost = {0.0 rows, 0.0 cpu, 1.0 io, 0.0 network, 0.0 memory}, id = 2113\n","foreman":{"address":"doc23.lab","userPort":31010,"controlPort":31011,"dataPort":31012,"version":"1.15.0-SNAPSHOT","state":0},"state":2,"totalFragments":1,"finishedFragments":0,"fragmentProfile":[{"majorFragmentId":0,"minorFragmentProfile":[{"state":3,"minorFragmentId":0,"operatorProfile":[{"inputProfile":[{"records":0,"batches":1,"schemas":1}],"operatorId":2,"operatorType":26,"setupNanos":0,"processNanos":780670,"peakLocalMemoryAllocated":102400,"waitNanos":0},{"inputProfile":[{"records":0,"batches":1,"schemas":1}],"operatorId":1,"operatorType":10,"setupNanos":1600465,"processNanos":207117,"peakLocalMemoryAllocated":102400,"waitNanos":0},{"inputProfile":[{"records":0,"batches":1,"schemas":1}],"operatorId":0,"operatorType":13,"setupNanos":0,"processNanos":229998,"peakLocalMemoryAllocated":0,"metric":[{"metricId":0,"longValue":0}],"waitNanos":1246096}],"startTime":1544232280300,"endTime":1544232280307,"memoryUsed":0,"maxMemoryUsed":3000000,"endpoint":{"address":"doc23.lab","userPort":31010,"controlPort":31011,"dataPort":31012,"version":"1.15.0-SNAPSHOT","state":0},"lastUpdate":1544232280307,"lastProgress":1544232280307}]}],"user":"anonymous","optionsJson":"[ {\n  \"kind\" : \"BOOLEAN\",\n  \"accessibleScopes\" : \"ALL\",\n  \"name\" : \"exec.return_result_set_for_ddl\",\n  \"bool_val\" : true,\n  \"scope\" : \"QUERY\"\n} ]","planEnd":1544232280300,"queueWaitEnd":1544232280300,"totalCost":2.0,"queueName":"Unknown","queryId":"23f4e2a7-5d60-a766-0b03-d7a03e99033e"} |
 		+---------------------------------------+----------------------------------------------------------------------------------+  
 
-The profiles_json provides the query profile in JSON format for all queries, by queryID.  
+The profiles_json table provides the query profile in JSON format for all queries, by queryID.  
 
-### Querying the options table  
+### Querying the options Table  
 
-The options table contains configuration options available in Drill. You can set most of the options at the system or session level. Starting in Drill 1.15, a new options table lists option descriptions, the value that the option is currently set to, and the status of the option. Status shows if the value for the option has been changed from the default. You can query the new and old options table, as shown in the examples below.
+The options table contains configuration options available in Drill that you can set at the system or session level. Starting in Drill 1.15, a new options table lists option descriptions. You can query the latest and previous options table, as shown in the examples below.  
+
+**Note:** Option names are case-sensitive.
 
 The following query selects all of the options related to memory from the new options table:
-  
-**Note:** Option names are case-sensitive.    
+    
   
  	SELECT * FROM options WHERE name LIKE '%memory%'; 
 	+----------------------------------------------------------------+---------+-------------------+-------------+----------+--------------+----------------------------------------------------------------------------------+
@@ -308,9 +309,9 @@ The following query selects all of the options related to memory from the new op
 	+----------------------------------------------------------------+---------+-------------------+-------------+----------+--------------+----------------------------------------------------------------------------------+  
 
 	
-The following query selects three of the options related to memory from the old options table:  
+The following query selects three of the options related to memory from the pre-1.15 options table:  
 
-**Note:** Notice that the old options table contains _val columns, which have been removed from the options table introduced in Drill 1.15.
+**Note:** Notice that the table contains _val columns, which have been removed from the latest options table (introduced in Drill 1.15).
 
 	SELECT * FROM options_old WHERE name LIKE '%memory%' LIMIT 3;
 	+----------------------------------------------------------------+----------+-------------------+--------------+----------+-----------+-------------+-----------+------------+
@@ -322,7 +323,7 @@ The following query selects three of the options related to memory from the old 
 	+----------------------------------------------------------------+----------+-------------------+--------------+----------+-----------+-------------+-----------+------------+
 
 
-### Querying the functions table 
+### Querying the functions Table 
 
 The functions table is available starting in Drill 1.15. The functions table exposes the available SQL functions in Drill and also detects UDFs that have been dynamically loaded into Drill. You can query the functions table to see the following information about built-in and user-defined functions in Drill:
 
