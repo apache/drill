@@ -189,7 +189,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
 
   <div class="page-header"></div>
   <h3>Query Profile: <span style='font-size:85%'>${model.getQueryId()}</span>
-  <#if model.getQueryStateDisplayName() == "Prepared" || model.getQueryStateDisplayName() == "Planning" || model.getQueryStateDisplayName() == "Enqueued" || model.getQueryStateDisplayName() == "Starting">
+  <#if model.getQueryStateDisplayName() == "Prepared" || model.getQueryStateDisplayName() == "Planning" || model.getQueryStateDisplayName() == "Enqueued" || model.getQueryStateDisplayName() == "Starting" || model.getQueryStateDisplayName() == "Running">
     <div  style="display: inline-block;">
       <button type="button" id="cancelBtn" class="btn btn-warning btn-sm" onclick="cancelQuery()" > Cancel </button>
     </div>
