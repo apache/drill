@@ -21,7 +21,7 @@ Maven and JDK installed:
 
 ## 1\. Clone the Repository
 
-    git clone https://github.com/apache/drill.git
+    git clone https://gitbox.apache.org/repos/asf/drill.git
 
 ## 2\. Compile the Code
 

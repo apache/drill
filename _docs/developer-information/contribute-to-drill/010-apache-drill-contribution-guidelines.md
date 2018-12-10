@@ -24,7 +24,7 @@ You may also be interested in the [additional information]({{site.baseurl}}/docs
 
 First, you need the Drill source code. You can use Git to put the source code on your local drive. Most development is done on "master."
 
-    git clone https://git-wip-us.apache.org/repos/asf/drill.git
+    git clone https://gitbox.apache.org/repos/asf/drill.git
 
 ## Step 2: Get approval and modify the source code.
 
