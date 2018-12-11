@@ -21,23 +21,6 @@
             "title": "ALTER SYSTEM", 
             "url": "/docs/alter-system/"
         }, 
-        "AOL Search": {
-            "breadcrumbs": [
-                {
-                    "title": "Sample Datasets", 
-                    "url": "/docs/sample-datasets/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Enron Emails", 
-            "next_url": "/docs/enron-emails/", 
-            "parent": "Sample Datasets", 
-            "previous_title": "Sample Datasets", 
-            "previous_url": "/docs/sample-datasets/", 
-            "relative_path": "_docs/sample-datasets/001-aol.md", 
-            "title": "AOL Search", 
-            "url": "/docs/aol-search/"
-        }, 
         "About SQL Function Examples": {
             "breadcrumbs": [
                 {
@@ -4789,9 +4772,9 @@
             "next_title": "Wikipedia Edit History", 
             "next_url": "/docs/wikipedia-edit-history/", 
             "parent": "Sample Datasets", 
-            "previous_title": "AOL Search", 
-            "previous_url": "/docs/aol-search/", 
-            "relative_path": "_docs/sample-datasets/002-enron.md", 
+            "previous_title": "Sample Datasets", 
+            "previous_url": "/docs/sample-datasets/", 
+            "relative_path": "_docs/sample-datasets/001-enron.md", 
             "title": "Enron Emails", 
             "url": "/docs/enron-emails/"
         }, 
@@ -13190,29 +13173,12 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Enron Emails", 
-                    "next_url": "/docs/enron-emails/", 
-                    "parent": "Sample Datasets", 
-                    "previous_title": "Sample Datasets", 
-                    "previous_url": "/docs/sample-datasets/", 
-                    "relative_path": "_docs/sample-datasets/001-aol.md", 
-                    "title": "AOL Search", 
-                    "url": "/docs/aol-search/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Sample Datasets", 
-                            "url": "/docs/sample-datasets/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Wikipedia Edit History", 
                     "next_url": "/docs/wikipedia-edit-history/", 
                     "parent": "Sample Datasets", 
-                    "previous_title": "AOL Search", 
-                    "previous_url": "/docs/aol-search/", 
-                    "relative_path": "_docs/sample-datasets/002-enron.md", 
+                    "previous_title": "Sample Datasets", 
+                    "previous_url": "/docs/sample-datasets/", 
+                    "relative_path": "_docs/sample-datasets/001-enron.md", 
                     "title": "Enron Emails", 
                     "url": "/docs/enron-emails/"
                 }, 
@@ -13229,13 +13195,13 @@
                     "parent": "Sample Datasets", 
                     "previous_title": "Enron Emails", 
                     "previous_url": "/docs/enron-emails/", 
-                    "relative_path": "_docs/sample-datasets/003-wikipedia.md", 
+                    "relative_path": "_docs/sample-datasets/002-wikipedia.md", 
                     "title": "Wikipedia Edit History", 
                     "url": "/docs/wikipedia-edit-history/"
                 }
             ], 
-            "next_title": "AOL Search", 
-            "next_url": "/docs/aol-search/", 
+            "next_title": "Enron Emails", 
+            "next_url": "/docs/enron-emails/", 
             "parent": "", 
             "previous_title": "Apache Drill M1 Release Notes (Apache Drill Alpha)", 
             "previous_url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/", 
@@ -15311,7 +15277,7 @@
             "parent": "Sample Datasets", 
             "previous_title": "Enron Emails", 
             "previous_url": "/docs/enron-emails/", 
-            "relative_path": "_docs/sample-datasets/003-wikipedia.md", 
+            "relative_path": "_docs/sample-datasets/002-wikipedia.md", 
             "title": "Wikipedia Edit History", 
             "url": "/docs/wikipedia-edit-history/"
         }, 
@@ -21358,29 +21324,12 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Enron Emails", 
-                    "next_url": "/docs/enron-emails/", 
-                    "parent": "Sample Datasets", 
-                    "previous_title": "Sample Datasets", 
-                    "previous_url": "/docs/sample-datasets/", 
-                    "relative_path": "_docs/sample-datasets/001-aol.md", 
-                    "title": "AOL Search", 
-                    "url": "/docs/aol-search/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Sample Datasets", 
-                            "url": "/docs/sample-datasets/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Wikipedia Edit History", 
                     "next_url": "/docs/wikipedia-edit-history/", 
                     "parent": "Sample Datasets", 
-                    "previous_title": "AOL Search", 
-                    "previous_url": "/docs/aol-search/", 
-                    "relative_path": "_docs/sample-datasets/002-enron.md", 
+                    "previous_title": "Sample Datasets", 
+                    "previous_url": "/docs/sample-datasets/", 
+                    "relative_path": "_docs/sample-datasets/001-enron.md", 
                     "title": "Enron Emails", 
                     "url": "/docs/enron-emails/"
                 }, 
@@ -21397,13 +21346,13 @@
                     "parent": "Sample Datasets", 
                     "previous_title": "Enron Emails", 
                     "previous_url": "/docs/enron-emails/", 
-                    "relative_path": "_docs/sample-datasets/003-wikipedia.md", 
+                    "relative_path": "_docs/sample-datasets/002-wikipedia.md", 
                     "title": "Wikipedia Edit History", 
                     "url": "/docs/wikipedia-edit-history/"
                 }
             ], 
-            "next_title": "AOL Search", 
-            "next_url": "/docs/aol-search/", 
+            "next_title": "Enron Emails", 
+            "next_url": "/docs/enron-emails/", 
             "parent": "", 
             "previous_title": "Apache Drill M1 Release Notes (Apache Drill Alpha)", 
             "previous_url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/", 
