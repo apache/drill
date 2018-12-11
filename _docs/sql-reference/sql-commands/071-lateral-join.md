@@ -1,10 +1,10 @@
 ---
 title: "LATERAL Join"
-date: 2018-08-06 23:12:05 UTC
+date: 2018-12-11
 parent: "SQL Commands"
 ---
 
-**NOTE:** Drill 1.14 provides an early release of lateral join. The lateral join functionality is disabled by default because feature testing is in progress. If you want to experiment with lateral joins in your queries, enable the `planner.enable_unnest_lateral` option using the [SET]({{site.baseurl}}/docs/set/) command.  
+Starting in Drill 1.15, the lateral join functionality is enabled by default. If you are running earlier versions of Drill, use the [SET]({{site.baseurl}}/docs/set/) command to enable the `planner.enable_unnest_lateral` option.  
 
 A lateral join is essentially a foreach loop in SQL. A lateral join is represented by the keyword LATERAL with an inner subquery in the FROM clause, as shown in the following simple representation:
  
