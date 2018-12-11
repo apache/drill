@@ -1,6 +1,6 @@
 ---
 title: "Interfaces Introduction"
-date: 2018-12-08
+date: 2018-12-11
 parent: "ODBC/JDBC Interfaces"
 ---
 You can connect to Apache Drill through the following interfaces:
@@ -8,10 +8,16 @@ You can connect to Apache Drill through the following interfaces:
   * Drill shell
   * Drill Web UI
   * [ODBC]({{ site.baseurl }}/docs/installing-the-odbc-driver/)*
-  * [JDBC]({{ site.baseurl }}/docs/using-jdbc-with-squirrel-on-windows/)
+  * [JDBC]({{ site.baseurl }}/docs/using-jdbc-with-squirrel-on-windows/)**
   * C++ API
 
 *Apache Drill does not have an open source ODBC driver. However, MapR provides an [ODBC driver](https://package.mapr.com/tools/MapR-ODBC/MapR_Drill/) developed specifically for connecting Apache Drill to BI tools. MapR also provides a [JDBC driver](https://package.mapr.com/tools/MapR-JDBC/MapR_Drill/).  
+
+**By default, Drill returns a result set when you issue DDL statements, such as CTAS and CREATE VIEW. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.return_result_set_for_ddl` option (Drill 1.15 and later) to false, as shown, to prevent the client from canceling queries:  
+
+	SET `exec.return_result_set_for_ddl` = false
+
+When set to false, Drill returns the affected rows count, and the result set is null.    
 
 ## Using ODBC to Access Apache Drill from BI Tools
 

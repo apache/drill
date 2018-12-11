@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill to use SPNEGO for HTTP Authentication"
-date: 2018-12-08
+date: 2018-12-11
 parent: "Securing Drill"
 ---  
 
@@ -23,7 +23,7 @@ An IT administrator configures the web server (Drillbit) to use SPNEGO for authe
 SPNEGO authentication for Drill requires the following:  
 
 
-- Drill 1.13 installed on each node.  
+- Drill 1.13 or later installed on each node.  
 - To use SPNEGO, you must have a working Kerberos infrastructure, which Drill does not provide.  
 - You must be working in a Linux-based or Windows Active Directory (AD) Kerberos environment with secure clusters and have a Drill server configured for Kerberos.   
 - Kerberos principal and keytab on each Drillbit (web server) that will use SPNEGO for authentication.  
@@ -50,10 +50,10 @@ To configure SPNEGO on the web server, complete the following steps:
 - To enable SPNEGO, add the following configuration to `drill-override.conf`:  
 
               drill.exec.http: {
-                      spnego.auth.principal:"HTTP/hostname@realm",
-                      spnego.auth.keytab:"path/to/keytab",
-                      auth.mechanisms: [“SPNEGO”]    
-                }   
+              				auth.spnego.principal:"HTTP/hostname@realm",
+              				auth.spnego.keytab:"path/to/keytab",
+              				auth.mechanisms: [“SPNEGO”]    
+       					 }   
               
               //The default authentication mechanism is “FORM”.   
  
@@ -98,10 +98,19 @@ To configure Firefox to use a negotiation dialog, such as SPNEGO to authenticate
 4-Set network.negotiate-auth.trusted-uris to “http://,https://”.  
 
 ###Chrome
-For MacOS or Linux, add the `--auth-server-whitelist` parameter to the `google-chrome` command. For example, to run Chrome from a Linux prompt, run the `google-chrome` command, as follows:
+For Linux, add the `--auth-server-whitelist` parameter to the `google-chrome` command. For example, to run Chrome from a Linux prompt, run the `google-chrome` command, as follows:       
 
-       google-chrome --auth-server-whitelist = "hostname/domain"  
-       Example: google-chrome --auth-server-whitelist = "example.QA.LAB"  
+	google-chrome --auth-server-whitelist="domain"  
+
+	example: google-chrome --auth-server-whitelist="machine.example.com"
+	example: google-chrome --auth-server-whitelist="*.example.com"
+
+For MacOS, use the following directories:  
+
+	cd /Applications/Google Chrome.app/Contents/MacOS
+	./"Google Chrome" --auth-server-whitelist="*.example.com"  
+
+**Note:** The URL given to Chrome to access the Web UI should match the domain specified in `auth-server-whitelist`. If the domain is used in `auth-server-whitelist`, use the domain with Chrome. If the IP address is used in `auth-server-whitelist`, use the IP address with Chrome.  
 
 ###Safari
 No configuration is required for Safari. Safari automatically authenticates using SPNEGO when requested by the server.  
