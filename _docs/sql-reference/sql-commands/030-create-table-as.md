@@ -1,9 +1,9 @@
 ---
 title: "CREATE TABLE AS (CTAS)"
-date: 2017-08-09 22:58:36 UTC
+date: 2018-12-11
 parent: "SQL Commands"
 ---
-Use the CTAS command to create tables in Drill.
+Use the CTAS (CREATE TABLE AS) command to create tables in Drill.
 
 ## Syntax
 
@@ -21,11 +21,16 @@ A SELECT statement that needs to include aliases for ambiguous column names, suc
 
 ## Usage Notes  
 
+- By default, Drill returns a result set when you issue DDL statements, such as CTAS. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
+
+		SET `exec.return_result_set_for_ddl` = false  
+		//This option is available in Drill 1.15 and later.   
+
+	When set to false, Drill returns the affected rows count, and the result set is null.  
+
 - You can use the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause) clause in a CTAS command.  
 
-- Drill writes files having names, such as 0_0_0.parquet, to the directory named in the CTAS command or to the workspace that is in use when you run the CTAS statement. You query the directory as you would query a table.
-
-
+- Drill writes files having names, such as 0_0_0.parquet, to the directory named in the CTAS command or to the workspace that is in use when you run the CTAS statement. You query the directory as you would query a table.  
 
        - The following command writes Parquet data from `nation.parquet`, installed with Drill, to the `/tmp/name_key` directory.
 
@@ -42,19 +47,13 @@ A SELECT statement that needs to include aliases for ambiguous column names, suc
        - This example writes a JSON table to the `/tmp/by_yr` directory that contains [Google Ngram data]({{site.baseurl}}/docs/partition-by-clause/#partioning-example).
 
               Use dfs.tmp;
-              CREATE TABLE by_yr (yr, ngram, occurrances) AS SELECT COLUMNS[0] ngram, COLUMNS[1] yr, COLUMNS[2] occurrances FROM `googlebooks-eng-all-5gram-20120701-zo.tsv` WHERE (columns[1] = '1993');
-
-
+              CREATE TABLE by_yr (yr, ngram, occurrances) AS SELECT COLUMNS[0] ngram, COLUMNS[1] yr, COLUMNS[2] occurrances FROM `googlebooks-eng-all-5gram-20120701-zo.tsv` WHERE (columns[1] = '1993');  
 
 - Drill 1.11 introduces the `exec.persistent_table.umask` option, which enables you to set permissions on tables and directories that result from running the CTAS command. By default, the option is set to 002, which sets the default directory permissions to 775 and default file permissions to 664. Use the [SET]({{site.baseurl}}/docs/set/) command to change the setting for this option at the system or session level, as shown:  
 
         ALTER SYSTEM|SESSION SET `exec.persistent_table.umask` = '000';  
 
-
-
-       - Setting the option to '000' sets the folder permissions to 777 and the file permissions to 666. This setting gives full access to folders and files when you create a table.
-
-
+       - Setting the option to '000' sets the folder permissions to 777 and the file permissions to 666. This setting gives full access to folders and files when you create a table.   
 
 ## Setting the Storage Format
 

@@ -1,6 +1,6 @@
 ---
 title: "DROP VIEW"
-date: 2016-08-04 00:23:10 UTC
+date: 2018-12-11
 parent: "SQL Commands"
 ---
 
@@ -23,9 +23,18 @@ The location of the view in subdirectories of a local or distributed file system
 *name*  
 A unique directory or file name, optionally prefaced by a storage plugin name, such as `dfs`, and a workspace, such as `tmp` using dot notation. 
 
-## Usage Notes
+## Usage Notes  
 
-When you drop a view, all information about the view is deleted from the workspace in which it was created. DROP VIEW applies to the view only, not to the underlying data sources used to create the view. However, if you drop a view that another view is dependent on, you can no longer use the dependent view. If the underlying tables or views change after a view is created, you may want to drop and re-create the view. Alternatively, you can use the CREATE OR REPLACE VIEW syntax to update the view.
+- By default, Drill returns a result set when you issue DDL statements, such as DROP VIEW. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
+
+		SET `exec.return_result_set_for_ddl` = false  
+		//This option is available in Drill 1.15 and later.   
+
+	When set to false, Drill returns the affected rows count, and the result set is null.  
+
+
+
+- When you drop a view, all information about the view is deleted from the workspace in which it was created. DROP VIEW applies to the view only, not to the underlying data sources used to create the view. However, if you drop a view that another view is dependent on, you can no longer use the dependent view. If the underlying tables or views change after a view is created, you may want to drop and re-create the view. Alternatively, you can use the CREATE OR REPLACE VIEW syntax to update the view.
 
 ## Example
 

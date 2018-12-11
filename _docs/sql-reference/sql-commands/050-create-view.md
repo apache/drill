@@ -1,6 +1,6 @@
 ---
 title: "CREATE VIEW"
-date: 2017-04-05 00:09:58 UTC
+date: 2018-12-11
 parent: "SQL Commands"
 ---
 The CREATE VIEW command creates a virtual structure for the result set of a
@@ -41,7 +41,14 @@ they are derived from the query.
 _query_  
 A SELECT statement that defines the columns and rows in the view.
 
-## Usage Notes
+## Usage Notes  
+
+By default, Drill returns a result set when you issue DDL statements, such as CREATE VIEW. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
+
+	SET `exec.return_result_set_for_ddl` = false  
+	//This option is available in Drill 1.15 and later.   
+
+When set to false, Drill returns the affected rows count, and the result set is null.
 
 ### Storage
 

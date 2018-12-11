@@ -1,6 +1,6 @@
 ---
 title: "DROP TABLE"
-date: 2016-08-04 22:01:44 UTC
+date: 2018-12-11
 parent: "SQL Commands"
 ---
 
@@ -23,7 +23,13 @@ The location of the table in subdirectories of a local or distributed file syste
 A unique directory or file name, optionally prefaced by a storage plugin name, such as `dfs`, and a workspace, such as `tmp` using dot notation.  
 
 
-## Usage Notes
+## Usage Notes  
+By default, Drill returns a result set when you issue DDL statements, such as DROP TABLE. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
+
+    SET `exec.return_result_set_for_ddl` = false  
+	//This option is available in Drill 1.15 and later.   
+
+When set to false, Drill returns the affected rows count, and the result set is null.
 
 ###Schema
 * You must identify the schema in which a table exists to successfully drop the table. You can identify the schema before dropping the table with the USE <schema_name> command (see [USE command]({{ site.baseurl }}/docs/use/)) or when you issue the DROP TABLE command. See [Example 1: Identifying a schema]({{ site.baseurl }}/docs/drop-table/#example-1:-identifying-a-schema).  
