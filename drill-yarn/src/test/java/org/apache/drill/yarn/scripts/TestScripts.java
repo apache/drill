@@ -517,7 +517,7 @@ public class TestScripts {
     // Dummy drill-env.sh to simulate the shipped "example" file.
 
     context.writeFile(new File(confDir, "drill-env.sh"),
-        "#!/usr/bin/env bash\n" + "# Example file");
+        "#!/bin/bash\n" + "# Example file");
     File siteJars = new File(siteDir, "jars");
 
     Map<String, String> distribEnv = new HashMap<>();
@@ -1284,7 +1284,7 @@ public class TestScripts {
     // with some client-specific changes.
 
     context.writeFile( new File( siteDir, "drill-env.sh" ),
-        "#!/usr/bin/env bash\n" +
+        "#!/bin/bash\n" +
         "# Example file\n" +
         "export SQLLINE_JAVA_OPTS=\"-XX:MaxPermSize=256M\"\n"
         );

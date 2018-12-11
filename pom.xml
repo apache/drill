@@ -588,7 +588,7 @@
           <version>3.0</version>
           <configuration>
             <aggregate>true</aggregate>
-            <header>${maven.multiModuleProjectDirectory}/header</header>
+            <header>header</header>
             <excludes>
               <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
               <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
@@ -650,6 +650,20 @@
               <exclude>KEYS</exclude>
               <exclude>header</exclude>
               <exclude>**/.drill.parquet_metadata</exclude>
+              <exclude>**/*.mov</exclude>
+              <exclude>**/*.mp4</exclude>
+              <exclude>**/*.avi</exclude>
+              <exclude>**/*.pcx</exclude>
+              <exclude>**/*.webp</exclude>
+              <exclude>**/*.pcapng</exclude>
+              <exclude>**/*.psd</exclude>
+              <exclude>**/*.pcx</exclude>
+              <exclude>**/*.log1</exclude>
+              <exclude>**/*.log2</exclude>
+              <exclude>**/*.sqllog</exclude>
+              <exclude>**/*.sqllog2</exclude>
+              <exclude>**/*.wav</exclude>
+              <exclude>**/control</exclude>
               <!-- TODO DRILL-4336: try to avoid the need to add this -->
               <exclude>dependency-reduced-pom.xml</exclude>
             </excludes>
@@ -666,6 +680,17 @@
               <linux>SLASHSTAR_STYLE</linux>
               <boost>SLASHSTAR_STYLE</boost>
               <cmake>SCRIPT_STYLE</cmake>
+              <g4>SLASHSTAR_STYLE</g4>
+              <runbit>SCRIPT_STYLE</runbit>
+              <runexec>SCRIPT_STYLE</runexec>
+              <drill-conf>SCRIPT_STYLE</drill-conf>
+              <sqlline>SCRIPT_STYLE</sqlline>
+              <drillbit>SCRIPT_STYLE</drillbit>
+              <dumpcat>SCRIPT_STYLE</dumpcat>
+              <drill-localhost>SCRIPT_STYLE</drill-localhost>
+              <submit_plan>SCRIPT_STYLE</submit_plan>
+              <drill-embedded>SCRIPT_STYLE</drill-embedded>
+              <conffiles>SCRIPT_STYLE</conffiles>
             </mapping>
           </configuration>
           <executions>

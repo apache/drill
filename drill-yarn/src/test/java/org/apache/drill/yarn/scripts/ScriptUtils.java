@@ -319,7 +319,7 @@ public class ScriptUtils {
   public void createEnvFile(File file, Map<String, String> env, boolean overrideValue)
       throws IOException {
     try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
-      out.println("#!/usr/bin/env bash");
+      out.println("#!/bin/bash");
       for (String key : env.keySet()) {
         String value = env.get(key);
         writeEnvFile(out, key, value, overrideValue);
@@ -349,7 +349,7 @@ public class ScriptUtils {
     Map.Entry currentEnv = (Map.Entry) envIterator.next();
 
     try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
-      out.println("#!/usr/bin/env bash");
+      out.println("#!/bin/bash");
 
       for (String condKey : condition.keySet()) {
         String condValue = condition.get(condKey);
