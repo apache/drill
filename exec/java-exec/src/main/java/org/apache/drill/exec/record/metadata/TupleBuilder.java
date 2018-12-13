@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.test.rowSet.schema;
+package org.apache.drill.exec.record.metadata;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -23,8 +23,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
 
 /**
  * Internal tuple builder shared by the schema and map builders.

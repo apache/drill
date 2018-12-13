@@ -23,4 +23,4 @@
  * the above structures.
  */
 
-package org.apache.drill.test.rowSet.schema;
+package org.apache.drill.exec.record.metadata;

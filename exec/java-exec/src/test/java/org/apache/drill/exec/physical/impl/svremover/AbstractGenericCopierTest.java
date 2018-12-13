@@ -26,6 +26,7 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.OperatorFixture;
@@ -33,7 +34,6 @@ import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 

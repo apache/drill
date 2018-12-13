@@ -30,10 +30,10 @@ import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.test.DrillTest;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**

@@ -29,11 +29,11 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.planner.physical.AggPrelBase;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Before;
 import org.junit.Test;
 

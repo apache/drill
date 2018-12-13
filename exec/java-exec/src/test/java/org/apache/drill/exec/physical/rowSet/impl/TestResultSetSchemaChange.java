@@ -29,6 +29,7 @@ import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.test.SubOperatorTest;
@@ -36,7 +37,6 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 public class TestResultSetSchemaChange extends SubOperatorTest {
