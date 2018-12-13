@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.test.rowSet.schema;
-
-import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
+package org.apache.drill.exec.record.metadata;
 
 /**
  * Magic that allows one schema builder to nest inside another
