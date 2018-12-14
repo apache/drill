@@ -8,42 +8,55 @@ We welcome contributions to the project. If you're interested in contributing, t
 
 ## Drill Committers
 
-| Name | Alias (email is &lt;alias&gt;@apache.org) |
-|------|-------|
-| Jacques Nadeau | jacques |
-| Tomer Shiran | tshiran |
-| Ted Dunning | tdunning |
-| Jason Frantz | jason |
-| MC Srivas | srivas |
-| Julian Hyde | jhyde |
-| Tim Chen | tnachen |
-| Mehant Baid | mehant |
-| Jinfeng Ni | jni |
-| Venki Korukanti | venki |
-| Jason Altekruse | json |
-| Aditya Kishore | adi |
-| Parth Chandra | parthc |
-| Aman Sinha | amansinha |
-| Steven Phillips | smp |
-| Bridget Bevens | bridgetb |
-| Hanifi Gunes | hg |
-| Abdelhakim Deneche | adeneche |
-| Sudheesh Katkam | sudheesh |
-| Ellen Friedman | ellenf |
-| Kris Hahn | krishahn |
-| Neeraja Rentachintala | neerajar |
-| Chris Westin | cwestin |
-| Abhishek Girish | agirish |
-| Rahul Challapalli | rkins |
-| Arina Ielchiieva | arina |  
-| Paul Rogers | progers |
-| Laurent Goujon | laurent |  
-| Charles Givre | cgivre |   
-| Boaz Ben-Zvi | boaz |  
-| Anil Kumar Batchu | akumarb2010 |  
-| Vitalii Diravka  | vitalii |  
-| Kamesh Bhallamudi | kameshb |  
-| Kunal Khatua | kunal |  
-| Volodymyr Vysotskyi | volodymyr |
-| Sorabh Hamirwasia | sorabh | 
-| Timothy Farkas | timothyfarkas |  
+| **Name**                    | **Alias (email is <alias>@apache.org)** |
+|-------------------------|-------------------------------------|
+| Abdel Hakim Deneche     | adeneche                            |
+| Aditya Kishore          | adi                                 |
+| Abhishek Girish         | agirish                             |
+| AnilKumar B             | akumarb2010                         |
+| Aman Sinha              | amansinha                           |
+| Arina Ielchiieva        | arina                               |
+| Boaz Ben-Zvi            | boaz                                |
+| Bridget Bevens          | bridgetb                            |
+| Kamesh Bhallamudi       | bvskamesh                           |
+| Charles Givre           | cgivre                              |
+| Chunhui Shi             | cshi                                |
+| Chris Wensel            | cwensel                             |
+| Chris Westin            | cwestin                             |
+| Ellen Friedman          | ellenf                              |
+| German Shegalov         | gera                                |
+| Gautam Parai            | gparai                              |
+| Grant Ingersoll         | gsingers                            |
+| Hanifi Gunes            | hg                                  |
+| Hanumath Rao Maduri     | hmaduri                             |
+| Hsuan-Yi Chu            | hsuanyichu                          |
+| Isabel Drost-Fromm      | isabel                              |
+| Jacques Nadeau          | jacques                             |
+| Jason Frantz            | jason                               |
+| Julian Hyde             | jhyde                               |
+| Jinfeng Ni              | jni                                 |
+| Jason Altekruse         | json                                |
+| Karthikeyan Manivannan  | karthikm                            |
+| Keys Botzum             | kbotzum                             |
+| Kris Hahn               | krishahn                            |
+| Kunal Khatua            | kunal                               |
+| Laurent Goujon          | laurent                             |
+| Mehant Baid             | mehant                              |
+| Neeraja Rentachintala   | neerajar                            |
+| Parth Chandra           | parthc                              |
+| Padma Penumarthy        | ppadma                              |
+| Paul Rogers             | progers                             |
+| Ryan Rawson             | rawson                              |
+| Rahul Kumar Challapalli | rkins                               |
+| Steven Phillips         | smp                                 |
+| Sorabh Hamirwasia       | sorabh                              |
+| Srivas                  | srivas                              |
+| Sudheesh Katkam         | sudheesh                            |
+| Ted Dunning             | tdunning                            |
+| Timothy Farkas          | timothyfarkas                       |
+| Timothy Chen            | tnachen                             |
+| Tomer Shiran            | tshiran                             |
+| Venki Korukanti         | venki                               |
+| Vitalii Diravka         | vitalii                             |
+| Vova Vysotskyi          | volodymyr                           |
+| Weijie Tong             | weijie                              |
