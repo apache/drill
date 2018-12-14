@@ -64,8 +64,11 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   // Record write status
   private boolean fRecordStarted = false; // true once the startRecord() is called until endRecord() is called
 
-  public JsonRecordWriter(StorageStrategy storageStrategy){
+  private Configuration fsConf;
+
+  public JsonRecordWriter(StorageStrategy storageStrategy, Configuration fsConf) {
     this.storageStrategy = storageStrategy == null ? StorageStrategy.DEFAULT : storageStrategy;
+    this.fsConf = new Configuration(fsConf);
   }
 
   @Override
@@ -78,9 +81,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
     this.skipNullFields = Boolean.parseBoolean(writerOptions.get("skipnulls"));
     final boolean uglify = Boolean.parseBoolean(writerOptions.get("uglify"));
 
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
-    this.fs = FileSystem.get(conf);
+    this.fs = FileSystem.get(fsConf);
 
     Path fileName = new Path(location, prefix + "_" + index + "." + extension);
     try {

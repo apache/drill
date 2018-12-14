@@ -132,6 +132,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     this.extraMetaData.put(WRITER_VERSION_PROPERTY, String.valueOf(ParquetWriter.WRITER_VERSION));
     this.storageStrategy = writer.getStorageStrategy() == null ? StorageStrategy.DEFAULT : writer.getStorageStrategy();
     this.cleanUpLocations = Lists.newArrayList();
+    this.conf = new Configuration(writer.getFormatPlugin().getFsConf());
   }
 
   @Override
@@ -139,8 +140,6 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     this.location = writerOptions.get("location");
     this.prefix = writerOptions.get("prefix");
 
-    conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
     fs = FileSystem.get(conf);
     blockSize = Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_BLOCK_SIZE));
     pageSize = Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_PAGE_SIZE));
