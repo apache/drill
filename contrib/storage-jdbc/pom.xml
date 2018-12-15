@@ -137,7 +137,6 @@
         <!-- Allows us to reserve ports for external servers that we will launch  -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.0.0</version>
         <executions>
           <execution>
             <id>reserve-network-port</id>
