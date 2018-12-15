@@ -13,7 +13,7 @@ Currently, the Apache Drill build process is known to work on Linux, Windows and
     Java HotSpot(TM) 64-Bit Server VM (build 25.161-b12, mixed mode)
 
     # mvn --version
-    Apache Maven 3.6.0 (97c98ec64a1fdfee7767ce5ffb20918da4f719f3; 2018-10-24T21:41:47+03:00)
+    Apache Maven 3.3.3
 
 ## Checkout
 
