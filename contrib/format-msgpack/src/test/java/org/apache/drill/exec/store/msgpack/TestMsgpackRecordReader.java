@@ -40,6 +40,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.store.msgpack.MsgpackFormatPlugin.MsgpackFormatConfig;
+import org.apache.drill.exec.store.msgpack.schema.MsgpackSchema;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.test.ClusterFixture;
@@ -85,7 +86,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
   public static void setup() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher).maxParallelization(1));
     testDir = dirTestWatcher.makeSubDir(Paths.get(schemaName));
-    schemaLocation = new File(testDir, ".schema.proto");
+    schemaLocation = new File(testDir, MsgpackSchema.SCHEMA_FILE_NAME);
     LocalDate now = LocalDate.now(ZoneId.of("UTC"));
     epochSeconds = now.atStartOfDay(ZoneId.of("UTC")).toEpochSecond();
     nanoSeconds = 0;
@@ -408,16 +409,16 @@ public class TestMsgpackRecordReader extends ClusterTest {
 
       packer.packMapHeader(1);
       packer.packString("anArray");
-      packer.packArrayHeader(2).packFloat(0.1f).packFloat(0.342f);
+      packer.packArrayHeader(2).packString("AA").packString("BB");
     }
-    String sql = "select round(root.anArray[1], 3) as x from `dfs.data`.`test.mp` as root";
+    String sql = "select root.anArray[1] as x from `dfs.data`.`test.mp` as root";
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     // @formatter:off
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("x", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL).buildSchema();
+        .add("x", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL).buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(new Object[] { null }).addRow(0.342d)
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema).addRow(new Object[] { null }).addRow("BB")
         .build();
     // @formatter:on
     new RowSetComparison(expected).verifyAndClearAll(actual);
@@ -847,7 +848,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
     // when a field does not exits it is defaulted to INT
     schemaBuilder.add("yyz", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
     expectedSchema = schemaBuilder.buildSchema();
- 
+
     rowSetBuilder = newRowSetBuilder();
     rowSetBuilder.addRow(new Object[]{null});
     verify(rowSetBuilder.build(), nextRowSet());
@@ -869,7 +870,7 @@ public class TestMsgpackRecordReader extends ClusterTest {
     schemaBuilder = new SchemaBuilder();
     schemaBuilder.add("yyz", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
     expectedSchema = schemaBuilder.buildSchema();
- 
+
     rowSetBuilder = newRowSetBuilder();
     rowSetBuilder.addRow("this field did not exits in first discovery process");
     verify(rowSetBuilder.build(), nextRowSet());
@@ -897,9 +898,9 @@ public class TestMsgpackRecordReader extends ClusterTest {
     // deleting the crc file is okay
     // if you manually modify the schema file you must delete the .crc file since
     // it no longer matches
-    assertTrue(new File(testDir, ".schema.proto").exists());
-    assertTrue(new File(testDir, "..schema.proto.crc").exists());
-    boolean deleted = new File(testDir, "..schema.proto.crc").delete();
+    assertTrue(new File(testDir, MsgpackSchema.SCHEMA_FILE_NAME).exists());
+    assertTrue(new File(testDir, "." + MsgpackSchema.SCHEMA_FILE_NAME + ".crc").exists());
+    boolean deleted = new File(testDir, "." + MsgpackSchema.SCHEMA_FILE_NAME + ".crc").delete();
     assertTrue(deleted);
 
     String sql = "select root.sho as w from dfs.data.`secondBatchHasCompleteModel.mp` as root";

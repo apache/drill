@@ -18,13 +18,18 @@
 package org.apache.drill.exec.store.msgpack.schema;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.SchemaChangeRuntimeException;
-import org.apache.drill.exec.proto.UserBitShared.SerializedField;
-import org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
@@ -36,8 +41,10 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 
-import com.google.protobuf.TextFormat;
-import com.google.protobuf.TextFormat.ParseException;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * <p>
@@ -70,7 +77,7 @@ import com.google.protobuf.TextFormat.ParseException;
 public class MsgpackSchema {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackSchema.class);
 
-  public static final String SCHEMA_FILE_NAME = ".schema.proto";
+  public static final String SCHEMA_FILE_NAME = ".schema.json";
   private final MsgpackSchemaWriter schemaWriter = new MsgpackSchemaWriter();
   private final DrillFileSystem dfs;
   private final Path schemaLocation;
@@ -169,10 +176,11 @@ public class MsgpackSchema {
    * @throws IOException
    */
   public MsgpackSchema save(MaterializedField mapField) throws IOException {
-    try (FSDataOutputStream out = dfs.create(schemaLocation, true)) {
-      SerializedField serializedMapField = mapField.getSerializedField();
-      String data = TextFormat.printToString(serializedMapField);
-      IOUtils.write(data, out);
+    try (FSDataOutputStream out = dfs.create(schemaLocation, true);
+        OutputStreamWriter writer = new OutputStreamWriter(out)) {
+      JsonObject json = materializedFieldToJson(mapField);
+      Gson gson = new Gson();
+      gson.toJson(json, writer);
     }
     this.schema = mapField;
     return this;
@@ -184,18 +192,10 @@ public class MsgpackSchema {
   public MsgpackSchema load() throws Exception {
     MaterializedField newlyLoadedSchema = null;
     if (schemaLocation != null && dfs.exists(schemaLocation)) {
-      try (FSDataInputStream in = dfs.open(schemaLocation)) {
-        String schemaData = IOUtils.toString(in);
-        Builder newBuilder = SerializedField.newBuilder();
-        try {
-          // Calling merge here is strange but that's the only way I found out how to read
-          // the schema from disk.
-          TextFormat.merge(schemaData, newBuilder);
-        } catch (ParseException e) {
-          throw new DrillRuntimeException("Failed to merge schema files: " + schemaLocation, e);
-        }
-        SerializedField read = newBuilder.build();
-        newlyLoadedSchema = MaterializedField.create(read);
+      try (FSDataInputStream in = dfs.open(schemaLocation); Reader reader = new InputStreamReader(in)) {
+        Gson gson = new Gson();
+        JsonElement json = gson.fromJson(reader, JsonElement.class);
+        newlyLoadedSchema = jsonToMaterializedField(json.getAsJsonObject());
       }
     }
     schema = newlyLoadedSchema;
@@ -248,6 +248,49 @@ public class MsgpackSchema {
       }
     }
     return null;
+  }
+
+  private MaterializedField jsonToMaterializedField(JsonObject json) {
+    String name = json.get("name").getAsString();
+    String mode = json.get("mode").getAsString();
+    String type = json.get("type").getAsString();
+    MajorType majorType = MajorType.newBuilder().setMode(DataMode.valueOf(mode)).setMinorType(MinorType.valueOf(type))
+        .build();
+    MaterializedField materializedField = MaterializedField.create(name, majorType);
+    JsonArray asJsonArray = json.getAsJsonArray("child");
+    if (asJsonArray != null && asJsonArray.size() > 0) {
+      for (JsonElement jsonElement : asJsonArray) {
+        JsonObject asJsonObject = jsonElement.getAsJsonObject();
+        MaterializedField child = jsonToMaterializedField(asJsonObject);
+        materializedField.addChild(child);
+      }
+    }
+    return materializedField;
+  }
+
+  private JsonObject materializedFieldToJson(MaterializedField f) {
+    JsonObject o = new JsonObject();
+    o.addProperty("name", f.getName());
+    o.addProperty("mode", f.getDataMode().toString());
+    o.addProperty("type", f.getType().getMinorType().toString());
+    Collection<MaterializedField> children = f.getChildren();
+
+    if (children != null && children.size() > 0) {
+      List<MaterializedField> list = new ArrayList<>();
+      list.addAll(children);
+      list.sort(new Comparator<MaterializedField>() {
+        public int compare(MaterializedField a, MaterializedField b) {
+          return a.getName().compareTo(b.getName());
+        }
+      });
+
+      JsonArray jsonArray = new JsonArray();
+      for (MaterializedField child : list) {
+        jsonArray.add(materializedFieldToJson(child));
+      }
+      o.add("child", jsonArray);
+    }
+    return o;
   }
 
 }

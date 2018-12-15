@@ -18,12 +18,10 @@
 package org.apache.drill.exec.store.msgpack.valuewriter.impl;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.store.msgpack.MsgpackParsingException;
 import org.apache.drill.exec.store.msgpack.valuewriter.ExtensionValueWriter;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;

@@ -48,8 +48,6 @@ import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.ValueType;
 
-import io.netty.buffer.DrillBuf;
-
 public class MsgpackReader {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MsgpackReader.class);
