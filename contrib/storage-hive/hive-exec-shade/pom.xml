@@ -101,6 +101,14 @@
           </artifactSet>
           <createDependencyReducedPom>false</createDependencyReducedPom>
           <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+          <createSourcesJar>true</createSourcesJar>
+          <shadeSourcesContent>true</shadeSourcesContent>
+          <transformers>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+              <addHeader>false</addHeader>
+            </transformer>
+          </transformers>
           <relocations>
             <relocation>
               <pattern>com.google.</pattern>
@@ -170,6 +178,33 @@
                   <includes>**/**</includes>
                 </artifactItem>
               </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-hive-shaded</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>
+                  <type>jar</type>
+                  <classifier>jar</classifier>
+                </artifact>
+                <artifact>
+                  <file>${project.build.directory}/${project.artifactId}-${project.version}-sources.jar</file>
+                  <type>jar</type>
+                  <classifier>sources</classifier>
+                </artifact>
+              </artifacts>
             </configuration>
           </execution>
         </executions>
