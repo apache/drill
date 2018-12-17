@@ -48,6 +48,7 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Paul Rogers             | progers                             |
 | Ryan Rawson             | rawson                              |
 | Rahul Kumar Challapalli | rkins                               |
+| Salim Achouche          | sachouche                           |
 | Steven Phillips         | smp                                 |
 | Sorabh Hamirwasia       | sorabh                              |
 | Srivas                  | srivas                              |
