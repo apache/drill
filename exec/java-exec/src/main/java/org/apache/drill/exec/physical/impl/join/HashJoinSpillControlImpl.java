@@ -21,8 +21,6 @@ package org.apache.drill.exec.physical.impl.join;
   import org.apache.drill.exec.memory.BufferAllocator;
   import org.apache.drill.exec.record.RecordBatchSizer;
   import org.apache.drill.exec.record.VectorContainer;
-  // import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-  // import java.util.concurrent.TimeUnit;
 
 /**
  * This class is currently used only for Semi-Hash-Join that avoids duplicates by the use of a hash table
@@ -32,23 +30,23 @@ package org.apache.drill.exec.physical.impl.join;
 public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.HashJoinSpillControl {
   private BufferAllocator allocator;
   private int recordsPerBatch;
+  private int minBatchesInAvailableMemory;
 
-  HashJoinSpillControlImpl(BufferAllocator allocator, int recordsPerBatch) {
+  HashJoinSpillControlImpl(BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory) {
     this.allocator = allocator;
     this.recordsPerBatch = recordsPerBatch;
+    this.minBatchesInAvailableMemory = minBatchesInAvailableMemory;
   }
 
   @Override
   public boolean shouldSpill(VectorContainer currentVectorContainer) {
-    // Stopwatch watch = Stopwatch.createStarted();
     assert currentVectorContainer.hasRecordCount();
     assert currentVectorContainer.getRecordCount() == recordsPerBatch;
     // Expected new batch size like the current, plus the Hash Value vector (4 bytes per HV)
     long batchSize = new RecordBatchSizer(currentVectorContainer).getActualSize() + 4 * recordsPerBatch;
     long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory();
-    boolean needsSpill = 3 * batchSize > memoryAvailableNow; // go spill if too little memory is available
-    // long total = watch.elapsed(TimeUnit.MICROSECONDS);
-    return needsSpill;
+    boolean needsSpill = minBatchesInAvailableMemory * batchSize > memoryAvailableNow;
+    return needsSpill;   // go spill if too little memory is available
   }
 
 }

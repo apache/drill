@@ -326,7 +326,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     AVG_OUTPUT_ROW_BYTES,
     OUTPUT_RECORD_COUNT;
 
-    // duplicate for hash ag
+    // duplicate for hash agg
 
     @Override
     public int metricId() { return ordinal(); }
@@ -803,7 +803,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     partitions = new HashPartition[numPartitions];
     // Runtime stats for semi-join: Help decide early if seen too many duplicates (based on initial data, about 32K per partition)
     semiCountTotal = semiCountDuplicates = 0;
-    semiDupDecisionThreshold =
+    semiDupDecisionThreshold = // average each partition's hash table half full ( + 1 to avoid zero in case numPartitions == 1 )
       ((numPartitions + 1) / 2) * context.getOptions().getLong(ExecConstants.MIN_HASH_TABLE_SIZE_KEY);
   }
 
@@ -979,8 +979,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
         buildCalc = partitionNumTuning(maxBatchRowCount, buildCalc);
       }
       // to be used in case of a Semi Join skippinging duplicates
-      spillControlCalc = new HashJoinSpillControlImpl(allocator, RECORDS_PER_BATCH);
-
+      spillControlCalc = new HashJoinSpillControlImpl(allocator, RECORDS_PER_BATCH,
+        (int) context.getOptions().getOption(ExecConstants.HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY));
     }
 
     if (spilledState.isFirstCycle()) {
@@ -1052,7 +1052,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
             boolean aDuplicate = partitions[currPart].insertKeyIntoHashTable(buildBatch.getContainer(), ind, hashCode);
             // A heuristic: Make a decision once the threshold was met - either continue skipping duplicates, or stop
             // (skipping duplicates carries a cost, so better avoid if duplicates are few ,i.e. < %20 )
-            if ( semiCountTotal == semiDupDecisionThreshold) {
+            if ( semiCountTotal == semiDupDecisionThreshold) {  // met threshold ?
               if ( semiCountDuplicates < (semiDupDecisionThreshold * 0.2) ) { // when less than 20% duplicates
                 for (HashPartition partn : partitions) {
                   partn.stopSkippingDuplicates();
