@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class TableBuilder {
+  private static final String NO_BGCOLOR = "";
   private final NumberFormat format = NumberFormat.getInstance(Locale.US);
   private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
   private final DecimalFormat dec = new DecimalFormat("0.00");
@@ -45,10 +46,10 @@ public class TableBuilder {
 
     format.setMaximumFractionDigits(3);
 
-    sb.append("<table class=\"table table-bordered text-right"+(isSortable? " sortable" : "")+"\">\n<thead><tr>");
+    sb.append("<table class=\"table table-bordered text-right"+(isSortable? " sortable" : NO_BGCOLOR)+"\">\n<thead><tr>");
     for (int i = 0; i < columns.length; i++) {
       String cn = columns[i];
-      String ctt = "";
+      String ctt = NO_BGCOLOR;
       if (columnTooltip != null) {
         String tooltip = columnTooltip[i];
         if (tooltip != null) {
@@ -61,37 +62,26 @@ public class TableBuilder {
   }
 
   public void appendCell(final String s) {
-    appendCell(s, null, null, null);
+    appendCell(s, NO_BGCOLOR, null);
   }
 
-  public void appendCell(final String s, final String link) {
-    appendCell(s, link, null, null);
-  }
-
-  public void appendCell(final String s, final String link, final String titleText) {
-    appendCell(s, link, titleText, null);
-  }
-
-  public void appendCell(final String s, final String link, final String titleText, final String backgroundColor) {
-    appendCell(s, link, titleText, backgroundColor, null);
+  public void appendCell(final String s, final String backgroundColor) {
+    appendCell(s, backgroundColor, null);
   }
 
   public void appendCell(final String s, final Map<String, String> kvPairs) {
-    appendCell(s, null, null, null, kvPairs);
+    appendCell(s, NO_BGCOLOR, kvPairs);
   }
 
-  public void appendCell(final String s, final String link, final String titleText, final String backgroundColor,
-      final Map<String, String> kvPairs) {
+  //Inject value into a table cell. Start or end a row if required
+  public void appendCell(final String s, final String rowBackgroundColor, final Map<String, String> kvPairs) {
+    //Check if this is first column?
     if (w == 0) {
       sb.append("<tr"
-          + (backgroundColor == null ? "" : " style=\"background-color:"+backgroundColor+"\"")
+          + (rowBackgroundColor == null || rowBackgroundColor == NO_BGCOLOR ? "" : " style=\"background-color:"+rowBackgroundColor+"\"")
           + ">");
     }
     StringBuilder tdElemSB = new StringBuilder("<td");
-    //Injecting title if specified (legacy impl)
-    if (titleText != null && titleText.length() > 0) {
-      tdElemSB.append(" title=\""+titleText+"\"");
-    }
     //Extract other attributes for injection into element
     if (kvPairs != null) {
       for (String attributeName : kvPairs.keySet()) {
@@ -99,8 +89,8 @@ public class TableBuilder {
         tdElemSB.append(attributeText);
       }
     }
-    //Closing <td>
-    tdElemSB.append(String.format(">%s%s</td>", s, link != null ? link : ""));
+    //Inserting inner text value and closing <td>
+    tdElemSB.append(">").append(s).append("</td>");
     sb.append(tdElemSB);
     if (++w >= width) {
       sb.append("</tr>\n");
@@ -108,13 +98,14 @@ public class TableBuilder {
     }
   }
 
-  public void appendRepeated(final String s, final String link, final int n) {
-    appendRepeated(s, link, n, null);
+  public void appendRepeated(final String s, final int n) {
+    appendRepeated(s, n, null);
   }
 
-  public void appendRepeated(final String s, final String link, final int n, final String tooltip) {
+  //Inject a value repeatedly into a table cell
+  public void appendRepeated(final String s, final int n, final Map<String, String> attributeMap) {
     for (int i = 0; i < n; i++) {
-      appendCell(s, link, tooltip);
+      appendCell(s, attributeMap);
     }
   }
 
@@ -122,109 +113,82 @@ public class TableBuilder {
     appendTime(d, null);
   }
 
-  public void appendTime(final long d, final String link) {
-    appendTime(d, link, null);
-  }
-
-  public void appendTime(final long d, final String link, final String tooltip) {
+  //Inject timestamp/date value with ordering into a table cell
+  public void appendTime(final long d, Map<String, String> attributeMap) {
     //Embedding dataTable's data-order attribute
-    Map<String, String> attributeMap = new HashMap<String, String>();
-    attributeMap.put("data-order", String.valueOf(d));
-    appendCell(dateFormat.format(d), link, tooltip, null, attributeMap);
+    if (attributeMap == null) {
+      attributeMap = new HashMap<>();
+    }
+    attributeMap.put(HtmlAttribute.DATA_ORDER, String.valueOf(d));
+    appendCell(dateFormat.format(d), null, attributeMap);
   }
 
   public void appendMillis(final long p) {
     appendMillis(p, null);
   }
 
-  public void appendMillis(final long p, final String link) {
-    appendMillis(p, link, null);
-  }
-
-  public void appendMillis(final long p, final String link, final String tooltip) {
-    //Embedding dataTable's data-order attribute
-    Map<String, String> attributeMap = new HashMap<String, String>();
-    attributeMap.put("data-order", String.valueOf(p));
-    appendCell((new SimpleDurationFormat(0, p)).compact(), link, tooltip, null, attributeMap);
-  }
-
-  public void appendNanos(final long p) {
-    appendNanos(p, null, null);
-  }
-
-  public void appendNanos(final long p, final String link) {
-    appendNanos(p, link, null);
-  }
-
-  public void appendNanos(final long p, final String link, final String tooltip) {
-    appendMillis(Math.round(p / 1000.0 / 1000.0), link, tooltip);
-  }
-
-  public void appendPercent(final double percentAsFraction) {
-    appendCell(dec.format(100*percentAsFraction).concat("%"), null, null);
-  }
-
-  public void appendPercent(final double percentAsFraction, final String link) {
-    appendCell(dec.format(100*percentAsFraction).concat("%"), link, null);
-  }
-
-  public void appendPercent(final double percentAsFraction, final String link, final String tooltip) {
-    appendCell(dec.format(100*percentAsFraction).concat("%"), link, tooltip);
-  }
-
-  public void appendFormattedNumber(final Number n) {
-    appendCell(format.format(n), null, null);
-  }
-
-  public void appendFormattedNumber(final Number n, final String link) {
-    appendCell(format.format(n), link, null);
-  }
-
-  public void appendFormattedNumber(final Number n, final String link, final String tooltip) {
-    appendCell(format.format(n), link, tooltip);
-  }
-
-  public void appendFormattedInteger(final long n) {
-    appendCell(intformat.format(n), null, null);
-  }
-
-  public void appendFormattedInteger(final long n, final String link) {
-    appendCell(intformat.format(n), link, null);
-  }
-
-  public void appendFormattedInteger(final long n, final String link, final String tooltip) {
-    appendCell(intformat.format(n), link, tooltip);
-  }
-
-  public void appendInteger(final long l, final String link, final String tooltip) {
-    appendCell(Long.toString(l), link, tooltip);
-  }
-
-  public void appendBytes(final long l) {
-    appendBytes(l, null, null, null);
-  }
-
-  public void appendBytes(final long l, final String link) {
-    appendBytes(l, link, null);
-  }
-
-  public void appendBytes(final long l, final String link, final String tooltip) {
-    appendBytes(l, link, tooltip, null);
-  }
-
-  public void appendBytes(final long l, Map<String, String> attributeMap) {
-    appendBytes(l, null, null, attributeMap);
-  }
-
-  public void appendBytes(final long l, final String link, final String tooltip, Map<String, String> attributeMap) {
+  //Inject millisecond based time value with ordering into a table cell
+  public void appendMillis(final long p, Map<String, String> attributeMap) {
     //Embedding dataTable's data-order attribute
     if (attributeMap == null) {
       attributeMap = new HashMap<>();
     }
-    attributeMap.put("data-order", String.valueOf(l));
-    appendCell(bytePrint(l), link, tooltip, null, attributeMap);
+    attributeMap.put(HtmlAttribute.DATA_ORDER, String.valueOf(p));
+    appendCell((new SimpleDurationFormat(0, p)).compact(), NO_BGCOLOR, attributeMap);
   }
 
+  public void appendNanos(final long p) {
+    appendNanos(p, null);
+  }
+
+  public void appendNanos(final long p, Map<String, String> attributeMap) {
+    appendMillis(Math.round(p / 1000.0 / 1000.0), attributeMap);
+  }
+
+  public void appendPercent(final double percentAsFraction) {
+    appendCell(dec.format(100*percentAsFraction).concat("%"), NO_BGCOLOR, null);
+  }
+
+  //Inject value as a percentage with value between 0 and 100 into a table cell
+  public void appendPercent(final double percentAsFraction, Map<String, String> attributeMap) {
+    appendCell(dec.format(100*percentAsFraction).concat("%"), NO_BGCOLOR, attributeMap);
+  }
+
+  public void appendFormattedNumber(final Number n) {
+    appendCell(format.format(n), NO_BGCOLOR, null);
+  }
+
+  public void appendFormattedNumber(final Number n, Map<String, String> attributeMap) {
+    appendCell(format.format(n), NO_BGCOLOR, attributeMap);
+  }
+
+  public void appendFormattedInteger(final long n) {
+    appendCell(intformat.format(n), NO_BGCOLOR, null);
+  }
+
+  public void appendFormattedInteger(final long n, Map<String, String> attributeMap) {
+    appendCell(intformat.format(n), NO_BGCOLOR, attributeMap);
+  }
+
+  public void appendInteger(final long l, Map<String, String> attributeMap) {
+    appendCell(Long.toString(l), NO_BGCOLOR, attributeMap);
+  }
+
+  public void appendBytes(final long l) {
+    appendBytes(l, null);
+  }
+
+  //Inject print-friendly byte value with ordering into a table cell
+  public void appendBytes(final long l, Map<String, String> attributeMap) {
+    //Embedding dataTable's data-order attribute
+    if (attributeMap == null) {
+      attributeMap = new HashMap<>();
+    }
+    attributeMap.put(HtmlAttribute.DATA_ORDER, String.valueOf(l));
+    appendCell(bytePrint(l), NO_BGCOLOR, attributeMap);
+  }
+
+  //Generate a print-friendly representation of a byte count
   private String bytePrint(final long size) {
     final double t = size / Math.pow(1024, 4);
     if (t > 1) {
