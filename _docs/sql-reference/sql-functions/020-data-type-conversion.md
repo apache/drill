@@ -686,7 +686,7 @@ Converts a character string or a UNIX epoch timestamp to a date.
 
 *expression* is a character string enclosed in single quotation marks or a Unix epoch timestamp in milliseconds, not enclosed in single quotation marks. 
 
-*'format'* is a character string that specifies the format of 'expression'. Only use this option when the expression is a character string, not a UNIX epoch timestamp. 
+*'format'* is a character string that specifies the format of *expression*. Only use this option when the *expression* is a character string, not a UNIX epoch timestamp. 
 
 ### TO_DATE Usage Notes
 Specify a format using patterns defined in [Joda DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds. The [UNIX_TIMESTAMP]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#unix_timestamp) function converts a time string to a UNIX timestamp in seconds. 
@@ -849,7 +849,7 @@ Convert 828550000 milliseconds (23 hours 55 seconds) to the time.
 
 *expression* is a character string enclosed in single quotation marks or a UNIX epoch timestamp, not enclosed in single quotation marks. 
 
-*'format'* is a character string that specifies the format of 'expression'. Only use this option when the expression is a character string, not a UNIX epoch timestamp. 
+*'format'* is a character string that specifies the format of *expression*. Only use this option when the *expression* is a character string, not a UNIX epoch timestamp. 
 
 ### TO_TIMESTAMP Usage Notes
 Specify a format using patterns defined in [Joda DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds.
