@@ -201,10 +201,10 @@ public class ProfileResources {
     private List<ProfileInfo> finishedQueries;
     private List<String> errors;
 
-    public QProfiles(List<ProfileInfo> runningQueries, List<ProfileInfo> finishedQueries, List<String> erorrs) {
+    public QProfiles(List<ProfileInfo> runningQueries, List<ProfileInfo> finishedQueries, List<String> errors) {
       this.runningQueries = runningQueries;
       this.finishedQueries = finishedQueries;
-      this.errors = erorrs;
+      this.errors = errors;
     }
 
     public List<ProfileInfo> getRunningQueries() {

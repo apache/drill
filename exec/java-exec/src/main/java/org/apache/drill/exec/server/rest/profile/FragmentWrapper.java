@@ -22,12 +22,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Collections2;
 
@@ -37,10 +39,13 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Collections2;
 public class FragmentWrapper {
   private final MajorFragmentProfile major;
   private final long start;
+  private final int runningProfileProgressThreshold;
 
-  public FragmentWrapper(final MajorFragmentProfile major, final long start) {
+  public FragmentWrapper(final MajorFragmentProfile major, final long start, DrillConfig config) {
     this.major = Preconditions.checkNotNull(major);
     this.start = start;
+    //Threshold to track if query made no progress in specified elapsed time
+    runningProfileProgressThreshold = config.getInt(ExecConstants.PROFILE_WARNING_PROGRESS_THRESHOLD);
   }
 
   public String getDisplayName() {
@@ -83,7 +88,7 @@ public class FragmentWrapper {
 
     // If there are no stats to aggregate, create an empty row
     if (complete.size() < 1) {
-      tb.appendRepeated("", null, NUM_NULLABLE_ACTIVE_OVERVIEW_COLUMNS);
+      tb.appendRepeated("", NUM_NULLABLE_ACTIVE_OVERVIEW_COLUMNS);
       return;
     }
 
@@ -118,15 +123,23 @@ public class FragmentWrapper {
     tb.appendMillis(cumulativeFragmentDurationInMillis / complete.size());
     tb.appendMillis(longRun.getEndTime() - longRun.getStartTime());
 
-    tb.appendPercent(totalProcessInMillis / (totalProcessInMillis + totalWaitInMillis), null,
-        //#8721 is the summation sign: sum(Busy): ## + sum(Wait): ##
+    Map<String, String> percBusyAttrMap = new HashMap<>();
+    //#8721 is the summation sign: sum(Busy): ## + sum(Wait): ##
+    percBusyAttrMap.put(HtmlAttribute.TITLE,
         String.format("&#8721;Busy: %,.2fs + &#8721;Wait: %,.2fs", totalProcessInMillis/1E3, totalWaitInMillis/1E3));
+    tb.appendPercent(totalProcessInMillis / (totalProcessInMillis + totalWaitInMillis), percBusyAttrMap);
 
     final MinorFragmentProfile lastUpdate = Collections.max(complete, Comparators.lastUpdate);
     tb.appendMillis(System.currentTimeMillis()-lastUpdate.getLastUpdate());
 
     final MinorFragmentProfile lastProgress = Collections.max(complete, Comparators.lastProgress);
-    tb.appendMillis(System.currentTimeMillis()-lastProgress.getLastProgress());
+    long elapsedSinceLastProgress = System.currentTimeMillis()-lastProgress.getLastProgress();
+    Map<String, String> lastProgressAttrMap = null;
+    if (elapsedSinceLastProgress > TimeUnit.SECONDS.toMillis(runningProfileProgressThreshold)) {
+      lastProgressAttrMap = new HashMap<>();
+      lastProgressAttrMap.put(HtmlAttribute.CLASS, HtmlAttribute.CLASS_VALUE_NO_PROGRESS_TAG);
+    }
+    tb.appendMillis(elapsedSinceLastProgress, lastProgressAttrMap);
 
     // TODO(DRILL-3494): Names (maxMem, getMaxMemoryUsed) are misleading; the value is peak memory allocated to fragment
     final MinorFragmentProfile maxMem = Collections.max(complete, Comparators.fragmentPeakMemory);
@@ -162,7 +175,7 @@ public class FragmentWrapper {
 
     // If there are no stats to aggregate, create an empty row
     if (complete.size() < 1) {
-      tb.appendRepeated("", null, NUM_NULLABLE_COMPLETED_OVERVIEW_COLUMNS);
+      tb.appendRepeated("", NUM_NULLABLE_COMPLETED_OVERVIEW_COLUMNS);
       return;
     }
 
@@ -195,9 +208,11 @@ public class FragmentWrapper {
     tb.appendMillis(totalDuration / complete.size());
     tb.appendMillis(longRun.getEndTime() - longRun.getStartTime());
 
-    tb.appendPercent(totalProcessInMillis / (totalProcessInMillis + totalWaitInMillis), null,
-        //#8721 is the summation sign: sum(Busy): ## + sum(Wait): ##
+    Map<String, String> percBusyAttrMap = new HashMap<>();
+    //#8721 is the summation sign: sum(Busy): ## + sum(Wait): ##
+    percBusyAttrMap.put(HtmlAttribute.TITLE,
         String.format("&#8721;Busy: %,.2fs + &#8721;Wait: %,.2fs", totalProcessInMillis/1E3, totalWaitInMillis/1E3));
+    tb.appendPercent(totalProcessInMillis / (totalProcessInMillis + totalWaitInMillis), percBusyAttrMap);
 
     // TODO(DRILL-3494): Names (maxMem, getMaxMemoryUsed) are misleading; the value is peak memory allocated to fragment
     final MinorFragmentProfile maxMem = Collections.max(complete, Comparators.fragmentPeakMemory);
@@ -231,9 +246,9 @@ public class FragmentWrapper {
 
     Collections.sort(complete, Comparators.minorId);
 
-    Map<String, String> attributeMap = new HashMap<String, String>(); //Reusing for different fragments
+    Map<String, String> attributeMap = new HashMap<>(); //Reusing for different fragments
     for (final MinorFragmentProfile minor : complete) {
-      final ArrayList<OperatorProfile> ops = new ArrayList<>(minor.getOperatorProfileList());
+      final List<OperatorProfile> ops = new ArrayList<>(minor.getOperatorProfileList());
 
       long biggestIncomingRecords = 0;
       long biggestBatches = 0;
@@ -267,7 +282,7 @@ public class FragmentWrapper {
 
     for (final MinorFragmentProfile m : incomplete) {
       builder.appendCell(major.getMajorFragmentId() + "-" + m.getMinorFragmentId());
-      builder.appendRepeated(m.getState().toString(), null, NUM_NULLABLE_FRAGMENTS_COLUMNS);
+      builder.appendRepeated(m.getState().toString(), NUM_NULLABLE_FRAGMENTS_COLUMNS);
     }
     return builder.build();
   }
