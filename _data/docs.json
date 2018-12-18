@@ -1906,6 +1906,27 @@
             "title": "Configuring Inbound Impersonation", 
             "url": "/docs/configuring-inbound-impersonation/"
         }, 
+        "Configuring Index Planning": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Indexes", 
+                    "url": "/docs/querying-indexes/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Verifying Index Use", 
+            "next_url": "/docs/verifying-index-use/", 
+            "parent": "Querying Indexes", 
+            "previous_title": "Designing Indexes for Your Queries", 
+            "previous_url": "/docs/designing-indexes-for-your-queries/", 
+            "relative_path": "_docs/query-data/querying-indexes/050-configuring-index-planning.md", 
+            "title": "Configuring Index Planning", 
+            "url": "/docs/configuring-index-planning/"
+        }, 
         "Configuring JReport with Drill": {
             "breadcrumbs": [
                 {
@@ -3579,6 +3600,27 @@
             "title": "Design Docs", 
             "url": "/docs/design-docs/"
         }, 
+        "Designing Indexes for Your Queries": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Indexes", 
+                    "url": "/docs/querying-indexes/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring Index Planning", 
+            "next_url": "/docs/configuring-index-planning/", 
+            "parent": "Querying Indexes", 
+            "previous_title": "Index Selection", 
+            "previous_url": "/docs/index-selection/", 
+            "relative_path": "_docs/query-data/querying-indexes/040-designing-indexes-for-your-queries.md", 
+            "title": "Designing Indexes for Your Queries", 
+            "url": "/docs/designing-indexes-for-your-queries/"
+        }, 
         "Develop Custom Functions": {
             "breadcrumbs": [], 
             "children": [
@@ -5247,6 +5289,27 @@
             "relative_path": "_docs/connect-a-data-source/plugins/114-image-metadata-format-plugin.md", 
             "title": "Image Metadata Format Plugin", 
             "url": "/docs/image-metadata-format-plugin/"
+        }, 
+        "Index Selection": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Indexes", 
+                    "url": "/docs/querying-indexes/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Designing Indexes for Your Queries", 
+            "next_url": "/docs/designing-indexes-for-your-queries/", 
+            "parent": "Querying Indexes", 
+            "previous_title": "Types of Indexes", 
+            "previous_url": "/docs/types-of-indexes/", 
+            "relative_path": "_docs/query-data/querying-indexes/030-index-selection.md", 
+            "title": "Index Selection", 
+            "url": "/docs/index-selection/"
         }, 
         "Install Drill": {
             "breadcrumbs": [], 
@@ -8512,6 +8575,27 @@
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
         }, 
+        "Queries that Qualify for Index-Based Query Plans": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Indexes", 
+                    "url": "/docs/querying-indexes/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Types of Indexes", 
+            "next_url": "/docs/types-of-indexes/", 
+            "parent": "Querying Indexes", 
+            "previous_title": "Querying Indexes Introduction", 
+            "previous_url": "/docs/querying-indexes-introduction/", 
+            "relative_path": "_docs/query-data/querying-indexes/020-queries-that-qualify-for-index-based-query-plans.md", 
+            "title": "Queries that Qualify for Index-Based Query Plans", 
+            "url": "/docs/queries-that-qualify-for-index-based-query-plans/"
+        }, 
         "Query Audit Logging": {
             "breadcrumbs": [
                 {
@@ -8900,8 +8984,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Querying System Tables", 
-                    "next_url": "/docs/querying-system-tables/", 
+                    "next_title": "Querying Indexes", 
+                    "next_url": "/docs/querying-indexes/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying Hive", 
                     "previous_url": "/docs/querying-hive/", 
@@ -8916,12 +9000,177 @@
                             "url": "/docs/query-data/"
                         }
                     ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Queries that Qualify for Index-Based Query Plans", 
+                            "next_url": "/docs/queries-that-qualify-for-index-based-query-plans/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Querying Indexes", 
+                            "previous_url": "/docs/querying-indexes/", 
+                            "relative_path": "_docs/query-data/querying-indexes/010-querying-indexes-introduction.md", 
+                            "title": "Querying Indexes Introduction", 
+                            "url": "/docs/querying-indexes-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Types of Indexes", 
+                            "next_url": "/docs/types-of-indexes/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Querying Indexes Introduction", 
+                            "previous_url": "/docs/querying-indexes-introduction/", 
+                            "relative_path": "_docs/query-data/querying-indexes/020-queries-that-qualify-for-index-based-query-plans.md", 
+                            "title": "Queries that Qualify for Index-Based Query Plans", 
+                            "url": "/docs/queries-that-qualify-for-index-based-query-plans/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Index Selection", 
+                            "next_url": "/docs/index-selection/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Queries that Qualify for Index-Based Query Plans", 
+                            "previous_url": "/docs/queries-that-qualify-for-index-based-query-plans/", 
+                            "relative_path": "_docs/query-data/querying-indexes/021-types-of-indexes.md", 
+                            "title": "Types of Indexes", 
+                            "url": "/docs/types-of-indexes/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Designing Indexes for Your Queries", 
+                            "next_url": "/docs/designing-indexes-for-your-queries/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Types of Indexes", 
+                            "previous_url": "/docs/types-of-indexes/", 
+                            "relative_path": "_docs/query-data/querying-indexes/030-index-selection.md", 
+                            "title": "Index Selection", 
+                            "url": "/docs/index-selection/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Index Planning", 
+                            "next_url": "/docs/configuring-index-planning/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Index Selection", 
+                            "previous_url": "/docs/index-selection/", 
+                            "relative_path": "_docs/query-data/querying-indexes/040-designing-indexes-for-your-queries.md", 
+                            "title": "Designing Indexes for Your Queries", 
+                            "url": "/docs/designing-indexes-for-your-queries/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Verifying Index Use", 
+                            "next_url": "/docs/verifying-index-use/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Designing Indexes for Your Queries", 
+                            "previous_url": "/docs/designing-indexes-for-your-queries/", 
+                            "relative_path": "_docs/query-data/querying-indexes/050-configuring-index-planning.md", 
+                            "title": "Configuring Index Planning", 
+                            "url": "/docs/configuring-index-planning/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Querying System Tables", 
+                            "next_url": "/docs/querying-system-tables/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Configuring Index Planning", 
+                            "previous_url": "/docs/configuring-index-planning/", 
+                            "relative_path": "_docs/query-data/querying-indexes/060-verifying-index-use.md", 
+                            "title": "Verifying Index Use", 
+                            "url": "/docs/verifying-index-use/"
+                        }
+                    ], 
+                    "next_title": "Querying Indexes Introduction", 
+                    "next_url": "/docs/querying-indexes-introduction/", 
+                    "parent": "Query Data", 
+                    "previous_title": "Querying the INFORMATION SCHEMA", 
+                    "previous_url": "/docs/querying-the-information-schema/", 
+                    "relative_path": "_docs/query-data/061-querying-indexes.md", 
+                    "title": "Querying Indexes", 
+                    "url": "/docs/querying-indexes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
                     "children": [], 
                     "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
                     "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
                     "parent": "Query Data", 
-                    "previous_title": "Querying the INFORMATION SCHEMA", 
-                    "previous_url": "/docs/querying-the-information-schema/", 
+                    "previous_title": "Verifying Index Use", 
+                    "previous_url": "/docs/verifying-index-use/", 
                     "relative_path": "_docs/query-data/070-query-sys-tbl.md", 
                     "title": "Querying System Tables", 
                     "url": "/docs/querying-system-tables/"
@@ -9519,6 +9768,192 @@
             "title": "Querying Hive", 
             "url": "/docs/querying-hive/"
         }, 
+        "Querying Indexes": {
+            "breadcrumbs": [
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Querying Indexes", 
+                            "url": "/docs/querying-indexes/"
+                        }, 
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Queries that Qualify for Index-Based Query Plans", 
+                    "next_url": "/docs/queries-that-qualify-for-index-based-query-plans/", 
+                    "parent": "Querying Indexes", 
+                    "previous_title": "Querying Indexes", 
+                    "previous_url": "/docs/querying-indexes/", 
+                    "relative_path": "_docs/query-data/querying-indexes/010-querying-indexes-introduction.md", 
+                    "title": "Querying Indexes Introduction", 
+                    "url": "/docs/querying-indexes-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Querying Indexes", 
+                            "url": "/docs/querying-indexes/"
+                        }, 
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Types of Indexes", 
+                    "next_url": "/docs/types-of-indexes/", 
+                    "parent": "Querying Indexes", 
+                    "previous_title": "Querying Indexes Introduction", 
+                    "previous_url": "/docs/querying-indexes-introduction/", 
+                    "relative_path": "_docs/query-data/querying-indexes/020-queries-that-qualify-for-index-based-query-plans.md", 
+                    "title": "Queries that Qualify for Index-Based Query Plans", 
+                    "url": "/docs/queries-that-qualify-for-index-based-query-plans/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Querying Indexes", 
+                            "url": "/docs/querying-indexes/"
+                        }, 
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Index Selection", 
+                    "next_url": "/docs/index-selection/", 
+                    "parent": "Querying Indexes", 
+                    "previous_title": "Queries that Qualify for Index-Based Query Plans", 
+                    "previous_url": "/docs/queries-that-qualify-for-index-based-query-plans/", 
+                    "relative_path": "_docs/query-data/querying-indexes/021-types-of-indexes.md", 
+                    "title": "Types of Indexes", 
+                    "url": "/docs/types-of-indexes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Querying Indexes", 
+                            "url": "/docs/querying-indexes/"
+                        }, 
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Designing Indexes for Your Queries", 
+                    "next_url": "/docs/designing-indexes-for-your-queries/", 
+                    "parent": "Querying Indexes", 
+                    "previous_title": "Types of Indexes", 
+                    "previous_url": "/docs/types-of-indexes/", 
+                    "relative_path": "_docs/query-data/querying-indexes/030-index-selection.md", 
+                    "title": "Index Selection", 
+                    "url": "/docs/index-selection/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Querying Indexes", 
+                            "url": "/docs/querying-indexes/"
+                        }, 
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Index Planning", 
+                    "next_url": "/docs/configuring-index-planning/", 
+                    "parent": "Querying Indexes", 
+                    "previous_title": "Index Selection", 
+                    "previous_url": "/docs/index-selection/", 
+                    "relative_path": "_docs/query-data/querying-indexes/040-designing-indexes-for-your-queries.md", 
+                    "title": "Designing Indexes for Your Queries", 
+                    "url": "/docs/designing-indexes-for-your-queries/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Querying Indexes", 
+                            "url": "/docs/querying-indexes/"
+                        }, 
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Verifying Index Use", 
+                    "next_url": "/docs/verifying-index-use/", 
+                    "parent": "Querying Indexes", 
+                    "previous_title": "Designing Indexes for Your Queries", 
+                    "previous_url": "/docs/designing-indexes-for-your-queries/", 
+                    "relative_path": "_docs/query-data/querying-indexes/050-configuring-index-planning.md", 
+                    "title": "Configuring Index Planning", 
+                    "url": "/docs/configuring-index-planning/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Querying Indexes", 
+                            "url": "/docs/querying-indexes/"
+                        }, 
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Querying System Tables", 
+                    "next_url": "/docs/querying-system-tables/", 
+                    "parent": "Querying Indexes", 
+                    "previous_title": "Configuring Index Planning", 
+                    "previous_url": "/docs/configuring-index-planning/", 
+                    "relative_path": "_docs/query-data/querying-indexes/060-verifying-index-use.md", 
+                    "title": "Verifying Index Use", 
+                    "url": "/docs/verifying-index-use/"
+                }
+            ], 
+            "next_title": "Querying Indexes Introduction", 
+            "next_url": "/docs/querying-indexes-introduction/", 
+            "parent": "Query Data", 
+            "previous_title": "Querying the INFORMATION SCHEMA", 
+            "previous_url": "/docs/querying-the-information-schema/", 
+            "relative_path": "_docs/query-data/061-querying-indexes.md", 
+            "title": "Querying Indexes", 
+            "url": "/docs/querying-indexes/"
+        }, 
+        "Querying Indexes Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Indexes", 
+                    "url": "/docs/querying-indexes/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Queries that Qualify for Index-Based Query Plans", 
+            "next_url": "/docs/queries-that-qualify-for-index-based-query-plans/", 
+            "parent": "Querying Indexes", 
+            "previous_title": "Querying Indexes", 
+            "previous_url": "/docs/querying-indexes/", 
+            "relative_path": "_docs/query-data/querying-indexes/010-querying-indexes-introduction.md", 
+            "title": "Querying Indexes Introduction", 
+            "url": "/docs/querying-indexes-introduction/"
+        }, 
         "Querying JSON Files": {
             "breadcrumbs": [
                 {
@@ -9614,8 +10049,8 @@
             "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
             "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
             "parent": "Query Data", 
-            "previous_title": "Querying the INFORMATION SCHEMA", 
-            "previous_url": "/docs/querying-the-information-schema/", 
+            "previous_title": "Verifying Index Use", 
+            "previous_url": "/docs/verifying-index-use/", 
             "relative_path": "_docs/query-data/070-query-sys-tbl.md", 
             "title": "Querying System Tables", 
             "url": "/docs/querying-system-tables/"
@@ -9814,8 +10249,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Querying System Tables", 
-            "next_url": "/docs/querying-system-tables/", 
+            "next_title": "Querying Indexes", 
+            "next_url": "/docs/querying-indexes/", 
             "parent": "Query Data", 
             "previous_title": "Querying Hive", 
             "previous_url": "/docs/querying-hive/", 
@@ -14412,6 +14847,27 @@
             "title": "Tutorials Introduction", 
             "url": "/docs/tutorials-introduction/"
         }, 
+        "Types of Indexes": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Indexes", 
+                    "url": "/docs/querying-indexes/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Index Selection", 
+            "next_url": "/docs/index-selection/", 
+            "parent": "Querying Indexes", 
+            "previous_title": "Queries that Qualify for Index-Based Query Plans", 
+            "previous_url": "/docs/queries-that-qualify-for-index-based-query-plans/", 
+            "relative_path": "_docs/query-data/querying-indexes/021-types-of-indexes.md", 
+            "title": "Types of Indexes", 
+            "url": "/docs/types-of-indexes/"
+        }, 
         "UNION Set Operator": {
             "breadcrumbs": [
                 {
@@ -15204,6 +15660,27 @@
             "relative_path": "_docs/sql-reference/sql-window-functions/035-value-window-functions.md", 
             "title": "Value Window Functions", 
             "url": "/docs/value-window-functions/"
+        }, 
+        "Verifying Index Use": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Indexes", 
+                    "url": "/docs/querying-indexes/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Querying System Tables", 
+            "next_url": "/docs/querying-system-tables/", 
+            "parent": "Querying Indexes", 
+            "previous_title": "Configuring Index Planning", 
+            "previous_url": "/docs/configuring-index-planning/", 
+            "relative_path": "_docs/query-data/querying-indexes/060-verifying-index-use.md", 
+            "title": "Verifying Index Use", 
+            "url": "/docs/verifying-index-use/"
         }, 
         "WHERE Clause": {
             "breadcrumbs": [
@@ -18205,8 +18682,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Querying System Tables", 
-                    "next_url": "/docs/querying-system-tables/", 
+                    "next_title": "Querying Indexes", 
+                    "next_url": "/docs/querying-indexes/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying Hive", 
                     "previous_url": "/docs/querying-hive/", 
@@ -18221,12 +18698,177 @@
                             "url": "/docs/query-data/"
                         }
                     ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Queries that Qualify for Index-Based Query Plans", 
+                            "next_url": "/docs/queries-that-qualify-for-index-based-query-plans/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Querying Indexes", 
+                            "previous_url": "/docs/querying-indexes/", 
+                            "relative_path": "_docs/query-data/querying-indexes/010-querying-indexes-introduction.md", 
+                            "title": "Querying Indexes Introduction", 
+                            "url": "/docs/querying-indexes-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Types of Indexes", 
+                            "next_url": "/docs/types-of-indexes/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Querying Indexes Introduction", 
+                            "previous_url": "/docs/querying-indexes-introduction/", 
+                            "relative_path": "_docs/query-data/querying-indexes/020-queries-that-qualify-for-index-based-query-plans.md", 
+                            "title": "Queries that Qualify for Index-Based Query Plans", 
+                            "url": "/docs/queries-that-qualify-for-index-based-query-plans/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Index Selection", 
+                            "next_url": "/docs/index-selection/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Queries that Qualify for Index-Based Query Plans", 
+                            "previous_url": "/docs/queries-that-qualify-for-index-based-query-plans/", 
+                            "relative_path": "_docs/query-data/querying-indexes/021-types-of-indexes.md", 
+                            "title": "Types of Indexes", 
+                            "url": "/docs/types-of-indexes/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Designing Indexes for Your Queries", 
+                            "next_url": "/docs/designing-indexes-for-your-queries/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Types of Indexes", 
+                            "previous_url": "/docs/types-of-indexes/", 
+                            "relative_path": "_docs/query-data/querying-indexes/030-index-selection.md", 
+                            "title": "Index Selection", 
+                            "url": "/docs/index-selection/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Index Planning", 
+                            "next_url": "/docs/configuring-index-planning/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Index Selection", 
+                            "previous_url": "/docs/index-selection/", 
+                            "relative_path": "_docs/query-data/querying-indexes/040-designing-indexes-for-your-queries.md", 
+                            "title": "Designing Indexes for Your Queries", 
+                            "url": "/docs/designing-indexes-for-your-queries/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Verifying Index Use", 
+                            "next_url": "/docs/verifying-index-use/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Designing Indexes for Your Queries", 
+                            "previous_url": "/docs/designing-indexes-for-your-queries/", 
+                            "relative_path": "_docs/query-data/querying-indexes/050-configuring-index-planning.md", 
+                            "title": "Configuring Index Planning", 
+                            "url": "/docs/configuring-index-planning/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying Indexes", 
+                                    "url": "/docs/querying-indexes/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Querying System Tables", 
+                            "next_url": "/docs/querying-system-tables/", 
+                            "parent": "Querying Indexes", 
+                            "previous_title": "Configuring Index Planning", 
+                            "previous_url": "/docs/configuring-index-planning/", 
+                            "relative_path": "_docs/query-data/querying-indexes/060-verifying-index-use.md", 
+                            "title": "Verifying Index Use", 
+                            "url": "/docs/verifying-index-use/"
+                        }
+                    ], 
+                    "next_title": "Querying Indexes Introduction", 
+                    "next_url": "/docs/querying-indexes-introduction/", 
+                    "parent": "Query Data", 
+                    "previous_title": "Querying the INFORMATION SCHEMA", 
+                    "previous_url": "/docs/querying-the-information-schema/", 
+                    "relative_path": "_docs/query-data/061-querying-indexes.md", 
+                    "title": "Querying Indexes", 
+                    "url": "/docs/querying-indexes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
                     "children": [], 
                     "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
                     "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
                     "parent": "Query Data", 
-                    "previous_title": "Querying the INFORMATION SCHEMA", 
-                    "previous_url": "/docs/querying-the-information-schema/", 
+                    "previous_title": "Verifying Index Use", 
+                    "previous_url": "/docs/verifying-index-use/", 
                     "relative_path": "_docs/query-data/070-query-sys-tbl.md", 
                     "title": "Querying System Tables", 
                     "url": "/docs/querying-system-tables/"
