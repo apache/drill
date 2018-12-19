@@ -64,6 +64,34 @@ public class DrillSqlWorker {
 
   /**
    * Converts sql query string into query physical plan.
+   * Catches various exceptions and converts them into user exception when possible.
+   *
+   * @param context query context
+   * @param sql sql query
+   * @param textPlan text plan
+   * @return query physical plan
+   */
+  public static PhysicalPlan getPlan(QueryContext context, String sql, Pointer<String> textPlan) throws ForemanSetupException {
+    try {
+      return convertPlan(context, sql, textPlan);
+    } catch (ValidationException e) {
+      String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+      throw UserException.validationError(e)
+        .message(errorMessage)
+        .build(logger);
+    } catch (AccessControlException e) {
+      throw UserException.permissionError(e)
+        .build(logger);
+    } catch (SqlUnsupportedException e) {
+      throw UserException.unsupportedError(e)
+        .build(logger);
+    } catch (IOException | RelConversionException e) {
+      throw new QueryInputException("Failure handling SQL.", e);
+    }
+  }
+
+  /**
+   * Converts sql query string into query physical plan.
    * In case of any errors (that might occur due to missing function implementation),
    * checks if local function registry should be synchronized with remote function registry.
    * If sync took place, reloads drill operator table
@@ -75,7 +103,8 @@ public class DrillSqlWorker {
    * @param textPlan text plan
    * @return query physical plan
    */
-  public static PhysicalPlan getPlan(QueryContext context, String sql, Pointer<String> textPlan) throws ForemanSetupException {
+  private static PhysicalPlan convertPlan(QueryContext context, String sql, Pointer<String> textPlan)
+      throws ForemanSetupException, RelConversionException, IOException, ValidationException {
     Pointer<String> textPlanCopy = textPlan == null ? null : new Pointer<>(textPlan.value);
     try {
       return getQueryPlan(context, sql, textPlan);
@@ -102,47 +131,46 @@ public class DrillSqlWorker {
    * @return query physical plan
    */
   private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan)
-      throws ForemanSetupException {
+      throws ForemanSetupException, RelConversionException, IOException, ValidationException {
 
     final SqlConverter parser = new SqlConverter(context);
-
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
     final SqlNode sqlNode = parser.parse(sql);
     final AbstractSqlHandler handler;
     final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
 
     switch(sqlNode.getKind()) {
-    case EXPLAIN:
-      handler = new ExplainHandler(config, textPlan);
-      break;
-    case SET_OPTION:
-      handler = new SetOptionHandler(context);
-      break;
-    case DESCRIBE_TABLE:
-      if (sqlNode instanceof DrillSqlDescribeTable) {
-        handler = new DescribeTableHandler(config);
+      case EXPLAIN:
+        handler = new ExplainHandler(config, textPlan);
         break;
-      }
-    case DESCRIBE_SCHEMA:
-      if (sqlNode instanceof SqlDescribeSchema) {
-        handler = new DescribeSchemaHandler(config);
+      case SET_OPTION:
+        handler = new SetOptionHandler(context);
         break;
-      }
-    case CREATE_TABLE:
-      handler = ((DrillSqlCall) sqlNode).getSqlHandler(config, textPlan);
-      break;
-    case DROP_TABLE:
-    case CREATE_VIEW:
-    case DROP_VIEW:
-    case OTHER_DDL:
-    case OTHER:
-      if (sqlNode instanceof DrillSqlCall) {
-        handler = ((DrillSqlCall) sqlNode).getSqlHandler(config);
+      case DESCRIBE_TABLE:
+        if (sqlNode instanceof DrillSqlDescribeTable) {
+          handler = new DescribeTableHandler(config);
+          break;
+        }
+      case DESCRIBE_SCHEMA:
+        if (sqlNode instanceof SqlDescribeSchema) {
+          handler = new DescribeSchemaHandler(config);
+          break;
+        }
+      case CREATE_TABLE:
+        handler = ((DrillSqlCall) sqlNode).getSqlHandler(config, textPlan);
         break;
-      }
-      // fallthrough
-    default:
-      handler = new DefaultSqlHandler(config, textPlan);
+      case DROP_TABLE:
+      case CREATE_VIEW:
+      case DROP_VIEW:
+      case OTHER_DDL:
+      case OTHER:
+        if (sqlNode instanceof DrillSqlCall) {
+          handler = ((DrillSqlCall) sqlNode).getSqlHandler(config);
+          break;
+        }
+        // fallthrough
+      default:
+        handler = new DefaultSqlHandler(config, textPlan);
     }
 
     boolean returnResultSet = context.getOptions().getBoolean(ExecConstants.RETURN_RESULT_SET_FOR_DDL);
@@ -151,21 +179,6 @@ public class DrillSqlWorker {
     context.getOptions().setLocalOption(ExecConstants.RETURN_RESULT_SET_FOR_DDL,
         returnResultSet || !SqlKind.DDL.contains(sqlNode.getKind()));
 
-    try {
-      return handler.getPlan(sqlNode);
-    } catch(ValidationException e) {
-      String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-      throw UserException.validationError(e)
-          .message(errorMessage)
-          .build(logger);
-    } catch (AccessControlException e) {
-      throw UserException.permissionError(e)
-          .build(logger);
-    } catch(SqlUnsupportedException e) {
-      throw UserException.unsupportedError(e)
-          .build(logger);
-    } catch (IOException | RelConversionException e) {
-      throw new QueryInputException("Failure handling SQL.", e);
-    }
+    return handler.getPlan(sqlNode);
   }
 }
