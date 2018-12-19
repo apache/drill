@@ -17,9 +17,11 @@
  */
 package org.apache.drill.test;
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.Drillbit;
+import org.apache.hadoop.net.ServerSocketUtil;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -36,6 +38,9 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collection;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 @Category({SlowTest.class})
@@ -171,6 +176,44 @@ public class TestGracefulShutdown extends BaseTestQuery {
         return;
       }
       Assert.fail("Timed out");
+    }
+  }
+
+  @Test // DRILL-6912
+  public void gracefulShutdownThreadShouldBeInitializedBeforeClosingDrillbit() throws Exception {
+    Drillbit drillbit = null;
+    Drillbit drillbitWithSamePort = null;
+
+    int userPort = ServerSocketUtil.getPort(31170, 300);
+    int bitPort = ServerSocketUtil.getPort(31180, 300);
+    ClusterFixtureBuilder fixtureBuilder = ClusterFixture.bareBuilder(dirTestWatcher).withLocalZk()
+        .configProperty(ExecConstants.INITIAL_USER_PORT, userPort)
+        .configProperty(ExecConstants.INITIAL_BIT_PORT, bitPort);
+    try (ClusterFixture clusterFixture = fixtureBuilder.build()) {
+      drillbit = clusterFixture.drillbit();
+
+      // creating another drillbit instance using same config
+      drillbitWithSamePort = new Drillbit(clusterFixture.config(), fixtureBuilder.configBuilder().getDefinitions(),
+          clusterFixture.serviceSet());
+
+      try {
+        drillbitWithSamePort.run();
+        fail("drillbitWithSamePort.run() should throw UserException");
+      } catch (UserException e) {
+        // it's expected that second drillbit can't be started because port is busy
+        assertThat(e.getMessage(), containsString("RESOURCE ERROR: Drillbit could not bind to port"));
+      }
+    } finally {
+      // preconditions
+      assertNotNull(drillbit);
+      assertNotNull(drillbitWithSamePort);
+      assertNotNull("gracefulShutdownThread should be initialized, otherwise NPE will be thrown from close()",
+          drillbit.getGracefulShutdownThread());
+      // main test case
+      assertNotNull("gracefulShutdownThread should be initialized, otherwise NPE will be thrown from close()",
+          drillbitWithSamePort.getGracefulShutdownThread());
+      drillbit.close();
+      drillbitWithSamePort.close();
     }
   }
 
