@@ -1546,14 +1546,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring a Multitenant Cluster", 
-                            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "next_title": "Configuring Custom ACLs to Secure znodes", 
+                            "next_url": "/docs/configuring-custom-acls-to-secure-znodes/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
                             "previous_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
                             "relative_path": "_docs/configure-drill/securing-drill/092-configuring-web-ui-and-rest-api-security.md", 
                             "title": "Configuring Web UI and REST API Security", 
                             "url": "/docs/configuring-web-ui-and-rest-api-security/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring a Multitenant Cluster", 
+                            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Configuring Web UI and REST API Security", 
+                            "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/093-configuring-custom-acls-to-secure-znodes.md", 
+                            "title": "Configuring Custom ACLs to Secure znodes", 
+                            "url": "/docs/configuring-custom-acls-to-secure-znodes/"
                         }
                     ], 
                     "next_title": "Securing Drill Introduction", 
@@ -1640,8 +1661,8 @@
                     "next_title": "Configuring a Multitenant Cluster Introduction", 
                     "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Web UI and REST API Security", 
-                    "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+                    "previous_title": "Configuring Custom ACLs to Secure znodes", 
+                    "previous_url": "/docs/configuring-custom-acls-to-secure-znodes/", 
                     "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"
@@ -1846,6 +1867,27 @@
             "relative_path": "_docs/configure-drill/010-configure-drill-introduction.md", 
             "title": "Configure Drill Introduction", 
             "url": "/docs/configure-drill-introduction/"
+        }, 
+        "Configuring Custom ACLs to Secure znodes": {
+            "breadcrumbs": [
+                {
+                    "title": "Securing Drill", 
+                    "url": "/docs/securing-drill/"
+                }, 
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring a Multitenant Cluster", 
+            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+            "parent": "Securing Drill", 
+            "previous_title": "Configuring Web UI and REST API Security", 
+            "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+            "relative_path": "_docs/configure-drill/securing-drill/093-configuring-custom-acls-to-secure-znodes.md", 
+            "title": "Configuring Custom ACLs to Secure znodes", 
+            "url": "/docs/configuring-custom-acls-to-secure-znodes/"
         }, 
         "Configuring Drill Memory": {
             "breadcrumbs": [
@@ -2356,8 +2398,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring a Multitenant Cluster", 
-            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+            "next_title": "Configuring Custom ACLs to Secure znodes", 
+            "next_url": "/docs/configuring-custom-acls-to-secure-znodes/", 
             "parent": "Securing Drill", 
             "previous_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
             "previous_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
@@ -2440,8 +2482,8 @@
             "next_title": "Configuring a Multitenant Cluster Introduction", 
             "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring Web UI and REST API Security", 
-            "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+            "previous_title": "Configuring Custom ACLs to Secure znodes", 
+            "previous_url": "/docs/configuring-custom-acls-to-secure-znodes/", 
             "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
             "title": "Configuring a Multitenant Cluster", 
             "url": "/docs/configuring-a-multitenant-cluster/"
@@ -13937,14 +13979,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring a Multitenant Cluster", 
-                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "next_title": "Configuring Custom ACLs to Secure znodes", 
+                    "next_url": "/docs/configuring-custom-acls-to-secure-znodes/", 
                     "parent": "Securing Drill", 
                     "previous_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
                     "previous_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
                     "relative_path": "_docs/configure-drill/securing-drill/092-configuring-web-ui-and-rest-api-security.md", 
                     "title": "Configuring Web UI and REST API Security", 
                     "url": "/docs/configuring-web-ui-and-rest-api-security/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Securing Drill", 
+                            "url": "/docs/securing-drill/"
+                        }, 
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring a Multitenant Cluster", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "parent": "Securing Drill", 
+                    "previous_title": "Configuring Web UI and REST API Security", 
+                    "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+                    "relative_path": "_docs/configure-drill/securing-drill/093-configuring-custom-acls-to-secure-znodes.md", 
+                    "title": "Configuring Custom ACLs to Secure znodes", 
+                    "url": "/docs/configuring-custom-acls-to-secure-znodes/"
                 }
             ], 
             "next_title": "Securing Drill Introduction", 
@@ -17038,14 +17101,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring a Multitenant Cluster", 
-                            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "next_title": "Configuring Custom ACLs to Secure znodes", 
+                            "next_url": "/docs/configuring-custom-acls-to-secure-znodes/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
                             "previous_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
                             "relative_path": "_docs/configure-drill/securing-drill/092-configuring-web-ui-and-rest-api-security.md", 
                             "title": "Configuring Web UI and REST API Security", 
                             "url": "/docs/configuring-web-ui-and-rest-api-security/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring a Multitenant Cluster", 
+                            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Configuring Web UI and REST API Security", 
+                            "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/093-configuring-custom-acls-to-secure-znodes.md", 
+                            "title": "Configuring Custom ACLs to Secure znodes", 
+                            "url": "/docs/configuring-custom-acls-to-secure-znodes/"
                         }
                     ], 
                     "next_title": "Securing Drill Introduction", 
@@ -17132,8 +17216,8 @@
                     "next_title": "Configuring a Multitenant Cluster Introduction", 
                     "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Web UI and REST API Security", 
-                    "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+                    "previous_title": "Configuring Custom ACLs to Secure znodes", 
+                    "previous_url": "/docs/configuring-custom-acls-to-secure-znodes/", 
                     "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"
