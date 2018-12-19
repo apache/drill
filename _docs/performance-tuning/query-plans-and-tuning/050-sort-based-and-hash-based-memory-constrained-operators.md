@@ -7,7 +7,7 @@ parent: "Query Plans and Tuning"
 Drill supports the following memory-intensive operators, which can temporarily spill data to disk if they run out of memory:  
 
 - External Sort
-- Hash-Join (with semi-join functionality in Drill 1.15 and later)
+- Hash-Join (includes semi-join functionality starting in Drill 1.15)
 - Hash-Aggregate
 
 Drill only uses the External Sort operator to sort data. Drill uses the Hash-Aggregate operator to aggregate data. Alternatively, Drill can sort the data and then use the (lightweight) Streaming-Aggregate operator to aggregate data.
