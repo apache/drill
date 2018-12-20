@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.vector;
 
-
-import org.apache.drill.exec.vector.complex.impl.UntypedReaderImpl;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -47,7 +45,6 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
 
   public UntypedNullVector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    valueCount = 0;
   }
 
   @Override
@@ -77,7 +74,9 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
   public boolean allocateNewSafe() { return true; }
 
   @Override
-  public void allocateNew(final int valueCount) { }
+  public void allocateNew(final int valueCount) {
+    this.valueCount = valueCount;
+  }
 
   @Override
   public void reset() { }
@@ -125,7 +124,10 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
     return new TransferImpl((UntypedNullVector) to);
   }
 
-  public void transferTo(UntypedNullVector target) { }
+  public void transferTo(UntypedNullVector target) {
+    target.valueCount = valueCount;
+    clear();
+  }
 
   public void splitAndTransferTo(int startIndex, int length, UntypedNullVector target) { }
 
@@ -170,7 +172,11 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
 
   @Override
   public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
-    ((UntypedNullVector) from).data.getBytes(fromIndex * 4, data, toIndex * 4, 4);
+  }
+
+  @Override
+  public void clear() {
+    valueCount = 0;
   }
 
   public final class Accessor extends BaseAccessor {

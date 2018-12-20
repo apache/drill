@@ -15,9 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.complex.impl;
+package org.apache.drill.exec.vector;
 
-import org.apache.drill.exec.vector.UntypedNullHolder;
 import org.apache.drill.exec.vector.complex.reader.BaseReader;
 
 public interface UntypedReader extends BaseReader {
@@ -26,5 +25,4 @@ public interface UntypedReader extends BaseReader {
   int size();
   void read(UntypedNullHolder holder);
   void read(int arrayIndex, UntypedNullHolder holder);
-
 }

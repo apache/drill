@@ -168,5 +168,22 @@
     {from: "NullableVarBinary", to: "NullableFloat8", major: "EmptyString", javaType:"Double", parse:"Double"},
 
     {from: "NullableVarBinary", to: "NullableVarDecimal", major: "NullableVarCharDecimalComplex"},
+
+    {from: "UntypedNull", to: "Bit", major: "UntypedNull"},
+    {from: "UntypedNull", to: "TinyInt", major: "UntypedNull"},
+    {from: "UntypedNull", to: "Int", major: "UntypedNull"},
+    {from: "UntypedNull", to: "BigInt", major: "UntypedNull"},
+    {from: "UntypedNull", to: "Float4", major: "UntypedNull"},
+    {from: "UntypedNull", to: "Float8", major: "UntypedNull"},
+    {from: "UntypedNull", to: "Date", major: "UntypedNull"},
+    {from: "UntypedNull", to: "Time", major: "UntypedNull"},
+    {from: "UntypedNull", to: "TimeStamp", major: "UntypedNull"},
+    {from: "UntypedNull", to: "Interval", major: "UntypedNull"},
+    {from: "UntypedNull", to: "IntervalDay", major: "UntypedNull"},
+    {from: "UntypedNull", to: "IntervalYear", major: "UntypedNull"},
+    {from: "UntypedNull", to: "VarBinary", major: "UntypedNull"},
+    {from: "UntypedNull", to: "VarChar", major: "UntypedNull"},
+    {from: "UntypedNull", to: "Var16Char", major: "UntypedNull"},
+    {from: "UntypedNull", to: "VarDecimal", major: "UntypedNull"}
   ]
 }

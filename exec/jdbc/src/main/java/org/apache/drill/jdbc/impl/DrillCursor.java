@@ -470,12 +470,11 @@ public class DrillCursor implements Cursor {
         QueryDataBatch qrb = resultsListener.getNext();
 
         // (Apparently:)  Skip any spurious empty batches (batches that have
-        // zero rows and/or null data, other than the first batch (which carries
+        // zero rows and null data, other than the first batch (which carries
         // the (initial) schema but no rows)).
-        if ( afterFirstBatch ) {
-          while ( qrb != null
-                  && ( qrb.getHeader().getRowCount() == 0
-                      || qrb.getData() == null ) ) {
+        if (afterFirstBatch) {
+          while (qrb != null
+              && (qrb.getHeader().getRowCount() == 0 && qrb.getData() == null)) {
             // Empty message--dispose of and try to get another.
             logger.warn( "Spurious batch read: {}", qrb );
 
