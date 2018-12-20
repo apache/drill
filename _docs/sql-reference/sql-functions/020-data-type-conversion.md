@@ -1,6 +1,6 @@
 ---
 title: "Data Type Conversion"
-date: 2018-12-18
+date: 2018-12-20
 parent: "SQL Functions"
 ---
 Drill supports the following functions for casting and converting data types:
@@ -8,7 +8,19 @@ Drill supports the following functions for casting and converting data types:
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion/#cast)
 * [CONVERT_TO and CONVERT_FROM]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from)
 * [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion/#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion/#binary_string-function)
-* [Other Data Type Conversions]({{ site.baseurl }}/docs/data-type-conversion/#other-data-type-conversions)
+* [Other Data Type Conversions]({{ site.baseurl }}/docs/data-type-conversion/#other-data-type-conversions)  
+
+**Note:** Starting in Drill 1.15, all cast and data type conversion functions return an empty string ('') as null when the `drill.exec.functions.cast_empty_string_to_null` option is enabled, for example:  
+
+	SELECT CAST('' AS DATE) FROM (VALUES(1));
+	+---------+
+	| EXPR$0  |
+	+---------+
+	| null    |
+	+---------+  
+
+Prior to 1.15, casting an empty string to null worked only for numeric types; in Drill 1.15 and later casting an empty string to null also works for DATE, TIME, TIMESTAMP, INTERVAL YEAR, INTERVAL MONTH, and INTERVAL DAY data types. You do not have to use the CASE statement to cast empty strings to null.
+
 
 ## CAST
 

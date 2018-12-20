@@ -1,6 +1,6 @@
 ---
 title: "Compiling Drill from Source"
-date: 2018-06-08 02:01:23 UTC
+date: 2018-12-20
 parent: "Develop Drill"
 ---
 To develop Drill, you compile Drill from source code and then set up a project
@@ -21,7 +21,7 @@ Maven and JDK installed:
 
 ## 1\. Clone the Repository
 
-    git clone https://git-wip-us.apache.org/repos/asf/drill.git
+    git clone https://github.com/apache/drill.git
 
 ## 2\. Compile the Code
 
