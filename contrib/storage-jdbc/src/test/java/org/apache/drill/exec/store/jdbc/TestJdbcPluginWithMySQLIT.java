@@ -21,6 +21,7 @@ import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.PlanTestBase;
 
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -145,6 +146,11 @@ public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
 
   @Test
   public void testCaseSensitiveTableNames() throws Exception {
+    String osName = System.getProperty("os.name").toLowerCase();
+    Assume.assumeTrue(
+        "Skip tests for non-linux systems due to " +
+            "table names case-insensitivity problems on Windows and MacOS",
+        osName.startsWith("linux"));
     test("use mysqlCaseInsensitive.`drill_mysql_test`");
     // two table names match the filter ignoring the case
     assertEquals(2, testSql("show tables like 'caseSensitiveTable'"));
