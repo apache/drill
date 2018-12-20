@@ -22,17 +22,12 @@ import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.openTSDB.OpenTSDBStoragePluginConfig;
+import org.apache.drill.test.QueryTestUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.BindException;
-import java.net.ServerSocket;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
@@ -55,7 +50,6 @@ import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POS
 import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_REQUEST_WITH_TAGS;
 
 public class TestOpenTSDBPlugin extends PlanTestBase {
-  private static final Logger logger = LoggerFactory.getLogger(TestOpenTSDBPlugin.class);
 
   private static int portNumber;
 
@@ -64,7 +58,7 @@ public class TestOpenTSDBPlugin extends PlanTestBase {
 
   @BeforeClass
   public static void setup() throws Exception {
-    portNumber = getFreePortNumber(10_000, 200);
+    portNumber = QueryTestUtil.getFreePortNumber(10_000, 200);
     final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
     OpenTSDBStoragePluginConfig storagePluginConfig =
         new OpenTSDBStoragePluginConfig(String.format("http://localhost:%s", portNumber));
@@ -190,28 +184,5 @@ public class TestOpenTSDBPlugin extends PlanTestBase {
     test("use openTSDB");
     test("describe `warp.speed.test`");
     Assert.assertEquals(1, testSql("show tables"));
-  }
-
-  /**
-   * Checks that port with specified number is free and returns it.
-   * Otherwise, increases port number and checks until free port is found
-   * or the number of attempts is reached specified numberOfAttempts
-   *
-   * @param portNumber     initial port number
-   * @param numberOfAttempts max number of attempts to find port with greater number
-   * @return free port number
-   * @throws BindException if free port was not found and all attempts were used.
-   */
-  private static int getFreePortNumber(int portNumber, int numberOfAttempts) throws IOException {
-    for (int i = portNumber; i <= portNumber + numberOfAttempts; i++) {
-      try (ServerSocket socket = new ServerSocket(i)) {
-        return socket.getLocalPort();
-      } catch (BindException e) {
-        logger.warn("Port {} is already in use.", i);
-      }
-    }
-
-    throw new BindException(String.format("Free port could not be found in the range [%s-%s].\n" +
-        "Please release any of used ports in this range.", portNumber, portNumber + numberOfAttempts));
   }
 }
