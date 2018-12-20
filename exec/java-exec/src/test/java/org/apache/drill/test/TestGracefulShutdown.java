@@ -21,7 +21,6 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.Drillbit;
-import org.apache.hadoop.net.ServerSocketUtil;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -184,8 +183,8 @@ public class TestGracefulShutdown extends BaseTestQuery {
     Drillbit drillbit = null;
     Drillbit drillbitWithSamePort = null;
 
-    int userPort = ServerSocketUtil.getPort(31170, 300);
-    int bitPort = ServerSocketUtil.getPort(31180, 300);
+    int userPort = QueryTestUtil.getFreePortNumber(31170, 300);
+    int bitPort = QueryTestUtil.getFreePortNumber(31180, 300);
     ClusterFixtureBuilder fixtureBuilder = ClusterFixture.bareBuilder(dirTestWatcher).withLocalZk()
         .configProperty(ExecConstants.INITIAL_USER_PORT, userPort)
         .configProperty(ExecConstants.INITIAL_BIT_PORT, bitPort);
