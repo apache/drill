@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.complex.impl;
+package org.apache.drill.exec.vector;
 
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.vector.UntypedNullHolder;
+import org.apache.drill.exec.vector.complex.impl.AbstractFieldReader;
 
 public class UntypedHolderReaderImpl extends AbstractFieldReader {
 
@@ -47,5 +47,4 @@ public class UntypedHolderReaderImpl extends AbstractFieldReader {
   public boolean isSet() {
     return false;
   }
-
 }

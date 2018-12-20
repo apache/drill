@@ -64,6 +64,8 @@ public class BasicTypeHelper {
       case FIXEDCHAR: return major.getPrecision();
       case FIXED16CHAR: return major.getPrecision();
       case FIXEDBINARY: return major.getPrecision();
+      case NULL:
+        return 0;
     }
     throw new UnsupportedOperationException(buildErrorMessage("get size", major));
   }
