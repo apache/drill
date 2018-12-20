@@ -19,8 +19,7 @@ Drill supports the following functions for casting and converting data types:
 	| null    |
 	+---------+  
 
-Prior to 1.15, casting an empty string to null worked only for numeric types; in Drill 1.15 and later casting an empty string to null also works for DATE, TIME, TIMESTAMP, INTERVAL YEAR, INTERVAL MONTH, and INTERVAL DAY data types. You do not have to use the CASE statement to cast empty strings to null.
-
+Prior to 1.15, casting an empty string to null only worked for numeric types; in Drill 1.15 and later casting an empty string to null also works for date and time data types, including DATE, TIME, TIMESTAMP, INTERVAL YEAR, INTERVAL MONTH, and INTERVAL DAY.
 
 ## CAST
 
