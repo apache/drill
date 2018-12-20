@@ -77,7 +77,7 @@
     -->
     <hive.version>2.3.2</hive.version>
     <hadoop.version>2.7.4</hadoop.version>
-    <hbase.version>2.1.0</hbase.version>
+    <hbase.version>2.1.1</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.26-incubating</freemarker.version>
     <javassist.version>3.24.0-GA</javassist.version>
