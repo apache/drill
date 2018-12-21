@@ -1,6 +1,6 @@
 ---
 title: "Sort-Based and Hash-Based Memory-Constrained Operators"
-date: 2018-12-19
+date: 2018-12-21
 parent: "Query Plans and Tuning"
 ---  
 
@@ -11,7 +11,7 @@ Drill supports the following memory-intensive operators, which can temporarily s
 - Hash-Aggregate
 
 Drill only uses the External Sort operator to sort data. Drill uses the Hash-Aggregate operator to aggregate data. Alternatively, Drill can sort the data and then use the (lightweight) Streaming-Aggregate operator to aggregate data.
-Drill uses the Hash-Join operator to join data. Drill 1.15 introduces semi-join functionality inside the Hash-Join operator to improve query performance. Semi-joins remove the distinct processing below the Hash-Join and eliminate the overhead incurred from using a Hash Aggregate. Prior to Drill 1.15 (or when [semi-join functionality is disabled]({{site.baseurl}}/docs/sort-based-and-hash-based-memory-constrained-operators/#disabling-the-hash-operators)), Drill uses a Distinct Hash Aggregate to implement the functionality of a semi-join. Alternatively, Drill can use the Nested-Loop-Join or sort the data and then use the (lightweight) Merge-Join. Drill typically uses Hash operators for joining and aggregation, as they perform better than the Sort operator (Hash - O(N) vs. Sort - O(N * log(N))). However, if you disable the Hash operators, or the data is already sorted, Drill uses the alternative methods previously described.
+Drill uses the Hash-Join operator to join data. Drill 1.15 introduces semi-join functionality inside the Hash-Join operator to improve query performance. Semi-joins remove the distinct processing below the Hash-Join and eliminate the overhead incurred from using a Hash Aggregate. Prior to Drill 1.15 (or when [semi-join functionality is disabled]({{site.baseurl}}/docs/sort-based-and-hash-based-memory-constrained-operators/#disabling-the-hash-operators)), Drill used a Distinct Hash Aggregate to implement the functionality of a semi-join. Alternatively, Drill can use the Nested-Loop-Join or sort the data and then use the (lightweight) Merge-Join. Drill typically uses Hash operators for joining and aggregation, as they perform better than the Sort operator (Hash - O(N) vs. Sort - O(N * log(N))). However, if you disable the Hash operators, or the data is already sorted, Drill uses the alternative methods previously described.
 
 The memory configuration in Drill is specified as the memory limit per-query, per-node. The allocated memory is equally divided among all instances of the spillable operators (per query on each node). The number of instances is the number of spillable operators in the query plan multiplied by the maximal degree of parallelism. The maximal degree of parallelism is the number of minor fragments required to perform the work for each instance of a spillable operator. When an instance of a spillable operator must process more data than it can hold, the operator temporarily spills some of the data to a directory on disk to complete its work.  
 
@@ -104,7 +104,8 @@ Enables or disables hash aggregation; otherwise, Drill does a sort-based aggrega
 Enables or disables hash joins. This option is enabled by default. Drill assumes that a query will have adequate memory to complete and tries to use the fastest operations possible. Prior to Drill 1.14, the Hash-Join operator used an uncontrolled amount of memory (up to 10 GB), after which the operator ran out of memory. As of Drill 1.14, this operator can spill to disk. This option is enabled by default.    
 
 - **planner.enable_semijoin**  
-Enables or disables semi-joins. This option is enabled by default and only works when the `planner.enable_hashjoin` option is also enabled. When enabled, Drill uses semi-joins to remove the distinct processing below the Hash Join and sets the semi-join flag in the Hash Join flag, as shown in the following example:  
+Enables or disables semi-join functionality inside the Hash Join. This option is enabled by default. When enabled, a semi-join flag inside the HashJoin flag is set to true, and Drill uses a semi-join to remove the distinct processing below the Hash Join. When disabled, Drill can still perform semi-joins, but the semi-joins are performed outside of the Hash Join, as shown in the following example:   
+
 
 ###Example: Query Plan with and without Semi-Join
 
@@ -129,9 +130,11 @@ In the following query plan, you can see the HashAgg before the HashJoin. In the
 **Semi-Join Enabled**   
 In the following query plan, you can see that the HashAgg is absent. In the HashJoin flag, you can see that semi-join flag is set to true, indicating that a semi-join was used. Using the semi-join optimizes the query by reducing the amount of processing that Drill must perform on data.   
 
-	EXPLAIN PLAN FOR SELECT employee_id, full_name FROM cp.`employee.json` WHERE employee_id IN (SELECT employee_id FROM cp.`employee.json`);
-	--------------------------------------------------------------------------------+
-	|                                       text                                       |                                     +----------------------------------------------------------------------------------+
+	EXPLAIN PLAN FOR SELECT employee_id, full_name FROM cp.`employee.json` WHERE employee_id IN (SELECT employee_id FROM cp.`employee.json`);  
+
+	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
+	|                                       text                                       |                                                            
+	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
 	| 00-00    Screen
 	00-01      Project(employee_id=[$0], full_name=[$1])
 	00-02        HashJoin(condition=[=($0, $2)], joinType=[inner], semi-join: =[true])
