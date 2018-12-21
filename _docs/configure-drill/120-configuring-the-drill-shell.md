@@ -5,7 +5,7 @@ parent: "Configure Drill"
 ---  
 Drill uses SQLLine as the Drill shell. SQLLine is a pure-Java console-based utility for connecting to relational databases and running SQL commands. 
 
-Starting in Drill 1.15, Drill uses SQLLine 1.6, which you can customize through the Drill [configuration file, drill-sqlline-override.conf]({{site.baseurl}}/docs/configuring-the-drill-shell/#customizing-sqlline-in-the-drill-sqlline-override.conf-file). Before installing and running Drill with SQLLine 1.6, delete the old SQLLine history file The history file is located in the following location:  
+Starting in Drill 1.15, Drill uses SQLLine 1.6, which you can customize through the Drill [configuration file, drill-sqlline-override.conf]({{site.baseurl}}/docs/configuring-the-drill-shell/#customizing-sqlline-in-the-drill-sqlline-override-conf-file). Before installing and running Drill with SQLLine 1.6, delete the old SQLLine history file The history file is located in the following location:  
 
 
 - $HOME/.sqlline/history (UNIX, Linux, Mac OS)
