@@ -330,7 +330,7 @@ public class QueryManager implements AutoCloseable {
         .setStart(startTime)
         .setTotalCost(totalCost)
         .setQueueName(queueName == null ? "-" : queueName)
-        .setOptionsJson(getQueryOptionsAsJson());
+        .setOptionsJson(getSessionOptionsAsJson());
 
     if (queryText != null) {
       queryInfoBuilder.setQuery(queryText);
@@ -359,7 +359,7 @@ public class QueryManager implements AutoCloseable {
         .setFinishedFragments(finishedFragments.get())
         .setTotalCost(totalCost)
         .setQueueName(queueName == null ? "-" : queueName)
-        .setOptionsJson(getQueryOptionsAsJson());
+        .setOptionsJson(getSessionOptionsAsJson());
 
     if (ex != null) {
       profileBuilder.setError(ex.getMessage(false));
@@ -384,9 +384,9 @@ public class QueryManager implements AutoCloseable {
     return profileBuilder.build();
   }
 
-  private String getQueryOptionsAsJson() {
+  private String getSessionOptionsAsJson() {
     try {
-      OptionList optionList = foreman.getQueryContext().getOptions().getOptionList();
+      OptionList optionList = foreman.getQueryContext().getOptions().getSessionOptionManager().getOptionList();
       return foreman.getQueryContext().getLpPersistence().getMapper().writeValueAsString(optionList);
     } catch (JsonProcessingException e) {
       throw new DrillRuntimeException("Error while trying to convert option list to json string", e);
