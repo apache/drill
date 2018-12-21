@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Linux"
-date: 2017-08-18 17:48:00 UTC
+date: 2018-12-21
 parent: "Installing the ODBC Driver"
 ---
 Install the Drill ODBC Driver on the machine from which you connect to
@@ -37,7 +37,7 @@ Verify that your system meets the system requirements before you start.
 To install the driver, you need Administrator privileges on the computer. 
 
 ## Step 1: Download the Drill ODBC Driver
-Download the driver from the [download site](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/). The current version is 1.3.8.
+Download the latest driver from the [download site](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/). 
 
 ## Step 2: Install the Drill ODBC Driver
 
