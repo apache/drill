@@ -77,7 +77,8 @@ Starting in Drill 1.15, the S3 storage plugin supports the [Hadoop Credential Pr
 
 When you configure the S3 storage plugin to use an external provider, Drill first checks the external provider for the keys. If the keys are not available via the provider, or the provider is not configured, Drill can fall back to using the plain text data in the `core-site.xml` file or S3 configuration, unless the `hadoop.security.credential.clear-text-fallback` property is set to `false`.  
 
-**Configuring the S3 Plugin to use an External Provider**
+**Configuring the S3 Plugin to use an External Provider**  
+
 Add the bucket name, `hadoop.security.credential.provider.path` and `fs.s3a.impl.disable.cache` properties to the S3 storage plugin configuration, as shown in the following example:
  
 	{
