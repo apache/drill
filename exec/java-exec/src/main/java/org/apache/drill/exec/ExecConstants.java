@@ -854,7 +854,7 @@ public final class ExecConstants {
    * the shutdown request is triggered. The primary use of grace period is to
    * avoid the race conditions caused by zookeeper delay in updating the state
    * information of the drillbit that is shutting down. So, it is advisable
-   * to have a grace period that is atleast twice the amount of zookeeper
+   * to have a grace period that is at least twice the amount of zookeeper
    * refresh time.
    */
   public static final String GRACE_PERIOD = "drill.exec.grace_period_ms";
@@ -880,10 +880,11 @@ public final class ExecConstants {
 
   public static final String LIST_FILES_RECURSIVELY = "storage.list_files_recursively";
   public static final BooleanValidator LIST_FILES_RECURSIVELY_VALIDATOR = new BooleanValidator(LIST_FILES_RECURSIVELY,
-      new OptionDescription("Enables recursive files listing when querying the `INFORMATION_SCHEMA.FILES` table or executing the SHOW FILES command. Default is false. (Drill 1.15+)"));
+      new OptionDescription("Enables recursive files listing when querying the `INFORMATION_SCHEMA.FILES` table or executing the SHOW FILES command. " +
+        "Default is false. (Drill 1.15+)"));
 
-  public static final String RETURN_RESULT_SET_FOR_DDL = "exec.return_result_set_for_ddl";
+  public static final String RETURN_RESULT_SET_FOR_DDL = "exec.query.return_result_set_for_ddl";
   public static final BooleanValidator RETURN_RESULT_SET_FOR_DDL_VALIDATOR = new BooleanValidator(RETURN_RESULT_SET_FOR_DDL,
-      new OptionDescription("Controls whether to return result set for CREATE TABLE/VIEW, DROP TABLE/VIEW, SET, USE etc. queries. " +
+      new OptionDescription("Controls whether to return result set for CREATE TABLE / VIEW, DROP TABLE / VIEW, SET, USE etc. queries. " +
           "If set to false affected rows count will be returned instead and result set will be null. Default is true. (Drill 1.15+)"));
 }

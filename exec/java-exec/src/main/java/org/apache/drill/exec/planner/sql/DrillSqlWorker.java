@@ -173,11 +173,13 @@ public class DrillSqlWorker {
         handler = new DefaultSqlHandler(config, textPlan);
     }
 
-    boolean returnResultSet = context.getOptions().getBoolean(ExecConstants.RETURN_RESULT_SET_FOR_DDL);
-    // Determine whether result set should be returned for the query based on `exec.return_result_set_for_ddl`
-    // and sql node kind. Overrides the option on a query level.
-    context.getOptions().setLocalOption(ExecConstants.RETURN_RESULT_SET_FOR_DDL,
-        returnResultSet || !SqlKind.DDL.contains(sqlNode.getKind()));
+    // Determines whether result set should be returned for the query based on return result set option and sql node kind.
+    // Overrides the option on a query level if it differs from the current value.
+    boolean currentReturnResultValue = context.getOptions().getBoolean(ExecConstants.RETURN_RESULT_SET_FOR_DDL);
+    boolean newReturnResultSetValue = currentReturnResultValue || !SqlKind.DDL.contains(sqlNode.getKind());
+    if (newReturnResultSetValue != currentReturnResultValue) {
+      context.getOptions().setLocalOption(ExecConstants.RETURN_RESULT_SET_FOR_DDL, true);
+    }
 
     return handler.getPlan(sqlNode);
   }

@@ -288,38 +288,23 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     </div>
   </div>
 
-  <#assign options = model.getOptions()>
-  <#if (options?keys?size > 0)>
+  <#assign sessionOptions = model.getSessionOptions()>
+  <#assign queryOptions = model.getQueryOptions()>
+  <#if (sessionOptions?keys?size > 0 || queryOptions?keys?size > 0) >
     <div class="page-header"></div>
-    <h3>Session Options</h3>
-    <div class="panel-group" id="session-options-accordion">
+    <h3>Options</h3>
+    <div class="panel-group" id="options-accordion">
       <div class="panel panel-default">
         <div class="panel-heading">
           <h4 class="panel-title">
-            <a data-toggle="collapse" href="#session-options-overview">
+            <a data-toggle="collapse" href="#options-overview">
               Overview
             </a>
           </h4>
         </div>
-        <div id="session-options-overview" class="panel-collapse collapse in">
-          <div class="panel-body">
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <#list options?keys as name>
-                  <tr>
-                    <td>${name}</td>
-                    <td>${options[name]}</td>
-                  </tr>
-                </#list>
-              </tbody>
-            </table>
-          </div>
+        <div id="options-overview" class="panel-collapse collapse in">
+          <@list_options options=sessionOptions scope="Session" />
+          <@list_options options=queryOptions scope="Query" />
         </div>
       </div>
     </div>
@@ -525,6 +510,30 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     });
     </script>
 
+</#macro>
+
+<#macro list_options options scope>
+ <#if (options?keys?size > 0) >
+   <div class="panel-body">
+     <h4>${scope} Options</h4>
+     <table id="${scope}_options_table" class="table table-bordered">
+       <thead>
+         <tr>
+           <th>Name</th>
+           <th>Value</th>
+         </tr>
+       </thead>
+         <tbody>
+           <#list options?keys as name>
+             <tr>
+               <td>${name}</td>
+               <td>${options[name]}</td>
+             </tr>
+           </#list>
+         </tbody>
+     </table>
+   </div>
+ </#if>
 </#macro>
 
 <@page_html/>

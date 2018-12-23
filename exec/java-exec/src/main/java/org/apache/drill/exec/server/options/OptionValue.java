@@ -84,7 +84,7 @@ public class OptionValue implements Comparable<OptionValue> {
    * This defines where an option was actually configured.
    */
   public enum OptionScope {
-    BOOT, SYSTEM, SESSION, QUERY;
+    BOOT, SYSTEM, SESSION, QUERY
   }
 
   public final String name;
@@ -184,6 +184,11 @@ public class OptionValue implements Comparable<OptionValue> {
       default:
         return null;
     }
+  }
+
+  @JsonIgnore
+  public OptionScope getScope() {
+    return scope;
   }
 
   public PersistedOptionValue toPersisted() {
