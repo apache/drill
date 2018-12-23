@@ -6800,10 +6800,20 @@ public final class UserBitShared {
     // optional int32 affected_rows_count = 4;
     /**
      * <code>optional int32 affected_rows_count = 4;</code>
+     *
+     * <pre>
+     * The value is set when result set is disabled and its value corresponds to number
+     * of rows affected by query (see JDBC java.sql.ResultSet#getUpdateCount())
+     * </pre>
      */
     boolean hasAffectedRowsCount();
     /**
      * <code>optional int32 affected_rows_count = 4;</code>
+     *
+     * <pre>
+     * The value is set when result set is disabled and its value corresponds to number
+     * of rows affected by query (see JDBC java.sql.ResultSet#getUpdateCount())
+     * </pre>
      */
     int getAffectedRowsCount();
   }
@@ -6997,12 +7007,22 @@ public final class UserBitShared {
     private int affectedRowsCount_;
     /**
      * <code>optional int32 affected_rows_count = 4;</code>
+     *
+     * <pre>
+     * The value is set when result set is disabled and its value corresponds to number
+     * of rows affected by query (see JDBC java.sql.ResultSet#getUpdateCount())
+     * </pre>
      */
     public boolean hasAffectedRowsCount() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <code>optional int32 affected_rows_count = 4;</code>
+     *
+     * <pre>
+     * The value is set when result set is disabled and its value corresponds to number
+     * of rows affected by query (see JDBC java.sql.ResultSet#getUpdateCount())
+     * </pre>
      */
     public int getAffectedRowsCount() {
       return affectedRowsCount_;
@@ -7629,18 +7649,33 @@ public final class UserBitShared {
       private int affectedRowsCount_ ;
       /**
        * <code>optional int32 affected_rows_count = 4;</code>
+       *
+       * <pre>
+       * The value is set when result set is disabled and its value corresponds to number
+       * of rows affected by query (see JDBC java.sql.ResultSet#getUpdateCount())
+       * </pre>
        */
       public boolean hasAffectedRowsCount() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
        * <code>optional int32 affected_rows_count = 4;</code>
+       *
+       * <pre>
+       * The value is set when result set is disabled and its value corresponds to number
+       * of rows affected by query (see JDBC java.sql.ResultSet#getUpdateCount())
+       * </pre>
        */
       public int getAffectedRowsCount() {
         return affectedRowsCount_;
       }
       /**
        * <code>optional int32 affected_rows_count = 4;</code>
+       *
+       * <pre>
+       * The value is set when result set is disabled and its value corresponds to number
+       * of rows affected by query (see JDBC java.sql.ResultSet#getUpdateCount())
+       * </pre>
        */
       public Builder setAffectedRowsCount(int value) {
         bitField0_ |= 0x00000008;
@@ -7650,6 +7685,11 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 affected_rows_count = 4;</code>
+       *
+       * <pre>
+       * The value is set when result set is disabled and its value corresponds to number
+       * of rows affected by query (see JDBC java.sql.ResultSet#getUpdateCount())
+       * </pre>
        */
       public Builder clearAffectedRowsCount() {
         bitField0_ = (bitField0_ & ~0x00000008);
