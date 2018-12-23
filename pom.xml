@@ -320,6 +320,7 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
+        <version>0.13</version>
         <executions>
           <execution>
             <id>rat-checks</id>
@@ -446,7 +447,7 @@
             </manifest>
             <manifestEntries>
               <Extension-Name>org.apache.drill</Extension-Name>
-              <Built-By>${username}</Built-By>
+              <Built-By>${user.name}</Built-By>
               <url>http://drill.apache.org/</url>
             </manifestEntries>
           </archive>
@@ -587,7 +588,8 @@
           <version>3.0</version>
           <configuration>
             <aggregate>true</aggregate>
-            <header>header</header>
+            <!--suppress UnresolvedMavenProperty -->
+            <header>${maven.multiModuleProjectDirectory}/header</header>
             <excludes>
               <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
               <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
@@ -3349,9 +3351,9 @@
     <profile>
       <!--
         If the IDE is Eclipse, it requires you to install an additional Eclipse plugin available here:
-        http://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+        http://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/1.6.1/os-maven-plugin-1.6.1.jar
         or from your local maven repository:
-        ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+        ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.6.1/os-maven-plugin-1.6.1.jar
         Note that installing this plugin may require you to start with a new workspace
       -->
       <id>openssl</id>

@@ -528,6 +528,13 @@ class RuntimeFilterBDef : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 hj_op_id() const;
   inline void set_hj_op_id(::google::protobuf::int32 value);
 
+  // optional int64 rf_identifier = 8;
+  inline bool has_rf_identifier() const;
+  inline void clear_rf_identifier();
+  static const int kRfIdentifierFieldNumber = 8;
+  inline ::google::protobuf::int64 rf_identifier() const;
+  inline void set_rf_identifier(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:exec.bit.data.RuntimeFilterBDef)
  private:
   inline void set_has_query_id();
@@ -540,6 +547,8 @@ class RuntimeFilterBDef : public ::google::protobuf::Message {
   inline void clear_has_to_foreman();
   inline void set_has_hj_op_id();
   inline void clear_has_hj_op_id();
+  inline void set_has_rf_identifier();
+  inline void clear_has_rf_identifier();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -550,9 +559,10 @@ class RuntimeFilterBDef : public ::google::protobuf::Message {
   bool to_foreman_;
   ::google::protobuf::int32 hj_op_id_;
   ::google::protobuf::RepeatedPtrField< ::std::string> probe_fields_;
+  ::google::protobuf::int64 rf_identifier_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitData_2eproto();
   friend void protobuf_AssignDesc_BitData_2eproto();
@@ -1073,6 +1083,28 @@ inline ::google::protobuf::int32 RuntimeFilterBDef::hj_op_id() const {
 inline void RuntimeFilterBDef::set_hj_op_id(::google::protobuf::int32 value) {
   set_has_hj_op_id();
   hj_op_id_ = value;
+}
+
+// optional int64 rf_identifier = 8;
+inline bool RuntimeFilterBDef::has_rf_identifier() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void RuntimeFilterBDef::set_has_rf_identifier() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void RuntimeFilterBDef::clear_has_rf_identifier() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void RuntimeFilterBDef::clear_rf_identifier() {
+  rf_identifier_ = GOOGLE_LONGLONG(0);
+  clear_has_rf_identifier();
+}
+inline ::google::protobuf::int64 RuntimeFilterBDef::rf_identifier() const {
+  return rf_identifier_;
+}
+inline void RuntimeFilterBDef::set_rf_identifier(::google::protobuf::int64 value) {
+  set_has_rf_identifier();
+  rf_identifier_ = value;
 }
 
 
