@@ -711,6 +711,11 @@
           <artifactId>maven-enforcer-plugin</artifactId>
           <version>3.0.0-M2</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
         <plugin> <!-- classpath scanning  -->
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>

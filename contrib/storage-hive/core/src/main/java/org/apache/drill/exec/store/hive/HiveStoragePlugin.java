@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 import org.apache.calcite.schema.Schema.TableType;
@@ -41,7 +42,6 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.planner.sql.logical.ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan;
 import org.apache.drill.exec.planner.sql.logical.ConvertHiveParquetScanToDrillParquetScan;
 import org.apache.drill.exec.planner.sql.logical.HivePushPartitionFilterIntoScan;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -55,8 +55,7 @@ import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
-import org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -217,7 +216,14 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
       ruleBuilder.add(ConvertHiveParquetScanToDrillParquetScan.INSTANCE);
     }
     if (options.getBoolean(ExecConstants.HIVE_OPTIMIZE_MAPRDB_JSON_SCAN_WITH_NATIVE_READER)) {
-      ruleBuilder.add(ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan.INSTANCE);
+      try {
+        Class<?> hiveToDrillMapRDBJsonRuleClass =
+            Class.forName("org.apache.drill.exec.planner.sql.logical.ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan");
+        ruleBuilder.add((StoragePluginOptimizerRule) hiveToDrillMapRDBJsonRuleClass.getField("INSTANCE").get(null));
+      } catch (ReflectiveOperationException e) {
+        logger.warn("Current Drill build is not designed for working with Hive MapR-DB tables. " +
+            "Please disable {} option", ExecConstants.HIVE_OPTIMIZE_MAPRDB_JSON_SCAN_WITH_NATIVE_READER);
+      }
     }
     return ruleBuilder.build();
   }
@@ -225,13 +231,21 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   @Override
   public FormatPlugin getFormatPlugin(FormatPluginConfig formatConfig) {
     //  TODO: implement formatCreator similar to FileSystemPlugin formatCreator. DRILL-6621
-    if (formatConfig instanceof MapRDBFormatPluginConfig) {
-      try {
-        return new MapRDBFormatPlugin(HIVE_MAPRDB_FORMAT_PLUGIN_NAME, context, hiveConf, config,
-            (MapRDBFormatPluginConfig) formatConfig);
-      } catch (IOException e) {
-        throw new DrillRuntimeException("The error is occurred while connecting to MapR-DB", e);
+    try {
+      Class<?> mapRDBFormatPluginConfigClass =
+          Class.forName("org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig");
+      Class<?> mapRDBFormatPluginClass =
+          Class.forName("org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin");
+
+      if (mapRDBFormatPluginConfigClass.isInstance(formatConfig)) {
+        return (FormatPlugin) mapRDBFormatPluginClass.getConstructor(
+              new Class[]{String.class, DrillbitContext.class, Configuration.class,
+                  StoragePluginConfig.class, mapRDBFormatPluginConfigClass})
+          .newInstance(
+              new Object[]{HIVE_MAPRDB_FORMAT_PLUGIN_NAME, context, hiveConf, config, formatConfig});
       }
+    } catch (ReflectiveOperationException e) {
+      throw new DrillRuntimeException("The error is occurred while connecting to MapR-DB or instantiating mapRDBFormatPlugin", e);
     }
     throw new DrillRuntimeException(String.format("Hive storage plugin doesn't support usage of %s format plugin",
         formatConfig.getClass().getName()));
