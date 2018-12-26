@@ -21,26 +21,25 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
+import org.apache.drill.exec.store.hive.HiveUtilities;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig;
 import org.apache.drill.exec.store.mapr.db.json.JsonScanSpec;
 import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
+import org.apache.hadoop.hive.maprdb.json.input.HiveMapRDBJsonInputFormat;
 import org.ojai.DocumentConstants;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.apache.drill.exec.store.hive.HiveUtilities.nativeReadersRuleMatches;
 
 /**
  * Convert Hive scan to use Drill's native MapR-DB reader instead of Hive's MapR-DB JSON Handler.
@@ -69,15 +68,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
    */
   @Override
   public boolean matches(RelOptRuleCall call) {
-    try {
-      return nativeReadersRuleMatches(call,
-          Class.forName("org.apache.hadoop.hive.maprdb.json.input.HiveMapRDBJsonInputFormat"));
-    } catch (ClassNotFoundException e) {
-      throw UserException.resourceError(e)
-          .message("Current Drill build is not designed for working with Hive MapR-DB tables. " +
-              "Please disable \"%s\" option", ExecConstants.HIVE_OPTIMIZE_MAPRDB_JSON_SCAN_WITH_NATIVE_READER)
-          .build(logger);
-    }
+    return HiveUtilities.nativeReadersRuleMatches(call, HiveMapRDBJsonInputFormat.class);
   }
 
   @Override
@@ -110,15 +101,16 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
         To ensure Drill MapR-DB Json scan will be chosen, reduce Hive scan importance to 0.
        */
       call.getPlanner().setImportance(hiveScanRel, 0.0);
-    } catch (final Exception e) {
-      logger.warn("Failed to convert HiveScan to JsonScanSpec", e);
+    } catch (DrillRuntimeException e) {
+      // TODO: Improve error handling after allowing to throw IOException from StoragePlugin.getFormatPlugin()
+      logger.warn("Failed to convert HiveScan to JsonScanSpec. Fallback to HiveMapR-DB connector.", e);
     }
   }
 
   /**
    * Helper method which creates a DrillScanRel with native Drill HiveScan.
    */
-  private DrillScanRel createNativeScanRel(final DrillScanRel hiveScanRel) throws Exception {
+  private DrillScanRel createNativeScanRel(final DrillScanRel hiveScanRel) {
     RelDataTypeFactory typeFactory = hiveScanRel.getCluster().getTypeFactory();
     HiveScan hiveScan = (HiveScan) hiveScanRel.getGroupScan();
     Map<String, String> parameters = hiveScan.getHiveReadEntry().getHiveTableWrapper().getParameters();
