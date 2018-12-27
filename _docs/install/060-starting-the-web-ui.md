@@ -1,12 +1,12 @@
 ---
 title: "Starting the Web UI"
-date: 2018-12-08
+date: 2018-12-27
 parent: Install Drill
 ---
 
-The Drill Web UI is one of several [client interfaces](/docs/architecture-introduction/#drill-clients) you can use to access Drill. 
+The Drill Web UI is one of several [client interfaces](/docs/architecture-introduction/#drill-clients) that you can use to access Drill. 
 
-To open the Drill Web UI, launch a web browser, and go to one of the following URLs depending on the configuration of HTTPS support:
+To open the Drill Web UI, launch a web browser, and go to one of the following URLs depending on the configuration:
 
 * `http://<IP address or host name>:8047`  
   Use this URL when [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/#https-support) is disabled (the default).
