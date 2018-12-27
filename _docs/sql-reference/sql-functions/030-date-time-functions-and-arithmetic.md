@@ -1,6 +1,6 @@
 ---
 title: "Date/Time Functions and Arithmetic"
-date: 2018-11-02
+date: 2018-12-27
 parent: "SQL Functions"
 ---
 
@@ -22,7 +22,10 @@ This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-
 [LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)    | TIMESTAMP  
 [NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)               | TIMESTAMP  
 [TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)         | VARCHAR  
-[UNIX_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#unix_timestamp)                   | BIGINT
+[UNIX_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#unix_timestamp)                   | BIGINT 
+[TIMESTAMPADD]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#TIMESTAMPADD)                         | Inferred based on unit of time
+[TIMESTAMPDIFF]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#TIMESTAMPDIFF) 					   | Inferred based on unit of time												   |  
+| 
 
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
@@ -560,5 +563,114 @@ SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM (
 +-------------+
 | 1432912733  |
 +-------------+
-1 row selected (0.171 seconds)
-```
+1 row selected (0.171 seconds)  
+```    
+
+##TIMESTAMPADD  
+Adds an interval of time, in the given time units, to the date expression.   
+
+###TIMESTAMPADD Syntax  
+TIMESTAMPADD(*time\_unit,interval,date\_expression*)  
+
+###TIMESTAMPADD Usage Notes  
+- A date expressions is in the format YYYY-MM-DD.
+- Supports the following time units: Day, Week, Month, Quarter, Year
+- Drill uses the unit of time to infer the return type.
+- You can include the SQL_TSI_ prefix with the any of the supported time units, as shown: 
+  
+		SELECT TIMESTAMPADD(SQL_TSI_YEAR,3,'1982-05-06');  
+
+
+###TIMESTAMPADD Examples   
+
+Add three years to the given date:  
+
+	SELECT TIMESTAMPADD(YEAR,3,'1982-05-06');
+	+------------------------+
+	|         EXPR$0         |
+	+------------------------+
+	| 1985-05-06 00:00:00.0  |
+	+------------------------+   
+ 
+Add one quarter of a year (3 months) to the given date:  
+ 
+	SELECT TIMESTAMPADD(QUARTER,1,'1982-05-06');
+	+------------------------+
+	|         EXPR$0         |
+	+------------------------+
+	| 1982-08-06 00:00:00.0  |
+	+------------------------+    
+
+Add three months to the given date:  
+
+	SELECT TIMESTAMPADD(MONTH,3,'1982-05-06');
+	+------------------------+
+	|         EXPR$0         |
+	+------------------------+
+	| 1982-08-06 00:00:00.0  |
+	+------------------------+  
+
+Add three weeks to the given date:  
+
+	SELECT TIMESTAMPADD(WEEK,3,'1982-05-06');
+	+------------------------+
+	|         EXPR$0         |
+	+------------------------+
+	| 1982-05-27 00:00:00.0  |
+	+------------------------+  
+
+Add three days to the given date:  
+
+	SELECT TIMESTAMPADD(DAY,3,'1982-05-06');
+	+------------------------+
+	|         EXPR$0         |
+	+------------------------+
+	| 1982-05-09 00:00:00.0  |
+	+------------------------+
+
+##TIMESTAMPDIFF  
+Calculates an interval of time, in the given time units, by subtracting *datetime\_expression2* from *datetime\_expression1*.    
+
+###TIMESTAMPDIFF Syntax  
+TIMESTAMPDIFF(*time\_unit,datetime\_expression1,datetime\_expression2*)  
+
+###TIMESTAMPDIFF Usage Notes  
+- Datetime expressions are date (YYYY-MM-DD) or datetime (YYYY-MM-DD HH:MM:SS) expressions.
+- You can include two date expressions, or one date expression with one datetime expression, as shown in the examples that follow.
+- Supports the following time units: Nanosecond, Microsecond, Second, Minute, Hour, Day, Month, Year, Week, Quarter
+- Drill uses the unit of time to infer the return type.
+- You can include the SQL_TSI_ prefix with the any of the supported time units, as shown: 
+  
+		SELECT TIMESTAMPDIFF(SQL_TSI_YEAR,'1982-05-06', '1986-05-06');  
+
+
+###TIMESTAMPDIFF Examples   
+
+Subtracts 1982-05-06 from 2018-12-26 and returns the difference in months:  
+	
+	SELECT TIMESTAMPDIFF(MONTH,'1982-05-06','2018-12-26');
+	+---------+
+	| EXPR$0  |
+	+---------+
+	| 439     |
+	+---------+   
+
+Subtracts 2003-02-01 12:05:55 from 2018-05-01 and returns the difference in minutes: 
+	
+	SELECT TIMESTAMPDIFF(MINUTE,'2003-02-01 12:05:55','2018-05-01');
+	+----------+
+	|  EXPR$0  |
+	+----------+
+	| 8017920  |
+	+----------+  
+
+Subtracts 2003-02-01 from 2018-05-01 12:05:35 and returns the difference in microseconds:
+
+	SELECT TIMESTAMPDIFF(MICROSECOND,'2003-02-01','2018-05-01 12:05:35');
+	+------------------+
+	|      EXPR$0      |
+	+------------------+
+	| 481075200000000  |
+	+------------------+
+
+ 

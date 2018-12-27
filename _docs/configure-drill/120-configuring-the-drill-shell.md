@@ -1,6 +1,6 @@
 ---
 title: "Configuring the Drill Shell"
-date: 2018-12-21
+date: 2018-12-27
 parent: "Configure Drill"
 ---  
 Drill uses SQLLine as the Drill shell. SQLLine is a pure-Java console-based utility for connecting to relational databases and running SQL commands. 
@@ -38,7 +38,7 @@ The following table lists the Drill shell commands that you can run from the com
 | !run          | Run a script from the specified file.                                                                                                 |
 | !save         | Save the current variables and aliases.                                                                                               |
 | !script       | Start saving a script to a file.                                                                                                      |
-| !set          | Set the given variable. See [Set Command Variables]({{site.baseurl}}/docs/configuring-the-drill-shell/#the-set-command-variables).    |
+| !set          | Set the given variable. See [Set Command Variables]({{site.baseurl}}/docs/configuring-the-drill-shell/#set-command-variables).    |
 | !tables       | List all the tables in the database.                                                                                                  |
 | !verbose      | Show unabbreviated error messages.                                                                                                    |
 
@@ -66,7 +66,9 @@ When prompted you enter a user name and password, which is hidden as you type it
 
 
 ## Set Command Variables  
-The following table lists the set command variables that you can use with the !set command:
+The following table lists some of the set command variables that you can use with the !set command: 
+
+**Note:** Issue the !set command without a variable to see the full list of command variables.
 
 | Variable Name   | Valid Variable Values  | Description                                                                                                                                                            |
 |-----------------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
