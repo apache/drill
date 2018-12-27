@@ -23,8 +23,8 @@ This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-
 [NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)               | TIMESTAMP  
 [TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)         | VARCHAR  
 [UNIX_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#unix_timestamp)                   | BIGINT 
-[TIMESTAMPADD]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#TIMESTAMPADD)                         | Inferred based on unit of time
-[TIMESTAMPDIFF]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#TIMESTAMPDIFF) 					   | Inferred based on unit of time												   |  
+[TIMESTAMPADD]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampadd)                     | Inferred based on unit of time
+[TIMESTAMPDIFF]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampdiff)					   | Inferred based on unit of time												   |  
 | 
 
 ## AGE
@@ -629,7 +629,7 @@ Add three days to the given date:
 	+------------------------+
 
 ##TIMESTAMPDIFF  
-Calculates an interval of time, in the given time units, by subtracting *datetime\_expression2* from *datetime\_expression1*.    
+Calculates an interval of time, in the given time units, by subtracting *datetime\_expression1* from *datetime\_expression2* (*datetime\_expression2* − *datetime\_expression1*).    
 
 ###TIMESTAMPDIFF Syntax  
 TIMESTAMPDIFF(*time\_unit,datetime\_expression1,datetime\_expression2*)  
