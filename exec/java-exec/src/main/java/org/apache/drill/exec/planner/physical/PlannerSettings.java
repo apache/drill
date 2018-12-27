@@ -196,7 +196,7 @@ public class PlannerSettings implements Context{
    */
   public static final String ENABLE_UNNEST_LATERAL_KEY = "planner.enable_unnest_lateral";
   public static final BooleanValidator ENABLE_UNNEST_LATERAL = new BooleanValidator(ENABLE_UNNEST_LATERAL_KEY,
-      new OptionDescription("Enables lateral join functionality. Default is false. (Drill 1.14+)"));
+      new OptionDescription("Enables lateral join functionality. Default is true. (Drill 1.15+)"));
 
   /*
      Enables rules that re-write query joins in the most optimal way.
