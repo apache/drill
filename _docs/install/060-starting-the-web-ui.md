@@ -1,21 +1,31 @@
 ---
 title: "Starting the Web UI"
-date: 2018-12-27
+date: 2018-12-28
 parent: Install Drill
 ---
 
-The Drill Web UI is one of several [client interfaces](/docs/architecture-introduction/#drill-clients) that you can use to access Drill. 
+The Drill Web UI is one of several [client interfaces](/docs/architecture-introduction/#drill-clients) that you can use to access Drill. You can perform the following activities from the Drill Web UI:  
 
-To open the Drill Web UI, launch a web browser, and go to one of the following URLs depending on the configuration:
+- [Run queries]({{site.baseurl}}/docs/query-data-introduction/) 
+- [Monitor and cancel queries]({{site.baseurl}}/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/)
+- [View query profiles]({{site.baseurl}}/docs/query-profiles/)
+- [Update and configure storage plugins]({{site.baseurl}}/docs/storage-plugin-registration/)
+- View [logs]({{site.baseurl}}/docs/log-and-debug-introduction/) and [metrics]({{site.baseurl}}/docs/monitoring-metrics/)
+- [Set configuration options]({{site.baseurl}}/docs/planning-and-execution-options/#setting-options-from-the-drill-web-ui)  
+
+Starting in Drill 1.15, you can use a Meta+Enter key combination instead of clicking the Submit button to submit queries through the query editor (Query page) in  Drill Web UI. On Mac keyboards, the combination is Ctrl+Meta or Ctrl+Enter. On Windows and Linux, the combination is Ctrl+Enter; however, on Linux, if you mapped the meta key to another physical key on the keyboard, use that key + Enter. 
+ 
+## Accessing the Web UI
+To access the Drill Web UI, enter the URL appropriate for your Drill configuration. The following list describes the URLs for various Drill configurations: 
 
 * `http://<IP address or host name>:8047`  
   Use this URL when [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/#https-support) is disabled (the default).
 * `https://<IP address or host name>:8047`  
   Use this URL when HTTPS support is enabled.  
 * `http://localhost:8047`   
-Use  this URL when running ./drill-embedded.
+  Use  this URL when running Drill in embedded mode (./drill-embedded).
 
-## Drill 1.2 and Later
+## Web UI Security
 
 If [user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) is not enabled, all the Web UI controls appear to users as well as administrators:  
 
