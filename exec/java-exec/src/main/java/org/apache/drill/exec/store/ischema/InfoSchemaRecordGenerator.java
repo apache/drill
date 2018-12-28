@@ -435,7 +435,8 @@ public abstract class InfoSchemaRecordGenerator<S> {
           String defaultLocation = wsSchema.getDefaultLocation();
           FileSystem fs = wsSchema.getFS();
           boolean recursive = optionManager.getBoolean(ExecConstants.LIST_FILES_RECURSIVELY);
-          FileSystemUtil.listAllSafe(fs, new Path(defaultLocation), recursive).forEach(
+          // add URI to the path to ensure that directory objects are skipped (see S3AFileSystem.listStatus method)
+          FileSystemUtil.listAllSafe(fs, new Path(fs.getUri().toString(), defaultLocation), recursive).forEach(
               fileStatus -> records.add(new Records.File(schemaName, wsSchema, fileStatus))
           );
         }

@@ -50,7 +50,7 @@ public class ShowFilesHandler extends DefaultSqlHandler {
     SchemaPlus drillSchema = defaultSchema;
     SqlShowFiles showFiles = unwrap(sqlNode, SqlShowFiles.class);
     SqlIdentifier from = showFiles.getDb();
-    String fromDir = "./";
+    String fromDir = null;
 
     // Show files can be used without from clause, in which case we display the files in the default schema
     if (from != null) {
@@ -61,7 +61,7 @@ public class ShowFilesHandler extends DefaultSqlHandler {
         // Entire from clause is not a schema, try to obtain the schema without the last part of the specified clause.
         drillSchema = SchemaUtilites.findSchema(defaultSchema, from.names.subList(0, from.names.size() - 1));
         // Listing for specific directory: show files in dfs.tmp.specific_directory
-        fromDir = fromDir + from.names.get((from.names.size() - 1));
+        fromDir = from.names.get((from.names.size() - 1));
       }
 
       if (drillSchema == null) {
@@ -81,7 +81,9 @@ public class ShowFilesHandler extends DefaultSqlHandler {
           .build(logger);
     }
 
-    Path path = new Path(wsSchema.getDefaultLocation(), fromDir);
+    Path endPath = fromDir == null ? new Path(wsSchema.getDefaultLocation()) : new Path(wsSchema.getDefaultLocation(), fromDir);
+    // add URI to the path to ensure that directory objects are skipped (see S3AFileSystem.listStatus method)
+    Path path = new Path(wsSchema.getFS().getUri().toString(), endPath);
     List<ShowFilesCommandResult> records = FileSystemUtil.listAllSafe(wsSchema.getFS(), path, false).stream()
         // use ShowFilesCommandResult for backward compatibility
         .map(fileStatus -> new ShowFilesCommandResult(new Records.File(wsSchema.getFullSchemaName(), wsSchema, fileStatus)))
