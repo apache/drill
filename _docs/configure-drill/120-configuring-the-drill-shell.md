@@ -16,6 +16,89 @@ After [starting the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-a
 
 Formatting tables takes time, which you may notice when running a huge query using the default outputFormat. The default outputFormat is “table.” You can set the outputFormat to a more performant table formatting, such as csv, as shown in the [examples]({{site.baseurl}}/docs/configuring-the-drill-shell/#examples-of-configuring-the-drill-shell).  
 
+## SQLLine Connection Parameters  
+
+You can use a jdbc connection string to connect to SQLLine when Drill is installed in embedded mode or distributed mode, as shown in the following examples:  
+
+- Embedded mode:  
+`./sqlline -u jdbc:drill:drillbit=local`  
+- Distributed mode:  
+`./sqlline –u jdbc:drill:zk=cento23,centos24,centos26:5181`   
+
+When you use a jdbc connection string to connect to Drill via SQLLine, you can include SQLLine connection parameters in the connection string, as shown in the following example:  
+
+`./sqlline -u 'jdbc:drill:drillbit=local' --help`  
+
+**Note:** Use single quotes around the jdbc portion of the connection string when using SQLLine parameters.  
+ 
+The --help command prints all the SQLLine connection parameters that you can include in the jdbc connection string, as shown in the following table:
+  
+
+| **Connection Parameters**                                      | **Description**                                                 |
+|----------------------------------------------------------------------------|-------------------------------------------------------------|
+|     -u <database url>                                                      |  the JDBC URL to connect to                                 |
+|      -n <username>                                                         |  the username to connect as                                 |
+|      -p <password>                                                         | the password to connect as                                  |
+|      -d <driver class>                                                     | the driver class to use                                     |
+|      -e <command>                                                          | the command to execute                                      |
+|      -nn <nickname>                                                        | nickname for the connection                                 |
+|      -ch <command handler>[,<command handler>]*                            | a custom command handler to use                             |
+|      -f <file>                                                             | script file to execute (same as --run)                      |
+|      -log <file>                                                           | file to write output                                        |
+|      -ac <class name>                                                      | application configuration class name                        |
+|      --color=[true/false]                                                  | control whether color is used for display                   |
+|      --colorScheme=[chester/dark/dracula/light/obsidian/solarized/vs2010]  | Syntax highlight schema                                     |
+|      --csvDelimiter=[delimiter]                                            | Delimiter in csv outputFormat                               |
+|      --csvQuoteCharacter=[char]                                            | Quote character in csv outputFormat                         |
+|      --escapeOutput=[true/false]                                           | escape control symbols in output                            |
+|      --showHeader=[true/false]                                             | show column names in query results                          |
+|      --headerInterval=ROWS                                                 | the interval between which headers are displayed            |
+|      --fastConnect=[true/false]                                            | skip building table/column list for tab-completion          |
+|      --autoCommit=[true/false]                                             | enable/disable automatic transaction commit                 |
+|      --verbose=[true/false]                                                | show verbose error messages and debug info                  |
+|      --showTime=[true/false]                                               | display execution time when verbose                         |
+|      --showWarnings=[true/false]                                           | display connection warnings                                 |
+|      --showNestedErrs=[true/false]                                         | display nested errors                                       |
+|      --strictJdbc=[true/false]                                             | use strict JDBC                                             |
+|      --nullValue=[string]                                                  | use string in place of NULL values                          |
+|      --numberFormat=[pattern]                                              | format numbers using DecimalFormat pattern                  |
+|      --dateFormat=[pattern]                                                | format dates using SimpleDateFormat pattern                 |
+|      --timeFormat=[pattern]                                                | format times using SimpleDateFormat pattern                 |
+|      --timestampFormat=[pattern]                                           | format timestamps using SimpleDateFormat pattern            |
+|      --force=[true/false]                                                  | continue running script even after errors                   |
+|      --maxWidth=MAXWIDTH                                                   | the maximum width of the terminal                           |
+|      --maxColumnWidth=MAXCOLWIDTH                                          | the maximum width to use when displaying columns            |
+|      --maxHistoryFileRows=ROWS                                             | the maximum number of history rows to store in history file |
+|      --maxHistoryRows=ROWS                                                 | the maximum number of history rows to store in memory       |
+|      --mode=[emacs/vi]                                                     | the editing mode                                            |
+|      --silent=[true/false]                                                 | be more silent                                              |
+|      --autosave=[true/false]                                               | automatically save preferences                              |
+|      --outputformat=[table/vertical/csv/tsv/xmlattrs/xmlelements/json]     | format mode for result display                              |
+|      --isolation=LEVEL                                                     | set the transaction isolation level                         |
+|      --run=/path/to/file                                                   | run one script and then exit                                |
+|      --historyfile=/path/to/file                                           | use or create history file in specified path                |
+|      --useLineContinuation=[true/false]                                    | Use line continuation                                       |
+|      --help                                                                | display parameters and commands                             |  
+
+### Example Connection String with Parameter  
+
+This example shows a jdbc connection string that includes the `-e` parameter to pass a query during the connection to Drill. The `-e` parameter is equivalent to the `-q` parameter. This connection string starts Drill, runs the query and then closes the connection. This type of connection string is useful in a script. The connection is run from DRILL_HOME/bin. 
+
+	[root@doc23 bin]# ./sqlline -u 'jdbc:drill:zk=local' -e 'select * from cp.`employee.json` limit 2;'  
+	Dec 28, 2018 2:13:30 PM org.jline.utils.Log logr
+	WARNING: Unable to create a system terminal, creating a dumb terminal (enable debug logging for more information)
+	Apache Drill 1.15.0-SNAPSHOT
+	"Say hello to my little Drill."
+	0: jdbc:drill:zk=local>  
+	+--------------+------------------+-------------+------------+--------------+---------------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+	| employee_id  |    full_name     | first_name  | last_name  | position_id  |   position_title    | store_id  | department_id  | birth_date  |       hire_date        |  salary  | supervisor_id  | education_level  | marital_status  | gender  |  management_role   |
+	+--------------+------------------+-------------+------------+--------------+---------------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+	| 1            | Sheri Nowmer     | Sheri       | Nowmer     | 1            | President           | 0         | 1              | 1961-08-26  | 1994-12-01 00:00:00.0  | 80000.0  | 0              | Graduate Degree  | S               | F       | Senior Management  |
+	| 2            | Derrick Whelply  | Derrick     | Whelply    | 2            | VP Country Manager  | 0         | 1              | 1915-07-03  | 1994-12-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree  | M               | M       | Senior Management  |
+	+--------------+------------------+-------------+------------+--------------+---------------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+	2 rows selected (2.907 seconds)
+	0: jdbc:drill:zk=local> Closing: org.apache.drill.jdbc.impl.DrillConnectionImpl
+
 
 ## Drill Shell Commands
 
@@ -118,7 +201,7 @@ Starting in Drill 1.15, SQLLine (the Drill shell) is upgraded to version 1.6. Yo
 
 You can customize quotes of the day; the quotes you see at the command prompt when starting Drill, such as “Just Drill it,” and you can override the SQLLine default properties. The SQLLine default properties are those that print when you run `!set` from the Drill shell. 
 
-Drill reads the `drill-sqlline-override.conf` file and applies the customizations during start-up. You must restart Drill for the changes to take effect. The file remains in the directory and Drill applies the customizes at each restart.  
+Drill reads the `drill-sqlline-override.conf` file and applies the custom configuration during start-up. You must restart Drill for the changes to take effect. The file remains in the directory and Drill applies the custom configuration at each restart.  
 
 **Note:** The SQLLine configuration file in the `<drill-installation>/conf` directory is named `drill-sqlline-override-example.conf`. Use this file and the information provided in the file as guidance for the `drill-sqlline-override.conf` file you create and store in the directory with your customizations.
 
