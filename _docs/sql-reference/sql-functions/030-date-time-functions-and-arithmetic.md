@@ -619,14 +619,14 @@ Add 225 seconds to the given time:
 	| 02:05:47  |
 	+-----------+  
 
-Add 5555500000 microseconds to the given timestamp value:
+Add 5555500000 microseconds to the given timestamp value:  
 
-SELECT TIMESTAMPADD(MICROSECOND,5555500000, TIMESTAMP '2003-02-01 12:05:35');
-+--------------------------+
-|          EXPR$0          |
-+--------------------------+
-| 2003-02-01 12:26:35.532  |
-+--------------------------+
+	SELECT TIMESTAMPADD(MICROSECOND,5555500000, TIMESTAMP '2003-02-01 12:05:35');  
+	+--------------------------+
+	|          EXPR$0          |
+	+--------------------------+
+	| 2003-02-01 12:26:35.532  |
+	+--------------------------+
 
 
 
