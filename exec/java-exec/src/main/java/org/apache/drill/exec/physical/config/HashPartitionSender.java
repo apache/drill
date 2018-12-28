@@ -66,9 +66,6 @@ public class HashPartitionSender extends AbstractSender {
     return expr;
   }
 
-  public int getOutgoingBatchSize() {
-    return outgoingBatchSize;
-  }
 
   @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {

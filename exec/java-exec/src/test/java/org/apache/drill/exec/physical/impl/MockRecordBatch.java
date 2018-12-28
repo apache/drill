@@ -273,6 +273,11 @@ public class MockRecordBatch implements CloseableRecordBatch {
   }
 
   @Override
+  public WritableBatch getWritableBatch(int start, int length) {
+    throw new UnsupportedOperationException("MockRecordBatch doesn't support gettingWritableBatch yet");
+  }
+
+  @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return container.iterator();
   }

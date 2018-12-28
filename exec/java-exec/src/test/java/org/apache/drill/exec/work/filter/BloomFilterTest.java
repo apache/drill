@@ -118,6 +118,11 @@ public class BloomFilterTest {
     }
 
     @Override
+    public WritableBatch getWritableBatch(int start, int length) {
+      return null;
+    }
+
+    @Override
     public Iterator<VectorWrapper<?>> iterator() {
       return null;
     }

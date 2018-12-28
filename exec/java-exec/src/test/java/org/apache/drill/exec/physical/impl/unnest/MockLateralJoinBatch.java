@@ -153,6 +153,10 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
     return null;
   }
 
+  @Override public WritableBatch getWritableBatch(int start, int length) {
+    return null;
+  }
+
   public List<ValueVector> getResultList() {
     return resultList;
   }

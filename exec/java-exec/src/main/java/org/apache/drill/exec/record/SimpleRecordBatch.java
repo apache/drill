@@ -89,6 +89,11 @@ public class SimpleRecordBatch implements RecordBatch {
   }
 
   @Override
+  public WritableBatch getWritableBatch(int start, int length) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return container.iterator();
   }

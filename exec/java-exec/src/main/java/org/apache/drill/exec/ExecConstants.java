@@ -73,6 +73,12 @@ public final class ExecConstants {
   public static final String TEMP_DIRECTORIES = "drill.exec.tmp.directories";
   public static final String TEMP_FILESYSTEM = "drill.exec.tmp.filesystem";
   public static final String INCOMING_BUFFER_IMPL = "drill.exec.buffer.impl";
+
+  public static final String EXCHANGE_BATCH_SIZE = "drill.exec.memory.operator.exchange_batch_size";
+  // Exchange Batch Size in Bytes.
+  public static final LongValidator EXCHANGE_BATCH_SIZE_VALIDATOR = new RangeLongValidator(EXCHANGE_BATCH_SIZE, 1024, 10 * 1024 * 1024,
+          new OptionDescription("Limit, in bytes, of the outgoing batch sent by an Exchange Sender."));
+
   /** incoming buffer size (number of batches) */
   public static final String INCOMING_BUFFER_SIZE = "drill.exec.buffer.size";
   public static final String SPOOLING_BUFFER_DELETE = "drill.exec.buffer.spooling.delete";

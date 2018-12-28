@@ -35,6 +35,8 @@ public interface VectorWrapper<T extends ValueVector> {
   public VectorWrapper<T> cloneAndTransfer(BufferAllocator allocator);
   public VectorWrapper<?> getChildWrapper(int[] ids);
   public void transfer(VectorWrapper<?> destination);
+  public void transferPartial(VectorWrapper<?> destination, int startIndex, int length);
+
 
   /**
    * Traverse the object graph and determine whether the provided SchemaPath matches data within the Wrapper.  If so, return a TypedFieldId associated with this path.

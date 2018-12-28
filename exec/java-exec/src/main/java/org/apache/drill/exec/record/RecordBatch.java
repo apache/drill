@@ -322,6 +322,12 @@ public interface RecordBatch extends VectorAccessible {
   WritableBatch getWritableBatch();
 
   /**
+   * Gets a writable version of this batch.  Takes over ownership of existing
+   * buffers.
+   */
+  WritableBatch getWritableBatch(int startIndex, int length);
+
+  /**
    * Perform dump of this batch's state to logs.
    */
   void dump();

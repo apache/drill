@@ -96,6 +96,12 @@ public class SchemalessBatch implements CloseableRecordBatch {
   }
 
   @Override
+  public WritableBatch getWritableBatch(int start, int length) {
+    throw new UnsupportedOperationException(String.format("You should not call getWritableBatch() for class %s",
+            this.getClass().getCanonicalName()));
+  }
+
+  @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return null;
   }

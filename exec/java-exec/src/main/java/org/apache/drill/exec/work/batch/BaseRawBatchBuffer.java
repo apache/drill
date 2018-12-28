@@ -36,11 +36,9 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
   }
 
   protected interface BufferQueue<T> {
-    void addOomBatch(RawFragmentBatch batch);
     RawFragmentBatch poll() throws IOException, InterruptedException;
     RawFragmentBatch take() throws IOException, InterruptedException;
     RawFragmentBatch poll(long timeout, TimeUnit timeUnit) throws InterruptedException, IOException;
-    boolean checkForOutOfMemory();
     int size();
     boolean isEmpty();
     void add(T obj);
@@ -56,7 +54,6 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
 
   public BaseRawBatchBuffer(final FragmentContext context, final int fragmentCount) {
     bufferSizePerSocket = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
-
     this.fragmentCount = fragmentCount;
     this.streamCounter = fragmentCount;
     this.context = context;

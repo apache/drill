@@ -253,6 +253,15 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   @Override
+  public WritableBatch getWritableBatch(int startIndex, int length) {
+    VectorContainer partialContainer = new VectorContainer(context.getAllocator(), getSchema());
+    container.transferOut(partialContainer, startIndex, length);
+    partialContainer.setRecordCount(length);
+    final WritableBatch batch = WritableBatch.get(partialContainer);
+    return batch;
+  }
+
+  @Override
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
   }

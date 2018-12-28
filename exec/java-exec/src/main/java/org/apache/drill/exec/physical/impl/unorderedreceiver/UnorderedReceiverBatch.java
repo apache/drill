@@ -219,6 +219,11 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
   }
 
   @Override
+  public WritableBatch getWritableBatch(int startIndex, int length) {
+    return batchLoader.getWritableBatch(startIndex, length);
+  }
+
+  @Override
   public WritableBatch getWritableBatch() {
     return batchLoader.getWritableBatch();
   }

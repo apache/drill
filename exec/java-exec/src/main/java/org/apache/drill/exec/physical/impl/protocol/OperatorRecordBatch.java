@@ -116,6 +116,11 @@ public class OperatorRecordBatch implements CloseableRecordBatch {
   }
 
   @Override
+  public WritableBatch getWritableBatch(int startIndex, int length) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public WritableBatch getWritableBatch() {
     return batchAccessor.getWritableBatch();
   }

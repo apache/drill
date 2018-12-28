@@ -160,6 +160,23 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   }
 
   /**
+   * Transfer vectors to destination HyperVectorWrapper.
+   * Both this and destination must be of same type and have same number of vectors.
+   * @param destination destination HyperVectorWrapper.
+   */
+  @Override
+  public void transferPartial(VectorWrapper<?> destination, int startIndex, int length) {
+    Preconditions.checkArgument(destination instanceof HyperVectorWrapper);
+    Preconditions.checkArgument(getField().getType().equals(destination.getField().getType()));
+    Preconditions.checkArgument(vectors.length == ((HyperVectorWrapper<?>)destination).vectors.length);
+
+    final ValueVector[] destionationVectors = ((HyperVectorWrapper<?>)destination).vectors;
+    for (int i = 0; i < vectors.length; ++i) {
+      vectors[i].makeTransferPair(destionationVectors[i]).splitAndTransfer(startIndex, length);
+    }
+  }
+
+  /**
    * Method to replace existing list of vectors with the newly provided ValueVectors list in this HyperVectorWrapper
    * @param vv - New list of ValueVectors to be stored
    */
