@@ -1,11 +1,11 @@
 ---
 title: "Configuring the Drill Shell"
-date: 2018-12-27
+date: 2018-12-28
 parent: "Configure Drill"
 ---  
 Drill uses SQLLine as the Drill shell. SQLLine is a pure-Java console-based utility for connecting to relational databases and running SQL commands. 
 
-Starting in Drill 1.15, Drill uses SQLLine 1.6, which you can customize through the Drill [configuration file, drill-sqlline-override.conf]({{site.baseurl}}/docs/configuring-the-drill-shell/#customizing-sqlline-in-the-drill-sqlline-override-conf-file). Before installing and running Drill with SQLLine 1.6, delete the old SQLLine history file The history file is located in the following location:  
+Starting in Drill 1.15, Drill uses SQLLine 1.6, which you can customize through the Drill [configuration file, drill-sqlline-override.conf]({{site.baseurl}}/docs/configuring-the-drill-shell/#customizing-sqlline-in-the-drill-sqlline-override-conf-file). Before installing and running Drill with SQLLine 1.6, delete the old SQLLine history file located in:  
 
 
 - $HOME/.sqlline/history (UNIX, Linux, Mac OS)
@@ -19,9 +19,12 @@ Formatting tables takes time, which you may notice when running a huge query usi
 
 ## Drill Shell Commands
 
-The following table lists the Drill shell commands that you can run from the command line:
+The following table lists some of the Drill shell commands that you can run from the command line. To see a complete list of shell commands issue the `!help` command.   
 
-| Command       | Description                                                                                                                           |
+**Note:** Some new shell commands, such as `!reset`, and key-strokes were introduced when Drill upgraded to SQLLine 1.6 (Drill 1.15 and later); however, not all of the commands are supported.   
+
+
+| **Command**       | **Description **                                                                                                                          |
 |---------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | !brief        | Set verbose mode off.                                                                                                                 |
 | !close        | Close the current connection to the database.                                                                                         |
@@ -34,7 +37,10 @@ The following table lists the Drill shell commands that you can run from the com
 | !properties   | Connect to the database specified in the properties file(s).                                                                          |
 | !quit         | Exits the Drill shell.                                                                                                                |
 | !reconnect    | Reconnect to the database.                                                                                                            |
-| !record       | Record all output to the specified file.                                                                                              |
+| !record       | Record all output to the specified file.
+|
+| !reset        | Reset a sqlline variable
+|                                                                                             |
 | !run          | Run a script from the specified file.                                                                                                 |
 | !save         | Save the current variables and aliases.                                                                                               |
 | !script       | Start saving a script to a file.                                                                                                      |
@@ -70,7 +76,7 @@ The following table lists some of the set command variables that you can use wit
 
 **Note:** Issue the !set command without a variable to see the full list of command variables.
 
-| Variable Name   | Valid Variable Values  | Description                                                                                                                                                            |
+| **Variable Name**   | **Valid Variable Values**  | **Description**                                                                                                                                                            |
 |-----------------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | autoCommit      | true/false             | Enable/disable automatic transaction commit. Should remain enabled (true). Drill performs read-only operations primarily, and autocommit writes. Drill JDBC throws an exception if autoCommit is disabled.                                                                                             |
 | autoSave        | true/false             | Automatically save preferences.                                                                                                                                        |

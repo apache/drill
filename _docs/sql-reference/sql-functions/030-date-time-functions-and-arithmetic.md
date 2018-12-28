@@ -1,6 +1,6 @@
 ---
 title: "Date/Time Functions and Arithmetic"
-date: 2018-12-27
+date: 2018-12-28
 parent: "SQL Functions"
 ---
 
@@ -570,63 +570,65 @@ SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM (
 Adds an interval of time, in the given time units, to the date expression.   
 
 ###TIMESTAMPADD Syntax  
-TIMESTAMPADD(*time\_unit,interval,date\_expression*)  
+TIMESTAMPADD(*time\_unit,interval, keyword date\_expression*)  
 
 ###TIMESTAMPADD Usage Notes  
-- A date expressions is in the format YYYY-MM-DD.
-- Supports the following time units: Day, Week, Month, Quarter, Year
+- *Keyword* is the type of *date\_expression*: date, time, or timestamp
+- Supports date, time, and timestamp values in the following formats:
+	- Date format: YYYY-MM-DD
+	- Time format: HH:MI:SS
+	- Timestamp format: YYYY-MM-DD HH:MI:SS
+- Supports the following time units: Nanosecond, Microsecond, Second, Minute, Hour, Day, Month, Year, Week, Quarter 
 - Drill uses the unit of time to infer the return type.
 - You can include the SQL_TSI_ prefix with the any of the supported time units, as shown: 
   
-		SELECT TIMESTAMPADD(SQL_TSI_YEAR,3,'1982-05-06');  
+		SELECT TIMESTAMPADD(SQL_TSI_MINUTE,5,TIME '05:05:05');
+		+-----------+
+		|  EXPR$0   |
+		+-----------+
+		| 05:10:05  |
+		+-----------+  
 
 
 ###TIMESTAMPADD Examples   
 
 Add three years to the given date:  
 
-	SELECT TIMESTAMPADD(YEAR,3,'1982-05-06');
+	SELECT TIMESTAMPADD(YEAR,3,DATE '1982-05-06');
 	+------------------------+
 	|         EXPR$0         |
 	+------------------------+
 	| 1985-05-06 00:00:00.0  |
 	+------------------------+   
- 
-Add one quarter of a year (3 months) to the given date:  
- 
-	SELECT TIMESTAMPADD(QUARTER,1,'1982-05-06');
+
+Add one quarter of a year (3 months) to the given date:   
+
+	SELECT TIMESTAMPADD(QUARTER,1,DATE'1982-05-06');
 	+------------------------+
 	|         EXPR$0         |
 	+------------------------+
 	| 1982-08-06 00:00:00.0  |
 	+------------------------+    
+ 
+Add 225 seconds to the given time: 
 
-Add three months to the given date:  
+	SELECT TIMESTAMPADD(SECOND,225,TIME '02:02:02');
+	+-----------+
+	|  EXPR$0   |
+	+-----------+
+	| 02:05:47  |
+	+-----------+  
 
-	SELECT TIMESTAMPADD(MONTH,3,'1982-05-06');
-	+------------------------+
-	|         EXPR$0         |
-	+------------------------+
-	| 1982-08-06 00:00:00.0  |
-	+------------------------+  
+Add 5555500000 microseconds to the given timestamp value:
 
-Add three weeks to the given date:  
+SELECT TIMESTAMPADD(MICROSECOND,5555500000, TIMESTAMP '2003-02-01 12:05:35');
++--------------------------+
+|          EXPR$0          |
++--------------------------+
+| 2003-02-01 12:26:35.532  |
++--------------------------+
 
-	SELECT TIMESTAMPADD(WEEK,3,'1982-05-06');
-	+------------------------+
-	|         EXPR$0         |
-	+------------------------+
-	| 1982-05-27 00:00:00.0  |
-	+------------------------+  
 
-Add three days to the given date:  
-
-	SELECT TIMESTAMPADD(DAY,3,'1982-05-06');
-	+------------------------+
-	|         EXPR$0         |
-	+------------------------+
-	| 1982-05-09 00:00:00.0  |
-	+------------------------+
 
 ##TIMESTAMPDIFF  
 Calculates an interval of time, in the given time units, by subtracting *datetime\_expression1* from *datetime\_expression2* (*datetime\_expression2* − *datetime\_expression1*).    
