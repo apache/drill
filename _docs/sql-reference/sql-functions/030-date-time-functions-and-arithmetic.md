@@ -570,7 +570,7 @@ SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM (
 Adds an interval of time, in the given time units, to a datetime expression.   
 
 ###TIMESTAMPADD Syntax  
-TIMESTAMPADD(*time\_unit,interval,datetime\_expression*)  
+TIMESTAMPADD(*time\_unit, interval, datetime\_expression*)  
 
 ###TIMESTAMPADD Usage Notes  
 - *datetime\_expression* is a column or literal with date, time, or timestamp values. 
@@ -625,7 +625,7 @@ Dates in column[0] before applying the TIMESTAMPADD function:
 Calculates an interval of time, in the given time units, by subtracting *datetime\_expression1* from *datetime\_expression2* (*datetime\_expression2* − *datetime\_expression1*).    
 
 ###TIMESTAMPDIFF Syntax  
-TIMESTAMPDIFF(*time\_unit, keyword datetime\_expression1, datetime\_expression2*)  
+TIMESTAMPDIFF(*time\_unit, datetime\_expression1, datetime\_expression2*)  
 
 ###TIMESTAMPDIFF Usage Notes  
 - *datetime\_expression* is a column or literal with date, time, or timestamp values. 
