@@ -635,12 +635,12 @@ TIMESTAMPDIFF(*time\_unit, datetime\_expression1, datetime\_expression2*)
 - Drill uses the *time\_unit* to infer the return type.
 - You can include the `SQL_TSI_` prefix with the any of the supported time units, as shown: 
   
-		SELECT TIMESTAMPADD(SQL_TSI_MINUTE,5,TIME '05:05:05');
-		+-----------+
-		|  EXPR$0   |
-		+-----------+
-		| 05:10:05  |
-		+-----------+  
+		SELECT TIMESTAMPDIFF(SQL_TSI_MONTH, DATE '1982-05-06', DATE '2018-12-26');
+		+---------+
+		| EXPR$0  |
+		+---------+
+		| 439     |
+		+---------+  
  
 
 ###TIMESTAMPDIFF Examples   
