@@ -645,7 +645,7 @@ TIMESTAMPDIFF(*time\_unit, datetime\_expression1, datetime\_expression2*)
 
 ###TIMESTAMPDIFF Examples   
 
-Subtracts date literal 1982-05-06 from date literal 2018-12-26 and returns the difference in months:  
+Subtracts the date literal '1982-05-06' from the date literal '2018-12-26' and returns the difference in months:  
 	
 	SELECT TIMESTAMPDIFF(MONTH, DATE'1982-05-06', DATE '2018-12-26');
 	+---------+
