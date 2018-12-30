@@ -70,12 +70,8 @@ $(document).ready(function() {
   <div class="news">News:
   </div>
   {% assign post = site.categories.blog[0] %}
-  <div><a href="https://t.co/9752ikEZsO">{% if post.news_title %}{{ post.news_title }}{% else %}{{ post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
-  {% assign post = site.categories.blog[1] %}
-  <div><a href="https://www.eventbrite.com/e/apache-drill-developer-day-tickets-52121673328">{% if post.news_title %}{{ post.news_title }}{% else %}{{ post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
-  {% assign post = site.categories.blog[2] %}
   <div><a href="{{ post.url | prepend: site.baseurl }}">{% if post.news_title %}{{ post.news_title }}{% else %}{{ post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
-  {% assign post = site.categories.blog[3] %}
+  {% assign post = site.categories.blog[1] %}
   <div><a href="{{ post.url | prepend: site.baseurl }}">{% if post.news_title %}{{ post.news_title }}{% else %}{{ post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
 </div>
 <div class="mw introWrapper">
