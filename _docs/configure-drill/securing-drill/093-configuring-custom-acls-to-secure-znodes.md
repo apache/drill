@@ -1,12 +1,12 @@
 ---
 title: "Configuring Custom ACLs to Secure znodes"
-date: 2018-12-28
+date: 2018-12-30
 parent: "Securing Drill"
 ---  
 
-Drill uses the Curator Framework to interact with ZooKeeper to discover services in a cluster. In addition to discovering services, Drill uses ZooKeeper to store certain cluster-level configuration and query profile information in znodes. A znode is an internal data tree in ZooKeeper that stores coordination- and execution-related information. If information in the znodes is not properly secured, cluster privacy and/or security is compromised.   
+Drill uses the Curator Framework to interact with ZooKeeper to discover services in a cluster. In addition to discovering services, Drill uses ZooKeeper to store certain cluster-level configuration and query profile information in znodes. A znode is an internal data tree in ZooKeeper that stores coordination and execution related information. If information in the znodes is not properly secured, cluster privacy and/or security is compromised.   
 
-Drill allows users to create a custom ACL (access control list) on the znodes to secure data. ACLs specify sets of ids and permissions that are associated with the ids. ZooKeeper uses ACLs to control access to znodes and secure the information they store.   
+Drill allows users to create a custom ACL (Access Control List) on the znodes to secure data. ACLs specify sets of ids and permissions that are associated with the ids. ZooKeeper uses ACLs to control access to znodes and secure the information they store.   
 
 Prior to Drill 1.15, ZooKeeper ACLs in secure and unsecure clusters were set to [world:all], meaning that all users had create, delete, read, write, and administrator access to the zknodes. Starting in Drill 1.15, ACLs in unsecure clusters are set to [world:all]. ACLs in secure clusters are set to [authid: all], which provides only the authenticated user that created the znode with full access. Discovery znodes (znodes with the list of Drillbits) have an additional ACL set to [world:read] making the list of Drillbits readable by any user.   
 
