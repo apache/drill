@@ -1,6 +1,6 @@
 ---
 title: "Configuring the Drill Shell"
-date: 2018-12-29
+date: 2018-12-30
 parent: "Configure Drill"
 ---  
 Drill uses SQLLine as the Drill shell. SQLLine is a pure-Java console-based utility for connecting to relational databases and running SQL commands. 
@@ -34,7 +34,7 @@ When you use a jdbc connection string to connect to Drill via SQLLine, you can i
 The --help command prints all the SQLLine connection parameters that you can include in the jdbc connection string, as shown in the following table:
   
 
-| **Connection Parameters**                                      | **Description**                                                 |
+| **Connection Parameter**                                      | **Description**                                                 |
 |----------------------------------------------------------------------------|-------------------------------------------------------------|
 |     -u <database url>                                                      |  the JDBC URL to connect to                                 |
 |      -n <username>                                                         |  the username to connect as                                 |
