@@ -224,6 +224,8 @@ public final class ExecConstants {
   public static final String HTTP_AUTHENTICATION_MECHANISMS = "drill.exec.http.auth.mechanisms";
   public static final String HTTP_SPNEGO_PRINCIPAL = "drill.exec.http.auth.spnego.principal";
   public static final String HTTP_SPNEGO_KEYTAB = "drill.exec.http.auth.spnego.keytab";
+  //Customize filters in options
+  public static final String HTTP_WEB_OPTIONS_FILTERS = "drill.exec.http.web.options.filters";
   public static final String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
   public static final String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
   public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
