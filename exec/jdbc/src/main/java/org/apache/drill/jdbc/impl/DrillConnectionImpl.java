@@ -34,6 +34,7 @@ import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 import org.apache.calcite.avatica.AvaticaConnection;
@@ -44,6 +45,7 @@ import org.apache.calcite.avatica.Meta.MetaResultSet;
 import org.apache.calcite.avatica.NoSuchStatementException;
 import org.apache.calcite.avatica.QueryState;
 import org.apache.calcite.avatica.UnregisteredDriver;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -52,6 +54,8 @@ import org.apache.drill.exec.client.InvalidConnectionInfoException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -579,6 +583,33 @@ public class DrillConnectionImpl extends AvaticaConnection
       return super.createStruct(typeName, attributes);
     } catch (UnsupportedOperationException e) {
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
+  }
+
+  @Override
+  public void setSchema(String schema) throws SQLException {
+    checkOpen();
+    try {
+      client.runQuery(UserBitShared.QueryType.SQL, String.format("use %s", schema));
+    } catch (RpcException e) {
+      throw new SQLException("Error when setting schema", e);
+    }
+  }
+
+  @Override
+  public String getSchema() throws SQLException {
+    checkOpen();
+    try {
+      UserProtos.GetServerMetaResp response = client.getServerMeta().get();
+      if (response.getStatus() != UserProtos.RequestStatus.OK) {
+        UserBitShared.DrillPBError drillError = response.getError();
+        throw new SQLException("Error when getting server meta: " + drillError.getMessage());
+      }
+      UserProtos.ServerMeta serverMeta = response.getServerMeta();
+      String currentSchema = serverMeta.hasCurrentSchema() ? serverMeta.getCurrentSchema() : null;
+      return StringUtils.isEmpty(currentSchema) ? null : currentSchema;
+    } catch (InterruptedException | ExecutionException e) {
+      throw new SQLException("Error when getting server meta", e);
     }
   }
 
