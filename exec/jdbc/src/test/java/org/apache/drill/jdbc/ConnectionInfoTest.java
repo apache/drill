@@ -20,8 +20,11 @@ package org.apache.drill.jdbc;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.drill.categories.JdbcTest;
 import org.apache.drill.categories.SlowTest;
+import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -29,6 +32,8 @@ import java.sql.SQLException;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -36,39 +41,59 @@ import static org.junit.Assert.assertThat;
  */
 @Category({SlowTest.class, JdbcTest.class})
 public class ConnectionInfoTest extends JdbcTestBase {
-  private static Connection connection;
-  private static DatabaseMetaData dbmd;
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+
+  @After
+  public void tearDown() {
+    reset();
+  }
 
   @Test
-  public void testQuotingIdentifiersProperty() throws SQLException {
-    try {
-      // Test DoubleQuotes for the DrillProperty#QUOTING_IDENTIFIERS in connection URL
-      connection = connect("jdbc:drill:zk=local;quoting_identifiers='\"'");
-      dbmd = connection.getMetaData();
-      assertThat(dbmd.getIdentifierQuoteString(), equalTo(Quoting.DOUBLE_QUOTE.string));
-      reset();
+  public void testQuotingIdentifiersProperty() throws Exception {
+    Connection connection = connect("jdbc:drill:zk=local;quoting_identifiers='\"'");
+    DatabaseMetaData dbmd = connection.getMetaData();
+    assertThat(dbmd.getIdentifierQuoteString(), equalTo(Quoting.DOUBLE_QUOTE.string));
 
-      // Test Brackets for the DrillProperty#QUOTING_IDENTIFIERS in connection URL
-      connection = connect("jdbc:drill:zk=local;quoting_identifiers=[");
-      dbmd = connection.getMetaData();
-      assertThat(dbmd.getIdentifierQuoteString(), equalTo(Quoting.BRACKET.string));
-    } finally {
-      reset();
-    }
+    reset();
+
+    connection = connect("jdbc:drill:zk=local;quoting_identifiers=[");
+    dbmd = connection.getMetaData();
+    assertThat(dbmd.getIdentifierQuoteString(), equalTo(Quoting.BRACKET.string));
   }
 
-  @Test(expected = SQLException.class)
-  public void testIncorrectCharacterForQuotingIdentifiers() throws SQLException {
-    try {
-      connection = connect("jdbc:drill:zk=local;quoting_identifiers=&");
-    }
-    catch (SQLException e) {
-      // Check exception text message
-      assertThat(e.getMessage(), containsString("Option planner.parser.quoting_identifiers " +
-          "must be one of: [`, \", []"));
-      throw e;
-    } finally {
-      reset();
-    }
+  @Test
+  public void testIncorrectCharacterForQuotingIdentifiers() throws Exception {
+    thrown.expect(SQLException.class);
+    thrown.expectMessage(containsString("Option planner.parser.quoting_identifiers must be one of: [`, \", []"));
+
+    connect("jdbc:drill:zk=local;quoting_identifiers=&");
   }
+
+  @Test
+  public void testSetSchemaUsingConnectionMethod() throws Exception {
+    Connection connection = connect("jdbc:drill:zk=local");
+    assertNull(connection.getSchema());
+
+    connection.setSchema("dfs.tmp");
+    assertEquals("dfs.tmp", connection.getSchema());
+  }
+
+  @Test
+  public void testIncorrectlySetSchema() throws Exception {
+    Connection connection = connect("jdbc:drill:zk=local");
+
+    thrown.expect(SQLException.class);
+    thrown.expectMessage("Error when setting schema");
+
+    connection.setSchema("ABC");
+  }
+
+  @Test
+  public void testSchemaInConnectionString() throws Exception {
+    Connection connection = connect("jdbc:drill:zk=local;schema=sys");
+    assertEquals("sys", connection.getSchema());
+  }
+
 }

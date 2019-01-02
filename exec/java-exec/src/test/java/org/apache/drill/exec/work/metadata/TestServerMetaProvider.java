@@ -21,28 +21,43 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.apache.calcite.avatica.util.Quoting;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.proto.UserProtos.GetServerMetaResp;
 import org.apache.drill.exec.proto.UserProtos.RequestStatus;
-import org.apache.drill.exec.proto.UserProtos.ServerMeta;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * Tests for server metadata provider APIs.
- */
-public class TestServerMetaProvider extends BaseTestQuery {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestServerMetaProvider.class);
+public class TestServerMetaProvider extends ClusterTest {
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
+    startCluster(builder);
+  }
 
   @Test
   public void testServerMeta() throws Exception {
-    GetServerMetaResp resp = client.getServerMeta().get();
-    assertNotNull(resp);
-    assertEquals(RequestStatus.OK, resp.getStatus());
-    assertNotNull(resp.getServerMeta());
+    GetServerMetaResp response = client.client().getServerMeta().get();
+    assertNotNull(response);
+    assertEquals(RequestStatus.OK, response.getStatus());
+    assertNotNull(response.getServerMeta());
 
-    ServerMeta serverMeta = resp.getServerMeta();
-    logger.trace("Server metadata: {}", serverMeta);
-
-    assertEquals(Quoting.BACK_TICK.string, serverMeta.getIdentifierQuoteString());
+    assertEquals(Quoting.BACK_TICK.string, response.getServerMeta().getIdentifierQuoteString());
   }
+
+  @Test
+  public void testCurrentSchema() throws Exception {
+    GetServerMetaResp response = client.client().getServerMeta().get();
+    assertEquals(RequestStatus.OK, response.getStatus());
+    assertEquals("", response.getServerMeta().getCurrentSchema());
+
+    queryBuilder().sql("use dfs.tmp").run();
+
+    response = client.client().getServerMeta().get();
+    assertEquals(RequestStatus.OK, response.getStatus());
+    assertEquals("dfs.tmp", response.getServerMeta().getCurrentSchema());
+  }
+
 }
