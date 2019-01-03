@@ -39,6 +39,8 @@
     Sample SQL query: <strong>SELECT * FROM cp.`employee.json` LIMIT 20</strong>
   </div>
 
+<#include "*/runningQuery.ftl">
+
   <#if model?? && model>
      <div class="form-group">
        <label for="userName">User Name</label>

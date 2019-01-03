@@ -11,10 +11,36 @@
  *  language governing permissions and limitations under the License.
  */
 var userName = null;
+//Elements for Timer in LoadingModal
+var elapsedTime = 0;
+var delay = 1000; //msec
+var timeTracker = null; //Handle for stopping watch
+
+//Show cancellation status
+function popupAndWait() {
+  elapsedTime=0; //Init
+  $("#queryLoadingModal").modal("show");
+  var stopWatchElem = $('#stopWatch'); //Get handle on time progress elem within Modal
+  //Timer updating
+  timeTracker = setInterval(function() {
+    elapsedTime = elapsedTime + delay/1000;
+    let time = elapsedTime;
+    let minutes = Math.floor(time / 60);
+    let seconds = time - minutes * 60;
+    let prettyTime = ("0" + minutes).slice(-2)+':'+ ("0" + seconds).slice(-2);
+    stopWatchElem.text('Elapsed Time : ' + prettyTime);
+  }, delay);
+}
+
+//Close the cancellation status popup
+function closePopup() {
+  clearInterval(timeTracker);
+  $("#queryLoadingModal").modal("hide");
+}
 
 //Submit query with username
 function doSubmitQueryWithUserName() {
-    userName = document.getElementById("userName").value;
+    var userName = document.getElementById("userName").value;
     if (!userName.trim()) {
         alert("Please fill in User Name field");
         return;
@@ -24,6 +50,7 @@ function doSubmitQueryWithUserName() {
 
 //Submit Query (used if impersonation is not enabled)
 function submitQuery() {
+    popupAndWait();
     //Submit query
     $.ajax({
         type: "POST",
@@ -35,11 +62,13 @@ function submitQuery() {
         url: "/query",
         data: $("#queryForm").serializeArray(),
         success: function (response) {
+            closePopup();
             var newDoc = document.open("text/html", "replace");
             newDoc.write(response);
             newDoc.close();
         },
         error: function (request, textStatus, errorThrown) {
+            closePopup();
             alert(errorThrown);
         }
     });
