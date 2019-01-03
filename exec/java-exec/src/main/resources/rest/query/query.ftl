@@ -19,10 +19,8 @@
 -->
 <#include "*/generic.ftl">
 <#macro page_head>
-    <#if model?? && model>
-      <script src="/static/js/jquery.form.js"></script>
-      <script src="/static/js/querySubmission.js"></script>
-    </#if>
+  <script src="/static/js/jquery.form.js"></script>
+  <script src="/static/js/querySubmission.js"></script>
   <!-- Ace Libraries for Syntax Formatting -->
   <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
   <!-- Disabled in favour of dynamic: script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8" -->
@@ -77,7 +75,7 @@
       <input class="form-control" type="hidden" id="query" name="query"/>
     </div>
 
-    <button class="btn btn-default" type=<#if model?? && model>"button" onclick="doSubmitQueryWithUserName()"<#else>"submit"</#if>>
+    <button class="btn btn-default" type="button" onclick="<#if model?? && model>doSubmitQueryWithUserName()<#else>submitQuery()</#if>">
       Submit
     </button>
   </form>
@@ -125,7 +123,8 @@
     document.getElementById('queryForm')
             .addEventListener('keydown', function(e) {
       if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
-      if (e.target.form) doSubmitQueryWithUserName();
+      if (e.target.form) 
+        <#if model?? && model>doSubmitQueryWithUserName()<#else>submitQuery()</#if>;
     });
   </script>
 

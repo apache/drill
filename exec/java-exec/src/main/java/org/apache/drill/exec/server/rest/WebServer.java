@@ -164,7 +164,7 @@ public class WebServer implements AutoCloseable {
    * @param config Drill configuration
    * @return true if impersonation without authentication is enabled, false otherwise
    */
-  public static boolean isImpersonationOnlyEnabled(DrillConfig config) {
+  public static boolean isOnlyImpersonationEnabled(DrillConfig config) {
     return !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)
         && config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
@@ -259,7 +259,7 @@ public class WebServer implements AutoCloseable {
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
-    if (isImpersonationOnlyEnabled(workManager.getContext().getConfig())) {
+    if (isOnlyImpersonationEnabled(workManager.getContext().getConfig())) {
       for (String path : new String[]{"/query", "/query.json"}) {
         servletContextHandler.addFilter(UserNameFilter.class, path, EnumSet.of(DispatcherType.REQUEST));
       }

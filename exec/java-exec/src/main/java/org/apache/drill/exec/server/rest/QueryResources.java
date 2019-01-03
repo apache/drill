@@ -59,7 +59,7 @@ public class QueryResources {
         "/rest/query/query.ftl",
         sc,
         // if impersonation is enabled without authentication, will provide mechanism to add user name to request header from Web UI
-        WebServer.isImpersonationOnlyEnabled(work.getContext().getConfig()));
+        WebServer.isOnlyImpersonationEnabled(work.getContext().getConfig()));
   }
 
   @POST

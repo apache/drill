@@ -23,18 +23,16 @@
 <script src="/static/js/dagre-d3.min.js"></script>
 <script src="/static/js/graph.js"></script>
 <script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
-<#if model.isOnlyImpersonationEnabled()>
-    <script src="/static/js/jquery.form.js"></script>
-    <script src="/static/js/querySubmission.js"></script>
-</#if>
-  <!-- Ace Libraries for Syntax Formatting -->
-  <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
-  <!-- Disabled in favour of dynamic: script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8" -->
-  <script src="/dynamic/mode-sql.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/theme-sqlserver.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/snippets/sql.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/mode-snippets.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/jquery.form.js"></script>
+<script src="/static/js/querySubmission.js"></script>
+<!-- Ace Libraries for Syntax Formatting -->
+<script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
+<!-- Disabled in favour of dynamic: script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8" -->
+<script src="/dynamic/mode-sql.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace-code-editor/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace-code-editor/theme-sqlserver.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace-code-editor/snippets/sql.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace-code-editor/mode-snippets.js" type="text/javascript" charset="utf-8"></script>
 
 <script>
     var globalconfig = {
@@ -176,7 +174,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
               </label>
             </div>
             </div>
-            <button class="btn btn-default" type=<#if model.isOnlyImpersonationEnabled()>"button" onclick="doSubmitQueryWithUserName()"<#else>"submit"</#if>>
+            <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>submitQuery()</#if>">
             Re-run query
             </button>
           </form>
@@ -573,7 +571,8 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     document.getElementById('queryForm')
             .addEventListener('keydown', function(e) {
       if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
-      if (e.target.form) doSubmitQueryWithUserName();
+      if (e.target.form) 
+        <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>submitQuery()</#if>;
     });
     </script>
 
