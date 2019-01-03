@@ -130,7 +130,7 @@ public class ProfileWrapper {
     }
     this.options = options;
 
-    this.onlyImpersonationEnabled = WebServer.isImpersonationOnlyEnabled(drillConfig);
+    this.onlyImpersonationEnabled = WebServer.isOnlyImpersonationEnabled(drillConfig);
     this.noProgressWarningThreshold = String.valueOf(drillConfig.getInt(ExecConstants.PROFILE_WARNING_PROGRESS_THRESHOLD));
   }
 

@@ -313,7 +313,7 @@ public class DrillRestServer extends ResourceConfig {
      * @return session user principal
      */
     private Principal createSessionUserPrincipal(DrillConfig config, HttpServletRequest request) {
-      if (WebServer.isImpersonationOnlyEnabled(config)) {
+      if (WebServer.isOnlyImpersonationEnabled(config)) {
         final String userName = request.getHeader("User-Name");
         if (!Strings.isNullOrEmpty(userName)) {
           return new DrillUserPrincipal(userName, true);
