@@ -1,6 +1,6 @@
 ---
 title: "Date/Time Functions and Arithmetic"
-date: 2018-12-29
+date: 2019-01-03
 parent: "SQL Functions"
 ---
 
@@ -23,9 +23,11 @@ This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-
 [NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)               | TIMESTAMP  
 [TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)         | VARCHAR  
 [UNIX_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#unix_timestamp)                   | BIGINT 
-[TIMESTAMPADD]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampadd)                     | Inferred based on unit of time
-[TIMESTAMPDIFF]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampdiff)					   | Inferred based on unit of time												   |  
-| 
+[TIMESTAMPADD]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampadd)*                     | Inferred based on unit of time
+[TIMESTAMPDIFF]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampdiff)*					   | Inferred based on unit of time												   |  
+|   
+
+* Supported in Drill 1.15 and later.
 
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
@@ -567,7 +569,9 @@ SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM (
 ```    
 
 ##TIMESTAMPADD  
-Adds an interval of time, in the given time units, to a datetime expression.   
+Adds an interval of time, in the given time units, to a datetime expression.  
+
+**Note:** Drill 1.15 and later supports the TIMESTAMPADD function.   
 
 ###TIMESTAMPADD Syntax  
 TIMESTAMPADD(*time\_unit, interval, datetime\_expression*)  
@@ -600,14 +604,14 @@ Add three years to a date literal:
 
 Add a quarter (3 months) to the date values in the first column of the dates.csv file:
 
-	SELECT TIMESTAMPADD(QUARTER, 1, COLUMNS[0]) q1 FROM dfs.`/quarter/dates.csv`;
+	SELECT TIMESTAMPADD(QUARTER, 1, CAST(COLUMNS[0] as date)) q1 FROM dfs.`/quarter/dates.csv`;
 	+------------------------+
 	|           q1           |
 	+------------------------+
 	| 2018-04-01 00:00:00.0  |
 	| 2017-05-02 00:00:00.0  |
 	| 2000-08-06 00:00:00.0  |
-	+------------------------+
+	+------------------------+  
 
 Dates in column[0] before applying the TIMESTAMPADD function:
 
@@ -622,7 +626,9 @@ Dates in column[0] before applying the TIMESTAMPADD function:
 
 
 ##TIMESTAMPDIFF  
-Calculates an interval of time, in the given time units, by subtracting *datetime\_expression1* from *datetime\_expression2* (*datetime\_expression2* − *datetime\_expression1*).    
+Calculates an interval of time, in the given time units, by subtracting *datetime\_expression1* from *datetime\_expression2* (*datetime\_expression2* − *datetime\_expression1*).  
+
+**Note:** Drill 1.15 and later supports the TIMESTAMPDIFF function.       
 
 ###TIMESTAMPDIFF Syntax  
 TIMESTAMPDIFF(*time\_unit, datetime\_expression1, datetime\_expression2*)  
@@ -656,7 +662,7 @@ Subtracts the date literal '1982-05-06' from the date literal '2018-12-26' and r
 
 Subtracts the date literal '1970-01-15' from the dates in the first column of the dates.csv file and returns the difference in seconds:    
 
-	SELECT TIMESTAMPDIFF(SECOND, DATE '1970-01-15', columns[0]) a from dfs.`/quarter/dates.csv`;     
+	SELECT TIMESTAMPDIFF(SECOND, DATE '1970-01-15', CAST(COLUMNS[0] as date)) a FROM dfs.`/quarter/dates.csv`
 	+-------------+
 	|      a      |
 	+-------------+
@@ -667,7 +673,7 @@ Subtracts the date literal '1970-01-15' from the dates in the first column of th
 
 Subtracts the date in the third column from the date in the first column (columns[0]-columns[2]) of the dates.csv file and returns the difference in seconds:   
    
-	SELECT TIMESTAMPDIFF(SECOND, columns[2], columns[0]) a from dfs.`/quarter/dates.csv`;
+	SELECT TIMESTAMPDIFF(SECOND, CAST(COLUMNS[2] as date), CAST(COLUMNS[0] as date)) a from dfs.`/home/bee/pets.csv`;
 	+------------+
 	|     a      |
 	+------------+
