@@ -179,6 +179,9 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
             </button>
           </form>
       </p>
+
+<#include "*/runningQuery.ftl">
+
       <p>
       <form action="/profiles/cancel/${model.queryId}" method="GET">
         <div class="form-group">
