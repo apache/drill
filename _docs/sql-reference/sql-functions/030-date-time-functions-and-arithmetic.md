@@ -673,7 +673,7 @@ Subtracts the date literal '1970-01-15' from the dates in the first column of th
 
 Subtracts the date in the third column from the date in the first column (columns[0]-columns[2]) of the dates.csv file and returns the difference in seconds:   
    
-	SELECT TIMESTAMPDIFF(SECOND, CAST(COLUMNS[2] as date), CAST(COLUMNS[0] as date)) a from dfs.`/home/bee/pets.csv`;
+	SELECT TIMESTAMPDIFF(SECOND, CAST(COLUMNS[2] as date), CAST(COLUMNS[0] as date)) a from dfs.`/quarter/dates.csv`;
 	+------------+
 	|     a      |
 	+------------+
