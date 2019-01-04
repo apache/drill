@@ -25,12 +25,13 @@
     $(document).ready(function() {
       $.each(["running","completed"], function(i, key) {
         $("#profileList_"+key).DataTable( {
-          //Preserve order
-          "ordering": false,
+          //Permit sorting-by-column
+          "ordering": true,
+          "order": [[ 0, "desc" ]],
           "searching": true,
           "paging": true,
           "pagingType": "full_numbers",
-          "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+          "lengthMenu": [[${model.getQueriesPerPage()}, -1], [${model.getQueriesPerPage()}, "All"]],
           "lengthChange": true,
           "info": true,
           //Ref: https://legacy.datatables.net/ref#sDom
@@ -108,6 +109,21 @@
     padding-right: 0.35em; 
     float:left 
   }
+</style>
+
+<style>
+/* Sorting Symbols */
+table.sortable thead .sorting { background-image: url("/static/img/black-unsorted.gif"); }
+table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
+table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
+
+/* DataTables Sorting: inherited via sortable class */
+table.sortable thead .sorting,.sorting_asc,.sorting_desc {
+  background-repeat: no-repeat;
+  background-position: center right;
+  cursor: pointer;
+}
+
 </style>
 </#macro>
 
@@ -193,7 +209,7 @@
 
 <#macro list_queries queries stateList>
     <div class="table-responsive">
-        <table id="profileList_${stateList}" class="table table-hover dataTable" role="grid">
+        <table id="profileList_${stateList}" class="table table-hover sortable dataTable" role="grid">
             <thead>
             <tr role="row">
                 <#if stateList == "running" >
@@ -213,7 +229,7 @@
                 <#if stateList == "running" >
                 <td><input type="checkbox" name="cancelQ" value="${query.getQueryId()}"/></td>
                 </#if>
-                <td>${query.getTime()}</td>
+                <td data-order='${query.getStartTime()}'>${query.getTime()}</td>
                 <td>${query.getUser()}</td>
                 <td>
                     <a href="/profiles/${query.getQueryId()}">
@@ -221,7 +237,7 @@
                     </a>
                 </td>
                 <td>${query.getState()}</td>
-                <td>${query.getDuration()}</td>
+                <td data-order='${query.getEndTime() - query.getStartTime()}'>${query.getDuration()}</td>
                 <td>${query.getForeman()}</td>
             </tr>
             </#list>

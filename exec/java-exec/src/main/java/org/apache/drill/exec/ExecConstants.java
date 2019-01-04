@@ -203,6 +203,7 @@ public final class ExecConstants {
   public static final String HAZELCAST_SUBNETS = "drill.exec.cache.hazel.subnets";
   public static final String HTTP_ENABLE = "drill.exec.http.enabled";
   public static final String HTTP_MAX_PROFILES = "drill.exec.http.max_profiles";
+  public static final String HTTP_PROFILES_PER_PAGE = "drill.exec.http.profiles_per_page";
   public static final String HTTP_PORT = "drill.exec.http.port";
   public static final String HTTP_PORT_HUNT = "drill.exec.http.porthunt";
   public static final String HTTP_JETTY_SERVER_ACCEPTORS = "drill.exec.http.jetty.server.acceptors";
