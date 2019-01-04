@@ -57,7 +57,7 @@ import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.glassfish.jersey.server.mvc.Viewable;
-
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @Path("/")
@@ -217,6 +217,12 @@ public class ProfileResources {
 
     public int getMaxFetchedQueries() {
       return work.getContext().getConfig().getInt(ExecConstants.HTTP_MAX_PROFILES);
+    }
+
+    public String getQueriesPerPage() {
+      List<Integer> queriesPerPageOptions = work.getContext().getConfig().getIntList(ExecConstants.HTTP_PROFILES_PER_PAGE);
+      Collections.sort(queriesPerPageOptions);
+      return Joiner.on(",").join(queriesPerPageOptions);
     }
 
     public List<String> getErrors() { return errors; }
