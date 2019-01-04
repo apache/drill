@@ -84,7 +84,7 @@ public class DrillHiveViewTable extends DrillViewTable {
    * @return - View object for further usage
    */
   private static View createView(List<String> schemaPath, HiveTableWithColumnCache hiveView) {
-    List<View.FieldType> viewFields = getViewFieldTypes(hiveView);
+    List<View.Field> viewFields = getViewFieldTypes(hiveView);
     String viewName = hiveView.getTableName();
     String viewSql = hiveView.getViewExpandedText();
     return new View(viewName, viewSql, viewFields, schemaPath);
@@ -97,10 +97,10 @@ public class DrillHiveViewTable extends DrillViewTable {
    * @param hiveTable - hive view metadata
    * @return - list of fields for construction of View
    */
-  private static List<View.FieldType> getViewFieldTypes(HiveTableWithColumnCache hiveTable) {
+  private static List<View.Field> getViewFieldTypes(HiveTableWithColumnCache hiveTable) {
     return Stream.of(hiveTable.getColumnListsCache().getTableSchemaColumns(), hiveTable.getPartitionKeys())
         .flatMap(Collection::stream)
-        .map(hiveField -> new View.FieldType(hiveField.getName(), DATA_TYPE_CONVERTER.convertToNullableRelDataType(hiveField)))
+        .map(hiveField -> new View.Field(hiveField.getName(), DATA_TYPE_CONVERTER.convertToNullableRelDataType(hiveField)))
         .collect(toList());
   }
 
