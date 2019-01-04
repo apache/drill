@@ -21,7 +21,7 @@ package org.apache.drill.exec.record.metadata;
  * Magic that allows one schema builder to nest inside another
  * without needing to know the type of the parent.
  */
-
 interface SchemaContainer {
-  void addColumn(AbstractColumnMetadata column);
+
+  void addColumn(ColumnMetadata column);
 }

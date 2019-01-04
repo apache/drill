@@ -23,7 +23,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
  * Builder of a row set schema expressed as a list of materialized
@@ -106,7 +105,7 @@ public class SchemaBuilder implements SchemaContainer {
   }
 
   @Override
-  public void addColumn(AbstractColumnMetadata column) {
+  public void addColumn(ColumnMetadata column) {
     tupleBuilder.addColumn(column);
   }
 
@@ -174,10 +173,9 @@ public class SchemaBuilder implements SchemaContainer {
    * map. Building that map, using {@link MapBuilder#resumeSchema()},
    * will return the original schema builder.
    *
-   * @param pathName the name of the map column
+   * @param name the name of the map column
    * @return a builder for the map
    */
-
   public MapBuilder addMap(String name) {
     return tupleBuilder.addMap(this, name);
   }

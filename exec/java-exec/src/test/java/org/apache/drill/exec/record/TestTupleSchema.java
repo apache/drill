@@ -51,7 +51,6 @@ import org.junit.Test;
 /**
  * Test the tuple and column metadata, including extended attributes.
  */
-
 public class TestTupleSchema extends SubOperatorTest {
 
   /**
@@ -452,7 +451,7 @@ public class TestTupleSchema extends SubOperatorTest {
   @Test
   public void testNonEmptyRootTuple() {
 
-    TupleMetadata root = new TupleSchema();
+    TupleSchema root = new TupleSchema();
 
     MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REQUIRED );
     ColumnMetadata colA = root.add(fieldA);
@@ -529,11 +528,11 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // A tuple is equivalent to its copy.
 
-    assertTrue(root.isEquivalent(((TupleSchema) root).copy()));
+    assertTrue(root.isEquivalent(root.copy()));
 
     // And it is equivalent to the round trip to a batch schema.
 
-    BatchSchema batchSchema = ((TupleSchema) root).toBatchSchema(SelectionVectorMode.NONE);
+    BatchSchema batchSchema = root.toBatchSchema(SelectionVectorMode.NONE);
     assertTrue(root.isEquivalent(MetadataUtils.fromFields(batchSchema)));
   }
 
@@ -549,7 +548,7 @@ public class TestTupleSchema extends SubOperatorTest {
   @Test
   public void testMapTupleFromMetadata() {
 
-    TupleMetadata root = new TupleSchema();
+    TupleSchema root = new TupleSchema();
 
     MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.MAP, DataMode.REQUIRED);
     ColumnMetadata colA = root.add(fieldA);
@@ -606,7 +605,7 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // Copying should be deep.
 
-    TupleMetadata root2 = ((TupleSchema) root).copy();
+    TupleMetadata root2 = root.copy();
     assertEquals(2, root2.metadata(0).mapSchema().metadata(0).mapSchema().metadata(0).mapSchema().size());
     assert(root.isEquivalent(root2));
 
@@ -791,7 +790,7 @@ public class TestTupleSchema extends SubOperatorTest {
           .addList()
             .addType(MinorType.FLOAT8)
             .addType(MinorType.DECIMAL18)
-            .buildNested()
+            .resumeUnion()
           .resumeSchema()
         .buildSchema();
 

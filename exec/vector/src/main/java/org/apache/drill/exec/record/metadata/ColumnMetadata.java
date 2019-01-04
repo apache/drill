@@ -26,7 +26,6 @@ import org.apache.drill.exec.record.MaterializedField;
  * Metadata description of a column including names, types and structure
  * information.
  */
-
 public interface ColumnMetadata {
 
   /**
@@ -203,4 +202,8 @@ public interface ColumnMetadata {
 
   int precision();
   int scale();
+
+  void bind(TupleMetadata parentTuple);
+
+  ColumnMetadata copy();
 }

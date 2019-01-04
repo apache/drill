@@ -24,20 +24,30 @@ import org.apache.drill.common.types.Types;
 /**
  * Builds unions or (non-repeated) lists (which implicitly contain
  * unions.)
+ * <p/>
+ * Class can be created with and without parent container.
+ * In the first case, column is added to the parent container during creation
+ * and all <tt>resumeXXX</tt> methods return qualified parent container.
+ * In the second case column is created without parent container as standalone entity.
+ * All <tt>resumeXXX</tt> methods do not produce any action and return null.
+ * To access built column {@link #buildColumn()} should be used.
  */
-
 public class UnionBuilder implements SchemaContainer {
+
   private final SchemaContainer parent;
   private final String name;
   private final MinorType type;
   private final VariantSchema union;
 
-  public UnionBuilder(SchemaContainer parent, String name,
-      MinorType type, DataMode mode) {
+  public UnionBuilder(String name, MinorType type) {
+    this(null, name, type);
+  }
+
+  public UnionBuilder(SchemaContainer parent, String name, MinorType type) {
     this.parent = parent;
     this.name = name;
     this.type = type;
-    union = new VariantSchema();
+    this.union = new VariantSchema();
   }
 
   private void checkType(MinorType type) {
@@ -47,7 +57,7 @@ public class UnionBuilder implements SchemaContainer {
   }
 
   @Override
-  public void addColumn(AbstractColumnMetadata column) {
+  public void addColumn(ColumnMetadata column) {
     assert column.name().equals(Types.typeKey(column.type()));
     union.addType(column);
   }
@@ -65,8 +75,7 @@ public class UnionBuilder implements SchemaContainer {
 
   public UnionBuilder addList() {
     checkType(MinorType.LIST);
-    return new UnionBuilder(this, Types.typeKey(MinorType.LIST),
-        MinorType.LIST, DataMode.OPTIONAL);
+    return new UnionBuilder(this, Types.typeKey(MinorType.LIST), MinorType.LIST);
   }
 
   public RepeatedListBuilder addRepeatedList() {
@@ -74,27 +83,28 @@ public class UnionBuilder implements SchemaContainer {
     return new RepeatedListBuilder(this, Types.typeKey(MinorType.LIST));
   }
 
-  private VariantColumnMetadata buildCol() {
+  public VariantColumnMetadata buildColumn() {
     return new VariantColumnMetadata(name, type, union);
   }
 
+  public void build() {
+    if (parent != null) {
+      parent.addColumn(buildColumn());
+    }
+  }
+
   public SchemaBuilder resumeSchema() {
-    parent.addColumn(buildCol());
+    build();
     return (SchemaBuilder) parent;
   }
 
-  public UnionBuilder buildNested() {
-    parent.addColumn(buildCol());
-    return (UnionBuilder) parent;
-  }
-
   public MapBuilder resumeMap() {
-    parent.addColumn(buildCol());
+    build();
     return (MapBuilder) parent;
   }
 
   public UnionBuilder resumeUnion() {
-    parent.addColumn(buildCol());
+    build();
     return (UnionBuilder) parent;
   }
 }
