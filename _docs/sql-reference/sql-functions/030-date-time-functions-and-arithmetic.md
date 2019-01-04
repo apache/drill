@@ -1,6 +1,6 @@
 ---
 title: "Date/Time Functions and Arithmetic"
-date: 2019-01-03
+date: 2019-01-04
 parent: "SQL Functions"
 ---
 
@@ -27,7 +27,7 @@ This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-
 [TIMESTAMPDIFF]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampdiff)*					   | Inferred based on unit of time												   |  
 |   
 
-* Supported in Drill 1.15 and later.
+*Supported in Drill 1.15 and later.
 
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
