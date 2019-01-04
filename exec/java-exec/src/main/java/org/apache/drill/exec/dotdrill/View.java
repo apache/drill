@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.dotdrill;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.calcite.avatica.util.TimeUnit;
+import org.apache.calcite.rel.type.DynamicRecordType;
 import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeFamily;
@@ -39,31 +41,33 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+
 
 @JsonTypeName("view")
 public class View {
 
   private final String name;
   private String sql;
-  private List<FieldType> fields;
+  private List<Field> fields;
 
   /* Current schema when view is created (not the schema to which view belongs to) */
   private List<String> workspaceSchemaPath;
 
   @JsonInclude(Include.NON_NULL)
-  public static class FieldType {
+  public static class Field {
 
     private final String name;
     private final SqlTypeName type;
-    private final Integer precision;
-    private final Integer scale;
-    private SqlIntervalQualifier intervalQualifier;
     private final Boolean isNullable;
+    private Integer precision;
+    private Integer scale;
+    private SqlIntervalQualifier intervalQualifier;
+    private Field keyType;
+    private Field valueType;
 
 
     @JsonCreator
-    public FieldType(
+    public Field(
         @JsonProperty("name")                       String name,
         @JsonProperty("type")                       SqlTypeName type,
         @JsonProperty("precision")                  Integer precision,
@@ -71,7 +75,9 @@ public class View {
         @JsonProperty("startUnit")                  TimeUnit startUnit,
         @JsonProperty("endUnit")                    TimeUnit endUnit,
         @JsonProperty("fractionalSecondPrecision")  Integer fractionalSecondPrecision,
-        @JsonProperty("isNullable")                 Boolean isNullable) {
+        @JsonProperty("isNullable")                 Boolean isNullable,
+        @JsonProperty("keyType") Field keyType,
+        @JsonProperty("valueType") Field valueType) {
       // Fix for views which were created on Calcite 1.4.
       // After Calcite upgrade star "*" was changed on dynamic star "**" (SchemaPath.DYNAMIC_STAR)
       // and type of star was changed to SqlTypeName.DYNAMIC_STAR
@@ -88,50 +94,59 @@ public class View {
       // Property "isNullable" is not part of the initial view definition and
       // was added in DRILL-2342.  If the default value is null, consider it as
       // "true".  It is safe to default to "nullable" than "required" type.
-      this.isNullable = isNullable == null ? true : isNullable;
+      this.isNullable = isNullable == null || isNullable;
+      this.keyType = keyType;
+      this.valueType = valueType;
     }
 
-    public FieldType(String name, RelDataType dataType) {
+    public Field(String name, RelDataType dataType) {
       this.name = name;
       this.type = dataType.getSqlTypeName();
-
-      Integer p = null;
-      Integer s = null;
-      Integer fractionalSecondPrecision = null;
-
-      switch (dataType.getSqlTypeName()) {
-      case CHAR:
-      case BINARY:
-      case VARBINARY:
-      case VARCHAR:
-        p = dataType.getPrecision();
-        break;
-      case DECIMAL:
-        p = dataType.getPrecision();
-        s = dataType.getScale();
-        break;
-      case INTERVAL_YEAR:
-      case INTERVAL_YEAR_MONTH:
-      case INTERVAL_MONTH:
-      case INTERVAL_DAY:
-      case INTERVAL_DAY_HOUR:
-      case INTERVAL_DAY_MINUTE:
-      case INTERVAL_DAY_SECOND:
-      case INTERVAL_HOUR:
-      case INTERVAL_HOUR_MINUTE:
-      case INTERVAL_HOUR_SECOND:
-      case INTERVAL_MINUTE:
-      case INTERVAL_MINUTE_SECOND:
-      case INTERVAL_SECOND:
-        p = dataType.getIntervalQualifier().getStartPrecisionPreservingDefault();
-      default:
-        break;
-      }
-
-      this.precision = p;
-      this.scale = s;
-      this.intervalQualifier = dataType.getIntervalQualifier();
       this.isNullable = dataType.isNullable();
+      this.intervalQualifier = dataType.getIntervalQualifier();
+      switch (dataType.getSqlTypeName()) {
+        case CHAR:
+        case BINARY:
+        case VARBINARY:
+        case VARCHAR:
+          this.precision = dataType.getPrecision();
+          break;
+        case DECIMAL:
+          this.precision = dataType.getPrecision();
+          this.scale = dataType.getScale();
+          break;
+        case INTERVAL_YEAR:
+        case INTERVAL_YEAR_MONTH:
+        case INTERVAL_MONTH:
+        case INTERVAL_DAY:
+        case INTERVAL_DAY_HOUR:
+        case INTERVAL_DAY_MINUTE:
+        case INTERVAL_DAY_SECOND:
+        case INTERVAL_HOUR:
+        case INTERVAL_HOUR_MINUTE:
+        case INTERVAL_HOUR_SECOND:
+        case INTERVAL_MINUTE:
+        case INTERVAL_MINUTE_SECOND:
+        case INTERVAL_SECOND:
+          this.precision = dataType.getIntervalQualifier().getStartPrecisionPreservingDefault();
+          break;
+        case MAP:
+          keyType = new Field(dataType.getKeyType());
+          valueType = new Field(dataType.getValueType());
+          break;
+      }
+    }
+
+    /**
+     * Overloaded constructor for creation of fields
+     * which carry only about dataType and don't represent
+     * named columns. Example of such usage is key and value types
+     * of Map columns.
+     *
+     * @param dataType field type
+     */
+    public Field(RelDataType dataType) {
+      this(null, dataType);
     }
 
     /**
@@ -207,6 +222,52 @@ public class View {
       return isNullable;
     }
 
+    /**
+     * Gets key type for fields whose type is
+     * {@link org.apache.calcite.sql.type.SqlTypeName#MAP}
+     *
+     * @return key type of map
+     */
+    public Field getKeyType() {
+      return keyType;
+    }
+
+    /**
+     * Gets value type for fields whose type is
+     * {@link org.apache.calcite.sql.type.SqlTypeName#MAP}
+     *
+     * @return value type of map
+     */
+    public Field getValueType() {
+      return valueType;
+    }
+
+
+    /**
+     * Checks whether this field type is interval
+     * by comparing current type family with known
+     * INTERVAL_YEAR_MONTH and INTERVAL_DAY_TIME families
+     *
+     * @return whether current type relates to any known
+     *         interval families
+     */
+    @JsonIgnore
+    boolean isInterval() {
+      SqlTypeFamily family = type.getFamily();
+      return family == SqlTypeFamily.INTERVAL_YEAR_MONTH || family == SqlTypeFamily.INTERVAL_DAY_TIME;
+    }
+
+    /**
+     * Checks that for MAP fields key and value types
+     * were persisted
+     *
+     * @return is map key and value types present
+     */
+    @JsonIgnore
+    boolean isMapTypesPresent() {
+      return keyType != null && valueType != null;
+    }
+
   }
 
 
@@ -214,7 +275,7 @@ public class View {
     this(name,
         sql,
         rowType.getFieldList().stream()
-            .map(f -> new FieldType(f.getName(), f.getType()))
+            .map(f -> new Field(f.getName(), f.getType()))
             .collect(Collectors.toList()),
         workspaceSchemaPath);
   }
@@ -222,7 +283,7 @@ public class View {
   @JsonCreator
   public View(@JsonProperty("name") String name,
               @JsonProperty("sql") String sql,
-              @JsonProperty("fields") List<FieldType> fields,
+              @JsonProperty("fields") List<Field> fields,
               @JsonProperty("workspaceSchemaPath") List<String> workspaceSchemaPath) {
     this.name = name;
     this.sql = sql;
@@ -235,6 +296,16 @@ public class View {
             .collect(Collectors.toList());
   }
 
+
+  /**
+   * If view fields are present then attempts to gather them
+   * into struct type, otherwise returns extension of  {@link DynamicRecordType}.
+   *
+   * @param factory factory for rel data types creation
+   * @return struct type that describes names and types of all
+   *         view fields or extension of {@link DynamicRecordType}
+   *         when view fields are empty
+   */
   public RelDataType getRowType(RelDataTypeFactory factory) {
 
     // if there are no fields defined, this is a dynamic view.
@@ -242,30 +313,45 @@ public class View {
       return new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory);
     }
 
-    List<RelDataType> types = Lists.newArrayList();
-    List<String> names = Lists.newArrayList();
-
-    for (FieldType field : fields) {
+    List<RelDataType> types = new ArrayList<>(fields.size());
+    List<String> names = new ArrayList<>(fields.size());
+    for (Field field : fields) {
       names.add(field.getName());
-      RelDataType type;
-      if (   SqlTypeFamily.INTERVAL_YEAR_MONTH == field.getType().getFamily()
-          || SqlTypeFamily.INTERVAL_DAY_TIME   == field.getType().getFamily() ) {
-       type = factory.createSqlIntervalType( field.getIntervalQualifier() );
-      } else if (field.getPrecision() == null && field.getScale() == null) {
-        type = factory.createSqlType(field.getType());
-      } else if (field.getPrecision() != null && field.getScale() == null) {
-        type = factory.createSqlType(field.getType(), field.getPrecision());
-      } else {
-        type = factory.createSqlType(field.getType(), field.getPrecision(), field.getScale());
-      }
-
-      if (field.getIsNullable()) {
-        types.add(factory.createTypeWithNullability(type, true));
-      } else {
-        types.add(type);
-      }
+      types.add(getType(field, factory));
     }
     return factory.createStructType(types, names);
+  }
+
+  private RelDataType getType(Field field, RelDataTypeFactory factory) {
+    RelDataType type;
+    final SqlTypeName typeName = field.getType();
+    final Integer precision = field.getPrecision();
+    final Integer scale = field.getScale();
+
+    if (field.isInterval()) {
+      type = factory.createSqlIntervalType(field.getIntervalQualifier());
+    } else if (precision != null) {
+      type = scale != null
+          ? factory.createSqlType(typeName, precision, scale)
+          : factory.createSqlType(typeName, precision);
+    } else if (typeName == SqlTypeName.MAP) {
+      if (field.isMapTypesPresent()) {
+        type = factory.createMapType(getType(field.getKeyType(), factory), getType(field.getValueType(), factory));
+      } else {
+         /*
+            For older views that doesn't have info about map key and value types,
+            chosen type is ANY. Because use of raw MAP type causes creation of
+            MAP cast expression that can't be serialized by ExpressionStringBuilder's
+            visitCastExpression(CastExpression e, StringBuilder sb) method.
+            See DRILL-6944 for more details.
+         */
+        type = factory.createSqlType(SqlTypeName.ANY);
+      }
+    } else {
+      type = factory.createSqlType(field.getType());
+    }
+
+    return field.getIsNullable() ? factory.createTypeWithNullability(type, true) : type;
   }
 
   @JsonIgnore
@@ -275,7 +361,7 @@ public class View {
 
   @JsonIgnore
   public boolean hasStar() {
-    for (FieldType field : fields) {
+    for (Field field : fields) {
       if (StarColumnHelper.isNonPrefixedStarColumn(field.getName())) {
         return true;
       }
@@ -295,7 +381,7 @@ public class View {
     return name;
   }
 
-  public List<FieldType> getFields() {
+  public List<Field> getFields() {
     return fields;
   }
 

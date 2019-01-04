@@ -17,18 +17,18 @@
  */
 package org.apache.drill.exec.sql;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.File;
-import java.nio.file.Paths;
-import java.util.List;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
@@ -39,6 +39,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   @BeforeClass
   public static void setupTestFiles() {
     dirTestWatcher.copyResourceToRoot(Paths.get("nation"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("avro", "map_string_to_long.avro"));
   }
 
   @Test
@@ -800,4 +801,54 @@ public class TestViewSupport extends TestBaseViewSupport {
       test("DROP VIEW IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, viewName);
     }
   }
+
+  @Test // DRILL-6944
+  public void testSelectMapColumnOfNewlyCreatedView() throws Exception {
+    try {
+      test("CREATE VIEW dfs.tmp.`mapf_view` AS SELECT `mapf` FROM dfs.`avro/map_string_to_long.avro`");
+      test("SELECT * FROM dfs.tmp.`mapf_view`");
+      testBuilder()
+          .sqlQuery("SELECT `mapf`['ki'] as ki FROM dfs.tmp.`mapf_view`")
+          .unOrdered()
+          .baselineColumns("ki")
+          .baselineValues(1L)
+          .go();
+    } finally {
+      test("DROP VIEW IF EXISTS dfs.tmp.`mapf_view`");
+    }
+  }
+
+  @Test // DRILL-6944
+  public void testMapTypeFullyQualifiedInNewlyCreatedView() throws Exception {
+    try {
+      test("CREATE VIEW dfs.tmp.`mapf_view` AS SELECT `mapf` FROM dfs.`avro/map_string_to_long.avro`");
+      testPlanWithAttributesMatchingPatterns("SELECT * FROM dfs.tmp.`mapf_view`", new String[]{
+          "Screen : rowType = RecordType\\(\\(VARCHAR\\(65535\\), BIGINT\\) MAP mapf\\)",
+          "Project\\(mapf=\\[\\$0\\]\\) : rowType = RecordType\\(\\(VARCHAR\\(65535\\), BIGINT\\) MAP mapf\\)",
+          "Scan.*avro/map_string_to_long.avro.*rowType = RecordType\\(\\(VARCHAR\\(65535\\), BIGINT\\) MAP mapf\\)"
+      }, null);
+    } finally {
+      test("DROP VIEW IF EXISTS dfs.tmp.`mapf_view`");
+    }
+  }
+
+  @Test // DRILL-6944
+  public void testMapColumnOfOlderViewWithUntypedMap() throws Exception {
+    test("SELECT * FROM cp.`view/vw_before_drill_6944.view.drill`");
+    testBuilder()
+        .sqlQuery("SELECT `mapf`['ki'] as ki FROM cp.`view/vw_before_drill_6944.view.drill`")
+        .unOrdered()
+        .baselineColumns("ki")
+        .baselineValues(1L)
+        .go();
+  }
+
+  @Test // DRILL-6944
+  public void testMapTypeTreatedAsAnyInOlderViewWithUntypedMap() throws Exception {
+    testPlanWithAttributesMatchingPatterns("SELECT * FROM cp.`view/vw_before_drill_6944.view.drill`", new String[]{
+        "Screen : rowType = RecordType\\(ANY mapf\\)",
+        "Project.mapf=.CAST\\(\\$0\\):ANY NOT NULL.*"
+    }, null);
+  }
+
 }

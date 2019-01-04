@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.sql;
 
+import org.apache.drill.PlanTestBase;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 
 import java.util.List;
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Base class for view tests. It has utility methods which can be used when writing tests for views on tables
  * in different storage engines such as Hive, HBase etc.
  */
-public class TestBaseViewSupport extends BaseTestQuery {
+public class TestBaseViewSupport extends PlanTestBase {
   private static AtomicInteger viewSeqNum = new AtomicInteger(0);
 
   /**
