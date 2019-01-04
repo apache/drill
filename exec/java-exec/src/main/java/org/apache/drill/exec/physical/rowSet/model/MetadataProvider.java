@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.rowSet.model;
 
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.RepeatedListColumnMetadata;
@@ -38,17 +37,16 @@ public interface MetadataProvider {
   TupleMetadata tuple();
   VariantMetadata variant();
 
-  public static class VectorDescrip {
+  class VectorDescrip {
     public final MetadataProvider parent;
     public final ColumnMetadata metadata;
 
     public VectorDescrip(MetadataProvider provider, ColumnMetadata metadata) {
-      parent = provider;
+      this.parent = provider;
       this.metadata = metadata;
     }
 
-    public VectorDescrip(MetadataProvider provider, int index,
-        MaterializedField field) {
+    public VectorDescrip(MetadataProvider provider, int index, MaterializedField field) {
       this(provider, provider.metadata(index, field));
     }
 
@@ -57,7 +55,7 @@ public interface MetadataProvider {
     }
   }
 
-  public static class MetadataCreator implements MetadataProvider {
+  class MetadataCreator implements MetadataProvider {
 
     private final TupleSchema tuple;
 
@@ -101,7 +99,7 @@ public interface MetadataProvider {
     }
   }
 
-  public static class VariantSchemaCreator implements MetadataProvider {
+  class VariantSchemaCreator implements MetadataProvider {
 
     private final VariantSchema variantSchema;
 
@@ -130,7 +128,7 @@ public interface MetadataProvider {
     }
   }
 
-  public static class ArraySchemaCreator implements MetadataProvider {
+  class ArraySchemaCreator implements MetadataProvider {
 
     private final RepeatedListColumnMetadata arraySchema;
 
@@ -142,7 +140,7 @@ public interface MetadataProvider {
     public ColumnMetadata metadata(int index, MaterializedField field) {
       assert index == 0;
       assert arraySchema.childSchema() == null;
-      AbstractColumnMetadata childSchema = MetadataUtils.fromField(field.cloneEmpty());
+      ColumnMetadata childSchema = MetadataUtils.fromField(field.cloneEmpty());
       arraySchema.childSchema(childSchema);
       return childSchema;
     }
@@ -163,7 +161,7 @@ public interface MetadataProvider {
     }
   }
 
-  public static class MetadataRetrieval implements MetadataProvider {
+  class MetadataRetrieval implements MetadataProvider {
 
     private final TupleMetadata tuple;
 
@@ -203,7 +201,7 @@ public interface MetadataProvider {
     }
   }
 
-  public static class VariantSchemaRetrieval implements MetadataProvider {
+  class VariantSchemaRetrieval implements MetadataProvider {
 
     private final VariantSchema variantSchema;
 
@@ -232,7 +230,7 @@ public interface MetadataProvider {
     }
   }
 
-  public static class ArraySchemaRetrieval implements MetadataProvider {
+  class ArraySchemaRetrieval implements MetadataProvider {
 
     private final ColumnMetadata arraySchema;
 

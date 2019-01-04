@@ -38,7 +38,7 @@ public class VariantSchema implements VariantMetadata {
     this.parent = parent;
   }
 
-  public static AbstractColumnMetadata memberMetadata(MinorType type) {
+  public static ColumnMetadata memberMetadata(MinorType type) {
     String name = Types.typeKey(type);
     switch (type) {
     case LIST:
@@ -64,7 +64,7 @@ public class VariantSchema implements VariantMetadata {
   @Override
   public ColumnMetadata addType(MinorType type) {
     checkType(type);
-    AbstractColumnMetadata dummyCol = memberMetadata(type);
+    ColumnMetadata dummyCol = memberMetadata(type);
     types.put(type, dummyCol);
     return dummyCol;
   }
@@ -140,7 +140,7 @@ public class VariantSchema implements VariantMetadata {
     Preconditions.checkState(! isSimple);
     MinorType type = field.getType().getMinorType();
     checkType(type);
-    AbstractColumnMetadata col;
+    ColumnMetadata col;
     switch (type) {
     case LIST:
       col = new VariantColumnMetadata(field);

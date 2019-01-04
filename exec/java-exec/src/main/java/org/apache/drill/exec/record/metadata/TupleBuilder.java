@@ -30,13 +30,12 @@ import org.apache.drill.exec.record.MaterializedField;
  * versions of the "add" methods return themselves to allow fluent
  * construction.
  */
+public class TupleBuilder implements SchemaContainer {
 
-class TupleBuilder implements SchemaContainer {
-
-  protected TupleSchema schema = new TupleSchema();
+  private final TupleSchema schema = new TupleSchema();
 
   @Override
-  public void addColumn(AbstractColumnMetadata column) {
+  public void addColumn(ColumnMetadata column) {
     schema.add(column);
   }
 
@@ -80,11 +79,10 @@ class TupleBuilder implements SchemaContainer {
     add(name, type, DataMode.REPEATED);
   }
 
-  public void addDecimal(String name, MinorType type, DataMode mode,
-      int precision, int scale) {
+  public void addDecimal(String name, MinorType type, DataMode mode, int precision, int scale) {
     MaterializedField field = new ColumnBuilder(name, type)
         .setMode(mode)
-        .setScale(scale, precision)
+        .setPrecisionAndScale(precision, scale)
         .build();
     add(field);
   }
@@ -96,9 +94,7 @@ class TupleBuilder implements SchemaContainer {
    * @param name column name
    * @param type base data type
    * @param dims number of dimensions, 1 or more
-   * @return this builder
    */
-
   public void addArray(String name, MinorType type, int dims) {
     assert dims >= 1;
     if (dims == 1) {
@@ -126,10 +122,10 @@ class TupleBuilder implements SchemaContainer {
    * map. Building that map, using {@link MapBuilder#resumeSchema()},
    * will return the original schema builder.
    *
-   * @param pathName the name of the map column
+   * @param parent schema container
+   * @param name the name of the map column
    * @return a builder for the map
    */
-
   public MapBuilder addMap(SchemaContainer parent, String name) {
     return new MapBuilder(parent, name, DataMode.REQUIRED);
   }
@@ -139,19 +135,15 @@ class TupleBuilder implements SchemaContainer {
   }
 
   public UnionBuilder addUnion(SchemaContainer parent, String name) {
-    return new UnionBuilder(parent, name, MinorType.UNION, DataMode.OPTIONAL);
+    return new UnionBuilder(parent, name, MinorType.UNION);
   }
 
   public UnionBuilder addList(SchemaContainer parent, String name) {
-    return new UnionBuilder(parent, name, MinorType.LIST, DataMode.REPEATED);
+    return new UnionBuilder(parent, name, MinorType.LIST);
   }
 
   public RepeatedListBuilder addRepeatedList(SchemaContainer parent, String name) {
     return new RepeatedListBuilder(parent, name);
-  }
-
-  void finish(AbstractColumnMetadata col) {
-    schema.add(col);
   }
 
   public BatchSchema batchSchema(SelectionVectorMode svMode) {

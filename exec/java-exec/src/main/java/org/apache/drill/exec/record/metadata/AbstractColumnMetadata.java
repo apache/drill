@@ -34,7 +34,6 @@ import org.apache.drill.exec.record.MaterializedField;
  * since maps (and the row itself) will, by definition, differ between
  * the two views.
  */
-
 public abstract class AbstractColumnMetadata implements ColumnMetadata {
 
   // Capture the key schema information. We cannot use the MaterializedField
@@ -87,7 +86,8 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
     expectedElementCount = from.expectedElementCount;
   }
 
-  protected void bind(TupleSchema parentTuple) { }
+  @Override
+  public void bind(TupleMetadata parentTuple) { }
 
   @Override
   public String name() { return name; }
@@ -204,6 +204,4 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
         .append("]")
         .toString();
   }
-
-  public abstract AbstractColumnMetadata copy();
 }

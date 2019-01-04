@@ -44,7 +44,7 @@ public class MetadataUtils {
    * @return the column metadata that wraps the field
    */
 
-  public static AbstractColumnMetadata fromField(MaterializedField field) {
+  public static ColumnMetadata fromField(MaterializedField field) {
     MinorType type = field.getType().getMinorType();
     switch (type) {
     case MAP:
@@ -79,7 +79,7 @@ public class MetadataUtils {
     }
   }
 
-  public static AbstractColumnMetadata fromView(MaterializedField field) {
+  public static ColumnMetadata fromView(MaterializedField field) {
     if (field.getType().getMinorType() == MinorType.MAP) {
       return new MapColumnMetadata(field, null);
     } else {
@@ -98,7 +98,7 @@ public class MetadataUtils {
   public static TupleSchema fromColumns(List<ColumnMetadata> columns) {
     TupleSchema tuple = new TupleSchema();
     for (ColumnMetadata column : columns) {
-      tuple.add((AbstractColumnMetadata) column);
+      tuple.add(column);
     }
     return tuple;
   }
@@ -149,11 +149,11 @@ public class MetadataUtils {
     }
   }
 
-  public static RepeatedListColumnMetadata newRepeatedList(String name, AbstractColumnMetadata child) {
+  public static RepeatedListColumnMetadata newRepeatedList(String name, ColumnMetadata child) {
     return new RepeatedListColumnMetadata(name, child);
   }
 
-  public static AbstractColumnMetadata newMapArray(String name, TupleMetadata schema) {
+  public static ColumnMetadata newMapArray(String name, TupleMetadata schema) {
     return new MapColumnMetadata(name, DataMode.REPEATED, (TupleSchema) schema);
   }
 

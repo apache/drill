@@ -25,7 +25,6 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter.ColumnWriterListener;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
 
 /**
  * Represents the write-time state for a column including the writer and the (optional)
@@ -39,7 +38,6 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
  * vector, or even a non-existent vector. The {@link VectorState} class abstracts out
  * these differences.
  */
-
 public abstract class ColumnState {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnState.class);
@@ -61,7 +59,7 @@ public abstract class ColumnState {
       } else {
         scalarWriter = writer.scalar();
       }
-      ((AbstractScalarWriter) scalarWriter).bindListener(this);
+      scalarWriter.bindListener(this);
     }
 
     @Override

@@ -31,7 +31,7 @@ import org.apache.drill.exec.record.MaterializedField;
 
 public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
-  protected int expectedWidth;
+  private int expectedWidth;
 
   public PrimitiveColumnMetadata(MaterializedField schema) {
     super(schema);
@@ -71,7 +71,7 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
-  public AbstractColumnMetadata copy() {
+  public ColumnMetadata copy() {
     return new PrimitiveColumnMetadata(this);
   }
 

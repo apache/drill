@@ -74,7 +74,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
  * Most operators do not support them. But, JSON uses them, so they must
  * be made to work in the result set loader layer.
  */
-
 public class TestResultSetLoaderUnions extends SubOperatorTest {
 
   @Test
@@ -219,7 +218,7 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
     // Make a bit bigger to overflow early.
 
     final int strLength = 600;
-    final byte value[] = new byte[strLength - 6];
+    final byte[] value = new byte[strLength - 6];
     Arrays.fill(value, (byte) 'X');
     final String strValue = new String(value, Charsets.UTF_8);
     int count = 0;
@@ -633,7 +632,7 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
         .addList("a")
           .addList()
             .addType(MinorType.INT)
-            .buildNested()
+            .resumeUnion()
           .resumeSchema()
         .buildSchema();
     final RowSet expected = new RowSetBuilder(fixture.allocator(), expectedSchema)

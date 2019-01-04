@@ -26,12 +26,14 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
+import org.apache.drill.exec.record.metadata.MapBuilder;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.RepeatedListBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.UnionBuilder;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
@@ -41,7 +43,6 @@ import org.junit.Test;
  * lists and repeated lists. This test verifies that it assembles the various
  * pieces correctly for the various nesting combinations.
  */
-
 public class TestSchemaBuilder extends DrillTest {
 
   @Test
@@ -81,7 +82,7 @@ public class TestSchemaBuilder extends DrillTest {
 
     MaterializedField aField = MaterializedField.create("a",
         Types.optional(MinorType.VARCHAR));
-    AbstractColumnMetadata bCol = MetadataUtils.newScalar("b",
+    ColumnMetadata bCol = MetadataUtils.newScalar("b",
         MinorType.INT, DataMode.REQUIRED);
 
     SchemaBuilder builder = new SchemaBuilder()
@@ -596,4 +597,82 @@ public class TestSchemaBuilder extends DrillTest {
     assertEquals(MinorType.VARCHAR, child.type());
     assertEquals(DataMode.REPEATED, child.mode());
   }
+
+  @Test
+  public void testStandaloneMapBuilder() {
+    ColumnMetadata columnMetadata= new MapBuilder("m1", DataMode.OPTIONAL)
+      .addNullable("b", MinorType.BIGINT)
+      .addMap("m2")
+      .addNullable("v", MinorType.VARCHAR)
+      .resumeMap()
+      .buildColumn();
+
+    assertTrue(columnMetadata.isMap());
+    assertTrue(columnMetadata.isNullable());
+    assertEquals("m1", columnMetadata.name());
+
+    TupleMetadata schema = columnMetadata.mapSchema();
+
+    ColumnMetadata col0 = schema.metadata(0);
+    assertEquals("b", col0.name());
+    assertEquals(MinorType.BIGINT, col0.type());
+    assertTrue(col0.isNullable());
+
+    ColumnMetadata col1 = schema.metadata(1);
+    assertEquals("m2", col1.name());
+    assertTrue(col1.isMap());
+    assertFalse(col1.isNullable());
+
+    ColumnMetadata child = col1.mapSchema().metadata(0);
+    assertEquals("v", child.name());
+    assertEquals(MinorType.VARCHAR, child.type());
+    assertTrue(child.isNullable());
+  }
+
+  @Test
+  public void testStandaloneRepeatedListBuilder() {
+    ColumnMetadata columnMetadata = new RepeatedListBuilder("l")
+      .addMapArray()
+      .addNullable("v", MinorType.VARCHAR)
+      .add("i", MinorType.INT)
+      .resumeList()
+      .buildColumn();
+
+    assertTrue(columnMetadata.isArray());
+    assertEquals("l", columnMetadata.name());
+    assertEquals(MinorType.LIST, columnMetadata.type());
+
+    ColumnMetadata child = columnMetadata.childSchema();
+    assertEquals("l", child.name());
+    assertTrue(child.isArray());
+    assertTrue(child.isMap());
+
+    TupleMetadata mapSchema = child.mapSchema();
+
+    ColumnMetadata col0 = mapSchema.metadata(0);
+    assertEquals("v", col0.name());
+    assertEquals(MinorType.VARCHAR, col0.type());
+    assertTrue(col0.isNullable());
+
+    ColumnMetadata col1 = mapSchema.metadata(1);
+    assertEquals("i", col1.name());
+    assertEquals(MinorType.INT, col1.type());
+    assertFalse(col1.isNullable());
+  }
+
+  @Test
+  public void testStandaloneUnionBuilder() {
+    ColumnMetadata columnMetadata = new UnionBuilder("u", MinorType.VARCHAR)
+      .addType(MinorType.INT)
+      .addType(MinorType.VARCHAR)
+      .buildColumn();
+
+    assertEquals("u", columnMetadata.name());
+    assertTrue(columnMetadata.isVariant());
+
+    VariantMetadata variantMetadata = columnMetadata.variantSchema();
+    assertTrue(variantMetadata.hasType(MinorType.INT));
+    assertTrue(variantMetadata.hasType(MinorType.VARCHAR));
+  }
+
 }

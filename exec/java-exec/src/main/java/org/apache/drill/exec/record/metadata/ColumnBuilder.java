@@ -28,16 +28,16 @@ import org.apache.drill.exec.record.MaterializedField;
  * some may need a mode other than required, may need a width, may
  * need scale and precision, and so on.
  */
-
 public class ColumnBuilder {
+
   private final String name;
   private final MajorType.Builder typeBuilder;
 
   public ColumnBuilder(String name, MinorType type) {
     this.name = name;
-    typeBuilder = MajorType.newBuilder()
-        .setMinorType(type)
-        .setMode(DataMode.REQUIRED);
+    this.typeBuilder = MajorType.newBuilder()
+      .setMinorType(type)
+      .setMode(DataMode.REQUIRED);
   }
 
   public ColumnBuilder setMode(DataMode mode) {
@@ -54,9 +54,9 @@ public class ColumnBuilder {
     return this;
   }
 
-  public ColumnBuilder setScale(int scale, int precision) {
-    typeBuilder.setScale(scale);
+  public ColumnBuilder setPrecisionAndScale(int precision, int scale) {
     typeBuilder.setPrecision(precision);
+    typeBuilder.setScale(scale);
     return this;
   }
 

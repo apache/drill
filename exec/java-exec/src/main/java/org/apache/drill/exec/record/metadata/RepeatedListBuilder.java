@@ -25,13 +25,23 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
  * list as a chain of materialized fields and that is the pattern used
  * here. It would certainly be cleaner to have a single field, with the
  * number of dimensions as a property, but that is not how Drill evolved.
+ * <p/>
+ * Class can be created with and without parent container.
+ * In the first case, column is added to the parent container during creation
+ * and all <tt>resumeXXX</tt> methods return qualified parent container.
+ * In the second case column is created without parent container as standalone entity.
+ * All <tt>resumeXXX</tt> methods do not produce any action and return null.
+ * To access built column {@link #buildColumn()} should be used.
  */
-
 public class RepeatedListBuilder implements SchemaContainer {
 
   private final SchemaContainer parent;
   private final String name;
-  private AbstractColumnMetadata child;
+  private ColumnMetadata child;
+
+  public RepeatedListBuilder(String name) {
+    this(null, name);
+  }
 
   public RepeatedListBuilder(SchemaContainer parent, String name) {
     this.parent = parent;
@@ -57,12 +67,14 @@ public class RepeatedListBuilder implements SchemaContainer {
     return this;
   }
 
-  private RepeatedListColumnMetadata buildCol() {
+  public RepeatedListColumnMetadata buildColumn() {
     return MetadataUtils.newRepeatedList(name, child);
   }
 
   public void build() {
-    parent.addColumn(buildCol());
+    if (parent != null) {
+      parent.addColumn(buildColumn());
+    }
   }
 
   public RepeatedListBuilder resumeList() {
@@ -86,7 +98,7 @@ public class RepeatedListBuilder implements SchemaContainer {
   }
 
   @Override
-  public void addColumn(AbstractColumnMetadata column) {
+  public void addColumn(ColumnMetadata column) {
     assert child == null;
     child = column;
   }

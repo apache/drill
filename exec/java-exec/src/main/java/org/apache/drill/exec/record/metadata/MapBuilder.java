@@ -25,13 +25,23 @@ import org.apache.drill.exec.record.MaterializedField;
 /**
  * Internal structure for building a map. A map is just a schema,
  * but one that is part of a parent column.
+ * <p/>
+ * Class can be created with and without parent container.
+ * In the first case, column is added to the parent container during creation
+ * and all <tt>resumeXXX</tt> methods return qualified parent container.
+ * In the second case column is created without parent container as standalone entity.
+ * All <tt>resumeXXX</tt> methods do not produce any action and return null.
+ * To access built column {@link #buildColumn()} should be used.
  */
-
 public class MapBuilder implements SchemaContainer {
   private final SchemaContainer parent;
   private final TupleBuilder tupleBuilder = new TupleBuilder();
   private final String memberName;
   private final DataMode mode;
+
+  public MapBuilder(String memberName, DataMode mode) {
+    this(null, memberName, mode);
+  }
 
   public MapBuilder(SchemaContainer parent, String memberName, DataMode mode) {
     this.parent = parent;
@@ -40,7 +50,7 @@ public class MapBuilder implements SchemaContainer {
   }
 
   @Override
-  public void addColumn(AbstractColumnMetadata column) {
+  public void addColumn(ColumnMetadata column) {
     tupleBuilder.addColumn(column);
   }
 
@@ -99,10 +109,9 @@ public class MapBuilder implements SchemaContainer {
    * map. Building that map, using {@link MapBuilder#resumeSchema()},
    * will return the original schema builder.
    *
-   * @param pathName the name of the map column
+   * @param name the name of the map column
    * @return a builder for the map
    */
-
   public MapBuilder addMap(String name) {
     return tupleBuilder.addMap(this, name);
   }
@@ -123,22 +132,28 @@ public class MapBuilder implements SchemaContainer {
     return tupleBuilder.addRepeatedList(this, name);
   }
 
-  private MapColumnMetadata buildCol() {
+  public MapColumnMetadata buildColumn() {
     return new MapColumnMetadata(memberName, mode, tupleBuilder.schema());
   }
 
+  public void build() {
+    if (parent != null) {
+      parent.addColumn(buildColumn());
+    }
+  }
+
   public SchemaBuilder resumeSchema() {
-    parent.addColumn(buildCol());
+    build();
     return (SchemaBuilder) parent;
   }
 
   public MapBuilder resumeMap() {
-    parent.addColumn(buildCol());
+    build();
     return (MapBuilder) parent;
   }
 
   public RepeatedListBuilder resumeList() {
-    parent.addColumn(buildCol());
+    build();
     return (RepeatedListBuilder) parent;
   }
 
@@ -146,7 +161,7 @@ public class MapBuilder implements SchemaContainer {
     // TODO: Use the map schema directly rather than
     // rebuilding it as is done here.
 
-    parent.addColumn(buildCol());
+    build();
     return (UnionBuilder) parent;
   }
 }

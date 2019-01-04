@@ -24,7 +24,6 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -55,7 +54,6 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * (repeated), variant (LIST, UNION) and tuple (MAP) columns, the tree grows
  * quite complex.
  */
-
 public class SingleSchemaInference {
 
   public TupleMetadata infer(VectorContainer container) {
@@ -66,7 +64,7 @@ public class SingleSchemaInference {
     return MetadataUtils.fromColumns(columns);
   }
 
-  private AbstractColumnMetadata inferVector(ValueVector vector) {
+  private ColumnMetadata inferVector(ValueVector vector) {
     final MaterializedField field = vector.getField();
     switch (field.getType().getMinorType()) {
     case MAP:
