@@ -119,7 +119,9 @@ public class KafkaRecordReader extends AbstractRecordReader {
         }
       }
 
-      messageReader.ensureAtLeastOneField();
+      if (currentMessageCount > 0) {
+        messageReader.ensureAtLeastOneField();
+      }
       writer.setValueCount(currentMessageCount);
       logger.debug("Took {} ms to process {} records.", watch.elapsed(TimeUnit.MILLISECONDS), currentMessageCount);
       logger.debug("Last offset consumed for {}:{} is {}", subScanSpec.getTopicName(), subScanSpec.getPartitionId(),
