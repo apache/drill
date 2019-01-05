@@ -175,6 +175,11 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
   }
 
   @Override
+  public int hash32(int index) {
+    return 0;
+  }
+
+  @Override
   public void clear() {
     valueCount = 0;
   }

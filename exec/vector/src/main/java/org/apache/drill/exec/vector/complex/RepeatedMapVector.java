@@ -410,6 +410,12 @@ public class RepeatedMapVector extends AbstractMapVector
   }
 
   @Override
+  public int hash32(int index) {
+    throw new UnsupportedOperationException("RepeatedMapVector does not support this");
+  }
+
+
+  @Override
   public int getValueCapacity() {
     return Math.max(offsets.getValueCapacity() - 1, 0);
   }

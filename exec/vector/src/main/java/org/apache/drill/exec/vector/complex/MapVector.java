@@ -91,6 +91,11 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
+  public int hash32(int index) {
+    throw new UnsupportedOperationException("MapVector does not support this");
+  }
+
+  @Override
   protected boolean supportsDirectRead() { return true; }
 
   public Iterator<String> fieldNameIterator() {

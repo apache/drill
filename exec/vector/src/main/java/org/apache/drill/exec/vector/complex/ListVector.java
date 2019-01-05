@@ -235,6 +235,11 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   @Override
+  public int hash32(int index) {
+    throw new UnsupportedOperationException("ListVector does not support this");
+  }
+
+  @Override
   public ValueVector getDataVector() { return vector; }
 
   public ValueVector getBitsVector() { return bits; }

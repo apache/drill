@@ -21,6 +21,7 @@ import java.nio.ByteOrder;
 import java.util.Set;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.hash.Hashing;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BaseValueVector;
@@ -440,6 +441,22 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   public void toNullable(ValueVector nullableVector) {
     Nullable${minor.class}Vector dest = (Nullable${minor.class}Vector) nullableVector;
     dest.getMutator().fromNotNullable(this);
+  }
+
+  @Override
+  public int hash32(int index) {
+    final UInt${type.width}Vector.Accessor accessor = offsetVector.getAccessor();
+    int start = accessor.get(index);
+    int end = accessor.get(index + 1);
+    <#if minor.class.contains("Decimal")>
+    int scale = field.getScale();
+    int precision = field.getPrecision();
+    java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(data,
+                                                                                                  start, end - start, scale);
+     return Hashing.hash32(bd.doubleValue());
+     <#else>
+    return Hashing.hash32(start, end, data);
+     </#if>
   }
 
   public final class Accessor extends BaseValueVector.BaseAccessor implements VariableWidthAccessor {

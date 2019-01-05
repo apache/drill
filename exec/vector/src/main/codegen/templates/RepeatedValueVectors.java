@@ -191,6 +191,11 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   }
 
   @Override
+  public int hash32(int index) {
+    throw new UnsupportedOperationException("RepeatedValueVector does not support this");
+  }
+
+  @Override
   public boolean allocateNewSafe() {
     /* boolean to keep track if all the memory allocations were successful.
      * Used in the case of composite vectors when we need to allocate multiple

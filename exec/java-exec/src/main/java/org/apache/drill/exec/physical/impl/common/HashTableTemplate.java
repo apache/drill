@@ -19,12 +19,17 @@ package org.apache.drill.exec.physical.impl.common;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Named;
 
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.hash.Hashing;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -118,6 +123,10 @@ public abstract class HashTableTemplate implements HashTable {
   private int resizingTime = 0;
 
   private Iterator<BatchHolder> htIter = null;
+
+  private List<Integer> buildVVIds = new ArrayList<>();
+
+  private List<Integer> probeVVIds = new ArrayList<>();
 
   // This class encapsulates the links, keys and values for up to BATCH_SIZE
   // *unique* records. Thus, suppose there are N incoming record batches, each
@@ -516,6 +525,23 @@ public abstract class HashTableTemplate implements HashTable {
     currentIndexSize = 0;
     totalIndexSize = 0;
 
+    List<NamedExpression> buildKeys = htConfig.getKeyExprsBuild();
+    for (NamedExpression namedExpression : buildKeys) {
+      SchemaPath schemaPath = (SchemaPath) namedExpression.getExpr();
+      TypedFieldId typedFieldId = incomingBuild.getValueVectorId(schemaPath);
+      int fieldId = typedFieldId.getFieldIds()[0];
+      buildVVIds.add(fieldId);
+    }
+    List<NamedExpression> probeKeys = htConfig.getKeyExprsProbe();
+    if (probeKeys != null) {
+      for (NamedExpression namedExpression : probeKeys) {
+        SchemaPath schemaPath = (SchemaPath) namedExpression.getExpr();
+        TypedFieldId typedFieldId = incomingProbe.getContainer().getValueVectorId(schemaPath);
+        int fieldId = typedFieldId.getFieldIds()[0];
+        probeVVIds.add(fieldId);
+      }
+    }
+
     try {
       doSetup(incomingBuild, incomingProbe);
     } catch (SchemaChangeException e) {
@@ -633,7 +659,20 @@ public abstract class HashTableTemplate implements HashTable {
    */
   @Override
   public int getBuildHashCode(int incomingRowIdx) throws SchemaChangeException {
-    return getHashBuild(incomingRowIdx, 0);
+    int size = buildVVIds.size();
+    ValueVector[] buildKeysVV = new ValueVector[size];
+    for (int i = 0; i < size; i ++) {
+      int index = buildVVIds.get(i);
+      ValueVector valueVector = incomingBuild.getValueVector(index).getValueVector();
+      buildKeysVV[i] = valueVector;
+    }
+    int len = buildKeysVV.length;
+    int seed = buildKeysVV[0].hash32(incomingRowIdx);
+    for (int i = 1 ; i < len; i ++) {
+      int hashCode = buildKeysVV[i].hash32(incomingRowIdx);
+      seed = Hashing.hashCombine(seed, hashCode);
+    }
+    return seed;
   }
 
   /**
@@ -645,7 +684,20 @@ public abstract class HashTableTemplate implements HashTable {
    */
   @Override
   public int getProbeHashCode(int incomingRowIdx) throws SchemaChangeException {
-    return getHashProbe(incomingRowIdx, 0);
+    int size = probeVVIds.size();
+    ValueVector[] probeKeysVV = new ValueVector[size];
+    for (int i = 0; i < size; i ++) {
+      int index = probeVVIds.get(i);
+      ValueVector valueVector = incomingProbe.getContainer().getValueVector(index).getValueVector();
+      probeKeysVV[i] = valueVector;
+    }
+    int len = probeKeysVV.length;
+    int seed = probeKeysVV[0].hash32(incomingRowIdx);
+    for (int i = 1 ; i < len; i ++) {
+      int hashCode = probeKeysVV[i].hash32(incomingRowIdx);
+      seed = Hashing.hashCombine(seed, hashCode);
+    }
+    return seed;
   }
 
   /** put() uses the hash code (from gethashCode() above) to insert the key(s) from the incoming
@@ -944,10 +996,6 @@ public abstract class HashTableTemplate implements HashTable {
 
   // These methods will be code-generated in the context of the outer class
   protected abstract void doSetup(@Named("incomingBuild") VectorContainer incomingBuild, @Named("incomingProbe") RecordBatch incomingProbe) throws SchemaChangeException;
-
-  protected abstract int getHashBuild(@Named("incomingRowIdx") int incomingRowIdx, @Named("seedValue") int seedValue) throws SchemaChangeException;
-
-  protected abstract int getHashProbe(@Named("incomingRowIdx") int incomingRowIdx, @Named("seedValue") int seedValue) throws SchemaChangeException;
 
   @Override
   public long getActualSize() {

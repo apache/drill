@@ -378,6 +378,41 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     dest.getMutator().fromNotNullable(this);
   }
 
+  @Override
+  public int hash32(int index) {
+<#if (type.width > 8)>
+   <#if (minor.class == "Interval")>
+    final int offsetIndex = index * VALUE_WIDTH;
+    int months = data.getInt(offsetIndex);
+    int days = data.getInt(offsetIndex + ${minor.daysOffset});
+    int milliseconds = data.getInt(offsetIndex + ${minor.millisecondsOffset});
+    int monthsHashv = Hashing.hash32(months);
+    int daysHashv = Hashing.hash32(days);
+    int combinedHashv = Hashing.hashCombine(monthsHashv, daysHashv);
+    int millisecondsHashv = Hashing.hash32(milliseconds);
+    return Hashing.hashCombine(combinedHashv, millisecondsHashv);
+   <#elseif (minor.class == "IntervalDay")>
+    final int offsetIndex = index * VALUE_WIDTH;
+    int days = data.getInt(offsetIndex);
+    int milliseconds = data.getInt(offsetIndex + ${minor.millisecondsOffset});
+    int daysHashv = Hashing.hash32(days);
+    int millisecondsHashv = Hashing.hash32(milliseconds);
+    return Hashing.hashCombine(millisecondsHashv, daysHashv);
+   <#elseif minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense">
+    throw new UnsupportedOperationException("${minor.class}Vector does not support this");
+    </#if>
+<#else> <#-- type.width <= 8 -->
+    <#if minor.class == "Decimal9" || minor.class == "Decimal18">
+    final BigInteger value = BigInteger.valueOf(((${type.boxedType}) accessor.get(index)).${type.javaType}Value());
+    BigDecimal bigDecimal = new BigDecimal(value, getField().getScale());
+    return Hashing.hash32(bigDecimal.doubleValue());
+    <#else>
+    ${minor.javaType!type.javaType} key = data.get${(minor.javaType!type.javaType)?cap_first}(index * VALUE_WIDTH);
+    return Hashing.hash32(key);
+    </#if>
+</#if>
+  }
+
   public final class Accessor extends BaseDataValueVector.BaseAccessor {
     @Override
     public int getValueCount() {

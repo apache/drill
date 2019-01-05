@@ -31,6 +31,7 @@ import io.netty.buffer.*;
 import org.apache.commons.lang3.ArrayUtils;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.hash.Hashing;
 import org.apache.drill.exec.memory.*;
 import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared;

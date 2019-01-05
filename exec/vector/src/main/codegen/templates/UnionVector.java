@@ -382,6 +382,11 @@ public class UnionVector implements ValueVector {
     copyFromSafe(fromIndex, toIndex, (UnionVector) from);
   }
 
+  @Override
+  public int hash32(int index) {
+    throw new UnsupportedOperationException("UnionValueVector does not support this");
+  }
+
   /**
    * Add a vector that matches the argument. Transfer the buffer from the argument
    * to the new vector.

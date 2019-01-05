@@ -205,6 +205,12 @@ public class ObjectVector extends BaseValueVector {
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public int hash32(int index)
+  {
+    throw new UnsupportedOperationException("ObjectVector does not support this");
+  }
+
   public final class Accessor extends BaseAccessor {
     @Override
     public Object getObject(int index) {

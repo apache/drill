@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
+import org.apache.drill.exec.hash.Hashing;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 
@@ -230,6 +231,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   @Override
   public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
     copyFrom(fromIndex, toIndex, (BitVector) from);
+  }
+
+  public int hash32(int index) {
+    int key = accessor.get(index);
+    return Hashing.hash32(key);
   }
 
   @Override
