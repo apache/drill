@@ -567,7 +567,7 @@ public final class ExecConstants {
 
   public static final String EARLY_LIMIT0_OPT_KEY = "planner.enable_limit0_optimization";
   public static final BooleanValidator EARLY_LIMIT0_OPT = new BooleanValidator(EARLY_LIMIT0_OPT_KEY,
-      new OptionDescription("Sets the type of identifier quotes for the SQL parser. Default is backticks ('`'). The SQL parser accepts double quotes ('\"') and square brackets ('['). (Drill 1.11+)"));
+      new OptionDescription("Enables the query planner to determine data types returned by a query during the planning phase before scanning data. Default is true. (Drill 1.9+)"));
 
   public static final String LATE_LIMIT0_OPT_KEY = "planner.enable_limit0_on_scan";
   public static final BooleanValidator LATE_LIMIT0_OPT = new BooleanValidator(LATE_LIMIT0_OPT_KEY,
