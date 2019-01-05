@@ -224,6 +224,13 @@ public abstract class HashTableTemplate implements HashTable {
       if (isProbe) {
         match = isKeyMatchInternalProbe(incomingRowIdx, currentIdxWithinBatch);
       } else {
+        // in case (of a hash-join only) where both the new incoming key and the current are null, treat them as
+        // a match; i.e. the new would be added into the helper (but not the Hash-Table !), though it would never
+        // be used (not putting it into the helper would take a bigger code change, and some performance cost, hence
+        // not worth it).  In the past such a new null key was added into the Hash-Table (i.e., no match), which
+        // created long costly chains - SEE DRILL-6880)
+        if ( areBothKeysNull(incomingRowIdx, currentIdxWithinBatch) ) { return true; }
+
         match = isKeyMatchInternalBuild(incomingRowIdx, currentIdxWithinBatch);
       }
 
@@ -420,6 +427,12 @@ public abstract class HashTableTemplate implements HashTable {
     @RuntimeOverridden
     protected boolean isKeyMatchInternalBuild(
         @Named("incomingRowIdx") int incomingRowIdx, @Named("htRowIdx") int htRowIdx) throws SchemaChangeException {
+      return false;
+    }
+
+    @RuntimeOverridden
+    protected boolean areBothKeysNull(
+      @Named("incomingRowIdx") int incomingRowIdx, @Named("htRowIdx") int htRowIdx) throws SchemaChangeException {
       return false;
     }
 
