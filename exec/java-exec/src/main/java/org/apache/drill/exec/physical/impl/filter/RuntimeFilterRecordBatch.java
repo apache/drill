@@ -224,21 +224,41 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
     setupHashHelper();
     //To make each independent bloom filter work together to construct a final filter result: BitSet.
     BitSet bitSet = new BitSet(originalRecordCount);
-    for (int i = 0; i < toFilterFields.size(); i++) {
-      BloomFilter bloomFilter = bloomFilters.get(i);
-      String fieldName = toFilterFields.get(i);
-      computeBitSet(field2id.get(fieldName), bloomFilter, bitSet);
-    }
+
+    int filterSize = toFilterFields.size();
     int svIndex = 0;
-    for (int i = 0; i < originalRecordCount; i++) {
-      boolean contain = bitSet.get(i);
-      if (contain) {
-        sv2.setIndex(svIndex, i);
-        svIndex++;
-      } else {
-        filteredRows++;
+    if (filterSize == 1) {
+      BloomFilter bloomFilter = bloomFilters.get(0);
+      String fieldName = toFilterFields.get(0);
+      int fieldId = field2id.get(fieldName);
+      for (int rowIndex = 0; rowIndex < originalRecordCount; rowIndex++) {
+        long hash = hash64.hash64Code(rowIndex, 0, fieldId);
+        boolean contain = bloomFilter.find(hash);
+        if (contain) {
+          sv2.setIndex(svIndex, rowIndex);
+          svIndex++;
+        } else {
+          filteredRows++;
+        }
+      }
+    } else {
+      for (int i = 0; i < toFilterFields.size(); i++) {
+        BloomFilter bloomFilter = bloomFilters.get(i);
+        String fieldName = toFilterFields.get(i);
+        computeBitSet(field2id.get(fieldName), bloomFilter, bitSet);
+      }
+      for (int i = 0; i < originalRecordCount; i++) {
+        boolean contain = bitSet.get(i);
+        if (contain) {
+          sv2.setIndex(svIndex, i);
+          svIndex++;
+        } else {
+          filteredRows++;
+        }
       }
     }
+
+
     appliedTimes++;
     sv2.setRecordCount(svIndex);
   }
