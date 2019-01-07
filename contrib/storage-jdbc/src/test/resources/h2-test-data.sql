@@ -1,6 +1,6 @@
 
-create SCHEMA drill_derby_test;
-set schema drill_derby_test;
+create SCHEMA drill_h2_test;
+set schema drill_h2_test;
 
 create table person (
   person_id       INT NOT NULL PRIMARY KEY,
