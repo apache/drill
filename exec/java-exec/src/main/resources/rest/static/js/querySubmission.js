@@ -15,6 +15,7 @@ var userName = null;
 var elapsedTime = 0;
 var delay = 1000; //msec
 var timeTracker = null; //Handle for stopping watch
+var userName = null;
 
 //Show cancellation status
 function popupAndWait() {
@@ -38,24 +39,33 @@ function closePopup() {
   $("#queryLoadingModal").modal("hide");
 }
 
-//Submit query with username
+// Wrap & Submit Query (invoked if impersonation is enabled to check for username)
 function doSubmitQueryWithUserName() {
-    var userName = document.getElementById("userName").value;
+    userName = document.getElementById("userName").value;
     if (!userName.trim()) {
         alert("Please fill in User Name field");
         return;
     }
+    //Wrap and Submit query
+    wrapAndSubmitQuery();
+}
+
+//Wrap & Submit Query (invoked directly if impersonation is not enabled)
+function wrapAndSubmitQuery() {
+    //Wrap if required
+    wrapQuery();
+    //Submit query
     submitQuery();
 }
 
-//Submit Query (used if impersonation is not enabled)
+//Submit Query
 function submitQuery() {
     popupAndWait();
     //Submit query
     $.ajax({
         type: "POST",
         beforeSend: function (request) {
-            if (typeof userName !== 'undefined' && userName != null && userName.length > 0) {
+            if (typeof userName !== 'undefined' && userName !== null && userName.length > 0) {
               request.setRequestHeader("User-Name", userName);
             }
         },
@@ -72,4 +82,26 @@ function submitQuery() {
             alert(errorThrown);
         }
     });
+}
+
+//Wraps a query with Limit by directly changing the query in the hidden textbox in the UI (see /query.ftl)
+function wrapQuery() {
+    var origQueryText = $('#query').attr('value');
+    //dBug: console.log("Query Input:" + origQueryText);
+    var mustWrapWithLimit = $('input[name="forceLimit"]:checked').length > 0;
+    if (mustWrapWithLimit) {
+        var semicolonIdx = origQueryText.lastIndexOf(';');
+        //Check and eliminate trailing semicolon
+        if (semicolonIdx  == origQueryText.length-1 ) {
+          origQueryText = origQueryText.substring(0, semicolonIdx)
+        }
+        var qLimit = $('#queryLimit').val();
+        var wrappedQuery = "-- [autoLimit: " + qLimit + " rows]\nselect * from (\n" + origQueryText + "\n) limit " + qLimit;
+        //dBug: console.log("Query Output:" + wrappedQuery);
+        //Wrapping Query
+        $('#query').attr('value', wrappedQuery);
+    } else {
+        //Do not change the query
+        //dBug: console.log("Query Output:" + origQueryText);
+    }
 }
