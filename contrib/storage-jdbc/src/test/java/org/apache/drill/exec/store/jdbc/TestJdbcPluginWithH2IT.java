@@ -18,27 +18,71 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
-import org.apache.drill.PlanTestBase;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
+import org.h2.tools.RunScript;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.FileReader;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
- * JDBC storage plugin tests against Derby.
+ * JDBC storage plugin tests against H2.
  */
 @Category(JdbcStorageTest.class)
-public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
+public class TestJdbcPluginWithH2IT extends ClusterTest {
 
   private static final String TABLE_PATH = "jdbcmulti/";
   private static final String TABLE_NAME = String.format("%s.`%s`", StoragePluginTestUtils.DFS_PLUGIN_NAME, TABLE_PATH);
+
+  @BeforeClass
+  public static void initH2() throws Exception {
+    Class.forName("org.h2.Driver");
+    String connString = String.format(
+        "jdbc:h2:%s", dirTestWatcher.getTmpDir().getCanonicalPath());
+
+    try (Connection connection = DriverManager.getConnection(connString, "root", "root")) {
+      URL scriptFile = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
+      Assert.assertNotNull("Script for test tables generation 'h2-test-data.sql' " +
+          "cannot be found in test resources", scriptFile);
+      RunScript.execute(connection, new FileReader(scriptFile.getFile()));
+    }
+
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+
+    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig(
+        "org.h2.Driver",
+        connString,
+        "root",
+        "root",
+        true);
+    jdbcStorageConfig.setEnabled(true);
+
+    String pluginName = "h2";
+    DrillbitContext context = cluster.drillbit().getContext();
+    JdbcStoragePlugin jdbcStoragePlugin = new JdbcStoragePlugin(jdbcStorageConfig,
+        context, pluginName);
+    StoragePluginRegistryImpl pluginRegistry = (StoragePluginRegistryImpl) context.getStorage();
+    pluginRegistry.addPluginToPersistentStoreIfAbsent(pluginName, jdbcStorageConfig, jdbcStoragePlugin);
+  }
 
   @BeforeClass
   public static void copyData() {
@@ -47,19 +91,23 @@ public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
 
   @Test
   public void testCrossSourceMultiFragmentJoin() throws Exception {
-    testNoResult("SET `planner.slice_target` = 1");
-    test("select x.person_id, y.salary from derby.drill_derby_test.person x "
-        + "join %s y on x.person_id = y.person_id ", TABLE_NAME);
+    try {
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      run("select x.person_id, y.salary from h2.drill_h2_test.person x "
+              + "join %s y on x.person_id = y.person_id ", TABLE_NAME);
+    } finally {
+      client.resetSession(ExecConstants.SLICE_TARGET);
+    }
   }
 
   @Test
   public void validateResult() throws Exception {
-    // Skip date, time, and timestamp types since derby mangles these due to improper timezone support.
+    // Skip date, time, and timestamp types since h2 mangles these due to improper timezone support.
     testBuilder()
         .sqlQuery(
             "select person_id, first_name, last_name, address, city, state, zip, json, bigint_field, smallint_field, " +
                 "numeric_field, boolean_field, double_field, float_field, real_field, time_field, timestamp_field, " +
-                "date_field, clob_field from derby.`drill_derby_test`.person")
+                "date_field, clob_field from h2.`drill_h2_test`.person")
         .ordered()
         .baselineColumns("person_id", "first_name", "last_name", "address", "city", "state", "zip", "json",
             "bigint_field", "smallint_field", "numeric_field", "boolean_field", "double_field", "float_field",
@@ -85,84 +133,108 @@ public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
 
   @Test
   public void pushdownJoin() throws Exception {
-    testNoResult("use derby");
-    String query = "select x.person_id from (select person_id from derby.drill_derby_test.person) x "
-            + "join (select person_id from derby.drill_derby_test.person) y on x.person_id = y.person_id ";
-    testPlanMatchingPatterns(query, new String[]{}, new String[]{"Join"});
+    run("use h2");
+    String query = "select x.person_id from (select person_id from h2.drill_h2_test.person) x "
+            + "join (select person_id from h2.drill_h2_test.person) y on x.person_id = y.person_id ";
+
+    String plan = queryBuilder().sql(query).explainText();
+
+    assertThat("Query plan shouldn't contain Join operator",
+        plan, not(containsString("Join")));
   }
 
   @Test
   public void pushdownJoinAndFilterPushDown() throws Exception {
-    final String query = "select * from \n" +
-        "derby.drill_derby_test.person e\n" +
+    String query = "select * from \n" +
+        "h2.drill_h2_test.person e\n" +
         "INNER JOIN \n" +
-        "derby.drill_derby_test.person s\n" +
+        "h2.drill_h2_test.person s\n" +
         "ON e.FIRST_NAME = s.FIRST_NAME\n" +
         "WHERE e.LAST_NAME > 'hello'";
 
-    testPlanMatchingPatterns(query, new String[] {}, new String[] { "Join", "Filter" });
+    String plan = queryBuilder().sql(query).explainText();
+
+    assertThat("Query plan shouldn't contain Join operator",
+        plan, not(containsString("Join")));
+    assertThat("Query plan shouldn't contain Filter operator",
+        plan, not(containsString("Filter")));
   }
 
   @Test
   public void pushdownAggregation() throws Exception {
-    final String query = "select count(*) from derby.drill_derby_test.person";
-    testPlanMatchingPatterns(query, new String[] {}, new String[] { "Aggregate" });
+    String query = "select count(*) from h2.drill_h2_test.person";
+    String plan = queryBuilder().sql(query).explainText();
+
+    assertThat("Query plan shouldn't contain Aggregate operator",
+        plan, not(containsString("Aggregate")));
   }
 
   @Test
   public void pushdownDoubleJoinAndFilter() throws Exception {
-    final String query = "select * from \n" +
-        "derby.drill_derby_test.person e\n" +
+    String query = "select * from \n" +
+        "h2.drill_h2_test.person e\n" +
         "INNER JOIN \n" +
-        "derby.drill_derby_test.person s\n" +
+        "h2.drill_h2_test.person s\n" +
         "ON e.person_ID = s.person_ID\n" +
         "INNER JOIN \n" +
-        "derby.drill_derby_test.person ed\n" +
+        "h2.drill_h2_test.person ed\n" +
         "ON e.person_ID = ed.person_ID\n" +
         "WHERE s.first_name > 'abc' and ed.first_name > 'efg'";
-    testPlanMatchingPatterns(query, new String[] {}, new String[] { "Join", "Filter" });
+
+    String plan = queryBuilder().sql(query).explainText();
+
+    assertThat("Query plan shouldn't contain Join operator",
+        plan, not(containsString("Join")));
+    assertThat("Query plan shouldn't contain Filter operator",
+        plan, not(containsString("Filter")));
   }
 
   @Test
   public void showTablesDefaultSchema() throws Exception {
-    testNoResult("use derby.drill_derby_test");
-    assertEquals(1, testSql("show tables like 'PERSON'"));
+    run("use h2.drill_h2_test");
+    assertEquals(1, queryBuilder().sql("show tables like 'PERSON'").run().recordCount());
 
     // check table names case insensitivity
-    assertEquals(1, testSql("show tables like 'person'"));
+    assertEquals(1, queryBuilder().sql("show tables like 'person'").run().recordCount());
   }
 
   @Test
   public void describe() throws Exception {
-    testNoResult("use derby.drill_derby_test");
-    assertEquals(19, testSql("describe PERSON"));
+    run("use h2.drill_h2_test");
+    assertEquals(19, queryBuilder().sql("describe PERSON").run().recordCount());
 
     // check table names case insensitivity
-    assertEquals(19, testSql("describe person"));
+    assertEquals(19, queryBuilder().sql("describe person").run().recordCount());
   }
 
   @Test
   public void ensureDrillFunctionsAreNotPushedDown() throws Exception {
     // This should verify that we're not trying to push CONVERT_FROM into the JDBC storage plugin. If were pushing
     // this function down, the SQL query would fail.
-    testNoResult("select CONVERT_FROM(JSON, 'JSON') from derby.drill_derby_test.person where person_ID = 4");
+    run("select CONVERT_FROM(JSON, 'JSON') from h2.drill_h2_test.person where person_ID = 4");
   }
 
   @Test
   public void pushdownFilter() throws Exception {
-    String query = "select * from derby.drill_derby_test.person where person_ID = 1";
-    testPlanMatchingPatterns(query, new String[]{}, new String[]{"Filter"});
+    String query = "select * from h2.drill_h2_test.person where person_ID = 1";
+    String plan = queryBuilder().sql(query).explainText();
+
+    assertThat("Query plan shouldn't contain Filter operator",
+        plan, not(containsString("Filter")));
   }
 
   @Test
   public void testCaseInsensitiveTableNames() throws Exception {
-    assertEquals(5, testSql("select * from derby.drill_derby_test.PeRsOn"));
-    assertEquals(5, testSql("select * from derby.drill_derby_test.PERSON"));
-    assertEquals(5, testSql("select * from derby.drill_derby_test.person"));
+    assertEquals(5, queryBuilder().sql("select * from h2.drill_h2_test.PeRsOn").run().recordCount());
+    assertEquals(5, queryBuilder().sql("select * from h2.drill_h2_test.PERSON").run().recordCount());
+    assertEquals(5, queryBuilder().sql("select * from h2.drill_h2_test.person").run().recordCount());
   }
 
   @Test
   public void testJdbcStoragePluginSerDe() throws Exception {
-    testPhysicalPlanExecutionBasedOnQuery("select * from derby.drill_derby_test.PeRsOn");
+    String query = "select * from h2.drill_h2_test.PeRsOn";
+
+    String plan = queryBuilder().sql(query).explainJson();
+    assertEquals(5, queryBuilder().physical(plan).run().recordCount());
   }
 }

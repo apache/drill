@@ -1,6 +1,3 @@
-
-set global time_zone = "+00:00";
-
 use drill_mysql_test;
 
 create table caseSensitiveTable (
