@@ -1,6 +1,6 @@
 ---
 title: "DROP FUNCTION USING JAR"
-date: 2018-12-11
+date: 2019-01-07
 parent: "SQL Commands"
 ---
 
@@ -21,9 +21,9 @@ The name of the JAR file that contains the UDFs.
 
 - When you issue the DROP FUNCTION USING JAR command, Drill unregisters the UDFs based on the JAR file name and removes the JAR file from the UDF directory. Drill deletes all UDFs associated with the JAR file from the Dynamic UDF registry ([persistent store]({{site.baseurl}}/docs/persistent-configuration-storage/)). Drill returns a message with the list of unregistered UDFs.  
   
-- By default, Drill returns a result set when you issue DDL statements, such as DROP FUNCTION USING JAR. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
+- By default, Drill returns a result set when you issue DDL statements, such as DROP FUNCTION USING JAR. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.query.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
 
-		SET `exec.return_result_set_for_ddl` = false  
+		SET `exec.query.return_result_set_for_ddl` = false  
 		//This option is available in Drill 1.15 and later.   
 
 	When set to false, Drill returns the affected rows count, and the result set is null. 

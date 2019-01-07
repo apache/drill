@@ -1,6 +1,6 @@
 ---
 title: "DROP VIEW"
-date: 2018-12-11
+date: 2019-01-07
 parent: "SQL Commands"
 ---
 
@@ -25,9 +25,9 @@ A unique directory or file name, optionally prefaced by a storage plugin name, s
 
 ## Usage Notes  
 
-- By default, Drill returns a result set when you issue DDL statements, such as DROP VIEW. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
+- By default, Drill returns a result set when you issue DDL statements, such as DROP VIEW. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.query.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
 
-		SET `exec.return_result_set_for_ddl` = false  
+		SET `exec.query.return_result_set_for_ddl` = false  
 		//This option is available in Drill 1.15 and later.   
 
 	When set to false, Drill returns the affected rows count, and the result set is null.  

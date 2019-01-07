@@ -1,6 +1,6 @@
 ---
 title: "Interfaces Introduction"
-date: 2018-12-11
+date: 2019-01-07
 parent: "ODBC/JDBC Interfaces"
 ---
 You can connect to Apache Drill through the following interfaces:
@@ -13,9 +13,9 @@ You can connect to Apache Drill through the following interfaces:
 
 *Apache Drill does not have an open source ODBC driver. However, MapR provides an [ODBC driver](https://package.mapr.com/tools/MapR-ODBC/MapR_Drill/) developed specifically for connecting Apache Drill to BI tools. MapR also provides a [JDBC driver](https://package.mapr.com/tools/MapR-JDBC/MapR_Drill/).  
 
-**By default, Drill returns a result set when you issue DDL statements, such as CTAS and CREATE VIEW. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
+**By default, Drill returns a result set when you issue DDL statements, such as CTAS and CREATE VIEW. If the client tool from which you connect to Drill (via JDBC) does not expect a result set when you issue DDL statements, set the `exec.query.return_result_set_for_ddl` option to false, as shown, to prevent the client from canceling queries:  
 
-	SET `exec.return_result_set_for_ddl` = false
+	SET `exec.query.return_result_set_for_ddl` = false
 	//This option is available in Drill 1.15 and later. 
 
 When set to false, Drill returns the affected rows count, and the result set is null.    
