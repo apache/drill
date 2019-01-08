@@ -87,9 +87,6 @@ public abstract class HashTableTemplate implements HashTable {
   // current available (free) slot globally across all batch holders
   private int freeIndex = 0;
 
-  // Placeholder for the current index while probing the hash table
-  private IndexPointer currentIdxHolder;
-
   private BufferAllocator allocator;
 
   // The incoming build side record batch
@@ -205,39 +202,38 @@ public abstract class HashTableTemplate implements HashTable {
       setupInterior(incomingBuild, incomingProbe, outgoing, htContainer);
     }
 
-    // Check if the key at the currentIdx position in hash table matches the key
-    // at the incomingRowIdx. if the key does not match, update the
-    // currentIdxHolder with the index of the next link.
+    // Check if the key at the current Index position in hash table matches the key
+    // at the incomingRowIdx.
     private boolean isKeyMatch(int incomingRowIdx,
-        IndexPointer currentIdxHolder,
+        int currentIndex,
         boolean isProbe) throws SchemaChangeException {
-      int currentIdxWithinBatch = currentIdxHolder.value & BATCH_MASK;
-      boolean match;
+      int currentIdxWithinBatch = currentIndex & BATCH_MASK;
 
-      if (currentIdxWithinBatch >= batchHolders.get((currentIdxHolder.value >>> 16) & BATCH_MASK).getTargetBatchRowCount()) {
+      if (currentIdxWithinBatch >= batchHolders.get((currentIndex >>> 16) & BATCH_MASK).getTargetBatchRowCount()) {
         logger.debug("Batch size = {}, incomingRowIdx = {}, currentIdxWithinBatch = {}.",
-          batchHolders.get((currentIdxHolder.value >>> 16) & BATCH_MASK).getTargetBatchRowCount(), incomingRowIdx, currentIdxWithinBatch);
+          batchHolders.get((currentIndex >>> 16) & BATCH_MASK).getTargetBatchRowCount(), incomingRowIdx, currentIdxWithinBatch);
       }
-      assert (currentIdxWithinBatch < batchHolders.get((currentIdxHolder.value >>> 16) & BATCH_MASK).getTargetBatchRowCount());
+      assert (currentIdxWithinBatch < batchHolders.get((currentIndex >>> 16) & BATCH_MASK).getTargetBatchRowCount());
       assert (incomingRowIdx < HashTable.BATCH_SIZE);
 
       if (isProbe) {
-        match = isKeyMatchInternalProbe(incomingRowIdx, currentIdxWithinBatch);
-      } else {
-        // in case (of a hash-join only) where both the new incoming key and the current are null, treat them as
-        // a match; i.e. the new would be added into the helper (but not the Hash-Table !), though it would never
-        // be used (not putting it into the helper would take a bigger code change, and some performance cost, hence
-        // not worth it).  In the past such a new null key was added into the Hash-Table (i.e., no match), which
-        // created long costly chains - SEE DRILL-6880)
-        if ( areBothKeysNull(incomingRowIdx, currentIdxWithinBatch) ) { return true; }
-
-        match = isKeyMatchInternalBuild(incomingRowIdx, currentIdxWithinBatch);
+        return isKeyMatchInternalProbe(incomingRowIdx, currentIdxWithinBatch);
       }
 
-      if (!match) {
-        currentIdxHolder.value = links.getAccessor().get(currentIdxWithinBatch);
-      }
-      return match;
+      // in case of a hash-join build, where both the new incoming key and the current key are null, treat them as
+      // a match; i.e. the new would be added into the helper (but not the Hash-Table !), though it would never
+      // be used (not putting it into the helper would take a bigger code change, and some performance cost, hence
+      // not worth it).  In the past such a new null key was added into the Hash-Table (i.e., no match), which
+      // created long costly chains - SEE DRILL-6880)
+      if ( areBothKeysNull(incomingRowIdx, currentIdxWithinBatch) ) { return true; }
+
+      return isKeyMatchInternalBuild(incomingRowIdx, currentIdxWithinBatch);
+    }
+
+    // This method should only be called following a "false" return from isKeyMatch()
+    // It returns the next index in the hash chain (if any) so that next call to isKeyMatch() would compare the next link
+    private int nextLinkInHashChain(int currentIndex) {
+      return links.getAccessor().get(currentIndex & BATCH_MASK);
     }
 
     // Insert a new <key1, key2...keyN> entry coming from the incoming batch into the hash table
@@ -524,7 +520,6 @@ public abstract class HashTableTemplate implements HashTable {
       throw new IllegalStateException("Unexpected schema change", e);
     }
 
-    currentIdxHolder = new IndexPointer();
   }
 
   @Override
@@ -674,16 +669,15 @@ public abstract class HashTableTemplate implements HashTable {
 
     // if startIdx is non-empty, follow the hash chain links until we find a matching
     // key or reach the end of the chain (and remember the last link there)
-    for ( currentIdxHolder.value = startIdx;
-          currentIdxHolder.value != EMPTY_SLOT;
-          /* isKeyMatch() below also advances the currentIdxHolder to the next link */) {
-
+    for ( int currentIndex = startIdx;
+          currentIndex != EMPTY_SLOT;
+          currentIndex = lastEntryBatch.nextLinkInHashChain(currentIndex)) {
       // remember the current link, which would be the last when the next link is empty
-      lastEntryBatch = batchHolders.get((currentIdxHolder.value >>> 16) & BATCH_MASK);
-      lastEntryIdxWithinBatch = currentIdxHolder.value & BATCH_MASK;
+      lastEntryBatch = batchHolders.get((currentIndex >>> 16) & BATCH_MASK);
+      lastEntryIdxWithinBatch = currentIndex & BATCH_MASK;
 
-      if (lastEntryBatch.isKeyMatch(incomingRowIdx, currentIdxHolder, false)) {
-        htIdxHolder.value = currentIdxHolder.value;
+      if (lastEntryBatch.isKeyMatch(incomingRowIdx, currentIndex, false)) {
+        htIdxHolder.value = currentIndex;
         return PutStatus.KEY_PRESENT;
       }
     }
@@ -751,12 +745,15 @@ public abstract class HashTableTemplate implements HashTable {
    @Override
   public int probeForKey(int incomingRowIdx, int hashCode) throws SchemaChangeException {
     int bucketIndex = getBucketIndex(hashCode, numBuckets());
+     int startIdx = startIndices.getAccessor().get(bucketIndex);
+     BatchHolder lastEntryBatch = null;
 
-    for ( currentIdxHolder.value = startIndices.getAccessor().get(bucketIndex);
-          currentIdxHolder.value != EMPTY_SLOT; ) {
-      BatchHolder bh = batchHolders.get((currentIdxHolder.value >>> 16) & BATCH_MASK);
-      if (bh.isKeyMatch(incomingRowIdx, currentIdxHolder, true /* isProbe */)) {
-        return currentIdxHolder.value;
+     for ( int currentIndex = startIdx;
+           currentIndex != EMPTY_SLOT;
+           currentIndex = lastEntryBatch.nextLinkInHashChain(currentIndex)) {
+      lastEntryBatch = batchHolders.get((currentIndex >>> 16) & BATCH_MASK);
+      if (lastEntryBatch.isKeyMatch(incomingRowIdx, currentIndex, true /* isProbe */)) {
+        return currentIndex;
       }
     }
     return -1;
