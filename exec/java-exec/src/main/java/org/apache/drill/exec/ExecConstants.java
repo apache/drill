@@ -902,6 +902,7 @@ public final class ExecConstants {
 
   public static final String RETURN_RESULT_SET_FOR_DDL = "exec.query.return_result_set_for_ddl";
   public static final BooleanValidator RETURN_RESULT_SET_FOR_DDL_VALIDATOR = new BooleanValidator(RETURN_RESULT_SET_FOR_DDL,
-      new OptionDescription("Controls whether to return result set for CREATE TABLE / VIEW, DROP TABLE / VIEW, SET, USE etc. queries. " +
-          "If set to false affected rows count will be returned instead and result set will be null. Default is true. (Drill 1.15+)"));
+      new OptionDescription("Controls whether to return result set for CREATE TABLE / VIEW / FUNCTION, DROP TABLE / VIEW / FUNCTION, " +
+          "SET, USE, REFRESH METADATA TABLE queries. If set to false affected rows count will be returned instead and result set will be null. " +
+          "Affects JDBC connections only. Default is true. (Drill 1.15+)"));
 }
