@@ -19,6 +19,8 @@ package org.apache.drill.exec.fn.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +34,10 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.IntervalYearVector;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,14 +46,20 @@ import org.junit.rules.ExpectedException;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
+import static org.apache.drill.exec.ExecTest.mockUtcDateTimeZone;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
-public class TestCastFunctions extends BaseTestQuery {
+public class TestCastFunctions extends ClusterTest {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+
+  @BeforeClass
+  public static void setUp() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+  }
 
   @Test
   public void testVarbinaryToDate() throws Exception {
@@ -123,7 +133,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (float value : values.keySet()) {
       try {
-        test("create table dfs.tmp.table_with_float as\n" +
+        run("create table dfs.tmp.table_with_float as\n" +
               "(select cast(%1$s as float) c1 from (values(1)))", value);
 
         testBuilder()
@@ -133,7 +143,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .baselineValues(values.get(value))
           .go();
       } finally {
-        test("drop table if exists dfs.tmp.table_with_float");
+        run("drop table if exists dfs.tmp.table_with_float");
       }
     }
   }
@@ -152,7 +162,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (int value : values) {
       try {
-        test("create table dfs.tmp.table_with_int as\n" +
+        run("create table dfs.tmp.table_with_int as\n" +
               "(select cast(%1$s as int) c1 from (values(1)))", value);
 
         testBuilder()
@@ -164,7 +174,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .baselineValues((float) value, (double) value)
           .go();
       } finally {
-        test("drop table if exists dfs.tmp.table_with_int");
+        run("drop table if exists dfs.tmp.table_with_int");
       }
     }
   }
@@ -190,7 +200,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (float value : values.keySet()) {
       try {
-        test("create table dfs.tmp.table_with_float as\n" +
+        run("create table dfs.tmp.table_with_float as\n" +
               "(select cast(%1$s as float) c1 from (values(1)))", value);
 
         testBuilder()
@@ -200,7 +210,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .baselineValues(values.get(value))
           .go();
       } finally {
-        test("drop table if exists dfs.tmp.table_with_float");
+        run("drop table if exists dfs.tmp.table_with_float");
       }
     }
   }
@@ -221,7 +231,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (long value : values) {
       try {
-        test("create table dfs.tmp.table_with_bigint as\n" +
+        run("create table dfs.tmp.table_with_bigint as\n" +
               "(select cast(%1$s as bigInt) c1 from (values(1)))", value);
 
         testBuilder()
@@ -233,7 +243,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .baselineValues((float) value, (double) value)
           .go();
       } finally {
-        test("drop table if exists dfs.tmp.table_with_bigint");
+        run("drop table if exists dfs.tmp.table_with_bigint");
       }
     }
   }
@@ -259,7 +269,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (double value : values.keySet()) {
       try {
-        test("create table dfs.tmp.table_with_double as\n" +
+        run("create table dfs.tmp.table_with_double as\n" +
               "(select cast(%1$s as double) c1 from (values(1)))", value);
 
         testBuilder()
@@ -269,7 +279,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .baselineValues(values.get(value))
           .go();
       } finally {
-        test("drop table if exists dfs.tmp.table_with_double");
+        run("drop table if exists dfs.tmp.table_with_double");
       }
     }
   }
@@ -295,7 +305,7 @@ public class TestCastFunctions extends BaseTestQuery {
     values.put(Double.MIN_VALUE, 0L);
     for (double value : values.keySet()) {
       try {
-        test("create table dfs.tmp.table_with_double as\n" +
+        run("create table dfs.tmp.table_with_double as\n" +
               "(select cast(%1$s as double) c1 from (values(1)))", value);
 
         testBuilder()
@@ -305,7 +315,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .baselineValues(values.get(value))
           .go();
       } finally {
-        test("drop table if exists dfs.tmp.table_with_double");
+        run("drop table if exists dfs.tmp.table_with_double");
       }
     }
   }
@@ -323,7 +333,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (int value : values) {
       try {
-        test("create table dfs.tmp.table_with_int as\n" +
+        run("create table dfs.tmp.table_with_int as\n" +
               "(select cast(%1$s as int) c1, cast(%1$s as bigInt) c2 from (values(1)))", value);
 
         testBuilder()
@@ -335,7 +345,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .baselineValues((long) value, value)
           .go();
       } finally {
-        test("drop table if exists dfs.tmp.table_with_int");
+        run("drop table if exists dfs.tmp.table_with_int");
       }
     }
   }
@@ -358,7 +368,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (double value : values) {
       try {
-        test("create table dfs.tmp.table_with_float as\n" +
+        run("create table dfs.tmp.table_with_float as\n" +
               "(select cast(%1$s as float) c1,\n" +
                       "cast(%1$s as double) c2\n" +
               "from (values(1)))", value);
@@ -372,7 +382,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .baselineValues((double) ((float) (value)), (float) value)
           .go();
       } finally {
-        test("drop table if exists dfs.tmp.table_with_float");
+        run("drop table if exists dfs.tmp.table_with_float");
       }
     }
   }
@@ -380,7 +390,7 @@ public class TestCastFunctions extends BaseTestQuery {
   @Test
   public void testCastIntAndBigIntToDecimal() throws Exception {
       try {
-        test("alter session set planner.enable_decimal_data_type = true");
+        client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
 
         testBuilder()
           .physicalPlanFromFile("decimal/cast_int_decimal.json")
@@ -406,15 +416,15 @@ public class TestCastFunctions extends BaseTestQuery {
                           new BigDecimal(123456789))
           .go();
       } finally {
-        test("drop table if exists dfs.tmp.table_with_int");
-        test("alter session reset planner.enable_decimal_data_type");
+        run("drop table if exists dfs.tmp.table_with_int");
+        client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
       }
   }
 
   @Test
   public void testCastDecimalToIntAndBigInt() throws Exception {
     try {
-      test("alter session set planner.enable_decimal_data_type = true");
+      client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
 
       testBuilder()
         .physicalPlanFromFile("decimal/cast_decimal_int.json")
@@ -434,15 +444,15 @@ public class TestCastFunctions extends BaseTestQuery {
         .baselineValues(123456789, 123456789, 123456789L, 123456789L)
         .go();
     } finally {
-      test("drop table if exists dfs.tmp.table_with_int");
-      test("alter session reset planner.enable_decimal_data_type");
+      run("drop table if exists dfs.tmp.table_with_int");
+      client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
 
   @Test
   public void testCastDecimalToFloatAndDouble() throws Exception {
     try {
-      test("alter session set planner.enable_decimal_data_type = true");
+      client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
 
       testBuilder()
         .physicalPlanFromFile("decimal/cast_decimal_float.json")
@@ -456,15 +466,15 @@ public class TestCastFunctions extends BaseTestQuery {
         .baselineValues(-1.0001f, -2.0301f, -1.0001, -2.0301)
         .go();
     } finally {
-      test("drop table if exists dfs.tmp.table_with_int");
-      test("alter session reset planner.enable_decimal_data_type");
+      run("drop table if exists dfs.tmp.table_with_int");
+      client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
 
   @Test
   public void testCastDecimalToVarDecimal() throws Exception {
     try {
-      setSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
 
       testBuilder()
         .physicalPlanFromFile("decimal/cast_decimal_vardecimal.json")
@@ -486,15 +496,15 @@ public class TestCastFunctions extends BaseTestQuery {
             new BigDecimal("12"), new BigDecimal("123456789123456789"))
         .go();
     } finally {
-      test("drop table if exists dfs.tmp.table_with_int");
-      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+      run("drop table if exists dfs.tmp.table_with_int");
+      client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
 
   @Test
   public void testCastVarDecimalToDecimal() throws Exception {
     try {
-      setSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
 
       testBuilder()
         .physicalPlanFromFile("decimal/cast_vardecimal_decimal.json")
@@ -516,15 +526,15 @@ public class TestCastFunctions extends BaseTestQuery {
           new BigDecimal("12"), new BigDecimal("123456789123456789"))
         .go();
     } finally {
-      test("drop table if exists dfs.tmp.table_with_int");
-      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+      run("drop table if exists dfs.tmp.table_with_int");
+      client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
 
   @Test // DRILL-4970
   public void testCastNegativeFloatToInt() throws Exception {
     try {
-      test("create table dfs.tmp.table_with_float as\n" +
+      run("create table dfs.tmp.table_with_float as\n" +
               "(select cast(-255.0 as double) as double_col,\n" +
                       "cast(-255.0 as float) as float_col\n" +
               "from (values(1)))");
@@ -551,16 +561,16 @@ public class TestCastFunctions extends BaseTestQuery {
         }
       }
     } finally {
-      test("drop table if exists dfs.tmp.table_with_float");
+      run("drop table if exists dfs.tmp.table_with_float");
     }
   }
 
   @Test // DRILL-4970
   public void testCastNegativeDecimalToVarChar() throws Exception {
     try {
-      test("alter session set planner.enable_decimal_data_type = true");
+      client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
 
-      test("create table dfs.tmp.table_with_decimal as" +
+      run("create table dfs.tmp.table_with_decimal as" +
               "(select cast(cast(manager_id as double) * (-1) as decimal(9, 0)) as decimal9_col,\n" +
                       "cast(cast(manager_id as double) * (-1) as decimal(18, 0)) as decimal18_col\n" +
               "from cp.`parquet/fixedlenDecimal.parquet` limit 1)");
@@ -581,8 +591,8 @@ public class TestCastFunctions extends BaseTestQuery {
           .go();
       }
     } finally {
-      test("drop table if exists dfs.tmp.table_with_decimal");
-      test("alter session reset planner.enable_decimal_data_type");
+      run("drop table if exists dfs.tmp.table_with_decimal");
+      client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
 
@@ -606,7 +616,7 @@ public class TestCastFunctions extends BaseTestQuery {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("VALIDATION ERROR: Expected precision greater than 0, but was 0"));
 
-    test(query);
+    run(query);
   }
 
   @Test
@@ -616,7 +626,7 @@ public class TestCastFunctions extends BaseTestQuery {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("VALIDATION ERROR: Expected scale less than or equal to precision, but was scale 5 and precision 3"));
 
-    test(query);
+    run(query);
   }
 
   @Test
@@ -626,7 +636,7 @@ public class TestCastFunctions extends BaseTestQuery {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456 overflows specified precision 4 with scale 0"));
 
-    test(query);
+    run(query);
   }
 
   @Test
@@ -636,7 +646,7 @@ public class TestCastFunctions extends BaseTestQuery {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456 overflows specified precision 4 with scale 0"));
 
-    test(query);
+    run(query);
   }
 
   @Test
@@ -646,7 +656,7 @@ public class TestCastFunctions extends BaseTestQuery {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456.123 overflows specified precision 4 with scale 0"));
 
-    test(query);
+    run(query);
   }
 
   @Test
@@ -656,7 +666,7 @@ public class TestCastFunctions extends BaseTestQuery {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456.123 overflows specified precision 4 with scale 0"));
 
-    test(query);
+    run(query);
   }
 
   @Test
@@ -666,14 +676,14 @@ public class TestCastFunctions extends BaseTestQuery {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456.123 overflows specified precision 4 with scale 0"));
 
-    test(query);
+    run(query);
   }
 
   @Test // DRILL-6783
   public void testCastVarCharIntervalYear() throws Exception {
     String query = "select cast('P31M' as interval month) as i from cp.`employee.json` limit 10";
-    List<QueryDataBatch> result = testSqlWithResults(query);
-    RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
+    List<QueryDataBatch> result = queryBuilder().sql(query).results();
+    RecordBatchLoader loader = new RecordBatchLoader(cluster.drillbit().getContext().getAllocator());
 
     QueryDataBatch b = result.get(0);
     loader.load(b.getHeader().getDef(), b.getData());
@@ -695,5 +705,48 @@ public class TestCastFunctions extends BaseTestQuery {
 
     b.release();
     loader.clear();
+  }
+
+  @Test // DRILL-6959
+  public void testCastTimestampLiteralInFilter() throws Exception {
+    try {
+      run("create table dfs.tmp.test_timestamp_filter as\n" +
+          "(select timestamp '2018-01-01 12:12:12.123' as c1)");
+
+      String query =
+          "select * from dfs.tmp.test_timestamp_filter\n" +
+              "where c1 = cast('2018-01-01 12:12:12.123' as timestamp(3))";
+
+      testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .baselineColumns("c1")
+          .baselineValues(LocalDateTime.of(2018, 1, 1,
+              12, 12, 12, 123_000_000))
+          .go();
+    } finally {
+      run("drop table if exists dfs.tmp.test_timestamp_filter");
+    }
+  }
+
+  @Test // DRILL-6959
+  public void testCastTimeLiteralInFilter() throws Exception {
+    try {
+      run("create table dfs.tmp.test_time_filter as\n" +
+          "(select time '12:12:12.123' as c1)");
+
+      String query =
+        "select * from dfs.tmp.test_time_filter\n" +
+            "where c1 = cast('12:12:12.123' as time(3))";
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c1")
+        .baselineValues(LocalTime.of(12, 12, 12, 123_000_000))
+        .go();
+    } finally {
+      run("drop table if exists dfs.tmp.test_time_filter");
+    }
   }
 }
