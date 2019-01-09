@@ -230,8 +230,11 @@ public abstract class HashTableTemplate implements HashTable {
       return isKeyMatchInternalBuild(incomingRowIdx, currentIdxWithinBatch);
     }
 
-    // This method should only be called following a "false" return from isKeyMatch()
-    // It returns the next index in the hash chain (if any) so that next call to isKeyMatch() would compare the next link
+    // This method should only be used in an "iterator like" next() fashion, to traverse a hash table chain looking for a match.
+    // Starting from the first element (i.e., index) in the chain, _isKeyMatch()_ should be called on that element; if "false" is returned,
+    // then this method should be called to return the (index to the) next element in the chain (or an EMPTY_SLOT to terminate), and then
+    // _isKeyMatch()_ should be called on that next element; and so on until a match is found - where the loop is exited with the found result.
+    // (This was not implemented as a real Java iterator as each index may point to another BatchHolder).
     private int nextLinkInHashChain(int currentIndex) {
       return links.getAccessor().get(currentIndex & BATCH_MASK);
     }
