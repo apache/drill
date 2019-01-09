@@ -130,7 +130,7 @@ public class ChainedHashTable {
   private RecordBatch incomingProbe;
   private final RecordBatch outgoing;
 
-  private enum setupWork {DO_BUILD, DO_PROBE, CHECK_BOTH_NULLS};
+  private enum SetupWork {DO_BUILD, DO_PROBE, CHECK_BOTH_NULLS};
 
   public ChainedHashTable(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
                           RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing) {
@@ -223,12 +223,12 @@ public class ChainedHashTable {
     // (used by Hash-Join to avoid creating a long hash-table chain of null keys, which can lead to useless O(n^2) work on that chain.)
     // The logic is: Nulls match on build, and don't match on probe. Note that this logic covers outer joins as well.
     setupIsKeyMatchInternal(cgInner, bothKeysNullIncomingBuildMapping, bothKeysNullHtableMapping, keyExprsBuild,
-        htConfig.getComparators(), htKeyFieldIds, setupWork.CHECK_BOTH_NULLS);
+        htConfig.getComparators(), htKeyFieldIds, SetupWork.CHECK_BOTH_NULLS);
     // generate code for isKeyMatch(), setValue(), getHash() and outputRecordKeys()
     setupIsKeyMatchInternal(cgInner, KeyMatchIncomingBuildMapping, KeyMatchHtableMapping, keyExprsBuild,
-        htConfig.getComparators(), htKeyFieldIds, setupWork.DO_BUILD);
+        htConfig.getComparators(), htKeyFieldIds, SetupWork.DO_BUILD);
     setupIsKeyMatchInternal(cgInner, KeyMatchIncomingProbeMapping, KeyMatchHtableProbeMapping, keyExprsProbe,
-        htConfig.getComparators(), htKeyFieldIds, setupWork.DO_PROBE);
+        htConfig.getComparators(), htKeyFieldIds, SetupWork.DO_PROBE);
 
     setupSetValue(cgInner, keyExprsBuild, htKeyFieldIds);
     if (outgoing != null) {
@@ -249,9 +249,9 @@ public class ChainedHashTable {
   }
 
   private void setupIsKeyMatchInternal(ClassGenerator<HashTable> cg, MappingSet incomingMapping, MappingSet htableMapping,
-      LogicalExpression[] keyExprs, List<Comparator> comparators, TypedFieldId[] htKeyFieldIds, setupWork work) {
+      LogicalExpression[] keyExprs, List<Comparator> comparators, TypedFieldId[] htKeyFieldIds, SetupWork work) {
 
-    boolean checkIfBothNulls = work == setupWork.CHECK_BOTH_NULLS;
+    boolean checkIfBothNulls = work == SetupWork.CHECK_BOTH_NULLS;
 
     // Regular key matching may return false in the middle (i.e., some pair of columns did not match), and true only if all matched;
     // but "both nulls" check returns the opposite logic (i.e., true when one pair of nulls is found, need check no more)
@@ -277,7 +277,7 @@ public class ChainedHashTable {
 
       JConditional jc;
 
-      if ( work != setupWork.DO_BUILD ) {  // BUILD runs this logic in a separate method - areBothKeysNull()
+      if ( work != SetupWork.DO_BUILD ) {  // BUILD runs this logic in a separate method - areBothKeysNull()
         // codegen for the special case when both columns are null (i.e., return early with midPointResult)
         if (comparators.get(i) == Comparator.EQUALS
             && left.isOptional() && right.isOptional()) {
@@ -298,7 +298,7 @@ public class ChainedHashTable {
       }
     }
 
-    // All key expressions compared equal, so return TRUE
+    // All key expressions compared the same way, so return the appropriate final result
     cg.getEvalBlock()._return(finalResult);
   }
 
