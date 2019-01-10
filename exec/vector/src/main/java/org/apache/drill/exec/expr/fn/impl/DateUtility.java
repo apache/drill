@@ -635,6 +635,9 @@ public class DateUtility {
   public static final DateTimeFormatter isoFormatTimeStamp= buildFormatter("yyyy-MM-dd'T'HH:mm:ss.SSSXX");
   public static final DateTimeFormatter isoFormatTime     = buildFormatter("HH:mm:ss.SSSXX");
 
+  public static final DateTimeFormatter UTC_FORMATTER = buildFormatter("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+  public static final long TIMEZONE_OFFSET_MILLIS = OffsetDateTime.now().getOffset().getTotalSeconds() * 1000;
+
   public static DateTimeFormatter dateTimeTZFormat = null;
   public static DateTimeFormatter timeFormat = null;
 

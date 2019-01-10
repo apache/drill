@@ -33,6 +33,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -43,6 +44,7 @@ import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
 import org.apache.drill.exec.util.EncodedSchemaPathSet;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderUtils;
+import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.Path;
 import org.ojai.Document;
@@ -60,8 +62,9 @@ import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
-import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -112,6 +115,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
   private final boolean unionEnabled;
   private final boolean readNumbersAsDouble;
+  private final boolean readTimestampWithZoneOffset;
   private boolean disablePushdown;
   private final boolean allTextMode;
   private final boolean ignoreSchemaChange;
@@ -156,6 +160,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     setColumns(projectedColumns);
     unionEnabled = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
     readNumbersAsDouble = formatPlugin.getConfig().isReadAllNumbersAsDouble();
+    readTimestampWithZoneOffset = formatPlugin.getConfig().isReadTimestampWithZoneOffset();
     allTextMode = formatPlugin.getConfig().isAllTextMode();
     ignoreSchemaChange = formatPlugin.getConfig().isIgnoreSchemaChange();
     disablePushdown = !formatPlugin.getConfig().isEnablePushdown();
@@ -284,16 +289,53 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       throw new ExecutionSetupException(ex);
     }
   }
-  /*
-   * Setup the valueWriter and documentWriters based on config options
+
+  /**
+   * Setup the valueWriter and documentWriters based on config options.
    */
   private void setupWriter() {
     if (allTextMode) {
-      valueWriter = new AllTextValueWriter(buffer);
+      if (readTimestampWithZoneOffset) {
+        valueWriter = new AllTextValueWriter(buffer) {
+          /**
+           * Applies local time zone offset to timestamp value read using specified {@code reader}.
+           *
+           * @param writer    writer to store string representation of timestamp value
+           * @param fieldName name of the field
+           * @param reader    document reader
+           */
+          @Override
+          protected void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+            String formattedTimestamp = Instant.ofEpochMilli(reader.getTimestampLong())
+                .atOffset(OffsetDateTime.now().getOffset()).format(DateUtility.UTC_FORMATTER);
+            writeString(writer, fieldName, formattedTimestamp);
+          }
+        };
+      } else {
+        valueWriter = new AllTextValueWriter(buffer);
+      }
     } else if (readNumbersAsDouble) {
-      valueWriter = new NumbersAsDoubleValueWriter(buffer);
+      if (readTimestampWithZoneOffset) {
+        valueWriter = new NumbersAsDoubleValueWriter(buffer) {
+          @Override
+          protected void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+            writeTimestampWithLocalZoneOffset(writer, fieldName, reader);
+          }
+        };
+      } else {
+        valueWriter = new NumbersAsDoubleValueWriter(buffer);
+      }
     } else {
-      valueWriter = new OjaiValueWriter(buffer);
+      if (readTimestampWithZoneOffset) {
+        valueWriter = new OjaiValueWriter(buffer) {
+          @Override
+          protected void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+            writeTimestampWithLocalZoneOffset(writer, fieldName, reader);
+          }
+        };
+      } else {
+        valueWriter = new OjaiValueWriter(buffer);
+      }
     }
 
     if (projectWholeDocument) {
@@ -305,6 +347,18 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     } else {
       documentWriter = new FieldTransferVectorWriter(valueWriter);
     }
+  }
+
+  /**
+   * Applies local time zone offset to timestamp value read using specified {@code reader}.
+   *
+   * @param writer    writer to store timestamp value
+   * @param fieldName name of the field
+   * @param reader    document reader
+   */
+  private void writeTimestampWithLocalZoneOffset(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+    long timestamp = reader.getTimestampLong() + DateUtility.TIMEZONE_OFFSET_MILLIS;
+    writer.timeStamp(fieldName).writeTimeStamp(timestamp);
   }
 
   @Override
@@ -387,7 +441,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     }
 
     if (nonExistentColumnsProjection && recordCount > 0) {
-      JsonReaderUtils.ensureAtLeastOneField(vectorWriter, getColumns(), allTextMode, Collections.EMPTY_LIST);
+      JsonReaderUtils.ensureAtLeastOneField(vectorWriter, getColumns(), allTextMode, Collections.emptyList());
     }
     vectorWriter.setValueCount(recordCount);
     if (maxRecordsToRead > 0) {
@@ -463,12 +517,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   }
 
   public static boolean includesIdField(Collection<FieldPath> projected) {
-    return Iterables.tryFind(projected, new Predicate<FieldPath>() {
-      @Override
-      public boolean apply(FieldPath path) {
-        return Preconditions.checkNotNull(path).equals(ID_FIELD);
-      }
-    }).isPresent();
+    return Iterables.tryFind(projected, path -> Preconditions.checkNotNull(path).equals(ID_FIELD)).isPresent();
   }
 
   @Override

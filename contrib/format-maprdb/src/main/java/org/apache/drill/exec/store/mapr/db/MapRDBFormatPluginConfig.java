@@ -32,6 +32,7 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
   public boolean ignoreSchemaChange = false;
   public boolean readAllNumbersAsDouble = false;
   public boolean disableCountOptimization = false;
+  public boolean readTimestampWithZoneOffset = false;
   /* This flag is a switch to do special handling in case of
    * no columns in the query exists in the maprdb table. This flag
    * can get deprecated once it is observed that this special handling
@@ -48,6 +49,7 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
     result = 31 * result + (readAllNumbersAsDouble ? 1231 : 1237);
     result = 31 * result + (disableCountOptimization ? 1231 : 1237);
     result = 31 * result + (nonExistentFieldSupport ? 1231 : 1237);
+    result = 31 * result + (readTimestampWithZoneOffset ? 1231 : 1237);
     return result;
   }
 
@@ -68,12 +70,18 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
       return false;
     } else if (!index.equals(other.index)) {
       return false;
+    } else if (readTimestampWithZoneOffset != other.readTimestampWithZoneOffset) {
+      return false;
     }
     return true;
   }
 
   public boolean isReadAllNumbersAsDouble() {
     return readAllNumbersAsDouble;
+  }
+
+  public boolean isReadTimestampWithZoneOffset() {
+    return readTimestampWithZoneOffset;
   }
 
   public boolean isAllTextMode() {
