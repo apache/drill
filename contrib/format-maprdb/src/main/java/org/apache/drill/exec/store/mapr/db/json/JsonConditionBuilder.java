@@ -74,7 +74,12 @@ public class JsonConditionBuilder extends AbstractExprVisitor<JsonScanSpec, Void
     ImmutableList<LogicalExpression> args = call.args;
 
     if (CompareFunctionsProcessor.isCompareFunction(functionName)) {
-      CompareFunctionsProcessor processor = CompareFunctionsProcessor.process(call);
+      CompareFunctionsProcessor processor;
+      if (groupScan.getFormatPlugin().getConfig().isReadTimestampWithZoneOffset()) {
+        processor = CompareFunctionsProcessor.processWithTimeZoneOffset(call);
+      } else {
+        processor = CompareFunctionsProcessor.process(call);
+      }
       if (processor.isSuccess()) {
         nodeScanSpec = createJsonScanSpec(call, processor);
       }

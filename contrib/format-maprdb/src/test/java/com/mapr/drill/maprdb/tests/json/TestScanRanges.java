@@ -82,8 +82,8 @@ public class TestScanRanges extends BaseJsonTest {
       table.flush();
       DBTests.waitForRowCount(table.getPath(), TOTAL_ROW_COUNT);
 
-      setSessionOption("planner.width.max_per_node", "5");
-   }
+      setSessionOption("planner.width.max_per_node", 5);
+    }
   }
 
   @AfterClass

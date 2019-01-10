@@ -515,6 +515,11 @@ public final class ExecConstants {
       new BooleanValidator(HIVE_OPTIMIZE_MAPRDB_JSON_SCAN_WITH_NATIVE_READER,
           new OptionDescription("Enables Drill to use the Drill native reader (instead of the Hive Serde interface) to optimize reads of MapR Database JSON tables from Hive. Default is false. (Drill 1.14+)"));
 
+  public static final String HIVE_READ_MAPRDB_JSON_TIMESTAMP_WITH_TIMEZONE_OFFSET = "store.hive.maprdb_json.read_timestamp_with_timezone_offset";
+  public static final OptionValidator HIVE_READ_MAPRDB_JSON_TIMESTAMP_WITH_TIMEZONE_OFFSET_VALIDATOR =
+      new BooleanValidator(HIVE_READ_MAPRDB_JSON_TIMESTAMP_WITH_TIMEZONE_OFFSET,
+          new OptionDescription("Enables Drill to read timestamp values with timezone offset when hive plugin is used and Drill native MaprDB JSON reader usage is enabled. (Drill 1.16+)"));
+
   public static final String HIVE_CONF_PROPERTIES = "store.hive.conf.properties";
   public static final OptionValidator HIVE_CONF_PROPERTIES_VALIDATOR = new StringValidator(HIVE_CONF_PROPERTIES,
       new OptionDescription("Enables the user to specify Hive properties at the session level. Do not set the property values in quotes. Separate the property name and value by =. Separate each property with a new line (\\n). Example: set `store.hive.conf.properties` = 'hive.mapred.supports.subdirectories=true\\nmapred.input.dir.recursive=true'. (Drill 1.14+)"));

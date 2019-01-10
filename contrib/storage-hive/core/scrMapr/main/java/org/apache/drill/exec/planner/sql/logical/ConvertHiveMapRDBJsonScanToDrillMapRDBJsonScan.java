@@ -23,8 +23,11 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
@@ -75,6 +78,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
   public void onMatch(RelOptRuleCall call) {
     try {
       DrillScanRel hiveScanRel = call.rel(0);
+      PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
 
       HiveScan hiveScan = (HiveScan) hiveScanRel.getGroupScan();
       HiveReadEntry hiveReadEntry = hiveScan.getHiveReadEntry();
@@ -90,7 +94,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
             "partitions");
       }
 
-      DrillScanRel nativeScanRel = createNativeScanRel(hiveScanRel);
+      DrillScanRel nativeScanRel = createNativeScanRel(hiveScanRel, settings);
       call.transformTo(nativeScanRel);
 
       /*
@@ -110,7 +114,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
   /**
    * Helper method which creates a DrillScanRel with native Drill HiveScan.
    */
-  private DrillScanRel createNativeScanRel(final DrillScanRel hiveScanRel) {
+  private DrillScanRel createNativeScanRel(DrillScanRel hiveScanRel, PlannerSettings settings) {
     RelDataTypeFactory typeFactory = hiveScanRel.getCluster().getTypeFactory();
     HiveScan hiveScan = (HiveScan) hiveScanRel.getGroupScan();
     Map<String, String> parameters = hiveScan.getHiveReadEntry().getHiveTableWrapper().getParameters();
@@ -128,6 +132,9 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
             scanSpec,
             hiveScanCols
         );
+
+    nativeMapRDBScan.getFormatPlugin().getConfig().readTimestampWithZoneOffset =
+        settings.getOptions().getBoolean(ExecConstants.HIVE_READ_MAPRDB_JSON_TIMESTAMP_WITH_TIMEZONE_OFFSET);
 
     List<String> nativeScanColNames = hiveScanRel.getRowType().getFieldList().stream()
         .map(field -> replaceOverriddenColumnId(parameters, field.getName()))
