@@ -1,6 +1,6 @@
 ---
 title: "S3 Storage Plugin"
-date: 2018-12-22
+date: 2019-01-10
 parent: "Connect a Data Source"
 ---
 Drill works with data stored in the cloud. With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries. 
@@ -19,7 +19,7 @@ For additional information, refer to the [HDFS S3 documentation](https://hadoop.
 
 ## Providing AWS Credentials  
 
-Your environment determines where you provide your AWS credentials. You can use the following methods to define your AWS credentials:  
+Your environment determines where you provide your AWS credentials. You define your AWS credentials:  
 
 - In the S3 storage plugin configuration:
 	- [You can point to an encrypted file in an external provider.]({{site.baseurl}}/docs/s3-storage-plugin/#using-an-external-provider-for-credentials) (Drill 1.15 and later) 
@@ -64,43 +64,47 @@ If you use IAM roles/Instance profiles, to access data in s3, use the following 
 
 ##Configuring the S3 Storage Plugin
 
-The Storage page in the Drill Web UI provides an S3 storage plugin that you configure to connect Drill to the S3 distributed file system registered in core-site.xml. If you did not define your AWS credentials in the core-site.xml file, you can define them in the storage plugin configuration. You can define the credentials directly in the configuration, or you can use an external provider. 
+The **Storage** page in the Drill Web UI provides an S3 storage plugin that you configure to connect Drill to the S3 distributed file system registered in `core-site.xml`. If you did not define your AWS credentials in the `core-site.xml` file, you can define them in the storage plugin configuration. You can define the credentials directly in the S3 storage plugin configuration, or you can configure the S3 storage plugin to use an external provider.
 
-To configure the S3 storage plugin, log in to the Drill Web UI at `http://<drill-hostname>:8047`. The drill-hostname is a node on which Drill is running. Go to the **Storage** page and click **Update** next to the S3 storage plugin option. Edit the configuration and then click **Update** to save the configuration.  
+To configure the S3 storage plugin, log in to the Drill Web UI at `http://<drill-hostname>:8047`. The `drill-hostname` is a node on which Drill is running. Go to the **Storage** page and click **Update** next to the S3 storage plugin option. 
 
-**Note:** The `"config"` block in the S3 storage plugin configuration contains contains properties to define your AWS credentials. Do not include the `"config"` block in your S3 storage plugin configuration if you defined your AWS credentials in the core-site.xml file. 
+**Note:** The `"config"` block in the S3 storage plugin configuration contains properties to define your AWS credentials. Do not include the `"config"` block in your S3 storage plugin configuration if you defined your AWS credentials in the `core-site.xml` file.  
 
-Use either of the following methods to provide your credentials:
+Configure the S3 storage plugin configuration to use an external provider for credentials or directly add the credentials in the configuration itself, as described in the following sections. Click **Update** to save the configuration when done. 
 
 ### Using an External Provider for Credentials
-Starting in Drill 1.15, the S3 storage plugin supports the [Hadoop Credential Provider API](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html]), which allows you to store secret keys and other sensitive data in an encrypted file in an external provider versus storing them in plain text in a configuration file or storage plugin configuration.
+Starting in Drill 1.15, the S3 storage plugin supports the [Hadoop Credential Provider API](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html%5D), which allows you to store secret keys and other sensitive data in an encrypted file in an external provider versus storing them in plain text in a configuration file or directly in the storage plugin configuration.
+ 
+When you configure the S3 storage plugin to use an external provider, Drill first checks the external provider for the keys. If the keys are not available via the provider, or the provider is not configured, Drill can fall back to using the plain text data in the `core-site.xml` file or S3 storage plugin configuration. 
 
-When you configure the S3 storage plugin to use an external provider, Drill first checks the external provider for the keys. If the keys are not available via the provider, or the provider is not configured, Drill can fall back to using the plain text data in the `core-site.xml` file or S3 configuration, unless the `hadoop.security.credential.clear-text-fallback` property is set to `false`.  
+For fallback to work, you must include the `hadoop.security.credential.clear-text-fallback` property in the S3 storage plugin configuration, with the property set to 'true'. 
+
+For subsequent connections, if you want Drill to connect using different credentials, you can include the `fs.s3a.impl.disable.cache` property in the  configuration. See [Reconnecting to an S3 Bucket Using Different Credentials]({{site.baseurl}}/docs/s3-storage-plugin/#reconnecting-to-an-s3-bucket-using-different-credentials) for more information.  
 
 **Configuring the S3 Plugin to use an External Provider**  
-
-Add the bucket name, `hadoop.security.credential.provider.path` and `fs.s3a.impl.disable.cache` properties to the S3 storage plugin configuration, as shown in the following example:
+Add the bucket name and the `hadoop.security.credential.provider.path` property to the S3 storage plugin configuration. The `hadoop.security.credential.provider.path` property should point to a file that contains your encrypted passwords. Optionally, include the `hadoop.security.credential.clear-text-fallback` property for fallback and the `fs.s3a.impl.disable.cache` property to reconnect using different credentials. 
  
+The following example shows an S3 storage plugin configuration with the S3 bucket, `hadoop.security.credential.provider.path`, and `fs.s3a.impl.disable.cache properties` set:  
+
 	{
-	 "type":
-	"file",
+ 	"type":
+    "file",
 	  "connection": "s3a://bucket-name/",
 	  "config": {
-	  	"hadoop.security.credential.provider.path":"jceks://file/tmp/s3.jceks",
-	  	"Fs.s3a.impl.disable.cache":"true",
-	  	...
-	  	},
+	    "hadoop.security.credential.provider.path":"jceks://file/tmp/s3.jceks",
+	    "fs.s3a.impl.disable.cache":"true",
+	    ...
+	    },
 	  "workspaces": {
 	    ...
-	  }
-
- 
-**Note:** The `hadoop.security.credential.provider.path` property should point to a file that contains your encrypted passwords. The `fs.s3a.impl.disable.cache` option must be set to true.
+	  }  
 
 ###Adding Credentials Directly to the S3 Plugin  
-You can add your AWS credentials directly to the S3 configuration, though this method is the least secure, but sufficient for use on a single machine, such as a laptop. 
+You can add your AWS credentials directly to the S3 configuration, though this method is the least secure, but sufficient for use on a single machine, such as a laptop. Include the S3 bucket name, the AWS access keys, and the S3 endpoint in the configuration. 
 
-Add the S3 bucket name and the `"config"` block with the properties shown in the following example: 
+Optionally, for subsequent connections, if you want Drill to connect using different credentials, you can include the `fs.s3a.impl.disable.cache` property in the  configuration. See [Reconnecting to an S3 Bucket Using Different Credentials]({{site.baseurl}}/docs/s3-storage-plugin/#reconnecting-to-an-s3-bucket-using-different-credentials) for more information.
+
+The following example shows an S3 storage plugin configuration with the S3 bucket, access key properties, and `fs.s3a.impl.disable.cache` property:
 
     {
 	"type": "file",
@@ -109,13 +113,34 @@ Add the S3 bucket name and the `"config"` block with the properties shown in the
 	"config": {
 		"fs.s3a.access.key": "<key>",
 		"fs.s3a.secret.key": "<key>",
-		"fs.s3a.endpoint": "s3.us-west-1.amazonaws.com"
+		"fs.s3a.endpoint": "s3.us-west-1.amazonaws.com",
+	    "fs.s3a.impl.disable.cache":"true"
 	},
 	"workspaces": {...
-		},
-	
-         
-Drill can now use the HDFS s3a library to access data in S3.
+		},  
+
+###Reconnecting to an S3 Bucket Using Different Credentials 
+Whether you store credentials in the S3 storage plugin configuration directly or in an external provider, you can reconnect to an existing S3 bucket using different credentials when you include the `fs.s3a.impl.disable.cache` property in the S3 storage plugin configuration. The `fs.s3a.impl.disable.cache` property disables the S3 file system cache when set to 'true'. If `fs.s3a.impl.disable.cache` is set to 'false' when Drill reconnects, Drill uses the previous credentials to connect. You must restart Drill after you enable the `fs.s3a.impl.disable.cache` property for the property to take effect.
+
+The following example S3 storage plugin configuration includes the fs.s3a.impl.disable.cache property:
+
+
+{
+ "type":
+"file",
+  "connection": "s3a://bucket-name/",
+  "config": {
+    "hadoop.security.credential.provider.path":"jceks://file/tmp/s3.jceks",
+    "fs.s3a.impl.disable.cache":"true",
+    ...
+    },
+  "workspaces": {
+    ...
+  }
+
+
+
+  
 
 
 ## Quering Parquet Format Files On S3 

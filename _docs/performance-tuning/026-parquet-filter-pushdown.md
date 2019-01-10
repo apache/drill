@@ -1,6 +1,6 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2018-12-14
+date: 2019-01-10
 parent: "Performance Tuning"
 ---
 
@@ -113,7 +113,7 @@ The following table lists the supported and unsupported clauses, operators, data
 | Clauses              | WHERE,   <sup>1</sup>WITH, HAVING (HAVING is supported if Drill can pass the filter through GROUP   BY.)                                                                                                                                                                 | -                                       |
 | Operators            | <sup>2</sup>BETWEEN,   <sup>2</sup>ITEM, AND, OR, NOT, <sup>1</sup>IS [NOT] NULL, <sup>1</sup>IS [NOT] TRUE, <sup>1</sup>IS [NOT] FALSE, IN (An   IN list is converted to OR if the number in the IN list is within a certain   threshold, for example 20. If greater than the threshold, pruning cannot   occur.) | -                                       |
 | Comparison Operators | <>,   <, >, <=, >=, =                                                                                                                                                                                                                                         | -                                       |
-| Data Types           | INT,   BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, TIME, <sup>1</sup>BOOLEAN (true, false), <sup>3</sup>VARCHAR and DECIMAL columns                                                                                                                                                                                   | CHAR,   Hive TIMESTAMP |
+| Data Types           | INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, TIME, <sup>1</sup>BOOLEAN (true, false), <sup>3</sup>VARCHAR,CHAR (treated as VARCHAR), and DECIMAL columns                                                                                                                                                                                   | Hive TIMESTAMP |
 | Function             | CAST   is supported among the following types only: int, bigint, float, double,   <sup>1</sup>date, <sup>1</sup>timestamp, and <sup>1</sup>time                                                                                                                                                | -                                       |
 | Other                | <sup>2</sup>Enabled   native Hive reader, Files with multiple row groups, <sup>2</sup>Joins                                                                                                                                                                                       | -                                       |
 
