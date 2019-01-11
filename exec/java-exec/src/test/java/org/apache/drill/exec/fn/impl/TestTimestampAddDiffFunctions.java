@@ -73,17 +73,12 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
         String dateTimeLiteral = typeResultPair.getValue();
         String type = typeResultPair.getKey();
 
-        client.queryBuilder()
-            .sql("SELECT TIMESTAMPADD(%s, 0, CAST('%s' AS %s)) col1",
-                qualifier, dateTimeLiteral, type)
-            .run();
+        run("SELECT TIMESTAMPADD(%s, 0, CAST('%s' AS %s)) col1", qualifier, dateTimeLiteral, type);
 
         // TIMESTAMPDIFF with args of different types
         for (Map.Entry<String, String> secondArg : dateTypes.entrySet()) {
-          client.queryBuilder()
-              .sql("SELECT TIMESTAMPDIFF(%s, CAST('%s' AS %s), CAST('%s' AS %s)) col1",
-                  qualifier, dateTimeLiteral, type, secondArg.getValue(), secondArg.getKey())
-              .run();
+          run("SELECT TIMESTAMPDIFF(%s, CAST('%s' AS %s), CAST('%s' AS %s)) col1",
+              qualifier, dateTimeLiteral, type, secondArg.getValue(), secondArg.getKey());
         }
       }
     }
@@ -92,31 +87,25 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
   @Test // DRILL-3610
   public void testTimestampAddDiffTypeInference() throws Exception {
     for (String qualifier : QUALIFIERS) {
-      client.queryBuilder()
-          .sql(
-            "SELECT TIMESTAMPADD(%1$s, 0, `date`) col1," +
-                    "TIMESTAMPADD(%1$s, 0, `time`) timeReq," +
-                    "TIMESTAMPADD(%1$s, 0, `timestamp`) timestampReq," +
-                    "TIMESTAMPADD(%1$s, 0, t.time_map.`date`) dateOpt," +
-                    "TIMESTAMPADD(%1$s, 0, t.time_map.`time`) timeOpt," +
-                    "TIMESTAMPADD(%1$s, 0, t.time_map.`timestamp`) timestampOpt\n" +
-            "FROM cp.`datetime.parquet` t", qualifier)
-          .run();
+      run("SELECT TIMESTAMPADD(%1$s, 0, `date`) col1," +
+                "TIMESTAMPADD(%1$s, 0, `time`) timeReq," +
+                "TIMESTAMPADD(%1$s, 0, `timestamp`) timestampReq," +
+                "TIMESTAMPADD(%1$s, 0, t.time_map.`date`) dateOpt," +
+                "TIMESTAMPADD(%1$s, 0, t.time_map.`time`) timeOpt," +
+                "TIMESTAMPADD(%1$s, 0, t.time_map.`timestamp`) timestampOpt\n" +
+          "FROM cp.`datetime.parquet` t", qualifier);
 
-      client.queryBuilder()
-          .sql(
-            "SELECT TIMESTAMPDIFF(%1$s, `date`, `date`) col1," +
-                    "TIMESTAMPDIFF(%1$s, `time`, `time`) timeReq," +
-                    "TIMESTAMPDIFF(%1$s, `timestamp`, `timestamp`) timestampReq," +
-                    "TIMESTAMPDIFF(%1$s, `timestamp`, t.time_map.`date`) timestampReqTimestampOpt," +
-                    "TIMESTAMPDIFF(%1$s, `timestamp`, t.time_map.`timestamp`) timestampReqTimestampOpt," +
-                    "TIMESTAMPDIFF(%1$s, `date`, `time`) timeDate," +
-                    "TIMESTAMPDIFF(%1$s, `time`, `date`) Datetime," +
-                    "TIMESTAMPDIFF(%1$s, t.time_map.`date`, t.time_map.`date`) dateOpt," +
-                    "TIMESTAMPDIFF(%1$s, t.time_map.`time`, t.time_map.`time`) timeOpt," +
-                    "TIMESTAMPDIFF(%1$s, t.time_map.`timestamp`, t.time_map.`timestamp`) timestampOpt\n" +
-            "FROM cp.`datetime.parquet` t", qualifier)
-          .run();
+      run("SELECT TIMESTAMPDIFF(%1$s, `date`, `date`) col1," +
+                "TIMESTAMPDIFF(%1$s, `time`, `time`) timeReq," +
+                "TIMESTAMPDIFF(%1$s, `timestamp`, `timestamp`) timestampReq," +
+                "TIMESTAMPDIFF(%1$s, `timestamp`, t.time_map.`date`) timestampReqTimestampOpt," +
+                "TIMESTAMPDIFF(%1$s, `timestamp`, t.time_map.`timestamp`) timestampReqTimestampOpt," +
+                "TIMESTAMPDIFF(%1$s, `date`, `time`) timeDate," +
+                "TIMESTAMPDIFF(%1$s, `time`, `date`) Datetime," +
+                "TIMESTAMPDIFF(%1$s, t.time_map.`date`, t.time_map.`date`) dateOpt," +
+                "TIMESTAMPDIFF(%1$s, t.time_map.`time`, t.time_map.`time`) timeOpt," +
+                "TIMESTAMPDIFF(%1$s, t.time_map.`timestamp`, t.time_map.`timestamp`) timestampOpt\n" +
+          "FROM cp.`datetime.parquet` t", qualifier);
     }
   }
 
@@ -131,7 +120,7 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
               "TIMESTAMPADD(YEAR, 1, t.time_map.`timestamp`) timestampOpt\n" +
         "FROM cp.`datetime.parquet` t";
 
-    client.testBuilder()
+    testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("dateReq", "timeReq", "timestampReq", "dateOpt", "timeOpt", "timestampOpt")
@@ -152,7 +141,7 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
             "TIMESTAMPDIFF(YEAR, TIMESTAMP '2020-03-24 17:40:52.123', t.time_map.`timestamp`) timestampOpt\n" +
         "FROM cp.`datetime.parquet` t";
 
-    client.testBuilder()
+    testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("dateReq", "timeReq", "timestampReq", "dateOpt", "timeOpt", "timestampOpt")
@@ -173,7 +162,7 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
             "(SELECT CASE WHEN FALSE THEN TIME '12:00:03.600' ELSE null END AS a," +
             "CASE WHEN FALSE THEN 2 ELSE null END AS b)";
 
-    client.testBuilder()
+    testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6")
@@ -192,11 +181,28 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
               "TIMESTAMPDIFF(DAY, DATE '2012-01-01', DATE '2013-01-01') col6," +
               "TIMESTAMPDIFF(DAY, DATE '2013-01-01', DATE '2014-01-01') col7";
 
-    client.testBuilder()
+    testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
         .baselineValues(0L, 0L, 0L, 1L, -1L, 366L, 365L)
+        .go();
+  }
+
+  @Test // DRILL-6967
+  public void testTimestampDiffQuarter() throws Exception {
+    String query =
+        "SELECT TIMESTAMPDIFF(SQL_TSI_QUARTER, date '1996-03-09', date '1998-03-09') AS col1," +
+                "TIMESTAMPDIFF(QUARTER, date '2019-01-01', date '2019-01-17') AS col2," +
+                "TIMESTAMPDIFF(SQL_TSI_QUARTER, date '2019-01-01', date '2019-03-31') AS col3," +
+                "TIMESTAMPDIFF(QUARTER, date '2019-01-01', date '2019-04-01') AS col4," +
+                "TIMESTAMPDIFF(SQL_TSI_QUARTER, date '1970-01-01', date '2019-01-11') AS col5";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3", "col4", "col5")
+        .baselineValues(8L, 0L, 0L, 1L, 196L)
         .go();
   }
 }
