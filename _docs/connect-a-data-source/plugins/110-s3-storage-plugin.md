@@ -1,6 +1,6 @@
 ---
 title: "S3 Storage Plugin"
-date: 2019-01-10
+date: 2019-01-11
 parent: "Connect a Data Source"
 ---
 Drill works with data stored in the cloud. With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries. 
@@ -73,7 +73,7 @@ To configure the S3 storage plugin, log in to the Drill Web UI at `http://<drill
 Configure the S3 storage plugin configuration to use an external provider for credentials or directly add the credentials in the configuration itself, as described in the following sections. Click **Update** to save the configuration when done. 
 
 ### Using an External Provider for Credentials
-Starting in Drill 1.15, the S3 storage plugin supports the [Hadoop Credential Provider API](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html%5D), which allows you to store secret keys and other sensitive data in an encrypted file in an external provider versus storing them in plain text in a configuration file or directly in the storage plugin configuration.
+Starting in Drill 1.15, the S3 storage plugin supports the [Hadoop Credential Provider API](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html), which allows you to store secret keys and other sensitive data in an encrypted file in an external provider versus storing them in plain text in a configuration file or directly in the storage plugin configuration.
  
 When you configure the S3 storage plugin to use an external provider, Drill first checks the external provider for the keys. If the keys are not available via the provider, or the provider is not configured, Drill can fall back to using the plain text data in the `core-site.xml` file or S3 storage plugin configuration. 
 
@@ -125,23 +125,18 @@ Whether you store credentials in the S3 storage plugin configuration directly or
 The following example S3 storage plugin configuration includes the fs.s3a.impl.disable.cache property:
 
 
-{
- "type":
-"file",
-  "connection": "s3a://bucket-name/",
-  "config": {
-    "hadoop.security.credential.provider.path":"jceks://file/tmp/s3.jceks",
-    "fs.s3a.impl.disable.cache":"true",
-    ...
-    },
-  "workspaces": {
-    ...
-  }
-
-
-
-  
-
+	{
+	 "type":
+	"file",
+	  "connection": "s3a://bucket-name/",
+	  "config": {
+	    "hadoop.security.credential.provider.path":"jceks://file/tmp/s3.jceks",
+	    "fs.s3a.impl.disable.cache":"true",
+	    ...
+	    },
+	  "workspaces": {
+	    ...
+	  }
 
 ## Quering Parquet Format Files On S3 
 
