@@ -1,6 +1,6 @@
 ---
 title: "Math and Trig"
-date: 2018-06-27 20:53:00 UTC
+date: 2019-01-11
 parent: "SQL Functions"
 ---
 Drill supports the math functions shown in the following table of math functions plus trig functions listed at the end of this section. Most math functions and all trig functions take these input types:
@@ -44,8 +44,9 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOA
 | RSHIFT(x, y) | Same as input | Shifts the binary x by y times to the right.                              |
 | SIGN(x)      | INT           | Returns the sign of x.                                                    |
 | SQRT(x)      | Same as input | Returns the square root of x.                                             |
-| TRUNC(x, y)  | Same as input | Truncates x to y decimal places. Specifying y is optional. Default is 1.  |
-| TRUNC(x, y)  | DECIMAL       | Truncates x to y decimal places.                                          |
+| TRUNC(x, y)  | DOUBLE        | Truncates x to y decimal places. Specifying y is optional. Default is 0.  |  
+
+
 
 ## Math Function Examples
 
