@@ -217,8 +217,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
   private long semiCountTotal;
   private long semiCountDuplicates;
-  private long semiDupDecisionThreshold;
+  private long semiDupDecisionPoint; // The number of incoming at which to stop and make the "continue skip" decision
   private boolean semiSkipDuplicates; // optional, for semi join
+  private int semiSkipDuplicatesMinPercentage;
 
   /**
    * This holds information about the spilled partitions for the build and probe side.
@@ -803,7 +804,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     partitions = new HashPartition[numPartitions];
     // Runtime stats for semi-join: Help decide early if seen too many duplicates (based on initial data, about 32K per partition)
     semiCountTotal = semiCountDuplicates = 0;
-    semiDupDecisionThreshold = // average each partition's hash table half full ( + 1 to avoid zero in case numPartitions == 1 )
+    semiDupDecisionPoint = // average each partition's hash table half full ( + 1 to avoid zero in case numPartitions == 1 )
       ((numPartitions + 1) / 2) * context.getOptions().getLong(ExecConstants.MIN_HASH_TABLE_SIZE_KEY);
   }
 
@@ -980,7 +981,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       }
       // to be used in case of a Semi Join skippinging duplicates
       spillControlCalc = new HashJoinSpillControlImpl(allocator, RECORDS_PER_BATCH,
-        (int) context.getOptions().getOption(ExecConstants.HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY));
+        (int) context.getOptions().getOption(ExecConstants.HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY_VALIDATOR), batchMemoryManager);
     }
 
     if (spilledState.isFirstCycle()) {
@@ -1051,16 +1052,18 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
             semiCountTotal++;
             boolean aDuplicate = partitions[currPart].insertKeyIntoHashTable(buildBatch.getContainer(), ind, hashCode);
             // A heuristic: Make a decision once the threshold was met - either continue skipping duplicates, or stop
-            // (skipping duplicates carries a cost, so better avoid if duplicates are few ,i.e. < %20 )
-            if ( semiCountTotal == semiDupDecisionThreshold) {  // met threshold ?
-              if ( semiCountDuplicates < (semiDupDecisionThreshold * 0.2) ) { // when less than 20% duplicates
+            // (skipping duplicates carries a cost, so better avoid if duplicates are too few)
+            if ( semiCountTotal == semiDupDecisionPoint) {  // got enough incoming rows to decide ?
+              long threshold = semiCountTotal * semiSkipDuplicatesMinPercentage / 100;
+              if ( semiCountDuplicates < threshold ) { // when duplicates found were less than the percentage threshold, stop skipping
                 for (HashPartition partn : partitions) {
                   partn.stopSkippingDuplicates();
                 }
                 semiSkipDuplicates = false;
                 spillCalc = buildCalc; // back to using the regular calc
               }
-              logger.debug("Semi {} skipping duplicates after {} rows, seeing {} percent duplicates", semiSkipDuplicates ? "to continue" : "stopped", semiCountTotal, (100 * semiCountDuplicates) / semiCountTotal);
+              logger.debug("Semi {} skipping duplicates after receiving {} rows with {} percent duplicates",
+                semiSkipDuplicates ? "to continue" : "stopped", semiCountTotal, (100 * semiCountDuplicates) / semiCountTotal);
             }
             if ( aDuplicate ) {
               semiCountDuplicates++;
@@ -1234,7 +1237,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     this.probeBatch = left;
     joinType = popConfig.getJoinType();
     semiJoin = popConfig.isSemiJoin();
-    semiSkipDuplicates = semiJoin && context.getOptions().getBoolean(ExecConstants.HASHJOIN_SEMI_SKIP_DUPLICATES_KEY);
+    semiSkipDuplicatesMinPercentage = (int) context.getOptions().getOption(ExecConstants.HASHJOIN_SEMI_PERCENT_DUPLICATES_TO_SKIP_VALIDATOR);
+    semiSkipDuplicates = semiJoin &&
+      semiSkipDuplicatesMinPercentage < 100 && // can't have 100 percent, at least the first key is not a duplicate
+      context.getOptions().getBoolean(ExecConstants.HASHJOIN_SEMI_SKIP_DUPLICATES_KEY);
     joinIsLeftOrFull  = joinType == JoinRelType.LEFT  || joinType == JoinRelType.FULL;
     joinIsRightOrFull = joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL;
     conditions = popConfig.getConditions();

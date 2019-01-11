@@ -160,10 +160,14 @@ public final class ExecConstants {
   public static final String HASHJOIN_SEMI_SKIP_DUPLICATES_KEY = "exec.hashjoin.semi_skip_duplicates";
   public static final BooleanValidator HASHJOIN_SEMI_SKIP_DUPLICATES_VALIDATOR = new BooleanValidator(HASHJOIN_SEMI_SKIP_DUPLICATES_KEY,
     new OptionDescription("When TRUE, make Semi Hash Join check for incoming duplicated and skip those (use more cpu, less memory)"));
+  public static final String HASHJOIN_SEMI_PERCENT_DUPLICATES_TO_SKIP_KEY = "exec.hashjoin.semi_percent_duplicates_to_skip";
+  public static final IntegerValidator HASHJOIN_SEMI_PERCENT_DUPLICATES_TO_SKIP_VALIDATOR = new IntegerValidator(HASHJOIN_SEMI_PERCENT_DUPLICATES_TO_SKIP_KEY,
+    0, 100,
+    new OptionDescription("Semi join to skip duplicates only if initial check finds duplicates in incoming as no less than this percentage"));
   public static final String HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY_KEY = "exec.hashjoin.min_batches_in_available_memory";
-  public static final IntegerValidator HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY = new IntegerValidator(HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY_KEY,
+  public static final IntegerValidator HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY_VALIDATOR = new IntegerValidator(HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY_KEY,
     1, Integer.MAX_VALUE,
-    new OptionDescription("To avoid spill, at least this number of batches must fit in the available memory (for semi join skipping duplicates"));
+    new OptionDescription("Threshold: Start spilling if available memory is less than this number of batches (only for semi join skipping duplicates"));
 
   // Hash Aggregate Options
   public static final String HASHAGG_NUM_PARTITIONS_KEY = "exec.hashagg.num_partitions";

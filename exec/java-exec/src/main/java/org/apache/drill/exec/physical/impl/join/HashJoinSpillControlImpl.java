@@ -19,6 +19,7 @@
 package org.apache.drill.exec.physical.impl.join;
 
   import org.apache.drill.exec.memory.BufferAllocator;
+  import org.apache.drill.exec.record.RecordBatchMemoryManager;
   import org.apache.drill.exec.record.RecordBatchSizer;
   import org.apache.drill.exec.record.VectorContainer;
 
@@ -31,11 +32,13 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.HashJo
   private BufferAllocator allocator;
   private int recordsPerBatch;
   private int minBatchesInAvailableMemory;
+  private RecordBatchMemoryManager batchMemoryManager;
 
-  HashJoinSpillControlImpl(BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory) {
+  HashJoinSpillControlImpl(BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory, RecordBatchMemoryManager batchMemoryManager) {
     this.allocator = allocator;
     this.recordsPerBatch = recordsPerBatch;
     this.minBatchesInAvailableMemory = minBatchesInAvailableMemory;
+    this.batchMemoryManager = batchMemoryManager;
   }
 
   @Override
@@ -44,7 +47,8 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.HashJo
     assert currentVectorContainer.getRecordCount() == recordsPerBatch;
     // Expected new batch size like the current, plus the Hash Value vector (4 bytes per HV)
     long batchSize = new RecordBatchSizer(currentVectorContainer).getActualSize() + 4 * recordsPerBatch;
-    long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory();
+    long reserveForOutgoing = batchMemoryManager.getOutputBatchSize();
+    long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory() - reserveForOutgoing;
     boolean needsSpill = minBatchesInAvailableMemory * batchSize > memoryAvailableNow;
     return needsSpill;   // go spill if too little memory is available
   }
