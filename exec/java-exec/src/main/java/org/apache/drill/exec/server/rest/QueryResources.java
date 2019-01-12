@@ -134,6 +134,7 @@ public class QueryResources {
     private final List<List<String>> rows;
     private final String queryId;
     private final String rowsPerPageValues;
+    private final String queryState;
 
     public TabularResult(QueryResult result, String rowsPerPageValuesAsStr) {
       rowsPerPageValues = rowsPerPageValuesAsStr;
@@ -149,6 +150,7 @@ public class QueryResources {
 
       this.columns = ImmutableList.copyOf(result.columns);
       this.rows = rows;
+      this.queryState = result.queryState;
     }
 
     public boolean isEmpty() {
@@ -170,6 +172,10 @@ public class QueryResources {
     //Used by results.ftl to render default number of pages per row
     public String getRowsPerPageValues() {
       return rowsPerPageValues;
+    }
+
+    public String getQueryState() {
+      return queryState;
     }
   }
 
