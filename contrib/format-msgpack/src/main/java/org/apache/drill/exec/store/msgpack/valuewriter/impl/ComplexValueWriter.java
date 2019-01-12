@@ -83,6 +83,15 @@ public abstract class ComplexValueWriter extends AbstractValueWriter {
   protected void writeElement(MessageUnpacker unpacker, MapWriter mapWriter, ListWriter listWriter, String fieldName,
       FieldSelection selection, ColumnMetadata schema) throws MessageFormatException, IOException {
 
+    // ColumnMetadata cachedChildSchema = context.getFieldPathTracker().getSelectedColumnMetadata();
+    // if (schema != null) {
+    //   if (cachedChildSchema == null) {
+    //     System.out.println("ERROR!!!!! COMPLEX no cached schema");
+    //   } else if (!cachedChildSchema.isEquivalent(schema)) {
+    //     System.out.println("ERROR!!!!! COMPLEX not equivalent");
+    //   }
+    // }
+
     // Get the type of the value. It can be any of the MAP, ARRAY, FLOAT, BOOLEAN,
     // STRING, INTEGER.
     ValueType valueType = unpacker.getNextFormat().getValueType();

@@ -115,6 +115,7 @@ public class MsgpackRecordReader extends AbstractRecordReader {
     while (context.getRecordCount() < DEFAULT_ROWS_PER_BATCH) {
       try {
         writer.setPosition(context.getRecordCount());
+        context.getFieldPathTracker().setSchema(msgpackSchema.getTupleMetadata());
         hasMore = msgpackReader.write(writer, msgpackSchema.getTupleMetadata());
         if (!hasMore) {
           break;

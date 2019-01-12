@@ -57,31 +57,34 @@ public class ArrayValueWriter extends ComplexValueWriter {
   public void write(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
       FieldSelection selection, ColumnMetadata schema) throws IOException {
 
+
     if (mapWriter != null) {
       // Write the array in map.
       ListWriter subListWriter = mapWriter.list(fieldName);
-      ColumnMetadata subSchema = getArrayInMapSubSchema(schema);
-      writeArrayValue(unpacker, subListWriter, selection, subSchema);
+      ColumnMetadata arrayElementSchema = getArrayInMapSubSchema(schema);
+      writeArrayValue(unpacker, subListWriter, selection, arrayElementSchema);
     } else {
       // Write the array in array.
       ListWriter subListWriter = listWriter.list();
-      ColumnMetadata subSchema = getArrayInArraySubSchema(schema);
-      writeArrayValue(unpacker, subListWriter, selection, subSchema);
+      ColumnMetadata subArrayElementSchema = getArrayInArraySubSchema(schema);
+      writeArrayValue(unpacker, subListWriter, selection, subArrayElementSchema);
     }
   }
 
   private void writeArrayValue(MessageUnpacker unpacker, ListWriter listWriter, FieldSelection selection,
       ColumnMetadata subSchema) throws IOException {
-    if (context.hasSchema()) {
-      if (subSchema == null) {
-        logger.debug("------no schema to write list value -> skipping");
-        return;
-      }
-    }
     try {
       listWriter.startList();
       context.getFieldPathTracker().enterArray();
-      int size = unpacker.unpackArrayHeader();
+      ColumnMetadata cachedChildSchema = context.getFieldPathTracker().getColumnMetadata();
+      if (subSchema != null) {
+        if (cachedChildSchema == null) {
+          System.out.println("ERROR!!!!! ARRAY no cached schema");
+        } else if (!cachedChildSchema.isEquivalent(subSchema)) {
+          System.out.println("ERROR!!!!! ARRAY not equivalent");
+        }
+      }
+    int size = unpacker.unpackArrayHeader();
       for (int i = 0; i < size; i++) {
         writeElement(unpacker, null, listWriter, null, selection, subSchema);
       }
@@ -101,10 +104,6 @@ public class ArrayValueWriter extends ComplexValueWriter {
    * @return the type of the elements in the array
    */
   private ColumnMetadata getArrayInMapSubSchema(ColumnMetadata schema) {
-    if (!context.hasSchema()) {
-      // We don't have a shema to work with.
-      return null;
-    }
     return schema;
   }
 
@@ -117,14 +116,13 @@ public class ArrayValueWriter extends ComplexValueWriter {
    * @return the type of the elements in the array
    */
   private ColumnMetadata getArrayInArraySubSchema(ColumnMetadata schema) {
-    if (!context.hasSchema()) {
-      // We don't have a shema to work with.
-      return null;
-    }
-    ColumnMetadata childSchema = schema.childSchema();
-    if (!context.isLearningSchema()) {
-      if (childSchema == null) {
-        throw new MsgpackParsingException("Array in array element has no child schema.");
+    ColumnMetadata childSchema = null;
+    if (schema != null) {
+      childSchema = schema.childSchema();
+      if (!context.isLearningSchema()) {
+        if (childSchema == null) {
+          throw new MsgpackParsingException("Array in array element has no child schema.");
+        }
       }
     }
     return childSchema;

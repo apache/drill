@@ -57,15 +57,14 @@ public class MapValueWriter extends ComplexValueWriter {
   public void write(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
       FieldSelection selection, ColumnMetadata schema) throws IOException {
 
-    if (context.hasSchema()) {
-      if (schema == null) {
-        logger.debug("------no schema for map value -> skipping.");
-        return;
-      } else if (schema.structureType() != StructureType.TUPLE) {
+    if (schema != null) {
+      if (schema.structureType() != StructureType.TUPLE) {
         logger.debug("------schema is not a MAP for map value -> skipping.");
         return;
       }
     }
+
+
 
     if (mapWriter != null) {
       // We are inside a mapWriter (inside a map) and we encoutered a field of type
@@ -87,9 +86,9 @@ public class MapValueWriter extends ComplexValueWriter {
       context.getFieldPathTracker().enterMap();
       writer.start();
 
-      int n = unpacker.unpackMapHeader();
+        int n = unpacker.unpackMapHeader();
       for (int i = 0; i < n; i++) {
-        String fieldName = getFieldName(unpacker);
+        String fieldName = selectField(unpacker);
         if (fieldName == null) {
           // skip the value associated with this key (the key we can't read)
           unpacker.skipValue();
@@ -102,7 +101,7 @@ public class MapValueWriter extends ComplexValueWriter {
         }
         FieldSelection childSelection = selection.getChild(fieldName);
         if (childSelection.isNeverValid()) {
-          logger.debug("Skipping not selected field: {}", context.getFieldPathTracker(), fieldName);
+          logger.debug("Skipping not selected field: {}", context.getFieldPathTracker());
           unpacker.skipValue();
           continue;
         }
@@ -113,13 +112,13 @@ public class MapValueWriter extends ComplexValueWriter {
         }
 
         ColumnMetadata childSchema = null;
-        if (context.hasSchema()) {
+        if (tupleMetadata != null) {
           childSchema = tupleMetadata.metadata(fieldName);
           if (!context.isLearningSchema()) {
             if (childSchema == null) {
               unpacker.skipValue();
               if (context.isLenient()) {
-                logger.debug("Skipping field with no schema: {}", context.getFieldPathTracker(), fieldName);
+                logger.debug("Skipping field with no schema: {}", context.getFieldPathTracker());
                 continue;
               } else {
                 throw new MsgpackParsingException(context.getFieldPathTracker() + " has no child schema.");
@@ -136,28 +135,6 @@ public class MapValueWriter extends ComplexValueWriter {
   }
 
   /**
-   * Get the schema of the given field
-   *
-   * @param tupleMetadata
-   *                        the schema of the map we are writing.
-   * @param fieldName
-   *                        the name of the field we want to write.
-   * @return the schema of the field
-   */
-  private ColumnMetadata getChildSchema(TupleMetadata tupleMetadata, String fieldName) {
-    if (!context.hasSchema()) {
-      // Not using a schema.
-      return null;
-    }
-    // Find the schema of the field.
-    ColumnMetadata c = tupleMetadata.metadata(fieldName);
-    if (c == null) {
-      throw new MsgpackParsingException("Field name: " + fieldName + " has no child schema.");
-    }
-    return c;
-  }
-
-  /**
    * In message pack the field names (key) are msgpack values. That is they can be
    * string or number etc. This method tries coerce the msgpack value into a
    * string so it can write the key into drill's MapWriter.
@@ -166,7 +143,7 @@ public class MapValueWriter extends ComplexValueWriter {
    *                   the value (key)
    * @return the key represented as a java string.
    */
-  private String getFieldName(MessageUnpacker unpacker) throws IOException {
+  private String selectField(MessageUnpacker unpacker) throws IOException {
     ValueType type = unpacker.getNextFormat().getValueType();
     if (type == ValueType.STRING) {
       int size = unpacker.unpackRawStringHeader();

@@ -51,10 +51,8 @@ public abstract class AbstractScalarValueWriter extends AbstractValueWriter impl
    * @return the target type desired.
    */
   protected MinorType getTargetType(MinorType defaultType, ColumnMetadata schema) {
-    if (context.hasSchema()) {
-      if (schema != null) {
-        return schema.type();
-      }
+    if (schema != null) {
+      return schema.type();
     }
     return defaultType;
   }
@@ -66,6 +64,15 @@ public abstract class AbstractScalarValueWriter extends AbstractValueWriter impl
   @Override
   public void write(MessageUnpacker unpacker, MapWriter mapWriter, String fieldName, ListWriter listWriter,
       FieldSelection selection, ColumnMetadata schema) throws IOException {
+
+        ColumnMetadata cachedChildSchema = context.getFieldPathTracker().getSelectedColumnMetadata();
+        if(schema != null){
+          if (cachedChildSchema == null) {
+            System.out.println("ERROR!!!!! SCALAR no cached schema: " + context.getFieldPathTracker());
+          } else if (!cachedChildSchema.isEquivalent(schema)) {
+            System.out.println("ERROR!!!!! SCALAR not equivalent: " + context.getFieldPathTracker());
+          }
+        }
 
     MinorType targetSchemaType = getTargetType(getDefaultType(), schema);
     if (logger.isDebugEnabled()) {

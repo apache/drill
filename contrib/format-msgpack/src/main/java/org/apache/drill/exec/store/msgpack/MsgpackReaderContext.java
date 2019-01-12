@@ -66,9 +66,9 @@ public class MsgpackReaderContext {
     return fieldPathTracker;
   }
 
-  public boolean hasSchema() {
-    return hasSchema;
-  }
+  // public boolean hasSchema() {
+  //   return hasSchema;
+  // }
 
   public boolean isLenient() {
     return config.isLenient();

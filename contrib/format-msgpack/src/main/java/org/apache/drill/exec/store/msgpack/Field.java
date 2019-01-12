@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.compress.utils.CharsetNames;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 public class Field {
 
@@ -41,6 +43,10 @@ public class Field {
   private Map<ByteBuffer, Field> children;
 
   private Field selectedField = null;
+
+  private TupleMetadata tupleMetadata;
+
+  private ColumnMetadata columnMetadata;
 
   public Field() {
     parent = null;
@@ -78,10 +84,21 @@ public class Field {
       aByteBuffer.get(nameBytes);
       String name = new String(nameBytes, CharsetNames.UTF_8);
       selectedField = new Field(this, name);
+      if (tupleMetadata != null) {
+        ColumnMetadata fieldMeta = tupleMetadata.metadata(name);
+        if(fieldMeta==null){
+          System.out.println("!!!!!!FIELD select but no meta available?");
+        }
+        selectedField.setColumnMetadata(fieldMeta);
+      }
       ByteBuffer byteBufferFieldKey = ByteBuffer.wrap(nameBytes);
       children.put(byteBufferFieldKey, selectedField);
     }
     return selectedField.getName();
+  }
+
+  private void setColumnMetadata(ColumnMetadata columnMetadata) {
+    this.columnMetadata = columnMetadata;
   }
 
   public Field enterMap() {
@@ -99,8 +116,15 @@ public class Field {
     if (children == null) {
       // create the children map if it's not yet created.
       children = new HashMap<ByteBuffer, Field>();
-    }
 
+      if (this.columnMetadata != null) {
+        if (this.columnMetadata.isMap()) {
+          this.setTupleMetadata(this.columnMetadata.mapSchema());
+        } else {
+          System.out.println("!!!!!!!!!FIELD entering map but it's not of map type?");
+        }
+      }
+    }
   }
 
   public Field enterArray() {
@@ -114,6 +138,17 @@ public class Field {
 
   private void setArray() {
     this.type = FieldType.ARRAY;
+    if (this.columnMetadata != null) {
+      if(!this.columnMetadata.isArray()){
+        System.out.println("!!!!!!!!!!FIELD entering array but schema is not for array?");
+      }
+      if (parent.isMap()) {
+        //this.columnMetadata = this.columnMetadata;
+      }
+      if (parent.isArray()) {
+        this.columnMetadata = this.columnMetadata.childSchema();
+      }
+    }
   }
 
   public Field leaveMap() {
@@ -149,5 +184,25 @@ public class Field {
       s += selectedField.toString();
     }
     return s;
+  }
+
+  public void setTupleMetadata(TupleMetadata tupleMetadata) {
+    this.tupleMetadata = tupleMetadata;
+  }
+
+  public ColumnMetadata getColumnMetadata() {
+    return this.columnMetadata;
+  }
+
+  public ColumnMetadata getSelectedColumnMetadata() {
+    if (this.selectedField == null) {
+      if (isArray()) {
+        return this.columnMetadata;
+      } else {
+        System.out.println("FIELDLDTRACKER!!!!!!!! getSelectedColumnMetadata none selected");
+        return null;
+      }
+    }
+    return this.selectedField.getColumnMetadata();
   }
 }

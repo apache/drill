@@ -20,6 +20,9 @@ package org.apache.drill.exec.store.msgpack;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+
 public class FieldPathTracker {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldPathTracker.class);
@@ -59,9 +62,35 @@ public class FieldPathTracker {
 
   @Override
   public String toString() {
-    if(current == null){
+    if (current == null) {
       return "root";
     }
     return rootField.toString();
   }
+
+  public void setSchema(TupleMetadata tupleMetadata) {
+    this.rootField.setTupleMetadata(tupleMetadata);
+  }
+
+  public ColumnMetadata getColumnMetadata() {
+    if (current == null) {
+      return rootField.getColumnMetadata();
+    }
+    if(this.current==null){
+      System.out.println("FIELDTRACKER!!!!!!! getColumnMetadata null current");
+      return null;
+    }
+      return this.current.getColumnMetadata();
+  }
+
+public ColumnMetadata getSelectedColumnMetadata() {
+  if (current == null) {
+    return rootField.getSelectedColumnMetadata();
+  }
+  if(this.current==null){
+    System.out.println("FIELDTRACKER!!!!!!!! getSelectedColumnMetadata null current");
+    return null;
+  }
+  return this.current.getSelectedColumnMetadata();
+}
 }
