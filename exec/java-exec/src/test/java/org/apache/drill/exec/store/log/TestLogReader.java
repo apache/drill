@@ -22,6 +22,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
@@ -30,12 +31,14 @@ import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+
+import java.util.List;
 
 public class TestLogReader extends ClusterTest {
 
@@ -119,6 +122,7 @@ public class TestLogReader extends ClusterTest {
     pluginConfig.getFormats().put("date-log",logDateConfig);
     pluginConfig.getFormats().put( "mysql-log", mysqlLogConfig);
     pluginRegistry.createOrUpdate("cp", pluginConfig, false);
+
   }
 
   @Test
@@ -138,7 +142,23 @@ public class TestLogReader extends ClusterTest {
         .addRow(2017, 12, 19)
         .build();
 
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testWildcardLargeFile() throws RpcException {
+    String sql = "SELECT * FROM cp.`regex/large.log1`";
+    List<QueryDataBatch> batches = client.queryBuilder().sql(sql).results();
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("year", MinorType.INT)
+        .addNullable("month", MinorType.INT)
+        .addNullable("day", MinorType.INT)
+        .build();
+
+    for (QueryDataBatch queryDataBatch : batches) {
+      queryDataBatch.release();
+    }
   }
 
   @Test
@@ -159,7 +179,7 @@ public class TestLogReader extends ClusterTest {
 
 //    results.print();
 //    expected.print();
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -181,7 +201,7 @@ public class TestLogReader extends ClusterTest {
 
 //    results.print();
 //    expected.print();
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -198,7 +218,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("2017-12-18 10:52:37,652 [main] INFO  o.a.drill.common.config.DrillConfig - Configuration and plugin file(s) identified in 115ms.")
         .addRow("2017-12-19 11:12:27,278 [main] ERROR o.apache.drill.exec.server.Drillbit - Failure during initial startup of Drillbit.")
         .build();
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
 
@@ -215,7 +235,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("TIMESTAMP")
         .build();
 
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
 
   }
 
@@ -256,7 +276,7 @@ public class TestLogReader extends ClusterTest {
 
     //results.print();
     //expected.print();
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -280,7 +300,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("070917", "16:29:12", "21", "Query","select * from location where id = 1 LIMIT 1" )
         .build();
 
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -301,7 +321,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("070917", "select * from location where id = 1 LIMIT 1" )
         .build();
 
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -321,7 +341,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("070917 16:29:12      21 Query       select * from location where id = 1 LIMIT 1" )
         .build();
 
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -337,7 +357,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("dfadkfjaldkjafsdfjlksdjflksjdlkfjsldkfjslkjl")
         .build();
 
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -359,6 +379,7 @@ public class TestLogReader extends ClusterTest {
         .addRow( null, "dfadkfjaldkjafsdfjlksdjflksjdlkfjsldkfjslkjl")
         .build();
 
-    RowSetUtilities.verify(expected, results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
 }

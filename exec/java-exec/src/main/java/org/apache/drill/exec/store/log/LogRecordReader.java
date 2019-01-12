@@ -107,7 +107,8 @@ public class LogRecordReader extends AbstractRecordReader {
 
     @Override
     public void load(int rowIndex, String value) {
-      mutator.set(rowIndex, value.getBytes());
+      byte[] bytes = value.getBytes();
+      mutator.setSafe(rowIndex, bytes, 0, bytes.length);
     }
   }
 
@@ -129,7 +130,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Long.parseLong(value));
+        mutator.setSafe(rowIndex, Long.parseLong(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -160,7 +161,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Short.parseShort(value));
+        mutator.setSafe(rowIndex, Short.parseShort(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -191,7 +192,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Integer.parseInt(value));
+        mutator.setSafe(rowIndex, Integer.parseInt(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -222,7 +223,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Float.parseFloat(value));
+        mutator.setSafe(rowIndex, Float.parseFloat(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -253,7 +254,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Double.parseDouble(value));
+        mutator.setSafe(rowIndex, Double.parseDouble(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -300,7 +301,7 @@ public class LogRecordReader extends AbstractRecordReader {
       try {
         Date d = df.parse(value);
         long milliseconds = d.getTime();
-        mutator.set(rowIndex, milliseconds);
+        mutator.setSafe(rowIndex, milliseconds);
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -356,7 +357,7 @@ public class LogRecordReader extends AbstractRecordReader {
       try {
         Date d = df.parse(value);
         int milliseconds = (int) d.getTime();
-        mutator.set(rowIndex, milliseconds);
+        mutator.setSafe(rowIndex, milliseconds);
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -412,7 +413,7 @@ public class LogRecordReader extends AbstractRecordReader {
       try {
         Date d = df.parse(value);
         long milliseconds = d.getTime();
-        mutator.set(rowIndex, milliseconds);
+        mutator.setSafe(rowIndex, milliseconds);
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
