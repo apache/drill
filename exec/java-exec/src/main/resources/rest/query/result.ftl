@@ -34,6 +34,9 @@
     <td align='left'>
       <button type="button"  title="Open in new window" onclick="popOutProfile('${model.getQueryId()}');" class="btn btn-default btn-sm">
       <b>Query Profile:</b> ${model.getQueryId()} <span class="glyphicon glyphicon-new-window"/></button>
+     </td>
+     <td>
+         <span class="input-group-addon" style="font-size:95%"><b>Query State:</b> ${model.getQueryState()}</span>
      </td><td align="right" width="100%">
        <div class="input-group">
          <span class="input-group-addon" style="font-size:95%">Delimiter </span>
