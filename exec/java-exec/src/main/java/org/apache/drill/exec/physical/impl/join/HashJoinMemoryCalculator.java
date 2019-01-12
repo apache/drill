@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
@@ -131,8 +130,9 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
     /**
      * Initializes the calculator with additional information needed.
      * @param probeEmty True if the probe is empty. False otherwise.
+     * @param numPartitionsSpilled
      */
-    void initialize(boolean probeEmty);
+    void initialize(boolean probeEmty, int numPartitionsSpilled);
 
     int getProbeRecordsPerBatch();
 
@@ -152,7 +152,7 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
   }
 
   interface HashJoinSpillControl {
-    boolean shouldSpill(VectorContainer currentVectorContainer);
+    boolean shouldSpill();
   }
   /**
    * This class represents the memory size statistics for an entire set of partitions.

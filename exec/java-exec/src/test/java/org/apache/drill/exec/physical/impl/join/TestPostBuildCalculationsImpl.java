@@ -139,7 +139,7 @@ public class TestPostBuildCalculationsImpl {
         .75, // loadFactor
         false, false); // reserveHash
 
-    calc.initialize(true);
+    calc.initialize(true, 0);
   }
 
   @Test
@@ -183,10 +183,10 @@ public class TestPostBuildCalculationsImpl {
         .75,
         true, false);
 
-    calc.initialize(true);
+    calc.initialize(true, 0);
 
-    Assert.assertFalse(calc.shouldSpill(null));
-    Assert.assertFalse(calc.shouldSpill(null));
+    Assert.assertFalse(calc.shouldSpill());
+    Assert.assertFalse(calc.shouldSpill());
   }
 
   @Test
@@ -243,14 +243,14 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false);
+    calc.initialize(false, 0);
 
     long expected = accountedProbeBatchSize
       + 160 // in memory partitions
       + 20 // max output batch size
       + 2 * 10 // Hash Table
       + 2 * 10; // Hash join helper
-    Assert.assertFalse(calc.shouldSpill(null));
+    Assert.assertFalse(calc.shouldSpill());
     Assert.assertEquals(expected, calc.getConsumedMemory());
     Assert.assertNull(calc.next());
   }
@@ -309,14 +309,14 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false);
+    calc.initialize(false, 0);
 
     long expected = accountedProbeBatchSize
       + 160 // in memory partitions
       + 20 // max output batch size
       + 2 * 10 // Hash Table
       + 2 * 10; // Hash join helper
-    Assert.assertFalse(calc.shouldSpill(null));
+    Assert.assertFalse(calc.shouldSpill());
     Assert.assertEquals(expected, calc.getConsumedMemory());
     Assert.assertNull(calc.next());
   }
@@ -375,14 +375,14 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false);
+    calc.initialize(false, 0);
 
     long expected = accountedProbeBatchSize
       + 160 // in memory partitions
       + 20 // max output batch size
       + 2 * 10 // Hash Table
       + 2 * 10; // Hash join helper
-    Assert.assertTrue(calc.shouldSpill(null));
+    Assert.assertTrue(calc.shouldSpill());
     Assert.assertEquals(expected, calc.getConsumedMemory());
     partition1.spill();
 
@@ -392,7 +392,7 @@ public class TestPostBuildCalculationsImpl {
       + 10 // Hash Table
       + 10 // Hash join helper
       + 15; // partition batch size
-    Assert.assertFalse(calc.shouldSpill(null));
+    Assert.assertFalse(calc.shouldSpill());
     Assert.assertEquals(expected, calc.getConsumedMemory());
     Assert.assertNotNull(calc.next());
   }
@@ -447,12 +447,12 @@ public class TestPostBuildCalculationsImpl {
         .75,
         true, false);
 
-    calc.initialize(false);
+    calc.initialize(false, 0);
 
     long expected = accountedProbeBatchSize // probe batch
       + 2 * 5 * 3 // partition batches
       + 20; // max output batch size
-    Assert.assertFalse(calc.shouldSpill(null));
+    Assert.assertFalse(calc.shouldSpill());
     Assert.assertEquals(expected, calc.getConsumedMemory());
     Assert.assertNotNull(calc.next());
   }
@@ -511,7 +511,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false);
+    calc.initialize(false, 0);
 
     long expected = accountedProbeBatchSize
       + 80 // in memory partition
@@ -520,9 +520,9 @@ public class TestPostBuildCalculationsImpl {
       + 15 // max partition probe batch size
       + 20; // outgoing batch size
 
-    Assert.assertTrue(calc.shouldSpill(null));
+    Assert.assertTrue(calc.shouldSpill());
     partition1.spill();
-    Assert.assertFalse(calc.shouldSpill(null));
+    Assert.assertFalse(calc.shouldSpill());
     Assert.assertEquals(expected, calc.getConsumedMemory());
     Assert.assertNotNull(calc.next());
   }
@@ -585,7 +585,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false);
+    calc.initialize(false, 0);
 
     long expected = accountedProbeBatchSize
       + 80 // in memory partition
@@ -593,9 +593,9 @@ public class TestPostBuildCalculationsImpl {
       + 10 // hash join helper size
       + 15 * 3 // max batch size for each spill probe partition
       + 20;
-    Assert.assertTrue(calc.shouldSpill(null));
+    Assert.assertTrue(calc.shouldSpill());
     partition3.spill();
-    Assert.assertFalse(calc.shouldSpill(null));
+    Assert.assertFalse(calc.shouldSpill());
     Assert.assertEquals(expected, calc.getConsumedMemory());
     Assert.assertNotNull(calc.next());
   }
@@ -652,8 +652,8 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false);
-    Assert.assertFalse(calc.shouldSpill(null));
+    calc.initialize(false, 0);
+    Assert.assertFalse(calc.shouldSpill());
     Assert.assertEquals(50 + accountedProbeBatchSize, calc.getConsumedMemory());
     Assert.assertNotNull(calc.next());
   }
@@ -707,7 +707,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false);
+    calc.initialize(false, 0);
   }
 
   private void addBatches(PartitionStatImpl partitionStat,

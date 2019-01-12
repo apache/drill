@@ -18,39 +18,211 @@
 
 package org.apache.drill.exec.physical.impl.join;
 
+  import org.apache.drill.exec.ExecConstants;
   import org.apache.drill.exec.memory.BufferAllocator;
+  import org.apache.drill.exec.ops.FragmentContext;
+  import org.apache.drill.exec.record.RecordBatch;
   import org.apache.drill.exec.record.RecordBatchMemoryManager;
-  import org.apache.drill.exec.record.RecordBatchSizer;
-  import org.apache.drill.exec.record.VectorContainer;
+  import org.slf4j.Logger;
+  import org.slf4j.LoggerFactory;
+
+  import javax.annotation.Nullable;
+  import java.util.Set;
+
+  import static org.apache.drill.exec.record.JoinBatchMemoryManager.LEFT_INDEX;
+  import static org.apache.drill.exec.record.JoinBatchMemoryManager.RIGHT_INDEX;
 
 /**
  * This class is currently used only for Semi-Hash-Join that avoids duplicates by the use of a hash table
- * The method {@link HashJoinMemoryCalculator.HashJoinSpillControl#shouldSpill(VectorContainer)} returns true if the memory available now to the allocator if not enough
+ * The method {@link HashJoinMemoryCalculator.HashJoinSpillControl#shouldSpill()} returns true if the memory available now to the allocator if not enough
  * to hold (a multiple of, for safety) a new allocated batch
  */
-public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.HashJoinSpillControl {
+public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildSidePartitioning {
+  private static final Logger logger = LoggerFactory.getLogger(HashJoinSpillControlImpl.class);
+
   private BufferAllocator allocator;
   private int recordsPerBatch;
   private int minBatchesInAvailableMemory;
   private RecordBatchMemoryManager batchMemoryManager;
+  private int initialPartitions;
+  private int numPartitions;
+  private int recordsPerPartitionBatchProbe;
+  private FragmentContext context;
 
-  HashJoinSpillControlImpl(BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory, RecordBatchMemoryManager batchMemoryManager) {
+  HashJoinSpillControlImpl(BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory, RecordBatchMemoryManager batchMemoryManager, FragmentContext context) {
     this.allocator = allocator;
     this.recordsPerBatch = recordsPerBatch;
     this.minBatchesInAvailableMemory = minBatchesInAvailableMemory;
     this.batchMemoryManager = batchMemoryManager;
+    this.context = context;
   }
 
   @Override
-  public boolean shouldSpill(VectorContainer currentVectorContainer) {
-    assert currentVectorContainer.hasRecordCount();
-    assert currentVectorContainer.getRecordCount() == recordsPerBatch;
-    // Expected new batch size like the current, plus the Hash Value vector (4 bytes per HV)
-    long batchSize = new RecordBatchSizer(currentVectorContainer).getActualSize() + 4 * recordsPerBatch;
+  public boolean shouldSpill() {
+    // Expected new batch size like the current, plus the Hash Values vector (4 bytes per HV)
+    long batchSize = ( batchMemoryManager.getRecordBatchSizer(RIGHT_INDEX).getRowAllocWidth() + 4 ) * recordsPerBatch;
     long reserveForOutgoing = batchMemoryManager.getOutputBatchSize();
     long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory() - reserveForOutgoing;
     boolean needsSpill = minBatchesInAvailableMemory * batchSize > memoryAvailableNow;
+    if ( needsSpill ) {
+      logger.debug("should spill now - batch size {}, mem avail {}, reserved for outgoing {}", batchSize, memoryAvailableNow, reserveForOutgoing);
+    }
     return needsSpill;   // go spill if too little memory is available
   }
 
+  @Override
+  public void initialize(boolean firstCycle,
+                         boolean reserveHash,
+                         RecordBatch buildSideBatch,
+                         RecordBatch probeSideBatch,
+                         Set<String> joinColumns,
+                         boolean probeEmpty,
+                         long memoryAvailable,
+                         int initialPartitions,
+                         int recordsPerPartitionBatchBuild,
+                         int recordsPerPartitionBatchProbe,
+                         int maxBatchNumRecordsBuild,
+                         int maxBatchNumRecordsProbe,
+                         int outputBatchSize,
+                         double loadFactor) {
+    this.initialPartitions = initialPartitions;
+    this.recordsPerPartitionBatchProbe = recordsPerPartitionBatchProbe;
+
+    calculateMemoryUsage();
+  }
+
+  @Override
+  public void setPartitionStatSet(HashJoinMemoryCalculator.PartitionStatSet partitionStatSet) {
+    // Do nothing
+  }
+
+  @Override
+  public int getNumPartitions() {
+    return numPartitions;
+  }
+
+  /**
+   * Calculate the number of partitions possible for the given available memory
+   * start at initialPartitions and adjust down (in powers of 2) as needed
+   */
+  private void calculateMemoryUsage() {
+    long reserveForOutgoing = batchMemoryManager.getOutputBatchSize();
+    long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory() - reserveForOutgoing;
+
+    // Expected new batch size like the current, plus the Hash Values vector (4 bytes per HV)
+    long batchSize = ( batchMemoryManager.getRecordBatchSizer(RIGHT_INDEX).getRowAllocWidth() + 4 ) * recordsPerBatch;
+    long hashTableSize = batchSize /* the keys in the HT */ +
+      4 * context.getOptions().getLong(ExecConstants.MIN_HASH_TABLE_SIZE_KEY) /* the initial hash table buckets */ +
+      (2 + 2) * recordsPerBatch; /* the hash-values and the links */
+
+    for ( numPartitions = initialPartitions; numPartitions > 2; numPartitions /= 2 ) { // need at least 2
+      // each partition needs at least one internal build batch, and a minimum hash-table
+      // adding "min batches" to create some safety slack
+      if ( memoryAvailableNow >
+             ( numPartitions + minBatchesInAvailableMemory ) * (batchSize + hashTableSize) ) {
+        break; // got enough memory
+      }
+    }
+    logger.debug("Spill control chosen to use {} partitions", numPartitions);
+  }
+
+  @Override
+  public long getBuildReservedMemory() {
+    return 0;
+  }
+
+  @Override
+  public long getMaxReservedMemory() {
+    return 0;
+  }
+
+  @Override
+  public String makeDebugString() {
+    return "Spill Control " + HashJoinMemoryCalculatorImpl.HashJoinSpillControl.class.getCanonicalName();
+  }
+
+  @Nullable
+  @Override
+  public HashJoinMemoryCalculator.PostBuildCalculations next() {
+    return new SpillControlPostBuildCalculationsImpl(recordsPerPartitionBatchProbe,allocator,recordsPerBatch,minBatchesInAvailableMemory,batchMemoryManager);
+  }
+
+  @Override
+  public HashJoinState getState() {
+    return HashJoinState.BUILD_SIDE_PARTITIONING;
+  }
+
+
+  /**
+   *   The purpose of this class is to provide the method {@link #shouldSpill} that ensures that enough memory is available to
+   *   hold all the probe incoming batches for those partitions that spilled (else need to spill more of them, for more memory).
+   */
+  public static class SpillControlPostBuildCalculationsImpl implements HashJoinMemoryCalculator.PostBuildCalculations {
+    private static final Logger logger = LoggerFactory.getLogger(SpillControlPostBuildCalculationsImpl.class);
+
+    private final int recordsPerPartitionBatchProbe;
+    private BufferAllocator allocator;
+    private int recordsPerBatch;
+    private int minBatchesInAvailableMemory;
+    private RecordBatchMemoryManager batchMemoryManager;
+    private int numPartitionsSpilled;
+    private boolean probeEmpty;
+
+    public SpillControlPostBuildCalculationsImpl(final int recordsPerPartitionBatchProbe,
+                                                 BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory, RecordBatchMemoryManager batchMemoryManager) {
+      this.allocator = allocator;
+      this.recordsPerBatch = recordsPerBatch;
+      this.minBatchesInAvailableMemory = minBatchesInAvailableMemory;
+      this.batchMemoryManager = batchMemoryManager;
+      this.recordsPerPartitionBatchProbe = recordsPerPartitionBatchProbe;
+    }
+
+    @Override
+    public void initialize(boolean hasProbeData, int numPartitionsSpilled) {
+      this.probeEmpty = hasProbeData;
+      this.numPartitionsSpilled = numPartitionsSpilled;
+    }
+
+    @Override
+    public int getProbeRecordsPerBatch() {
+      return recordsPerPartitionBatchProbe;
+    }
+
+    @Override
+    public boolean shouldSpill() {
+      if ( numPartitionsSpilled == 0 ) { return false; } // no extra memory is needed if all the build side is in memory
+      if ( probeEmpty ) { return false; } // no probe side data
+      // Expected new batch size like the current, plus the Hash Values vector (4 bytes per HV)
+      long batchSize = ( batchMemoryManager.getRecordBatchSizer(LEFT_INDEX).getRowAllocWidth() + 4 ) * recordsPerBatch;
+      long reserveForOutgoing = batchMemoryManager.getOutputBatchSize();
+      long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory() - reserveForOutgoing;
+      boolean needsSpill = (numPartitionsSpilled + minBatchesInAvailableMemory ) * batchSize > memoryAvailableNow;
+      if ( needsSpill ) {
+        numPartitionsSpilled++;  // one more partition is about to spill
+        logger.debug("Post build should spill now - batch size {}, mem avail {}, reserved for outgoing {}, num partn spilled {}", batchSize,
+          memoryAvailableNow, reserveForOutgoing, numPartitionsSpilled);
+      }
+      return needsSpill;   // go spill if too little memory is available
+    }
+
+    @Nullable
+    @Override
+    public HashJoinMemoryCalculator next() {
+      return null;
+    }
+
+    @Override
+    public HashJoinState getState() {
+      return HashJoinState.POST_BUILD_CALCULATIONS;
+    }
+
+    @Override
+    public String makeDebugString() {
+      return "Spill Control " + HashJoinMemoryCalculatorImpl.HashJoinSpillControl.class.getCanonicalName() + " calculator.";
+    }
+  }
+
+
+
 }
+

@@ -263,7 +263,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     int pos = currentVectorContainer.appendRow(buildContainer,ind);
     currHVVector.getMutator().set(pos - 1, hashCode);   // store the hash value in the new column
     if ( pos == recordsPerBatch ) {
-      boolean needsSpill = isSpilled || calc.shouldSpill(currentVectorContainer);
+      boolean needsSpill = isSpilled || calc.shouldSpill();
       completeAnInnerBatch(true, needsSpill);
     }
   }

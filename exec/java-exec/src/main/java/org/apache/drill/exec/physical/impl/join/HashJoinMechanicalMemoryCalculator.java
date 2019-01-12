@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -106,7 +105,7 @@ public class HashJoinMechanicalMemoryCalculator implements HashJoinMemoryCalcula
     }
 
     @Override
-    public boolean shouldSpill(VectorContainer currentVectorContainer) {
+    public boolean shouldSpill() {
       return partitionStatSet.getNumInMemoryBatches() > maxNumInMemBatches;
     }
 
@@ -141,7 +140,7 @@ public class HashJoinMechanicalMemoryCalculator implements HashJoinMemoryCalcula
     }
 
     @Override
-    public void initialize(boolean probeEmty) {
+    public void initialize(boolean probeEmty, int numPartitionsSpilled) {
     }
 
     @Override
@@ -150,7 +149,7 @@ public class HashJoinMechanicalMemoryCalculator implements HashJoinMemoryCalcula
     }
 
     @Override
-    public boolean shouldSpill(VectorContainer currentVectorContainer) {
+    public boolean shouldSpill() {
       return partitionStatSet.getNumInMemoryBatches() > maxNumInMemBatches;
     }
 
