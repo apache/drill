@@ -28,6 +28,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Category({SlowTest.class, OperatorTest.class})
 public class TestSemiJoin extends BaseTestQuery {
   @Test
@@ -76,10 +79,11 @@ public class TestSemiJoin extends BaseTestQuery {
   @Test
   public void testLargeInClauseToSemiJoin() throws Exception {
     String sql = "select employee_id, full_name from cp.`employee.json` " +
-            "where employee_id in (351, 352, 353, 451, 452, 453, 551, 552, 553, 651, 652, 653, 751, 752, 753, 851, 852, 853, 951, 952, 953)";
+            "where employee_id in (351, 352, 353, 451, 452, 453, 551, 552, 553, 651, 652, 653, 751, 752, 753, 851, 851,  852, 853, 951, 952, 953, 954, 956)";
 
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-            .setOptionDefault(PlannerSettings.SEMIJOIN.getOptionName(), true);
+            .setOptionDefault(PlannerSettings.SEMIJOIN.getOptionName(), true)
+            .setOptionDefault(PlannerSettings.IN_SUBQUERY_THRESHOLD.getOptionName(), 10);
 
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -113,6 +117,23 @@ public class TestSemiJoin extends BaseTestQuery {
          ClientFixture client = cluster.clientFixture()) {
       String queryPlan = client.queryBuilder().sql(sql).explainText();
       assertTrue(queryPlan.contains("semi-join: =[true]"));
+    }
+  }
+
+  @Test
+  public void testJoinOrderingSemiJoin() throws Exception {
+    String sql = "select * from cp.`employee.json` e1, cp.`employee.json` e2  " +
+                 "where e1.employee_id in (select e.employee_id from cp.`employee.json` e) and e1.employee_id = e2.employee_id";
+
+
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+                 .setOptionDefault(PlannerSettings.SEMIJOIN.getOptionName(), true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String queryPlan = client.queryBuilder().sql(sql).explainText();
+      Matcher matcher = Pattern.compile(".*semi-join.*[false].*semi-join.*[true].*", Pattern.MULTILINE | Pattern.DOTALL).matcher(queryPlan);
+      assertTrue(matcher.find());
     }
   }
 }

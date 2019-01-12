@@ -17,13 +17,19 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.rex.RexChecker;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.Litmus;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.SemiJoin;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.expression.FieldReference;
@@ -78,7 +84,6 @@ public class DrillSemiJoinRel extends SemiJoin implements DrillJoin, DrillRel {
     List<String> fields = new ArrayList<>();
     fields.addAll(getInput(0).getRowType().getFieldNames());
     fields.addAll(getInput(1).getRowType().getFieldNames());
-    Preconditions.checkArgument(DrillJoinRel.isUnique(fields));
     final int leftCount = left.getRowType().getFieldCount();
     final List<String> leftFields = fields.subList(0, leftCount);
     final List<String> rightFields = fields.subList(leftCount, leftCount + right.getRowType().getFieldCount());
@@ -97,6 +102,55 @@ public class DrillSemiJoinRel extends SemiJoin implements DrillJoin, DrillRel {
     }
 
     return new LogicalSemiJoin(leftOp, rightOp, conditions, joinType);
+  }
+
+  @Override public boolean isValid(Litmus litmus, Context context) {
+    if (getRowType().getFieldCount()
+            != getSystemFieldList().size()
+            + left.getRowType().getFieldCount()
+            + right.getRowType().getFieldCount()) {
+      return litmus.fail("field count mismatch");
+    }
+    if (condition != null) {
+      if (condition.getType().getSqlTypeName() != SqlTypeName.BOOLEAN) {
+        return litmus.fail("condition must be boolean: {}",
+                condition.getType());
+      }
+      // The input to the condition is a row type consisting of system
+      // fields, left fields, and right fields. Very similar to the
+      // output row type, except that fields have not yet been made due
+      // due to outer joins.
+      RexChecker checker =
+              new RexChecker(
+                      getCluster().getTypeFactory().builder()
+                              .addAll(getSystemFieldList())
+                              .addAll(getLeft().getRowType().getFieldList())
+                              .addAll(getRight().getRowType().getFieldList())
+                              .build(),
+                      context, litmus);
+      condition.accept(checker);
+      if (checker.getFailureCount() > 0) {
+        return litmus.fail(checker.getFailureCount()
+                + " failures in condition " + condition);
+      }
+    }
+    return litmus.succeed();
+  }
+
+  /*
+    The rowtype returned by the DrillSemiJoinRel is different from that of calcite's semi-join.
+    This is done because the semi-join implemented as the hash join doesn't remove the right side columns.
+    Also the DrillSemiJoinRule converts the join--(scan, Agg) to DrillSemiJoinRel whose rowtype still has
+    all the columns from both the relations.
+   */
+  @Override public RelDataType deriveRowType() {
+    return SqlValidatorUtil.deriveJoinRowType(
+            left.getRowType(),
+            right.getRowType(),
+            JoinRelType.INNER,
+            getCluster().getTypeFactory(),
+            null,
+            ImmutableList.of());
   }
 
   @Override
