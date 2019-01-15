@@ -76,7 +76,7 @@
       <div style="display: inline-block"><label for="query">Query</label></div>
       <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
       <div id="query-editor-format"></div>
-      <input class="form-control" type="hidden" id="query" name="query"/>
+      <input class="form-control" type="hidden" id="query" name="query" autofocus/>
     </div>
 
     <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
@@ -104,6 +104,7 @@
     editor.getSession().setUseSoftTabs(true);
     editor.setTheme("ace/theme/sqlserver");
     editor.$blockScrolling = "Infinity";
+    editor.focus();
     //CSS Formatting
     document.getElementById('query-editor-format').style.fontSize='13px';
     document.getElementById('query-editor-format').style.fontFamily='courier,monospace';
