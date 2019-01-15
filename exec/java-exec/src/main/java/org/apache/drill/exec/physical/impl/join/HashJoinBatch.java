@@ -949,7 +949,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     }
 
     HashJoinMemoryCalculator.BuildSidePartitioning buildCalc;
-    HashJoinMemoryCalculator.BuildSidePartitioning currentCalc; // may be a spill control calc, or buildCalc
+    HashJoinMemoryCalculator.BuildSidePartitioning currentCalc; // may be either a spill control calc, or buildCalc
 
     {
       // Initializing build calculator
@@ -1018,7 +1018,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
     // Make the calculator aware of our partitions
     final HashJoinMemoryCalculator.PartitionStatSet partitionStatSet = new HashJoinMemoryCalculator.PartitionStatSet(partitions);
-    buildCalc.setPartitionStatSet(partitionStatSet);
+    currentCalc.setPartitionStatSet(partitionStatSet);
 
     boolean moreData = true;
     while (moreData) {
@@ -1131,7 +1131,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     }
 
     HashJoinMemoryCalculator.PostBuildCalculations postBuildCalc = currentCalc.next();
-    postBuildCalc.initialize(probeSideIsEmpty.booleanValue(), numPartitionsSpilled);
+    postBuildCalc.initialize(probeSideIsEmpty.booleanValue());
 
     //
     //  Traverse all the in-memory partitions' incoming batches, and build their hash tables

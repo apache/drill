@@ -48,6 +48,7 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
   private int numPartitions;
   private int recordsPerPartitionBatchProbe;
   private FragmentContext context;
+  HashJoinMemoryCalculator.PartitionStatSet partitionStatSet;
 
   HashJoinSpillControlImpl(BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory, RecordBatchMemoryManager batchMemoryManager, FragmentContext context) {
     this.allocator = allocator;
@@ -93,7 +94,7 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
 
   @Override
   public void setPartitionStatSet(HashJoinMemoryCalculator.PartitionStatSet partitionStatSet) {
-    // Do nothing
+    this.partitionStatSet = partitionStatSet;
   }
 
   @Override
@@ -110,16 +111,20 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
     long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory() - reserveForOutgoing;
 
     // Expected new batch size like the current, plus the Hash Values vector (4 bytes per HV)
-    long batchSize = ( batchMemoryManager.getRecordBatchSizer(RIGHT_INDEX).getRowAllocWidth() + 4 ) * recordsPerBatch;
-    long hashTableSize = batchSize /* the keys in the HT */ +
-      4 * context.getOptions().getLong(ExecConstants.MIN_HASH_TABLE_SIZE_KEY) /* the initial hash table buckets */ +
+    int buildBatchSize = ( batchMemoryManager.getRecordBatchSizer(RIGHT_INDEX).getRowAllocWidth() + 4 ) * recordsPerBatch;
+    int hashTableSize = buildBatchSize /* the keys in the HT */ +
+      4 * (int)context.getOptions().getLong(ExecConstants.MIN_HASH_TABLE_SIZE_KEY) /* the initial hash table buckets */ +
       (2 + 2) * recordsPerBatch; /* the hash-values and the links */
+    int probeBatchSize = ( batchMemoryManager.getRecordBatchSizer(LEFT_INDEX).getRowAllocWidth() + 4 ) * recordsPerBatch;
+
+    long memoryNeededPerPartition = Integer.max(buildBatchSize + hashTableSize, probeBatchSize);
 
     for ( numPartitions = initialPartitions; numPartitions > 2; numPartitions /= 2 ) { // need at least 2
       // each partition needs at least one internal build batch, and a minimum hash-table
+      // ( or an internal probe batch, for a spilled partition during probe phase )
       // adding "min batches" to create some safety slack
       if ( memoryAvailableNow >
-             ( numPartitions + minBatchesInAvailableMemory ) * (batchSize + hashTableSize) ) {
+             ( numPartitions + minBatchesInAvailableMemory ) * memoryNeededPerPartition ) {
         break; // got enough memory
       }
     }
@@ -144,7 +149,8 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
   @Nullable
   @Override
   public HashJoinMemoryCalculator.PostBuildCalculations next() {
-    return new SpillControlPostBuildCalculationsImpl(recordsPerPartitionBatchProbe,allocator,recordsPerBatch,minBatchesInAvailableMemory,batchMemoryManager);
+    return new SpillControlPostBuildCalculationsImpl(recordsPerPartitionBatchProbe,
+      allocator, recordsPerBatch, minBatchesInAvailableMemory, batchMemoryManager, partitionStatSet);
   }
 
   @Override
@@ -165,23 +171,27 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
     private int recordsPerBatch;
     private int minBatchesInAvailableMemory;
     private RecordBatchMemoryManager batchMemoryManager;
-    private int numPartitionsSpilled;
     private boolean probeEmpty;
+    private final HashJoinMemoryCalculator.PartitionStatSet buildPartitionStatSet;
+
 
     public SpillControlPostBuildCalculationsImpl(final int recordsPerPartitionBatchProbe,
-                                                 BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory, RecordBatchMemoryManager batchMemoryManager) {
+                                                 BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory,
+                                                 RecordBatchMemoryManager batchMemoryManager,
+                                                 final HashJoinMemoryCalculator.PartitionStatSet buildPartitionStatSet) {
       this.allocator = allocator;
       this.recordsPerBatch = recordsPerBatch;
       this.minBatchesInAvailableMemory = minBatchesInAvailableMemory;
       this.batchMemoryManager = batchMemoryManager;
       this.recordsPerPartitionBatchProbe = recordsPerPartitionBatchProbe;
+      this.buildPartitionStatSet = buildPartitionStatSet;
     }
 
     @Override
-    public void initialize(boolean hasProbeData, int numPartitionsSpilled) {
+    public void initialize(boolean hasProbeData) {
       this.probeEmpty = hasProbeData;
-      this.numPartitionsSpilled = numPartitionsSpilled;
     }
+
 
     @Override
     public int getProbeRecordsPerBatch() {
@@ -190,6 +200,7 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
 
     @Override
     public boolean shouldSpill() {
+      int numPartitionsSpilled = buildPartitionStatSet.getNumSpilledPartitions();
       if ( numPartitionsSpilled == 0 ) { return false; } // no extra memory is needed if all the build side is in memory
       if ( probeEmpty ) { return false; } // no probe side data
       // Expected new batch size like the current, plus the Hash Values vector (4 bytes per HV)
@@ -198,7 +209,6 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
       long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory() - reserveForOutgoing;
       boolean needsSpill = (numPartitionsSpilled + minBatchesInAvailableMemory ) * batchSize > memoryAvailableNow;
       if ( needsSpill ) {
-        numPartitionsSpilled++;  // one more partition is about to spill
         logger.debug("Post build should spill now - batch size {}, mem avail {}, reserved for outgoing {}, num partn spilled {}", batchSize,
           memoryAvailableNow, reserveForOutgoing, numPartitionsSpilled);
       }

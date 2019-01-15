@@ -514,7 +514,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     }
 
     @Override
-    public void initialize(boolean hasProbeData, int numPartitionsSpilled) {
+    public void initialize(boolean hasProbeData) {
     }
 
     @Override
@@ -555,7 +555,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
    * <h1>Lifecycle</h1>
    * <p>
    *   <ul>
-   *     <li><b>Step 1:</b> Call {@link PostBuildCalculations#initialize(boolean, int)}. This
+   *     <li><b>Step 1:</b> Call {@link PostBuildCalculations#initialize(boolean)}. This
    *     gives the {@link HashJoinStateCalculator} additional information it needs to compute memory requirements.</li>
    *     <li><b>Step 2:</b> Call {@link HashJoinSpillControl#shouldSpill()}. This tells
    *     you which build side partitions need to be spilled in order to make room for probing.</li>
@@ -624,7 +624,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     }
 
     @Override
-    public void initialize(boolean probeEmpty, int numPartitionsSpilled) {
+    public void initialize(boolean probeEmpty) {
       Preconditions.checkState(!initialized);
       // If we had probe data before there should still be probe data now.
       // If we didn't have probe data before we could get some new data now.

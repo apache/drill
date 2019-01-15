@@ -139,7 +139,7 @@ public class TestPostBuildCalculationsImpl {
         .75, // loadFactor
         false, false); // reserveHash
 
-    calc.initialize(true, 0);
+    calc.initialize(true);
   }
 
   @Test
@@ -183,7 +183,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         true, false);
 
-    calc.initialize(true, 0);
+    calc.initialize(true);
 
     Assert.assertFalse(calc.shouldSpill());
     Assert.assertFalse(calc.shouldSpill());
@@ -243,7 +243,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false, 0);
+    calc.initialize(false);
 
     long expected = accountedProbeBatchSize
       + 160 // in memory partitions
@@ -309,7 +309,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false, 0);
+    calc.initialize(false);
 
     long expected = accountedProbeBatchSize
       + 160 // in memory partitions
@@ -375,7 +375,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false, 0);
+    calc.initialize(false);
 
     long expected = accountedProbeBatchSize
       + 160 // in memory partitions
@@ -447,7 +447,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         true, false);
 
-    calc.initialize(false, 0);
+    calc.initialize(false);
 
     long expected = accountedProbeBatchSize // probe batch
       + 2 * 5 * 3 // partition batches
@@ -511,7 +511,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false, 0);
+    calc.initialize(false);
 
     long expected = accountedProbeBatchSize
       + 80 // in memory partition
@@ -585,7 +585,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false, 0);
+    calc.initialize(false);
 
     long expected = accountedProbeBatchSize
       + 80 // in memory partition
@@ -652,7 +652,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false, 0);
+    calc.initialize(false);
     Assert.assertFalse(calc.shouldSpill());
     Assert.assertEquals(50 + accountedProbeBatchSize, calc.getConsumedMemory());
     Assert.assertNotNull(calc.next());
@@ -707,7 +707,7 @@ public class TestPostBuildCalculationsImpl {
         .75,
         false, false);
 
-    calc.initialize(false, 0);
+    calc.initialize(false);
   }
 
   private void addBatches(PartitionStatImpl partitionStat,

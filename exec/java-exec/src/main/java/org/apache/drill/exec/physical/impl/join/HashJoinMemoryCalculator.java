@@ -130,9 +130,9 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
     /**
      * Initializes the calculator with additional information needed.
      * @param probeEmty True if the probe is empty. False otherwise.
-     * @param numPartitionsSpilled
+     *
      */
-    void initialize(boolean probeEmty, int numPartitionsSpilled);
+    void initialize(boolean probeEmty);
 
     int getProbeRecordsPerBatch();
 

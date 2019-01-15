@@ -140,7 +140,7 @@ public class HashJoinMechanicalMemoryCalculator implements HashJoinMemoryCalcula
     }
 
     @Override
-    public void initialize(boolean probeEmty, int numPartitionsSpilled) {
+    public void initialize(boolean probeEmty) {
     }
 
     @Override
