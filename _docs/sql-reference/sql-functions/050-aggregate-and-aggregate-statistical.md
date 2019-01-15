@@ -1,6 +1,6 @@
 ---
 title: "Aggregate and Aggregate Statistical"
-date: 2018-06-26 00:42:19 UTC
+date: 2019-01-15
 parent: "SQL Functions"
 ---
 
@@ -11,6 +11,8 @@ Drill queries:
 
 | **Function**                     | **Argument Type**                                                 | **Return Type**                                                                                                                        |
 |------------------------------|---------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| ANY_VALUE(expression)        | Bit, Int, BigInt, Float4, Float8, Date, Timestamp, Time, VarChar, VarBinary, List, Map, Interval, IntervalDay, IntervalYear, VarDecimal | same as argument type
+|
 | AVG(expression)              | SMALLINT,   INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL | DECIMAL for DECIMAL argument,   DOUBLE for all other arguments                                                                     |
 | COUNT(*)                     | -                                                             | BIGINT                                                                                                                             |
 | COUNT([DISTINCT] expression) | any                                                           | BIGINT                                                                                                                             |
@@ -18,11 +20,149 @@ Drill queries:
 | MIN(expression)              | BINARY,   DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP          | same   as argument type                                                                                                            |
 | SUM(expression)              | SMALLINT,   INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL | DECIMAL for DECIMAL   argument,     BIGINT for any integer-type argument (including BIGINT), DOUBLE for   floating-point arguments |  
 
-Starting in Drill 1.14, the DECIMAL data type is enabled by default. 
 
-AVG, COUNT, MIN, MAX, and SUM accept ALL and DISTINCT keywords. The default is ALL.
 
-These examples of aggregate functions use the `cp` storage plugin to access a the [`employee.json`]({{site.baseurl}}/docs/querying-json-files/) file installed with Drill. By default, JSON reads numbers as double-precision floating point numbers. These examples assume that you are using the default option [all_text_mode]({{site.baseurl}}/docs/json-data-model/#handling-type-differences) set to false.
+- Drill 1.14 and later supports the ANY_VALUE function. 
+- Starting in Drill 1.14, the DECIMAL data type is enabled by default.  
+- AVG, COUNT, MIN, MAX, and SUM accept ALL and DISTINCT keywords. The default is ALL.  
+- The aggregate function examples use the `cp` storage plugin to access the [`employee.json`]({{site.baseurl}}/docs/querying-json-files/) file installed with Drill. By default, JSON reads numbers as double-precision floating point numbers. These examples assume that you are using the default option [all_text_mode]({{site.baseurl}}/docs/json-data-model/#handling-type-differences) set to false.  
+
+##ANY_VALUE
+Supported in Drill 1.14 and later. Returns one of the values of value across all input values. This function is NOT specified in the SQL standard.  
+
+###ANY_VALUE Syntax  
+ANY_VALUE( [ ALL | DISTINCT ] value)  
+
+###ANY_VALUE Examples  
+	SELECT ANY_VALUE(employee_id) AS anyemp FROM cp.`employee.json`;
+	+---------+
+	| anyemp  |
+	+---------+
+	| 1156    |
+	+---------+  
+
+	SELECT ANY_VALUE(ALL employee_id) AS anyemp FROM cp.`employee.json`;
+	+---------+
+	| anyemp  |
+	+---------+
+	| 1156    |
+	+---------+
+
+	SELECT ANY_VALUE(DISTINCT employee_id) AS anyemp FROM cp.`employee.json`;
+	+---------+
+	| anyemp  |
+	+---------+
+	| 1156    |
+	+---------+  
+
+	SELECT ANY_VALUE(employee_id) as anyemp, salary as empsal FROM cp.`employee.json` GROUP BY salary;
+	+---------+----------+
+	| anyemp  |  empsal  |
+	+---------+----------+
+	| 1155    | 20.0     |
+	| 197     | 3700.0   |
+	| 1115    | 4200.0   |
+	| 589     | 4300.0   |
+	| 403     | 4400.0   |
+	| 204     | 4500.0   |
+	| 201     | 4550.0   |
+	| 206     | 4600.0   |
+	| 264     | 4650.0   |
+	| 267     | 4700.0   |
+	| 632     | 4800.0   |
+	| 42      | 5000.0   |
+	| 590     | 5200.0   |
+	| 733     | 5900.0   |
+	| 1144    | 6100.0   |
+	| 625     | 6200.0   |
+	| 1141    | 6400.0   |
+	| 588     | 6500.0   |
+	| 46      | 6600.0   |
+	| 1075    | 6700.0   |
+	| 1079    | 6800.0   |
+	| 1028    | 6900.0   |
+	| 900     | 7000.0   |
+	| 63      | 7100.0   |
+	| 60      | 7200.0   |
+	| 69      | 7500.0   |
+	| 764     | 7900.0   |
+	| 957     | 8000.0   |
+	| 566     | 8100.0   |
+	| 171     | 8200.0   |
+	| 489     | 8500.0   |
+	| 226     | 8900.0   |
+	| 490     | 9000.0   |
+	| 8       | 10000.0  |
+	| 35      | 11000.0  |
+	| 53      | 12000.0  |
+	| 484     | 13000.0  |
+	| 31      | 14000.0  |
+	| 13      | 15000.0  |
+	| 27      | 16000.0  |
+	| 33      | 17000.0  |
+	| 6       | 25000.0  |
+	| 20      | 30000.0  |
+	| 21      | 35000.0  |
+	| 4       | 40000.0  |
+	| 36      | 45000.0  |
+	| 10      | 50000.0  |
+	| 1       | 80000.0  |
+	+---------+----------+  
+
+	SELECT ANY_VALUE(employee_id) as anyemp FROM cp.`employee.json` GROUP BY salary ORDER BY anyemp;
+	+-----------+
+	| anyemp    |
+	+-----------+
+	| 1         |
+	| 4         |
+	| 6         |
+	| 8         |
+	| 10        |
+	| 13        |
+	| 20        |
+	| 21        |
+	| 27        |
+	| 31        |
+	| 33        |
+	| 35        |
+	| 36        |
+	| 42        |
+	| 46        |
+	| 53        |
+	| 60        |
+	| 63        |
+	| 69        |
+	| 171       |
+	| 197       |
+	| 201       |
+	| 204       |
+	| 206       |
+	| 226       |
+	| 264       |
+	| 267       |
+	| 403       |
+	| 484       |
+	| 489       |
+	| 490       |
+	| 566       |
+	| 588       |
+	| 589       |
+	| 590       |
+	| 625       |
+	| 632       |
+	| 733       |
+	| 764       |
+	| 900       |
+	| 957       |
+	| 1028      |
+	| 1075      |
+	| 1079      |
+	| 1115      |
+	| 1141      |
+	| 1144      |
+	| 1155      |
+	+-----------+  
+
 
 ## AVG 
 
