@@ -1,6 +1,6 @@
 ---
 title: "Querying System Tables"
-date: 2019-01-07
+date: 2019-01-17
 parent: "Query Data"
 ---  
 
@@ -138,13 +138,13 @@ The time that the release was built.
     +--------------------------------------+----------+-------+---------+------------+-------------------------+-----------+------------+
     10 rows selected (0.192 seconds)
 
-  * **name**  
+  * **name**    
 The name of the boot option.
-  * **kind**  
+  * **kind**    
 The data type of the option value.
-  * **type**  
+  * **type**    
 This is always boot.
-  * **status**
+  * **status**  
 This is always boot.
   * **num_val**  
 The default value, which is of the long or int data type; otherwise, null.
@@ -173,9 +173,9 @@ The name of the node running the Drillbit service.
   * **user_port**  
 The user port address, used between nodes in a cluster for connecting to
 external clients and for the Drill Web UI. 
-  * **total_threads**
+  * **total_threads**  
 The peak thread count on the node.
-  * **busy_threads**
+  * **busy_threads**  
 The current number of live threads (daemon and non-daemon) on the node.
 
 ### Querying the memory Table
@@ -195,17 +195,16 @@ The name of the node running the Drillbit service.
   * **user_port**  
 The user port address, used between nodes in a cluster for connecting to
 external clients and for the Drill Web UI.
-  * **heap_current**
+  * **heap_current**  
 The amount of memory being used on the heap, in bytes.
-  * **heap_max**
+  * **heap_max**  
 The maximum amount of memory available on the heap, in bytes.
-  * **direct_current**
-The current direct memory being used by the allocator, in bytes.
-  * **jvm_direct_current**
-The current JVM direct memory allocation, in bytes.
-  * **direct_max**
+  * **direct_current**  
+The current direct memory being used by the allocator, in bytes.  
+  * **direct_max**  
 The maximum direct memory available to the allocator, in bytes.  
-
+  * (Deprecated) **jvm\_direct\_current**  
+The current JVM direct memory allocation, in bytes.  
 
 ### Querying the connections Table  
 
