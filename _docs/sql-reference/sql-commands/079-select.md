@@ -1,6 +1,6 @@
 ---
 title: "SELECT"
-date: 2018-12-04
+date: 2019-01-18
 parent: "SQL Commands"
 ---
 Drill supports the following ANSI standard clauses in the SELECT statement:
@@ -56,14 +56,14 @@ The following types of join syntax are supported:
 | ON join in FROM clause         | FROM table1 JOIN table2 ON table1.col1=table2.col1 |
 
 
-You must specify a join condition when more than one table is listed in the FROM clause.
 
-Non-equijoins are supported if the join also contains an equality condition on
-the same two tables as part of a conjunction:
 
-    table1.col1 = table2.col1 AND table1.c2 < table2.c2
+- You must specify a join condition when more than one table is listed in the FROM clause.  
+- Non-equi joins are supported if the join is an inner join with an equality condition on the same two tables as part of a conjunction:  
+  
+		table1.col1 = table2.col1 AND table1.c2 < table2.c2
 
-This restriction applies to both inner and outer joins.
+	Drill does not support non-equi joins as outer joins.
 
 ## Subqueries
 
