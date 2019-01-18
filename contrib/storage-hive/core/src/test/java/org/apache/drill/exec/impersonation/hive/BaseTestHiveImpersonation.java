@@ -17,10 +17,15 @@
  */
 package org.apache.drill.exec.impersonation.hive;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.calcite.schema.Schema.TableType;
-import org.apache.drill.test.TestBuilder;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
+import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -30,13 +35,8 @@ import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.shims.ShimLoader;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
+import static org.apache.drill.exec.hive.HiveTestUtilities.createDirWithPosixPermissions;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
-import static org.apache.drill.exec.store.hive.HiveTestDataGenerator.createFileWithPermissions;
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 
@@ -65,8 +65,8 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   protected static void prepHiveConfAndData() throws Exception {
     hiveConf = new HiveConf();
 
-    File scratchDir = createFileWithPermissions(dirTestWatcher.getRootDir(), "scratch_dir");
-    File localScratchDir = createFileWithPermissions(dirTestWatcher.getRootDir(), "local_scratch_dir");
+    File scratchDir = createDirWithPosixPermissions(dirTestWatcher.getRootDir(), "scratch_dir");
+    File localScratchDir = createDirWithPosixPermissions(dirTestWatcher.getRootDir(), "local_scratch_dir");
     File metaStoreDBDir = new File(dirTestWatcher.getRootDir(), "metastore_db");
 
     // Configure metastore persistence db location on local filesystem

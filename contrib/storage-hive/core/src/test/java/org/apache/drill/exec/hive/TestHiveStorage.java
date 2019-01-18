@@ -17,12 +17,9 @@
  */
 package org.apache.drill.exec.hive;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,8 +40,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveStorage extends HiveTestBase {
@@ -211,8 +211,10 @@ public class TestHiveStorage extends HiveTestBase {
   @Test
   public void queryingTablesInNonDefaultFS() throws Exception {
     // Update the default FS settings in Hive test storage plugin to non-local FS
-    hiveTest.updatePluginConfig(getDrillbitContext().getStorage(),
-        ImmutableMap.of(FileSystem.FS_DEFAULT_NAME_KEY, "hdfs://localhost:9001"));
+
+    HIVE_TEST_FIXTURE.getPluginManager().updateHivePlugin(
+        Collections.singleton(bits[0]),
+        Collections.singletonMap(FileSystem.FS_DEFAULT_NAME_KEY, "hdfs://localhost:9001"));
 
     testBuilder()
         .sqlQuery("SELECT * FROM hive.`default`.kv LIMIT 1")
@@ -224,8 +226,8 @@ public class TestHiveStorage extends HiveTestBase {
 
   @Test // DRILL-745
   public void queryingHiveAvroTable() throws Exception {
-      testBuilder()
-          .sqlQuery("SELECT * FROM hive.db1.avro ORDER BY key DESC LIMIT 1")
+    testBuilder()
+        .sqlQuery("SELECT * FROM hive.db1.avro ORDER BY key DESC LIMIT 1")
         .unOrdered()
         .baselineColumns("key", "value")
         .baselineValues(5, " key_5")
@@ -274,7 +276,6 @@ public class TestHiveStorage extends HiveTestBase {
   }
 
 
-
   @Test // DRILL-3739
   public void readingFromStorageHandleBasedTable() throws Exception {
     testBuilder()
@@ -287,7 +288,7 @@ public class TestHiveStorage extends HiveTestBase {
 
   @Test // DRILL-3688
   public void readingFromSmallTableWithSkipHeaderAndFooter() throws Exception {
-   testBuilder()
+    testBuilder()
         .sqlQuery("select key, `value` from hive.skipper.kv_text_small order by key asc")
         .ordered()
         .baselineColumns("key", "value")
@@ -312,7 +313,7 @@ public class TestHiveStorage extends HiveTestBase {
         .sqlQuery("select sum(key) as sum_keys from hive.skipper.kv_text_large")
         .unOrdered()
         .baselineColumns("sum_keys")
-        .baselineValues((long)(5000*(5000 + 1)/2))
+        .baselineValues((long) (5000 * (5000 + 1) / 2))
         .go();
 
     testBuilder()
@@ -383,7 +384,7 @@ public class TestHiveStorage extends HiveTestBase {
   public void testStringColumnsMetadata() throws Exception {
     String query = "select varchar_field, char_field, string_field from hive.readtest";
 
-    Map<String, Integer> expectedResult = Maps.newHashMap();
+    Map<String, Integer> expectedResult = new HashMap<>();
     expectedResult.put("varchar_field", 50);
     expectedResult.put("char_field", 10);
     expectedResult.put("string_field", HiveVarchar.MAX_VARCHAR_LENGTH);
@@ -394,7 +395,7 @@ public class TestHiveStorage extends HiveTestBase {
     try {
       test("alter session set `%s` = true", ExecConstants.EARLY_LIMIT0_OPT_KEY);
       verifyColumnsMetadata(client.createPreparedStatement(String.format("select * from (%s) t limit 0", query)).get()
-              .getPreparedStatement().getColumnsList(), expectedResult);
+          .getPreparedStatement().getColumnsList(), expectedResult);
     } finally {
       test("alter session reset `%s`", ExecConstants.EARLY_LIMIT0_OPT_KEY);
     }
@@ -450,4 +451,5 @@ public class TestHiveStorage extends HiveTestBase {
       assertTrue("Column should be nullable", columnMetadata.getIsNullable());
     }
   }
+
 }

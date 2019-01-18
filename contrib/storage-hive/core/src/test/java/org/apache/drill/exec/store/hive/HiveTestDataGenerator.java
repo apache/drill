@@ -18,152 +18,46 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.common.exceptions.DrillException;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.Driver;
-import org.apache.hadoop.hive.ql.session.SessionState;
-
 import org.apache.hadoop.hive.serde.serdeConstants;
 
+import static org.apache.drill.exec.hive.HiveTestUtilities.createDirWithPosixPermissions;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
 
 public class HiveTestDataGenerator {
-  private static final String HIVE_TEST_PLUGIN_NAME = "hive";
-  private static HiveTestDataGenerator instance;
-  private static File baseDir;
 
-  private final String dbDir;
-  private final String whDir;
   private final BaseDirTestWatcher dirTestWatcher;
-  private final Map<String, String> config;
 
-  public static synchronized HiveTestDataGenerator getInstance(BaseDirTestWatcher dirTestWatcher) throws Exception {
-    File baseDir = dirTestWatcher.getRootDir();
-    if (instance == null || !HiveTestDataGenerator.baseDir.equals(baseDir)) {
-      HiveTestDataGenerator.baseDir = baseDir;
+  private final File baseDir;
 
-      File dbDirFile = new File(baseDir, "metastore_db");
-      File whDirFile = new File(baseDir, "warehouse");
+  private final String warehouseDir;
 
-      final String dbDir = dbDirFile.getAbsolutePath();
-      final String whDir = whDirFile.getAbsolutePath();
-
-      instance = new HiveTestDataGenerator(dbDir, whDir, dirTestWatcher);
-      instance.generateTestData();
-    }
-
-    return instance;
-  }
-
-  private HiveTestDataGenerator(final String dbDir, final String whDir, final BaseDirTestWatcher dirTestWatcher) {
-    this.dbDir = dbDir;
-    this.whDir = whDir;
+  public HiveTestDataGenerator(BaseDirTestWatcher dirTestWatcher, File baseDir, String warehouseDir) {
     this.dirTestWatcher = dirTestWatcher;
-
-    config = new HashMap<>();
-    config.put(ConfVars.METASTOREURIS.toString(), "");
-    config.put("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
-    config.put("hive.metastore.warehouse.dir", whDir);
-    config.put(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
+    this.baseDir = baseDir;
+    this.warehouseDir = warehouseDir;
   }
 
-  /**
-   * Add Hive test storage plugin to the given plugin registry.
-   *
-   * @param pluginRegistry storage plugin registry
-   * @throws Exception in case if unable to update Hive storage plugin
-   */
-  public void addHiveTestPlugin(final StoragePluginRegistry pluginRegistry) throws Exception {
-    HiveStoragePluginConfig pluginConfig = new HiveStoragePluginConfig(config);
-    pluginConfig.setEnabled(true);
-
-    pluginRegistry.createOrUpdate(HIVE_TEST_PLUGIN_NAME, pluginConfig, true);
-  }
-
-  /**
-   * Update the current HiveStoragePlugin in given plugin registry with given <i>configOverride</i>.
-   *
-   * @param pluginRegistry storage plugin registry
-   * @param configOverride config properties to be overridden
-   * @throws DrillException if fails to update or no Hive plugin currently exists in given plugin registry.
-   */
-  public void updatePluginConfig(final StoragePluginRegistry pluginRegistry, Map<String, String> configOverride)
-      throws DrillException {
-    HiveStoragePlugin storagePlugin = (HiveStoragePlugin) pluginRegistry.getPlugin(HIVE_TEST_PLUGIN_NAME);
-    if (storagePlugin == null) {
-      throw new DrillException(
-          "Hive test storage plugin doesn't exist. Add a plugin using addHiveTestPlugin()");
-    }
-
-    HiveStoragePluginConfig newPluginConfig = storagePlugin.getConfig();
-    newPluginConfig.getConfigProps().putAll(configOverride);
-
-    pluginRegistry.createOrUpdate(HIVE_TEST_PLUGIN_NAME, newPluginConfig, true);
-  }
-
-  /**
-   * Delete the Hive test plugin from registry.
-   */
-  public void deleteHiveTestPlugin(final StoragePluginRegistry pluginRegistry) {
-    pluginRegistry.deletePlugin(HIVE_TEST_PLUGIN_NAME);
-  }
-
-  public static File createFileWithPermissions(File baseDir, String name) {
-    Set<PosixFilePermission> perms = Sets.newHashSet(PosixFilePermission.values());
-    File dir = new File(baseDir, name);
-    dir.mkdirs();
-
+  public void generateData(Driver hiveDriver) {
     try {
-      Files.setPosixFilePermissions(dir.toPath(), perms);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+      generateDataInternal(hiveDriver);
+    } catch (Exception e) {
+      throw new RuntimeException("Exception was thrown while generating test data", e);
     }
-
-    return dir;
   }
 
-  private void generateTestData() throws Exception {
-    HiveConf conf = new HiveConf(SessionState.class);
-
-    File scratchDir = createFileWithPermissions(baseDir, "scratch_dir");
-    File localScratchDir = createFileWithPermissions(baseDir, "local_scratch_dir");
-    File part1Dir = createFileWithPermissions(baseDir, "part1");
-
-    conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    conf.set("hive.metastore.warehouse.dir", whDir);
-    conf.set("mapred.job.tracker", "local");
-    conf.set(ConfVars.SCRATCHDIR.varname,  scratchDir.getAbsolutePath());
-    conf.set(ConfVars.LOCALSCRATCHDIR.varname, localScratchDir.getAbsolutePath());
-    conf.set(ConfVars.DYNAMICPARTITIONINGMODE.varname, "nonstrict");
-    conf.set(ConfVars.METASTORE_AUTO_CREATE_ALL.varname, "true");
-    conf.set(ConfVars.METASTORE_SCHEMA_VERIFICATION.varname, "false");
-    conf.set(ConfVars.HIVE_CBO_ENABLED.varname, "false");
-
-    SessionState ss = new SessionState(conf);
-    SessionState.start(ss);
-    Driver hiveDriver = new Driver(conf);
-
+  private void generateDataInternal(Driver hiveDriver) throws Exception {
+    File part1Dir = createDirWithPosixPermissions(baseDir, "part1");
     // generate (key, value) test data
     String testDataFile = generateTestDataFile();
 
@@ -199,7 +93,7 @@ public class HiveTestDataGenerator {
     // create a table with no data
     executeQuery(hiveDriver, "CREATE TABLE IF NOT EXISTS empty_table(a INT, b STRING)");
     // delete the table location of empty table
-    File emptyTableLocation = new File(whDir, "empty_table");
+    File emptyTableLocation = new File(warehouseDir, "empty_table");
     if (emptyTableLocation.exists()) {
       FileUtils.forceDelete(emptyTableLocation);
     }
@@ -504,7 +398,7 @@ public class HiveTestDataGenerator {
         "'org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler'");
     // Insert fails if the table directory already exists for tables with DefaultStorageHandlers. Its a known
     // issue in Hive. So delete the table directory created as part of the CREATE TABLE
-    FileUtils.deleteQuietly(new File(whDir, "kv_sh"));
+    FileUtils.deleteQuietly(new File(warehouseDir, "kv_sh"));
     //executeQuery(hiveDriver, "INSERT OVERWRITE TABLE kv_sh SELECT * FROM kv");
 
     // Create text tables with skip header and footer table property
@@ -552,7 +446,6 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, "CREATE OR REPLACE VIEW view_over_hive_view AS SELECT * FROM hive_view WHERE key BETWEEN 2 AND 3");
     executeQuery(hiveDriver, "CREATE OR REPLACE VIEW db1.two_table_view AS SELECT COUNT(dk.key) dk_key_count FROM db1.avro dk " +
         "INNER JOIN kv ON kv.key = dk.key");
-    ss.close();
   }
 
   private void createTestDataForDrillNativeParquetReaderTests(Driver hiveDriver) {
