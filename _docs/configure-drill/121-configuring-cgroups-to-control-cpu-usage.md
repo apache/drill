@@ -1,6 +1,6 @@
 ---
 title: "Configuring cgroups to Control CPU Usage"
-date: 2018-06-08 02:01:21 UTC
+date: 2019-01-18
 parent: "Configure Drill"
 ---   
 
@@ -8,9 +8,7 @@ Starting in Drill 1.13, you can configure a Linux cgroup to enforce CPU limits o
 
 In Drill 1.13, you had to update the `cgroup.procs` file with the Drill process ID (PID) each time a Drillbit restarted in order to enforce the CPU limit for the Drillbit service.  As of Drill 1.14, Drill can directly manage the CPU resources through the Drill start-up script, `drill-env.sh`. You no longer have to manually add the PID to the `cgroup.procs` file each time a Drillbit restarts. This step occurs automatically upon restart. The start-up script checks for the specified cgroup, such as drillcpu, and then applies the cgroup to the launched Drillbit JVM. The Drillbit CPU resource usage is then managed under the cgroup, drillcpu. 
 
-Note: The Linux kernel version must support cgroups v2 to use this feature. Version 4.5 officially supports cgroups v2. You can run the following command to get the kernel version:  
-
-    uname -r  
+Note: Cgroups V2 is recommended.  
 
 The `drill-env.sh` script contains variables that you must enable for Drill to directly manage the CPU resources. Uncomment the following variables in drill-env.sh to enable the feature:  
 
@@ -44,10 +42,6 @@ Each Drill node must have the libcgroup package installed to configure CPU limit
 You can install the libcgroup package using the `yum install` command, as shown:  
 
        yum install libcgroup  
-
-For Drill to directly manage the CPU resources through the Drill start-up script, `drill-env.sh`, the Linux kernel version must support cgroups v2. Version 4.5 of the kernel officially supports cgroups v2. You can run the following command to get the kernel version:  
-
-       uname -r
 
 
 ##Configuring CPU Limits
