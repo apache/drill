@@ -21,13 +21,14 @@
 <#macro page_head>
 
 <script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
+<link href="/static/css/drill-dataTables.sortable.css" rel="stylesheet">
 <script>
     $(document).ready(function() {
       $.each(["running","completed"], function(i, key) {
         $("#profileList_"+key).DataTable( {
           //Permit sorting-by-column
           "ordering": true,
-          "order": [[ 0, "desc" ]],
+          "order": [[0, "desc"]],
           "searching": true,
           "paging": true,
           "pagingType": "full_numbers",
@@ -109,21 +110,6 @@
     padding-right: 0.35em; 
     float:left 
   }
-</style>
-
-<style>
-/* Sorting Symbols */
-table.sortable thead .sorting { background-image: url("/static/img/black-unsorted.gif"); }
-table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
-table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
-
-/* DataTables Sorting: inherited via sortable class */
-table.sortable thead .sorting,.sorting_asc,.sorting_desc {
-  background-repeat: no-repeat;
-  background-position: center right;
-  cursor: pointer;
-}
-
 </style>
 </#macro>
 

@@ -64,18 +64,7 @@
     <link href="/static/css/dataTables.colVis-1.1.0.min.css" rel="stylesheet">
     <link href="/static/css/dataTables.jqueryui.css" rel="stylesheet">
     <link href="/static/css/jquery-ui-1.10.3.min.css" rel="stylesheet">
-<style>
-/* DataTables Sorting: inherited via sortable class */
-table.sortable thead .sorting,.sorting_asc,.sorting_desc {
-  background-repeat: no-repeat;
-  background-position: center right;
-  cursor: pointer;
-}
-/* Sorting Symbols */
-table.sortable thead .sorting { background-image: url("/static/img/black-unsorted.gif"); }
-table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
-table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
-</style>
+    <link href="/static/css/drill-dataTables.sortable.css" rel="stylesheet">
 </#macro>
 
 <#macro page_body>

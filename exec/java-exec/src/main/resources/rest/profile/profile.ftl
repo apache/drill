@@ -97,19 +97,6 @@
     };
 
 </script>
-<style>
-/* DataTables Sorting: inherited via sortable class */
-table.sortable thead .sorting,.sorting_asc,.sorting_desc {
-  background-repeat: no-repeat;
-  background-position: center right;
-  cursor: pointer;
-}
-/* Sorting Symbols */
-table.sortable thead .sorting { background-image: url("/static/img/black-unsorted.gif"); }
-table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
-table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
-</style>
-
 </#macro>
 
 <#macro page_body>
