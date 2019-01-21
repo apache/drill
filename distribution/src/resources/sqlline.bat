@@ -17,25 +17,17 @@
 @REM
 
 @echo off
-@rem/*
-@rem * Licensed to the Apache Software Foundation (ASF) under one
-@rem * or more contributor license agreements.  See the NOTICE file
-@rem * distributed with this work for additional information
-@rem * regarding copyright ownership.  The ASF licenses this file
-@rem * to you under the Apache License, Version 2.0 (the
-@rem * "License"); you may not use this file except in compliance
-@rem * with the License.  You may obtain a copy of the License at
-@rem *
-@rem *     http://www.apache.org/licenses/LICENSE-2.0
-@rem *
-@rem * Unless required by applicable law or agreed to in writing, software
-@rem * distributed under the License is distributed on an "AS IS" BASIS,
-@rem * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-@rem * See the License for the specific language governing permissions and
-@rem * limitations under the License.
-@rem */
-@rem 
 setlocal EnableExtensions EnableDelayedExpansion
+
+rem ----
+rem Sets Drill home and bin dirs before shift is applied
+rem to preserve correct paths
+rem ----
+
+set DRILL_BIN_DIR=%~dp0
+pushd %DRILL_BIN_DIR%..
+set DRILL_HOME=%cd%
+popd
 
 rem ----
 rem In order to pass in arguments with an equals symbol, use quotation marks.
@@ -54,6 +46,7 @@ set atleastonearg=0
 
 if x%1 == x-q (
   set QUERY=%2
+  set QUERY=!QUERY:"=!
   set atleastonearg=1
   shift
   shift
@@ -61,6 +54,7 @@ if x%1 == x-q (
 
 if x%1 == x-e (
   set QUERY=%2
+  set QUERY=!QUERY:"=!
   set atleastonearg=1
   shift
   shift
@@ -68,6 +62,7 @@ if x%1 == x-e (
 
 if x%1 == x-f (
   set FILE=%2
+  set FILE=!FILE:"=!
   set atleastonearg=1
   shift
   shift
@@ -76,6 +71,7 @@ if x%1 == x-f (
 if x%1 == x--config (
   set confdir=%2
   set DRILL_CONF_DIR=%2
+  set DRILL_CONF_DIR=!DRILL_CONF_DIR:"=!
   set atleastonearg=1
   shift
   shift
@@ -126,11 +122,6 @@ echo DRILL_ARGS - "%DRILL_ARGS%"
 rem ----
 rem Deal with Drill variables
 rem ----
-
-set DRILL_BIN_DIR=%~dp0
-pushd %DRILL_BIN_DIR%..
-set DRILL_HOME=%cd%
-popd
 
 if "test%DRILL_CONF_DIR%" == "test" (
   set DRILL_CONF_DIR=%DRILL_HOME%\conf
@@ -219,10 +210,10 @@ if errorlevel 1 (
 
 set SQLLINE_CALL=sqlline.SqlLine -ac org.apache.drill.exec.client.DrillSqlLineApplication -d org.apache.drill.jdbc.Driver
 if NOT "test%QUERY%"=="test" (
-  echo %QUERY% | "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS%
+  "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS% -e "%QUERY%"
 ) else (
   if NOT "test%FILE%"=="test" (
-    "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS% --run=%FILE%
+    "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS% --run="%FILE%"
   ) else (
     "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS%
   )
