@@ -311,6 +311,11 @@
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
+      <source>src/resources/drill-embedded.bat</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
       <source>src/resources/drill-localhost</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
@@ -327,6 +332,7 @@
     </file>
     <file>
       <source>src/resources/sqlline.bat</source>
+      <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
