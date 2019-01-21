@@ -24,6 +24,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
@@ -89,7 +90,17 @@ public class InterpreterEvaluator {
 
   }
 
-  public static ValueHolder evaluateFunction(DrillSimpleFunc interpreter, ValueHolder[] args, String funcName) throws Exception {
+  /**
+   * Assigns specified {@code Object[] args} to the function arguments,
+   * evaluates function and returns its result.
+   *
+   * @param interpreter function to be evaluated
+   * @param args        function arguments
+   * @param funcName    name of the function
+   * @return result of function call stored in {@link ValueHolder}
+   * @throws Exception if {@code args} types does not match function input arguments types
+   */
+  public static ValueHolder evaluateFunction(DrillSimpleFunc interpreter, Object[] args, String funcName) throws Exception {
     Preconditions.checkArgument(interpreter != null, "interpreter could not be null when use interpreted model to evaluate function " + funcName);
 
     // the current input index to assign into the next available parameter, found using the @Param notation
@@ -100,13 +111,13 @@ public class InterpreterEvaluator {
       Field[] fields = interpreter.getClass().getDeclaredFields();
       for (Field f : fields) {
         // if this is annotated as a parameter to the function
-        if ( f.getAnnotation(Param.class) != null ) {
+        if (f.getAnnotation(Param.class) != null) {
           f.setAccessible(true);
           if (currParameterIndex < args.length) {
             f.set(interpreter, args[currParameterIndex]);
           }
           currParameterIndex++;
-        } else if ( f.getAnnotation(Output.class) != null ) {
+        } else if (f.getAnnotation(Output.class) != null) {
           f.setAccessible(true);
           outField = f;
           // create an instance of the holder for the output to be stored in
@@ -127,9 +138,8 @@ public class InterpreterEvaluator {
     }
     interpreter.setup();
     interpreter.eval();
-    ValueHolder out = (ValueHolder) outField.get(interpreter);
 
-    return out;
+    return (ValueHolder) outField.get(interpreter);
   }
 
   private static class InitVisitor extends AbstractExprVisitor<LogicalExpression, VectorAccessible, RuntimeException> {
@@ -307,25 +317,36 @@ public class InterpreterEvaluator {
 
       DrillSimpleFuncHolder holder = (DrillSimpleFuncHolder) holderExpr.getHolder();
 
-      ValueHolder [] args = new ValueHolder [holderExpr.args.size()];
+      // function arguments may have different types:
+      // usually ValueHolder inheritors but sometimes FieldReader ones
+      Object[] args = new Object[holderExpr.args.size()];
       for (int i = 0; i < holderExpr.args.size(); i++) {
-        args[i] = holderExpr.args.get(i).accept(this, inIndex);
+        ValueHolder valueHolder = holderExpr.args.get(i).accept(this, inIndex);
+        Object resultArg = valueHolder;
+        TypeProtos.MajorType argType = TypeHelper.getValueHolderType(valueHolder);
+        TypeProtos.MajorType holderParamType = holder.getParameters()[i].getType();
         // In case function use "NULL_IF_NULL" policy.
         if (holder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) {
           // Case 1: parameter is non-nullable, argument is nullable.
-          if (holder.getParameters()[i].getType().getMode() == TypeProtos.DataMode.REQUIRED && TypeHelper.getValueHolderType(args[i]).getMode() == TypeProtos.DataMode.OPTIONAL) {
+          if (holderParamType.getMode() == TypeProtos.DataMode.REQUIRED
+              && argType.getMode() == TypeProtos.DataMode.OPTIONAL) {
             // Case 1.1 : argument is null, return null value holder directly.
-            if (TypeHelper.isNull(args[i])) {
+            if (TypeHelper.isNull(valueHolder)) {
               return TypeHelper.createValueHolder(holderExpr.getMajorType());
             } else {
               // Case 1.2: argument is nullable but not null value, deNullify it.
-              args[i] = TypeHelper.deNullify(args[i]);
+              resultArg = TypeHelper.deNullify(valueHolder);
             }
-          } else if (holder.getParameters()[i].getType().getMode() == TypeProtos.DataMode.OPTIONAL && TypeHelper.getValueHolderType(args[i]).getMode() == TypeProtos.DataMode.REQUIRED) {
+          } else if (holderParamType.getMode() == TypeProtos.DataMode.OPTIONAL
+              && argType.getMode() == TypeProtos.DataMode.REQUIRED) {
             // Case 2: parameter is nullable, argument is non-nullable. Nullify it.
-            args[i] = TypeHelper.nullify(args[i]);
+            resultArg = TypeHelper.nullify(valueHolder);
           }
         }
+        if (holder.getParameters()[i].isFieldReader()) {
+          resultArg = BasicTypeHelper.getHolderReaderImpl(argType, valueHolder);
+        }
+        args[i] = resultArg;
       }
 
       try {
@@ -333,10 +354,11 @@ public class InterpreterEvaluator {
 
         ValueHolder out = evaluateFunction(interpreter, args, holderExpr.getName());
 
-        if (TypeHelper.getValueHolderType(out).getMode() == TypeProtos.DataMode.OPTIONAL &&
+        TypeProtos.MajorType outputType = TypeHelper.getValueHolderType(out);
+        if (outputType.getMode() == TypeProtos.DataMode.OPTIONAL &&
             holderExpr.getMajorType().getMode() == TypeProtos.DataMode.REQUIRED) {
           return TypeHelper.deNullify(out);
-        } else if (TypeHelper.getValueHolderType(out).getMode() == TypeProtos.DataMode.REQUIRED &&
+        } else if (outputType.getMode() == TypeProtos.DataMode.REQUIRED &&
               holderExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
           return TypeHelper.nullify(out);
         } else {

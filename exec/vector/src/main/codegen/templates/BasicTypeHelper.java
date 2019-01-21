@@ -207,7 +207,35 @@ public class BasicTypeHelper {
       throw new UnsupportedOperationException(buildErrorMessage("get writer implementation", type, mode));
   }
 
-  public static Class<?> getHolderReaderImpl( MinorType type, DataMode mode){
+  /**
+   * Creates and returns {@link FieldReader} instance for specified {@code MajorType type} using specisied {@code ValueHolder}
+   *
+   * @param type   type of resulting {@link FieldReader} instance
+   * @param holder value holder for {@link FieldReader} creation
+   * @return {@link FieldReader} instance
+   */
+  public static FieldReader getHolderReaderImpl(MajorType type, ValueHolder holder) {
+    switch (type.getMinorType()) {
+    <#list vv.types as type>
+      <#list type.minor as minor>
+      case ${minor.class?upper_case}:
+        switch (type.getMode()) {
+          case REQUIRED:
+            return new ${minor.class}HolderReaderImpl((${minor.class}Holder) holder);
+          case OPTIONAL:
+            return new Nullable${minor.class}HolderReaderImpl((Nullable${minor.class}Holder) holder);
+          case REPEATED:
+            return new Repeated${minor.class}HolderReaderImpl((Repeated${minor.class}Holder) holder);
+      }
+      </#list>
+    </#list>
+      case NULL:
+        return new UntypedHolderReaderImpl((UntypedNullHolder) holder);
+    }
+    throw new UnsupportedOperationException(buildErrorMessage("get holder reader implementation", type.getMinorType(), type.getMode()));
+  }
+
+  public static Class<?> getHolderReaderImpl(MinorType type, DataMode mode) {
     switch (type) {      
 <#list vv.types as type>
   <#list type.minor as minor>
