@@ -42,7 +42,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * a record batch with a single vector of type repeated varchar vector. Each record is a single
  * value within the vector containing all the fields in the record as individual array elements.
  */
-class RepeatedVarCharOutput extends TextOutput {
+public class RepeatedVarCharOutput extends TextOutput {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RepeatedVarCharOutput.class);
 
   static final String COL_NAME = "columns";

@@ -21,16 +21,28 @@ import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumnDefn;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.impl.scan.project.SchemaLevelProjection.SchemaProjectionResolver;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class ScanTestUtils {
+
+  // Default file metadata column names; primarily for testing.
+
+  public static final String FILE_NAME_COL = "filename";
+  public static final String FULLY_QUALIFIED_NAME_COL = "fqn";
+  public static final String FILE_PATH_COL = "filepath";
+  public static final String SUFFIX_COL = "suffix";
+  public static final String PARTITION_COL = "dir";
 
   /**
    * Type-safe way to define a list of parsers.
@@ -45,6 +57,35 @@ public class ScanTestUtils {
 
   public static List<SchemaProjectionResolver> resolvers(SchemaProjectionResolver... resolvers) {
     return ImmutableList.copyOf(resolvers);
+  }
+
+  /**
+   * Mimic legacy wildcard expansion of metadata columns. Is not a full
+   * emulation because this version only works if the wildcard was at the end
+   * of the list (or alone.)
+   * @param scanProj scan projection definition (provides the partition column names)
+   * @param base the table part of the expansion
+   * @param dirCount number of partition directories
+   * @return schema with the metadata columns appended to the table columns
+   */
+
+  public static TupleMetadata expandMetadata(TupleMetadata base, FileMetadataManager metadataProj, int dirCount) {
+    TupleMetadata metadataSchema = new TupleSchema();
+    for (ColumnMetadata col : base) {
+      metadataSchema.addColumn(col);
+    }
+    for (FileMetadataColumnDefn fileColDefn : metadataProj.fileMetadataColDefns()) {
+      metadataSchema.add(MaterializedField.create(fileColDefn.colName(), fileColDefn.dataType()));
+    }
+    for (int i = 0; i < dirCount; i++) {
+      metadataSchema.add(MaterializedField.create(metadataProj.partitionName(i),
+          PartitionColumn.dataType()));
+    }
+    return metadataSchema;
+  }
+
+  public static String partitionColName(int partition) {
+    return PARTITION_COL + partition;
   }
 
   public static TupleMetadata schema(ResolvedTuple output) {
