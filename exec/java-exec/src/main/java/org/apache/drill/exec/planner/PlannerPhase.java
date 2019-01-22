@@ -447,7 +447,8 @@ public enum PlannerPhase {
             // estimation of filter operator, after filter is pushed down to scan.
 
             ParquetPushDownFilter.getFilterOnProject(optimizerRulesContext),
-            ParquetPushDownFilter.getFilterOnScan(optimizerRulesContext)
+            ParquetPushDownFilter.getFilterOnScan(optimizerRulesContext),
+            DrillPushProjectIntoScanRule.DRILL_PHYSICAL_INSTANCE
         )
         .build();
 
