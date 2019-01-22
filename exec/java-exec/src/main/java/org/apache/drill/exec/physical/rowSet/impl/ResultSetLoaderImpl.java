@@ -374,6 +374,10 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     startBatch(false);
   }
 
+  /**
+   * Start a batch to report only schema without data.
+   */
+
   public void startEmptyBatch() {
     startBatch(true);
   }
@@ -422,6 +426,19 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     harvestSchemaVersion = activeSchemaVersion;
     pendingRowCount = 0;
     state = State.ACTIVE;
+  }
+
+  @Override
+  public boolean hasRows() {
+    switch (state) {
+    case ACTIVE:
+    case HARVESTED:
+      return rootWriter.rowCount() > 0;
+    case LOOK_AHEAD:
+      return true;
+    default:
+      return false;
+    }
   }
 
   @Override

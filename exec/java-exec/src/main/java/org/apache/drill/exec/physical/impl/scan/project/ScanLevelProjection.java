@@ -125,7 +125,6 @@ public class ScanLevelProjection {
   // Configuration
 
   protected List<ScanProjectionParser> parsers;
-  private final boolean v1_12MetadataLocation;
 
   // Internal state
 
@@ -147,11 +146,9 @@ public class ScanLevelProjection {
    * @return this builder
    */
   public ScanLevelProjection(List<SchemaPath> projectionList,
-      List<ScanProjectionParser> parsers,
-      boolean v1_12MetadataLocation) {
+      List<ScanProjectionParser> parsers) {
     this.projectionList = projectionList;
     this.parsers = parsers;
-    this.v1_12MetadataLocation = v1_12MetadataLocation;
     doParse();
   }
 
@@ -172,11 +169,6 @@ public class ScanLevelProjection {
     for (ScanProjectionParser parser : parsers) {
       parser.build();
     }
-  }
-
-  public ScanLevelProjection(List<SchemaPath> projectionList,
-      List<ScanProjectionParser> parsers) {
-    this(projectionList, parsers, false);
   }
 
   /**
@@ -216,25 +208,8 @@ public class ScanLevelProjection {
     // placeholder to be filled in later with actual table columns.
 
     if (wildcardPosn != -1) {
-
-      // Drill 1.1 - 1.11 and Drill 1.13 or later put metadata columns after
-      // data columns. Drill 1.12 moved them before data columns. For testing
-      // and compatibility, the client can request to use the Drill 1.12 position,
-      // though the after-data position is the default.
-      //
-      // Note that the after-data location is much more convenient for the dirx
-      // partition columns since these vary in number across scans within the same query.
-      // By putting them at the end, the index of all other columns remains
-      // constant. Drill 1.12 broke that behavior, but Drill 1.13 restored it.
-      //
-      // This option can be removed in Drill 1.14 after things settle down.
-
       UnresolvedColumn wildcardCol = new UnresolvedColumn(inCol, UnresolvedColumn.WILDCARD);
-      if (v1_12MetadataLocation) {
-        outputCols.add(wildcardCol);
-      } else {
-        outputCols.add(wildcardPosn, wildcardCol);
-      }
+      outputCols.add(wildcardPosn, wildcardCol);
       hasWildcard = true;
       emptyProjection = false;
     }

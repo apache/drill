@@ -76,7 +76,7 @@ public class ScanBatch implements CloseableRecordBatch {
   private RecordReader currentReader;
   private BatchSchema schema;
   private final Mutator mutator;
-  private boolean done = false;
+  private boolean done;
   private Iterator<Map<String, String>> implicitColumns;
   private Map<String, String> implicitValues;
   private final BufferAllocator allocator;
@@ -88,15 +88,15 @@ public class ScanBatch implements CloseableRecordBatch {
   // during the method's execution a value IterOutcome.STOP will be assigned.
   private IterOutcome lastOutcome;
 
-  private List<RecordReader> readerList = null; // needed for repeatable scanners
-  private boolean isRepeatableScan = false;     // needed for repeatable scanners
+  private List<RecordReader> readerList; // needed for repeatable scanners
+  private boolean isRepeatableScan;      // needed for repeatable scanners
 
   /**
    *
    * @param context
    * @param oContext
    * @param readerList
-   * @param implicitColumnList : either an emptylist when all the readers do not have implicit
+   * @param implicitColumnList : either an empty list when all the readers do not have implicit
    *                        columns, or there is a one-to-one mapping between reader and implicitColumns.
    */
   public ScanBatch(FragmentContext context,
@@ -179,7 +179,7 @@ public class ScanBatch implements CloseableRecordBatch {
    * @return NONE
    */
   private IterOutcome cleanAndReturnNone() {
-    if(isRepeatableScan) {
+    if (isRepeatableScan) {
       readers = readerList.iterator();
       return IterOutcome.NONE;
     } else {
@@ -197,7 +197,7 @@ public class ScanBatch implements CloseableRecordBatch {
    */
   private boolean shouldContinueAfterNoRecords() throws Exception {
     logger.trace("scan got 0 record.");
-    if(isRepeatableScan) {
+    if (isRepeatableScan) {
       if (!currentReader.hasNext()) {
         currentReader = null;
         readers = readerList.iterator();

@@ -192,14 +192,29 @@ public class ColumnExplorer {
    * Example: root - a/b/c, filePath - a/b/c/d/e/0_0_0.parquet, result - d/e.
    * Stores different directory names in the list in successive order.
    *
-   *
    * @param filePath file path
    * @param root root directory
    * @return list of directory names
    */
   public static List<String> listPartitionValues(String filePath, String root) {
-    if (filePath == null || root == null) {
+    String[] dirs = parsePartitions(filePath, root);
+    if (dirs == null) {
       return Collections.emptyList();
+    }
+    return Arrays.asList(dirs);
+  }
+
+  /**
+   * Low-level parse of partitions, returned as a string array. Returns a
+   * null array for invalid values.
+   *
+   * @param filePath file path
+   * @param root root directory
+   * @return array of directory names, or null if the arguments are invalid
+   */
+  public static String[] parsePartitions(String filePath, String root) {
+    if (filePath == null || root == null) {
+      return null;
     }
 
     int rootDepth = new Path(root).depth();
@@ -208,8 +223,8 @@ public class ColumnExplorer {
 
     int diffCount = parentDepth - rootDepth;
 
-    if (diffCount < 1) {
-      return Collections.emptyList();
+    if (diffCount < 0) {
+      return null;
     }
 
     String[] diffDirectoryNames = new String[diffCount];
@@ -221,7 +236,7 @@ public class ColumnExplorer {
       diffDirectoryNames[parentDepth - i - 1] = path.getName();
     }
 
-    return Arrays.asList(diffDirectoryNames);
+    return diffDirectoryNames;
   }
 
   public boolean isStarQuery() {

@@ -115,8 +115,12 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     return blockSplittable;
   }
 
-  /** Method indicates whether or not this format could also be in a compression container (for example: csv.gz versus csv).
-   * If this format uses its own internal compression scheme, such as Parquet does, then this should return false.
+  /**
+   * Indicates whether or not this format could also be in a compression
+   * container (for example: csv.gz versus csv). If this format uses its own
+   * internal compression scheme, such as Parquet does, then this should return
+   * false.
+   *
    * @return <code>true</code> if it is compressible
    */
   public boolean isCompressible() {
@@ -126,7 +130,6 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   public abstract RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
       List<SchemaPath> columns, String userName) throws ExecutionSetupException;
 
-  @SuppressWarnings("resource")
   CloseableRecordBatch getReaderBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
     final ColumnExplorer columnExplorer = new ColumnExplorer(context.getOptions(), scan.getColumns());
 
@@ -134,7 +137,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
           columnExplorer.getTableColumns(), scan.getSelectionRoot());
       scan.setOperatorId(scan.getOperatorId());
-        }
+    }
 
     OperatorContext oContext = context.newOperatorContext(scan);
     final DrillFileSystem dfs;
@@ -156,14 +159,14 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       implicitColumns.add(implicitValues);
       if (implicitValues.size() > mapWithMaxColumns.size()) {
         mapWithMaxColumns = implicitValues;
-        }
       }
+    }
 
     // all readers should have the same number of implicit columns, add missing ones with value null
     Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
     for (Map<String, String> map : implicitColumns) {
       map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
-      }
+    }
 
     return new ScanBatch(context, oContext, readers, implicitColumns);
   }

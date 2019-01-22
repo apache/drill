@@ -1,0 +1,120 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.physical.impl.scan.file;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
+import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
+import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
+import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
+
+/**
+ * Parses the implicit file metadata columns out of a project list,
+ * and marks them for special handling by the file metadata manager.
+ */
+
+public class FileMetadataColumnsParser implements ScanProjectionParser {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileMetadataColumnsParser.class);
+
+  // Internal
+
+  private final FileMetadataManager metadataManager;
+  private final Pattern partitionPattern;
+  private ScanLevelProjection builder;
+
+  // Output
+
+  private boolean hasImplicitCols;
+
+  public FileMetadataColumnsParser(FileMetadataManager metadataManager) {
+    this.metadataManager = metadataManager;
+    partitionPattern = Pattern.compile(metadataManager.partitionDesignator + "(\\d+)", Pattern.CASE_INSENSITIVE);
+  }
+
+  @Override
+  public void bind(ScanLevelProjection builder) {
+    this.builder = builder;
+  }
+
+  @Override
+  public boolean parse(RequestedColumn inCol) {
+    Matcher m = partitionPattern.matcher(inCol.name());
+    if (m.matches()) {
+      return buildPartitionColumn(m, inCol);
+    }
+
+    FileMetadataColumnDefn defn = metadataManager.fileMetadataColIndex.get(inCol.name());
+    if (defn != null) {
+      return buildMetadataColumn(defn, inCol);
+    }
+    return false;
+  }
+
+  private boolean buildPartitionColumn(Matcher m, RequestedColumn inCol) {
+
+    // If the projected column is a map or array, then it shadows the
+    // partition column. Example: dir0.x, dir0[2].
+
+    if (! inCol.isSimple()) {
+      logger.warn("Partition column {} is shadowed by a projected {}",
+          inCol.name(), inCol.summary());
+      return false;
+    }
+
+    // Partition column
+
+    builder.addMetadataColumn(
+        new PartitionColumn(
+          inCol.name(),
+          Integer.parseInt(m.group(1))));
+    hasImplicitCols = true;
+    return true;
+  }
+
+  private boolean buildMetadataColumn(FileMetadataColumnDefn defn,
+      RequestedColumn inCol) {
+
+    // If the projected column is a map or array, then it shadows the
+    // metadata column. Example: filename.x, filename[2].
+
+    if (! inCol.isSimple()) {
+      logger.warn("File metadata column {} is shadowed by a projected {}",
+          inCol.name(), inCol.summary());
+      return false;
+    }
+
+    // File metadata (implicit) column
+
+    builder.addMetadataColumn(new FileMetadataColumn(inCol.name(), defn));
+    hasImplicitCols = true;
+    return true;
+  }
+
+  @Override
+  public void validate() { }
+
+  @Override
+  public void validateColumn(ColumnProjection outCol) { }
+
+  @Override
+  public void build() { }
+
+  public boolean hasImplicitCols() { return hasImplicitCols; }
+}

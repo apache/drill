@@ -15,30 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.scan.project;
+package org.apache.drill.exec.physical.impl.scan;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
+import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
+import org.apache.drill.exec.physical.impl.scan.project.UnresolvedColumn;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Test the level of projection done at the level of the scan as a whole;
  * before knowledge of table "implicit" columns or the specific table schema.
  */
 
-@Category(RowSetTests.class)
 public class TestScanLevelProjection extends SubOperatorTest {
 
   /**
@@ -53,7 +51,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
     // Simulate SELECT a, b, c ...
     // Build the projection plan and verify
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList("a", "b", "c"),
         ScanTestUtils.parsers());
     assertFalse(scanProj.projectAll());
@@ -74,15 +72,9 @@ public class TestScanLevelProjection extends SubOperatorTest {
     assertEquals(UnresolvedColumn.UNRESOLVED, scanProj.columns().get(0).nodeType());
   }
 
-  /**
-   * Map projection occurs when a query contains project-list items with
-   * a dot, such as "a.b". We may not know the type of "b", but have
-   * just learned that "a" must be a map.
-   */
-
   @Test
   public void testMap() {
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList("a.x", "b.x", "a.y", "b.y", "c"),
         ScanTestUtils.parsers());
     assertFalse(scanProj.projectAll());
@@ -99,24 +91,19 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
     // Map structure
 
-    final RequestedColumn a = ((UnresolvedColumn) scanProj.columns().get(0)).element();
+    RequestedColumn a = ((UnresolvedColumn) scanProj.columns().get(0)).element();
     assertTrue(a.isTuple());
     assertEquals(ProjectionType.UNSPECIFIED, a.mapProjection().projectionType("x"));
     assertEquals(ProjectionType.UNSPECIFIED, a.mapProjection().projectionType("y"));
     assertEquals(ProjectionType.UNPROJECTED,  a.mapProjection().projectionType("z"));
 
-    final RequestedColumn c = ((UnresolvedColumn) scanProj.columns().get(2)).element();
+    RequestedColumn c = ((UnresolvedColumn) scanProj.columns().get(2)).element();
     assertTrue(c.isSimple());
   }
 
-  /**
-   * Similar to maps, if the project list contains "a[1]" then we've learned that
-   * a is an array, but we don't know what type.
-   */
-
   @Test
   public void testArray() {
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList("a[1]", "a[3]"),
         ScanTestUtils.parsers());
     assertFalse(scanProj.projectAll());
@@ -131,7 +118,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
     // Map structure
 
-    final RequestedColumn a = ((UnresolvedColumn) scanProj.columns().get(0)).element();
+    RequestedColumn a = ((UnresolvedColumn) scanProj.columns().get(0)).element();
     assertTrue(a.isArray());
     assertFalse(a.hasIndex(0));
     assertTrue(a.hasIndex(1));
@@ -140,13 +127,13 @@ public class TestScanLevelProjection extends SubOperatorTest {
   }
 
   /**
-   * Simulate a SELECT * query by passing "**" (Drill's internal representation
+   * Simulate a SELECT * query by passing "**" (Drill's internal version
    * of the wildcard) as a column name.
    */
 
   @Test
   public void testWildcard() {
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers());
 
@@ -174,7 +161,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
   @Test
   public void testEmptyProjection() {
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(),
         ScanTestUtils.parsers());
 
@@ -194,7 +181,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
           RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR, "a"),
           ScanTestUtils.parsers());
       fail();
-    } catch (final IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       // Expected
     }
   }
@@ -210,7 +197,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
           RowSetTestUtils.projectList("a", SchemaPath.DYNAMIC_STAR),
           ScanTestUtils.parsers());
       fail();
-    } catch (final IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       // Expected
     }
   }
@@ -229,7 +216,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
           RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR, SchemaPath.DYNAMIC_STAR),
           ScanTestUtils.parsers());
       fail();
-    } catch (final UserException e) {
+    } catch (UserException e) {
       // Expected
     }
   }

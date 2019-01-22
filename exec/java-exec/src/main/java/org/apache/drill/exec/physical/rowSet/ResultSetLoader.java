@@ -97,6 +97,17 @@ public interface ResultSetLoader {
   int totalRowCount();
 
   /**
+   * Report whether the loader currently holds rows. If within a batch,
+   * reports if at least one row has been read (which might be a look-ahead
+   * row.) If between batches, reports if a look-ahead row is available.
+   *
+   * @return true if at least one row is available to harvest, false
+   * otherwise
+   */
+
+  boolean hasRows();
+
+  /**
    * Start a new row batch. Valid only when first started, or after the
    * previous batch has been harvested.
    */

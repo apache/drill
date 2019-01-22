@@ -60,7 +60,7 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   private TextReader reader;
   // input buffer
   private DrillBuf readBuffer;
-  // working buffer to handle whitespaces
+  // working buffer to handle whitespace
   private DrillBuf whitespaceBuffer;
   private DrillFileSystem dfs;
   // operator context for OutputMutator
@@ -111,7 +111,6 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
    * @param outputMutator  Used to create the schema in the output record batch
    * @throws ExecutionSetupException
    */
-  @SuppressWarnings("resource")
   @Override
   public void setup(OperatorContext context, OutputMutator outputMutator) throws ExecutionSetupException {
 
@@ -165,7 +164,6 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
    * TODO: enhance to support more common header patterns
    * @return field name strings
    */
-  @SuppressWarnings("resource")
   private String [] extractHeader() throws SchemaChangeException, IOException, ExecutionSetupException{
     assert (settings.isHeaderExtractionEnabled());
     assert (oContext != null);
