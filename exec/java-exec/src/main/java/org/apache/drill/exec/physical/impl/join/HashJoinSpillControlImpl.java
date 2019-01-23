@@ -23,6 +23,7 @@ package org.apache.drill.exec.physical.impl.join;
   import org.apache.drill.exec.ops.FragmentContext;
   import org.apache.drill.exec.record.RecordBatch;
   import org.apache.drill.exec.record.RecordBatchMemoryManager;
+  import org.apache.drill.exec.record.RecordBatchSizer;
   import org.slf4j.Logger;
   import org.slf4j.LoggerFactory;
 
@@ -115,7 +116,8 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
     int hashTableSize = buildBatchSize /* the keys in the HT */ +
       4 * (int)context.getOptions().getLong(ExecConstants.MIN_HASH_TABLE_SIZE_KEY) /* the initial hash table buckets */ +
       (2 + 2) * recordsPerBatch; /* the hash-values and the links */
-    int probeBatchSize = ( batchMemoryManager.getRecordBatchSizer(LEFT_INDEX).getRowAllocWidth() + 4 ) * recordsPerBatch;
+    RecordBatchSizer left_rbs = batchMemoryManager.getRecordBatchSizer(LEFT_INDEX);
+    int probeBatchSize = left_rbs == null ? 0 :  ( left_rbs.getRowAllocWidth() + 4 ) * recordsPerBatch;
 
     long memoryNeededPerPartition = Integer.max(buildBatchSize + hashTableSize, probeBatchSize);
 
