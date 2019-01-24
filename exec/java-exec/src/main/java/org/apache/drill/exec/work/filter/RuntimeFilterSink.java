@@ -99,6 +99,10 @@ public class RuntimeFilterSink implements Closeable
       joinMjId2Stopwatch.put(joinMjId, stopwatch);
     }
     synchronized (rfQueue) {
+      if (!running.get()) {
+        runtimeFilterWritable.close();
+        return;
+      }
       rfQueue.add(runtimeFilterWritable);
       rfQueue.notify();
     }
@@ -246,14 +250,22 @@ public class RuntimeFilterSink implements Closeable
           aggregate(toAggregate);
         } catch (Exception ex) {
           logger.error("Failed to aggregate or route the RFW", ex);
+
+          // Set running to false and cleanup pending RFW in queue. This will make sure producer
+          // thread is also indicated to stop and queue is cleaned up properly in failure cases
+          synchronized (rfQueue) {
+            running.set(false);
+          }
+          cleanupQueue();
           throw new DrillRuntimeException(ex);
         } finally {
-          if (toAggregate != null) {
             toAggregate.close();
-          }
         }
       }
+      cleanupQueue();
+    }
 
+    private void cleanupQueue() {
       if (!running.get()) {
         RuntimeFilterWritable toClose;
         while ((toClose = rfQueue.poll()) != null) {
