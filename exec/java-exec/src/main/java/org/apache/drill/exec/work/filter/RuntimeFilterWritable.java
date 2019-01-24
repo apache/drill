@@ -50,24 +50,6 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable{
       + ", srcOperatorId:" + runtimeFilterBDef.getHjOpId();
   }
 
-  public RuntimeFilterWritable(BitData.RuntimeFilterBDef runtimeFilterBDef, DrillBuf data) {
-    this.runtimeFilterBDef = runtimeFilterBDef;
-    List<Integer> bfSizeInBytes = runtimeFilterBDef.getBloomFilterSizeInBytesList();
-    int boomFilterNum = bfSizeInBytes.size();
-    this.data = new DrillBuf[boomFilterNum];
-    int index = 0;
-    for (int i = 0; i < boomFilterNum; i++) {
-      int length = bfSizeInBytes.get(i);
-      this.data[i] = data.slice(index, length);
-      index = index + length;
-    }
-
-    this.identifier = "majorFragmentId:" + runtimeFilterBDef.getMajorFragmentId()
-                      + ",minorFragmentId:" + runtimeFilterBDef.getMinorFragmentId()
-                      + ", srcOperatorId:" + runtimeFilterBDef.getHjOpId();
-  }
-
-
   public BitData.RuntimeFilterBDef getRuntimeFilterBDef() {
     return runtimeFilterBDef;
   }
