@@ -1001,16 +1001,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
         // Fall through
       case OK:
         batchMemoryManager.update(buildBatch, RIGHT_INDEX, 0, true);
-        // Special treatment (when no spill, and single partition) -- use the incoming vectors as they are (no row copy)
-        if ( numPartitions == 1 ) {
-          partitions[0].appendBatch(buildBatch);
-          break;
-        }
         final int currentRecordCount = buildBatch.getRecordCount();
-
-        if (!spilledState.isFirstCycle()) {
-          read_right_HV_vector = (IntVector) buildBatch.getContainer().getLast();
-        }
         //create runtime filter
         if (spilledState.isFirstCycle() && enableRuntimeFilter) {
           //create runtime filter and send out async
@@ -1021,6 +1012,15 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
               bloomFilter.insert(hashCode);
             }
           }
+        }
+        // Special treatment (when no spill, and single partition) -- use the incoming vectors as they are (no row copy)
+        if ( numPartitions == 1 ) {
+          partitions[0].appendBatch(buildBatch);
+          break;
+        }
+
+        if (!spilledState.isFirstCycle()) {
+          read_right_HV_vector = (IntVector) buildBatch.getContainer().getLast();
         }
 
         // For every record in the build batch, hash the key columns and keep the result
