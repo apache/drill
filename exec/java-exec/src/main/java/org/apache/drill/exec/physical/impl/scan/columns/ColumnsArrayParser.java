@@ -96,7 +96,7 @@ public class ColumnsArrayParser implements ScanProjectionParser {
     if (inCol.isTuple()) {
       throw UserException
         .validationError()
-        .message("{} has mep elements, but cannot be a map", inCol.name())
+        .message("{} has map elements, but cannot be a map", inCol.name())
         .build(logger);
     }
 
@@ -105,7 +105,9 @@ public class ColumnsArrayParser implements ScanProjectionParser {
       if (maxIndex > RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS) {
         throw UserException
           .validationError()
-          .message("`columns`[" + maxIndex + "] index out of bounds")
+          .message(String.format(
+              "`columns`[%d] index out of bounds, max supported size is %d",
+              maxIndex, RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS))
           .addContext("Column", inCol.name())
           .addContext("Maximum index", RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS)
           .build(logger);

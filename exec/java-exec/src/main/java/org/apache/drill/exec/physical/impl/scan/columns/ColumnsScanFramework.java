@@ -33,6 +33,15 @@ import org.apache.hadoop.mapred.FileSplit;
 
 /**
  * Scan framework for a file that supports the special "columns" column.
+ * <p>
+ * The logic here is a bit tricky. The CSV (really, "compliant text") reader
+ * operates in multiple modes. If a header is required, then the columns
+ * array is not allowed. If the header is not loaded, then the columns
+ * array must be used.
+ * <p>
+ * This class combines the above semantics with the projection list from the
+ * query. It handles things like two appearances of the unadorned columns
+ * identifier, the use of the columns identifier when it is not allowed, etc.
  */
 
 public class ColumnsScanFramework extends BaseFileScanFramework<ColumnsScanFramework.ColumnsSchemaNegotiator> {
@@ -60,25 +69,29 @@ public class ColumnsScanFramework extends BaseFileScanFramework<ColumnsScanFrame
   public static class ColumnsSchemaNegotiatorImpl extends FileSchemaNegotiatorImpl
           implements ColumnsSchemaNegotiator {
 
-    private final ColumnsScanFramework framework;
-
     public ColumnsSchemaNegotiatorImpl(ColumnsScanFramework framework,
         ShimBatchReader<ColumnsSchemaNegotiator> shim) {
       super(framework, shim);
-      this.framework = framework;
+    }
+
+    private ColumnsScanFramework framework() {
+      return (ColumnsScanFramework) basicFramework;
     }
 
     @Override
     public boolean columnsArrayProjected() {
-      return framework.columnsArrayManager.hasColumnsArrayColumn();
+      return framework().columnsArrayManager.hasColumnsArrayColumn();
     }
 
     @Override
     public boolean[] projectedIndexes() {
-      return framework.columnsArrayManager.elementProjection();
+      return framework().columnsArrayManager.elementProjection();
     }
   }
 
+  /**
+   * Creates (or iterates over) the readers for this scan.
+   */
   private final FileReaderCreator readerCreator;
   private boolean requireColumnsArray;
   protected ColumnsArrayManager columnsArrayManager;

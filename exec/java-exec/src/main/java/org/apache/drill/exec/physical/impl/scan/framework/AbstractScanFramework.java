@@ -35,7 +35,7 @@ import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
  * <p>
  * This framework is a bridge between operator logic and the scan projection
  * internals. It gathers scan-specific options, then sets
- * then on the scan orchestrator at the right time. By abstracting out this
+ * them on the scan orchestrator at the right time. By abstracting out this
  * plumbing, a scan batch creator simply chooses the proper framework, passes
  * config options, and implements the matching "managed reader". All details
  * of setup, projection, and so on are handled by the framework and the components

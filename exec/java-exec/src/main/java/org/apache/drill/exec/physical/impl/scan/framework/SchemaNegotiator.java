@@ -59,11 +59,12 @@ public interface SchemaNegotiator {
   OperatorContext context();
 
   /**
-   * Specify the type of table schema. Required only in the obscure
-   * case of an early-schema table with an empty schema, else inferred.
-   * (Set to {@link TableSchemaType#EARLY} if no columns provided, or
-   * to {@link TableSchemaType#LATE if at least one column is provided.)
-   * @param type the table schema type
+   * Specify the table schema if this is an early-schema reader. Need
+   * not be called for a late-schema readers. The schema provided here,
+   * if any, is a base schema: the reader is free to discover additional
+   * columns during the read.
+   *
+   * @param schema the table schema if known at open time
    */
 
   void setTableSchema(TupleMetadata schema);

@@ -28,7 +28,13 @@ import org.apache.drill.exec.record.VectorContainer;
  * result set loader and schema manager to structure the data
  * read by the actual row batch reader.
  * <p>
- * Provides the row set mutator used to construct record batches.
+ * Provides the row set loader used to construct record batches.
+ * <p>
+ * The idea of this class is that schema construction is complex,
+ * and varies depending on the kind of reader. Rather than pack
+ * that logic into the scan operator and scan-level reader state,
+ * this class abstracts out the schema logic. This allows a variety
+ * of solutions as needed for different readers.
  */
 
 public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchReader {
@@ -39,6 +45,13 @@ public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchRead
   protected final ManagedReader<T> reader;
   protected final ReaderSchemaOrchestrator readerOrchestrator;
   protected ResultSetLoader tableLoader;
+
+  /**
+   * True once the reader reports EOF. This shim may keep going for another
+   * batch to handle any look-ahead row on the last batch.
+   */
+
+  private boolean eof;
 
   public ShimBatchReader(AbstractScanFramework<T> manager, ManagedReader<T> reader) {
     this.manager = manager;
@@ -85,15 +98,26 @@ public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchRead
   @Override
   public boolean next() {
 
+    // The reader may report EOF, but the result set loader might
+    // have a lookhead row.
+
+    if (eof && ! tableLoader.hasRows()) {
+      return false;
+    }
+
     // Prepare for the batch.
-    // TODO: A bit wasteful to allocate vectors if the reader
-    // knows it has no more data.
 
     readerOrchestrator.startBatch();
 
-    // Read the batch.
+    // Read the batch. The reader should report EOF if it hits the
+    // end of data, even if the reader returns rows. This will prevent allocating
+    // a new batch just to learn about EOF. Don't read if the reader
+    // already reported EOF. In that case, we're just processing any last
+    // lookahead row in the result set loader.
 
-    boolean more = reader.next();
+    if (! eof) {
+      eof = ! reader.next();
+    }
 
     // Add implicit columns, if any.
     // Identify the output container and its schema version.
@@ -101,7 +125,12 @@ public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchRead
     // the scan operator.
 
     readerOrchestrator.endBatch();
-    return more;
+
+    // Return EOF (false) only when the reader reports EOF
+    // and the result set loader has drained its rows from either
+    // this batch or lookahead rows.
+
+    return ! eof || tableLoader.hasRows();
   }
 
   @Override

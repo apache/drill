@@ -53,6 +53,8 @@ import org.junit.Test;
 
 /**
  * Tests the file metadata extensions to the file operator framework.
+ * Focuses on the file metadata itself, assumes that other tests have
+ * verified the underlying mechanisms.
  */
 
 public class TestFileScanFramework extends SubOperatorTest {
@@ -235,6 +237,11 @@ public class TestFileScanFramework extends SubOperatorTest {
       return true;
     }
   }
+
+  /**
+   * Mock reader with an early schema: the schema is known before the first
+   * record. Think Parquet or JDBC.
+   */
 
   private static class MockEarlySchemaReader extends BaseMockBatchReader {
 
@@ -536,5 +543,4 @@ public class TestFileScanFramework extends SubOperatorTest {
     assertEquals(0, scan.batchAccessor().getRowCount());
     scanFixture.close();
   }
-
 }

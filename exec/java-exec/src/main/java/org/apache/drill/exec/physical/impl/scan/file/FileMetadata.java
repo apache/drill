@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.scan.file;
 
-import org.apache.commons.lang3.ArrayUtils;
+import java.util.List;
+
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.hadoop.fs.Path;
 
 /**
@@ -52,25 +54,12 @@ public class FileMetadata {
       return;
     }
 
-    // Result of splitting /x/y is ["", "x", "y"], so ignore first.
-
-    String[] r = rootPath.toString().split("/");
-
-    // Result of splitting "/x/y/z.csv" is ["", "x", "y", "z.csv"], so ignore first and last
-
-    String[] p = bareFilePath.toString().split("/");
-
-    if (p.length - 1 < r.length) {
-      throw new IllegalArgumentException("Selection root of \"" + selectionRoot +
-                                      "\" is shorter than file path of \"" + filePath.toString() + "\"");
+    dirPath = ColumnExplorer.parsePartitions(filePath.toString(), rootPath.toString());
+    if (dirPath == null) {
+      throw new IllegalArgumentException(
+          String.format("Selection root of \"%s\" is not a leading path of \"%s\"",
+          selectionRoot.toString(), filePath.toString()));
     }
-    for (int i = 1; i < r.length; i++) {
-      if (! r[i].equals(p[i])) {
-        throw new IllegalArgumentException("Selection root of \"" + selectionRoot +
-            "\" is not a leading path of \"" + filePath.toString() + "\"");
-      }
-    }
-    dirPath = ArrayUtils.subarray(p, r.length, p.length - 1);
   }
 
   public Path filePath() { return filePath; }

@@ -53,7 +53,7 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
   protected final String partitionDesignator;
   protected List<FileMetadataColumnDefn> implicitColDefns = new ArrayList<>();
   protected Map<String, FileMetadataColumnDefn> fileMetadataColIndex = CaseInsensitiveMap.newHashMap();
-  protected boolean useLegacyWildcardExpansion = true;
+  protected boolean useLegacyWildcardExpansion;
   private final FileMetadataColumnsParser parser;
 
   // Internal state
@@ -197,18 +197,7 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
   @Override
   public boolean resolveColumn(ColumnProjection col, ResolvedTuple tuple,
       TupleMetadata tableSchema) {
-    switch (col.nodeType()) {
-
-    case PartitionColumn.ID:
-    case FileMetadataColumn.ID:
-      break;
-
-    default:
-      return false;
-    }
-
-    MetadataColumn outputCol;
-
+    MetadataColumn outputCol = null;
     switch (col.nodeType()) {
     case PartitionColumn.ID:
       outputCol = ((PartitionColumn) col).resolve(currentFile, this, metadataColumns.size());
@@ -219,7 +208,7 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
       break;
 
     default:
-      throw new IllegalStateException("Should never get here");
+      return false;
     }
 
     tuple.add(outputCol);

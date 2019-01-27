@@ -129,8 +129,16 @@ public class ScanOperatorExec implements OperatorExec {
     // seen EOF from the iterator.
 
     if (readerCount == 0) {
-      // return false; // When empty batches are supported
-      throw UserException.executionError( // TODO: Test this path
+
+      // The scan operator cannot handle the case that no readers are
+      // available: there is nothing to define a schema, yet the scanner
+      // is required to return a schema.
+      //
+      // This exception can be softened if the operator stack is enhanced
+      // to handle "empty batches" in the most extreme case: no schema,
+      // no data.
+
+      throw UserException.executionError(
           new ExecutionSetupException("A scan batch must contain at least one reader."))
         .build(logger);
     }
@@ -157,7 +165,7 @@ public class ScanOperatorExec implements OperatorExec {
       default:
         throw new IllegalStateException("Unexpected state: " + state);
       }
-    } catch(final Throwable t) {
+    } catch (final Throwable t) {
       state = State.FAILED;
       throw t;
     }
@@ -169,13 +177,13 @@ public class ScanOperatorExec implements OperatorExec {
       // If have a reader, read a batch
 
       if (readerState != null) {
-        boolean ok;
+        boolean hasData;
         if (schema) {
-          ok = readerState.buildSchema();
+          hasData = readerState.buildSchema();
         } else {
-          ok = readerState.next();
+          hasData = readerState.next();
         }
-        if (ok) {
+        if (hasData) {
           break;
         }
         closeReader();

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -362,7 +363,7 @@ public class TestScanOperatorExec extends SubOperatorTest {
 
     assertFalse(reader.openCalled);
 
-    // First batch: build schema. The reader helps: it returns an
+    // First batch: build schema. The reader does not help: it returns an
     // empty first batch.
 
     assertTrue(scan.buildSchema());
@@ -386,6 +387,128 @@ public class TestScanOperatorExec extends SubOperatorTest {
     assertFalse(scan.next());
     assertTrue(reader.closeCalled);
     assertEquals(0, scan.batchAccessor().getRowCount());
+
+    scanFixture.close();
+  }
+
+  /**
+   * Test the case that a late scan operator is closed before
+   * the first reader is opened.
+   */
+
+  @Test
+  public void testLateSchemaEarlyClose() {
+
+    // Create a mock reader, return two batches: one schema-only, another with data.
+
+    MockLateSchemaReader reader = new MockLateSchemaReader();
+    reader.batchLimit = 2;
+    reader.returnDataOnFirst = false;
+
+    // Create the scan operator
+
+    BasicScanOpFixture scanFixture = new BasicScanOpFixture();
+    scanFixture.projectAll();
+    scanFixture.addReader(reader);
+    scanFixture.build();
+
+    // Reader never opened.
+
+    scanFixture.close();
+    assertFalse(reader.openCalled);
+    assertEquals(0, reader.batchCount);
+    assertFalse(reader.closeCalled);
+  }
+
+  /**
+   * Test the case that a late schema reader is closed after discovering
+   * schema, before any calls to next().
+   */
+
+  @Test
+  public void testLateSchemaEarlyReaderClose() {
+
+    // Create a mock reader, return two batches: one schema-only, another with data.
+
+    MockLateSchemaReader reader = new MockLateSchemaReader();
+    reader.batchLimit = 2;
+    reader.returnDataOnFirst = false;
+
+    // Create the scan operator
+
+    BasicScanOpFixture scanFixture = new BasicScanOpFixture();
+    scanFixture.projectAll();
+    scanFixture.addReader(reader);
+    ScanOperatorExec scan = scanFixture.build();
+
+    // Get the schema as above.
+
+    assertTrue(scan.buildSchema());
+
+    // No lookahead batch created.
+
+    scanFixture.close();
+    assertEquals(1, reader.batchCount);
+    assertTrue(reader.closeCalled);
+  }
+
+  /**
+   * Test the case that a late schema reader is closed before
+   * consuming the look-ahead batch used to infer schema.
+   */
+
+  @Test
+  public void testLateSchemaEarlyCloseWithData() {
+
+    // Create a mock reader, return two batches: one schema-only, another with data.
+
+    MockLateSchemaReader reader = new MockLateSchemaReader();
+    reader.batchLimit = 2;
+    reader.returnDataOnFirst = true;
+
+    // Create the scan operator
+
+    BasicScanOpFixture scanFixture = new BasicScanOpFixture();
+    scanFixture.projectAll();
+    scanFixture.addReader(reader);
+    ScanOperatorExec scan = scanFixture.build();
+
+    // Get the schema as above.
+
+    assertTrue(scan.buildSchema());
+
+    // Lookahead batch created.
+
+    scanFixture.close();
+    assertEquals(1, reader.batchCount);
+    assertTrue(reader.closeCalled);
+  }
+
+  /**
+   * Pathological case that a scan operator is provided no readers.
+   * It will throw a user exception because the downstream operators
+   * can't handle this case so we choose to stop the show early to
+   * avoid getting into a strange state.
+   */
+  @Test
+  public void testNoReader() {
+
+    // Create the scan operator
+
+    BasicScanOpFixture scanFixture = new BasicScanOpFixture();
+    scanFixture.projectAll();
+    ScanOperatorExec scan = scanFixture.build();
+
+    try {
+      scan.buildSchema();
+    } catch (UserException e) {
+
+      // Expected
+
+      assertTrue(e.getCause() instanceof ExecutionSetupException);
+    }
+
+    // Must close the DAG (context and scan operator) even on failures
 
     scanFixture.close();
   }
@@ -1217,6 +1340,17 @@ public class TestScanOperatorExec extends SubOperatorTest {
 
     private final String value;
     public int rowCount;
+    /**
+     * If true, the reader will report EOF after filling a batch
+     * to overflow. This simulates the corner case in which a reader
+     * has, say, 1000 rows, hits overflow on row 1000, then declares
+     * it has nothing more to read.
+     * <p>
+     * If false, reports EOF on a call to next() without reading more
+     * rows. The overlow row from the prior batch still exists in
+     * the result set loader.
+     */
+    public boolean reportEofWithOverflow;
 
     public OverflowReader() {
       char buf[] = new char[512];
@@ -1251,10 +1385,15 @@ public class TestScanOperatorExec extends SubOperatorTest {
       }
 
       // The vector overflowed on the last row. But, we still had to write the row.
-      // The row is tucked away in the mutator to appear as the first row in
+      // The row is tucked away in the loader to appear as the first row in
       // the next batch.
+      //
+      // Depending on the flag set by the test routine, either report the EOF
+      // during this read, or report it next time around.
 
-      return true;
+      return reportEofWithOverflow
+          ? batchCount < batchLimit
+          : true;
     }
   }
 
@@ -1266,8 +1405,14 @@ public class TestScanOperatorExec extends SubOperatorTest {
 
   @Test
   public void testMultipleReadersWithOverflow() {
+    runOverflowTest(false);
+    runOverflowTest(true);
+  }
+
+  private void runOverflowTest(boolean eofWithData) {
     OverflowReader reader1 = new OverflowReader();
     reader1.batchLimit = 2;
+    reader1.reportEofWithOverflow = eofWithData;
     MockEarlySchemaReader reader2 = new MockEarlySchemaReader();
     reader2.batchLimit = 2;
 
@@ -1311,7 +1456,7 @@ public class TestScanOperatorExec extends SubOperatorTest {
     // the first reader.
 
     assertTrue(scan.next());
-    assertEquals(3, reader1.batchCount);
+    assertEquals(eofWithData ? 2 : 3, reader1.batchCount);
     assertEquals(1, scan.batchAccessor().schemaVersion());
     assertEquals(1, scan.batchAccessor().getRowCount());
     assertEquals(prevReaderRowCount, reader1.rowCount);

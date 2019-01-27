@@ -53,7 +53,12 @@ public abstract class BaseFileScanFramework<T extends BaseFileScanFramework.File
   /**
    * The file schema negotiator adds no behavior at present, but is
    * created as a placeholder anticipating the need for file-specific
-   * behavior later.
+   * behavior later. Readers are expected to use an instance of this
+   * class so that their code need not change later if/when we add new
+   * methods. For example, perhaps we want to specify an assumed block
+   * size for S3 files, or want to specify behavior if the file no longer
+   * exists. Those are out of scope of this first round of changes which
+   * focus on schema.
    */
 
   public interface FileSchemaNegotiator extends SchemaNegotiator {
@@ -119,7 +124,7 @@ public abstract class BaseFileScanFramework<T extends BaseFileScanFramework.File
     // iterate over the splits to create readers on demand.
 
     List<Path> paths = new ArrayList<>();
-    for(FileWork work : files) {
+    for (FileWork work : files) {
       Path path = dfs.makeQualified(new Path(work.getPath()));
       paths.add(path);
       FileSplit split = new FileSplit(path, work.getStart(), work.getLength(), new String[]{""});

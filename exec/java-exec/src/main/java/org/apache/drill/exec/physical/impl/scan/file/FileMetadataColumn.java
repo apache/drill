@@ -19,6 +19,12 @@ package org.apache.drill.exec.physical.impl.scan.file;
 
 import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
 
+/**
+ * Represents projection column which resolved to a file metadata
+ * (AKA "implicit") column sch as "filename", "fqn", etc. These
+ * columns are "synthetic" added by the scan framework itself
+ * rather than "organic" coming from the scanned table.
+ */
 public class FileMetadataColumn extends MetadataColumn {
 
   public static final int ID = 15;
@@ -26,12 +32,16 @@ public class FileMetadataColumn extends MetadataColumn {
   private final FileMetadataColumnDefn defn;
 
   /**
-   * Constructor for resolved column.
+   * Constructor for resolved column. The column is resolved at the file
+   * level once we identify the file to which the column is bound.
    *
-   * @param name
-   * @param defn
-   * @param fileInfo
-   * @param projection
+   * @param name name of the column as given in the projection list
+   * @param defn definition of the metadata column
+   * @param fileInfo description of the file used in this scan. Used to
+   * populate the value of this column on a per-file basis
+   * @param source handle to the a logical batch that holds the vectors
+   * to be populated in each row batch
+   * @param sourceIndex the location of the vector to populate
    */
   public FileMetadataColumn(String name, FileMetadataColumnDefn defn,
       FileMetadata fileInfo, VectorSource source, int sourceIndex) {
@@ -40,10 +50,12 @@ public class FileMetadataColumn extends MetadataColumn {
   }
 
   /**
-   * Constructor for unresolved column.
+   * Constructor for unresolved column. A column is unresolved at the scan
+   * level: we know that this is a file metadata column, but we don't yet
+   * know the file to which to bind the column
    *
-   * @param name
-   * @param defn
+   * @param name name of the column as given in the projection list
+   * @param defn definition of the metadata column
    */
 
   public FileMetadataColumn(String name, FileMetadataColumnDefn defn) {

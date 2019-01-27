@@ -29,12 +29,155 @@ import org.apache.drill.exec.record.VectorContainer;
  * This class is private to the scan operator and is not meant to be used,
  * or even visible, outside of that operator itself. Instead, all reader-specific
  * functionality should be in the {@link RowBatchReader} subclass.
+ * <p>
+ * Each reader is managed in the context of a scan operator. A prior reader
+ * may have established a schema that this reader will (hopefully) continue
+ * to use. This reader may have no data (and thus no schema). The scan
+ * operator will try to quietly pass over this reader, using a schema from
+ * either a prior reader or a later reader.
+ *
+ * <h4>Error Handling</h4>
+ *
+ * Handles all possible reader errors to control the exceptions thrown
+ * to callers. Drill uses unchecked exceptions which makes error handling a
+ * bit hard to follow. The reader can report any kind of error. If might
+ * nicely report an (unchecked) UserException with details of the failure.
+ * Or, it might throw some other unchecked exception (NPE, illegal state
+ * or whatever.) This method ensues that all errors are mapped to a
+ * UserException for two reasons. First, this ensures that errors are
+ * attributed to the reader itself. Second, callers need not also go
+ * through the "which kind of exception" dance: they are assured that
+ * only UserException is thrown with proper explanations filled in.
+ *
+ * <h4>Schema Handling</h4>
+ *
+ * Readers can report schema in one of two ways. An "early schema" reader
+ * reports the schema during the reader open. For example, Parquet can
+ * obtain the schema from the file header. CSV with headers finds the
+ * schema by reading the header row. This is the "happy path": the
+ * reader provides a schema on open, calls to next() just provide data.
+ * <p>
+ * "Late schema" readers are more complex. Opening the reader is not
+ * sufficient to discover the schema. Instead, the reader has to read a
+ * batch of data in order to infer the schema. The scanner, however, must
+ * report schema before the first row of data. This class acts as a shim:
+ * it will read ahead one batch of data on open in order to obtain a
+ * schema. It will then deliver that "look-ahead" batch on the first
+ * call to next().
+ * <p>
+ * Readers are free to alter the schema at any time by discovering new
+ * columns. (Think JSON.) Considerable complexity (mostly implemented
+ * elsewhere) is needed to properly handle this case, and to do so in
+ * a way that is transparent to the reader.
+ * <p>
+ * Because schema handling is complex, the logic is split into two
+ * parts. This class orchestrates schema actions. A reader-level shim
+ * handles the details of schema coordination in a way that is specific
+ * to each kind of reader (file reader, generic reader, etc.)
+ *
+ * <h4>Batch Overflow Handling<h4>
+ *
+ * A key driving principle of this design is the need to limit batch sizes.
+ * Readers, in general, cannot easily determine when to stop reading rows
+ * to just fill a batch, minimizing internal fragmentation. Instead, this
+ * is the job of the result set loader. This class simply needs to be
+ * aware that, even if the reader itself says it may have no more data,
+ * there could still be an overflow row in the look-ahead batch maintained
+ * by the result set loader. This class hides that complexity from the
+ * reader, but provides a clean protocol for the scan operator.
+ *
+ * <h4>Advice to Developers</hr>
+ *
+ * The protocol supported here creates a very
+ * simple API for readers to implement. We expect contributors to create
+ * a large number of readers: our job is to maintain a very clean API
+ * that hides as many routine details as possible from the reader
+ * author.
+ * <p>
+ * While Drill supports many readers, there is just one scan operator,
+ * with this class as the shim between the two. When considering changes,
+ * understand how those changes will affect a wide range of readers. A fix
+ * that make sense for one might not make sense for another.
+ * <p>
+ * Some of the considerations include:
+ * <ul>
+ * <li>Keep the number of methods small: focus on the essentials.</li>
+ * <li>Most of the complex interplay between scan operator and reader
+ * is due to schema negotiation. Handle all that via the schema
+ * negotiator class rather than by adding methods to the reader
+ * interface.</li>
+ * <li>As explained above, error handling is complex due to the
+ * use of unchecked exceptions. Encourage reader authors to handle all
+ * errors themselves by throwing a UserException that clearly states
+ * the problem, if it is caused by the user's query, by an environment
+ * issue or other item that the user can correct. Use any Java
+ * exception to report unexpected errors (assertions, NPEs, etc.) This
+ * class wraps all those errors handle whatever the author chooses to
+ * do while providing a clean error interface to callers.</li>
+ * <li>Readers are simplest if the don't have to worry about repeated
+ * calls to next() after the reader reports EOF. This class buffers
+ * those calls to enforce the protocol.</li>
+ * <li>Handles both early and late schema readers to provide a uniform
+ * API, and to allow odd-ball hybrid cases.</li>
+ * </ul>
+ * When considering changes and fixes to this class (or to the readers),
+ * think about how to preserve the clean separation that this class
+ * attempts to provide.
  */
 
 class ReaderState {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReaderState.class);
 
-  private enum State { START, LOOK_AHEAD, LOOK_AHEAD_WITH_EOF, ACTIVE, EOF, CLOSED };
+  private enum State {
+    /**
+     * Initial state before opening the reader.
+     */
+    START,
+    /**
+     * The scan operator is obligated to provide a "fast schema", without data,
+     * before the first row of data. "Early schema" readers (those that provide
+     * a schema) can simply provide the schema. However "late schema" readers
+     * (those that discover the schema during read) must fetch a batch of rows
+     * to infer schema.
+     * <p>
+     * Note that the reader must fetch an entire batch of rows, not just sample
+     * the first dozen or so. This allows the "schema smoothing" features to work,
+     * such as finding the first non-null row in JSON, etc. The larger the sample
+     * size, the more likely that ambiguities can be resolved (though there is
+     * no guarantee, unfortunately.)
+     * <p>
+     * This state indicates that the reader has read the look-ahead batch so that
+     * the next call to {@link ReaderState#next()} will return this look-ahead
+     * batch rather than reading a new one.
+     */
+    LOOK_AHEAD,
+    /**
+     * As above, but the reader hit EOF during the read of the look-ahead batch.
+     * The {@link ReaderState#next()} checks if the lookahead batch has any
+     * rows. If so it will return it and move to the EOF state.
+     * <p>
+     * The goal of the EOF states is to avoid calling the reader's next
+     * method after the reader reports EOF. This is done to avoid the need
+     * for readers to handle repeated reads after EOF.
+     * <p>
+     * Note that the look-ahead batch here is distinct from the look-ahead
+     * row in the result set loader. That look-ahead is handled by the
+     * (shim) reader which this class manages.
+     */
+    LOOK_AHEAD_WITH_EOF,
+    /**
+     * Normal state: the reader has supplied data but not yet reported EOF.
+     */
+    ACTIVE,
+    /**
+     * The reader has reported EOF. No look-ahead batch is active. The
+     * reader's next() method will no longer be called.
+     */
+    EOF,
+    /**
+     * The reader is closed: no further operations are allowed.
+     */
+    CLOSED };
 
   final ScanOperatorExec scanOp;
   private final RowBatchReader reader;
@@ -50,8 +193,10 @@ class ReaderState {
   /**
    * Open the next available reader, if any, preparing both the
    * reader and table loader.
-   * @return true if another reader is active, false if no more
-   * readers are available
+   *
+   * @return true if the reader has data, false if EOF was found on
+   * open
+   * @throws UserException for all errors
    */
 
   boolean open() {
@@ -130,7 +275,9 @@ class ReaderState {
    * </ul>
    * @return true if the schema was read, false if EOF was reached while trying
    * to read the schema.
+   * @throws UserException for all errors
    */
+
   protected boolean buildSchema() {
 
     VectorContainer container = reader.output();
@@ -162,9 +309,18 @@ class ReaderState {
     lookahead = new VectorContainer(scanOp.context.getAllocator(), scanOp.containerAccessor.getSchema());
     lookahead.setRecordCount(0);
     lookahead.exchange(scanOp.containerAccessor.getOutgoingContainer());
-    state = state == State.EOF? State.LOOK_AHEAD_WITH_EOF : State.LOOK_AHEAD;
+    state = state == State.EOF ? State.LOOK_AHEAD_WITH_EOF : State.LOOK_AHEAD;
     return true;
   }
+
+  /**
+   * Read another batch of data from the reader. Can be called repeatedly
+   * even after EOF. Handles look-ahead batches.
+   *
+   * @return true if a batch of rows is available in the scan operator,
+   * false if EOF was hit
+   * @throws UserException for all reader errors
+   */
 
   protected boolean next() {
     switch (state) {
@@ -190,7 +346,7 @@ class ReaderState {
   }
 
   /**
-   * Read a batch from the current reader.
+   * Read a batch from the reader.
    * <p>
    * Expected semantics for the reader's <tt>next()</tt> method:
    * <ul>
@@ -213,6 +369,7 @@ class ReaderState {
    * </ul>
    *
    * @return true if a batch was read, false if the reader hit EOF
+   * @throws UserException for all reader errors
    */
 
   private boolean readBatch() {
@@ -260,7 +417,7 @@ class ReaderState {
 
   void close() {
     if (state == State.CLOSED) {
-      return; // TODO: Test this path
+      return;
     }
 
     // Close the reader. This can fail.
@@ -278,7 +435,7 @@ class ReaderState {
       // Will not throw exceptions
 
       if (lookahead != null) {
-        lookahead.clear(); // TODO: Test this path
+        lookahead.clear();
         lookahead = null;
       }
       state = State.CLOSED;
