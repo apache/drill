@@ -99,6 +99,7 @@ public class Drillbit implements AutoCloseable {
   private boolean quiescentMode;
   private boolean forcefulShutdown = false;
   private GracefulShutdownThread gracefulShutdownThread;
+  private Thread shutdownHook;
   private boolean interruptPollShutdown = true;
 
   public void setQuiescentMode(boolean quiescentMode) {
@@ -222,7 +223,8 @@ public class Drillbit implements AutoCloseable {
     // Must start the RM after the above since it needs to read system options.
     drillbitContext.startRM();
 
-    Runtime.getRuntime().addShutdownHook(new ShutdownThread(this, new StackTrace()));
+    shutdownHook = new ShutdownThread(this, new StackTrace());
+    Runtime.getRuntime().addShutdownHook(shutdownHook);
     gracefulShutdownThread.start();
     logger.info("Startup completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
   }
@@ -258,6 +260,17 @@ public class Drillbit implements AutoCloseable {
     }
     final Stopwatch w = Stopwatch.createStarted();
     logger.debug("Shutdown begun.");
+    // We don't really want for Drillbits to pile up in memory, so the hook should be removed
+    // It might be better to use PhantomReferences to cleanup as soon as Drillbit becomes
+    // unreachable, however current approach seems to be good enough.
+    Thread shutdownHook = this.shutdownHook;
+    if (shutdownHook != null && Thread.currentThread() != shutdownHook) {
+      try {
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
+      } catch (IllegalArgumentException e) {
+        // If shutdown is in progress, just ignore the removal
+      }
+    }
     updateState(State.QUIESCENT);
     stateManager.setState(DrillbitState.GRACE);
     waitForGracePeriod();
