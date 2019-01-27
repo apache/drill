@@ -29,7 +29,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
@@ -47,8 +46,8 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSetWriter;
 import org.junit.Test;
 
@@ -72,8 +71,8 @@ import org.junit.Test;
  * A list is an array of variants. Variants are tested elsewhere.
  */
 
-public class RowSetTest extends SubOperatorTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RowSetTest.class);
+public class TestRowSet extends SubOperatorTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRowSet.class);
 
   /**
    * Test the simplest constructs: a row with top-level scalar
@@ -169,7 +168,7 @@ public class RowSetTest extends SubOperatorTest {
         .addRow(30)
         .addRow(40)
         .build();
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
   }
 
   /**
@@ -303,8 +302,7 @@ public class RowSetTest extends SubOperatorTest {
         .addSingleCol(intArray(30))
         .addSingleCol(intArray(40, 41))
         .build();
-    new RowSetComparison(expected)
-      .verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
   }
 
   /**
@@ -438,8 +436,7 @@ public class RowSetTest extends SubOperatorTest {
         .addRow(20, objArray(intArray(21, 22)))
         .addRow(30, objArray(intArray(31, 32)))
         .build();
-    new RowSetComparison(expected)
-      .verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
   }
 
   @Test
@@ -583,8 +580,7 @@ public class RowSetTest extends SubOperatorTest {
         .addRow(20, objArray(objArray(201, 202), objArray(211, 212)))
         .addRow(30, objArray(objArray(301, 302), objArray(311, 312)))
         .build();
-    new RowSetComparison(expected)
-      .verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
   }
 
   /**
@@ -594,12 +590,12 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testTopFixedWidthArray() {
-    final BatchSchema batchSchema = new SchemaBuilder()
+    final TupleMetadata schema = new SchemaBuilder()
         .add("c", MinorType.INT)
         .addArray("a", MinorType.INT)
-        .build();
+        .buildSchema();
 
-    final ExtendableRowSet rs1 = fixture.rowSet(batchSchema);
+    final ExtendableRowSet rs1 = fixture.rowSet(schema);
     final RowSetWriter writer = rs1.writer();
     writer.scalar(0).setInt(10);
     final ScalarWriter array = writer.array(1).scalar();
@@ -644,14 +640,13 @@ public class RowSetTest extends SubOperatorTest {
     assertEquals(0, arrayReader.size());
     assertFalse(reader.next());
 
-    final SingleRowSet rs2 = fixture.rowSetBuilder(batchSchema)
+    final SingleRowSet rs2 = fixture.rowSetBuilder(schema)
       .addRow(10, intArray(100, 110))
       .addRow(20, intArray(200, 120, 220))
       .addRow(30, null)
       .build();
 
-    new RowSetComparison(rs1)
-      .verifyAndClearAll(rs2);
+    RowSetUtilities.verify(rs1, rs2);
   }
   /**
    * Test filling a row set up to the maximum number of rows.
@@ -661,11 +656,11 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testRowBounds() {
-    final BatchSchema batchSchema = new SchemaBuilder()
+    final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .build();
+        .buildSchema();
 
-    final ExtendableRowSet rs = fixture.rowSet(batchSchema);
+    final ExtendableRowSet rs = fixture.rowSet(schema);
     final RowSetWriter writer = rs.writer();
     int count = 0;
     while (! writer.isFull()) {
@@ -695,10 +690,10 @@ public class RowSetTest extends SubOperatorTest {
 
   @Test
   public void testBufferBounds() {
-    final BatchSchema batchSchema = new SchemaBuilder()
+    final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     String varCharValue;
     try {
@@ -709,7 +704,7 @@ public class RowSetTest extends SubOperatorTest {
       throw new IllegalStateException(e);
     }
 
-    final ExtendableRowSet rs = fixture.rowSet(batchSchema);
+    final ExtendableRowSet rs = fixture.rowSet(schema);
     final RowSetWriter writer = rs.writer();
     int count = 0;
     try {
@@ -751,14 +746,14 @@ public class RowSetTest extends SubOperatorTest {
     // will be provided by a reader, by an incoming batch,
     // etc.
 
-    final BatchSchema schema = new SchemaBuilder()
+    final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
         .addArray("b", MinorType.INT)
         .addMap("c")
           .add("c1", MinorType.INT)
           .add("c2", MinorType.VARCHAR)
           .resumeSchema()
-        .build();
+        .buildSchema();
 
     // Step 2: Create a batch. Done here because this is
     // a batch-oriented test. Done automatically in the

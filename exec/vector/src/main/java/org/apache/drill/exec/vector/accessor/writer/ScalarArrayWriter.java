@@ -60,13 +60,17 @@ public class ScalarArrayWriter extends BaseArrayWriter {
     public final void nextElement() { next(); }
   }
 
-  private final BaseScalarWriter elementWriter;
+  private final ConcreteWriter elementWriter;
 
   public ScalarArrayWriter(ColumnMetadata schema,
       RepeatedValueVector vector, BaseScalarWriter elementWriter) {
     super(schema, vector.getOffsetVector(),
         new ScalarObjectWriter(elementWriter));
-    this.elementWriter = elementWriter;
+
+    // Save the writer from the scalar object writer created above
+    // which may have wrapped the element writer in a type convertor.
+
+    this.elementWriter = (ConcreteWriter) elementObjWriter.scalar();
   }
 
   public static ArrayObjectWriter build(ColumnMetadata schema,
@@ -110,7 +114,7 @@ public class ScalarArrayWriter extends BaseArrayWriter {
 
       return;
     }
-    String objClass = array.getClass().getName();
+    final String objClass = array.getClass().getName();
     if (! objClass.startsWith("[")) {
       throw new IllegalArgumentException(
           String.format("Argument must be an array. Column `%s`, value = %s",
@@ -119,12 +123,12 @@ public class ScalarArrayWriter extends BaseArrayWriter {
 
     // Figure out type
 
-    char second = objClass.charAt(1);
+    final char second = objClass.charAt(1);
     switch ( second ) {
     case  '[':
       // bytes is represented as an array of byte arrays.
 
-      char third = objClass.charAt(2);
+      final char third = objClass.charAt(2);
       switch (third) {
       case 'B':
         setBytesArray((byte[][]) array);
@@ -157,11 +161,11 @@ public class ScalarArrayWriter extends BaseArrayWriter {
       setBooleanArray((boolean[]) array);
       break;
     case 'L':
-      int posn = objClass.indexOf(';');
+      final int posn = objClass.indexOf(';');
 
       // If the array is of type Object, then we have no type info.
 
-      String memberClassName = objClass.substring(2, posn);
+      final String memberClassName = objClass.substring(2, posn);
       if (memberClassName.equals(String.class.getName())) {
         setStringArray((String[]) array);
       } else if (memberClassName.equals(Period.class.getName())) {
@@ -215,7 +219,7 @@ public class ScalarArrayWriter extends BaseArrayWriter {
 
   public void setIntObjectArray(Integer[] value) {
     for (int i = 0; i < value.length; i++) {
-      Integer element = value[i];
+      final Integer element = value[i];
       if (element == null) {
         elementWriter.setNull();
       } else {
@@ -232,7 +236,7 @@ public class ScalarArrayWriter extends BaseArrayWriter {
 
   public void setLongObjectArray(Long[] value) {
     for (int i = 0; i < value.length; i++) {
-      Long element = value[i];
+      final Long element = value[i];
       if (element == null) {
         elementWriter.setNull();
       } else {
@@ -255,7 +259,7 @@ public class ScalarArrayWriter extends BaseArrayWriter {
 
   public void setDoubleObjectArray(Double[] value) {
     for (int i = 0; i < value.length; i++) {
-      Double element = value[i];
+      final Double element = value[i];
       if (element == null) {
         elementWriter.setNull();
       } else {

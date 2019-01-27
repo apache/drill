@@ -17,16 +17,13 @@
  */
 package org.apache.drill.exec.vector.accessor.writer;
 
-import java.math.BigDecimal;
-
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.BaseDataValueVector;
+import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
-import org.joda.time.Period;
 
 /**
  * Column writer implementation that acts as the basis for the
@@ -35,14 +32,20 @@ import org.joda.time.Period;
  * method(s).
  */
 
-public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents {
+public abstract class AbstractScalarWriter extends ConcreteWriter {
 
   public static class ScalarObjectWriter extends AbstractObjectWriter {
 
-    private AbstractScalarWriter scalarWriter;
+    private ConcreteWriter scalarWriter;
 
-    public ScalarObjectWriter(AbstractScalarWriter scalarWriter) {
-      this.scalarWriter = scalarWriter;
+    public ScalarObjectWriter(ConcreteWriter scalarWriter) {
+      final ColumnMetadata metadata = scalarWriter.schema();
+      final ColumnConversionFactory factory = metadata.typeConverter();
+      if (factory == null) {
+        this.scalarWriter = scalarWriter;
+      } else {
+        this.scalarWriter = factory.newWriter(metadata, scalarWriter);
+      }
     }
 
     @Override
@@ -111,40 +114,7 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
   @Override
   public void saveRow() { }
 
-  protected UnsupportedConversionError conversionError(String javaType) {
-    return UnsupportedConversionError.writeError(schema(), javaType);
-  }
-
   @Override
-  public void setObject(Object value) {
-    if (value == null) {
-      setNull();
-    } else if (value instanceof Integer) {
-      setInt((Integer) value);
-    } else if (value instanceof Long) {
-      setLong((Long) value);
-    } else if (value instanceof String) {
-      setString((String) value);
-    } else if (value instanceof BigDecimal) {
-      setDecimal((BigDecimal) value);
-    } else if (value instanceof Period) {
-      setPeriod((Period) value);
-    } else if (value instanceof byte[]) {
-      byte[] bytes = (byte[]) value;
-      setBytes(bytes, bytes.length);
-    } else if (value instanceof Byte) {
-      setInt((Byte) value);
-    } else if (value instanceof Short) {
-      setInt((Short) value);
-    } else if (value instanceof Double) {
-      setDouble((Double) value);
-    } else if (value instanceof Float) {
-      setDouble((Float) value);
-    } else {
-      throw conversionError(value.getClass().getSimpleName());
-    }
-  }
-
   public void dump(HierarchicalFormatter format) {
     format
       .startObject(this)

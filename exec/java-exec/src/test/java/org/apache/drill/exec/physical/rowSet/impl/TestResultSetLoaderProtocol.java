@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -43,8 +44,10 @@ import org.apache.drill.exec.vector.accessor.TupleWriter.UndefinedColumnExceptio
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.test.rowSet.test.TestColumnConvertor.TestConvertor;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -601,5 +604,56 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
     // loader does not release memory.
 
     rsLoader.close();
+  }
+
+  /**
+   * Test the use of a column type converter in the result set loader for
+   * required, nullable and repeated columns.
+   */
+
+  @Ignore("Not yet")
+  @Test
+  public void testTypeConversion() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("n1", MinorType.INT)
+        .addNullable("n2", MinorType.INT)
+        .addArray("n3", MinorType.INT)
+        .buildSchema();
+
+    // Add a type convertor. Passed in as a factory
+    // since we must create a new one for each row set writer.
+
+    schema.metadata("n1").setTypeConverter(TestConvertor.factory());
+    schema.metadata("n2").setTypeConverter(TestConvertor.factory());
+    schema.metadata("n3").setTypeConverter(TestConvertor.factory());
+
+    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+        .setSchema(schema)
+        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+
+    // Write data as both a string as an integer
+
+    RowSetLoader rootWriter = rsLoader.writer();
+    rootWriter.addRow("123", "12", strArray("123", "124"));
+    rootWriter.addRow(234, 23, intArray(234, 235));
+    RowSet actual = fixture.wrap(rsLoader.harvest());
+
+    // Build the expected vector without a type convertor.
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("n1", MinorType.INT)
+        .addNullable("n2", MinorType.INT)
+        .addArray("n3", MinorType.INT)
+        .buildSchema();
+    final SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addRow(123, 12, intArray(123, 124))
+        .addRow(234, 23, intArray(234, 235))
+        .build();
+
+    // Compare
+
+    RowSetUtilities.verify(expected, actual);
   }
 }
