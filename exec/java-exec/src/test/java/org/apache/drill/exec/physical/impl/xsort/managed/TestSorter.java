@@ -93,8 +93,7 @@ public class TestSorter extends DrillTest {
     try {
       sorter.sortBatch(rowSet.container(), rowSet.getSv2());
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(rowSet);
+      RowSetUtilities.verify(expected, rowSet);
       sorter.close();
     } finally {
       opContext.close();
@@ -240,8 +239,7 @@ public class TestSorter extends DrillTest {
     }
 
     protected void doVerify(DataItem[] expected, RowSet expectedRows, RowSet actual) {
-      new RowSetComparison(expectedRows)
-            .verifyAndClearAll(actual);
+      RowSetUtilities.verify(expectedRows, actual);
     }
 
     protected abstract void doSort(DataItem[] expected);

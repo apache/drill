@@ -40,7 +40,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 
 /**
@@ -136,8 +136,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .build();
     RowSet actual = fixture.wrap(rsLoader.harvest());
 //    actual.print();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
@@ -212,8 +211,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
       .addRow(mapValue( 1,  2), mapValue( 4))
       .addRow(mapValue(11, 12), mapValue(14))
       .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));
+    RowSetUtilities.verify(expected, fixture.wrap(rsLoader.harvest()));
     rsLoader.close();
   }
 
@@ -258,8 +256,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
       .addSingleCol(mapValue( 1,  2))
       .addSingleCol(mapValue(11, 12))
       .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));
+    RowSetUtilities.verify(expected, fixture.wrap(rsLoader.harvest()));
     rsLoader.close();
   }
 
@@ -324,8 +321,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
           objArray(objArray(110, 120), objArray(111, 121)),
           objArray(objArray(140), objArray(142)))
       .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));
+    RowSetUtilities.verify(expected, fixture.wrap(rsLoader.harvest()));
     rsLoader.close();
   }
 

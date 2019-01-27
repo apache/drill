@@ -42,7 +42,6 @@ import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSetWriter;
 import org.junit.AfterClass;
@@ -149,8 +148,7 @@ public class TestBatchSerialization extends DrillTest {
       result = fixture.wrap(reader.read(), reader.sv2());
     }
 
-    new RowSetComparison(expected)
-      .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
     outFile.delete();
   }
 
