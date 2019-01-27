@@ -39,8 +39,7 @@ import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
-
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class SortTestUtilities {
@@ -126,8 +125,7 @@ public class SortTestUtilities {
       for (RowSet expectedSet : expected) {
         assertTrue(merger.next());
         RowSet rowSet = DirectRowSet.fromContainer(dest);
-        new RowSetComparison(expectedSet)
-              .verifyAndClearAll(rowSet);
+        RowSetUtilities.verify(expectedSet, rowSet);
       }
       assertFalse(merger.next());
     }

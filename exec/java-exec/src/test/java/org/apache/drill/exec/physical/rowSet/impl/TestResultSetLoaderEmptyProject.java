@@ -34,7 +34,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -156,8 +156,7 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
     for (int i = 0; i < rowCount; i++) {
       builder.addRow(0, 0);
     }
-    new RowSetComparison(builder.build())
-        .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));
+    RowSetUtilities.verify(builder.build(), fixture.wrap(rsLoader.harvest()));
 
     rsLoader.close();
   }

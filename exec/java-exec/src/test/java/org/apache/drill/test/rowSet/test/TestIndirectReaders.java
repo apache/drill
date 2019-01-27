@@ -29,8 +29,8 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -100,8 +100,7 @@ public class TestIndirectReaders extends SubOperatorTest {
         .addRow(0)
         .build();
 
-    new RowSetComparison(expected)
-      .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
   }
 
   /**
