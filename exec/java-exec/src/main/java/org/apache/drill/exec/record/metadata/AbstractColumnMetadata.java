@@ -21,6 +21,8 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
+import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 
 /**
  * Abstract definition of column metadata. Allows applications to create
@@ -177,6 +179,20 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
 
   @Override
   public boolean isProjected() { return projected; }
+
+  @Override
+  public void setDefaultValue(Object value) { }
+
+  @Override
+  public Object defaultValue() { return null; }
+
+  @Override
+  public void setTypeConverter(ColumnConversionFactory factory) {
+    throw new UnsupportedConversionError("Type conversion not supported for non-scalar writers");
+  }
+
+  @Override
+  public ColumnConversionFactory typeConverter() { return null; }
 
   @Override
   public String toString() {
