@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.scan.file;
 
-import java.util.List;
-
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.hadoop.fs.Path;
 
