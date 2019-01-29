@@ -32,12 +32,12 @@ import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.record.metadata.VariantSchema;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.VariantWriter;
-import org.apache.drill.exec.vector.accessor.WriterPosition;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.ListWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.SimpleListShim;
 import org.apache.drill.exec.vector.accessor.writer.UnionVectorShim;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl;
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
@@ -123,7 +123,7 @@ public class ListState extends ContainerState
       memberVectorState = new NullVectorState();
     }
 
-    public ListVectorState(ListWriterImpl writer, WriterPosition elementWriter, ListVector vector) {
+    public ListVectorState(ListWriterImpl writer, WriterEvents elementWriter, ListVector vector) {
       this.schema = writer.schema();
       this.vector = vector;
       bitsVectorState = new IsSetVectorState(writer, vector.getBitsVector());

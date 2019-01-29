@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -32,6 +33,7 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Drill allows file metadata columns (also called "implicit" columns.)
@@ -39,6 +41,7 @@ import org.junit.Test;
  * values. The ConstantColumnLoader builds and populates these columns.
  */
 
+@Category(RowSetTests.class)
 public class TestConstantColumnLoader extends SubOperatorTest {
 
   private static class DummyColumn implements ConstantColumnSpec {

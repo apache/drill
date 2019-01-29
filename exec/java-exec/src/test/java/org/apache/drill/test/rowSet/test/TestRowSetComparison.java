@@ -17,6 +17,7 @@
  */
 package org.apache.drill.test.rowSet.test;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocator;
@@ -28,7 +29,9 @@ import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(RowSetTests.class)
 public class TestRowSetComparison {
   private BufferAllocator allocator;
 

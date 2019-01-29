@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
@@ -28,15 +29,16 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.VarCharColumnWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.ScalarWriter.ColumnWriterListener;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.test.TestFixedWidthWriter.TestIndex;
 import org.bouncycastle.util.Arrays;
 import org.junit.Test;
-
+import org.junit.experimental.categories.Category;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
+@Category(RowSetTests.class)
 public class TestVariableWidthWriter extends SubOperatorTest {
 
   /**

@@ -18,6 +18,9 @@
 package org.apache.drill.test.rowSet.test;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+
+import org.apache.drill.categories.RowSetTests;
+
 import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -26,29 +29,31 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractWriteConvertor;
-import org.apache.drill.exec.vector.accessor.writer.ConcreteWriter;
+import org.apache.drill.exec.vector.accessor.writer.AbstractWriteConverter;
+import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
- * Tests the column type convertor feature of the column metadata
+ * Tests the column type converter feature of the column metadata
  * and of the RowSetWriter.
  */
 
-public class TestColumnConvertor extends SubOperatorTest {
+@Category(RowSetTests.class)
+public class TestColumnConverter extends SubOperatorTest {
 
   /**
    * Simple type converter that allows string-to-int conversions.
    * Inherits usual int value support from the base writer.
    */
-  public static class TestConvertor extends AbstractWriteConvertor {
+  public static class TestConverter extends AbstractWriteConverter {
 
-    public TestConvertor(ScalarWriter baseWriter) {
+    public TestConverter(ScalarWriter baseWriter) {
       super(baseWriter);
     }
 
@@ -60,16 +65,16 @@ public class TestColumnConvertor extends SubOperatorTest {
     public static ColumnConversionFactory factory() {
       return new ColumnConversionFactory() {
         @Override
-        public ConcreteWriter newWriter(ColumnMetadata colDefn,
-            ConcreteWriter baseWriter) {
-           return new TestConvertor(baseWriter);
+        public AbstractScalarWriter newWriter(ColumnMetadata colDefn,
+            ScalarWriter baseWriter) {
+           return new TestConverter(baseWriter);
         }
       };
     }
   }
 
   @Test
-  public void testScalarConvertor() {
+  public void testScalarConverter() {
 
     // Create the schema
 
@@ -78,11 +83,11 @@ public class TestColumnConvertor extends SubOperatorTest {
         .addNullable("n2", MinorType.INT)
         .buildSchema();
 
-    // Add a type convertor. Passed in as a factory
+    // Add a type converter. Passed in as a factory
     // since we must create a new one for each row set writer.
 
-    schema.metadata("n1").setTypeConverter(TestConvertor.factory());
-    schema.metadata("n2").setTypeConverter(TestConvertor.factory());
+    schema.metadata("n1").setTypeConverter(TestConverter.factory());
+    schema.metadata("n2").setTypeConverter(TestConverter.factory());
 
     // Write data as both a string as an integer
 
@@ -91,7 +96,7 @@ public class TestColumnConvertor extends SubOperatorTest {
         .addRow(234, 23)
         .build();
 
-    // Build the expected vector without a type convertor.
+    // Build the expected vector without a type converter.
 
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("n1", MinorType.INT)
@@ -108,7 +113,7 @@ public class TestColumnConvertor extends SubOperatorTest {
   }
 
   @Test
-  public void testArrayConvertor() {
+  public void testArrayConverter() {
 
     // Create the schema
 
@@ -116,10 +121,10 @@ public class TestColumnConvertor extends SubOperatorTest {
         .addArray("n", MinorType.INT)
         .buildSchema();
 
-    // Add a type convertor. Passed in as a factory
+    // Add a type converter. Passed in as a factory
     // since we must create a new one for each row set writer.
 
-    schema.metadata("n").setTypeConverter(TestConvertor.factory());
+    schema.metadata("n").setTypeConverter(TestConverter.factory());
 
     // Write data as both a string as an integer
 
@@ -128,7 +133,7 @@ public class TestColumnConvertor extends SubOperatorTest {
         .addSingleCol(intArray(234, 235))
         .build();
 
-    // Build the expected vector without a type convertor.
+    // Build the expected vector without a type converter.
 
     TupleMetadata expectedSchema = new SchemaBuilder()
         .addArray("n", MinorType.INT)

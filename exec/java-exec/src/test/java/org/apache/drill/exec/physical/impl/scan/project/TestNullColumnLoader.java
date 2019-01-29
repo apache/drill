@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.impl.NullResultVectorCacheImpl;
@@ -37,6 +38,7 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the mechanism that handles all-null columns during projection.
@@ -49,6 +51,7 @@ import org.junit.Test;
  * any other type and mode.
  */
 
+@Category(RowSetTests.class)
 public class TestNullColumnLoader extends SubOperatorTest {
 
   private ResolvedNullColumn makeNullCol(String name, MajorType nullType) {

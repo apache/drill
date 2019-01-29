@@ -87,12 +87,12 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
     private final RepeatedListVector vector;
     private final OffsetVectorState offsetsState;
 
-    public RepeatedListVectorState(ArrayWriter arrayWriter, RepeatedListVector vector) {
+    public RepeatedListVectorState(AbstractObjectWriter arrayWriter, RepeatedListVector vector) {
       this.vector = vector;
-      this.arrayWriter = arrayWriter;
+      this.arrayWriter = arrayWriter.array();
       offsetsState = new OffsetVectorState(
-          arrayWriter, vector.getOffsetVector(),
-          arrayWriter.entryType() == null ? null : arrayWriter.array());
+          arrayWriter.events(), vector.getOffsetVector(),
+          this.arrayWriter.entryType() == null ? null : arrayWriter.events());
     }
 
     /**
@@ -105,7 +105,7 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
      */
 
     public void updateChildWriter(AbstractObjectWriter childWriter) {
-      offsetsState.setChildWriter(childWriter.array());
+      offsetsState.setChildWriter(childWriter.events());
     }
 
     @SuppressWarnings("unchecked")

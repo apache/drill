@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
@@ -35,6 +36,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * "Schema level projection" describes one side of the projection
@@ -44,6 +46,7 @@ import org.junit.Test;
  * combines these to map out the actual projection.
  */
 
+@Category(RowSetTests.class)
 public class TestSchemaLevelProjection extends SubOperatorTest {
 
   /**

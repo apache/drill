@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
@@ -38,6 +39,7 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests schema smoothing at the schema projection level.
@@ -79,6 +81,7 @@ import org.junit.Test;
  * the future to know what data will be scanned.)
  */
 
+@Category(RowSetTests.class)
 public class TestSchemaSmoothing extends SubOperatorTest {
 
   /**

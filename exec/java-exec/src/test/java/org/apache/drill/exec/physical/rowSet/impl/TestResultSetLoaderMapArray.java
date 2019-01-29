@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
@@ -49,6 +50,7 @@ import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test map array support in the result set loader.
@@ -59,6 +61,7 @@ import org.junit.Test;
  * constructs not to be tackled lightly.
  */
 
+@Category(RowSetTests.class)
 public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
   @Test

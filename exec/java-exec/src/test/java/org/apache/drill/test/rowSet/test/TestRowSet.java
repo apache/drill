@@ -28,6 +28,7 @@ import static org.junit.Assert.fail;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -50,6 +51,7 @@ import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSetWriter;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test row sets. Since row sets are a thin wrapper around vectors,
@@ -71,6 +73,7 @@ import org.junit.Test;
  * A list is an array of variants. Variants are tested elsewhere.
  */
 
+@Category(RowSetTests.class)
 public class TestRowSet extends SubOperatorTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRowSet.class);
 

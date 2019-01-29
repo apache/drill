@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
+
 /**
  * Represents a column within a tuple. A column can be an array, a scalar or a
  * tuple. Each has an associated column metadata (schema) and a writer. The
@@ -49,4 +51,11 @@ public interface ObjectWriter extends ColumnWriter {
   ArrayWriter array();
 
   VariantWriter variant();
+
+  /**
+   * The internal state behind this writer. To be used only by the
+   * implementation, not by the client.
+   */
+
+  WriterEvents events();
 }

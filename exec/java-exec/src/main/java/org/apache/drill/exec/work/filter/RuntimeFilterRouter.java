@@ -18,6 +18,7 @@
 package org.apache.drill.exec.work.filter;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.SendingAccountor;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.Exchange;
@@ -172,9 +173,14 @@ public class RuntimeFilterRouter {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private Wrapper findTargetWrapper(Wrapper wrapper, TargetPhysicalOperatorVisitor targetOpVisitor) {
     targetOpVisitor.setCurrentFragment(wrapper.getNode());
-    wrapper.getNode().getRoot().accept(targetOpVisitor, null);
+    try {
+      wrapper.getNode().getRoot().accept(targetOpVisitor, null);
+    } catch (Throwable e) {
+      throw UserException.systemError(e).build();
+    }
     boolean contain = targetOpVisitor.isContain();
     if (contain) {
       return wrapper;
@@ -233,6 +239,7 @@ public class RuntimeFilterRouter {
       return null;
     }
 
+    @Override
     public boolean isContain() {
       return contain;
     }
@@ -284,6 +291,7 @@ public class RuntimeFilterRouter {
       return null;
     }
 
+    @Override
     public boolean isContain() {
       return contain;
     }

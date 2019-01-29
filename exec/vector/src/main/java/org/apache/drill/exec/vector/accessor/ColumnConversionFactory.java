@@ -18,7 +18,6 @@
 package org.apache.drill.exec.vector.accessor;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.vector.accessor.writer.ConcreteWriter;
 
 /**
  * Create a column type converter for the given column and base writer.
@@ -36,5 +35,5 @@ public interface ColumnConversionFactory {
    * @return a new scalar writer to insert between the client and
    * the base vector
    */
-  ConcreteWriter newWriter(ColumnMetadata colDefn, ConcreteWriter baseWriter);
+  ScalarWriter newWriter(ColumnMetadata colDefn, ScalarWriter baseWriter);
 }

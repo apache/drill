@@ -20,11 +20,9 @@ package org.apache.drill.exec.vector.accessor.writer;
 import java.math.BigDecimal;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.joda.time.Period;
 
 /**
@@ -38,50 +36,17 @@ import org.joda.time.Period;
  * for an int column in the case above.
  */
 
-// TODO: This organization works fine, but is a bit heavy-weight.
-// It may be time to think about separating the pure writer aspect of
-// a column writer from its plumbing aspects. That is, the base
-// ConcreteWriter class combines the public API (ScalarWriter) with
-// the internal implementation (WriterEvents) into a single class.
-// Might be worth using composition rather than inheritance to keep
-// these aspects distinct.
+public class AbstractWriteConverter extends AbstractScalarWriter {
 
-public class AbstractWriteConvertor extends ConcreteWriter {
+  private final ScalarWriter baseWriter;
 
-  private final ConcreteWriter baseWriter;
-
-  public AbstractWriteConvertor(ScalarWriter baseWriter) {
-    this.baseWriter = (ConcreteWriter) baseWriter;
+  public AbstractWriteConverter(ScalarWriter baseWriter) {
+    this.baseWriter = baseWriter;
   }
 
   @Override
   public ValueType valueType() {
     return baseWriter.valueType();
-  }
-
-  @Override
-  public int lastWriteIndex() {
-    return baseWriter.lastWriteIndex();
-  }
-
-  @Override
-  public void restartRow() {
-    baseWriter.restartRow();
-  }
-
-  @Override
-  public void endWrite() {
-    baseWriter.endWrite();
-  }
-
-  @Override
-  public void preRollover() {
-    baseWriter.preRollover();
-  }
-
-  @Override
-  public void postRollover() {
-    baseWriter.postRollover();
   }
 
   @Override
@@ -102,46 +67,6 @@ public class AbstractWriteConvertor extends ConcreteWriter {
   @Override
   public void setNull() {
     baseWriter.setNull();
-  }
-
-  @Override
-  public int rowStartIndex() {
-    return baseWriter.rowStartIndex();
-  }
-
-  @Override
-  public int writeIndex() {
-    return baseWriter.writeIndex();
-  }
-
-  @Override
-  public void bindListener(ColumnWriterListener listener) {
-    baseWriter.bindListener(listener);
-  }
-
-  @Override
-  public void bindIndex(ColumnWriterIndex index) {
-    baseWriter.bindIndex(index);
-  }
-
-  @Override
-  public void startWrite() {
-    baseWriter.startWrite();
-  }
-
-  @Override
-  public void startRow() {
-    baseWriter.startRow();
-  }
-
-  @Override
-  public void endArrayValue() {
-    baseWriter.endArrayValue();
-  }
-
-  @Override
-  public void saveRow() {
-    baseWriter.saveRow();
   }
 
   @Override
@@ -177,10 +102,5 @@ public class AbstractWriteConvertor extends ConcreteWriter {
   @Override
   public void setPeriod(Period value) {
     baseWriter.setPeriod(value);
-  }
-
-  @Override
-  public void dump(HierarchicalFormatter format) {
-    baseWriter.dump(format);
   }
 }

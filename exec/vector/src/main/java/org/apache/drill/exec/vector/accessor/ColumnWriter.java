@@ -18,9 +18,6 @@
 package org.apache.drill.exec.vector.accessor;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.vector.accessor.ScalarWriter.ColumnWriterListener;
-import org.apache.drill.exec.vector.accessor.TupleWriter.TupleWriterListener;
-import org.apache.drill.exec.vector.accessor.VariantWriter.VariantWriterListener;
 
 /**
  * Generic information about a column writer including:
@@ -33,36 +30,7 @@ import org.apache.drill.exec.vector.accessor.VariantWriter.VariantWriterListener
  * testing.</li>
  */
 
-public interface ColumnWriter extends WriterPosition {
-
-  interface TupleListenable {
-
-    /**
-     * Bind a listener to the underlying map or map array column. Not valid if the
-     * underlying writer is a scalar or scalar array.
-     *
-     * @param listener
-     *          the tuple listener to bind
-     */
-
-    void bindListener(TupleWriterListener listener);
-  }
-
-  interface ScalarListenable {
-    /**
-     * Bind a listener to the underlying scalar column, or array of scalar
-     * columns. Not valid if the underlying writer is a map or array of maps.
-     *
-     * @param listener
-     *          the column listener to bind
-     */
-
-    void bindListener(ColumnWriterListener listener);
-  }
-
-  interface VariantListenable {
-    void bindListener(VariantWriterListener listener);
-  }
+public interface ColumnWriter {
 
   /**
    * Return the object (structure) type of this writer.

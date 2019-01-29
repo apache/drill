@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.singleObjArray;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
@@ -56,6 +57,7 @@ import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSetWriter;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the basics of repeated list support in the schema builder,
@@ -64,6 +66,7 @@ import org.junit.Test;
  * on to the result set loader tests.
  */
 
+@Category(RowSetTests.class)
 public class TestRepeatedListAccessors extends SubOperatorTest {
 
   /**

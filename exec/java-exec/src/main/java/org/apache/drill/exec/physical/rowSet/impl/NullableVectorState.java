@@ -38,7 +38,7 @@ public class NullableVectorState implements VectorState {
     this.schema = writer.schema();
     this.vector = vector;
 
-    this.writer = (NullableScalarWriter) writer.scalar();
+    this.writer = (NullableScalarWriter) writer.events();
     bitsState = new IsSetVectorState(this.writer.bitsWriter(), vector.getBitsVector());
     valuesState = SimpleVectorState.vectorState(this.writer.schema(),
         this.writer.baseWriter(), vector.getValuesVector());

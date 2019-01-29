@@ -162,7 +162,7 @@ public class ColumnBuilder {
           (NullableVector) vector);
     } else {
       vectorState = SimpleVectorState.vectorState(columnSchema,
-            colWriter.scalar(), vector);
+            colWriter.events(), vector);
     }
 
     // Create the column state which binds the vector and writer together.
@@ -261,7 +261,7 @@ public class ColumnBuilder {
       offsetVectorState = new OffsetVectorState(
           (((AbstractArrayWriter) writer.array()).offsetWriter()),
           offsetVector,
-          writer.array().entry());
+          writer.array().entry().events());
     } else {
       offsetVectorState = new NullVectorState();
     }
@@ -397,7 +397,8 @@ public class ColumnBuilder {
 
     // Create the list vector state that tracks the list vector lifecycle.
 
-    final ListVectorState vectorState = new ListVectorState(listWriter, memberState.writer(), listVector);
+    final ListVectorState vectorState = new ListVectorState(listWriter,
+        memberState.writer().events(), listVector);
 
     // Assemble it all into a union column state.
 
@@ -504,7 +505,7 @@ public class ColumnBuilder {
     // For a repeated list, we only care about
 
     final RepeatedListVectorState vectorState = new RepeatedListVectorState(
-        arrayWriter.array(), vector);
+        arrayWriter, vector);
 
     // Build the container that tracks the array contents
 

@@ -23,6 +23,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
+import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
@@ -55,7 +56,9 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
 
     ObjectWriter member(MinorType type);
     void setType(MinorType type);
+    @Override
     int lastWriteIndex();
+    @Override
     int rowStartIndex();
     AbstractObjectWriter addMember(ColumnMetadata colSchema);
     AbstractObjectWriter addMember(MinorType type);
@@ -69,6 +72,9 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
     public VariantObjectWriter(UnionWriterImpl writer) {
       this.writer = writer;
     }
+
+    @Override
+    public ColumnWriter writer() { return writer; }
 
     @Override
     public VariantWriter variant() { return writer; }
@@ -136,6 +142,12 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
     this.listener = listener;
   }
 
+  // Unions are complex: listeners should bind to the components as they
+  // are created.
+
+  @Override
+  public void bindListener(ColumnWriterListener listener) { }
+
   // The following are for coordinating with the shim.
 
   public State state() { return state; }
@@ -192,7 +204,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
     // conversion. Then set the type because, if the conversion is
     // done, the type vector exists only after creating the member.
 
-    ObjectWriter writer = shim.member(type);
+    final ObjectWriter writer = shim.member(type);
     setType(type);
     return writer;
   }
@@ -222,7 +234,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
    */
 
   protected void addMember(AbstractObjectWriter writer) {
-    MinorType type = writer.schema().type();
+    final MinorType type = writer.schema().type();
 
     // If the metadata has not yet been added to the variant
     // schema, do so now. (Unfortunately, the default listener
@@ -334,7 +346,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
       // Can look for exactly one period type as is done for Object[] below
       throw new IllegalArgumentException("Period is ambiguous, please use scalar(type)");
     } else if (value instanceof byte[]) {
-      byte[] bytes = (byte[]) value;
+      final byte[] bytes = (byte[]) value;
       scalar(MinorType.VARBINARY).setBytes(bytes, bytes.length);
     } else if (value instanceof Byte) {
       scalar(MinorType.TINYINT).setInt((Byte) value);
@@ -361,6 +373,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
     }
   }
 
+  @Override
   public void dump(HierarchicalFormatter format) {
     // TODO Auto-generated method stub
 

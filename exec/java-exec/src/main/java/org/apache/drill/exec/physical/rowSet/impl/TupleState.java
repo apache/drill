@@ -35,7 +35,6 @@ import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.drill.exec.vector.accessor.TupleWriter.TupleWriterListener;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
@@ -92,7 +91,7 @@ import org.apache.drill.exec.vector.complex.AbstractMapVector;
  */
 
 public abstract class TupleState extends ContainerState
-  implements TupleWriterListener {
+  implements AbstractTupleWriter.TupleWriterListener {
 
   /**
    * Represents a map column (either single or repeated). Includes maps that
