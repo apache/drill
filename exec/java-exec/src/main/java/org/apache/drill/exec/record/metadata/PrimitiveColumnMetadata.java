@@ -26,18 +26,17 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 
 /**
- * Primitive (non-map) column. Describes non-nullable, nullable and
- * array types (which differ only in mode, but not in metadata structure.)
+ * Primitive (non-map) column. Describes non-nullable, nullable and array types
+ * (which differ only in mode, but not in metadata structure.)
  * <p>
  * Metadata is of two types:
  * <ul>
- * <li>Storage metadata that describes how the is materialized in a
- * vector. Storage metadata is immutable because revising an existing
- * vector is a complex operation.</li>
+ * <li>Storage metadata that describes how the column is materialized in a
+ * vector. Storage metadata is immutable because revising an existing vector is
+ * a complex operation.</li>
  * <li>Supplemental metadata used when reading or writing the column.
- * Supplemental metadata can be changed after the column is created,
- * though it should generally be set before invoking code that uses
- * the metadata.</li>
+ * Supplemental metadata can be changed after the column is created, though it
+ * should generally be set before invoking code that uses the metadata.</li>
  * </ul>
  */
 
@@ -52,8 +51,8 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   /**
    * Default value to use for filling a vector when no real data is
    * available, such as for columns added in new files but which does not
-   * exist in existing files. The "default default" is null, which works
-   * only for nullable columns.
+   * exist in existing files. The ultimate default value is the SQL null
+   * value, which works only for nullable columns.
    */
 
   private Object defaultValue;
