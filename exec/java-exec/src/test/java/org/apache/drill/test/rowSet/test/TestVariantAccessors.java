@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
@@ -57,6 +58,7 @@ import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for readers and writers for union and list types.
@@ -67,6 +69,8 @@ import org.junit.Test;
  * result set builder. It does not, however, work in the Project
  * and other operators. Some assembly required for future use.)
  */
+
+@Category(RowSetTests.class)
 public class TestVariantAccessors extends SubOperatorTest {
 
   @Test

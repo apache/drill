@@ -28,7 +28,7 @@ import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.joda.time.Period;
 
-public class NullableScalarWriter extends AbstractScalarWriter {
+public class NullableScalarWriter extends AbstractScalarWriterImpl {
 
   public static final class ChildIndex implements ColumnWriterIndex {
 
@@ -196,7 +196,7 @@ public class NullableScalarWriter extends AbstractScalarWriter {
   }
 
   @Override
-  public void bindListener(ColumnWriterListener listener) {
+  public void bindListener(AbstractScalarWriterImpl.ColumnWriterListener listener) {
     baseWriter.bindListener(listener);
   }
 

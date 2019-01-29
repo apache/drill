@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -37,12 +38,15 @@ import org.apache.drill.exec.record.metadata.UnionBuilder;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * The schema builder for tests has grown complex to handle maps, unions,
  * lists and repeated lists. This test verifies that it assembles the various
  * pieces correctly for the various nesting combinations.
  */
+
+@Category(RowSetTests.class)
 public class TestSchemaBuilder extends DrillTest {
 
   @Test

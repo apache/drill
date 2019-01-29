@@ -18,6 +18,8 @@
 package org.apache.drill.exec.vector.accessor.writer;
 
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.apache.drill.exec.vector.accessor.WriterPosition;
+import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
  * Internal interface used to control the behavior
@@ -37,7 +39,7 @@ import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
  * calls, can change.
  */
 
-public interface WriterEvents {
+public interface WriterEvents extends WriterPosition {
 
   /**
    * Tracks the write state of a tuple or variant to allow applying the correct
@@ -143,4 +145,6 @@ public interface WriterEvents {
    */
 
   void postRollover();
+
+  abstract void dump(HierarchicalFormatter format);
 }

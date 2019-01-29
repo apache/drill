@@ -23,7 +23,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
+import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl;
 import org.joda.time.Period;
 
 /**
@@ -32,7 +32,7 @@ import org.joda.time.Period;
  * nor is it backed by a real vector, index or type.
  */
 
-public class DummyScalarWriter extends AbstractScalarWriter {
+public class DummyScalarWriter extends AbstractScalarWriterImpl {
 
   public DummyScalarWriter(ColumnMetadata schema) {
    this.schema = schema;

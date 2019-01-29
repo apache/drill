@@ -17,109 +17,50 @@
  */
 package org.apache.drill.exec.vector.accessor.writer;
 
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
-import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
-import org.apache.drill.exec.vector.accessor.ObjectType;
+import java.math.BigDecimal;
+
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
+import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
+import org.joda.time.Period;
 
 /**
- * Column writer implementation that acts as the basis for the
- * generated, vector-specific implementations. All set methods
- * throw an exception; subclasses simply override the supported
- * method(s).
+ * Base class for concrete scalar column writers including actual vector
+ * writers, wrappers for nullable types, and shims used to convert types.
  */
 
-public abstract class AbstractScalarWriter extends ConcreteWriter {
+public abstract class AbstractScalarWriter implements ScalarWriter {
 
-  public static class ScalarObjectWriter extends AbstractObjectWriter {
-
-    private ConcreteWriter scalarWriter;
-
-    public ScalarObjectWriter(ConcreteWriter scalarWriter) {
-      final ColumnMetadata metadata = scalarWriter.schema();
-      final ColumnConversionFactory factory = metadata.typeConverter();
-      if (factory == null) {
-        this.scalarWriter = scalarWriter;
-      } else {
-        this.scalarWriter = factory.newWriter(metadata, scalarWriter);
-      }
+  @Override
+  public void setObject(Object value) {
+    if (value == null) {
+      setNull();
+    } else if (value instanceof Integer) {
+      setInt((Integer) value);
+    } else if (value instanceof Long) {
+      setLong((Long) value);
+    } else if (value instanceof String) {
+      setString((String) value);
+    } else if (value instanceof BigDecimal) {
+      setDecimal((BigDecimal) value);
+    } else if (value instanceof Period) {
+      setPeriod((Period) value);
+    } else if (value instanceof byte[]) {
+      final byte[] bytes = (byte[]) value;
+      setBytes(bytes, bytes.length);
+    } else if (value instanceof Byte) {
+      setInt((Byte) value);
+    } else if (value instanceof Short) {
+      setInt((Short) value);
+    } else if (value instanceof Double) {
+      setDouble((Double) value);
+    } else if (value instanceof Float) {
+      setDouble((Float) value);
+    } else {
+      throw conversionError(value.getClass().getSimpleName());
     }
-
-    @Override
-    public ScalarWriter scalar() { return scalarWriter; }
-
-    @Override
-    public WriterEvents events() { return scalarWriter; }
-
-    @Override
-    public void dump(HierarchicalFormatter format) {
-      format
-        .startObject(this)
-        .attribute("scalarWriter");
-      scalarWriter.dump(format);
-      format.endObject();
-    }
   }
 
-  protected ColumnMetadata schema;
-
-  /**
-   * Indicates the position in the vector to write. Set via an object so that
-   * all writers (within the same subtree) can agree on the write position.
-   * For example, all top-level, simple columns see the same row index.
-   * All columns within a repeated map see the same (inner) index, etc.
-   */
-
-  protected ColumnWriterIndex vectorIndex;
-
-  @Override
-  public ObjectType type() { return ObjectType.SCALAR; }
-
-  public void bindSchema(ColumnMetadata schema) {
-    this.schema = schema;
-  }
-
-  @Override
-  public void bindIndex(ColumnWriterIndex vectorIndex) {
-    this.vectorIndex = vectorIndex;
-  }
-
-  @Override
-  public int rowStartIndex() {
-    return vectorIndex.rowStartIndex();
-  }
-
-  @Override
-  public int writeIndex() {
-    return vectorIndex.vectorIndex();
-  }
-
-  @Override
-  public ColumnMetadata schema() { return schema; }
-
-  public abstract BaseDataValueVector vector();
-
-  @Override
-  public void startWrite() { }
-
-  @Override
-  public void startRow() { }
-
-  @Override
-  public void endArrayValue() { }
-
-  @Override
-  public void saveRow() { }
-
-  @Override
-  public void dump(HierarchicalFormatter format) {
-    format
-      .startObject(this)
-      .attributeIdentity("vector", vector())
-      .attribute("schema", vector().getField())
-      .endObject();
+  protected UnsupportedConversionError conversionError(String javaType) {
+    return UnsupportedConversionError.writeError(schema(), javaType);
   }
 }

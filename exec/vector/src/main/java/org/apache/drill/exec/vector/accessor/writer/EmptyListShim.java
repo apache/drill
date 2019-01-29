@@ -21,6 +21,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
+import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl.UnionShim;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
@@ -127,6 +128,9 @@ public class EmptyListShim implements UnionShim {
   public int rowStartIndex() { return 0; }
 
   @Override
+  public int writeIndex() { return 0; }
+
+  @Override
   public void addMember(AbstractObjectWriter colWriter) {
 
     // This shim has no types. If this is called, then the shim replacement
@@ -135,4 +139,8 @@ public class EmptyListShim implements UnionShim {
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public void dump(HierarchicalFormatter format) {
+    format.startObject(this).endObject();
+  }
 }

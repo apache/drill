@@ -38,11 +38,15 @@ import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.netty.buffer.DrillBuf;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import static org.apache.drill.test.rowSet.RowSetUtilities.singleMap;
+
+import org.apache.drill.categories.RowSetTests;
+
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 
 
@@ -55,6 +59,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
  * vector.
  */
 
+@Category(RowSetTests.class)
 public class TestRowBatchMerger extends SubOperatorTest {
 
   public static class RowSetSource implements VectorSource {
