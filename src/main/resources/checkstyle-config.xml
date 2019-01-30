@@ -28,6 +28,7 @@
 
   <module name="TreeWalker">
     <module name="UnusedImports"/>
+    <module name="RedundantImport"/>
     <module name="IllegalImport">
       <!-- For "org.apache.commons.lang.*" classes use the corresponding class from "org.apache.commons.lang3.*".
         For com.google.common.* classes use shaded ones from org.apache.drill.shaded.guava.com.google.common.*-->

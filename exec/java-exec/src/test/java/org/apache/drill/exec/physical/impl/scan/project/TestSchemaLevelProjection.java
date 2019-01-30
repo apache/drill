@@ -28,19 +28,8 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedMapColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
-import org.apache.drill.exec.physical.impl.scan.project.ExplicitSchemaProjection;
-import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedColumn;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedNullColumn;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedTableColumn;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple;
-import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
-import org.apache.drill.exec.physical.impl.scan.project.UnresolvedColumn;
-import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
-import org.apache.drill.exec.physical.impl.scan.project.WildcardSchemaProjection;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -382,16 +371,16 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
     final ResolvedColumn xCol = columns.get(0);
     assertEquals("x", xCol.name());
     assertEquals(ResolvedTableColumn.ID, xCol.nodeType());
-    assertSame(rootTuple, ((ResolvedTableColumn) (xCol)).source());
-    assertEquals(0, ((ResolvedTableColumn) (xCol)).sourceIndex());
+    assertSame(rootTuple, xCol.source());
+    assertEquals(0, xCol.sourceIndex());
 
     // Y is projected
 
     final ResolvedColumn yCol = columns.get(2);
     assertEquals("y", yCol.name());
     assertEquals(ResolvedTableColumn.ID, yCol.nodeType());
-    assertSame(rootTuple, ((ResolvedTableColumn) (yCol)).source());
-    assertEquals(1, ((ResolvedTableColumn) (yCol)).sourceIndex());
+    assertSame(rootTuple, yCol.source());
+    assertEquals(1, yCol.sourceIndex());
 
     // A is projected
 
@@ -410,7 +399,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
     final ResolvedColumn acCol = aMembers.columns().get(0);
     assertEquals("c", acCol.name());
     assertEquals(ResolvedTableColumn.ID, acCol.nodeType());
-    assertEquals(1, ((ResolvedTableColumn) (acCol)).sourceIndex());
+    assertEquals(1, acCol.sourceIndex());
 
     // a.d is not in the table, is null
 
@@ -481,8 +470,8 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
     final ResolvedColumn aCol = columns.get(0);
     assertEquals("a", aCol.name());
     assertEquals(ResolvedTableColumn.ID, aCol.nodeType());
-    assertSame(rootTuple, ((ResolvedTableColumn) (aCol)).source());
-    assertEquals(0, ((ResolvedTableColumn) (aCol)).sourceIndex());
+    assertSame(rootTuple, aCol.source());
+    assertEquals(0, aCol.sourceIndex());
   }
 
   /**
@@ -550,8 +539,8 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
     final ResolvedColumn aCol = columns.get(0);
     assertEquals("a", aCol.name());
     assertEquals(ResolvedTableColumn.ID, aCol.nodeType());
-    assertSame(rootTuple, ((ResolvedTableColumn) (aCol)).source());
-    assertEquals(0, ((ResolvedTableColumn) (aCol)).sourceIndex());
+    assertSame(rootTuple, aCol.source());
+    assertEquals(0, aCol.sourceIndex());
   }
 
   /**
