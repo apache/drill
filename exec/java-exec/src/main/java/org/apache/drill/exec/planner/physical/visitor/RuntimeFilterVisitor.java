@@ -162,12 +162,14 @@ public class RuntimeFilterVisitor extends BasePrelVisitor<Prel, Void, RuntimeExc
     List<String> leftFields = left.getRowType().getFieldNames();
     List<String> rightFields = right.getRowType().getFieldNames();
     List<Integer> leftKeys = hashJoinPrel.getLeftKeys();
+    List<Integer> rightKeys = hashJoinPrel.getRightKeys();
     RelMetadataQuery metadataQuery = left.getCluster().getMetadataQuery();
     int i = 0;
     for (Integer leftKey : leftKeys) {
       String leftFieldName = leftFields.get(leftKey);
-      String rightFieldName = rightFields.get(i);
-      i++;
+      Integer rightKey = rightKeys.get(i++);
+      String rightFieldName = rightFields.get(rightKey);
+
       //This also avoids the left field of the join condition with a function call.
       ScanPrel scanPrel = findLeftScanPrel(leftFieldName, left);
       if (scanPrel != null) {
