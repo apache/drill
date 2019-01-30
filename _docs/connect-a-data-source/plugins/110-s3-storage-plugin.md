@@ -1,6 +1,6 @@
 ---
 title: "S3 Storage Plugin"
-date: 2019-01-11
+date: 2019-01-30
 parent: "Connect a Data Source"
 ---
 Drill works with data stored in the cloud. With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries. 
@@ -51,16 +51,14 @@ To configure the access keys in Drill's core-site.xml file, navigate to the `$DR
 
 ### Configuring Drill to use AWS IAM Roles for Accessing S3
 
-If you use IAM roles/Instance profiles, to access data in s3, use the following settings in your core-site.xml. Do not specify the secret key or access key properties. For example:
+If you use IAM roles/instance profiles, to access data in s3, use the following settings in your core-site.xml. Do not specify the secret key or access key properties. For example:
 
        <configuration>
 		<property>
 		    <name>fs.s3a.aws.credentials.provider</name>
 		    <value>com.amazonaws.auth.InstanceProfileCredentialsProvider</value>
 		</property>
-       </configuration>            
-
-**Note:** When you rename the file, Hadoop support breaks if `$HADOOP_HOME` was in the path because Drill pulls in the Drill core-site.xml file instead of the Hadoop core-site.xml file. In this situation, make the changes in the Hadoop core-site.xml file. Do not create a core-site.xml file for Drill.  
+       </configuration>    
 
 ##Configuring the S3 Storage Plugin
 
