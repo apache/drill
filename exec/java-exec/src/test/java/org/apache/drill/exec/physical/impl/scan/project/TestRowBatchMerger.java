@@ -19,12 +19,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedMapColumn;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedColumn;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
-import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.impl.NullResultVectorCacheImpl;
 import org.apache.drill.exec.record.BatchSchema;
