@@ -88,7 +88,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePathA, filePathB));
 
@@ -581,14 +581,14 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePathA, filePathB));
 
     // Set up the scan level projection
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
-        RowSetTestUtils.projectAll(),
+        ScanTestUtils.projectAllWithMetadata(2),
         ScanTestUtils.parsers(metadataManager.projectionParser()));
 
     // Define the schema smoother
@@ -629,14 +629,14 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePathA, filePathB));
 
     // Set up the scan level projection
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
-        RowSetTestUtils.projectAll(),
+        ScanTestUtils.projectAllWithMetadata(2),
         ScanTestUtils.parsers(metadataManager.projectionParser()));
 
     // Define the schema smoother
@@ -677,14 +677,14 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     Path filePathA = new Path("hdfs:///w/x/a.csv");
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePathA, filePathB));
 
     // Set up the scan level projection
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
-        RowSetTestUtils.projectAll(),
+        ScanTestUtils.projectAllWithMetadata(2),
         ScanTestUtils.parsers(metadataManager.projectionParser()));
 
     // Define the schema smoother

@@ -69,7 +69,6 @@ public abstract class BaseFileScanFramework<T extends BaseFileScanFramework.File
   private List<FileSplit> spilts = new ArrayList<>();
   private Iterator<FileSplit> splitIter;
   private Path scanRootDir;
-  private boolean useLegacyWildcardExpansion = true;
   protected DrillFileSystem dfs;
   private FileMetadataManager metadataManager;
 
@@ -89,20 +88,6 @@ public abstract class BaseFileScanFramework<T extends BaseFileScanFramework.File
 
   public void setSelectionRoot(Path rootPath) {
     this.scanRootDir = rootPath;
-  }
-
-  /**
-   * For historical reasons, Drill adds all metadata columns for a wildcard
-   * query. The project operator then drops those that are not needed. This
-   * flag disables that behavior if newer versions of Drill don't need the
-   * "create-then-delete" behavior.
-   *
-   * @param flag true to use the old-style expansion, false to not include
-   * metadata columns when expanding the wildcard column
-   */
-
-  public void useLegacyWildcardExpansion(boolean flag) {
-    useLegacyWildcardExpansion = flag;
   }
 
   @Override
@@ -137,7 +122,6 @@ public abstract class BaseFileScanFramework<T extends BaseFileScanFramework.File
 
     metadataManager = new FileMetadataManager(
         context.getFragmentContext().getOptions(),
-        useLegacyWildcardExpansion,
         scanRootDir,
         paths);
     scanOrchestrator.withMetadata(metadataManager);

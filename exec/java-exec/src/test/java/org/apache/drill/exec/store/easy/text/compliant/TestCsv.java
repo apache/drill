@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -46,6 +47,8 @@ import org.junit.Test;
 
 public class TestCsv extends ClusterTest {
 
+  private static final String CASE2_FILE_NAME = "case2.csv";
+
   private static File testDir;
 
   @BeforeClass
@@ -60,9 +63,10 @@ public class TestCsv extends ClusterTest {
     csvFormat.extractHeader = true;
 
     testDir = cluster.makeDataDir("data", "csv", csvFormat);
+    buildFile(CASE2_FILE_NAME, validHeaders);
   }
 
-  String emptyHeaders[] = {
+  private static String emptyHeaders[] = {
       "",
       "10,foo,bar"
   };
@@ -79,29 +83,27 @@ public class TestCsv extends ClusterTest {
     }
   }
 
-  String validHeaders[] = {
+  private static String validHeaders[] = {
       "a,b,c",
       "10,foo,bar"
   };
 
   @Test
   public void testValidCsvHeaders() throws IOException {
-    String fileName = "case2.csv";
-    buildFile(fileName, validHeaders);
-    RowSet actual = client.queryBuilder().sql(makeStatement(fileName)).rowSet();
+    RowSet actual = client.queryBuilder().sql(makeStatement(CASE2_FILE_NAME)).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
         .add("b", MinorType.VARCHAR)
         .add("c", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow("10", "foo", "bar")
         .build();
     RowSetUtilities.verify(expected, actual);
   }
 
-  String invalidHeaders[] = {
+  private static String invalidHeaders[] = {
       "$,,9b,c,c,c_2",
       "10,foo,bar,fourth,fifth,sixth"
   };
@@ -112,14 +114,14 @@ public class TestCsv extends ClusterTest {
     buildFile(fileName, invalidHeaders);
     RowSet actual = client.queryBuilder().sql(makeStatement(fileName)).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("column_1", MinorType.VARCHAR)
         .add("column_2", MinorType.VARCHAR)
         .add("col_9b", MinorType.VARCHAR)
         .add("c", MinorType.VARCHAR)
         .add("c_2", MinorType.VARCHAR)
         .add("c_2_2", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow("10", "foo", "bar", "fourth", "fifth", "sixth")
         .build();
@@ -129,10 +131,8 @@ public class TestCsv extends ClusterTest {
   // Test fix for DRILL-5590
   @Test
   public void testCsvHeadersCaseInsensitive() throws IOException {
-    String fileName = "case2.csv";
-    buildFile(fileName, validHeaders);
     String sql = "SELECT A, b, C FROM `dfs.data`.`%s`";
-    RowSet actual = client.queryBuilder().sql(sql, fileName).rowSet();
+    RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
 
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("A", MinorType.VARCHAR)
@@ -151,7 +151,7 @@ public class TestCsv extends ClusterTest {
     return "SELECT * FROM `dfs.data`.`" + fileName + "`";
   }
 
-  private void buildFile(String fileName, String[] data) throws IOException {
+  private static void buildFile(String fileName, String[] data) throws IOException {
     try(PrintWriter out = new PrintWriter(new FileWriter(new File(testDir, fileName)))) {
       for (String line : data) {
         out.println(line);
@@ -159,4 +159,69 @@ public class TestCsv extends ClusterTest {
     }
   }
 
+  /**
+   * Verify that the wildcard expands columns to the header names, including
+   * case
+   */
+  @Test
+  public void testWildcard() throws IOException {
+    String sql = "SELECT * FROM `dfs.data`.`%s`";
+    RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .add("b", MinorType.VARCHAR)
+        .add("c", MinorType.VARCHAR)
+        .build();
+    assertTrue(expectedSchema.isEquivalent(actual.batchSchema()));
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("10", "foo", "bar")
+        .build();
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * Verify that implicit columns are recognized and populated. Sanity test
+   * of just one implicit column.
+   */
+  @Test
+  public void testImplicitColsExplicitSelect() throws IOException {
+    String sql = "SELECT A, filename FROM `dfs.data`.`%s`";
+    RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+        .add("A", MinorType.VARCHAR)
+        .addNullable("filename", MinorType.VARCHAR)
+        .build();
+    assertTrue(expectedSchema.isEquivalent(actual.batchSchema()));
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("10", CASE2_FILE_NAME)
+        .build();
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * Verify that implicit columns are recognized and populated. Sanity test
+   * of just one implicit column.
+   */
+  @Test
+  public void testImplicitColsWildcard() throws IOException {
+    String sql = "SELECT *, filename FROM `dfs.data`.`%s`";
+    RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .add("b", MinorType.VARCHAR)
+        .add("c", MinorType.VARCHAR)
+        .addNullable("filename", MinorType.VARCHAR)
+        .build();
+    assertTrue(expectedSchema.isEquivalent(actual.batchSchema()));
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("10", "foo", "bar", CASE2_FILE_NAME)
+        .build();
+    RowSetUtilities.verify(expected, actual);
+  }
 }

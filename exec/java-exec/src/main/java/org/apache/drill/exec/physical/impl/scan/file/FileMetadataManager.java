@@ -53,7 +53,6 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
   protected final String partitionDesignator;
   protected List<FileMetadataColumnDefn> implicitColDefns = new ArrayList<>();
   protected Map<String, FileMetadataColumnDefn> fileMetadataColIndex = CaseInsensitiveMap.newHashMap();
-  protected boolean useLegacyWildcardExpansion;
   private final FileMetadataColumnsParser parser;
 
   // Internal state
@@ -85,9 +84,7 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
    */
 
   public FileMetadataManager(OptionSet optionManager,
-      boolean useLegacyWildcardExpansion,
       Path rootDir, List<Path> files) {
-    this.useLegacyWildcardExpansion = useLegacyWildcardExpansion;
     scanRootDir = rootDir;
 
     partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
@@ -141,9 +138,7 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
     return new FileMetadata(filePath, scanRootDir);
   }
 
-  public boolean useLegacyWildcardPartition() { return useLegacyWildcardExpansion; }
-
-  public boolean hasMetadata() { return parser.hasMetadata; }
+  public boolean hasImplicitCols() { return parser.hasImplicitCols(); }
 
   public String partitionName(int partition) {
     return partitionDesignator + partition;

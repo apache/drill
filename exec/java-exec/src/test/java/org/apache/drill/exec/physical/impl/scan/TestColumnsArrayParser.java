@@ -229,7 +229,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
   public void testMetadataColumnsWithColumnsArray() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 

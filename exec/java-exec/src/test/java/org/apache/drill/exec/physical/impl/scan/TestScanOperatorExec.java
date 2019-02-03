@@ -263,8 +263,11 @@ public class TestScanOperatorExec extends SubOperatorTest {
     private MajorType nullType;
 
     public void projectAll() {
-      projection = new ArrayList<>();
-      projection.add(SchemaPath.STAR_COLUMN);
+      projection = RowSetTestUtils.projectAll();
+    }
+
+    public void projectAllWithMetadata(int dirs) {
+      projection = ScanTestUtils.projectAllWithMetadata(dirs);
     }
 
     public void setProjection(String... projCols) {

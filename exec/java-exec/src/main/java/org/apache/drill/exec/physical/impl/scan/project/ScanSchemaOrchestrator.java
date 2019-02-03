@@ -377,7 +377,6 @@ public class ScanSchemaOrchestrator {
   private final BufferAllocator allocator;
   private int scanBatchRecordLimit = DEFAULT_BATCH_ROW_COUNT;
   private int scanBatchByteLimit = DEFAULT_BATCH_BYTE_COUNT;
-  private boolean v1_12MetadataLocation;
   private final List<ScanProjectionParser> parsers = new ArrayList<>();
 
   /**
@@ -476,10 +475,6 @@ public class ScanSchemaOrchestrator {
     allowRequiredNullColumns = flag;
   }
 
-  public void useDrill1_12MetadataPosition(boolean flag) {
-    v1_12MetadataLocation = flag;
-  }
-
   public void build(List<SchemaPath> projection) {
     vectorCache = new ResultVectorCacheImpl(allocator, useSchemaSmoothing);
 
@@ -505,16 +500,12 @@ public class ScanSchemaOrchestrator {
       // This is temporary and should be removed once the test framework
       // is restored to Drill 1.11 functionality.
 
-      if (v1_12MetadataLocation) {
-        parsers.add(0, parser);
-      } else {
-        parsers.add(parser);
-      }
+      parsers.add(parser);
     }
 
     // Parse the projection list.
 
-    scanProj = new ScanLevelProjection(projection, parsers, v1_12MetadataLocation);
+    scanProj = new ScanLevelProjection(projection, parsers);
 
     if (scanProj.hasWildcard() && useSchemaSmoothing) {
       schemaSmoother = new SchemaSmoother(scanProj, schemaResolvers);

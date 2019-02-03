@@ -25,8 +25,12 @@ import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
 
-public class FileMetadataColumnsParser implements ScanProjectionParser {
+/**
+ * Parses the implicit file metadata columns out of a project list,
+ * and marks them for special handling by the file metadata manager.
+ */
 
+public class FileMetadataColumnsParser implements ScanProjectionParser {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileMetadataColumnsParser.class);
 
   // Internal
@@ -37,7 +41,7 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
 
   // Output
 
-  boolean hasMetadata;
+  private boolean hasImplicitCols;
 
   public FileMetadataColumnsParser(FileMetadataManager metadataManager) {
     this.metadataManager = metadataManager;
@@ -60,11 +64,6 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
     if (defn != null) {
       return buildMetadataColumn(defn, inCol);
     }
-    if (inCol.isWildcard()) {
-      buildWildcard();
-
-      // Don't consider this a match.
-    }
     return false;
   }
 
@@ -78,9 +77,6 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
           inCol.name(), inCol.summary());
       return false;
     }
-    if (builder.hasWildcard()) {
-      wildcardAndMetadataError();
-    }
 
     // Partition column
 
@@ -88,7 +84,7 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
         new PartitionColumn(
           inCol.name(),
           Integer.parseInt(m.group(1))));
-    hasMetadata = true;
+    hasImplicitCols = true;
     return true;
   }
 
@@ -103,52 +99,12 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
           inCol.name(), inCol.summary());
       return false;
     }
-    if (builder.hasWildcard()) {
-      wildcardAndMetadataError();
-    }
 
     // File metadata (implicit) column
 
     builder.addMetadataColumn(new FileMetadataColumn(inCol.name(), defn));
-    hasMetadata = true;
+    hasImplicitCols = true;
     return true;
-  }
-
-  private void buildWildcard() {
-    if (hasMetadata) {
-      wildcardAndMetadataError();
-    }
-    if (metadataManager.useLegacyWildcardExpansion) {
-
-      // Star column: this is a SELECT * query.
-
-      // Old-style wildcard handling inserts all metadata columns in
-      // the scanner, removes them in Project.
-      // Fill in the file metadata columns. Can do here because the
-      // set is constant across all files.
-
-      expandWildcard();
-      hasMetadata = true;
-    }
-  }
-
-  protected void expandWildcard() {
-
-    // Legacy wildcard expansion: include the file metadata and
-    // file partitions for this file.
-    // This is a disadvantage for a * query: files at different directory
-    // levels will have different numbers of columns. Would be better to
-    // return this data as an array at some point.
-    // Append this after the *, keeping the * for later expansion.
-
-    for (FileMetadataColumnDefn iCol : metadataManager.fileMetadataColDefns()) {
-      builder.addMetadataColumn(new FileMetadataColumn(
-          iCol.colName(), iCol));
-    }
-    for (int i = 0; i < metadataManager.partitionCount(); i++) {
-      builder.addMetadataColumn(new PartitionColumn(
-          metadataManager.partitionName(i), i));
-    }
   }
 
   @Override
@@ -157,10 +113,8 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
   @Override
   public void validateColumn(ColumnProjection outCol) { }
 
-  private void wildcardAndMetadataError() {
-    throw new IllegalArgumentException("Cannot select file metadata columns and `*` together");
-  }
-
   @Override
   public void build() { }
+
+  public boolean hasImplicitCols() { return hasImplicitCols; }
 }

@@ -48,7 +48,6 @@ public abstract class AbstractScanFramework<T extends SchemaNegotiator> implemen
   protected MajorType nullType;
   protected int maxBatchRowCount;
   protected int maxBatchByteCount;
-  protected boolean v1_12MetadataLocation;
   protected OperatorContext context;
   protected ScanSchemaOrchestrator scanOrchestrator;
 
@@ -71,19 +70,6 @@ public abstract class AbstractScanFramework<T extends SchemaNegotiator> implemen
 
   public void setMaxBatchByteCount(int byteCount) {
     maxBatchByteCount = byteCount;
-  }
-
-  /**
-   * In Drill 1.11, and Drill 1.13, metadata columns come after the data
-   * columns. In Drill 1.11, metadata columns come before the data columns.
-   * This flag preserves the 1.12 behavior for testing purposes.
-   *
-   * @param flag true to use the Drill 1.12 metadata position, false to
-   * use the Drill 1.1-1.11 & Drill 1.13 position
-   */
-
-  public void useDrill1_12MetadataPosition(boolean flag) {
-    v1_12MetadataLocation = flag;
   }
 
   @Override
@@ -114,7 +100,6 @@ public abstract class AbstractScanFramework<T extends SchemaNegotiator> implemen
     if (nullType != null) {
       scanOrchestrator.setNullType(nullType);
     }
-    scanOrchestrator.useDrill1_12MetadataPosition(v1_12MetadataLocation);
   }
 
   public abstract boolean openReader(ShimBatchReader<T> shim, ManagedReader<T> reader);

@@ -40,7 +40,6 @@ import org.apache.drill.exec.physical.impl.scan.project.ResolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
 import org.apache.drill.exec.physical.impl.scan.project.UnresolvedColumn;
-import org.apache.drill.exec.physical.impl.scan.project.WildcardSchemaProjection;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -50,7 +49,7 @@ import org.junit.Test;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
-public class TestMetadataProjection extends SubOperatorTest {
+public class TestFileMetadataProjection extends SubOperatorTest {
 
   @Test
   public void testMetadataBuilder() {
@@ -161,7 +160,7 @@ public class TestMetadataProjection extends SubOperatorTest {
   public void testProjectList() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), false,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
@@ -240,52 +239,6 @@ public class TestMetadataProjection extends SubOperatorTest {
   }
 
   /**
-   * For obscure reasons, Drill 1.10 and earlier would add all implicit
-   * columns in a SELECT *, then would remove them again in a PROJECT
-   * if not needed.
-   */
-
-  @Test
-  public void testLegacyWildcard() {
-    Path filePath = new Path("hdfs:///w/x/y/z.csv");
-    FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
-        new Path("hdfs:///w"),
-        Lists.newArrayList(filePath));
-
-    // Scan level projection
-
-    ScanLevelProjection scanProj = new ScanLevelProjection(
-        RowSetTestUtils.projectAll(),
-        ScanTestUtils.parsers(metadataManager.projectionParser()));
-    assertEquals(7, scanProj.columns().size());
-
-    // Schema-level preparation for a file
-
-    TupleMetadata tableSchema = new SchemaBuilder()
-        .add("a", MinorType.VARCHAR)
-        .buildSchema();
-    metadataManager.startFile(filePath);
-    NullColumnBuilder builder = new NullColumnBuilder(null, false);
-    ResolvedRow rootTuple = new ResolvedRow(builder);
-    new WildcardSchemaProjection(
-        scanProj, tableSchema, rootTuple,
-        ScanTestUtils.resolvers(metadataManager));
-
-    List<ResolvedColumn> columns = rootTuple.columns();
-    assertEquals(7, columns.size());
-
-    // Verify constant values
-
-    assertEquals("/w/x/y/z.csv", ((MetadataColumn) columns.get(1)).value());
-    assertEquals("/w/x/y", ((MetadataColumn) columns.get(2)).value());
-    assertEquals("z.csv", ((MetadataColumn) columns.get(3)).value());
-    assertEquals("csv", ((MetadataColumn) columns.get(4)).value());
-    assertEquals("x", ((MetadataColumn) columns.get(5)).value());
-    assertEquals("y", ((MetadataColumn) columns.get(6)).value());
-  }
-
-  /**
    * Test a query with explicit mention of file metadata columns.
    */
 
@@ -293,7 +246,7 @@ public class TestMetadataProjection extends SubOperatorTest {
   public void testFileMetadata() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), false,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
@@ -344,7 +297,7 @@ public class TestMetadataProjection extends SubOperatorTest {
   public void testPartitionColumnTwoDigits() {
     Path filePath = new Path("hdfs:///x/0/1/2/3/4/5/6/7/8/9/10/d11/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), false,
+        fixture.getOptionManager(),
         new Path("hdfs:///x"),
         Lists.newArrayList(filePath));
 

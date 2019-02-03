@@ -30,6 +30,11 @@ import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.FileSplit;
 
+/**
+ * The file scan framework adds into the scan framework support for implicit
+ * file metadata columns.
+ */
+
 public class FileScanFramework extends BaseFileScanFramework<FileSchemaNegotiator> {
 
   public interface FileReaderCreator {

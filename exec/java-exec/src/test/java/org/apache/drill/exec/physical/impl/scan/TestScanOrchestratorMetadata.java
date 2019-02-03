@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.scan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -40,6 +41,11 @@ import org.junit.Test;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
+/**
+ * Tests the scan orchestrator's ability to merge table schemas
+ * with implicit file columns provided by the file metadata manager.
+ */
+
 public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   /**
@@ -50,16 +56,23 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
   public void testWildcardWithMetadata() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
     scanner.withMetadata(metadataManager);
 
-    // SELECT * ...
+    // SELECT *, filename, suffix ...
 
-    scanner.build(RowSetTestUtils.projectAll());
+    scanner.build(RowSetTestUtils.projectList(
+        SchemaPath.DYNAMIC_STAR,
+        ScanTestUtils.FULLY_QUALIFIED_NAME_COL,
+        ScanTestUtils.FILE_PATH_COL,
+        ScanTestUtils.FILE_NAME_COL,
+        ScanTestUtils.SUFFIX_COL,
+        ScanTestUtils.partitionColName(0),
+        ScanTestUtils.partitionColName(1)));
 
     // ... FROM file
 
@@ -108,7 +121,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
     scanner.withMetadata(metadataManager);
@@ -189,7 +202,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
     scanner.setNullType(nullType);
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
     scanner.withMetadata(metadataManager);
@@ -264,7 +277,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
     scanner.withMetadata(metadataManager);
@@ -341,7 +354,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePathA, filePathB));
     scanner.withMetadata(metadataManager);

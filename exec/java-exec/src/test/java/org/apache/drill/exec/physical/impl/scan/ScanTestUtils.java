@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.scan;
 import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumnDefn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
@@ -28,11 +29,14 @@ import org.apache.drill.exec.physical.impl.scan.project.ResolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.impl.scan.project.SchemaLevelProjection.SchemaProjectionResolver;
+import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+
+import avro.shaded.com.google.common.collect.Lists;
 
 public class ScanTestUtils {
 
@@ -103,5 +107,24 @@ public class ScanTestUtils {
       schema.add(field);
     }
     return schema;
+  }
+
+  public static List<SchemaPath> expandMetadata(int dirCount) {
+    List<String> selected = Lists.newArrayList(
+        FULLY_QUALIFIED_NAME_COL,
+        FILE_PATH_COL,
+        FILE_NAME_COL,
+        SUFFIX_COL);
+
+    for (int i = 0; i < dirCount; i++) {
+      selected.add(PARTITION_COL + Integer.toString(i));
+    }
+    return RowSetTestUtils.projectList(selected);
+  }
+
+  public static List<SchemaPath> projectAllWithMetadata(int dirCount) {
+    return RowSetTestUtils.concat(
+        RowSetTestUtils.projectAll(),
+        expandMetadata(2));
   }
 }

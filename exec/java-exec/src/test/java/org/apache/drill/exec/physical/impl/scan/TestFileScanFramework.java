@@ -281,7 +281,7 @@ public class TestFileScanFramework extends SubOperatorTest {
     // Create the scan operator
 
     FileScanOpFixture scanFixture = new FileScanOpFixture();
-    scanFixture.projectAll();
+    scanFixture.projectAllWithMetadata(2);
     scanFixture.addReader(reader);
     ScanOperatorExec scan = scanFixture.build();
 

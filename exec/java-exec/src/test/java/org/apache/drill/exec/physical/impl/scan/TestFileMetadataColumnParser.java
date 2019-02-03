@@ -20,8 +20,6 @@ package org.apache.drill.exec.physical.impl.scan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -42,10 +40,9 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
   @Test
   public void testBasics() {
-
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
@@ -58,8 +55,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     // Verify
 
     assertFalse(scanProj.projectAll());
-    assertFalse(metadataManager.hasMetadata());
-    assertTrue(metadataManager.useLegacyWildcardPartition());
+    assertFalse(metadataManager.hasImplicitCols());
   }
 
   /**
@@ -69,10 +65,9 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
   @Test
   public void testFileMetadataColumnSelection() {
-
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
@@ -105,7 +100,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     assertEquals(FileMetadataColumn.ID, scanProj.columns().get(3).nodeType());
     assertEquals(FileMetadataColumn.ID, scanProj.columns().get(4).nodeType());
 
-    assertTrue(metadataManager.hasMetadata());
+    assertTrue(metadataManager.hasImplicitCols());
   }
 
   /**
@@ -114,10 +109,9 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
   @Test
   public void testPartitionColumnSelection() {
-
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
@@ -145,7 +139,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
   public void testWildcard() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
@@ -154,93 +148,85 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         Lists.newArrayList(metadataManager.projectionParser()));
 
     List<ColumnProjection> cols = scanProj.columns();
-    assertEquals(7, cols.size());
+    assertEquals(1, cols.size());
     assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
-    for (int i = 0; i < 4; i++) {
-      assertEquals(FileMetadataColumn.ID, cols.get(1+i).nodeType());
-    }
-    assertEquals(PartitionColumn.ID, cols.get(5).nodeType());
-    assertEquals(PartitionColumn.ID, cols.get(6).nodeType());
   }
 
   /**
-   * Drill 1.1 - 1.11 and Drill 1.13 or later put metadata columns after
-   * data columns. Drill 1.12 moved them before data columns. For testing
-   * and compatibility, the client can request to use the Drill 1.12 position,
-   * though the after-data position is the default.
+   * Combine wildcard and file metadata columms. The wildcard expands
+   * table columns but not metadata columns.
    */
 
   @Test
-  public void testDrill1_12Wildcard() {
+  public void testWildcardAndFileMetaata() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
-        RowSetTestUtils.projectAll(),
-        Lists.newArrayList(metadataManager.projectionParser()),
-        true);
+        RowSetTestUtils.projectList(
+            SchemaPath.DYNAMIC_STAR,
+            ScanTestUtils.FILE_NAME_COL,
+            ScanTestUtils.SUFFIX_COL),
+        Lists.newArrayList(metadataManager.projectionParser()));
 
     List<ColumnProjection> cols = scanProj.columns();
-    assertEquals(7, cols.size());
-    for (int i = 0; i < 4; i++) {
-      assertEquals(FileMetadataColumn.ID, cols.get(i).nodeType());
-    }
-    assertEquals(PartitionColumn.ID, cols.get(4).nodeType());
-    assertEquals(PartitionColumn.ID, cols.get(5).nodeType());
-    assertEquals(UnresolvedColumn.WILDCARD, cols.get(6).nodeType());
+    assertEquals(3, cols.size());
+    assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
+    assertEquals(FileMetadataColumn.ID, cols.get(1).nodeType());
+    assertEquals(FileMetadataColumn.ID, cols.get(2).nodeType());
   }
 
   /**
-   * Can't explicitly list file metadata columns with a wildcard in
-   * "legacy" mode: that is, when the wildcard already includes partition
-   * and file metadata columns.
+   * As above, but include implicit columns before and after the
+   * wildcard.
    */
 
   @Test
-  public void testErrorWildcardLegacyAndFileMetaata() {
-
+  public void testWildcardAndFileMetaataMixed() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
-    try {
-      new ScanLevelProjection(
-          RowSetTestUtils.projectList(ScanTestUtils.FILE_NAME_COL,
-              SchemaPath.DYNAMIC_STAR),
-          Lists.newArrayList(metadataManager.projectionParser()));
-      fail();
-    } catch (IllegalArgumentException e) {
-      // expected
-    }
+    ScanLevelProjection scanProj = new ScanLevelProjection(
+        RowSetTestUtils.projectList(
+            ScanTestUtils.FILE_NAME_COL,
+            SchemaPath.DYNAMIC_STAR,
+            ScanTestUtils.SUFFIX_COL),
+        Lists.newArrayList(metadataManager.projectionParser()));
+
+    List<ColumnProjection> cols = scanProj.columns();
+    assertEquals(3, cols.size());
+    assertEquals(FileMetadataColumn.ID, cols.get(0).nodeType());
+    assertEquals(UnresolvedColumn.WILDCARD, cols.get(1).nodeType());
+    assertEquals(FileMetadataColumn.ID, cols.get(2).nodeType());
   }
 
   /**
-   * Can't include both a wildcard and a partition column.
+   * Include both a wildcard and a partition column.
    */
 
   @Test
-  public void testErrorWildcardLegacyAndPartition() {
-
+  public void testWildcardAndPartition() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
-    try {
-      new ScanLevelProjection(
-          RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
-              ScanTestUtils.partitionColName(8)),
-          Lists.newArrayList(metadataManager.projectionParser()));
-      fail();
-    } catch (IllegalArgumentException e) {
-      // expected
-    }
+    ScanLevelProjection scanProj = new ScanLevelProjection(
+        RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
+            ScanTestUtils.partitionColName(8)),
+        Lists.newArrayList(metadataManager.projectionParser()));
+
+      List<ColumnProjection> cols = scanProj.columns();
+      assertEquals(2, cols.size());
+      assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
+      assertEquals(PartitionColumn.ID, cols.get(1).nodeType());
   }
 
   /**
@@ -253,7 +239,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
   public void testShadowed() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(), true,
+        fixture.getOptionManager(),
         new Path("hdfs:///w"),
         Lists.newArrayList(filePath));
 
@@ -264,8 +250,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
             ScanTestUtils.partitionColName(0) + ".b",
             ScanTestUtils.partitionColName(1) + "[0]",
             ScanTestUtils.SUFFIX_COL),
-        Lists.newArrayList(metadataManager.projectionParser()),
-        true);
+        Lists.newArrayList(metadataManager.projectionParser()));
 
     List<ColumnProjection> cols = scanProj.columns();
     assertEquals(5, cols.size());

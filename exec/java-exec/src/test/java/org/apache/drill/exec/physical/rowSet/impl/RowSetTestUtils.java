@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class RowSetTestUtils {
@@ -30,17 +29,21 @@ public class RowSetTestUtils {
 
   public static List<SchemaPath> projectList(String... names) {
     List<SchemaPath> selected = new ArrayList<>();
-    for (String name: names) {
-
-      // Parse from string does not handle wildcards.
-
-      if (name.equals(SchemaPath.DYNAMIC_STAR)) {
+    for (String name : names) {
+      if (name.equals(SchemaPath.DYNAMIC_STAR) ||
+          name.equals("*")) {
         selected.add(SchemaPath.STAR_COLUMN);
       } else {
         selected.add(SchemaPath.parseFromString(name));
       }
     }
     return selected;
+  }
+
+  public static List<SchemaPath> projectList(List<String> names) {
+    String nameArray[] = new String[names.size()];
+    names.toArray(nameArray);
+    return projectList(nameArray);
   }
 
   public static List<SchemaPath> projectCols(SchemaPath... cols) {
@@ -56,4 +59,12 @@ public class RowSetTestUtils {
         new SchemaPath[] {SchemaPath.getSimplePath(SchemaPath.DYNAMIC_STAR)});
   }
 
+  @SafeVarargs
+  public static List<SchemaPath> concat(List<SchemaPath>... parts) {
+    List<SchemaPath> selected = new ArrayList<>();
+    for (List<SchemaPath> part : parts) {
+      selected.addAll(part);
+    }
+    return selected;
+  }
 }
