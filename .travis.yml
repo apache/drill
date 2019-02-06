@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-before_install: git fetch --unshallow
+matrix:
+  fast_finish: true
+  include:
+    - env: PHASE=tests
+    - env: PHASE=build_checkstyle_protobuf
 sudo: required
 language: java
 jdk:
@@ -21,5 +25,34 @@ jdk:
 cache:
   directories:
   - "$HOME/.m2"
-install: MAVEN_OPTS="-Xms1G -Xmx1G" mvn install --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true
-script: mvn install -Drat.skip=false -Dlicense.skip=false -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest,org.apache.drill.categories.SecurityTest" -DforkCount=1 -DmemoryMb=2560 -DdirectMemoryMb=4608 -Ptravis
+before_install:
+  - git fetch --unshallow
+  # Install libraries required for protobuf generation
+  - |
+    if [ $PHASE = "build_checkstyle_protobuf" ]; then \
+      sudo apt-get install -y libboost-all-dev libzookeeper-mt-dev libsasl2-dev cmake libcppunit-dev && \
+      pushd .. && wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz && \
+      tar -xzvf protobuf-2.5.0.tar.gz && \
+      pushd protobuf-2.5.0 && ./configure --prefix=/usr && make && sudo make install && popd && popd; \
+    fi
+install:
+  # For tests phase runs unit tests
+  # For protobuf phase: builds Drill project, performs license checkstyle goal and regenerates Java and C++ Protobuf files
+  - |
+    if [ $PHASE = "tests" ]; then \
+      mvn install --batch-mode -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest,org.apache.drill.categories.SecurityTest" -DforkCount=1 -DmemoryMb=2560 -DdirectMemoryMb=4608 -Ptravis; \
+    elif [ $PHASE = "build_checkstyle_protobuf" ]; then \
+      MAVEN_OPTS="-Xms1G -Xmx1G" mvn install --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
+      pushd protocol && mvn process-sources -P proto-compile && popd && \
+      mkdir contrib/native/client/build && pushd contrib/native/client/build && cmake -G "Unix Makefiles" .. && make cpProtobufs && popd; \
+    fi
+script:
+  # Checks whether project files weren't changed after regenerating protobufs
+  - |
+    if [ "$(git status -s | grep -c "")" -gt 0 ]; then \
+      echo "The following changes are found in files after regenerating protobufs (output may be used as a patch to apply):" >&2 &&
+      echo "$(git diff --color)" && \
+      exit 1; \
+    else
+      echo "All checks are passed!";
+    fi
