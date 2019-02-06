@@ -1,6 +1,6 @@
 ---
 title: "Configuring cgroups to Control CPU Usage"
-date: 2019-02-05
+date: 2019-02-06
 parent: "Configure Drill"
 ---   
 
@@ -40,17 +40,17 @@ If you have Drill 1.13 running on the node, or you have Drill 1.14 running on th
 You can set the CPU limit as a soft or hard limit, or both. You set the limits with parameters in the `/etc/cgconfig.conf` file. The hard limit takes precedence over the soft limit. When Drill hits the hard limit, in-progress queries may not complete. Review the following sections that describe the soft and hard limit parameters and then configure CPU limits.  
 
 **Soft Limit Parameter**  
-You set the soft limit with the `cpu.shares` parameter. When you set a soft limit, Drill can exceed the CPU allocated if extra CPU is available for use on the system. Drill can continue to use CPU until there is contention with other processes over the CPU or Drill hits the hard limit.  
+You set the soft limit with the `cpu.shares` parameter. This parameter takes an integer value, which specifies a relative share of CPU time available to the tasks in a cgroup. For example, if there are two tasks and cpu.shares is set to 100, each task receives half of the CPU time. The value must be 2 or greater.When you set a soft limit, Drill can exceed the CPU allocated if extra CPU is available for use on the system. Drill can continue to use CPU until there is contention with other processes over the CPU or Drill hits the hard limit.   
 
 **Hard Limit Parameters**  
-You set the hard limit with the `cpu.cfs_period_us` and `cpu.cfs_quota_us` parameters. The `cpu.cfs_period_us` and `cpu.cfs_quota_us` parameters set a hard limit on the amount of CPU time that the Drill process can use.  
+You set the hard limit on the amount of CPU time that the Drill process can use through the `cpu.cfs_period_us` and `cpu.cfs_quota_us` parameters.  
 
 - **`cpu.cfs_period_us`**   
-The `cpu.cfs_quota_us` parameter specifies a segment of time (in microseconds represented by `us` for µs) for how often the access to CPU resources should be reallocated. For example, if tasks in a cgroup can access a single CPU for 0.2 seconds out of every 1 second, set cpu.cfs_quota_us to 200000 and cpu.cfs_period_us to 1000000. The upper limit of the `cpu.cfs_quota_us` parameter is 1 second and the lower limit is 1000 microseconds.    
+Specifies a period in microseconds (represented by `us` for µs) to indicate how often a cgroup's access to CPU resources should be reallocated. For example, if you want tasks in a cgroup to have access to a single CPU for 0.2 seconds in a 1 second window, set `cpu.cfs_quota_us` to 200000 and `cpu.cfs_period_us` to 1000000. The upper limit of the `cpu.cfs_quota_us` parameter is 1 second and the lower limit is 1000 microseconds.    
 
 
 - **`cpu.cfs_quota_us`**  
-The `cpu.cfs_quota_us` parameter specifies the total amount of runtime (in microseconds represented by `us` for µs) for which all tasks in the Drill cgroup can run during one period (as defined by cpu.cfs_period_us). As soon as tasks in the Drill cgroup use the time specified by the quota, they are throttled for the remainder of the time specified by the period and not allowed to run until the next period. For example, if tasks in the Drill cgroup can access a single CPU for 0.2 seconds out of every 1 second, set `cpu.cfs_quota_us` to 200000 and `cpu.cfs_period_us` to 1000000. A value of -1 indicates that the group does not have any restrictions on CPU.   
+Specifies the total amount of runtime in microseconds (represented by `us` for µs), for which all tasks in the Drill cgroup can run during one period (as defined by `cpu.cfs_period_us`). When tasks in the Drill cgroup use up all the time specified by the quota, the tasks are throttled for the remainder of the time specified by the period and they cannot run until the next period. For example, if tasks in the Drill cgroup can access a single CPU for 0.2 seconds out of every 1 second, set `cpu.cfs_quota_us` to 200000 and `cpu.cfs_period_us` to 1000000. Setting the `cpu.cfs_quota_us` value to -1 indicates that the group does not have any restrictions on CPU. This is the default value for every cgroup, except for the root cgroup.   
 
 
 ###Configuring CPU Limits  
@@ -94,11 +94,8 @@ When setting a hard limit, add limits to the `cpu.cfs_quota_us` and `cpu.cfs_per
 
 ******************************************    
 
-For additional information, refer to the following documentation:  
-- [https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html)  
-- [resource_management_guide/sect-cpu-example_usage](resource_management_guide/sect-cpu-example_usage)  
-- [https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html)
-- [resource_management_guide/sec-cpu_and_memory-use_case](resource_management_guide/sec-cpu_and_memory-use_case)
+For additional information, refer to the [RedHat documentation](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/resource_management_guide/sec-cpu). 
+
 
 
 
