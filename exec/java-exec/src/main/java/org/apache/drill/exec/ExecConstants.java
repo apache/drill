@@ -658,6 +658,7 @@ public final class ExecConstants {
   public static final String ORDERED_MUX_EXCHANGE = "planner.enable_ordered_mux_exchange";
 
   // Resource management boot-time options.
+  public static final String RM_ENABLED = "drill.exec.rm.enabled";
   public static final String MAX_MEMORY_PER_NODE = "drill.exec.rm.memory_per_node";
   public static final String MAX_CPUS_PER_NODE = "drill.exec.rm.cpus_per_node";
 

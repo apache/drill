@@ -17,29 +17,29 @@
  */
 package org.apache.drill.common.config;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
+import io.netty.util.internal.PlatformDependent;
+import org.apache.drill.common.exceptions.DrillConfigurationException;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.reflections.util.ClasspathHelper;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Constructor;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-
-import io.netty.util.internal.PlatformDependent;
-import org.apache.drill.common.exceptions.DrillConfigurationException;
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.scanner.ClassPathScanner;
-import org.reflections.util.ClasspathHelper;
-
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
 
 public class DrillConfig extends NestedConfig {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
@@ -153,7 +153,17 @@ public class DrillConfig extends NestedConfig {
    */
   @VisibleForTesting
   public static DrillConfig create(Properties testConfigurations) {
-    return create(null, testConfigurations, true);
+    return create(null, testConfigurations, true, new DrillExecConfigFileInfo());
+  }
+
+
+  /**
+   * Convenience method for unit tests to create RM specific configuration
+   * <b><u>Do not use this method outside of test code.</u></b>
+   */
+  @VisibleForTesting
+  public static DrillConfig createForRM(Properties testConfigurations) {
+    return create(null, testConfigurations, true, new DrillRMConfigFileInfo());
   }
 
   /**
@@ -161,7 +171,27 @@ public class DrillConfig extends NestedConfig {
    *          see {@link #create(String)}'s {@code overrideFileResourcePathname}
    */
   public static DrillConfig create(String overrideFileResourcePathname, boolean enableServerConfigs) {
-    return create(overrideFileResourcePathname, null, enableServerConfigs);
+    return create(overrideFileResourcePathname, null, enableServerConfigs, new DrillExecConfigFileInfo());
+  }
+
+  /**
+   * Merged DrillConfig object for all the RM Configurations provided through various resource files. The order of
+   * precedence is as follows:
+   * <p>
+   * Configuration values are retrieved as follows:
+   * <ul>
+   * <li>Check a single copy of "drill-rm-override.conf".  If multiple copies are
+   *     on the classpath, which copy is read is indeterminate.</li>
+   * <li>Check a single copy of "drill-rm-distrib.conf". If multiple copies are
+   *     on the classpath, which copy is read is indeterminate. </li>
+   * <li>Check a single copy of "{@code drill-rm-default.conf}".  If multiple
+   *     copies are on the classpath, which copy is read is indeterminate.</li>
+   * </ul>
+   * </p>
+   *  @return A merged Config object.
+   */
+  public static DrillConfig createForRM() {
+    return create(null, null, true, new DrillRMConfigFileInfo());
   }
 
   /**
@@ -181,35 +211,37 @@ public class DrillConfig extends NestedConfig {
    *          is assimilated
    * @param enableServerConfigs
    *          whether to enable server-specific configuration options
-   * @return
+   * @param configInfo
+   *          see {@link ConfigFileInfo}
+   * @return {@link DrillConfig} object with all configs from passed in resource files
    */
   private static DrillConfig create(String overrideFileResourcePathname,
                                     final Properties overriderProps,
-                                    final boolean enableServerConfigs) {
+                                    final boolean enableServerConfigs,
+                                    ConfigFileInfo configInfo) {
     final StringBuilder logString = new StringBuilder();
     final Stopwatch watch = Stopwatch.createStarted();
-    overrideFileResourcePathname =
-        overrideFileResourcePathname == null
-            ? CommonConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME
-            : overrideFileResourcePathname;
+    overrideFileResourcePathname = overrideFileResourcePathname == null ?
+      configInfo.getOverrideFileName() : overrideFileResourcePathname;
 
     // 1. Load defaults configuration file.
     Config fallback = null;
     final ClassLoader[] classLoaders = ClasspathHelper.classLoaders();
     for (ClassLoader classLoader : classLoaders) {
       final URL url =
-          classLoader.getResource(CommonConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME);
+          classLoader.getResource(configInfo.getDefaultFileName());
       if (null != url) {
         logString.append("Base Configuration:\n\t- ").append(url).append("\n");
         fallback =
-            ConfigFactory.load(classLoader,
-                               CommonConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME);
+            ConfigFactory.load(classLoader, configInfo.getDefaultFileName());
         break;
       }
     }
 
     // 2. Load per-module configuration files.
-    final Collection<URL> urls = ClassPathScanner.getConfigURLs();
+    final String perModuleResourcePathName = configInfo.getModuleFileName();
+    final Collection<URL> urls = (perModuleResourcePathName != null) ?
+      ClassPathScanner.getConfigURLs(perModuleResourcePathName) : new ArrayList<>();
     logString.append("\nIntermediate Configuration and Plugin files, in order of precedence:\n");
     for (URL url : urls) {
       logString.append("\t- ").append(url).append("\n");
@@ -220,12 +252,12 @@ public class DrillConfig extends NestedConfig {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
     // 3. Load distribution specific configuration file.
-    final URL distribConfigFileUrl = classLoader.getResource(CommonConstants.CONFIG_DISTRIBUTION_RESOURCE_PATHNAME);
+    final URL distribConfigFileUrl = classLoader.getResource(configInfo.getDistributionFileName());
     if (null != distribConfigFileUrl ) {
       logString.append("Distribution Specific Configuration File: ").append(distribConfigFileUrl).append("\n");
     }
     fallback =
-      ConfigFactory.load(CommonConstants.CONFIG_DISTRIBUTION_RESOURCE_PATHNAME).withFallback(fallback);
+      ConfigFactory.load(configInfo.getDistributionFileName()).withFallback(fallback);
 
     // 4. Load any specified overrides configuration file along with any
     //    overrides from JVM system properties (e.g., {-Dname=value").
@@ -258,7 +290,7 @@ public class DrillConfig extends NestedConfig {
     return new DrillConfig(effectiveConfig.resolve());
   }
 
-  public <T> Class<T> getClassAt(String location, Class<T> clazz) throws DrillConfigurationException {
+  private <T> Class<T> getClassAt(String location, Class<T> clazz) throws DrillConfigurationException {
     final String className = getString(location);
     if (className == null) {
       throw new DrillConfigurationException(String.format(
@@ -286,8 +318,7 @@ public class DrillConfig extends NestedConfig {
   public <T> T getInstanceOf(String location, Class<T> clazz) throws DrillConfigurationException{
     final Class<T> c = getClassAt(location, clazz);
     try {
-      final T t = c.newInstance();
-      return t;
+      return c.newInstance();
     } catch (Exception ex) {
       throw new DrillConfigurationException(String.format("Failure while instantiating class [%s] located at '%s.", clazz.getCanonicalName(), location), ex);
     }

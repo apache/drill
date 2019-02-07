@@ -153,6 +153,7 @@ public class Drillbit implements AutoCloseable {
       throw new DrillbitStartupException("JDK Java compiler not available. Ensure Drill is running with the java executable from a JDK and not a JRE");
     }
 
+    boolean isRMEnabled = config.getBoolean(ExecConstants.RM_ENABLED);
     gracePeriod = config.getInt(ExecConstants.GRACE_PERIOD);
     final Stopwatch w = Stopwatch.createStarted();
     logger.debug("Construction started.");
@@ -167,9 +168,19 @@ public class Drillbit implements AutoCloseable {
     if (serviceSet != null) {
       coord = serviceSet.getCoordinator();
       storeProvider = new CachingPersistentStoreProvider(new LocalPersistentStoreProvider(config));
+      if (isRMEnabled) {
+        isRMEnabled = false;
+        logger.info("Drill ResourceManagement cannot be enabled if Zookeeper is not available for state store. This " +
+          "can happen when Drill is started as embedded process instead of distributed mode");
+      }
     } else {
       coord = new ZKClusterCoordinator(config, context);
       storeProvider = new PersistentStoreRegistry<ClusterCoordinator>(this.coord, config).newPStoreProvider();
+    }
+
+    // RM is enabled so lets create a new config file specifically for RM configurations
+    if (isRMEnabled) {
+      final DrillConfig rmConfig = DrillConfig.createForRM();
     }
 
     //Check if InMemory Profile Store, else use Default Store Provider
