@@ -81,40 +81,6 @@ public abstract class AbstractScalarWriterImpl extends AbstractScalarWriter impl
     }
   }
 
-  /**
-   * Listener (callback) for vector overflow events. To be optionally
-   * implemented and bound by the client code of the writer. If no
-   * listener is bound, and a vector overflows, then an exception is
-   * thrown.
-   */
-
-  public static interface ColumnWriterListener {
-
-    /**
-     * Alert the listener that a vector has overflowed. Upon return,
-     * all writers must have a new set of buffers available, ready
-     * to accept the in-flight value that triggered the overflow.
-     *
-     * @param writer the writer that triggered the overflow
-     */
-
-    void overflowed(ScalarWriter writer);
-
-    /**
-     * A writer wants to expand its vector. Allows the listener to
-     * either allow the growth, or trigger and overflow to limit
-     * batch size.
-     *
-     * @param writer the writer that wishes to grow its vector
-     * @param delta the amount by which the vector is to grow
-     * @return true if the vector can be grown, false if the writer
-     * should instead trigger an overflow by calling
-     * <tt>overflowed()</tt>
-     */
-
-    boolean canExpand(ScalarWriter writer, int delta);
-  }
-
   protected ColumnMetadata schema;
 
   /**
@@ -150,16 +116,6 @@ public abstract class AbstractScalarWriterImpl extends AbstractScalarWriter impl
 
   @Override
   public ColumnMetadata schema() { return schema; }
-
-  /**
-   * Bind a listener to the underlying scalar column, or array of scalar
-   * columns. Not valid if the underlying writer is a map or array of maps.
-   *
-   * @param listener
-   *          the column listener to bind
-   */
-
-  public abstract void bindListener(ColumnWriterListener listener);
 
   public abstract BaseDataValueVector vector();
 

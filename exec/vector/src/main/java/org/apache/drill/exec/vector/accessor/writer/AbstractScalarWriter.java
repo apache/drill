@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
 import org.joda.time.Period;
 
 /**
@@ -63,4 +64,6 @@ public abstract class AbstractScalarWriter implements ScalarWriter {
   protected UnsupportedConversionError conversionError(String javaType) {
     return UnsupportedConversionError.writeError(schema(), javaType);
   }
+
+  public void bindListener(ColumnWriterListener listener) { }
 }

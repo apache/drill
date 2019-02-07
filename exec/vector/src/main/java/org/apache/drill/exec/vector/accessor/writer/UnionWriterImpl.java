@@ -142,6 +142,12 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
     this.listener = listener;
   }
 
+  // Unions are complex: listeners should bind to the components as they
+  // are created.
+
+  @Override
+  public void bindListener(ColumnWriterListener listener) { }
+
   // The following are for coordinating with the shim.
 
   public State state() { return state; }

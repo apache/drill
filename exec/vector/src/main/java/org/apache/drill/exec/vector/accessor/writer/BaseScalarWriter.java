@@ -151,7 +151,7 @@ public abstract class BaseScalarWriter extends AbstractScalarWriterImpl {
   protected int capacity;
 
   @Override
-  public void bindListener(AbstractScalarWriterImpl.ColumnWriterListener listener) {
+  public void bindListener(ColumnWriterListener listener) {
     this.listener = listener;
   }
 

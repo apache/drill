@@ -23,9 +23,9 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.UInt1ColumnWriter;
-import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.joda.time.Period;
 
 public class NullableScalarWriter extends AbstractScalarWriterImpl {
@@ -93,7 +93,7 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   @Override
   public void bindIndex(ColumnWriterIndex index) {
     writerIndex = index;
-    ColumnWriterIndex childIndex = new ChildIndex(index);
+    final ColumnWriterIndex childIndex = new ChildIndex(index);
     isSetWriter.bindIndex(childIndex);
     baseWriter.bindIndex(childIndex);
   }
@@ -196,7 +196,7 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   }
 
   @Override
-  public void bindListener(AbstractScalarWriterImpl.ColumnWriterListener listener) {
+  public void bindListener(ColumnWriterListener listener) {
     baseWriter.bindListener(listener);
   }
 

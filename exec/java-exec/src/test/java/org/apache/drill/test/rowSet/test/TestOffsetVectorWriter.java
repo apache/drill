@@ -30,8 +30,8 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriterImpl;
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.test.TestFixedWidthWriter.TestIndex;
 import org.junit.BeforeClass;
@@ -371,7 +371,7 @@ public class TestOffsetVectorWriter extends SubOperatorTest {
     try (UInt4Vector vector = allocVector(1000)) {
       TestIndex index = new TestIndex();
       OffsetVectorWriterImpl writer = makeWriter(vector, index);
-      writer.bindListener(new AbstractScalarWriterImpl.ColumnWriterListener() {
+      writer.bindListener(new ColumnWriterListener() {
         int totalAlloc = 4096;
 
         @Override

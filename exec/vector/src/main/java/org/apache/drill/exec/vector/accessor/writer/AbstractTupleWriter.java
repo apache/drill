@@ -424,17 +424,12 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     return vectorIndex.vectorIndex();
   }
 
-  /**
-   * Bind a listener to the underlying map or map array column. Not valid if the
-   * underlying writer is a scalar or scalar array.
-   *
-   * @param listener
-   *          the tuple listener to bind
-   */
-
   public void bindListener(TupleWriterListener listener) {
     this.listener = listener;
   }
+
+  @Override
+  public void bindListener(ColumnWriterListener listener) { }
 
   @Override
   public void dump(HierarchicalFormatter format) {

@@ -31,7 +31,7 @@ import org.apache.drill.exec.vector.accessor.ColumnAccessors.IntColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl;
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -388,7 +388,7 @@ public class TestFixedWidthWriter extends SubOperatorTest {
     try (IntVector vector = allocVector(1000)) {
       TestIndex index = new TestIndex();
       IntColumnWriter writer = makeWriter(vector, index);
-      writer.bindListener(new AbstractScalarWriterImpl.ColumnWriterListener() {
+      writer.bindListener(new ColumnWriterListener() {
         int totalAlloc = 4096;
 
         @Override

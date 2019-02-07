@@ -116,6 +116,12 @@ public class UnionVectorShim implements UnionShim {
     }
   }
 
+  // Unions are complex: the listener should bind to the individual components
+  // as they are created.
+
+  @Override
+  public void bindListener(ColumnWriterListener listener) { }
+
   @Override
   public void setNull() {
 

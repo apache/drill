@@ -270,6 +270,12 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
   }
 
   @Override
+  public void bindListener(ColumnWriterListener listener) {
+    elementObjWriter.events().bindListener(listener);
+    offsetsWriter.bindListener(listener);
+  }
+
+  @Override
   public ObjectType type() { return ObjectType.ARRAY; }
 
   @Override

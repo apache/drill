@@ -46,6 +46,9 @@ public class EmptyListShim implements UnionShim {
   public void bindIndex(ColumnWriterIndex index) { }
 
   @Override
+  public void bindListener(ColumnWriterListener listener) { }
+
+  @Override
   public void startWrite() { }
 
   @Override

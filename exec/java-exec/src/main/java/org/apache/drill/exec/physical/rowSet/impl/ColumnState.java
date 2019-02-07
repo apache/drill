@@ -24,8 +24,8 @@ import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
 
 /**
  * Represents the write-time state for a column including the writer and the (optional)
@@ -48,19 +48,19 @@ public abstract class ColumnState {
    * Column metadata is hosted on the writer.
    */
 
-  public static class PrimitiveColumnState extends ColumnState implements AbstractScalarWriterImpl.ColumnWriterListener {
+  public static class PrimitiveColumnState extends ColumnState implements ColumnWriterListener {
 
     public PrimitiveColumnState(LoaderInternals loader,
         AbstractObjectWriter colWriter,
         VectorState vectorState) {
       super(loader, colWriter, vectorState);
-      WriterEvents scalarWriter;
+      WriterEvents scalarEvents;
       if (colWriter.type() == ObjectType.ARRAY) {
-        scalarWriter = writer.array().entry().events();
+        scalarEvents = writer.array().entry().events();
       } else {
-        scalarWriter = writer.events();
+        scalarEvents = writer.events();
       }
-      ((AbstractScalarWriterImpl) scalarWriter).bindListener(this);
+      scalarEvents.bindListener(this);
     }
 
     @Override

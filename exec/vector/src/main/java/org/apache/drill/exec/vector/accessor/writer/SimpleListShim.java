@@ -56,6 +56,11 @@ public class SimpleListShim implements UnionShim {
   }
 
   @Override
+  public void bindListener(ColumnWriterListener listener) {
+    colWriter.events().bindListener(listener);
+  }
+
+  @Override
   public boolean hasType(MinorType type) {
     return type == colWriter.schema().type();
   }

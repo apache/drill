@@ -30,7 +30,7 @@ import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.VarCharColumnWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl;
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.test.TestFixedWidthWriter.TestIndex;
 import org.bouncycastle.util.Arrays;
@@ -363,7 +363,7 @@ public class TestVariableWidthWriter extends SubOperatorTest {
     try (VarCharVector vector = allocVector(1000)) {
       TestIndex index = new TestIndex();
       VarCharColumnWriter writer = makeWriter(vector, index);
-      writer.bindListener(new AbstractScalarWriterImpl.ColumnWriterListener() {
+      writer.bindListener(new ColumnWriterListener() {
         // Because assumed array size is 10, so 10 * 1000 = 10,000
         // rounded to 16K
         int totalAlloc = 16384;
