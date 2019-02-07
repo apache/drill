@@ -17,21 +17,25 @@
  */
 package org.apache.drill.common.config;
 
-public interface CommonConstants {
+public class DrillRMConfigFileInfo implements ConfigFileInfo {
 
-  /** Default (base) configuration file name.  (Classpath resource pathname.) */
-  String CONFIG_DEFAULT_RESOURCE_PATHNAME = "drill-default.conf";
+  @Override
+  public String getDefaultFileName() {
+    return ConfigConstants.RM_CONFIG_DEFAULT_RESOURCE_PATHNAME;
+  }
 
-  /** Module configuration files name.  (Classpath resource pathname.) */
-  String DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME = "drill-module.conf";
+  @Override
+  public String getModuleFileName() {
+    return null;
+  }
 
-  /** Distribution Specific Override configuration file name.  (Classpath resource pathname.) */
-  String CONFIG_DISTRIBUTION_RESOURCE_PATHNAME = "drill-distrib.conf";
+  @Override
+  public String getDistributionFileName() {
+    return ConfigConstants.RM_CONFIG_DISTRIBUTION_RESOURCE_PATHNAME;
+  }
 
-  /** Override configuration file name.  (Classpath resource pathname.) */
-  String CONFIG_OVERRIDE_RESOURCE_PATHNAME = "drill-override.conf";
-
-  /** Override plugins configs file name.  (Classpath resource pathname.) */
-  String STORAGE_PLUGINS_OVERRIDE_CONF = "storage-plugins-override.conf";
-
+  @Override
+  public String getOverrideFileName() {
+    return ConfigConstants.RM_CONFIG_OVERRIDE_RESOURCE_PATHNAME;
+  }
 }

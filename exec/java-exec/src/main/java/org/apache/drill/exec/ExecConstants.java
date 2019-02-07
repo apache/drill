@@ -666,6 +666,7 @@ public final class ExecConstants {
   public static final String ORDERED_MUX_EXCHANGE = "planner.enable_ordered_mux_exchange";
 
   // Resource management boot-time options.
+  public static final String RM_ENABLED = "drill.exec.rm.enabled";
   public static final String MAX_MEMORY_PER_NODE = "drill.exec.rm.memory_per_node";
   public static final String MAX_CPUS_PER_NODE = "drill.exec.rm.cpus_per_node";
 
@@ -684,6 +685,16 @@ public final class ExecConstants {
       new OptionDescription("Sets the cost threshold, which depends on the complexity of the queries in queue, for determining whether query is large or small. Complex queries have higher thresholds. Range: 0-9223372036854775807"));
   public static final LongValidator QUEUE_TIMEOUT = new PositiveLongValidator("exec.queue.timeout_millis", Long.MAX_VALUE,
       new OptionDescription("Indicates how long a query can wait in queue before the query fails. Range: 0-9223372036854775807"));
+
+  // New Smart RM boot time configs
+  public static final String RM_QUERY_TAGS_KEY = "exec.rm.queryTags";
+  public static final StringValidator RM_QUERY_TAGS_VALIDATOR = new StringValidator(RM_QUERY_TAGS_KEY,
+    new OptionDescription("Allows user to set coma separated list of tags for all the queries submitted over a session"));
+
+  public static final String RM_QUEUES_WAIT_FOR_PREFERRED_NODES_KEY = "exec.rm.queues.wait_for_preferred_nodes";
+  public static final BooleanValidator RM_QUEUES_WAIT_FOR_PREFERRED_NODES_VALIDATOR = new BooleanValidator
+    (RM_QUEUES_WAIT_FOR_PREFERRED_NODES_KEY, new OptionDescription("Allows user to enable/disable " +
+      "wait_for_preferred_nodes configuration across rm queues for all the queries submitted over a session"));
 
   // Ratio of memory for small queries vs. large queries.
   // Each small query gets 1 unit, each large query gets QUEUE_MEMORY_RATIO units.

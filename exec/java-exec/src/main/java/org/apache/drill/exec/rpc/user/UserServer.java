@@ -17,17 +17,16 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import java.io.IOException;
-import java.net.SocketAddress;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.net.ssl.SSLEngine;
-import javax.security.sasl.SaslException;
-
+import com.google.protobuf.MessageLite;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -65,17 +64,15 @@ import org.apache.hadoop.security.HadoopKerberosName;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
-import com.google.protobuf.MessageLite;
-
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.ssl.SslHandler;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
+import javax.net.ssl.SSLEngine;
+import javax.security.sasl.SaslException;
+import java.io.IOException;
+import java.net.SocketAddress;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserServer.class);
@@ -197,7 +194,11 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
   }
 
   /**
-   * {@link AbstractRemoteConnection} implementation for user connection. Also implements {@link UserClientConnection}.
+   * It represents a client connection accepted by Foreman Drillbit's UserServer from a DrillClient. This connection
+   * is used to get hold of {@link UserSession} which stores all session related information like session options
+   * changed over the lifetime of this connection. There is a 1:1 mapping between a BitToUserConnection and a
+   * UserSession. This connection object is also used to send query data and result back to the client submitted as part
+   * of the session tied to this connection.
    */
   public class BitToUserConnection extends AbstractServerConnection<BitToUserConnection>
       implements UserClientConnection {
