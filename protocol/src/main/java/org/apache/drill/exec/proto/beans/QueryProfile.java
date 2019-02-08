@@ -74,6 +74,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
     private double totalCost;
     private String queueName = DEFAULT_QUEUE_NAME;
     private String queryId;
+    private int autoLimit;
 
     public QueryProfile()
     {
@@ -368,6 +369,19 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         return this;
     }
 
+    // autoLimit
+
+    public int getAutoLimit()
+    {
+        return autoLimit;
+    }
+
+    public QueryProfile setAutoLimit(int autoLimit)
+    {
+        this.autoLimit = autoLimit;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -493,6 +507,9 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
                 case 22:
                     message.queryId = input.readString();
                     break;
+                case 23:
+                    message.autoLimit = input.readInt32();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -576,6 +593,9 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
 
         if(message.queryId != null)
             output.writeString(22, message.queryId, false);
+
+        if(message.autoLimit != 0)
+            output.writeInt32(23, message.autoLimit, false);
     }
 
     public String getFieldName(int number)
@@ -604,6 +624,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
             case 20: return "totalCost";
             case 21: return "queueName";
             case 22: return "queryId";
+            case 23: return "autoLimit";
             default: return null;
         }
     }
@@ -639,6 +660,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         __fieldMap.put("totalCost", 20);
         __fieldMap.put("queueName", 21);
         __fieldMap.put("queryId", 22);
+        __fieldMap.put("autoLimit", 23);
     }
     
 }

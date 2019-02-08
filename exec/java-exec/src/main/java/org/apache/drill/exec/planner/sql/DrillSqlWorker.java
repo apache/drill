@@ -21,7 +21,12 @@ import java.io.IOException;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlOrderBy;
+import org.apache.calcite.sql.dialect.HiveSqlDialect;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
@@ -135,7 +140,7 @@ public class DrillSqlWorker {
 
     final SqlConverter parser = new SqlConverter(context);
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
-    final SqlNode sqlNode = parser.parse(sql);
+    final SqlNode sqlNode = checkAndApplyAutoLimit(parser, context, sql);
     final AbstractSqlHandler handler;
     final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
 
@@ -182,5 +187,35 @@ public class DrillSqlWorker {
     }
 
     return handler.getPlan(sqlNode);
+  }
+
+  //Wrap with Auto Limit
+  private static SqlNode checkAndApplyAutoLimit(SqlConverter parser, QueryContext context, String sql) {
+    SqlNode sqlNode = parser.parse(sql);
+    boolean appliedLimit = false; //Default
+    if (context.isAutoLimitEnabled() && sqlNode.getKind().belongsTo(SqlKind.QUERY)) {
+      int fetch = context.getAutoLimitRowCount();
+      if (sqlNode.getKind() == SqlKind.ORDER_BY) {
+        // merge SqlOrderBy
+        SqlOrderBy orderBy = (SqlOrderBy) sqlNode;
+        if (orderBy.fetch != null) {
+          int ctxtAutoLimit = fetch;
+          fetch = Math.min(Integer.valueOf(orderBy.fetch.toString()), fetch);
+          appliedLimit = (fetch == ctxtAutoLimit); //Mark if contextAutoLimit overrode existing limit
+        }
+        sqlNode = new SqlOrderBy(orderBy.getParserPosition(), orderBy.query, orderBy.orderList, orderBy.offset,
+            SqlLiteral.createExactNumeric(Integer.toString(fetch), SqlParserPos.ZERO));
+      } else {
+        sqlNode = new SqlOrderBy(SqlParserPos.ZERO, sqlNode, SqlNodeList.EMPTY, null,
+            SqlLiteral.createExactNumeric(Integer.toString(fetch), SqlParserPos.ZERO));
+        appliedLimit = true;
+      }
+      logger.debug("AutoLimit was{}applied", appliedLimit ? " " : " not ");
+    }
+    if (!appliedLimit) {
+      context.disableAutoLimit();
+    }
+    logger.debug("Query text to execute: {}", sqlNode.toSqlString(HiveSqlDialect.DEFAULT));
+    return sqlNode;
   }
 }

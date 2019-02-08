@@ -57,6 +57,7 @@ import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.FailureUtils;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.rest.WebUserConnection;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
@@ -144,7 +145,8 @@ public class Foreman implements Runnable {
     this.closeFuture = initiatingClient.getChannelClosureFuture();
     closeFuture.addListener(closeListener);
 
-    this.queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId);
+    this.queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId,
+        connection instanceof WebUserConnection ? ((WebUserConnection) connection).getAutoLimitRowCount() : null);
     this.queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
         drillbitContext.getClusterCoordinator(), this);
     this.queryRM = drillbitContext.getResourceManager().newQueryRM(this);

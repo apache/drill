@@ -68,6 +68,8 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
 
   public final List<String> metadata = new ArrayList<>();
 
+  private Integer autoLimitRowCount = null;
+
   WebUserConnection(WebSessionResources webSessionResources) {
     this.webSessionResources = webSessionResources;
   }
@@ -195,5 +197,29 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
     public void cleanupSession() {
       webSessionResources.close();
     }
+  }
+
+  /**
+   * Sets an autolimit on the size of records to be sent back on the connection
+   * @param Max number of records to be sent back to WebServer
+   */
+  void autoLimitResultSet(Integer autoLimitSize) {
+    this.autoLimitRowCount = autoLimitSize;
+  }
+
+  /**
+   * Gets the max size of records to be sent back by the query
+   * @return Max number of records to be sent back to WebServer
+   */
+  public Integer getAutoLimitRowCount() {
+    return this.autoLimitRowCount;
+  }
+
+  /**
+   * Indicates if resultset is autolimited
+   * @return
+   */
+  boolean isResultSetAutoLimited() {
+    return autoLimitRowCount != null;
   }
 }

@@ -2219,6 +2219,13 @@ class QueryProfile : public ::google::protobuf::Message {
   inline ::std::string* release_queryid();
   inline void set_allocated_queryid(::std::string* queryid);
 
+  // optional int32 autoLimit = 23;
+  inline bool has_autolimit() const;
+  inline void clear_autolimit();
+  static const int kAutoLimitFieldNumber = 23;
+  inline ::google::protobuf::int32 autolimit() const;
+  inline void set_autolimit(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:exec.shared.QueryProfile)
  private:
   inline void set_has_id();
@@ -2263,6 +2270,8 @@ class QueryProfile : public ::google::protobuf::Message {
   inline void clear_has_queue_name();
   inline void set_has_queryid();
   inline void clear_has_queryid();
+  inline void set_has_autolimit();
+  inline void clear_has_autolimit();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -2290,9 +2299,10 @@ class QueryProfile : public ::google::protobuf::Message {
   ::std::string* queue_name_;
   static ::std::string* _default_queue_name_;
   ::std::string* queryid_;
+  ::google::protobuf::int32 autolimit_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(22 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(23 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -6253,6 +6263,28 @@ inline void QueryProfile::set_allocated_queryid(::std::string* queryid) {
     clear_has_queryid();
     queryid_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
+}
+
+// optional int32 autoLimit = 23;
+inline bool QueryProfile::has_autolimit() const {
+  return (_has_bits_[0] & 0x00400000u) != 0;
+}
+inline void QueryProfile::set_has_autolimit() {
+  _has_bits_[0] |= 0x00400000u;
+}
+inline void QueryProfile::clear_has_autolimit() {
+  _has_bits_[0] &= ~0x00400000u;
+}
+inline void QueryProfile::clear_autolimit() {
+  autolimit_ = 0;
+  clear_has_autolimit();
+}
+inline ::google::protobuf::int32 QueryProfile::autolimit() const {
+  return autolimit_;
+}
+inline void QueryProfile::set_autolimit(::google::protobuf::int32 value) {
+  set_has_autolimit();
+  autolimit_ = value;
 }
 
 // -------------------------------------------------------------------

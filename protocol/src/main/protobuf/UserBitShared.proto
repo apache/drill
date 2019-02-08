@@ -237,6 +237,7 @@ message QueryProfile {
   optional double total_cost = 20;
   optional string queue_name = 21 [default = "-"];
   optional string queryId = 22;
+  optional int32 autoLimit = 23;
 }
 
 message MajorFragmentProfile {

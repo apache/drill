@@ -64,15 +64,15 @@ function doSubmitQueryWithAutoLimit() {
     //Clear field when submitting if not mustWrapWithLimit
     if (!mustWrapWithLimit) {
       //Wipe out any numeric entry in the field before
-      $('#queryLimit').attr('value', '');
+      $('#autoLimit').attr('value', '');
     } else {
-      let autoLimitValue=document.getElementById('queryLimit').value;
+      let autoLimitValue=document.getElementById('autoLimit').value;
       let positiveIntRegex = new RegExp("^[1-9]\\d*$");
       let isValidRowCount = positiveIntRegex.test(autoLimitValue);
       if (!isValidRowCount) {
         let alertValues = {'_autoLimitValue_': autoLimitValue };
         populateAndShowAlert("invalidRowCount", alertValues);
-        $('#queryLimit').focus();
+        $('#autoLimit').focus();
         return;
       }
     }

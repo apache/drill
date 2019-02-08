@@ -379,6 +379,11 @@ public class QueryManager implements AutoCloseable {
       profileBuilder.setQuery(queryText);
     }
 
+    if (foreman.getQueryContext().isAutoLimitEnabled()) {
+      profileBuilder.setAutoLimit(foreman.getQueryContext().getAutoLimitRowCount());
+      logger.debug("The query's resultset was limited to {} rows", foreman.getQueryContext().getAutoLimitRowCount());
+    }
+
     fragmentDataMap.forEach(new OuterIter(profileBuilder));
 
     return profileBuilder.build();

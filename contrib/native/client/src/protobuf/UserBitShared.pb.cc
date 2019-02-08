@@ -343,7 +343,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryInfo));
   QueryProfile_descriptor_ = file->message_type(13);
-  static const int QueryProfile_offsets_[22] = {
+  static const int QueryProfile_offsets_[23] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, start_),
@@ -366,6 +366,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, total_cost_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, queue_name_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, queryid_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, autolimit_),
   };
   QueryProfile_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -706,7 +707,7 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "ult.QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007forem"
     "an\030\005 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014opti"
     "ons_json\030\006 \001(\t\022\022\n\ntotal_cost\030\007 \001(\001\022\025\n\nqu"
-    "eue_name\030\010 \001(\t:\001-\"\263\004\n\014QueryProfile\022 \n\002id"
+    "eue_name\030\010 \001(\t:\001-\"\306\004\n\014QueryProfile\022 \n\002id"
     "\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 \001"
     "(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003 \001("
     "\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 "
@@ -5670,6 +5671,7 @@ const int QueryProfile::kQueueWaitEndFieldNumber;
 const int QueryProfile::kTotalCostFieldNumber;
 const int QueryProfile::kQueueNameFieldNumber;
 const int QueryProfile::kQueryIdFieldNumber;
+const int QueryProfile::kAutoLimitFieldNumber;
 #endif  // !_MSC_VER
 
 QueryProfile::QueryProfile()
@@ -5711,6 +5713,7 @@ void QueryProfile::SharedCtor() {
   total_cost_ = 0;
   queue_name_ = const_cast< ::std::string*>(_default_queue_name_);
   queryid_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  autolimit_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -5847,6 +5850,7 @@ void QueryProfile::Clear() {
         queryid_->clear();
       }
     }
+    autolimit_ = 0;
   }
   fragment_profile_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -6221,6 +6225,22 @@ bool QueryProfile::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(184)) goto parse_autoLimit;
+        break;
+      }
+
+      // optional int32 autoLimit = 23;
+      case 23: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_autoLimit:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &autolimit_)));
+          set_has_autolimit();
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -6396,6 +6416,11 @@ void QueryProfile::SerializeWithCachedSizes(
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     ::google::protobuf::internal::WireFormatLite::WriteString(
       22, this->queryid(), output);
+  }
+
+  // optional int32 autoLimit = 23;
+  if (has_autolimit()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(23, this->autolimit(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -6574,6 +6599,11 @@ void QueryProfile::SerializeWithCachedSizes(
         22, this->queryid(), target);
   }
 
+  // optional int32 autoLimit = 23;
+  if (has_autolimit()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(23, this->autolimit(), target);
+  }
+
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -6732,6 +6762,13 @@ int QueryProfile::ByteSize() const {
           this->queryid());
     }
 
+    // optional int32 autoLimit = 23;
+    if (has_autolimit()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->autolimit());
+    }
+
   }
   // repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;
   total_size += 1 * this->fragment_profile_size();
@@ -6835,6 +6872,9 @@ void QueryProfile::MergeFrom(const QueryProfile& from) {
     if (from.has_queryid()) {
       set_queryid(from.queryid());
     }
+    if (from.has_autolimit()) {
+      set_autolimit(from.autolimit());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -6880,6 +6920,7 @@ void QueryProfile::Swap(QueryProfile* other) {
     std::swap(total_cost_, other->total_cost_);
     std::swap(queue_name_, other->queue_name_);
     std::swap(queryid_, other->queryid_);
+    std::swap(autolimit_, other->autolimit_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

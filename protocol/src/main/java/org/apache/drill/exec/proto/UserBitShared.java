@@ -14225,6 +14225,16 @@ public final class UserBitShared {
      */
     com.google.protobuf.ByteString
         getQueryIdBytes();
+
+    // optional int32 autoLimit = 23;
+    /**
+     * <code>optional int32 autoLimit = 23;</code>
+     */
+    boolean hasAutoLimit();
+    /**
+     * <code>optional int32 autoLimit = 23;</code>
+     */
+    int getAutoLimit();
   }
   /**
    * Protobuf type {@code exec.shared.QueryProfile}
@@ -14416,6 +14426,11 @@ public final class UserBitShared {
             case 178: {
               bitField0_ |= 0x00100000;
               queryId_ = input.readBytes();
+              break;
+            }
+            case 184: {
+              bitField0_ |= 0x00200000;
+              autoLimit_ = input.readInt32();
               break;
             }
           }
@@ -15115,6 +15130,22 @@ public final class UserBitShared {
       }
     }
 
+    // optional int32 autoLimit = 23;
+    public static final int AUTOLIMIT_FIELD_NUMBER = 23;
+    private int autoLimit_;
+    /**
+     * <code>optional int32 autoLimit = 23;</code>
+     */
+    public boolean hasAutoLimit() {
+      return ((bitField0_ & 0x00200000) == 0x00200000);
+    }
+    /**
+     * <code>optional int32 autoLimit = 23;</code>
+     */
+    public int getAutoLimit() {
+      return autoLimit_;
+    }
+
     private void initFields() {
       id_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
       type_ = org.apache.drill.exec.proto.UserBitShared.QueryType.SQL;
@@ -15138,6 +15169,7 @@ public final class UserBitShared {
       totalCost_ = 0D;
       queueName_ = "-";
       queryId_ = "";
+      autoLimit_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -15216,6 +15248,9 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00100000) == 0x00100000)) {
         output.writeBytes(22, getQueryIdBytes());
+      }
+      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+        output.writeInt32(23, autoLimit_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -15313,6 +15348,10 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00100000) == 0x00100000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(22, getQueryIdBytes());
+      }
+      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(23, autoLimit_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -15489,6 +15528,8 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00100000);
         queryId_ = "";
         bitField0_ = (bitField0_ & ~0x00200000);
+        autoLimit_ = 0;
+        bitField0_ = (bitField0_ & ~0x00400000);
         return this;
       }
 
@@ -15618,6 +15659,10 @@ public final class UserBitShared {
           to_bitField0_ |= 0x00100000;
         }
         result.queryId_ = queryId_;
+        if (((from_bitField0_ & 0x00400000) == 0x00400000)) {
+          to_bitField0_ |= 0x00200000;
+        }
+        result.autoLimit_ = autoLimit_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -15742,6 +15787,9 @@ public final class UserBitShared {
           bitField0_ |= 0x00200000;
           queryId_ = other.queryId_;
           onChanged();
+        }
+        if (other.hasAutoLimit()) {
+          setAutoLimit(other.getAutoLimit());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -17283,6 +17331,39 @@ public final class UserBitShared {
   }
   bitField0_ |= 0x00200000;
         queryId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 autoLimit = 23;
+      private int autoLimit_ ;
+      /**
+       * <code>optional int32 autoLimit = 23;</code>
+       */
+      public boolean hasAutoLimit() {
+        return ((bitField0_ & 0x00400000) == 0x00400000);
+      }
+      /**
+       * <code>optional int32 autoLimit = 23;</code>
+       */
+      public int getAutoLimit() {
+        return autoLimit_;
+      }
+      /**
+       * <code>optional int32 autoLimit = 23;</code>
+       */
+      public Builder setAutoLimit(int value) {
+        bitField0_ |= 0x00400000;
+        autoLimit_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 autoLimit = 23;</code>
+       */
+      public Builder clearAutoLimit() {
+        bitField0_ = (bitField0_ & ~0x00400000);
+        autoLimit_ = 0;
         onChanged();
         return this;
       }
@@ -24596,7 +24677,7 @@ public final class UserBitShared {
       "ult.QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007forem" +
       "an\030\005 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014opti" +
       "ons_json\030\006 \001(\t\022\022\n\ntotal_cost\030\007 \001(\001\022\025\n\nqu" +
-      "eue_name\030\010 \001(\t:\001-\"\263\004\n\014QueryProfile\022 \n\002id" +
+      "eue_name\030\010 \001(\t:\001-\"\306\004\n\014QueryProfile\022 \n\002id" +
       "\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 \001" +
       "(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003 \001(",
       "\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 " +
@@ -24767,7 +24848,7 @@ public final class UserBitShared {
           internal_static_exec_shared_QueryProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryProfile_descriptor,
-              new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", "OptionsJson", "PlanEnd", "QueueWaitEnd", "TotalCost", "QueueName", "QueryId", });
+              new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", "OptionsJson", "PlanEnd", "QueueWaitEnd", "TotalCost", "QueueName", "QueryId", "AutoLimit", });
           internal_static_exec_shared_MajorFragmentProfile_descriptor =
             getDescriptor().getMessageTypes().get(14);
           internal_static_exec_shared_MajorFragmentProfile_fieldAccessorTable = new
