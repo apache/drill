@@ -54,6 +54,7 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
   HashJoinSpillControlImpl(BufferAllocator allocator, int recordsPerBatch, int minBatchesInAvailableMemory, RecordBatchMemoryManager batchMemoryManager, FragmentContext context) {
     this.allocator = allocator;
     this.recordsPerBatch = recordsPerBatch;
+    this.recordsPerPartitionBatchProbe = recordsPerBatch; // later initialize() will update
     this.minBatchesInAvailableMemory = minBatchesInAvailableMemory;
     this.batchMemoryManager = batchMemoryManager;
     this.context = context;
@@ -64,8 +65,8 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
     // Expected new batch size like the current, plus the Hash Values vector (4 bytes per HV)
     long batchSize = ( batchMemoryManager.getRecordBatchSizer(RIGHT_INDEX).getRowAllocWidth() + 4 ) * recordsPerBatch;
     long reserveForOutgoing = batchMemoryManager.getOutputBatchSize();
-    long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory() - reserveForOutgoing;
-    boolean needsSpill = minBatchesInAvailableMemory * batchSize > memoryAvailableNow;
+    long memoryAvailableNow = allocator.getLimit() - allocator.getAllocatedMemory();
+    boolean needsSpill = minBatchesInAvailableMemory * batchSize > memoryAvailableNow - reserveForOutgoing;
     if ( needsSpill ) {
       logger.debug("should spill now - batch size {}, mem avail {}, reserved for outgoing {}", batchSize, memoryAvailableNow, reserveForOutgoing);
     }
@@ -234,7 +235,4 @@ public class HashJoinSpillControlImpl implements HashJoinMemoryCalculator.BuildS
     }
   }
 
-
-
 }
-

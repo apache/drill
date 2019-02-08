@@ -928,6 +928,11 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     numPartitions = 1; // We are only using one partition
     canSpill = false; // We cannot spill
     allocator.setLimit(AbstractBase.MAX_ALLOCATION); // Violate framework and force unbounded memory
+
+    if ( semiSkipDuplicates ) {
+      logger.warn("Semi-join duplicate skipping is disabled due to num_partitions = 1");
+      semiSkipDuplicates = false; // can't skip duplicates if incoming rows are not copied
+    }
   }
 
   /**
@@ -986,8 +991,13 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
           (int) context.getOptions().getOption(ExecConstants.HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY_VALIDATOR),
           batchMemoryManager, context);
 
+        // TODO: numPartitions was already calculated, but without considering the memory needed for a hash table
+        // for each partition; the code below is incomplete ..... (or the original code needs to be adopted to
+        // consider hash tables as well).
+
         // calculates the max number of partitions possible
-        if ( spilledState.isFirstCycle() && doMemoryCalculation ) {
+        if ( false &&
+          spilledState.isFirstCycle() && doMemoryCalculation ) {
           currentCalc.initialize(spilledState.isFirstCycle(), true, // TODO Fix after growing hash values bug fixed
           buildBatch,
           probeBatch,

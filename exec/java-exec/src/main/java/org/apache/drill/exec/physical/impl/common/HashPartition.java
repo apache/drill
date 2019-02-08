@@ -245,9 +245,8 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     try {
       status = hashTable.put(ind, htIndex, hashCode, BATCH_SIZE);
     } catch (RetryAfterSpillException RE) {
-      if ( numPartitions == 1 ) { // if cannot spill
-        throw new OutOfMemoryException(RE);
-      }
+      logger.trace("Semi join ran out of memory while put into hash-table; going to spill {} batches and retry",
+        tmpBatchesList.size());
       spillThisPartition(); // free some memory
       return false;
     }
