@@ -245,9 +245,15 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     try {
       status = hashTable.put(ind, htIndex, hashCode, BATCH_SIZE);
     } catch (RetryAfterSpillException RE) {
+      if ( tmpBatchesList.size() == 0 && // extreme case of an empty partition trying to spill
+        currentVectorContainer.hasRecordCount() && currentVectorContainer.getRecordCount() == 0 ) {
+        String msg = "Too little memory; try to reduce number of partitions (currently " + numPartitions + ")";
+        throw new OutOfMemoryException(msg);
+      }
       logger.trace("Semi join ran out of memory while put into hash-table; going to spill {} batches and retry",
-        tmpBatchesList.size());
-      spillThisPartition(); // free some memory
+        tmpBatchesList.size() + 1); // plus the current batch
+      // Add the current batch to the list, spill and initialize
+      completeAnInnerBatch(true,true);
       return false;
     }
 
