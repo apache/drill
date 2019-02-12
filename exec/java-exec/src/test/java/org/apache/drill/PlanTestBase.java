@@ -20,15 +20,20 @@ package org.apache.drill;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.calcite.sql.SqlExplain.Depth;
@@ -315,6 +320,26 @@ public class PlanTestBase extends BaseTestQuery {
     query = "EXPLAIN PLAN for " + QueryTestUtil.normalizeQuery(query);
     String plan = getPlanInString(query, JSON_FORMAT);
     testPhysical(plan);
+  }
+
+  /**
+   * Helper method for checking the metadata file existence
+   *
+   * @param table table name or table path
+   */
+  public static void checkForMetadataFile(String table) {
+    final String tmpDir;
+
+    try {
+      tmpDir = dirTestWatcher.getRootDir().getCanonicalPath();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    File metaFile = table.startsWith(tmpDir) ? FileUtils.getFile(table, Metadata.METADATA_FILENAME)
+        : FileUtils.getFile(tmpDir, table, Metadata.METADATA_FILENAME);
+    assertTrue(String.format("There is no metadata cache file for the %s table", table),
+        Files.exists(metaFile.toPath()));
   }
 
   /*

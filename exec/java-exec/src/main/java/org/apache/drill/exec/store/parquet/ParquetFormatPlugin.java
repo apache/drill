@@ -276,6 +276,7 @@ public class ParquetFormatPlugin implements FormatPlugin {
           ParquetReaderConfig readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).build();
           ParquetTableMetadataDirs mDirs = Metadata.readMetadataDirs(fs, dirMetaPath, metaContext, readerConfig);
           if (mDirs != null && mDirs.getDirectories().size() > 0) {
+            metaContext.setDirectories(mDirs.getDirectories());
             FileSelection dirSelection = FileSelection.createFromDirectories(mDirs.getDirectories(), selection,
                 selection.getSelectionRoot() /* cacheFileRoot initially points to selectionRoot */);
             dirSelection.setExpandedPartial();

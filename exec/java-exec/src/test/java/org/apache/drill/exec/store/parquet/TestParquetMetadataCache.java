@@ -923,24 +923,4 @@ public class TestParquetMetadataCache extends PlanTestBase {
     assertEquals("Row count does not match the expected value", 1, actualRowCount);
     // TODO: Check that metadata cache file is actually regenerated, once Drill will use JDK version with resolved JDK-8177809.
   }
-
-  /**
-   * Helper method for checking the metadata file existence
-   *
-   * @param table table name or table path
-   */
-  private void checkForMetadataFile(String table) {
-    final String tmpDir;
-
-    try {
-      tmpDir = dirTestWatcher.getRootDir().getCanonicalPath();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    File metaFile = table.startsWith(tmpDir) ? FileUtils.getFile(table, Metadata.METADATA_FILENAME)
-        : FileUtils.getFile(tmpDir, table, Metadata.METADATA_FILENAME);
-    assertTrue(String.format("There is no metadata cache file for the %s table", table),
-        Files.exists(metaFile.toPath()));
-  }
 }
