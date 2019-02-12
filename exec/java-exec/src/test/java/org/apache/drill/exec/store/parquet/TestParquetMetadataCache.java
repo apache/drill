@@ -956,24 +956,4 @@ public class TestParquetMetadataCache extends PlanTestBase {
     int actualRowCount = testSql(query);
     assertEquals(expectedRowCount, actualRowCount);
   }
-
-  /**
-   * Helper method for checking the metadata file existence
-   *
-   * @param table table name or table path
-   */
-  private void checkForMetadataFile(String table) {
-    final String tmpDir;
-
-    try {
-      tmpDir = dirTestWatcher.getRootDir().getCanonicalPath();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    File metaFile = table.startsWith(tmpDir) ? FileUtils.getFile(table, Metadata.METADATA_FILENAME)
-        : FileUtils.getFile(tmpDir, table, Metadata.METADATA_FILENAME);
-    assertTrue(String.format("There is no metadata cache file for the %s table", table),
-        Files.exists(metaFile.toPath()));
-  }
 }
