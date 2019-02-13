@@ -24,6 +24,7 @@ import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
@@ -43,15 +44,19 @@ public class SqlRefreshMetadata extends DrillSqlCall {
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("REFRESH_TABLE_METADATA", SqlKind.OTHER_DDL) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
-      return new SqlRefreshMetadata(pos, (SqlIdentifier) operands[0]);
+      return new SqlRefreshMetadata(pos, (SqlIdentifier) operands[0], (SqlLiteral) operands[1], (SqlNodeList) operands[2]);
     }
   };
 
   private SqlIdentifier tblName;
+  private final SqlLiteral allColumns;
+  private final SqlNodeList fieldList;
 
-  public SqlRefreshMetadata(SqlParserPos pos, SqlIdentifier tblName){
+  public SqlRefreshMetadata(SqlParserPos pos, SqlIdentifier tblName, SqlLiteral allColumns, SqlNodeList fieldList){
     super(pos);
     this.tblName = tblName;
+    this.allColumns = allColumns;
+    this.fieldList = fieldList;
   }
 
   @Override
@@ -63,6 +68,8 @@ public class SqlRefreshMetadata extends DrillSqlCall {
   public List<SqlNode> getOperandList() {
     List<SqlNode> ops = Lists.newArrayList();
     ops.add(tblName);
+    ops.add(allColumns);
+    ops.add(fieldList);
     return ops;
   }
 
@@ -71,6 +78,20 @@ public class SqlRefreshMetadata extends DrillSqlCall {
     writer.keyword("REFRESH");
     writer.keyword("TABLE");
     writer.keyword("METADATA");
+    if (!allColumns.booleanValue()) {
+      writer.keyword("COLUMNS");
+      if (fieldList == null) {
+        writer.keyword("NONE");
+      } else if (fieldList != null && fieldList.size() > 0) {
+        writer.keyword("(");
+        fieldList.get(0).unparse(writer, leftPrec, rightPrec);
+        for (int i = 1; i < fieldList.size(); i++) {
+          writer.keyword(",");
+          fieldList.get(i).unparse(writer, leftPrec, rightPrec);
+        }
+        writer.keyword(")");
+      }
+    }
     tblName.unparse(writer, leftPrec, rightPrec);
   }
 
@@ -93,5 +114,13 @@ public class SqlRefreshMetadata extends DrillSqlCall {
   @Override
   public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
     return new RefreshMetadataHandler(config);
+  }
+
+  public SqlNodeList getFieldList() {
+    return fieldList;
+  }
+
+  public SqlLiteral getAllColumns() {
+    return allColumns;
   }
 }

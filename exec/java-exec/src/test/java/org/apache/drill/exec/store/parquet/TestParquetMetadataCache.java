@@ -924,6 +924,39 @@ public class TestParquetMetadataCache extends PlanTestBase {
     // TODO: Check that metadata cache file is actually regenerated, once Drill will use JDK version with resolved JDK-8177809.
   }
 
+  @Test
+  public void testRefreshDefault() throws Exception {
+    test("refresh table metadata dfs.`%s`", TABLE_NAME_1);
+    checkForMetadataFile(TABLE_NAME_1);
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs.`%s` " +
+            " where dir0=1994 and dir1 in ('Q1', 'Q2')", TABLE_NAME_1);
+    int expectedRowCount = 20;
+    int actualRowCount = testSql(query);
+    assertEquals(expectedRowCount, actualRowCount);
+  }
+
+  @Test
+  public void testRefreshWithColumns() throws Exception {
+    test("refresh table metadata columns (o_custkey, o_orderdate) dfs.`%s`", TABLE_NAME_1);
+    checkForMetadataFile(TABLE_NAME_1);
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs.`%s` " +
+            " where dir0=1994 and dir1 in ('Q1', 'Q2')", TABLE_NAME_1);
+    int expectedRowCount = 20;
+    int actualRowCount = testSql(query);
+    assertEquals(expectedRowCount, actualRowCount);
+  }
+
+  @Test
+  public void testRefreshNone() throws Exception {
+    test("refresh table metadata columns none dfs.`%s`", TABLE_NAME_1);
+    checkForMetadataFile(TABLE_NAME_1);
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs.`%s` " +
+            " where dir0=1994 and dir1 in ('Q1', 'Q2')", TABLE_NAME_1);
+    int expectedRowCount = 20;
+    int actualRowCount = testSql(query);
+    assertEquals(expectedRowCount, actualRowCount);
+  }
+
   /**
    * Helper method for checking the metadata file existence
    *

@@ -464,22 +464,30 @@ SqlNode SqlDropSchema(SqlParserPos pos) :
 
 /**
  * Parse refresh table metadata statement.
- * REFRESH TABLE METADATA tblname
+ * REFRESH TABLE METADATA [COLUMNS ((field1, field2,..) | NONE)] tblname
  */
 SqlNode SqlRefreshMetadata() :
 {
     SqlParserPos pos;
     SqlIdentifier tblName;
-    SqlNodeList fieldList;
+    SqlNodeList fieldList = null;
     SqlNode query;
+    boolean allColumns = true;
 }
 {
     <REFRESH> { pos = getPos(); }
     <TABLE>
     <METADATA>
+    [
+        <COLUMNS> { allColumns = false; }
+        (   fieldList = ParseRequiredFieldList("Table")
+            |
+            <NONE>
+        )
+    ]
     tblName = CompoundIdentifier()
     {
-        return new SqlRefreshMetadata(pos, tblName);
+        return new SqlRefreshMetadata(pos, tblName, SqlLiteral.createBoolean(allColumns, getPos()), fieldList);
     }
 }
 
