@@ -37,12 +37,13 @@
     "METADATA",
     "IF",
     "JAR",
-    "PROPERTIES"
+    "PROPERTIES",
     "ANALYZE",
     "COMPUTE",
     "ESTIMATE",
     "STATISTICS",
-    "SAMPLE"
+    "SAMPLE",
+    "COLUMNS"
   ]
 
   # List of methods for parsing custom SQL statements.
@@ -854,6 +855,7 @@
         "YEAR",
         # "YEARS", # not a keyword in Calcite
         "ZONE",
+        "COLUMNS"
       ]
 
   # List of additional join types. Each is a method with no arguments.
