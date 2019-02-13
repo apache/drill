@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.sys;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Wrapper around {@link PersistentStore} to ensure all passed keys are converted to lower case and stored this way.
@@ -70,6 +71,11 @@ public class CaseInsensitivePersistentStore<V> implements PersistentStore<V> {
   @Override
   public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
     return underlyingStore.getRange(skip, take);
+  }
+
+  @Override
+  public Iterator<Entry<String, V>> getRange(int skip, int take, boolean useCache) {
+    return underlyingStore.getRange(skip, take, useCache);
   }
 
   @Override

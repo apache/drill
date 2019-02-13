@@ -42,6 +42,8 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   private final CuratorFramework curator;
   private final DrillFileSystem fs;
   private final Path blobRoot;
+  //Reference for Archiving
+  private final DrillConfig drillConfig;
 
   public ZookeeperPersistentStoreProvider(final PersistentStoreRegistry<ZKClusterCoordinator> registry) throws StoreException {
     this(registry.getConfig(), registry.getCoordinator().getCurator());
@@ -50,13 +52,12 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   @VisibleForTesting
   public ZookeeperPersistentStoreProvider(final DrillConfig config, final CuratorFramework curator) throws StoreException {
     this.curator = curator;
-
+    this.drillConfig = config;
     if (config.hasPath(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT)) {
       blobRoot = new Path(config.getString(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT));
     }else{
       blobRoot = LocalPersistentStore.getLogDir();
     }
-
     try {
       this.fs = LocalPersistentStore.getFileSystem(config, blobRoot);
     } catch (IOException ex) {
@@ -68,7 +69,7 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> config) throws StoreException {
     switch(config.getMode()){
     case BLOB_PERSISTENT:
-      return new LocalPersistentStore<>(fs, blobRoot, config);
+      return new LocalPersistentStore<>(fs, blobRoot, config, drillConfig);
     case PERSISTENT:
       final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
       try {
@@ -86,7 +87,7 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   public <V> VersionedPersistentStore<V> getOrCreateVersionedStore(final PersistentStoreConfig<V> config) throws StoreException {
     switch(config.getMode()){
       case BLOB_PERSISTENT:
-        return new VersionedDelegatingStore<>(new LocalPersistentStore<>(fs, blobRoot, config));
+        return new VersionedDelegatingStore<>(new LocalPersistentStore<>(fs, blobRoot, config, drillConfig));
       case PERSISTENT:
         final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
         try {

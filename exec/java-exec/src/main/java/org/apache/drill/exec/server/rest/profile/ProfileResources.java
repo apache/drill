@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server.rest.profile;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -71,6 +72,7 @@ public class ProfileResources {
   @Inject SecurityContext sc;
 
   public static class ProfileInfo implements Comparable<ProfileInfo> {
+    private static final String TRAILING_DOTS = " ... ";
     private static final int QUERY_SNIPPET_MAX_CHAR = 150;
     private static final int QUERY_SNIPPET_MAX_LINES = 8;
 
@@ -171,13 +173,13 @@ public class ProfileResources {
       //Trimming down based on line-count
       if (QUERY_SNIPPET_MAX_LINES < queryParts.length) {
         int linesConstructed = 0;
-        StringBuilder lineCappedQuerySnippet = new StringBuilder();
+        StringBuilder lineCappedQuerySnippet = new StringBuilder(QUERY_SNIPPET_MAX_CHAR + TRAILING_DOTS.length());
         for (String qPart : queryParts) {
           lineCappedQuerySnippet.append(qPart);
           if (++linesConstructed < QUERY_SNIPPET_MAX_LINES) {
             lineCappedQuerySnippet.append(System.lineSeparator());
           } else {
-            lineCappedQuerySnippet.append(" ... ");
+            lineCappedQuerySnippet.append(TRAILING_DOTS);
             break;
           }
         }
@@ -237,6 +239,7 @@ public class ProfileResources {
   @Produces(MediaType.APPLICATION_JSON)
   public QProfiles getProfilesJSON(@Context UriInfo uriInfo) {
     try {
+      final DrillConfig drillConfig = work.getContext().getConfig();
       final QueryProfileStoreContext profileStoreContext = work.getContext().getProfileStoreContext();
       final PersistentStore<QueryProfile> completed = profileStoreContext.getCompletedProfileStore();
       final TransientStore<QueryInfo> running = profileStoreContext.getRunningProfileStore();
@@ -246,17 +249,20 @@ public class ProfileResources {
       final List<ProfileInfo> runningQueries = Lists.newArrayList();
 
       final Iterator<Map.Entry<String, QueryInfo>> runningEntries = running.entries();
+      final long currentSysTime = System.currentTimeMillis();
+
       while (runningEntries.hasNext()) {
         try {
           final Map.Entry<String, QueryInfo> runningEntry = runningEntries.next();
           final QueryInfo profile = runningEntry.getValue();
-          if (principal.canManageProfileOf(profile.getUser())) {
+          final String runningProfileUser = profile.getUser();
+          if (principal.canManageProfileOf(runningProfileUser)) {
             runningQueries.add(
-                new ProfileInfo(work.getContext().getConfig(),
-                    runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(),
+                new ProfileInfo(drillConfig,
+                    runningEntry.getKey(), profile.getStart(), currentSysTime,
                     profile.getForeman().getAddress(), profile.getQuery(),
                     ProfileUtil.getQueryStateDisplayName(profile.getState()),
-                    profile.getUser(), profile.getTotalCost(), profile.getQueueName()));
+                    runningProfileUser, profile.getTotalCost(), profile.getQueueName()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
@@ -266,8 +272,6 @@ public class ProfileResources {
 
       Collections.sort(runningQueries, Collections.reverseOrder());
 
-      final List<ProfileInfo> finishedQueries = Lists.newArrayList();
-
       //Defining #Profiles to load
       int maxProfilesToLoad = work.getContext().getConfig().getInt(ExecConstants.HTTP_MAX_PROFILES);
       String maxProfilesParams = uriInfo.getQueryParameters().getFirst(MAX_QPROFILES_PARAM);
@@ -275,19 +279,22 @@ public class ProfileResources {
         maxProfilesToLoad = Integer.valueOf(maxProfilesParams);
       }
 
-      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, maxProfilesToLoad);
+      final List<ProfileInfo> finishedQueries = new ArrayList<ProfileResources.ProfileInfo>(maxProfilesToLoad);
 
+      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, maxProfilesToLoad, true); //Leverage any underlying cache
       while (range.hasNext()) {
         try {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();
+          final String queryId = profileEntry.getKey();
           final QueryProfile profile = profileEntry.getValue();
-          if (principal.canManageProfileOf(profile.getUser())) {
+          final String completedProfileUser = profile.getUser();
+          if (principal.canManageProfileOf(completedProfileUser)) {
             finishedQueries.add(
-                new ProfileInfo(work.getContext().getConfig(),
-                    profileEntry.getKey(), profile.getStart(), profile.getEnd(),
+                new ProfileInfo(drillConfig,
+                    queryId, profile.getStart(), profile.getEnd(),
                     profile.getForeman().getAddress(), profile.getQuery(),
                     ProfileUtil.getQueryStateDisplayName(profile.getState()),
-                    profile.getUser(), profile.getTotalCost(), profile.getQueueName()));
+                    completedProfileUser, profile.getTotalCost(), profile.getQueueName()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
