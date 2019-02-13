@@ -63,12 +63,16 @@ public class DrillStatsTable {
   public enum STATS_VERSION {V0, V1};
   // The current version
   public static final STATS_VERSION CURRENT_VERSION = STATS_VERSION.V1;
+  // 10 histogram buckets (TODO: can make this configurable later)
+  public static final int NUM_HISTOGRAM_BUCKETS = 10;
+
   private final FileSystem fs;
   private final Path tablePath;
   private final String schemaName;
   private final String tableName;
-  private double rowCount = -1;
   private final Map<String, Long> ndv = Maps.newHashMap();
+  private final Map<String, Histogram> histogram = Maps.newHashMap();
+  private double rowCount = -1;
   private final Map<String, Long> nnRowCount = Maps.newHashMap();
   private boolean materialized = false;
   private TableStatistics statistics = null;
@@ -163,6 +167,30 @@ public class DrillStatsTable {
   }
 
   /**
+   * Get the histogram of a given column. If stats are not present for the given column,
+   * a null is returned.
+   *
+   * Note: returned data may not be accurate. Accuracy depends on whether the table data has changed after the
+   * stats are computed.
+   *
+   * @param col
+   * @return Histogram for this column
+   */
+  public Histogram getHistogram(String col) {
+    // Stats might not have materialized because of errors.
+    if (!materialized) {
+      return null;
+    }
+    final String upperCol = col.toUpperCase();
+    Histogram histogramCol = histogram.get(upperCol);
+    if (histogramCol == null) {
+      histogramCol = histogram.get(SchemaPath.getSimplePath(upperCol).toString());
+    }
+    return histogramCol;
+  }
+
+
+  /**
    * Read the stats from storage and keep them in memory.
    * @param table - Drill table for which we require stats
    * @param context - Query context
@@ -184,6 +212,10 @@ public class DrillStatsTable {
             ndv.put(cs.getName().toUpperCase(), cs.getNdv());
             nnRowCount.put(cs.getName().toUpperCase(), (long)cs.getNonNullCount());
             rowCount = Math.max(rowCount, cs.getCount());
+
+            // get the histogram for this column
+            Histogram hist = cs.getHistogram();
+            histogram.put(cs.getName(), hist);
           }
         }
       }
@@ -330,6 +362,7 @@ public class DrillStatsTable {
     @JsonProperty ("nonnullrowcount") private long nonNullCount = 0;
     @JsonProperty ("ndv") private long ndv = 0;
     @JsonProperty ("avgwidth") private double width = 0;
+    @JsonProperty ("histogram") private Histogram histogram = null;
 
     public ColumnStatistics_v1() {}
     @JsonGetter ("column")
@@ -380,6 +413,18 @@ public class DrillStatsTable {
     }
     @JsonSetter ("avgwidth")
     public void setAvgWidth(double width) { this.width = width; }
+    @JsonGetter("histogram")
+    public Histogram getHistogram() { return this.histogram; }
+    @JsonSetter("histogram")
+    public void setHistogram(Histogram histogram) {
+      this.histogram = histogram;
+    }
+    @JsonIgnore
+    public void buildHistogram(byte[] tdigest_bytearray) {
+      int num_buckets = (int) Math.min(ndv, (long) DrillStatsTable.NUM_HISTOGRAM_BUCKETS);
+      this.histogram = HistogramUtils.buildHistogramFromTDigest(tdigest_bytearray, this.getType(),
+              num_buckets, nonNullCount);
+    }
   }
 
   private TableStatistics readStatistics(DrillTable drillTable, Path path) throws IOException {

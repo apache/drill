@@ -452,6 +452,7 @@
                <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
                <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Tree*</exclude>
                <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Standard*</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/io/BaseEncoding*</exclude>
                <exclude>com/google/common/math</exclude>
                <exclude>com/google/common/net</exclude>
                <exclude>com/google/common/primitives</exclude>

@@ -283,7 +283,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.NDV_BLOOM_FILTER_FPOS_PROB_VALIDATOR),
       new OptionDefinition(ExecConstants.RM_QUERY_TAGS_VALIDATOR,
         new OptionMetaData(OptionValue.AccessibleScopes.SESSION_AND_QUERY, false, false)),
-      new OptionDefinition(ExecConstants.RM_QUEUES_WAIT_FOR_PREFERRED_NODES_VALIDATOR)
+      new OptionDefinition(ExecConstants.RM_QUEUES_WAIT_FOR_PREFERRED_NODES_VALIDATOR),
+      new OptionDefinition(ExecConstants.TDIGEST_COMPRESSION_VALIDATOR)
     };
 
     CaseInsensitiveMap<OptionDefinition> map = Arrays.stream(definitions)

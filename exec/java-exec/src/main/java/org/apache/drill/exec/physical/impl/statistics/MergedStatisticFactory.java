@@ -35,6 +35,7 @@ public class MergedStatisticFactory {
     statsClasses.put(Statistic.HLL_MERGE, HLLMergedStatistic.class);
     statsClasses.put(Statistic.NDV, NDVMergedStatistic.class);
     statsClasses.put(Statistic.SUM_DUPS, CntDupsMergedStatistic.class);
+    statsClasses.put(Statistic.TDIGEST_MERGE, TDigestMergedStatistic.class);
   }
 
   private MergedStatistic newMergedStatistic(String outputStatName)

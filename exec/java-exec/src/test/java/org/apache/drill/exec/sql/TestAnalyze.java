@@ -368,6 +368,67 @@ public class TestAnalyze extends BaseTestQuery {
     test("DROP TABLE dfs.tmp.`parquetStale/1996/Q5`");
   }
 
+  // Test basic histogram creation functionality for int, bigint, double, date, timestamp and boolean data types.
+  // Test that varchar column does not fail the query but generates empty buckets.
+  // Use Repeated_Count for checking number of entries, but currently we don't check actual contents of the
+  // buckets since that requires enforcing a repeatable t-digest quantile that is used by histogram and is future work.
+  @Test
+  public void testHistogramWithDataTypes1() throws Exception {
+    try {
+      test("ALTER SESSION SET `planner.slice_target` = 1");
+      test("ALTER SESSION SET `store.format` = 'parquet'");
+      test("CREATE TABLE dfs.tmp.employee1 AS SELECT  employee_id, full_name, "
+              + "case when gender = 'M' then cast(1 as boolean) else cast(0 as boolean) end as is_male, "
+              + " cast(store_id as int) as store_id, cast(department_id as bigint) as department_id, "
+              + " cast(birth_date as date) as birth_date, cast(hire_date as timestamp) as hire_date_and_time, "
+              + " cast(salary as double) as salary from cp.`employee.json` where department_id > 10");
+      test("ANALYZE TABLE dfs.tmp.employee1 COMPUTE STATISTICS");
+
+      testBuilder()
+              .sqlQuery("SELECT tbl.`columns`.`column` as `column`, "
+                      + " repeated_count(tbl.`columns`.`histogram`.`buckets`) as num_bucket_entries "
+                      + " from (select flatten(`directories`[0].`columns`) as `columns` "
+                      + "  from dfs.tmp.`employee1/.stats.drill`) as tbl")
+              .unOrdered()
+              .baselineColumns("column", "num_bucket_entries")
+              .baselineValues("`employee_id`", 11)
+              .baselineValues("`full_name`", 0)
+              .baselineValues("`is_male`", 3)
+              .baselineValues("`store_id`", 11)
+              .baselineValues("`department_id`", 8)
+              .baselineValues("`birth_date`", 11)
+              .baselineValues("`hire_date_and_time`", 7)
+              .baselineValues("`salary`", 11)
+              .go();
+    } finally {
+      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+    }
+  }
+
+  @Test
+  public void testHistogramWithSubsetColumnsAndSampling() throws Exception {
+    try {
+      test("ALTER SESSION SET `planner.slice_target` = 1");
+      test("ALTER SESSION SET `store.format` = 'parquet'");
+      test("CREATE TABLE dfs.tmp.customer1 AS SELECT  * from cp.`tpch/customer.parquet`");
+      test("ANALYZE TABLE dfs.tmp.customer1 COMPUTE STATISTICS (c_custkey, c_nationkey, c_acctbal) SAMPLE 55 PERCENT");
+
+      testBuilder()
+              .sqlQuery("SELECT tbl.`columns`.`column` as `column`, "
+                      + " repeated_count(tbl.`columns`.`histogram`.`buckets`) as num_bucket_entries "
+                      + " from (select flatten(`directories`[0].`columns`) as `columns` "
+                      + "  from dfs.tmp.`customer1/.stats.drill`) as tbl")
+              .unOrdered()
+              .baselineColumns("column", "num_bucket_entries")
+              .baselineValues("`c_custkey`", 11)
+              .baselineValues("`c_nationkey`", 11)
+              .baselineValues("`c_acctbal`", 11)
+              .go();
+    } finally {
+      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+    }
+  }
+
   //Helper function to verify output of ANALYZE statement
   private void verifyAnalyzeOutput(String query, String message) throws Exception {
     List<QueryDataBatch>result = testRunAndReturn(QueryType.SQL, query);

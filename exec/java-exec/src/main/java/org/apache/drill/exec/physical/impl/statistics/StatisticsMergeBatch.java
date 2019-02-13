@@ -209,6 +209,8 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
         ((CntDupsMergedStatistic)statistic).configure(mergedStatisticList);
       } else if (statistic.getName().equals(Statistic.HLL_MERGE)) {
         ((HLLMergedStatistic)statistic).configure(context.getOptions());
+      } else if (statistic.getName().equals(Statistic.TDIGEST_MERGE)) {
+        ((TDigestMergedStatistic)statistic).configure(context.getOptions());
       }
     }
     // Create the schema number and time when computed in the outgoing vector
@@ -259,7 +261,8 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
         TypeProtos.MinorType minorType;
         if (outStatName.equals(Statistic.AVG_WIDTH)) {
           minorType = TypeProtos.MinorType.FLOAT8;
-        } else if (outStatName.equals(Statistic.HLL_MERGE)) {
+        } else if (outStatName.equals(Statistic.HLL_MERGE) ||
+                   outStatName.equals(Statistic.TDIGEST_MERGE)) {
           minorType = TypeProtos.MinorType.VARBINARY;
         } else {
           minorType = TypeProtos.MinorType.BIGINT;

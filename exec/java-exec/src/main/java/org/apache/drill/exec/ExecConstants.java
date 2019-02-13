@@ -979,4 +979,12 @@ public final class ExecConstants {
   public static final String NDV_BLOOM_FILTER_FPOS_PROB = "exec.statistics.ndv_extrapolation_bf_fpprobability";
   public static final LongValidator NDV_BLOOM_FILTER_FPOS_PROB_VALIDATOR = new PositiveLongValidator(NDV_BLOOM_FILTER_FPOS_PROB,
           100, new OptionDescription("Controls trade-off between NDV statistic computation memory cost and sampling extrapolation accuracy"));
+
+  /**
+   * Controls the 'compression' factor for the TDigest algorithm.
+   */
+  public static final String TDIGEST_COMPRESSION = "exec.statistics.tdigest_compression";
+  public static final LongValidator TDIGEST_COMPRESSION_VALIDATOR = new PositiveLongValidator(TDIGEST_COMPRESSION, 10000,
+    new OptionDescription("Controls trade-off between t-digest quantile statistic storage cost and accuracy. " +
+      "Higher values use more groups (clusters) for the t-digest and improve accuracy at the expense of extra storage. "));
 }

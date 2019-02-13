@@ -346,7 +346,8 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter {
     public void startField() throws IOException {
       if (!skipNullFields || this.reader.isSet()) {
         if (fieldName.equals(Statistic.HLL)
-            || fieldName.equals(Statistic.HLL_MERGE)) {
+            || fieldName.equals(Statistic.HLL_MERGE)
+            || fieldName.equals(Statistic.TDIGEST_MERGE)) {
           nextField = fieldName;
         }
       }
@@ -363,6 +364,9 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter {
             || nextField.equals(Statistic.HLL_MERGE)) {
           // Do NOT write out the HLL output, since it is not used yet for computing statistics for a
           // subset of partitions in the query OR for computing NDV with incremental statistics.
+        }  else if (nextField.equals(Statistic.TDIGEST_MERGE)) {
+          byte[] tdigest_bytearray = reader.readByteArray();
+          ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).buildHistogram(tdigest_bytearray);
         }
       }
     }
