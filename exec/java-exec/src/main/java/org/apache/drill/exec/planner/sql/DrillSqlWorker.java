@@ -24,8 +24,8 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOrderBy;
-import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
@@ -189,33 +189,35 @@ public class DrillSqlWorker {
     return handler.getPlan(sqlNode);
   }
 
-  //Wrap with Auto Limit
+  //Check if AutoLimit should be applied
+  private static boolean isAutoLimitShouldBeApplied(QueryContext context, SqlNode sqlNode) {
+    return context.isAutoLimitEnabled() && sqlNode.getKind().belongsTo(SqlKind.QUERY)
+        && (sqlNode.getKind() != SqlKind.ORDER_BY || isAutoLimitLessThanOrderByFetch((SqlOrderBy) sqlNode, context));
+  }
+
+  //Check and apply auto Limit
   private static SqlNode checkAndApplyAutoLimit(SqlConverter parser, QueryContext context, String sql) {
     SqlNode sqlNode = parser.parse(sql);
-    boolean appliedLimit = false; //Default
-    if (context.isAutoLimitEnabled() && sqlNode.getKind().belongsTo(SqlKind.QUERY)) {
-      int fetch = context.getAutoLimitRowCount();
-      if (sqlNode.getKind() == SqlKind.ORDER_BY) {
-        // merge SqlOrderBy
-        SqlOrderBy orderBy = (SqlOrderBy) sqlNode;
-        if (orderBy.fetch != null) {
-          int ctxtAutoLimit = fetch;
-          fetch = Math.min(Integer.valueOf(orderBy.fetch.toString()), fetch);
-          appliedLimit = (fetch == ctxtAutoLimit); //Mark if contextAutoLimit overrode existing limit
-        }
-        sqlNode = new SqlOrderBy(orderBy.getParserPosition(), orderBy.query, orderBy.orderList, orderBy.offset,
-            SqlLiteral.createExactNumeric(Integer.toString(fetch), SqlParserPos.ZERO));
-      } else {
-        sqlNode = new SqlOrderBy(SqlParserPos.ZERO, sqlNode, SqlNodeList.EMPTY, null,
-            SqlLiteral.createExactNumeric(Integer.toString(fetch), SqlParserPos.ZERO));
-        appliedLimit = true;
-      }
-      logger.debug("AutoLimit was{}applied", appliedLimit ? " " : " not ");
-    }
-    if (!appliedLimit) {
+    if (isAutoLimitShouldBeApplied(context, sqlNode)) {
+      sqlNode = wrapWithAutoLimit(sqlNode, context);
+    } else {
       context.disableAutoLimit();
     }
-    logger.debug("Query text to execute: {}", sqlNode.toSqlString(HiveSqlDialect.DEFAULT));
     return sqlNode;
+  }
+
+  //Check if autoLimit is less than existing limit in the query
+  private static boolean isAutoLimitLessThanOrderByFetch(SqlOrderBy orderBy, QueryContext context) {
+    return orderBy.fetch == null || Integer.parseInt(orderBy.fetch.toString()) > context.getAutoLimitRowCount();
+  }
+
+  //Wrap the query with the autoLimit value
+  private static SqlNode wrapWithAutoLimit(SqlNode sqlNode, QueryContext context) {
+    SqlNumericLiteral autoLimitLiteral = SqlLiteral.createExactNumeric(context.getAutoLimitRowCount().toString(), SqlParserPos.ZERO);
+    if (sqlNode.getKind() == SqlKind.ORDER_BY) {
+      SqlOrderBy orderBy = (SqlOrderBy) sqlNode;
+      return new SqlOrderBy(orderBy.getParserPosition(), orderBy.query, orderBy.orderList, orderBy.offset, autoLimitLiteral);
+    }
+    return new SqlOrderBy(SqlParserPos.ZERO, sqlNode, SqlNodeList.EMPTY, null, autoLimitLiteral);
   }
 }

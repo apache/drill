@@ -68,7 +68,7 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
 
   public final List<String> metadata = new ArrayList<>();
 
-  private Integer autoLimitRowCount = null;
+  private Integer autoLimitRowCount;
 
   WebUserConnection(WebSessionResources webSessionResources) {
     this.webSessionResources = webSessionResources;

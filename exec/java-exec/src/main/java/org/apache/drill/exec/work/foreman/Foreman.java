@@ -144,9 +144,9 @@ public class Foreman implements Runnable {
     this.initiatingClient = connection;
     this.closeFuture = initiatingClient.getChannelClosureFuture();
     closeFuture.addListener(closeListener);
-
-    this.queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId,
-        connection instanceof WebUserConnection ? ((WebUserConnection) connection).getAutoLimitRowCount() : null);
+    //Extract any auto-limit for the resultSet in case of a WebUser invoked query
+    Integer autoLimitRowCount = (connection instanceof WebUserConnection) ? ((WebUserConnection) connection).getAutoLimitRowCount() : null;
+    this.queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId, autoLimitRowCount);
     this.queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
         drillbitContext.getClusterCoordinator(), this);
     this.queryRM = drillbitContext.getResourceManager().newQueryRM(this);
