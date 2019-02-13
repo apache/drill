@@ -1,24 +1,49 @@
 ---
-title: "HTTPD Storage Plugin"
+title: "HTTPD Format Plugin"
 date: 2017-03-31 21:49:40 UTC
 parent: "Connect a Data Source"
 ---
 
-As of version 1.9, Drill can natively ingest and query web server logs. To configure Drill to read server logs, you must modify the extensions section in the dfs storage plugin configuration, as shown below:
+As of version 1.9, Drill can natively ingest and query web server logs. To configure Drill to read server logs, add the httpd format configuration to the formats section of a dfs storage plugin configuration, as shown below:   
 
-    "httpd": {
-      "type": "httpd",
-      "logFormat": "%h %t \"%r\" %>s %b \"%{Referer}i\" \"%{user-agent}i\"",
-      "timestampFormat": null
-    }  
+
+	{
+	  "storage":{
+	    dfs: {
+	      type: "file",
+	      connection: "file:///",
+	      workspaces: {
+	        "root" : {
+	          location: "/",
+	          writable: false,
+	          allowAccessOutsideWorkspace: false
+	        },
+	        "tmp" : {
+	          location: "/tmp",
+	          writable: true,
+	          allowAccessOutsideWorkspace: false
+	        }
+	      },
+	      formats: {
+	        "csv" : {
+	          type: "text",
+	          extensions: [ "csv" ],
+	          delimiter: ","
+	        },
+	        "httpd" : {
+	          type: "httpd",
+	          logFormat: "%h %t \"%r\" %>s %b \"%{Referer}i\" \"%{user-agent}i\"",
+	          timestampFormat: "dd/MMM/yyyy:HH:mm:ss ZZ" 
+	        },
+		...
 
 {% include startnote.html %}The logFormat section must match the format of the log files, otherwise Drill cannot correctly parse the logs.{% include endnote.html %}
 
 ## HTTPD Format Strings  
-The following table lists the fields that log files can include. The `timestampformat` is optional, but you can include a format for the time stamp and Drill will parse the times in the log files into Drill dates.
+The following table lists the fields that log files can include. The `timestampformat` is optional, but you can include a format for the time stamp, and Drill will parse the times in the log files into Drill dates.
 
 
-|Format String | Variable Name |
+|**Format String** | **Variable Name** |
 |--------------|---------------|
 |%a	| connection.client.ip |
 |%{c}a | connection.client.peerip |
