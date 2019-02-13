@@ -2826,8 +2826,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "HTTPD Storage Plugin", 
-                    "next_url": "/docs/httpd-storage-plugin/", 
+                    "next_title": "HTTPD Format Plugin", 
+                    "next_url": "/docs/httpd-format-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "MapR-DB Format", 
                     "previous_url": "/docs/mapr-db-format/", 
@@ -2848,9 +2848,9 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "S3 Storage Plugin", 
                     "previous_url": "/docs/s3-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-storage-plugin.md", 
-                    "title": "HTTPD Storage Plugin", 
-                    "url": "/docs/httpd-storage-plugin/"
+                    "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-format-plugin.md", 
+                    "title": "HTTPD Format Plugin", 
+                    "url": "/docs/httpd-format-plugin/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -2863,8 +2863,8 @@
                     "next_title": "Kafka Storage Plugin", 
                     "next_url": "/docs/kafka-storage-plugin/", 
                     "parent": "Connect a Data Source", 
-                    "previous_title": "HTTPD Storage Plugin", 
-                    "previous_url": "/docs/httpd-storage-plugin/", 
+                    "previous_title": "HTTPD Format Plugin", 
+                    "previous_url": "/docs/httpd-format-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/112-opentsdb-storage-plugin.md", 
                     "title": "OpenTSDB Storage Plugin", 
                     "url": "/docs/opentsdb-storage-plugin/"
@@ -5145,7 +5145,7 @@
             "title": "HBase Storage Plugin", 
             "url": "/docs/hbase-storage-plugin/"
         }, 
-        "HTTPD Storage Plugin": {
+        "HTTPD Format Plugin": {
             "breadcrumbs": [
                 {
                     "title": "Connect a Data Source", 
@@ -5158,9 +5158,9 @@
             "parent": "Connect a Data Source", 
             "previous_title": "S3 Storage Plugin", 
             "previous_url": "/docs/s3-storage-plugin/", 
-            "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-storage-plugin.md", 
-            "title": "HTTPD Storage Plugin", 
-            "url": "/docs/httpd-storage-plugin/"
+            "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-format-plugin.md", 
+            "title": "HTTPD Format Plugin", 
+            "url": "/docs/httpd-format-plugin/"
         }, 
         "Handling Different Data Types": {
             "breadcrumbs": [
@@ -7732,8 +7732,8 @@
             "next_title": "Kafka Storage Plugin", 
             "next_url": "/docs/kafka-storage-plugin/", 
             "parent": "Connect a Data Source", 
-            "previous_title": "HTTPD Storage Plugin", 
-            "previous_url": "/docs/httpd-storage-plugin/", 
+            "previous_title": "HTTPD Format Plugin", 
+            "previous_url": "/docs/httpd-format-plugin/", 
             "relative_path": "_docs/connect-a-data-source/plugins/112-opentsdb-storage-plugin.md", 
             "title": "OpenTSDB Storage Plugin", 
             "url": "/docs/opentsdb-storage-plugin/"
@@ -11046,8 +11046,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "HTTPD Storage Plugin", 
-            "next_url": "/docs/httpd-storage-plugin/", 
+            "next_title": "HTTPD Format Plugin", 
+            "next_url": "/docs/httpd-format-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "MapR-DB Format", 
             "previous_url": "/docs/mapr-db-format/", 
@@ -17706,8 +17706,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "HTTPD Storage Plugin", 
-                    "next_url": "/docs/httpd-storage-plugin/", 
+                    "next_title": "HTTPD Format Plugin", 
+                    "next_url": "/docs/httpd-format-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "MapR-DB Format", 
                     "previous_url": "/docs/mapr-db-format/", 
@@ -17728,9 +17728,9 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "S3 Storage Plugin", 
                     "previous_url": "/docs/s3-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-storage-plugin.md", 
-                    "title": "HTTPD Storage Plugin", 
-                    "url": "/docs/httpd-storage-plugin/"
+                    "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-format-plugin.md", 
+                    "title": "HTTPD Format Plugin", 
+                    "url": "/docs/httpd-format-plugin/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -17743,8 +17743,8 @@
                     "next_title": "Kafka Storage Plugin", 
                     "next_url": "/docs/kafka-storage-plugin/", 
                     "parent": "Connect a Data Source", 
-                    "previous_title": "HTTPD Storage Plugin", 
-                    "previous_url": "/docs/httpd-storage-plugin/", 
+                    "previous_title": "HTTPD Format Plugin", 
+                    "previous_url": "/docs/httpd-format-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/112-opentsdb-storage-plugin.md", 
                     "title": "OpenTSDB Storage Plugin", 
                     "url": "/docs/opentsdb-storage-plugin/"
