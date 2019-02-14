@@ -479,6 +479,14 @@ public class EvaluationVisitor {
 
       if (!hasReadPath && !complex) {
         JBlock eval = new JBlock();
+
+        if (repeated) {
+          JExpression expr = vv1.invoke("getReader");
+          // Set correct position to the reader
+          eval.add(expr.invoke("reset"));
+          eval.add(expr.invoke("setPosition").arg(recordIndex));
+        }
+
         GetSetVectorHelper.read(e.getMajorType(),  vv1, eval, out, generator.getModel(), recordIndex);
         generator.getEvalBlock().add(eval);
 
