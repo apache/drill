@@ -34,15 +34,11 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   private final RepeatedMapVector vector;
   private final Map<String, FieldReader> fields = Maps.newHashMap();
+  private int currentOffset;
+  private int maxOffset;
 
   public RepeatedMapReaderImpl(RepeatedMapVector vector) {
     this.vector = vector;
-  }
-
-  private void setChildrenPosition(int index) {
-    for (FieldReader r : fields.values()) {
-      r.setPosition(index);
-    }
   }
 
   @Override
@@ -63,16 +59,13 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public FieldReader reader() {
-    if (currentOffset == NO_VALUES) {
+    if (isNull()) {
       return NullReader.INSTANCE;
     }
 
     setChildrenPosition(currentOffset);
     return new SingleLikeRepeatedMapReaderImpl(vector, this);
   }
-
-  private int currentOffset;
-  private int maxOffset;
 
   @Override
   public void reset() {
@@ -87,10 +80,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public int size() {
-    if (isNull()) {
-      return 0;
-    }
-    return maxOffset - (currentOffset < 0 ? 0 : currentOffset);
+    return isNull() ? 0 : maxOffset - currentOffset;
   }
 
   @Override
@@ -106,8 +96,8 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
     if (h.start == h.end) {
       currentOffset = NO_VALUES;
     } else {
-      currentOffset = h.start-1;
-      maxOffset = h.end;
+      currentOffset = h.start - 1;
+      maxOffset = h.end - 1;
       setChildrenPosition(currentOffset);
     }
   }
@@ -129,7 +119,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public boolean next() {
-    if (currentOffset +1 < maxOffset) {
+    if (currentOffset < maxOffset) {
       setChildrenPosition(++currentOffset);
       return true;
     } else {
@@ -164,7 +154,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public void copyAsValue(MapWriter writer) {
-    if (currentOffset == NO_VALUES) {
+    if (isNull()) {
       return;
     }
     RepeatedMapWriter impl = (RepeatedMapWriter) writer;
@@ -172,7 +162,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   }
 
   public void copyAsValueSingle(MapWriter writer) {
-    if (currentOffset == NO_VALUES) {
+    if (isNull()) {
       return;
     }
     SingleMapWriter impl = (SingleMapWriter) writer;
@@ -181,11 +171,16 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public void copyAsField(String name, MapWriter writer) {
-    if (currentOffset == NO_VALUES) {
+    if (isNull()) {
       return;
     }
     RepeatedMapWriter impl = (RepeatedMapWriter) writer.map(name);
     impl.container.copyFromSafe(idx(), impl.idx(), vector);
   }
 
+  private void setChildrenPosition(int index) {
+    for (FieldReader r : fields.values()) {
+      r.setPosition(index);
+    }
+  }
 }
