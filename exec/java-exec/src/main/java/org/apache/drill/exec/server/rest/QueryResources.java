@@ -183,7 +183,7 @@ public class QueryResources {
     }
 
     //Used by results.ftl to indicate autoLimited resultset
-    public boolean resultsAutoLimited() {
+    public boolean isResultSetAutoLimited() {
       return autoLimitedRowCount != null && rows.size() == autoLimitedRowCount;
     }
 

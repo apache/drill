@@ -74,9 +74,9 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   private final QueryContextInformation queryContextInfo;
   private final ViewExpansionContext viewExpansionContext;
   private final SchemaTreeProvider schemaTreeProvider;
-  private Integer autoLimitRowCount; //Not final because this can be disabled for inapplicable scenarios
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
+  private Integer autoLimitRowCount;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -89,10 +89,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     this(session, drillbitContext, queryId, null);
   }
 
-  public QueryContext(final UserSession session, final DrillbitContext drillbitContext, final QueryId queryId, final Integer autoLimit) {
+  public QueryContext(final UserSession session, final DrillbitContext drillbitContext, final QueryId queryId, final Integer autoLimitRowCount) {
     this.drillbitContext = drillbitContext;
     this.session = session;
-    this.autoLimitRowCount = autoLimit;
+    this.autoLimitRowCount = autoLimitRowCount;
     this.queryId = queryId;
     queryOptions = new QueryOptionManager(session.getOptions());
     executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());

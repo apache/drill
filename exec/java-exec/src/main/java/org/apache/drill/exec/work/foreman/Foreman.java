@@ -57,7 +57,6 @@ import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.FailureUtils;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.rest.WebUserConnection;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
@@ -144,9 +143,8 @@ public class Foreman implements Runnable {
     this.initiatingClient = connection;
     this.closeFuture = initiatingClient.getChannelClosureFuture();
     closeFuture.addListener(closeListener);
-    //Extract any auto-limit for the resultSet in case of a WebUser invoked query
-    Integer autoLimitRowCount = (connection instanceof WebUserConnection) ? ((WebUserConnection) connection).getAutoLimitRowCount() : null;
-    this.queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId, autoLimitRowCount);
+
+    this.queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId, queryRequest.getAutolimitRowcount());
     this.queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
         drillbitContext.getClusterCoordinator(), this);
     this.queryRM = drillbitContext.getResourceManager().newQueryRM(this);

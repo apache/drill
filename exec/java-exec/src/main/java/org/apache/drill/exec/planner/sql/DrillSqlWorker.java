@@ -189,13 +189,11 @@ public class DrillSqlWorker {
     return handler.getPlan(sqlNode);
   }
 
-  //Check if AutoLimit should be applied
   private static boolean isAutoLimitShouldBeApplied(QueryContext context, SqlNode sqlNode) {
     return context.isAutoLimitEnabled() && sqlNode.getKind().belongsTo(SqlKind.QUERY)
         && (sqlNode.getKind() != SqlKind.ORDER_BY || isAutoLimitLessThanOrderByFetch((SqlOrderBy) sqlNode, context));
   }
 
-  //Check and apply auto Limit
   private static SqlNode checkAndApplyAutoLimit(SqlConverter parser, QueryContext context, String sql) {
     SqlNode sqlNode = parser.parse(sql);
     if (isAutoLimitShouldBeApplied(context, sqlNode)) {
@@ -206,12 +204,10 @@ public class DrillSqlWorker {
     return sqlNode;
   }
 
-  //Check if autoLimit is less than existing limit in the query
   private static boolean isAutoLimitLessThanOrderByFetch(SqlOrderBy orderBy, QueryContext context) {
     return orderBy.fetch == null || Integer.parseInt(orderBy.fetch.toString()) > context.getAutoLimitRowCount();
   }
 
-  //Wrap the query with the autoLimit value
   private static SqlNode wrapWithAutoLimit(SqlNode sqlNode, QueryContext context) {
     SqlNumericLiteral autoLimitLiteral = SqlLiteral.createExactNumeric(context.getAutoLimitRowCount().toString(), SqlParserPos.ZERO);
     if (sqlNode.getKind() == SqlKind.ORDER_BY) {

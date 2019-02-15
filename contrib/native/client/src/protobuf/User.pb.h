@@ -4824,6 +4824,13 @@ class RunQuery : public ::google::protobuf::Message {
   inline ::exec::user::PreparedStatementHandle* release_prepared_statement_handle();
   inline void set_allocated_prepared_statement_handle(::exec::user::PreparedStatementHandle* prepared_statement_handle);
 
+  // optional int32 autolimit_rowcount = 6;
+  inline bool has_autolimit_rowcount() const;
+  inline void clear_autolimit_rowcount();
+  static const int kAutolimitRowcountFieldNumber = 6;
+  inline ::google::protobuf::int32 autolimit_rowcount() const;
+  inline void set_autolimit_rowcount(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:exec.user.RunQuery)
  private:
   inline void set_has_results_mode();
@@ -4834,6 +4841,8 @@ class RunQuery : public ::google::protobuf::Message {
   inline void clear_has_plan();
   inline void set_has_prepared_statement_handle();
   inline void clear_has_prepared_statement_handle();
+  inline void set_has_autolimit_rowcount();
+  inline void clear_has_autolimit_rowcount();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -4842,9 +4851,10 @@ class RunQuery : public ::google::protobuf::Message {
   ::std::string* plan_;
   ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment > fragments_;
   ::exec::user::PreparedStatementHandle* prepared_statement_handle_;
+  ::google::protobuf::int32 autolimit_rowcount_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -11868,6 +11878,28 @@ inline void RunQuery::set_allocated_prepared_statement_handle(::exec::user::Prep
   } else {
     clear_has_prepared_statement_handle();
   }
+}
+
+// optional int32 autolimit_rowcount = 6;
+inline bool RunQuery::has_autolimit_rowcount() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void RunQuery::set_has_autolimit_rowcount() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void RunQuery::clear_has_autolimit_rowcount() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void RunQuery::clear_autolimit_rowcount() {
+  autolimit_rowcount_ = 0;
+  clear_has_autolimit_rowcount();
+}
+inline ::google::protobuf::int32 RunQuery::autolimit_rowcount() const {
+  return autolimit_rowcount_;
+}
+inline void RunQuery::set_autolimit_rowcount(::google::protobuf::int32 value) {
+  set_has_autolimit_rowcount();
+  autolimit_rowcount_ = value;
 }
 
 

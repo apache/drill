@@ -92,8 +92,8 @@
         "dom": '<"H"lCfr>t<"F"ip>',
         "jQueryUI" : true,
         "language": {
-              "infoEmpty": "No records to show <#if model.resultsAutoLimited()> [NOTE: Results are auto-limited to max ${model.getAutoLimitedRowCount()} rows]</#if>",
-              "info": "Showing _START_ to _END_ of _TOTAL_ entries <#if model.resultsAutoLimited()>[<b>NOTE:</b> Results are auto-limited to max ${model.getAutoLimitedRowCount()} rows]</#if>"
+              "infoEmpty": "No records to show <#if model.isResultSetAutoLimited()> [NOTE: Results are auto-limited to max ${model.getAutoLimitedRowCount()} rows]</#if>",
+              "info": "Showing _START_ to _END_ of _TOTAL_ entries <#if model.isResultSetAutoLimited()>[<b>NOTE:</b> Results are auto-limited to max ${model.getAutoLimitedRowCount()} rows]</#if>"
         }
       } );
     } );

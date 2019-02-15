@@ -201,10 +201,10 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
 
   /**
    * Sets an autolimit on the size of records to be sent back on the connection
-   * @param Max number of records to be sent back to WebServer
+   * @param autoLimitRowCount Max number of records to be sent back to WebServer
    */
-  void autoLimitResultSet(Integer autoLimitSize) {
-    this.autoLimitRowCount = autoLimitSize;
+  void setAutoLimitRowCount(Integer autoLimitRowCount) {
+    this.autoLimitRowCount = autoLimitRowCount;
   }
 
   /**
@@ -213,13 +213,5 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
    */
   public Integer getAutoLimitRowCount() {
     return this.autoLimitRowCount;
-  }
-
-  /**
-   * Indicates if resultset is autolimited
-   * @return
-   */
-  boolean isResultSetAutoLimited() {
-    return autoLimitRowCount != null;
   }
 }

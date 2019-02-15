@@ -77,7 +77,6 @@
         }
     }
 
-    //Close Warning
     function closeWarning(warningElemId) {
         document.getElementById(warningElemId).style.display="none";
     }
