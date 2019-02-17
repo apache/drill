@@ -189,7 +189,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
             null,
             null,
             null, "XXX")
-         .go();
+        .go();
   }
 
   @Test
@@ -204,7 +204,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
   @Test
   public void pushdownJoinAndFilterPushDown() throws Exception {
-    final String query = "select * from " +
+    String query = "select * from " +
             "mysql.`drill_mysql_test`.person e " +
             "INNER JOIN " +
             "mysql.`drill_mysql_test`.person s " +
@@ -251,5 +251,61 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
     // checks that tables with names in different case are recognized correctly
     assertEquals(1, queryBuilder().sql("describe caseSensitiveTable").run().recordCount());
     assertEquals(2, queryBuilder().sql("describe CASESENSITIVETABLE").run().recordCount());
+  }
+
+  @Test // DRILL-6734
+  public void testExpressionsWithoutAlias() throws Exception {
+    String query = "select count(*), 1+1+2+3+5+8+13+21+34, (1+sqrt(5))/2\n" +
+        "from mysql.`drill_mysql_test`.person";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("EXPR$0", "EXPR$1", "EXPR$2")
+        .baselineValues(4L, 88L, 1.618033988749895)
+        .go();
+  }
+
+  @Test // DRILL-6734
+  public void testExpressionsWithoutAliasesPermutations() throws Exception {
+    String query = "select EXPR$1, EXPR$0, EXPR$2\n" +
+        "from (select 1+1+2+3+5+8+13+21+34, (1+sqrt(5))/2, count(*) from mysql.`drill_mysql_test`.person)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("EXPR$1", "EXPR$0", "EXPR$2")
+        .baselineValues(1.618033988749895, 88L, 4L)
+        .go();
+  }
+
+  @Test // DRILL-6734
+  public void testExpressionsWithAliases() throws Exception {
+    String query = "select person_id as ID, 1+1+2+3+5+8+13+21+34 as FIBONACCI_SUM, (1+sqrt(5))/2 as golden_ratio\n" +
+        "from mysql.`drill_mysql_test`.person limit 2";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("ID", "FIBONACCI_SUM", "golden_ratio")
+        .baselineValues(1, 88L, 1.618033988749895)
+        .baselineValues(2, 88L, 1.618033988749895)
+        .go();
+  }
+
+  @Test // DRILL-6893
+  public void testJoinStar() throws Exception {
+    String query = "select * from (select person_id from mysql.`drill_mysql_test`.person) t1 join " +
+        "(select person_id from mysql.`drill_mysql_test`.person) t2 on t1.person_id = t2.person_id";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("person_id", "person_id0")
+        .baselineValues(1, 1)
+        .baselineValues(2, 2)
+        .baselineValues(3, 3)
+        .baselineValues(5, 5)
+        .go();
   }
 }
