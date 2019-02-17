@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
@@ -39,35 +38,39 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class JdbcGroupScan extends AbstractGroupScan {
 
   private final String sql;
+  private final List<String> columns;
   private final JdbcStoragePlugin plugin;
   private final double rows;
 
   @JsonCreator
   public JdbcGroupScan(
       @JsonProperty("sql") String sql,
+      @JsonProperty("columns") List<String> columns,
       @JsonProperty("config") StoragePluginConfig config,
       @JsonProperty("rows") double rows,
       @JacksonInject StoragePluginRegistry plugins) throws ExecutionSetupException {
     super("");
     this.sql = sql;
+    this.columns = columns;
     this.plugin = (JdbcStoragePlugin) plugins.getPlugin(config);
     this.rows = rows;
   }
 
-  JdbcGroupScan(String sql, JdbcStoragePlugin plugin, double rows) {
+  JdbcGroupScan(String sql, List<String> columns, JdbcStoragePlugin plugin, double rows) {
     super("");
     this.sql = sql;
+    this.columns = columns;
     this.plugin = plugin;
     this.rows = rows;
   }
 
   @Override
-  public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+  public void applyAssignments(List<DrillbitEndpoint> endpoints) {
   }
 
   @Override
-  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-    return new JdbcSubScan(sql, plugin);
+  public SubScan getSpecificScan(int minorFragmentId) {
+    return new JdbcSubScan(sql, columns, plugin);
   }
 
   @Override
@@ -88,9 +91,13 @@ public class JdbcGroupScan extends AbstractGroupScan {
     return sql;
   }
 
+  public List<String> getColumns() {
+    return columns;
+  }
+
   @Override
   public String getDigest() {
-    return sql + String.valueOf(plugin.getConfig());
+    return sql + plugin.getConfig();
   }
 
   public StoragePluginConfig getConfig() {
@@ -98,10 +105,7 @@ public class JdbcGroupScan extends AbstractGroupScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
-    return new JdbcGroupScan(sql, plugin, rows);
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
+    return new JdbcGroupScan(sql, columns, plugin, rows);
   }
-
-
-
 }

@@ -29,25 +29,31 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import java.util.List;
+
 @JsonTypeName("jdbc-sub-scan")
 public class JdbcSubScan extends AbstractSubScan {
 
   private final String sql;
   private final JdbcStoragePlugin plugin;
+  private final List<String> columns;
 
   @JsonCreator
   public JdbcSubScan(
       @JsonProperty("sql") String sql,
+      @JsonProperty("columns") List<String> columns,
       @JsonProperty("config") StoragePluginConfig config,
       @JacksonInject StoragePluginRegistry plugins) throws ExecutionSetupException {
     super("");
     this.sql = sql;
+    this.columns = columns;
     this.plugin = (JdbcStoragePlugin) plugins.getPlugin(config);
   }
 
-  JdbcSubScan(String sql, JdbcStoragePlugin plugin) {
+  JdbcSubScan(String sql, List<String> columns, JdbcStoragePlugin plugin) {
     super("");
     this.sql = sql;
+    this.columns = columns;
     this.plugin = plugin;
   }
 
@@ -60,6 +66,10 @@ public class JdbcSubScan extends AbstractSubScan {
     return sql;
   }
 
+  public List<String> getColumns() {
+    return columns;
+  }
+
   public StoragePluginConfig getConfig() {
     return plugin.getConfig();
   }
@@ -68,5 +78,4 @@ public class JdbcSubScan extends AbstractSubScan {
   public JdbcStoragePlugin getPlugin() {
     return plugin;
   }
-
 }

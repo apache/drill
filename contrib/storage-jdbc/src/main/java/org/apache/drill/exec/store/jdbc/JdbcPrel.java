@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -91,8 +90,8 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
   }
 
   @Override
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    JdbcGroupScan output = new JdbcGroupScan(sql, convention.getPlugin(), rows);
+  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) {
+    JdbcGroupScan output = new JdbcGroupScan(sql, rowType.getFieldNames(), convention.getPlugin(), rows);
     return creator.addMetadata(this, output);
   }
 

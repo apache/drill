@@ -63,7 +63,9 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
       URL scriptFile = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
       Assert.assertNotNull("Script for test tables generation 'h2-test-data.sql' " +
           "cannot be found in test resources", scriptFile);
-      RunScript.execute(connection, new FileReader(scriptFile.getFile()));
+      try (FileReader fileReader = new FileReader(scriptFile.getFile())) {
+        RunScript.execute(connection, fileReader);
+      }
     }
 
     startCluster(ClusterFixture.builder(dirTestWatcher));
