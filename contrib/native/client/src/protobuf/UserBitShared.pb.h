@@ -261,11 +261,12 @@ enum CoreOperatorType {
   PARTITION_LIMIT = 54,
   PCAPNG_SUB_SCAN = 55,
   RUNTIME_FILTER = 56,
-  ROWKEY_JOIN = 57
+  ROWKEY_JOIN = 57,
+  SYSLOG_SUB_SCAN = 58
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = ROWKEY_JOIN;
+const CoreOperatorType CoreOperatorType_MAX = SYSLOG_SUB_SCAN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();
