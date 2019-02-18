@@ -92,11 +92,11 @@ public class PcapRecordReader extends AbstractRecordReader {
         .build();
   }
 
-  public PcapRecordReader(final String pathToFile,
+  public PcapRecordReader(final Path pathToFile,
                           final FileSystem fileSystem,
                           final List<SchemaPath> projectedColumns) {
     this.fs = fileSystem;
-    this.pathToFile = fs.makeQualified(new Path(pathToFile));
+    this.pathToFile = fs.makeQualified(pathToFile);
     this.projectedColumns = projectedColumns;
   }
 

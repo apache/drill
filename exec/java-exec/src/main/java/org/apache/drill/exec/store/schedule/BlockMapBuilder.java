@@ -116,8 +116,8 @@ public class BlockMapBuilder {
         try {
           ImmutableRangeMap<Long, BlockLocation> rangeMap = getBlockMap(status);
           for (Entry<Range<Long>, BlockLocation> l : rangeMap.asMapOfRanges().entrySet()) {
-            work.add(new CompleteFileWork(getEndpointByteMap(noDrillbitHosts, new FileStatusWork(status)), l.getValue().getOffset(), l.getValue().getLength(), status.getPath()
-              .toString()));
+            work.add(new CompleteFileWork(getEndpointByteMap(noDrillbitHosts, new FileStatusWork(status)),
+                l.getValue().getOffset(), l.getValue().getLength(), status.getPath()));
           }
         } catch (IOException e) {
           logger.warn("failure while generating file work.", e);
@@ -127,7 +127,8 @@ public class BlockMapBuilder {
 
 
       if (!blockify || error || compressed(status)) {
-        work.add(new CompleteFileWork(getEndpointByteMap(noDrillbitHosts, new FileStatusWork(status)), 0, status.getLen(), status.getPath().toString()));
+        work.add(new CompleteFileWork(getEndpointByteMap(noDrillbitHosts, new FileStatusWork(status)), 0,
+            status.getLen(), status.getPath()));
       }
 
       // This if-condition is specific for empty CSV file
@@ -135,7 +136,8 @@ public class BlockMapBuilder {
       // And if this CSV file is empty, rangeMap would be empty also
       // Therefore, at the point before this if-condition, work would not be populated
       if(work.isEmpty()) {
-        work.add(new CompleteFileWork(getEndpointByteMap(noDrillbitHosts, new FileStatusWork(status)), 0, 0, status.getPath().toString()));
+        work.add(new CompleteFileWork(getEndpointByteMap(noDrillbitHosts, new FileStatusWork(status)), 0, 0,
+            status.getPath()));
       }
 
       if (noDrillbitHosts != null) {
@@ -162,8 +164,8 @@ public class BlockMapBuilder {
     }
 
     @Override
-    public String getPath() {
-      return status.getPath().toString();
+    public Path getPath() {
+      return status.getPath();
     }
 
     @Override
@@ -231,20 +233,20 @@ public class BlockMapBuilder {
    */
   public EndpointByteMap getEndpointByteMap(Set<String> noDrillbitHosts, FileWork work) throws IOException {
     Stopwatch watch = Stopwatch.createStarted();
-    Path fileName = new Path(work.getPath());
+    Path fileName = work.getPath();
 
 
-    ImmutableRangeMap<Long,BlockLocation> blockMap = getBlockMap(fileName);
+    ImmutableRangeMap<Long, BlockLocation> blockMap = getBlockMap(fileName);
     EndpointByteMapImpl endpointByteMap = new EndpointByteMapImpl();
     long start = work.getStart();
     long end = start + work.getLength();
     Range<Long> rowGroupRange = Range.closedOpen(start, end);
 
     // Find submap of ranges that intersect with the rowGroup
-    ImmutableRangeMap<Long,BlockLocation> subRangeMap = blockMap.subRangeMap(rowGroupRange);
+    ImmutableRangeMap<Long, BlockLocation> subRangeMap = blockMap.subRangeMap(rowGroupRange);
 
     // Iterate through each block in this submap and get the host for the block location
-    for (Map.Entry<Range<Long>,BlockLocation> block : subRangeMap.asMapOfRanges().entrySet()) {
+    for (Map.Entry<Range<Long>, BlockLocation> block : subRangeMap.asMapOfRanges().entrySet()) {
       String[] hosts;
       Range<Long> blockRange = block.getKey();
       try {

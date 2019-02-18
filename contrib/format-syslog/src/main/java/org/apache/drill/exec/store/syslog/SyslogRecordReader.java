@@ -32,7 +32,6 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
-import org.apache.hadoop.fs.Path;
 import org.realityforge.jsyslog.message.StructuredDataParameter;
 import org.realityforge.jsyslog.message.SyslogMessage;
 
@@ -95,7 +94,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
   private void openFile() {
     InputStream in;
     try {
-      in = fileSystem.open(new Path(fileWork.getPath()));
+      in = fileSystem.open(fileWork.getPath());
     } catch (Exception e) {
       throw UserException
               .dataReadError(e)

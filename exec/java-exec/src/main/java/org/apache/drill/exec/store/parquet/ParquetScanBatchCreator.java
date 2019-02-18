@@ -28,6 +28,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.List;
@@ -61,7 +62,7 @@ public class ParquetScanBatchCreator extends AbstractParquetScanBatchCreator imp
     }
 
     @Override
-    protected DrillFileSystem get(Configuration config, String path) throws ExecutionSetupException {
+    protected DrillFileSystem get(Configuration config, Path path) throws ExecutionSetupException {
       if (fs == null) {
         try {
           fs =  useAsyncPageReader ? operatorContext.newNonTrackingFileSystem(config) : operatorContext.newFileSystem(config);

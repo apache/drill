@@ -90,13 +90,13 @@ public class AvroRecordReader extends AbstractRecordReader {
 
 
   public AvroRecordReader(final FragmentContext fragmentContext,
-                          final String inputPath,
+                          final Path inputPath,
                           final long start,
                           final long length,
                           final FileSystem fileSystem,
                           final List<SchemaPath> projectedColumns,
                           final String userName) {
-    hadoop = new Path(inputPath);
+    hadoop = inputPath;
     this.start = start;
     this.end = start + length;
     buffer = fragmentContext.getManagedBuffer();
@@ -111,12 +111,8 @@ public class AvroRecordReader extends AbstractRecordReader {
   private DataFileReader<GenericContainer> getReader(final Path hadoop, final FileSystem fs) throws ExecutionSetupException {
     try {
       final UserGroupInformation ugi = ImpersonationUtil.createProxyUgi(this.opUserName, this.queryUserName);
-      return ugi.doAs(new PrivilegedExceptionAction<DataFileReader<GenericContainer>>() {
-        @Override
-        public DataFileReader<GenericContainer> run() throws Exception {
-          return new DataFileReader<>(new FsInput(hadoop, fs.getConf()), new GenericDatumReader<GenericContainer>());
-        }
-      });
+      return ugi.doAs((PrivilegedExceptionAction<DataFileReader<GenericContainer>>) () ->
+              new DataFileReader<>(new FsInput(hadoop, fs.getConf()), new GenericDatumReader<GenericContainer>()));
     } catch (IOException | InterruptedException e) {
       throw new ExecutionSetupException(
         String.format("Error in creating avro reader for file: %s", hadoop), e);

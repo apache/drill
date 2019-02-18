@@ -22,6 +22,7 @@ import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.hadoop.fs.Path;
 
 public class RowGroupReadEntry extends ReadEntryFromHDFS {
 
@@ -29,7 +30,7 @@ public class RowGroupReadEntry extends ReadEntryFromHDFS {
   private long numRecordsToRead;
 
   @JsonCreator
-  public RowGroupReadEntry(@JsonProperty("path") String path, @JsonProperty("start") long start,
+  public RowGroupReadEntry(@JsonProperty("path") Path path, @JsonProperty("start") long start,
                            @JsonProperty("length") long length, @JsonProperty("rowGroupIndex") int rowGroupIndex,
                            @JsonProperty("numRecordsToRead") long numRecordsToRead) {
     super(path, start, length);

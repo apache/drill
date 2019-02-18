@@ -52,7 +52,8 @@ public abstract class AbstractParquetScanBatchCreator {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractParquetScanBatchCreator.class);
 
-  protected ScanBatch getBatch(ExecutorFragmentContext context, AbstractParquetRowGroupScan rowGroupScan, OperatorContext oContext) throws ExecutionSetupException {
+  protected ScanBatch getBatch(ExecutorFragmentContext context, AbstractParquetRowGroupScan rowGroupScan,
+                               OperatorContext oContext) throws ExecutionSetupException {
     final ColumnExplorer columnExplorer = new ColumnExplorer(context.getOptions(), rowGroupScan.getColumns());
 
     if (!columnExplorer.isStarQuery()) {
@@ -63,7 +64,7 @@ public abstract class AbstractParquetScanBatchCreator {
     AbstractDrillFileSystemManager fsManager = getDrillFileSystemCreator(oContext, context.getOptions());
 
     // keep footers in a map to avoid re-reading them
-    Map<String, ParquetMetadata> footers = new HashMap<>();
+    Map<Path, ParquetMetadata> footers = new HashMap<>();
     List<RecordReader> readers = new LinkedList<>();
     List<Map<String, String>> implicitColumns = new ArrayList<>();
     Map<String, String> mapWithMaxColumns = new LinkedHashMap<>();
@@ -150,8 +151,8 @@ public abstract class AbstractParquetScanBatchCreator {
 
   protected abstract AbstractDrillFileSystemManager getDrillFileSystemCreator(OperatorContext operatorContext, OptionManager optionManager);
 
-  private ParquetMetadata readFooter(Configuration conf, String path, ParquetReaderConfig readerConfig) throws IOException {
-    try (ParquetFileReader reader = ParquetFileReader.open(HadoopInputFile.fromPath(new Path(path),
+  private ParquetMetadata readFooter(Configuration conf, Path path, ParquetReaderConfig readerConfig) throws IOException {
+    try (ParquetFileReader reader = ParquetFileReader.open(HadoopInputFile.fromPath(path,
       readerConfig.addCountersToConf(conf)), readerConfig.toReadOptions())) {
       return reader.getFooter();
     }
@@ -168,6 +169,6 @@ public abstract class AbstractParquetScanBatchCreator {
       this.operatorContext = operatorContext;
     }
 
-    protected abstract DrillFileSystem get(Configuration config, String path) throws ExecutionSetupException;
+    protected abstract DrillFileSystem get(Configuration config, Path path) throws ExecutionSetupException;
   }
 }

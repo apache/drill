@@ -24,6 +24,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.hadoop.fs.Path;
 
 
 public class FormatSelection {
@@ -32,16 +33,15 @@ public class FormatSelection {
   private FormatPluginConfig format;
   private FileSelection selection;
 
-  public FormatSelection(){}
+  public FormatSelection() {}
 
   @JsonCreator
-  public FormatSelection(@JsonProperty("format") FormatPluginConfig format, @JsonProperty("files") List<String> files){
+  public FormatSelection(@JsonProperty("format") FormatPluginConfig format, @JsonProperty("files") List<Path> files){
     this.format = format;
     this.selection = FileSelection.create(null, files, null);
   }
 
   public FormatSelection(FormatPluginConfig format, FileSelection selection) {
-    super();
     this.format = format;
     this.selection = selection;
   }
@@ -52,7 +52,7 @@ public class FormatSelection {
   }
 
   @JsonProperty("files")
-  public List<String> getAsFiles(){
+  public List<Path> getAsFiles(){
     return selection.getFiles();
   }
 

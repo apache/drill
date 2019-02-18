@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.hadoop.fs.Path;
+
 /*
  * PartitionLocation for the parquet auto partitioning scheme. We just store
  * the location of each partition within this class. Since the partition value
@@ -25,9 +27,9 @@ package org.apache.drill.exec.planner;
  * invoked.
  */
 public class ParquetPartitionLocation extends SimplePartitionLocation {
-  private final String file;
+  private final Path file;
 
-  public ParquetPartitionLocation(String file) {
+  public ParquetPartitionLocation(Path file) {
     this.file = file;
   }
 
@@ -48,7 +50,7 @@ public class ParquetPartitionLocation extends SimplePartitionLocation {
    * @return String location of the partition
    */
   @Override
-  public String getEntirePartitionLocation() {
+  public Path getEntirePartitionLocation() {
     return file;
   }
 }

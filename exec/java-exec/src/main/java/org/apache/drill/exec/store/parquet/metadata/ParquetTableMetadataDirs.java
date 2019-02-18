@@ -19,24 +19,25 @@ package org.apache.drill.exec.store.parquet.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.hadoop.fs.Path;
 
 import java.util.List;
 
 public class ParquetTableMetadataDirs {
 
   @JsonProperty
-  List<String> directories;
+  List<Path> directories;
 
   public ParquetTableMetadataDirs() {
     // default constructor needed for deserialization
   }
 
-  public ParquetTableMetadataDirs(List<String> directories) {
+  public ParquetTableMetadataDirs(List<Path> directories) {
     this.directories = directories;
   }
 
   @JsonIgnore
-  public List<String> getDirectories() {
+  public List<Path> getDirectories() {
     return directories;
   }
 

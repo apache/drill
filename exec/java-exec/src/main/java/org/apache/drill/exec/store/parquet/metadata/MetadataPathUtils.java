@@ -21,6 +21,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.hadoop.fs.Path;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Constants.SUPPORTED_VERSIONS;
@@ -39,12 +40,12 @@ public class MetadataPathUtils {
    * @param baseDir base parent directory
    * @return list of absolute paths
    */
-  public static List<String> convertToAbsolutePaths(List<String> paths, String baseDir) {
+  public static List<Path> convertToAbsolutePaths(List<Path> paths, String baseDir) {
     if (!paths.isEmpty()) {
-      List<String> absolutePaths = Lists.newArrayList();
-      for (String relativePath : paths) {
-        String absolutePath = (new Path(relativePath).isAbsolute()) ? relativePath
-            : new Path(baseDir, relativePath).toUri().getPath();
+      List<Path> absolutePaths = Lists.newArrayList();
+      for (Path relativePath : paths) {
+        Path absolutePath = (relativePath.isAbsolute()) ? relativePath
+            : new Path(baseDir, relativePath);
         absolutePaths.add(absolutePath);
       }
       return absolutePaths;
@@ -64,10 +65,10 @@ public class MetadataPathUtils {
     if (!files.isEmpty()) {
       List<ParquetFileMetadata_v3> filesWithAbsolutePaths = Lists.newArrayList();
       for (ParquetFileMetadata_v3 file : files) {
-        Path relativePath = new Path(file.getPath());
+        Path relativePath = file.getPath();
         // create a new file if old one contains a relative path, otherwise use an old file
         ParquetFileMetadata_v3 fileWithAbsolutePath = (relativePath.isAbsolute()) ? file
-            : new ParquetFileMetadata_v3(new Path(baseDir, relativePath).toUri().getPath(), file.length, file.rowGroups);
+            : new ParquetFileMetadata_v3(new Path(baseDir, relativePath), file.length, file.rowGroups);
         filesWithAbsolutePaths.add(fileWithAbsolutePath);
       }
       return filesWithAbsolutePaths;
@@ -84,9 +85,9 @@ public class MetadataPathUtils {
    * @return parquet table metadata with relative paths for the files and directories
    */
   public static ParquetTableMetadata_v3 createMetadataWithRelativePaths(
-      ParquetTableMetadata_v3 tableMetadataWithAbsolutePaths, String baseDir) {
-    List<String> directoriesWithRelativePaths = Lists.newArrayList();
-    for (String directory : tableMetadataWithAbsolutePaths.getDirectories()) {
+      ParquetTableMetadata_v3 tableMetadataWithAbsolutePaths, Path baseDir) {
+    List<Path> directoriesWithRelativePaths = new ArrayList<>();
+    for (Path directory : tableMetadataWithAbsolutePaths.getDirectories()) {
       directoriesWithRelativePaths.add(relativize(baseDir, directory));
     }
     List<ParquetFileMetadata_v3> filesWithRelativePaths = Lists.newArrayList();
@@ -105,9 +106,9 @@ public class MetadataPathUtils {
    * @param baseDir base path (the part of the Path, which should be cut off from child path)
    * @return relative path
    */
-  public static String relativize(String baseDir, String childPath) {
-    Path fullPathWithoutSchemeAndAuthority = Path.getPathWithoutSchemeAndAuthority(new Path(childPath));
-    Path basePathWithoutSchemeAndAuthority = Path.getPathWithoutSchemeAndAuthority(new Path(baseDir));
+  public static Path relativize(Path baseDir, Path childPath) {
+    Path fullPathWithoutSchemeAndAuthority = Path.getPathWithoutSchemeAndAuthority(childPath);
+    Path basePathWithoutSchemeAndAuthority = Path.getPathWithoutSchemeAndAuthority(baseDir);
 
     // Since hadoop Path hasn't relativize() we use uri.relativize() to get relative path
     Path relativeFilePath = new Path(basePathWithoutSchemeAndAuthority.toUri()
@@ -116,7 +117,7 @@ public class MetadataPathUtils {
       throw new IllegalStateException(String.format("Path %s is not a subpath of %s.",
           basePathWithoutSchemeAndAuthority.toUri().getPath(), fullPathWithoutSchemeAndAuthority.toUri().getPath()));
     }
-    return relativeFilePath.toUri().getPath();
+    return relativeFilePath;
   }
 
 }

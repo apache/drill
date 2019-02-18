@@ -18,19 +18,20 @@
 package org.apache.drill.exec.store.dfs;
 
 
+import org.apache.hadoop.fs.Path;
+
 public class ReadEntryWithPath {
 
-  protected String path;
+  protected Path path;
 
+  // Default constructor is needed for deserialization
+  public ReadEntryWithPath() {}
 
-  public ReadEntryWithPath(String path) {
-    super();
+  public ReadEntryWithPath(Path path) {
     this.path = path;
   }
 
-  public ReadEntryWithPath(){}
-
-  public String getPath(){
+  public Path getPath() {
    return path;
   }
 

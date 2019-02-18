@@ -21,16 +21,17 @@ import org.apache.drill.exec.store.dfs.easy.FileWork;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.hadoop.fs.Path;
 
 public class CompleteFileWork implements FileWork, CompleteWork {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompleteFileWork.class);
 
   private long start;
   private long length;
-  private String path;
+  private Path path;
   private EndpointByteMap byteMap;
 
-  public CompleteFileWork(EndpointByteMap byteMap, long start, long length, String path) {
+  public CompleteFileWork(EndpointByteMap byteMap, long start, long length, Path path) {
     super();
     this.start = start;
     this.length = length;
@@ -69,7 +70,7 @@ public class CompleteFileWork implements FileWork, CompleteWork {
   }
 
   @Override
-  public String getPath() {
+  public Path getPath() {
     return path;
   }
 
@@ -87,22 +88,28 @@ public class CompleteFileWork implements FileWork, CompleteWork {
     return new FileWorkImpl(start, length, path);
   }
 
-  public static class FileWorkImpl implements FileWork{
+  @Override
+  public String toString() {
+    return String.format("File: %s start: %d length: %d", path, start, length);
+  }
+
+  public static class FileWorkImpl implements FileWork {
+
+    private long start;
+    private long length;
+    private Path path;
 
     @JsonCreator
-    public FileWorkImpl(@JsonProperty("start") long start, @JsonProperty("length") long length, @JsonProperty("path") String path) {
-      super();
+    public FileWorkImpl(@JsonProperty("start") long start,
+                        @JsonProperty("length") long length,
+                        @JsonProperty("path") Path path) {
       this.start = start;
       this.length = length;
       this.path = path;
     }
 
-    public long start;
-    public long length;
-    public String path;
-
     @Override
-    public String getPath() {
+    public Path getPath() {
       return path;
     }
 
@@ -116,10 +123,13 @@ public class CompleteFileWork implements FileWork, CompleteWork {
       return length;
     }
 
-  }
-
-  @Override
-  public String toString() {
-    return String.format("File: %s start: %d length: %d", path, start, length);
+    @Override
+    public String toString() {
+      return "FileWorkImpl{" +
+          "start=" + start +
+          ", length=" + length +
+          ", path=" + path +
+          '}';
+    }
   }
 }

@@ -32,6 +32,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -59,11 +60,11 @@ public class TestMiniPlan extends MiniPlanUnitTestBase {
   @Test
   public void testSimpleParquetScan() throws Exception {
     String file = DrillFileUtils.getResourceAsFile("/tpchmulti/region/01.parquet").toURI().toString();
-
+    List<Path> filePath = Collections.singletonList(new Path(file));
     RecordBatch scanBatch = new ParquetScanBuilder()
         .fileSystem(fs)
         .columnsToRead("R_REGIONKEY")
-        .inputPaths(Lists.newArrayList(file))
+        .inputPaths(filePath)
         .build();
 
     BatchSchema expectedSchema = new SchemaBuilder()

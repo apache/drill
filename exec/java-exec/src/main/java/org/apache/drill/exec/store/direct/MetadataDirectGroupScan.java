@@ -18,12 +18,12 @@
 package org.apache.drill.exec.store.direct;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.hadoop.fs.Path;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,20 +37,20 @@ import java.util.List;
 @JsonTypeName("metadata-direct-scan")
 public class MetadataDirectGroupScan extends DirectGroupScan {
 
-  private final Collection<String> files;
+  private final Collection<Path> files;
 
-  public MetadataDirectGroupScan(RecordReader reader, Collection<String> files) {
+  public MetadataDirectGroupScan(RecordReader reader, Collection<Path> files) {
     super(reader);
     this.files = files;
   }
 
-  public MetadataDirectGroupScan(RecordReader reader, Collection<String> files, ScanStats stats) {
+  public MetadataDirectGroupScan(RecordReader reader, Collection<Path> files, ScanStats stats) {
     super(reader, stats);
     this.files = files;
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     assert children == null || children.isEmpty();
     return new MetadataDirectGroupScan(reader, files, stats);
   }

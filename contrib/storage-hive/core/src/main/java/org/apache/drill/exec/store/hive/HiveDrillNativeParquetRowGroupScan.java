@@ -124,7 +124,7 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
 
   @Override
   public Configuration getFsConf(RowGroupReadEntry rowGroupReadEntry) throws IOException {
-    Path path = new Path(rowGroupReadEntry.getPath()).getParent();
+    Path path = rowGroupReadEntry.getPath().getParent();
     return new ProjectionPusher().pushProjectionsAndFilters(
         new JobConf(HiveUtilities.generateHiveConf(hiveStoragePlugin.getHiveConf(), confProperties)),
         path.getParent());

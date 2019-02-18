@@ -143,8 +143,7 @@ public class PlanTestBase extends BaseTestQuery {
    *                     planning process throws an exception
    */
   public static void testPlanWithAttributesMatchingPatterns(String query, String[] expectedPatterns,
-                                                            String[] excludedPatterns)
-          throws Exception {
+                                                            String[] excludedPatterns) throws Exception {
     final String plan = getPlanInString("EXPLAIN PLAN INCLUDING ALL ATTRIBUTES for " +
             QueryTestUtil.normalizeQuery(query), OPTIQ_FORMAT);
 

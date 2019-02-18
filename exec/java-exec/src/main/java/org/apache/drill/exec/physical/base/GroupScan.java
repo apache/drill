@@ -30,6 +30,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.hadoop.fs.Path;
 
 /**
  * A GroupScan operator represents all data which will be scanned by a given physical
@@ -142,8 +143,10 @@ public interface GroupScan extends Scan, HasAffinity{
   /**
    * Returns a collection of file names associated with this GroupScan. This should be called after checking
    * hasFiles().  If this GroupScan cannot provide file names, it returns null.
+   *
+   * @return collection of files paths
    */
-  Collection<String> getFiles();
+  Collection<Path> getFiles();
 
   @JsonIgnore
   LogicalExpression getFilter();

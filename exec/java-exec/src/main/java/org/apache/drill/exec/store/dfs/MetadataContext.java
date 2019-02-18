@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.dfs;
 import java.util.Map;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.hadoop.fs.Path;
 
 /**
  * A metadata context that holds state across multiple invocations of
@@ -32,17 +33,17 @@ public class MetadataContext {
    *  Note: the #directories is typically a small percentage of the #files, so the memory footprint
    *  is expected to be relatively small.
    */
-  private Map<String, Boolean> dirModifCheckMap = Maps.newHashMap();
+  private Map<Path, Boolean> dirModifCheckMap = Maps.newHashMap();
 
   private PruneStatus pruneStatus = PruneStatus.NOT_STARTED;
 
   private boolean metadataCacheCorrupted;
 
-  public void setStatus(String dir) {
+  public void setStatus(Path dir) {
     dirModifCheckMap.put(dir,  true);
   }
 
-  public void clearStatus(String dir) {
+  public void clearStatus(Path dir) {
     dirModifCheckMap.put(dir,  false);
   }
 

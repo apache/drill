@@ -643,7 +643,7 @@ public class QueryBuilder {
    */
 
   protected String queryPlan(String columnName) throws Exception {
-    Preconditions.checkArgument(queryType == QueryType.SQL, "Can only explan an SQL query.");
+    Preconditions.checkArgument(queryType == QueryType.SQL, "Can only explain an SQL query.");
     final List<QueryDataBatch> results = results();
     final RecordBatchLoader loader = new RecordBatchLoader(client.allocator());
     final StringBuilder builder = new StringBuilder();

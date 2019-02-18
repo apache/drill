@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.parquet.metadata;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.hadoop.fs.Path;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 
@@ -57,7 +58,7 @@ public class MetadataBase {
   public static abstract class ParquetTableMetadataBase {
 
     @JsonIgnore
-    public abstract List<String> getDirectories();
+    public abstract List<Path> getDirectories();
 
     @JsonIgnore public abstract List<? extends ParquetFileMetadata> getFiles();
 
@@ -83,7 +84,7 @@ public class MetadataBase {
   }
 
   public static abstract class ParquetFileMetadata {
-    @JsonIgnore public abstract String getPath();
+    @JsonIgnore public abstract Path getPath();
 
     @JsonIgnore public abstract Long getLength();
 

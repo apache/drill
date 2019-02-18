@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.drill.exec.store.dfs.MetadataContext;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Abstract base class for file system based partition descriptors and Hive partition descriptors.
@@ -65,7 +66,7 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
 
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot,
+  public TableScan createTableScan(List<PartitionLocation> newPartitions, Path cacheFileRoot,
       boolean isAllPruned, MetadataContext metaContext) throws Exception {
     throw new UnsupportedOperationException();
   }

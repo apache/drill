@@ -41,6 +41,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -272,11 +273,12 @@ public class TestNullInputMiniPlan extends MiniPlanUnitTestBase{
     RecordBatch left = createScanBatchFromJson(SINGLE_EMPTY_JSON);
 
     String file = DrillFileUtils.getResourceAsFile("/tpchmulti/region/01.parquet").toURI().toString();
+    List<Path> filePath = Collections.singletonList(new Path(file));
 
     RecordBatch scanBatch = new ParquetScanBuilder()
         .fileSystem(fs)
         .columnsToRead("R_REGIONKEY")
-        .inputPaths(Lists.newArrayList(file))
+        .inputPaths(filePath)
         .build();
 
     RecordBatch projectBatch = new PopBuilder()
@@ -554,10 +556,10 @@ public class TestNullInputMiniPlan extends MiniPlanUnitTestBase{
   }
 
   private RecordBatch createScanBatchFromJson(String... resourcePaths) throws Exception {
-    List<String> inputPaths = new ArrayList<>();
+    List<Path> inputPaths = new ArrayList<>();
 
     for (String resource : resourcePaths) {
-      inputPaths.add(DrillFileUtils.getResourceAsFile(resource).toURI().toString());
+      inputPaths.add(new Path(DrillFileUtils.getResourceAsFile(resource).toURI()));
     }
 
     RecordBatch scanBatch = new JsonScanBuilder()

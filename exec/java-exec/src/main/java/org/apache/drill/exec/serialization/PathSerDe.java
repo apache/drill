@@ -15,31 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.sql;
+package org.apache.drill.exec.serialization;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.exec.planner.SimplePartitionLocation;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import org.apache.hadoop.fs.Path;
 
-import java.util.List;
+import java.io.IOException;
 
-public class HivePartitionLocation extends SimplePartitionLocation {
-  private final Path partitionLocation;
-  private final List<String> partitionValues;
+/**
+ * Path serializer to simple String path. Without it the hadoop Path serialization creates a big JSON object.
+ */
+public class PathSerDe {
 
-  public HivePartitionLocation(List<String> partitionValues, Path partitionLocation) {
-    this.partitionValues = ImmutableList.copyOf(partitionValues);
-    this.partitionLocation = partitionLocation;
-  }
+  public static class Se extends JsonSerializer<Path> {
 
-  @Override
-  public String getPartitionValue(int index) {
-    assert index < partitionValues.size();
-    return partitionValues.get(index);
-  }
-
-  @Override
-  public Path getEntirePartitionLocation() {
-    return partitionLocation;
+    @Override
+    public void serialize(Path value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      gen.writeString(value.toUri().getPath());
+    }
   }
 }

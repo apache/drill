@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.hadoop.fs.Path;
+
 import java.util.List;
 
 /**
@@ -37,27 +39,27 @@ public interface PartitionLocation {
   /**
    * Returns the value of the 'index' partition column
    */
-  public String getPartitionValue(int index);
+  String getPartitionValue(int index);
 
   /**
-   * Returns the string representation of this partition.
+   * Returns the path of this partition.
    * Only a non-composite partition supports this.
    */
-  public String getEntirePartitionLocation();
+  Path getEntirePartitionLocation();
 
   /**
    * Returns the list of the non-composite partitions that this partition consists of.
    */
-  public List<SimplePartitionLocation> getPartitionLocationRecursive();
+  List<SimplePartitionLocation> getPartitionLocationRecursive();
 
   /**
    * Returns if this is a simple or composite partition.
    */
-  public boolean isCompositePartition();
+  boolean isCompositePartition();
 
   /**
    * Returns the path string of directory names only for composite partition
    */
-  public String getCompositePartitionPath();
+  Path getCompositePartitionPath();
 
 }

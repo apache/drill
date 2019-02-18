@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.hadoop.fs.Path;
 
 /**
@@ -24,28 +25,14 @@ import org.apache.hadoop.fs.Path;
  */
 public class DFSFilePartitionLocation extends SimplePartitionLocation {
   private final String[] dirs;
-  private final String file;
+  private final Path file;
 
-  public DFSFilePartitionLocation(int max, String selectionRoot, String file, boolean hasDirsOnly) {
+  public DFSFilePartitionLocation(int max, Path selectionRoot, Path file, boolean hasDirsOnly) {
     this.file = file;
     this.dirs = new String[max];
 
-    // strip the scheme and authority if they exist
-    selectionRoot = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot)).toString();
-
-    int start = file.indexOf(selectionRoot) + selectionRoot.length();
-    String postPath = file.substring(start);
-    if (postPath.length() == 0) {
-      return;
-    }
-    if(postPath.charAt(0) == '/'){
-      postPath = postPath.substring(1);
-    }
-    String[] mostDirs = postPath.split("/");
-    int maxLoop = Math.min(max, hasDirsOnly ? mostDirs.length : mostDirs.length - 1);
-    for(int i =0; i < maxLoop; i++) {
-      this.dirs[i] = mostDirs[i];
-    }
+    String[] dirs = ColumnExplorer.parsePartitions(this.file, selectionRoot, hasDirsOnly);
+    System.arraycopy(dirs, 0, this.dirs, 0, Math.min(max, dirs.length));
   }
 
   /**
@@ -64,7 +51,7 @@ public class DFSFilePartitionLocation extends SimplePartitionLocation {
    * @return The partition location.
    */
   @Override
-  public String getEntirePartitionLocation() {
+  public Path getEntirePartitionLocation() {
     return file;
   }
 
