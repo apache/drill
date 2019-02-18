@@ -41,6 +41,7 @@
   <modules>
     <module>storage-hbase</module>
     <module>format-maprdb</module>
+    <module>format-syslog</module>
     <module>storage-hive</module>
     <module>storage-mongo</module>
     <module>storage-jdbc</module>

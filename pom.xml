@@ -340,6 +340,8 @@
             <exclude>**/*.log2</exclude>
             <exclude>**/*.sqllog</exclude>
             <exclude>**/*.sqllog2</exclude>
+            <exclude>**/*.syslog</exclude>
+            <exclude>**/*.syslog1</exclude>
             <exclude>**/*.log</exclude>
             <exclude>**/*.css</exclude>
             <exclude>**/*.js</exclude>
@@ -601,6 +603,8 @@
               <exclude>**/*.woff2</exclude>
               <exclude>**/*.ks</exclude>
               <exclude>**/*.pcap</exclude>
+              <exclude>**/*.syslog</exclude>
+              <exclude>**/*.syslog1</exclude>
               <exclude>**/*.props</exclude>
               <exclude>**/*.conf</exclude>
               <exclude>**/*.log</exclude>

@@ -754,7 +754,7 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "entState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCA"
     "TION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCAN"
     "CELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQ"
-    "UESTED\020\006*\222\t\n\020CoreOperatorType\022\021\n\rSINGLE_"
+    "UESTED\020\006*\247\t\n\020CoreOperatorType\022\021\n\rSINGLE_"
     "SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FILTER"
     "\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n"
     "\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDER\020\006"
@@ -783,11 +783,11 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "TPPD_LOG_SUB_SCAN\0203\022\022\n\016IMAGE_SUB_SCAN\0204\022"
     "\025\n\021SEQUENCE_SUB_SCAN\0205\022\023\n\017PARTITION_LIMI"
     "T\0206\022\023\n\017PCAPNG_SUB_SCAN\0207\022\022\n\016RUNTIME_FILT"
-    "ER\0208\022\017\n\013ROWKEY_JOIN\0209*g\n\nSaslStatus\022\020\n\014S"
-    "ASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN"
-    "_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FA"
-    "ILED\020\004B.\n\033org.apache.drill.exec.protoB\rU"
-    "serBitSharedH\001", 5534);
+    "ER\0208\022\017\n\013ROWKEY_JOIN\0209\022\023\n\017SYSLOG_SUB_SCAN"
+    "\020:*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSA"
+    "SL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL"
+    "_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.apach"
+    "e.drill.exec.protoB\rUserBitSharedH\001", 5555);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   UserCredentials::default_instance_ = new UserCredentials();
@@ -966,6 +966,7 @@ bool CoreOperatorType_IsValid(int value) {
     case 55:
     case 56:
     case 57:
+    case 58:
       return true;
     default:
       return false;
