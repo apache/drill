@@ -52,7 +52,7 @@ public class FileMetadata {
       return;
     }
 
-    dirPath = ColumnExplorer.parsePartitions(filePath.toString(), rootPath.toString());
+    dirPath = ColumnExplorer.parsePartitions(filePath, rootPath, false);
     if (dirPath == null) {
       throw new IllegalArgumentException(
           String.format("Selection root of \"%s\" is not a leading path of \"%s\"",

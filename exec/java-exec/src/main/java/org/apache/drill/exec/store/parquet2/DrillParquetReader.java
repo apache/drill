@@ -235,7 +235,7 @@ public class DrillParquetReader extends AbstractRecordReader {
         paths.put(md.getPath(), md);
       }
 
-      Path filePath = new Path(entry.getPath());
+      Path filePath = entry.getPath();
 
       BlockMetaData blockMetaData = footer.getBlocks().get(entry.getRowGroupIndex());
 

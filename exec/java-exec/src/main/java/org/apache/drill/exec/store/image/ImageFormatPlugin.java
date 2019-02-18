@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -57,11 +56,9 @@ public class ImageFormatPlugin extends EasyFormatPlugin<ImageFormatConfig> {
 
   @Override
   public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
-      List<SchemaPath> columns, String userName) throws ExecutionSetupException {
-    return new ImageRecordReader(context, dfs, fileWork.getPath(),
-        ((ImageFormatConfig)formatConfig).hasFileSystemMetadata(),
-        ((ImageFormatConfig)formatConfig).isDescriptive(),
-        ((ImageFormatConfig)formatConfig).getTimeZone());
+      List<SchemaPath> columns, String userName) {
+    return new ImageRecordReader(context, dfs, fileWork.getPath(), formatConfig.hasFileSystemMetadata(),
+        formatConfig.isDescriptive(), formatConfig.getTimeZone());
   }
 
   @Override

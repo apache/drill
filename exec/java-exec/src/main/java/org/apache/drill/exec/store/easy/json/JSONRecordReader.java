@@ -76,7 +76,7 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @param columns  pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */
-  public JSONRecordReader(final FragmentContext fragmentContext, final String inputPath, final DrillFileSystem fileSystem,
+  public JSONRecordReader(final FragmentContext fragmentContext, final Path inputPath, final DrillFileSystem fileSystem,
       final List<SchemaPath> columns) throws OutOfMemoryException {
     this(fragmentContext, inputPath, null, fileSystem, columns);
   }
@@ -89,14 +89,13 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @param columns  pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */
-  public JSONRecordReader(final FragmentContext fragmentContext, final JsonNode embeddedContent,
-      final DrillFileSystem fileSystem, final List<SchemaPath> columns) throws OutOfMemoryException {
+  public JSONRecordReader(FragmentContext fragmentContext, JsonNode embeddedContent, DrillFileSystem fileSystem,
+      List<SchemaPath> columns) throws OutOfMemoryException {
     this(fragmentContext, null, embeddedContent, fileSystem, columns);
   }
 
-  private JSONRecordReader(final FragmentContext fragmentContext, final String inputPath,
-      final JsonNode embeddedContent, final DrillFileSystem fileSystem,
-      final List<SchemaPath> columns) {
+  private JSONRecordReader(FragmentContext fragmentContext, Path inputPath, JsonNode embeddedContent,
+      DrillFileSystem fileSystem, List<SchemaPath> columns) {
 
     Preconditions.checkArgument(
         (inputPath == null && embeddedContent != null) ||
@@ -105,7 +104,7 @@ public class JSONRecordReader extends AbstractRecordReader {
         );
 
     if (inputPath != null) {
-      this.hadoopPath = new Path(inputPath);
+      this.hadoopPath = inputPath;
     } else {
       this.embeddedContent = embeddedContent;
     }

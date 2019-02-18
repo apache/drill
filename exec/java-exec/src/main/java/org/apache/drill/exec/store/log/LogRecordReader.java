@@ -41,9 +41,6 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableTimeVector;
 
-
-import org.apache.hadoop.fs.Path;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -522,7 +519,7 @@ public class LogRecordReader extends AbstractRecordReader {
   private void openFile() {
     InputStream in;
     try {
-      in = dfs.open(new Path(fileWork.getPath()));
+      in = dfs.open(fileWork.getPath());
     } catch (Exception e) {
       throw UserException
           .dataReadError(e)

@@ -82,7 +82,7 @@ public class TestFileScanFramework extends SubOperatorTest {
     }
 
     @Override
-    public String getPath() { return path.toString(); }
+    public Path getPath() { return path; }
 
     @Override
     public long getStart() { return 0; }

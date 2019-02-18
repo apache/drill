@@ -52,6 +52,7 @@ import org.apache.drill.exec.store.schedule.AffinityCreator;
 import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
 import org.apache.drill.exec.store.schedule.EndpointByteMapImpl;
+import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -80,7 +81,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
   protected ParquetTableMetadataBase parquetTableMetadata;
   protected List<RowGroupInfo> rowGroupInfos;
   protected ListMultimap<Integer, RowGroupInfo> mappings;
-  protected Set<String> fileSet;
+  protected Set<Path> fileSet;
   protected ParquetReaderConfig readerConfig;
 
   private List<EndpointAffinity> endpointAffinities;
@@ -146,7 +147,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
 
   @JsonIgnore
   @Override
-  public Collection<String> getFiles() {
+  public Collection<Path> getFiles() {
     return fileSet;
   }
 
@@ -428,12 +429,12 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
   }
 
   @JsonIgnore
-  public <T> T getPartitionValue(String path, SchemaPath column, Class<T> clazz) {
+  public <T> T getPartitionValue(Path path, SchemaPath column, Class<T> clazz) {
     return clazz.cast(parquetGroupScanStatistics.getPartitionValue(path, column));
   }
 
   @JsonIgnore
-  public Set<String> getFileSet() {
+  public Set<Path> getFileSet() {
     return fileSet;
   }
   // partition pruning methods end
@@ -441,7 +442,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
   // helper method used for partition pruning and filter push down
   @Override
   public void modifyFileSelection(FileSelection selection) {
-    List<String> files = selection.getFiles();
+    List<Path> files = selection.getFiles();
     fileSet = new HashSet<>(files);
     entries = new ArrayList<>(files.size());
 
@@ -464,7 +465,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
     if (fileSet == null) {
       fileSet = new HashSet<>();
       fileSet.addAll(parquetTableMetadata.getFiles().stream()
-          .map((Function<ParquetFileMetadata, String>) ParquetFileMetadata::getPath)
+          .map((Function<ParquetFileMetadata, Path>) ParquetFileMetadata::getPath)
           .collect(Collectors.toSet()));
     }
 
@@ -505,7 +506,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
   // abstract methods block start
   protected abstract void initInternal() throws IOException;
   protected abstract Collection<CoordinationProtos.DrillbitEndpoint> getDrillbits();
-  protected abstract AbstractParquetGroupScan cloneWithFileSelection(Collection<String> filePaths) throws IOException;
+  protected abstract AbstractParquetGroupScan cloneWithFileSelection(Collection<Path> filePaths) throws IOException;
   protected abstract boolean supportsFileImplicitColumns();
   protected abstract List<String> getPartitionValues(RowGroupInfo rowGroupInfo);
   // abstract methods block end
@@ -520,7 +521,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
    * @return new parquet group scan
    */
   private AbstractParquetGroupScan cloneWithRowGroupInfos(List<RowGroupInfo> rowGroupInfos) throws IOException {
-    Set<String> filePaths = rowGroupInfos.stream()
+    Set<Path> filePaths = rowGroupInfos.stream()
       .map(ReadEntryWithPath::getPath)
       .collect(Collectors.toSet()); // set keeps file names unique
     AbstractParquetGroupScan scan = cloneWithFileSelection(filePaths);

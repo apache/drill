@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.hive;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.hadoop.fs.Path;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,11 +35,11 @@ import java.util.Map;
  */
 public class HivePartitionHolder {
 
-  private final Map<String, Integer> keyToIndexMapper;
+  private final Map<Path, Integer> keyToIndexMapper;
   private final List<List<String>> partitionValues;
 
   @JsonCreator
-  public HivePartitionHolder(@JsonProperty("keyToIndexMapper") Map<String, Integer> keyToIndexMapper,
+  public HivePartitionHolder(@JsonProperty("keyToIndexMapper") Map<Path, Integer> keyToIndexMapper,
                              @JsonProperty("partitionValues") List<List<String>> partitionValues) {
     this.keyToIndexMapper = keyToIndexMapper;
     this.partitionValues = partitionValues;
@@ -50,7 +51,7 @@ public class HivePartitionHolder {
   }
 
   @JsonProperty
-  public Map<String, Integer> getKeyToIndexMapper() {
+  public Map<Path, Integer> getKeyToIndexMapper() {
     return keyToIndexMapper;
   }
 
@@ -67,7 +68,7 @@ public class HivePartitionHolder {
    * @param key mapper key
    * @param values partition values
    */
-  public void add(String key, List<String> values) {
+  public void add(Path key, List<String> values) {
     int index = partitionValues.indexOf(values);
     if (index == -1) {
       index = partitionValues.size();
@@ -84,7 +85,7 @@ public class HivePartitionHolder {
    * @param key mapper key
    * @return list of partition values
    */
-  public List<String> get(String key) {
+  public List<String> get(Path key) {
     Integer index = keyToIndexMapper.get(key);
     if (index == null) {
       return Collections.emptyList();

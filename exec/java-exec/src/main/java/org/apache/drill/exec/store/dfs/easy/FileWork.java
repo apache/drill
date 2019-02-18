@@ -17,8 +17,14 @@
  */
 package org.apache.drill.exec.store.dfs.easy;
 
+
+import org.apache.hadoop.fs.Path;
+
 public interface FileWork {
-  String getPath();
+
+  Path getPath();
+
   long getStart();
+
   long getLength();
 }

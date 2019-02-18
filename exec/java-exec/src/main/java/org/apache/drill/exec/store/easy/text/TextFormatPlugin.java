@@ -82,7 +82,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
                                       FileWork fileWork,
                                       List<SchemaPath> columns,
                                       String userName) {
-    Path path = dfs.makeQualified(new Path(fileWork.getPath()));
+    Path path = dfs.makeQualified(fileWork.getPath());
     FileSplit split = new FileSplit(path, fileWork.getStart(), fileWork.getLength(), new String[]{""});
 
     if (context.getOptions().getBoolean(ExecConstants.ENABLE_NEW_TEXT_READER_KEY)) {

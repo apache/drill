@@ -114,7 +114,7 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
       assert split instanceof FileSplit;
       FileSplit fileSplit = (FileSplit) split;
       Path finalPath = fileSplit.getPath();
-      String pathString = Path.getPathWithoutSchemeAndAuthority(finalPath).toString();
+      Path pathString = Path.getPathWithoutSchemeAndAuthority(finalPath);
       entries.add(new ReadEntryWithPath(pathString));
 
       // store partition values per path
@@ -205,7 +205,7 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
   protected void initInternal() throws IOException {
     Map<FileStatus, FileSystem> fileStatusConfMap = new LinkedHashMap<>();
     for (ReadEntryWithPath entry : entries) {
-      Path path = new Path(entry.getPath());
+      Path path = entry.getPath();
       Configuration conf = new ProjectionPusher().pushProjectionsAndFilters(
           new JobConf(hiveStoragePlugin.getHiveConf()),
           path.getParent());
@@ -221,7 +221,7 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
   }
 
   @Override
-  protected AbstractParquetGroupScan cloneWithFileSelection(Collection<String> filePaths) throws IOException {
+  protected AbstractParquetGroupScan cloneWithFileSelection(Collection<Path> filePaths) throws IOException {
     FileSelection newSelection = new FileSelection(null, new ArrayList<>(filePaths), null, null, false);
     return clone(newSelection);
   }

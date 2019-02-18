@@ -45,7 +45,8 @@ public class PhysicalPlan {
   Graph<PhysicalOperator, Root, Leaf> graph;
 
   @JsonCreator
-  public PhysicalPlan(@JsonProperty("head") PlanProperties properties, @JsonProperty("graph") List<PhysicalOperator> operators){
+  public PhysicalPlan(@JsonProperty("head") PlanProperties properties,
+                      @JsonProperty("graph") List<PhysicalOperator> operators) {
     this.properties = properties;
     this.graph = Graph.newGraph(operators, Root.class, Leaf.class);
   }

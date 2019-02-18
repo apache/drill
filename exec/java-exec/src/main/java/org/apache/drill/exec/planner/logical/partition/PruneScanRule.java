@@ -74,6 +74,9 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.hadoop.fs.Path;
+
+import static org.apache.drill.exec.util.DrillFileSystemUtil.createPathSafe;
 
 
 public abstract class PruneScanRule extends StoragePluginOptimizerRule {
@@ -372,7 +375,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       // handle the case all partitions are filtered out.
       boolean canDropFilter = true;
       boolean wasAllPartitionsPruned = false;
-      String cacheFileRoot = null;
+      Path cacheFileRoot = null;
 
       if (newPartitions.isEmpty()) {
         assert firstLocation != null;
@@ -388,7 +391,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
         // set the cacheFileRoot appropriately
         if (firstLocation.isCompositePartition()) {
-          cacheFileRoot = descriptor.getBaseTableLocation() + firstLocation.getCompositePartitionPath();
+          cacheFileRoot = Path.mergePaths(descriptor.getBaseTableLocation(), firstLocation.getCompositePartitionPath());
         }
       }
 
@@ -408,7 +411,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         // if metadata cache file could potentially be used, then assign a proper cacheFileRoot
         int index = -1;
         if (!matchBitSet.isEmpty()) {
-          String path = "";
+          StringBuilder path = new StringBuilder();
           index = matchBitSet.length() - 1;
 
           for (int j = 0; j < matchBitSet.length(); j++) {
@@ -420,9 +423,10 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
             }
           }
           for (int j=0; j <= index; j++) {
-            path += "/" + spInfo[j];
+            path.append("/")
+                .append(spInfo[j]);
           }
-          cacheFileRoot = descriptor.getBaseTableLocation() + path;
+          cacheFileRoot = Path.mergePaths(descriptor.getBaseTableLocation(), createPathSafe(path.toString()));
         }
         if (index != maxIndex) {
           // if multiple partitions are being selected, we should not drop the filter

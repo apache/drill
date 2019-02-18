@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -52,6 +51,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.hadoop.fs.Path;
 
 @JsonTypeName("fs-scan")
 public class EasyGroupScan extends AbstractFileGroupScan {
@@ -65,17 +65,17 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   private ListMultimap<Integer, CompleteFileWork> mappings;
   private List<CompleteFileWork> chunks;
   private List<EndpointAffinity> endpointAffinities;
-  private String selectionRoot;
+  private Path selectionRoot;
 
   @JsonCreator
   public EasyGroupScan(
       @JsonProperty("userName") String userName,
-      @JsonProperty("files") List<String> files, //
-      @JsonProperty("storage") StoragePluginConfig storageConfig, //
-      @JsonProperty("format") FormatPluginConfig formatConfig, //
-      @JacksonInject StoragePluginRegistry engineRegistry, //
+      @JsonProperty("files") List<Path> files,
+      @JsonProperty("storage") StoragePluginConfig storageConfig,
+      @JsonProperty("format") FormatPluginConfig formatConfig,
+      @JacksonInject StoragePluginRegistry engineRegistry,
       @JsonProperty("columns") List<SchemaPath> columns,
-      @JsonProperty("selectionRoot") String selectionRoot
+      @JsonProperty("selectionRoot") Path selectionRoot
       ) throws IOException, ExecutionSetupException {
         this(ImpersonationUtil.resolveUserName(userName),
             FileSelection.create(null, files, selectionRoot),
@@ -84,17 +84,17 @@ public class EasyGroupScan extends AbstractFileGroupScan {
             selectionRoot);
   }
 
-  public EasyGroupScan(String userName, FileSelection selection, EasyFormatPlugin<?> formatPlugin, String selectionRoot)
+  public EasyGroupScan(String userName, FileSelection selection, EasyFormatPlugin<?> formatPlugin, Path selectionRoot)
       throws IOException {
     this(userName, selection, formatPlugin, ALL_COLUMNS, selectionRoot);
   }
 
   public EasyGroupScan(
       String userName,
-      FileSelection selection, //
-      EasyFormatPlugin<?> formatPlugin, //
+      FileSelection selection,
+      EasyFormatPlugin<?> formatPlugin,
       List<SchemaPath> columns,
-      String selectionRoot
+      Path selectionRoot
       ) throws IOException{
     super(userName);
     this.selection = Preconditions.checkNotNull(selection);
@@ -106,12 +106,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
 
   @JsonIgnore
   public Iterable<CompleteFileWork> getWorkIterable() {
-    return new Iterable<CompleteFileWork>() {
-      @Override
-      public Iterator<CompleteFileWork> iterator() {
-        return Iterators.unmodifiableIterator(chunks.iterator());
-      }
-    };
+    return () -> Iterators.unmodifiableIterator(chunks.iterator());
   }
 
   private EasyGroupScan(final EasyGroupScan that) {
@@ -136,7 +131,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
   }
 
-  public String getSelectionRoot() {
+  public Path getSelectionRoot() {
     return selectionRoot;
   }
 
@@ -158,7 +153,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
 
   @JsonProperty("files")
   @Override
-  public List<String> getFiles() {
+  public List<Path> getFiles() {
     return selection.getFiles();
   }
 

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.hadoop.fs.Path;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
@@ -43,19 +44,19 @@ public class Metadata_V1 {
     @JsonProperty(value = "metadata_version", access = JsonProperty.Access.WRITE_ONLY) private String metadataVersion;
     @JsonProperty
     List<ParquetFileMetadata_v1> files;
-    @JsonProperty List<String> directories;
+    @JsonProperty List<Path> directories;
 
     public ParquetTableMetadata_v1() {
     }
 
-    public ParquetTableMetadata_v1(String metadataVersion, List<ParquetFileMetadata_v1> files, List<String> directories) {
+    public ParquetTableMetadata_v1(String metadataVersion, List<ParquetFileMetadata_v1> files, List<Path> directories) {
       this.metadataVersion = metadataVersion;
       this.files = files;
       this.directories = directories;
     }
 
     @JsonIgnore
-    @Override public List<String> getDirectories() {
+    @Override public List<Path> getDirectories() {
       return directories;
     }
 
@@ -114,7 +115,7 @@ public class Metadata_V1 {
    */
   public static class ParquetFileMetadata_v1 extends ParquetFileMetadata {
     @JsonProperty
-    public String path;
+    public Path path;
     @JsonProperty
     public Long length;
     @JsonProperty
@@ -123,7 +124,7 @@ public class Metadata_V1 {
     public ParquetFileMetadata_v1() {
     }
 
-    public ParquetFileMetadata_v1(String path, Long length, List<RowGroupMetadata_v1> rowGroups) {
+    public ParquetFileMetadata_v1(Path path, Long length, List<RowGroupMetadata_v1> rowGroups) {
       this.path = path;
       this.length = length;
       this.rowGroups = rowGroups;
@@ -134,7 +135,7 @@ public class Metadata_V1 {
       return String.format("path: %s rowGroups: %s", path, rowGroups);
     }
 
-    @JsonIgnore @Override public String getPath() {
+    @JsonIgnore @Override public Path getPath() {
       return path;
     }
 

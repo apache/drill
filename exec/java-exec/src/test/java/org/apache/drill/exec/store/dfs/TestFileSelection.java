@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs;
 
 import static junit.framework.TestCase.fail;
+import static org.apache.drill.exec.util.DrillFileSystemUtil.createPathSafe;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
@@ -30,7 +31,7 @@ import org.junit.Test;
 
 public class TestFileSelection extends BaseTestQuery {
   private static final List<FileStatus> EMPTY_STATUSES = ImmutableList.of();
-  private static final List<String> EMPTY_FILES = ImmutableList.of();
+  private static final List<Path> EMPTY_FILES = ImmutableList.of();
   private static final String EMPTY_ROOT = "";
 
   @Test
@@ -38,8 +39,8 @@ public class TestFileSelection extends BaseTestQuery {
     for (final Object statuses : new Object[] { null, EMPTY_STATUSES}) {
       for (final Object files : new Object[]{null, EMPTY_FILES}) {
         for (final Object root : new Object[]{null, EMPTY_ROOT}) {
-          final FileSelection selection = FileSelection.create((List<FileStatus>) statuses, (List<String>) files,
-              (String)root);
+          FileSelection selection =
+              FileSelection.create((List<FileStatus>) statuses, (List<Path>) files, createPathSafe((String) root));
           assertNull(selection);
         }
       }

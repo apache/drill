@@ -108,8 +108,8 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
       FileSystemPlugin plugin = (FileSystemPlugin) drillTable.getPlugin();
       DrillFileSystem fs = new DrillFileSystem(plugin.getFormatPlugin(formatSelection.getFormat()).getFsConf());
 
-      String selectionRoot = formatSelection.getSelection().selectionRoot;
-      if (!fs.getFileStatus(new Path(selectionRoot)).isDirectory()) {
+      Path selectionRoot = formatSelection.getSelection().getSelectionRoot();
+      if (!fs.getFileStatus(selectionRoot).isDirectory()) {
         return notSupported(tableName);
       }
 

@@ -21,7 +21,9 @@
 package org.apache.drill.exec.planner;
 
 
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.hadoop.fs.Path;
 
 import java.util.Collection;
 import java.util.List;
@@ -46,7 +48,7 @@ public class DFSDirPartitionLocation implements PartitionLocation {
   }
 
   @Override
-  public String getEntirePartitionLocation() {
+  public Path getEntirePartitionLocation() {
     throw new UnsupportedOperationException("Should not call getEntirePartitionLocation for composite partition location!");
   }
 
@@ -67,15 +69,17 @@ public class DFSDirPartitionLocation implements PartitionLocation {
   }
 
   @Override
-  public String getCompositePartitionPath() {
-    String path = "";
-    for (int i=0; i < dirs.length; i++) {
-      if (dirs[i] == null) { // get the prefix
+  public Path getCompositePartitionPath() {
+    StringBuilder path = new StringBuilder();
+    for (String dir : dirs) {
+      if (dir == null) { // get the prefix
         break;
       }
-      path += "/" + dirs[i];
+      path.append("/")
+          .append(dir);
     }
-    return path;
+
+    return DrillFileSystemUtil.createPathSafe(path.toString());
   }
 
 }

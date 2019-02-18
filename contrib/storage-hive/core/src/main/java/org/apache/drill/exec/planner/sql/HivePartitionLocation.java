@@ -19,17 +19,19 @@ package org.apache.drill.exec.planner.sql;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.planner.SimplePartitionLocation;
+import org.apache.hadoop.fs.Path;
 
 import java.util.List;
 
 public class HivePartitionLocation extends SimplePartitionLocation {
-  private final String partitionLocation;
+  private final Path partitionLocation;
   private final List<String> partitionValues;
 
-  public HivePartitionLocation(final List<String> partitionValues, final String partitionLocation) {
+  public HivePartitionLocation(List<String> partitionValues, Path partitionLocation) {
     this.partitionValues = ImmutableList.copyOf(partitionValues);
     this.partitionLocation = partitionLocation;
   }
+
   @Override
   public String getPartitionValue(int index) {
     assert index < partitionValues.size();
@@ -37,7 +39,7 @@ public class HivePartitionLocation extends SimplePartitionLocation {
   }
 
   @Override
-  public String getEntirePartitionLocation() {
+  public Path getEntirePartitionLocation() {
     return partitionLocation;
   }
 }

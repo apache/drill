@@ -65,11 +65,11 @@ public class PcapngRecordReader extends AbstractRecordReader {
 
   private Iterator<IPcapngType> it;
 
-  public PcapngRecordReader(final String pathToFile,
+  public PcapngRecordReader(final Path pathToFile,
                             final FileSystem fileSystem,
                             final List<SchemaPath> columns) {
     this.fs = fileSystem;
-    this.pathToFile = fs.makeQualified(new Path(pathToFile));
+    this.pathToFile = fs.makeQualified(pathToFile);
     this.columns = columns;
     setColumns(columns);
   }

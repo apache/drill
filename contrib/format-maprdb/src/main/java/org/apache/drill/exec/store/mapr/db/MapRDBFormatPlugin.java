@@ -180,9 +180,9 @@ public class MapRDBFormatPlugin extends TableFormatPlugin {
    */
   @JsonIgnore
   public String getTableName(FileSelection selection) {
-    List<String> files = selection.getFiles();
+    List<Path> files = selection.getFiles();
     assert (files.size() == 1);
-    return files.get(0);
+    return files.get(0).toUri().getPath();
   }
 
 }

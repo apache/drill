@@ -90,7 +90,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   public boolean useBulkReader;
 
   @SuppressWarnings("unused")
-  private String name;
+  private Path name;
 
   public ParquetReaderStats parquetReaderStats = new ParquetReaderStats();
   private BatchReader batchReader;
@@ -123,44 +123,42 @@ public class ParquetRecordReader extends AbstractRecordReader {
   }
 
   public ParquetRecordReader(FragmentContext fragmentContext,
-      String path,
+      Path path,
       int rowGroupIndex,
       long numRecordsToRead,
       FileSystem fs,
       CodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
-      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) throws ExecutionSetupException {
-    this(fragmentContext, numRecordsToRead,
-         path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
+    this(fragmentContext, numRecordsToRead, path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
   }
 
   public ParquetRecordReader(FragmentContext fragmentContext,
-      String path,
+      Path path,
       int rowGroupIndex,
       FileSystem fs,
       CodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
-      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus)
-      throws ExecutionSetupException {
-      this(fragmentContext, footer.getBlocks().get(rowGroupIndex).getRowCount(),
-           path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
+    this(fragmentContext, footer.getBlocks().get(rowGroupIndex).getRowCount(), path, rowGroupIndex, fs, codecFactory,
+        footer, columns, dateCorruptionStatus);
   }
 
   public ParquetRecordReader(
       FragmentContext fragmentContext,
       long numRecordsToRead,
-      String path,
+      Path path,
       int rowGroupIndex,
       FileSystem fs,
       CodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
-      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) throws ExecutionSetupException {
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
 
     this.name = path;
-    this.hadoopPath = new Path(path);
+    this.hadoopPath = path;
     this.fileSystem = fs;
     this.codecFactory = codecFactory;
     this.rowGroupIndex = rowGroupIndex;

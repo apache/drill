@@ -23,6 +23,7 @@ import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.drill.exec.store.schedule.CompleteWork;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
+import org.apache.hadoop.fs.Path;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class RowGroupInfo extends ReadEntryFromHDFS implements CompleteWork, Fil
   private long numRecordsToRead;
 
   @JsonCreator
-  public RowGroupInfo(@JsonProperty("path") String path,
+  public RowGroupInfo(@JsonProperty("path") Path path,
                       @JsonProperty("start") long start,
                       @JsonProperty("length") long length,
                       @JsonProperty("rowGroupIndex") int rowGroupIndex,

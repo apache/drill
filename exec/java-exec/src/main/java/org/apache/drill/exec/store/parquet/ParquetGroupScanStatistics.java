@@ -21,6 +21,7 @@ import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.hadoop.fs.Path;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 
@@ -41,7 +42,7 @@ import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ParquetTa
 public class ParquetGroupScanStatistics {
 
   // map from file names to maps of column name to partition value mappings
-  private Map<String, Map<SchemaPath, Object>> partitionValueMap;
+  private Map<Path, Map<SchemaPath, Object>> partitionValueMap;
   // only for partition columns : value is unique for each partition
   private Map<SchemaPath, TypeProtos.MajorType> partitionColTypeMap;
   // total number of non-null value for each column in parquet files
@@ -78,7 +79,7 @@ public class ParquetGroupScanStatistics {
     return rowCount;
   }
 
-  public Object getPartitionValue(String path, SchemaPath column) {
+  public Object getPartitionValue(Path path, SchemaPath column) {
     return partitionValueMap.get(path).get(column);
   }
 

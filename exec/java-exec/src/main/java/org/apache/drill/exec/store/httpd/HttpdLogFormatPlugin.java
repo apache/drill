@@ -192,7 +192,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
             HttpdLogFormatPlugin.this.getConfig().getTimestampFormat(),
             fieldMapping);
 
-        final Path path = fs.makeQualified(new Path(work.getPath()));
+        final Path path = fs.makeQualified(work.getPath());
         FileSplit split = new FileSplit(path, work.getStart(), work.getLength(), new String[]{""});
         TextInputFormat inputFormat = new TextInputFormat();
         JobConf job = new JobConf(fs.getConf());

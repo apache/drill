@@ -36,6 +36,7 @@ import org.apache.drill.exec.store.hive.HiveUtilities;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.Partition;
 
 import java.util.BitSet;
@@ -87,9 +88,9 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public String getBaseTableLocation() {
+  public Path getBaseTableLocation() {
     HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).getHiveReadEntry();
-    return origEntry.table.getTable().getSd().getLocation();
+    return new Path(origEntry.table.getTable().getSd().getLocation());
   }
 
   @Override
@@ -145,7 +146,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     List<PartitionLocation> locations = new LinkedList<>();
     HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).getHiveReadEntry();
     for (Partition partition: origEntry.getPartitions()) {
-      locations.add(new HivePartitionLocation(partition.getValues(), partition.getSd().getLocation()));
+      locations.add(new HivePartitionLocation(partition.getValues(), new Path(partition.getSd().getLocation())));
     }
     locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
     sublistsCreated = true;
@@ -170,7 +171,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     List<HiveTableWrapper.HivePartitionWrapper> newPartitions = Lists.newLinkedList();
 
     for (HiveTableWrapper.HivePartitionWrapper part: oldPartitions) {
-      String partitionLocation = part.getPartition().getSd().getLocation();
+      Path partitionLocation = new Path(part.getPartition().getSd().getLocation());
       for (PartitionLocation newPartitionLocation: newPartitionLocations) {
         if (partitionLocation.equals(newPartitionLocation.getEntirePartitionLocation())) {
           newPartitions.add(part);

@@ -15,29 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.dfs;
+package org.apache.drill.exec.serialization;
 
-
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import org.apache.hadoop.fs.Path;
 
-public class ReadEntryWithPath {
+import java.io.IOException;
 
-  protected Path path;
+/**
+ * Path serializer to simple String path. Without it the hadoop Path serialization creates a big JSON object.
+ */
+public class PathSerDe {
 
-  // Default constructor is needed for deserialization
-  public ReadEntryWithPath(){}
+  public static class Se extends JsonSerializer<Path> {
 
-  public ReadEntryWithPath(Path path) {
-    this.path = path;
+    @Override
+    public void serialize(Path value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      gen.writeString(value.toUri().getPath());
+    }
   }
-
-  public Path getPath(){
-   return path;
-  }
-
-  @Override
-  public String toString() {
-    return "ReadEntryWithPath [path=" + path + "]";
-  }
-
 }

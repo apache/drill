@@ -134,17 +134,17 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public String getBaseTableLocation() {
+  public Path getBaseTableLocation() {
     final FormatSelection origSelection = (FormatSelection) scanRel.getDrillTable().getSelection();
     return origSelection.getSelection().selectionRoot;
   }
 
   @Override
   public TableScan createTableScan(List<PartitionLocation> newPartitionLocation,
-                                   String cacheFileRoot,
+                                   Path cacheFileRoot,
                                    boolean wasAllPartitionsPruned,
                                    MetadataContext metaContext) throws Exception {
-    List<String> newFiles = new ArrayList<>();
+    List<Path> newFiles = new ArrayList<>();
     for (final PartitionLocation location : newPartitionLocation) {
       newFiles.add(location.getEntirePartitionLocation());
     }
@@ -172,17 +172,17 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   protected void createPartitionSublists() {
-    Set<String> fileLocations = groupScan.getFileSet();
+    Set<Path> fileLocations = groupScan.getFileSet();
     List<PartitionLocation> locations = new LinkedList<>();
-    for (String file : fileLocations) {
+    for (Path file : fileLocations) {
       locations.add(new ParquetPartitionLocation(file));
     }
     locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
     sublistsCreated = true;
   }
 
-  private GroupScan createNewGroupScan(List<String> newFiles,
-                                       String cacheFileRoot,
+  private GroupScan createNewGroupScan(List<Path> newFiles,
+                                       Path cacheFileRoot,
                                        boolean wasAllPartitionsPruned,
                                        MetadataContext metaContext) throws IOException {
 
@@ -194,8 +194,8 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     return groupScan.clone(newSelection);
   }
 
-  private void populatePruningVector(ValueVector v, int index, SchemaPath column, String file) {
-    String path = Path.getPathWithoutSchemeAndAuthority(new Path(file)).toString();
+  private void populatePruningVector(ValueVector v, int index, SchemaPath column, Path file) {
+    Path path = Path.getPathWithoutSchemeAndAuthority(file);
     TypeProtos.MajorType majorType = getVectorType(column, null);
     TypeProtos.MinorType type = majorType.getMinorType();
     switch (type) {

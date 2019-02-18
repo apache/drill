@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.hadoop.fs.Path;
 
 import java.util.List;
 
@@ -26,14 +27,14 @@ import java.util.List;
  * location of the entire partition and also stores the
  * value of the individual partition keys for this partition.
  */
-public abstract  class SimplePartitionLocation implements PartitionLocation{
+public abstract class SimplePartitionLocation implements PartitionLocation{
   @Override
   public boolean isCompositePartition() {
     return false;
   }
 
   @Override
-  public String getCompositePartitionPath() {
+  public Path getCompositePartitionPath() {
     throw new UnsupportedOperationException();
   }
 

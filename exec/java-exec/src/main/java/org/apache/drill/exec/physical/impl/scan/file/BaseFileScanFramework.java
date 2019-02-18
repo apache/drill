@@ -110,7 +110,7 @@ public abstract class BaseFileScanFramework<T extends BaseFileScanFramework.File
 
     List<Path> paths = new ArrayList<>();
     for (FileWork work : files) {
-      Path path = dfs.makeQualified(new Path(work.getPath()));
+      Path path = dfs.makeQualified(work.getPath());
       paths.add(path);
       FileSplit split = new FileSplit(path, work.getStart(), work.getLength(), new String[]{""});
       spilts.add(split);
