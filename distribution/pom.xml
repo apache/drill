@@ -196,9 +196,7 @@
         <inherited>true</inherited>
         <configuration>
           <excludes>
-            <exclude>**/conffiles</exclude>
             <exclude>**/git.properties</exclude>
-            <exclude>**/control</exclude>
             <exclude>**/*.checkstyle</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/README.md</exclude>
@@ -361,7 +359,7 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>rpm-maven-plugin</artifactId>
-            <version>2.1-alpha-3</version>
+            <version>2.2.0</version>
             <executions>
               <execution>
                 <id>generate-rpm</id>
@@ -371,26 +369,49 @@
               </execution>
             </executions>
             <configuration>
-              <copyright>2013 ASF</copyright>
+              <license>${project.organization} ${project.licenses}</license>
               <group>Apache Software Foundation</group>
               <prefix>/opt</prefix>
-              <release>SNAPSHOT</release>
-              <version>1.0</version>
-              <name>drill</name>
+              <version>${project.version}</version>
+              <name>apache-drill</name>
               <mappings>
                 <mapping>
-                  <directory>/opt/drill/bin</directory>
+                  <directory>/opt/drill</directory>
                   <sources>
                     <source>
-                      <location>target/drill-${project.version}-bin/drill-${project.version}/bin</location>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/git.properties</location>
                     </source>
                   </sources>
                 </mapping>
                 <mapping>
-                  <directory>/opt/drill/lib</directory>
+                  <directory>/opt/drill</directory>
                   <sources>
                     <source>
-                      <location>target/drill-${project.version}-bin/drill-${project.version}/lib</location>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/KEYS</location>
+                    </source>
+                  </sources>
+                </mapping>
+                <mapping>
+                  <directory>/opt/drill</directory>
+                  <sources>
+                    <source>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/LICENSE</location>
+                    </source>
+                  </sources>
+                </mapping>
+                <mapping>
+                  <directory>/opt/drill</directory>
+                  <sources>
+                    <source>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/NOTICE</location>
+                    </source>
+                  </sources>
+                </mapping>
+                <mapping>
+                  <directory>/opt/drill</directory>
+                  <sources>
+                    <source>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/README.md</location>
                     </source>
                   </sources>
                 </mapping>
@@ -398,7 +419,23 @@
                   <directory>/opt/drill/jars</directory>
                   <sources>
                     <source>
-                      <location>target/drill-${project.version}-bin/drill-${project.version}/jars</location>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/jars</location>
+                    </source>
+                  </sources>
+                </mapping>
+                <mapping>
+                  <directory>/opt/drill/bin</directory>
+                  <sources>
+                    <source>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/bin</location>
+                    </source>
+                  </sources>
+                </mapping>
+                <mapping>
+		<directory>/opt/drill/sample-data</directory>
+                  <sources>
+                    <source>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/sample-data</location>
                     </source>
                   </sources>
                 </mapping>
@@ -406,7 +443,7 @@
                   <directory>/etc/drill/conf</directory>
                   <sources>
                     <source>
-                      <location>target/drill-${project.version}-bin/drill-${project.version}/conf</location>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/conf</location>
                     </source>
                   </sources>
                   <configuration>true</configuration>
@@ -433,7 +470,7 @@
           <plugin>
             <artifactId>jdeb</artifactId>
             <groupId>org.vafer</groupId>
-            <version>1.0</version>
+            <version>1.7</version>
             <executions>
               <execution>
                 <phase>package</phase>
@@ -441,18 +478,51 @@
                   <goal>jdeb</goal>
                 </goals>
                 <configuration>
-                  <deb>target/drill-${project.version}.deb</deb>
+                  <skipPOMs>false</skipPOMs>
+                  <deb>distribution/target/apache-drill-${project.version}/apache-drill-${project.version}.deb</deb>
                   <dataSet>
                     <data>
-                      <src>target/drill-${project.version}-bin/drill-${project.version}/lib</src>
-                      <type>directory</type>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/git.properties</src>
+                      <type>file</type>
                       <mapper>
                         <type>perm</type>
-                        <prefix>/opt/drill/lib/</prefix>
+                        <prefix>/opt/drill/</prefix>
                       </mapper>
                     </data>
                     <data>
-                      <src>target/drill-${project.version}-bin/drill-${project.version}/jars</src>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/KEYS</src>
+                      <type>file</type>
+                      <mapper>
+                        <type>perm</type>
+                        <prefix>/opt/drill/</prefix>
+                      </mapper>
+                    </data>
+                    <data>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/LICENSE</src>
+                      <type>file</type>
+                      <mapper>
+                        <type>perm</type>
+                        <prefix>/opt/drill/</prefix>
+                      </mapper>
+                    </data>
+                    <data>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/NOTICE</src>
+                      <type>file</type>
+                      <mapper>
+                        <type>perm</type>
+                        <prefix>/opt/drill/</prefix>
+                      </mapper>
+                    </data>
+                    <data>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/README.md</src>
+                      <type>file</type>
+                      <mapper>
+                        <type>perm</type>
+                        <prefix>/opt/drill/</prefix>
+                      </mapper>
+                    </data>
+                    <data>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/jars</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -460,7 +530,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/drill-${project.version}-bin/drill-${project.version}/bin</src>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/bin</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -469,7 +539,16 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/drill-${project.version}-bin/drill-${project.version}/conf</src>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/sample-data</src>
+                      <type>directory</type>
+                      <mapper>
+                        <type>perm</type>
+                        <prefix>/opt/drill/sample-data</prefix>
+                        <filemode>755</filemode>
+                      </mapper>
+                    </data>
+                    <data>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/conf</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
