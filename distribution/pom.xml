@@ -441,18 +441,10 @@
                   <goal>jdeb</goal>
                 </goals>
                 <configuration>
-                  <deb>target/drill-${project.version}.deb</deb>
+                  <deb>target/apache-drill-${project.version}.deb</deb>
                   <dataSet>
                     <data>
-                      <src>target/drill-${project.version}-bin/drill-${project.version}/lib</src>
-                      <type>directory</type>
-                      <mapper>
-                        <type>perm</type>
-                        <prefix>/opt/drill/lib/</prefix>
-                      </mapper>
-                    </data>
-                    <data>
-                      <src>target/drill-${project.version}-bin/drill-${project.version}/jars</src>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/jars</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -460,7 +452,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/drill-${project.version}-bin/drill-${project.version}/bin</src>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/bin</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -469,7 +461,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/drill-${project.version}-bin/drill-${project.version}/conf</src>
+                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/conf</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
