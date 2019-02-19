@@ -382,15 +382,7 @@
                   <directory>/opt/drill/bin</directory>
                   <sources>
                     <source>
-                      <location>target/drill-${project.version}-bin/drill-${project.version}/bin</location>
-                    </source>
-                  </sources>
-                </mapping>
-                <mapping>
-                  <directory>/opt/drill/lib</directory>
-                  <sources>
-                    <source>
-                      <location>target/drill-${project.version}-bin/drill-${project.version}/lib</location>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/bin</location>
                     </source>
                   </sources>
                 </mapping>
@@ -398,7 +390,7 @@
                   <directory>/opt/drill/jars</directory>
                   <sources>
                     <source>
-                      <location>target/drill-${project.version}-bin/drill-${project.version}/jars</location>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/jars</location>
                     </source>
                   </sources>
                 </mapping>
@@ -406,7 +398,7 @@
                   <directory>/etc/drill/conf</directory>
                   <sources>
                     <source>
-                      <location>target/drill-${project.version}-bin/drill-${project.version}/conf</location>
+                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/conf</location>
                     </source>
                   </sources>
                   <configuration>true</configuration>
