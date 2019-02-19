@@ -678,6 +678,16 @@ public final class ExecConstants {
   public static final LongValidator QUEUE_TIMEOUT = new PositiveLongValidator("exec.queue.timeout_millis", Long.MAX_VALUE,
       new OptionDescription("Indicates how long a query can wait in queue before the query fails. Range: 0-9223372036854775807"));
 
+  // New Smart RM boot time configs
+  public static final String RM_QUERY_TAGS_KEY = "exec.rm.queryTags";
+  public static final StringValidator RM_QUERY_TAGS_VALIDATOR = new StringValidator(RM_QUERY_TAGS_KEY,
+    new OptionDescription("Allows user to set coma separated list of tags for all the queries submitted over a session"));
+
+  public static final String RM_QUEUES_WAIT_FOR_PREFERRED_NODES_KEY = "exec.rm.queues.wait_for_preferred_nodes";
+  public static final StringValidator RM_QUEUES_WAIT_FOR_PREFERRED_NODES_VALIDATOR = new StringValidator
+    (RM_QUEUES_WAIT_FOR_PREFERRED_NODES_KEY, new OptionDescription("Allows user to enable/disable " +
+      "wait_for_preferred_nodes configuration across rm queues for all the queries submitted over a session"));
+
   // Ratio of memory for small queries vs. large queries.
   // Each small query gets 1 unit, each large query gets QUEUE_MEMORY_RATIO units.
   // A lower limit of 1 enforces the intuition that a large query should never get

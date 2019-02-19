@@ -83,6 +83,8 @@ public final class DrillProperties extends Properties {
   public static final String TLS_PROVIDER = "TLSProvider";
   public static final String USE_SYSTEM_TRUSTSTORE = "useSystemTrustStore";
 
+  public static final String QUERY_TAGS = "queryTags";
+
   // Although all properties from the application are sent to the server (from the client), the following
   // sets of properties are used by the client and server respectively. These are reserved words.
 
@@ -94,14 +96,15 @@ public final class DrillProperties extends Properties {
           SERVICE_PRINCIPAL, SERVICE_NAME, SERVICE_HOST, REALM, KEYTAB, KERBEROS_FROM_SUBJECT,
           ENABLE_TLS, TLS_PROTOCOL, TRUSTSTORE_TYPE, TRUSTSTORE_PATH, TRUSTSTORE_PASSWORD,
           DISABLE_HOST_VERIFICATION, DISABLE_CERT_VERIFICATION, TLS_HANDSHAKE_TIMEOUT, TLS_PROVIDER,
-          USE_SYSTEM_TRUSTSTORE
+          USE_SYSTEM_TRUSTSTORE, QUERY_TAGS
       );
 
   public static final ImmutableSet<String> ACCEPTED_BY_SERVER = ImmutableSet.of(
       USER /** deprecated */, PASSWORD /** deprecated */,
       SCHEMA,
       IMPERSONATION_TARGET,
-      QUOTING_IDENTIFIERS
+      QUOTING_IDENTIFIERS,
+      QUERY_TAGS
   );
 
   private DrillProperties() {

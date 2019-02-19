@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
@@ -119,14 +120,34 @@ public class UserSession implements AutoCloseable {
       return this;
     }
 
-    public UserSession build() {
+    private boolean canApplyUserProperty() {
+      final StringBuilder sb = new StringBuilder();
       if (userSession.properties.containsKey(DrillProperties.QUOTING_IDENTIFIERS)) {
-        if (userSession.sessionOptions != null) {
+        sb.append(DrillProperties.QUOTING_IDENTIFIERS).append(",");
+      }
+
+      if (userSession.properties.containsKey(DrillProperties.QUERY_TAGS)) {
+        sb.append(DrillProperties.QUERY_TAGS);
+      }
+
+      if (userSession.sessionOptions == null && sb.length() > 0) {
+        logger.warn("User property {} can't be installed as a server option without the session option manager",
+          sb.toString());
+        return false;
+      }
+      return true;
+    }
+
+    public UserSession build() {
+      if (canApplyUserProperty()) {
+        if (userSession.properties.containsKey(DrillProperties.QUOTING_IDENTIFIERS)) {
           userSession.setSessionOption(PlannerSettings.QUOTING_IDENTIFIERS_KEY,
-              userSession.properties.getProperty(DrillProperties.QUOTING_IDENTIFIERS));
-        } else {
-          logger.warn("User property {} can't be installed as a server option without the session option manager",
-              DrillProperties.QUOTING_IDENTIFIERS);
+            userSession.properties.getProperty(DrillProperties.QUOTING_IDENTIFIERS));
+        }
+
+        if (userSession.properties.containsKey(DrillProperties.QUERY_TAGS)) {
+          userSession.setSessionOption(ExecConstants.RM_QUERY_TAGS_KEY,
+            userSession.properties.getProperty(DrillProperties.QUERY_TAGS));
         }
       }
       UserSession session = userSession;

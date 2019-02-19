@@ -197,7 +197,8 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
   }
 
   /**
-   * {@link AbstractRemoteConnection} implementation for user connection. Also implements {@link UserClientConnection}.
+   * {@link org.apache.drill.exec.rpc.AbstractRemoteConnection} implementation for user connection.
+   * Also implements {@link UserClientConnection}.
    */
   public class BitToUserConnection extends AbstractServerConnection<BitToUserConnection>
       implements UserClientConnection {
