@@ -79,7 +79,7 @@ public class QueryWrapper {
     final RunQuery runQuery = RunQuery.newBuilder().setType(getType())
         .setPlan(getQuery())
         .setResultsMode(QueryResultsMode.STREAM_FULL)
-        .setAutolimitRowcount(autoLimitRowCount)
+        .setAutolimitRowcount(autoLimitRowCount == null ? 0 : autoLimitRowCount)
         .build();
 
     webUserConnection.setAutoLimitRowCount(autoLimitRowCount);

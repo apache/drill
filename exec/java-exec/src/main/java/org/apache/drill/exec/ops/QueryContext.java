@@ -284,7 +284,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    * @return True if auto-limit is enabled
    */
   public boolean isAutoLimitEnabled() {
-    return autoLimitRowCount != null;
+    return autoLimitRowCount != null && autoLimitRowCount > 0;
   }
 
   /**
