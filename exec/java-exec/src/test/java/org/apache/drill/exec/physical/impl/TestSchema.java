@@ -54,7 +54,7 @@ public class TestSchema extends DrillTest {
     try {
       client.queryBuilder().sql(sql).run();
     } catch (Exception ex) {
-      assertTrue(ex.getMessage().contains("VALIDATION ERROR: Schema"));
+      assertTrue(ex.getMessage().contains("RESOURCE ERROR: Failed to load schema"));
       throw ex;
     }
   }
@@ -79,7 +79,7 @@ public class TestSchema extends DrillTest {
       String use_dfs = "use mock_broken";
       client.queryBuilder().sql(use_dfs).run();
     } catch(Exception ex) {
-      assertTrue(ex.getMessage().contains("VALIDATION ERROR: Schema"));
+      assertTrue(ex.getMessage().contains("RESOURCE ERROR: Failed to load schema"));
       throw ex;
     }
   }
