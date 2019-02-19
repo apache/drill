@@ -36,6 +36,8 @@ public class DistributedResourceManager implements ResourceManager {
 
   private final DrillConfig rmConfig;
 
+  private final ResourceManager delegatedRM;
+
   public DistributedResourceManager(DrillbitContext context) throws DrillRuntimeException {
     try {
       this.context = context;
@@ -43,6 +45,7 @@ public class DistributedResourceManager implements ResourceManager {
       rmPoolTree = new ResourcePoolTreeImpl(rmConfig, DrillConfig.getMaxDirectMemory(),
         Runtime.getRuntime().availableProcessors(), 1);
       logger.debug("Successfully parsed RM config \n{}", rmConfig.getConfig(ResourcePoolTreeImpl.ROOT_POOL_CONFIG_KEY));
+      this.delegatedRM = new DefaultResourceManager();
     } catch (RMConfigException ex) {
       throw new DrillRuntimeException(String.format("Failed while parsing Drill RM Configs. Drillbit won't be started" +
         " unless config is fixed or RM is disabled by setting %s to false", ExecConstants.RM_ENABLED), ex);
@@ -50,22 +53,22 @@ public class DistributedResourceManager implements ResourceManager {
   }
   @Override
   public long memoryPerNode() {
-    return 0;
+    return delegatedRM.memoryPerNode();
   }
 
   @Override
   public int cpusPerNode() {
-    return 0;
+    return delegatedRM.cpusPerNode();
   }
 
   @Override
   public QueryResourceAllocator newResourceAllocator(QueryContext queryContext) {
-    return null;
+    return delegatedRM.newResourceAllocator(queryContext);
   }
 
   @Override
   public QueryResourceManager newQueryRM(Foreman foreman) {
-    return null;
+    return delegatedRM.newQueryRM(foreman);
   }
 
   public ResourcePoolTree getRmPoolTree() {
@@ -74,6 +77,6 @@ public class DistributedResourceManager implements ResourceManager {
 
   @Override
   public void close() {
-
+    delegatedRM.close();
   }
 }
