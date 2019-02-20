@@ -29,6 +29,7 @@ import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.BeforeClass;
@@ -138,6 +139,30 @@ public class TestLogReader extends ClusterTest {
         .addRow(2017, 12, 18)
         .addRow(2017, 12, 19)
         .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+  
+  @Test
+  public void testWildcardLargeFile() throws RpcException {
+    String sql = "SELECT * FROM cp.`regex/large.log1`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("year", MinorType.INT)
+        .addNullable("month", MinorType.INT)
+        .addNullable("day", MinorType.INT)
+        .build();
+    
+    RowSetBuilder builder = client.rowSetBuilder(expectedSchema);
+    
+    for (int i = 0; i < 15990 / 3; i++) {
+      builder.addRow(2017, 12, 17)
+      builder.addRow(2017, 12, 18)
+      builder.addRow(2017, 12, 19)
+    }
+    
+    RowSet expected = builder.build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
