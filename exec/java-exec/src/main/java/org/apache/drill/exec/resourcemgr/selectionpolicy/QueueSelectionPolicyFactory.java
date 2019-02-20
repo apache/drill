@@ -25,6 +25,7 @@ public class QueueSelectionPolicyFactory {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueueSelectionPolicyFactory.class);
 
   public static QueueSelectionPolicy createSelectionPolicy(String policy) {
+    logger.debug("Creating SelectionPolicy of type {}", policy);
     QueueSelectionPolicy selectionPolicy;
     switch (policy) {
       case "default":

@@ -17,11 +17,16 @@
  */
 package org.apache.drill.exec.resourcemgr;
 
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Used to keep track of selected leaf and all rejected {@link ResourcePool} for the provided query.
+ * It is used by {@link ResourcePoolImpl#visitAndSelectPool(QueueAssignmentResult, QueryContext)}
+ */
 public class QueueAssignmentResult {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueueAssignmentResult.class);
 

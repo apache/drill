@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.resourcemgr.exception;
 
+/**
+ * Used in case of error while selecting a queue for a given query
+ */
 public class QueueSelectionException extends Exception {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueueSelectionException.class);
-
   public QueueSelectionException(String msg) {
     super(msg);
   }

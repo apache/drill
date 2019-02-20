@@ -19,6 +19,23 @@ package org.apache.drill.exec.resourcemgr.selectors;
 
 import org.apache.drill.exec.ops.QueryContext;
 
+/**
+ * Interface that defines implementation for selectors assigned to a ResourcePool. ResourcePoolSelector helps to
+ * evaluate if a given query can be admitted into a ResourcePool or not. Based on the assigned selector type to a
+ * ResourcePool it uses the query metadata with it's own configured values and make a decision for a query. The
+ * SelectorType defines all the supported ResourcePoolSelector which can be assigned to a ResourcePool. The
+ * configuration of a selector is of type:
+ * <br/>
+ * <pre><i>
+ * selector: {
+ *   SelectorType:SelectorValue
+ * }
+ * where SelectorValue can be a string (for SelectorType tag),
+ *       object (for SelectorType acl and not_equal) and
+ *       list of objects (for SelectorType and, or)
+ * when selector config is absent then a DefaultSelector is associated with the ResourcePool
+ * </i></pre>
+ */
 public interface ResourcePoolSelector {
 
   enum SelectorType {

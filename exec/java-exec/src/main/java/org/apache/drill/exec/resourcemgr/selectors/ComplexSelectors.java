@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class ComplexSelectors extends AbstractResourcePoolSelector {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexSelectors.class);
 
   protected final List<ResourcePoolSelector> childSelectors = new ArrayList<>();
 

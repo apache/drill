@@ -25,6 +25,9 @@ import org.apache.drill.exec.resourcemgr.selectors.ResourcePoolSelector;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Interface which defines an implementation of ResourcePool configuration for {@link ResourcePoolTree}
+ */
 public interface ResourcePool {
   String getPoolName();
 

@@ -17,6 +17,14 @@
  */
 package org.apache.drill.exec.resourcemgr;
 
+/**
+ * Provides resources for a node in cluster. Currently it is used to support only 2 kind of resources:
+ * <ul>
+ * <li>Memory</li>
+ * <li>Virtual CPU count</li>
+ * </ul>
+ * It also has a version field to support extensibility in future to add other resources like network, disk, etc
+ */
 public class NodeResources {
 
   private int version;

@@ -62,13 +62,7 @@ public class BestFitQueueSelection extends AbstractQueueSelectionPolicy {
     public int compare(ResourcePool o1, ResourcePool o2) {
       long pool1Value = o1.getQueuryQueue().getMaxQueryMemoryInMBPerNode();
       long pool2Value = o2.getQueuryQueue().getMaxQueryMemoryInMBPerNode();
-      if (pool1Value == pool2Value) {
-        return 0;
-      } else if (pool1Value < pool2Value) {
-        return -1;
-      } else {
-        return 1;
-      }
+      return Long.compare(pool1Value, pool2Value);
     }
   }
 
@@ -92,6 +86,8 @@ public class BestFitQueueSelection extends AbstractQueueSelectionPolicy {
         break;
       }
     }
+    logger.debug("Selected pool {} based on bestfit policy for query {}",
+      selectedPool.getPoolName(), queryContext.getQueryId());
     return selectedPool;
   }
 }

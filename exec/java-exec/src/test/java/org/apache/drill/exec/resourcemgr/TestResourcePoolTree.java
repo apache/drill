@@ -46,7 +46,6 @@ import static org.mockito.Mockito.when;
 
 @Category(ResourceManagerTest.class)
 public final class TestResourcePoolTree {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestResourcePoolTree.class);
 
   private static final Map<String, Object> poolTreeConfig = new HashMap<>();
 

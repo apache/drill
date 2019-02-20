@@ -23,8 +23,21 @@ import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
 
 import java.util.List;
 
+/**
+ * Complex selector whose value is list of other Simple or Complex Selectors. There has to be at least 2 other
+ * selectors configured in the value list for this selector. It does AND operation on result of all the child
+ * selectors configured with it to evaluate if a query can be admitted to it's ResourcePool or not.
+ *
+ * Example configuration is of form:
+ * <br/>
+ * <pre><i>
+ * selector: {
+ *   and: [{tag: "BITool"},{tag: "operational"}]
+ * }
+ * </i></pre>
+ */
 public class AndSelector extends ComplexSelectors {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AndSelector.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AndSelector.class);
 
   AndSelector(List<? extends Config> configValue) throws RMConfigException {
     super(SelectorType.AND, configValue);
@@ -34,6 +47,8 @@ public class AndSelector extends ComplexSelectors {
   public boolean isQuerySelected(QueryContext queryContext) {
     for (ResourcePoolSelector childSelector : childSelectors) {
       if (!childSelector.isQuerySelected(queryContext)) {
+        logger.debug("Query {} is not selected by the child selector of type {} in this complex AndSelector",
+          queryContext.getQueryId(), childSelector.getSelectorType().getTypeName());
         return false;
       }
     }

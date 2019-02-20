@@ -27,8 +27,13 @@ import java.util.regex.Pattern;
 import static org.apache.drill.exec.resourcemgr.RMCommonDefaults.MAX_ADMISSIBLE_DEFAULT;
 import static org.apache.drill.exec.resourcemgr.RMCommonDefaults.MAX_WAITING_DEFAULT;
 
+/**
+ * Parses and initialize QueueConfiguration for a {@link ResourcePool}. It also generates a unique UUID for each queue
+ * which will be later used by Drillbit to store in Zookeeper along with
+ * {@link org.apache.drill.exec.proto.beans.DrillbitEndpoint}. This UUID is used in the leader election mechanism in
+ * which Drillbit participates for each of the configured rm queue.
+ */
 public class QueryQueueConfigImpl implements QueryQueueConfig {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryQueueConfigImpl.class);
 
   private String queueUUID;
 
@@ -46,7 +51,7 @@ public class QueryQueueConfigImpl implements QueryQueueConfig {
 
   private NodeResources queryPerNodeResourceShare;
 
-  /** Optional queue configurations */
+  // Optional queue configurations
   private static final String MAX_ADMISSIBLE_KEY = "max_admissible";
 
   private static final String MAX_WAITING_KEY = "max_waiting";
@@ -55,7 +60,9 @@ public class QueryQueueConfigImpl implements QueryQueueConfig {
 
   private static final String WAIT_FOR_PREFERRED_NODES_KEY = "wait_for_preferred_nodes";
 
-  /** Required queue configurations */
+  private static final String MAX_QUERY_MEMORY_PER_NODE_FORMAT = "([0-9]+)\\s*([kKmMgG]?)\\s*$";
+
+  // Required queue configurations in MAX_QUERY_MEMORY_PER_NODE_FORMAT pattern
   private static final String MAX_QUERY_MEMORY_PER_NODE_KEY = "max_query_memory_per_node";
 
   public QueryQueueConfigImpl(Config queueConfig, String poolName,
@@ -65,6 +72,13 @@ public class QueryQueueConfigImpl implements QueryQueueConfig {
     parseQueueConfig(queueConfig, queueNodeResource);
   }
 
+  /**
+   * Assigns either supplied or default values for the optional queue configuration. For required configuration uses
+   * the supplied value in queueConfig object or throws proper exception if not present
+   * @param queueConfig - Config object for ResourcePool queue
+   * @param nodeShare - Share of resources on a node for this queue
+   * @throws RMConfigException - In case of error
+   */
   private void parseQueueConfig(Config queueConfig, NodeResources nodeShare) throws RMConfigException {
     this.queueResourceShare = nodeShare;
     this.maxAdmissibleQuery = queueConfig.hasPath(MAX_ADMISSIBLE_KEY) ?
@@ -88,6 +102,12 @@ public class QueryQueueConfigImpl implements QueryQueueConfig {
     return queueName;
   }
 
+  /**
+   * Total memory share of this queue in the cluster based on per node resource share. It assumes that the cluster is
+   * made up of homogeneous nodes in terms of resources
+   * @param numClusterNodes - total number of available cluster nodes which can participate in this queue
+   * @return - queue memory share in MB
+   */
   @Override
   public long getQueueTotalMemoryInMB(int numClusterNodes) {
     return queueResourceShare.getMemoryInMB() * numClusterNodes;
@@ -123,11 +143,18 @@ public class QueryQueueConfigImpl implements QueryQueueConfig {
     return maxWaitingTimeout;
   }
 
+  /**
+   * Parses queues {@link QueryQueueConfigImpl#MAX_QUERY_MEMORY_PER_NODE_KEY} configuration to get memory value in
+   * bytes. The format used for parsing the configuration value is defined by
+   * {@link QueryQueueConfigImpl#MAX_QUERY_MEMORY_PER_NODE_FORMAT}
+   * @param queueConfig - Queue Configuration object
+   * @return - NodeResources created with value of {@link QueryQueueConfigImpl#MAX_QUERY_MEMORY_PER_NODE_KEY}
+   * @throws RMConfigException - In case the config value is absent or doesn't follow the specified format
+   */
   private NodeResources parseAndGetNodeShare(Config queueConfig) throws RMConfigException {
     try {
       String memoryPerNode = queueConfig.getString(MAX_QUERY_MEMORY_PER_NODE_KEY);
-      String memoryPattern = "([0-9]+)\\s*([kKmMgG]?)\\s*$";
-      Pattern pattern = Pattern.compile(memoryPattern);
+      Pattern pattern = Pattern.compile(MAX_QUERY_MEMORY_PER_NODE_FORMAT);
       Matcher patternMatcher = pattern.matcher(memoryPerNode);
 
       long memoryPerNodeInBytes = 0;
@@ -158,7 +185,7 @@ public class QueryQueueConfigImpl implements QueryQueueConfig {
         }
       } else {
         throw new RMConfigException(String.format("Configuration value of %s for queue %s didn't matched supported " +
-          "format. Supported format is [0-9]*[kKmMgG]?", MAX_QUERY_MEMORY_PER_NODE_KEY, queueName));
+          "format. Supported format is %s?", MAX_QUERY_MEMORY_PER_NODE_KEY, queueName, MAX_QUERY_MEMORY_PER_NODE_FORMAT));
       }
 
       return new NodeResources(memoryPerNodeInBytes, Integer.MAX_VALUE);

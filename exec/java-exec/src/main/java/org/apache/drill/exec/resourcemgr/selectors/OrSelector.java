@@ -23,8 +23,21 @@ import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
 
 import java.util.List;
 
+/**
+ * Complex selector whose value is list of other Simple or Complex Selectors. There has to be at least 2 other
+ * selectors configured in the value list for this selector. It does OR operation on result of all the child selectors
+ * configured with it to evaluate if a query can be admitted to it's ResourcePool or not.
+ *
+ * Example configuration is of form:
+ * <br/>
+ * <pre><i>
+ * selector: {
+ *   or: [{tag: "BITool"},{tag: "operational"}]
+ * }
+ * </i></pre>
+ */
 public class OrSelector extends ComplexSelectors {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrSelector.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrSelector.class);
 
   OrSelector(List<? extends Config> configValue) throws RMConfigException {
     super(SelectorType.OR, configValue);
@@ -35,6 +48,8 @@ public class OrSelector extends ComplexSelectors {
     for (ResourcePoolSelector childSelector : childSelectors) {
       // If we find any selector evaluating to true then no need to evaluate other selectors in the list
       if (childSelector.isQuerySelected(queryContext)) {
+        logger.debug("Query {} is selected by the child selector of type {} in this OrSelector",
+          queryContext.getQueryId(), childSelector.getSelectorType().getTypeName());
         return true;
       }
     }

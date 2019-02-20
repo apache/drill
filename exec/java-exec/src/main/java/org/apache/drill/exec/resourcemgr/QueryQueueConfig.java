@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.resourcemgr;
 
+/**
+ * Interface which defines an implementation for managing queue configuration of a {@link ResourcePool}
+ */
 public interface QueryQueueConfig {
   String getQueueId();
 

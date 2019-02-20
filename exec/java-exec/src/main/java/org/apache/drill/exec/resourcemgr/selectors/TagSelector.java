@@ -21,7 +21,21 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
 
+/**
+ * Simple selector whose value is a string representing a tag. It tries to match it's configured tag with one of
+ * the tags configured for the query using connection/session parameter. If a query posses at least one tag same as
+ * this selector tag then it will be admitted in the respective ResourcePool.
+ *
+ * Example configuration is of form:
+ * <br/>
+ * <pre><i>
+ * selector: {
+ *   tag: "BITool"
+ * }
+ * </i></pre>
+ */
 public class TagSelector extends AbstractResourcePoolSelector {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TagSelector.class);
 
   private String configuredTag;
 
@@ -45,6 +59,7 @@ public class TagSelector extends AbstractResourcePoolSelector {
     String[] queryTags = queryContext.getOption(ExecConstants.RM_QUERY_TAGS_KEY).string_val.split(",");
     for (String queryTag : queryTags) {
       if (queryTag.equals(configuredTag)) {
+        logger.debug("Query {} tag {} matches the selector tag {}", queryContext.getQueryId(), queryTag, configuredTag);
         return true;
       }
     }

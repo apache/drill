@@ -77,9 +77,9 @@ public final class TestAclSelector {
     assertTrue("Expected +ve groups config mismatched with actual config",
       checkIfSame(expectedPositiveGroups.toArray(), ((AclSelector) testSelector).getAllowedGroups().toArray()));
     assertTrue("Expected -ve users config mismatched with actual config",
-      checkIfSame(expectedNegativeUsers.toArray(), ((AclSelector) testSelector).getDisAllowedUsers().toArray()));
+      checkIfSame(expectedNegativeUsers.toArray(), ((AclSelector) testSelector).getDeniedUsers().toArray()));
     assertTrue("Expected -ve groups config mismatched with actual config",
-      checkIfSame(expectedNegativeGroups.toArray(), ((AclSelector) testSelector).getDisAllowedGroups().toArray()));
+      checkIfSame(expectedNegativeGroups.toArray(), ((AclSelector) testSelector).getDeniedGroups().toArray()));
     return testSelector;
   }
 

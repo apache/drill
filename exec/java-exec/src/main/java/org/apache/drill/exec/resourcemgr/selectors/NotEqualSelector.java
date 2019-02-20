@@ -22,7 +22,20 @@ import com.typesafe.config.Config;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
 
+/**
+ * Simple selector whose value is another Simple or Complex Selectors. It does NOT of result of its child selector
+ * configured with it to evaluate if a query can be admitted to it's ResourcePool or not.
+ *
+ * Example configuration is of form:
+ * <br/>
+ * <pre><i>
+ * selector: {
+ *   not_equal: {tag: "BITool"}
+ * }
+ * </i></pre>
+ */
 public class NotEqualSelector extends AbstractResourcePoolSelector {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotEqualSelector.class);
 
   private final ResourcePoolSelector poolSelector;
 
@@ -33,6 +46,8 @@ public class NotEqualSelector extends AbstractResourcePoolSelector {
 
   @Override
   public boolean isQuerySelected(QueryContext queryContext) {
+    logger.debug("Query {} is evaluated for not_equal of selector type {}", queryContext.getQueryId(),
+      poolSelector.getSelectorType().getTypeName());
     return !poolSelector.isQuerySelected(queryContext);
   }
 

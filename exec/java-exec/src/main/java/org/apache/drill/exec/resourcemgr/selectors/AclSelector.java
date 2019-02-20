@@ -28,6 +28,28 @@ import org.apache.hadoop.security.UserGroupInformation;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Evaluates if a query can be admitted to a ResourcePool or not by comparing query user/groups with the
+ * configured users/groups policies for this selector. AclSelector can be configured using both long-form syntax or
+ * short-form syntax as defined below:
+ * <ul>
+ *   <li>Long-Form Syntax: Allows to use identifiers to specify allowed and disallowed users/groups. For example:
+ *   users: [alice:+, bob:-] means alice is allowed whereas bob is denied access to the pool</li>
+ *   <li>Short-Form Syntax: Allows to specify lists of allowed users/groups only. For example: users: [alice, bob]
+ *   means only alice and bob are allowed access to this pool</li>
+ * </ul>
+ * The selector also supports * as a wildcard for both long and short form syntax to allow/deny all users/groups.
+ * Example configuration is of form:
+ * <br/>
+ * <pre><i>
+ * selector: {
+ *   acl: {
+ *     users: [alice:+, bob:-],
+ *     groups: [sales, marketing]
+ *   }
+ * }
+ * </i></pre>
+ */
 public class AclSelector extends AbstractResourcePoolSelector {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AclSelector.class);
 
@@ -35,9 +57,9 @@ public class AclSelector extends AbstractResourcePoolSelector {
 
   private final Set<String> allowedGroups = Sets.newHashSet();
 
-  private final Set<String> disAllowedUsers = Sets.newHashSet();
+  private final Set<String> deniedUsers = Sets.newHashSet();
 
-  private final Set<String> disAllowedGroups = Sets.newHashSet();
+  private final Set<String> deniedGroups = Sets.newHashSet();
 
   private final Config aclSelectorValue;
 
@@ -95,7 +117,7 @@ public class AclSelector extends AbstractResourcePoolSelector {
   @VisibleForTesting
   public boolean checkQueryUserGroups(String queryUser, Set<String> queryGroups) {
     // Check for +ve/-ve users information with query user
-    if (disAllowedUsers.contains(queryUser)) {
+    if (deniedUsers.contains(queryUser)) {
       logger.debug("Query user is present in configured ACL -ve users list");
       return false;
     } else if (allowedUsers.contains(queryUser)) {
@@ -110,7 +132,7 @@ public class AclSelector extends AbstractResourcePoolSelector {
     }
 
     // Check for +ve/-ve groups information with groups of query user
-    if (Sets.intersection(queryGroups, disAllowedGroups).size() > 0) {
+    if (Sets.intersection(queryGroups, deniedGroups).size() > 0) {
       logger.debug("Groups of Query user is present in configured ACL -ve groups list");
       return false;
     } else if (Sets.intersection(queryGroups, allowedGroups).size() > 0) {
@@ -128,6 +150,11 @@ public class AclSelector extends AbstractResourcePoolSelector {
     return false;
   }
 
+  /**
+   * Parses the acl selector config value for users and groups to populate list of allowed/denied users and groups.
+   * @param aclConfig - Acl config to parse
+   * @throws RMConfigException - In case of invalid config for either users/groups
+   */
   private void validateAndParseACL(Config aclConfig) throws RMConfigException {
 
     // ACL config doesn't have either group or user list
@@ -138,30 +165,30 @@ public class AclSelector extends AbstractResourcePoolSelector {
 
     if (aclConfig.hasPath(ACL_VALUE_USERS_KEY)) {
       final List<String> users = aclSelectorValue.getStringList(ACL_VALUE_USERS_KEY);
-      parseACLInput(users, allowedUsers, disAllowedUsers);
+      parseACLInput(users, allowedUsers, deniedUsers);
     }
 
     if (aclConfig.hasPath(ACL_VALUE_GROUPS_KEY)) {
       final List<String> groups = aclSelectorValue.getStringList(ACL_VALUE_GROUPS_KEY);
-      parseACLInput(groups, allowedGroups, disAllowedGroups);
+      parseACLInput(groups, allowedGroups, deniedGroups);
     }
 
     // If no valid configuration is seen for this selector
-    if (allowedGroups.size() == 0 && disAllowedGroups.size() == 0 &&
-      disAllowedUsers.size() == 0 && allowedUsers.size() == 0) {
+    if (allowedGroups.size() == 0 && deniedGroups.size() == 0 &&
+      deniedUsers.size() == 0 && allowedUsers.size() == 0) {
       throw new RMConfigException("No valid users or groups information is configured for this ACL selector. Either " +
         "use * or valid users/groups");
     }
 
     // Check if there is any intersection between allowed and disallowed users/groups
-    Set<String> wrongConfig = Sets.intersection(allowedUsers, disAllowedUsers);
+    Set<String> wrongConfig = Sets.intersection(allowedUsers, deniedUsers);
     if (wrongConfig.size() > 0) {
       logger.warn("These users are configured both in allowed and disallowed list. They will be treated as disallowed" +
         ". [Details: users: {}]", wrongConfig);
       allowedUsers.removeAll(wrongConfig);
     }
 
-    wrongConfig = Sets.intersection(allowedGroups, disAllowedGroups);
+    wrongConfig = Sets.intersection(allowedGroups, deniedGroups);
     if (wrongConfig.size() > 0) {
       logger.warn("These groups are configured both in allowed and disallowed list. They will be treated as " +
         "disallowed. [Details: groups: {}]", wrongConfig);
@@ -177,12 +204,12 @@ public class AclSelector extends AbstractResourcePoolSelector {
     return allowedGroups;
   }
 
-  public Set<String> getDisAllowedUsers() {
-    return disAllowedUsers;
+  public Set<String> getDeniedUsers() {
+    return deniedUsers;
   }
 
-  public Set<String> getDisAllowedGroups() {
-    return disAllowedGroups;
+  public Set<String> getDeniedGroups() {
+    return deniedGroups;
   }
 
   private boolean isStarInAllowedUsersList() {
@@ -194,11 +221,11 @@ public class AclSelector extends AbstractResourcePoolSelector {
   }
 
   private boolean isStarInDisAllowedUsersList() {
-    return disAllowedUsers.contains(ACL_ALLOW_ALL);
+    return deniedUsers.contains(ACL_ALLOW_ALL);
   }
 
   private boolean isStarInDisAllowedGroupsList() {
-    return disAllowedGroups.contains(ACL_ALLOW_ALL);
+    return deniedGroups.contains(ACL_ALLOW_ALL);
   }
 
   private void parseACLInput(List<String> acls, Set<String> allowedIdentity, Set<String> disAllowedIdentity) {
@@ -246,11 +273,11 @@ public class AclSelector extends AbstractResourcePoolSelector {
       sb.append(positiveGroup).append(", ");
     }
     sb.append("], DisallowedUsers: [");
-    for (String negativeUser : disAllowedUsers) {
+    for (String negativeUser : deniedUsers) {
       sb.append(negativeUser).append(", ");
     }
     sb.append("], DisallowedGroups: [");
-    for (String negativeGroup : disAllowedGroups) {
+    for (String negativeGroup : deniedGroups) {
       sb.append(negativeGroup).append(", ");
     }
     sb.append("]}");

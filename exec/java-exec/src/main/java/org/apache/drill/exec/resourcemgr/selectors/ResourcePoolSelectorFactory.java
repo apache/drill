@@ -22,7 +22,7 @@ import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
 import org.apache.drill.exec.resourcemgr.selectors.ResourcePoolSelector.SelectorType;
 
 public class ResourcePoolSelectorFactory {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResourcePoolSelectorFactory.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResourcePoolSelectorFactory.class);
 
   public static ResourcePoolSelector createSelector(Config selectorConfig) throws RMConfigException {
     ResourcePoolSelector poolSelector = null;
@@ -58,6 +58,7 @@ public class ResourcePoolSelectorFactory {
         "SelectorConfig: %s]", selectorConfig));
     }
 
+    logger.debug("Created selector of type {}", poolSelector.getSelectorType().getTypeName());
     return poolSelector;
   }
 }

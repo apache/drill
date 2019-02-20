@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.resourcemgr;
 
+/**
+ * Defines all the default values used for the optional configurations for ResourceManagement
+ */
 public final class RMCommonDefaults {
 
   public static final int MAX_ADMISSIBLE_DEFAULT = 10;

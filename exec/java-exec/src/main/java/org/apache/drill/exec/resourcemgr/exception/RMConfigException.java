@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.resourcemgr.exception;
 
+/**
+ * Used in cases of any error with the ResourceManagement configuration
+ */
 public class RMConfigException extends Exception {
   public RMConfigException(String message) {
     super(message);

@@ -19,8 +19,12 @@ package org.apache.drill.exec.resourcemgr.selectors;
 
 import org.apache.drill.exec.ops.QueryContext;
 
+/**
+ * When selector configuration is absent for a ResourcePool then it is associated with a DefaultSelector. It acts as
+ * a sink for all the queries which means all the queries will be selected by this default selector.
+ */
 public class DefaultSelector extends AbstractResourcePoolSelector {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSelector.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSelector.class);
 
   DefaultSelector() {
     super(SelectorType.DEFAULT);
@@ -33,6 +37,7 @@ public class DefaultSelector extends AbstractResourcePoolSelector {
 
   @Override
   public boolean isQuerySelected(QueryContext queryContext) {
+    logger.debug("Query {} is selected by this Default selector", queryContext.getQueryId());
     return true;
   }
 
