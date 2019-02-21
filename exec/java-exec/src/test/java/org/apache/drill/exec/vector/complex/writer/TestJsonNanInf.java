@@ -240,7 +240,7 @@ public class TestJsonNanInf extends BaseTestQuery {
   public void testLargeStringBinary() throws Exception {
     String chunk = "0123456789";
     String data = "";
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 1000; i++) {
       data += chunk;
     }
     String query = String.format("select string_binary(binary_string('%s')) from (values(1))", data);
