@@ -37,7 +37,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class r extends ClusterTest {
+public class TestLogReader extends ClusterTest {
 
   public static final String DATE_ONLY_PATTERN = "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) .*";
 
