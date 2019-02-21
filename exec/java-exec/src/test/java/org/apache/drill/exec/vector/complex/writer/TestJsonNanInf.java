@@ -237,6 +237,22 @@ public class TestJsonNanInf extends BaseTestQuery {
 
 
   @Test
+  public void testLargeStringBinary() throws Exception {
+    String chunk = "0123456789";
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < 1000; i++) {
+      builder.append(chunk);
+    }
+    String data = builder.toString();
+    String query = String.format("select string_binary(binary_string('%s')) from (values(1))", data);
+    List<QueryDataBatch> results = testSqlWithResults(query);
+    RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
+    QueryDataBatch batch = results.get(0);
+    batch.release();
+    batchLoader.clear();
+ }
+
+  @Test
   public void testConvertToJsonFunction() throws Exception {
     String table = "nan_test.csv";
     File file = new File(dirTestWatcher.getRootDir(), table);
