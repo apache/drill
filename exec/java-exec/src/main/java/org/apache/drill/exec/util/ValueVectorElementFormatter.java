@@ -71,6 +71,9 @@ public class ValueVectorElementFormatter {
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_TIME),
                         (v, p) -> v.format(getTimeFormatter(p)));
         }
+      case VARBINARY:
+        byte[] bytes = (bytes[]) value;
+        return org.apache.drill.common.util.DrillStringUtils.toBinaryString(bytes);
       default:
         return value.toString();
     }
