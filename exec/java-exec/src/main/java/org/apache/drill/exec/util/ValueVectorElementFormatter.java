@@ -72,7 +72,7 @@ public class ValueVectorElementFormatter {
                         (v, p) -> v.format(getTimeFormatter(p)));
         }
       case VARBINARY:
-        byte[] bytes = (bytes[]) value;
+        byte[] bytes = (byte[]) value;
         return org.apache.drill.common.util.DrillStringUtils.toBinaryString(bytes);
       default:
         return value.toString();
