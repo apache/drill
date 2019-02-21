@@ -52,28 +52,47 @@ public class ValueVectorElementFormatter {
    * @return the formatted value, null if failed
    */
   public String format(Object value, TypeProtos.MinorType minorType) {
+    boolean handled = false;
+	String str = null;
     switch (minorType) {
       case TIMESTAMP:
         if (value instanceof LocalDateTime) {
-          return format((LocalDateTime) value,
+          handled = true;
+          str = format((LocalDateTime) value,
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_TIMESTAMP),
                         (v, p) -> v.format(getTimestampFormatter(p)));
         }
+        break;
       case DATE:
         if (value instanceof LocalDate) {
-          return format((LocalDate) value,
+          handled = true;
+          str = format((LocalDate) value,
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_DATE),
                         (v, p) -> v.format(getDateFormatter(p)));
         }
+        break;
       case TIME:
         if (value instanceof LocalTime) {
-          return format((LocalTime) value,
+          handled = true;
+          str = format((LocalTime) value,
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_TIME),
                         (v, p) -> v.format(getTimeFormatter(p)));
         }
-      default:
-        return value.toString();
+        break;
+      case VARBINARY:
+        if (value instanceof byte[]) {
+          handled = true;
+          byte[] bytes = (byte[]) value;
+          str = org.apache.drill.common.util.DrillStringUtils.toBinaryString(bytes);
+        }
+        break;
     }
+
+    if (!handled) {
+      str = value.toString();
+    }
+
+    return str;
   }
 
   /**
