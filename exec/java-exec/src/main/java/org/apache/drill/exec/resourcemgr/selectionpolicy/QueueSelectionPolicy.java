@@ -18,11 +18,18 @@
 package org.apache.drill.exec.resourcemgr.selectionpolicy;
 
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.ResourcePool;
 import org.apache.drill.exec.resourcemgr.exception.QueueSelectionException;
 
 import java.util.List;
 
+/**
+ * Interface that defines all the implementation of a QueueSelectionPolicy supported by ResourceManagement
+ */
 public interface QueueSelectionPolicy {
-  ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext) throws QueueSelectionException;
+  String getSelectionPolicyName();
+
+  ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext, NodeResources maxResourcePerNode)
+    throws QueueSelectionException;
 }

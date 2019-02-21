@@ -19,16 +19,26 @@ package org.apache.drill.exec.resourcemgr.selectors;
 
 import com.typesafe.config.Config;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
+
+import java.util.List;
 
 public class OrSelector extends ComplexSelectors {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrSelector.class);
 
-  OrSelector(Config configValue) {
+  OrSelector(List<? extends Config> configValue) throws RMConfigException {
     super(SelectorType.OR, configValue);
   }
 
   @Override
   public boolean isQuerySelected(QueryContext queryContext) {
+    for (ResourcePoolSelector childSelector : childSelectors) {
+      // If we find any selector evaluating to true then no need to evaluate other selectors in the list
+      if (childSelector.isQuerySelected(queryContext)) {
+        return true;
+      }
+    }
+
     return false;
   }
 }

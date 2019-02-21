@@ -17,22 +17,36 @@
  */
 package org.apache.drill.exec.resourcemgr.selectionpolicy;
 
+/**
+ * Factory to return an instance of {@link QueueSelectionPolicy} based on the configured policy name. By default if
+ * the configured policy name doesn't matches any supported policies then it returns {@link BestFitQueueSelection}
+ */
 public class QueueSelectionPolicyFactory {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueueSelectionPolicyFactory.class);
 
   public static QueueSelectionPolicy createSelectionPolicy(String policy) {
     QueueSelectionPolicy selectionPolicy;
-    if (policy.equals("default")) {
-      selectionPolicy = new DefaultQueueSelection();
-    } else if (policy.equals("bestfit")) {
-      selectionPolicy = new BestFitQueueSelection();
-    } else if (policy.equals("random")) {
-      selectionPolicy = new RandomQueueSelection();
-    } else {
-      logger.info("QueueSelectionPolicy is not configured so proceeding with the bestfit for now");
-      selectionPolicy = new BestFitQueueSelection();
+    switch (policy) {
+      case "default":
+        selectionPolicy = new DefaultQueueSelection();
+        break;
+      case "bestfit":
+        selectionPolicy = new BestFitQueueSelection();
+        break;
+      case "random":
+        selectionPolicy = new RandomQueueSelection();
+        break;
+      default:
+        logger.info("QueueSelectionPolicy is not configured so proceeding with the bestfit as default policy");
+        selectionPolicy = new BestFitQueueSelection();
+        break;
     }
 
     return selectionPolicy;
+  }
+
+  // prevents from instantiation
+  private QueueSelectionPolicyFactory() {
+    // no-op
   }
 }

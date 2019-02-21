@@ -17,14 +17,21 @@
  */
 package org.apache.drill.exec.resourcemgr.selectors;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
 
 public class TagSelector extends AbstractResourcePoolSelector {
 
   private String configuredTag;
 
-  TagSelector(String selectorValue) {
+  TagSelector(String selectorValue) throws RMConfigException {
     super(SelectorType.TAG);
+
+    if (selectorValue == null || selectorValue.isEmpty()) {
+      throw new RMConfigException("Tag value of this selector is either null or empty. Please configure a valid tag " +
+        "as string.");
+    }
     configuredTag = selectorValue;
   }
 
@@ -33,9 +40,23 @@ public class TagSelector extends AbstractResourcePoolSelector {
     return SELECTOR_TYPE;
   }
 
-  // TODO: Get tag from QueryContext
   @Override
   public boolean isQuerySelected(QueryContext queryContext) {
+    String[] queryTags = queryContext.getOption(ExecConstants.RM_QUERY_TAGS_KEY).string_val.split(",");
+    for (String queryTag : queryTags) {
+      if (queryTag.equals(configuredTag)) {
+        return true;
+      }
+    }
     return false;
+  }
+
+  public String getTagValue() {
+    return configuredTag;
+  }
+
+  @Override
+  public String toString() {
+    return "{ SelectorType: " + super.toString() + ", TagValue: [" + configuredTag + "]}";
   }
 }

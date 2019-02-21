@@ -18,7 +18,11 @@
 package org.apache.drill.exec.resourcemgr;
 
 import com.typesafe.config.Config;
+import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
+import org.apache.drill.exec.resourcemgr.selectors.ResourcePoolSelector;
 
+import java.util.List;
 import java.util.Map;
 
 public interface ResourcePool {
@@ -31,14 +35,22 @@ public interface ResourcePool {
   // Only valid for leaf pool since it will have a queue assigned to it with this configuration
   long getMaxQueryMemoryPerNode();
 
-  boolean checkAndSelectPool(QueueAssignmentResult assignmentResult);
+  boolean visitAndSelectPool(QueueAssignmentResult assignmentResult, QueryContext queryContext);
 
   double getPoolMemoryShare();
 
   long getPoolMemoryInMB(int numClusterNodes);
 
   void parseAndCreateChildPools(Config poolConfig, NodeResources parentResource, Map<String, QueryQueueConfig>
-    leadQueueCollector);
+    leadQueueCollector) throws RMConfigException;
 
   QueryQueueConfig getQueuryQueue();
+
+  String getFullPath();
+
+  ResourcePool getParentPool();
+
+  List<ResourcePool> getChildPools();
+
+  ResourcePoolSelector getSelector();
 }

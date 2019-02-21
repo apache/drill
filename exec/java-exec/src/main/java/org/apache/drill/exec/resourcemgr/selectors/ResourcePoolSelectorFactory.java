@@ -18,16 +18,46 @@
 package org.apache.drill.exec.resourcemgr.selectors;
 
 import com.typesafe.config.Config;
+import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
+import org.apache.drill.exec.resourcemgr.selectors.ResourcePoolSelector.SelectorType;
 
 public class ResourcePoolSelectorFactory {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResourcePoolSelectorFactory.class);
 
-  public static ResourcePoolSelector createSelector(Config selectorConfig) {
-    if (selectorConfig == null) {
-      return new DefaultSelector();
+  public static ResourcePoolSelector createSelector(Config selectorConfig) throws RMConfigException {
+    ResourcePoolSelector poolSelector = null;
+    String selectorType = "";
+    try {
+      if (selectorConfig == null) {
+        selectorType = "default";
+        poolSelector = new DefaultSelector();
+      } else if (selectorConfig.hasPath(SelectorType.TAG.getTypeName())) {
+        selectorType = "tag";
+        poolSelector = new TagSelector(selectorConfig.getString(SelectorType.TAG.getTypeName()));
+      } else if (selectorConfig.hasPath(SelectorType.ACL.getTypeName())) {
+        selectorType = "acl";
+        poolSelector = new AclSelector(selectorConfig.getConfig(SelectorType.ACL.getTypeName()));
+      } else if (selectorConfig.hasPath(SelectorType.OR.getTypeName())) {
+        selectorType = "or";
+        poolSelector = new OrSelector(selectorConfig.getConfigList(SelectorType.OR.getTypeName()));
+      } else if (selectorConfig.hasPath(SelectorType.AND.getTypeName())) {
+        selectorType = "and";
+        poolSelector = new AndSelector(selectorConfig.getConfigList(SelectorType.AND.getTypeName()));
+      } else if (selectorConfig.hasPath(SelectorType.NOT_EQUAL.getTypeName())) {
+        selectorType = "not_equal";
+        poolSelector = new NotEqualSelector(selectorConfig.getConfig(SelectorType.NOT_EQUAL.getTypeName()));
+      }
+    } catch (Exception ex) {
+      throw new RMConfigException(String.format("There is an error with value configuration for selector type %s",
+        selectorType), ex);
     }
-    // TODO: take care of other selectors creation
-    // Figure out how to get the selector type string AND/OR/ACL/TAG
-    return null;
+
+    // if here means either a selector is chosen or wrong configuration
+    if (poolSelector == null) {
+      throw new RMConfigException(String.format("Configured selector is either empty or not supported. [Details: " +
+        "SelectorConfig: %s]", selectorConfig));
+    }
+
+    return poolSelector;
   }
 }

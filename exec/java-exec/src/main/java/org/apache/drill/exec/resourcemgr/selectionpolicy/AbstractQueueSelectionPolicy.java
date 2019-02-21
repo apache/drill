@@ -15,30 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.resourcemgr;
+package org.apache.drill.exec.resourcemgr.selectionpolicy;
 
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.NodeResources;
+import org.apache.drill.exec.resourcemgr.ResourcePool;
 import org.apache.drill.exec.resourcemgr.exception.QueueSelectionException;
-import org.apache.drill.exec.resourcemgr.selectionpolicy.QueueSelectionPolicy;
 
-import java.util.Map;
+import java.util.List;
 
-/**
- * Interface which defines the implementation of a hierarchical configuration for all the ResourcePool that will be
- * used for ResourceManagement
- */
-public interface ResourcePoolTree {
+public abstract class AbstractQueueSelectionPolicy implements QueueSelectionPolicy {
+  private String selectionPolicyName;
 
-  ResourcePool getRootPool();
+  public AbstractQueueSelectionPolicy(String policyName) {
+    this.selectionPolicyName = policyName;
+  }
 
-  Map<String, QueryQueueConfig> getAllLeafQueues();
+  @Override
+  public String getSelectionPolicyName() {
+    return selectionPolicyName;
+  }
 
-  double getResourceShare();
-
-  QueueAssignmentResult selectAllQueues(QueryContext queryContext);
-
-  QueryQueueConfig selectOneQueue(QueryContext queryContext, NodeResources queryMaxNodeResource)
-    throws QueueSelectionException;
-
-  QueueSelectionPolicy getSelectionPolicyInUse();
+  public abstract ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext,
+                                           NodeResources maxResourcePerNode) throws QueueSelectionException;
 }

@@ -48,7 +48,21 @@ public class QueueAssignmentResult {
   }
 
   public void logAssignmentResult(String queryId) {
-    logger.debug("For query {}, list of selected leaf pools are {} and rejected pools are {}",
-      queryId, selectedLeafPools, rejectedPools);
+    logger.debug("For query {}. Details[{}]", queryId, toString());
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Selected Leaf Pools: {");
+    for (ResourcePool pool : selectedLeafPools) {
+      sb.append(pool.getPoolName()).append(", ");
+    }
+    sb.append("} and Rejected pools: {");
+    for (ResourcePool pool : rejectedPools) {
+      sb.append(pool.getPoolName()).append(", ");
+    }
+    sb.append("}");
+    return sb.toString();
   }
 }

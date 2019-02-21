@@ -17,20 +17,32 @@
  */
 package org.apache.drill.exec.resourcemgr.selectors;
 
+import avro.shaded.com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
 
 public class NotEqualSelector extends AbstractResourcePoolSelector {
 
-  private ResourcePoolSelector selector;
+  private final ResourcePoolSelector poolSelector;
 
-  NotEqualSelector(Config selectorValue) {
+  NotEqualSelector(Config selectorValue) throws RMConfigException {
     super(SelectorType.NOT_EQUAL);
+    poolSelector = ResourcePoolSelectorFactory.createSelector(selectorValue);
   }
 
-  // TODO: Get tag from QueryContext
   @Override
   public boolean isQuerySelected(QueryContext queryContext) {
-    return false;
+    return !poolSelector.isQuerySelected(queryContext);
+  }
+
+  @VisibleForTesting
+  public ResourcePoolSelector getPoolSelector() {
+    return poolSelector;
+  }
+
+  @Override
+  public String toString() {
+    return "{ SelectorType: " + super.toString() + ", of selector " + poolSelector.toString() + " }";
   }
 }

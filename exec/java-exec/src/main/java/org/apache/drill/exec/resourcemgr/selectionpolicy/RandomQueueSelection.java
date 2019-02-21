@@ -18,18 +18,33 @@
 package org.apache.drill.exec.resourcemgr.selectionpolicy;
 
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.ResourcePool;
 import org.apache.drill.exec.resourcemgr.exception.QueueSelectionException;
 
 import java.util.Collections;
 import java.util.List;
 
-public class RandomQueueSelection implements QueueSelectionPolicy {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomQueueSelection.class);
+/**
+ * Randomly selects a queue from the list of all the provided queues. If no pools are provided then it throws
+ * {@link QueueSelectionException}
+ */
+public class RandomQueueSelection extends AbstractQueueSelectionPolicy {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomQueueSelection.class);
+
+  public RandomQueueSelection() {
+    super("random");
+  }
 
   @Override
-  public ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext) throws QueueSelectionException {
+  public ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext,
+                                  NodeResources maxResourcePerNode) throws QueueSelectionException {
+    if (allPools.size() == 0) {
+      throw new QueueSelectionException("Input pool list is empty for random queue selection");
+    }
     Collections.shuffle(allPools);
-    return allPools.get(0);
+    ResourcePool selectedPool = allPools.get(0);
+    logger.debug("Selected random pool: {} for query: {}", selectedPool.getPoolName(), queryContext.getQueryId());
+    return selectedPool;
   }
 }

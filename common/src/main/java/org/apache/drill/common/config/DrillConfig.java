@@ -156,16 +156,6 @@ public class DrillConfig extends NestedConfig {
     return create(null, testConfigurations, true, new DrillExecConfigFileInfo());
   }
 
-
-  /**
-   * Convenience method for unit tests to create RM specific configuration
-   * <b><u>Do not use this method outside of test code.</u></b>
-   */
-  @VisibleForTesting
-  public static DrillConfig createForRM(Properties testConfigurations) {
-    return create(null, testConfigurations, true, new DrillRMConfigFileInfo());
-  }
-
   /**
    * @param overrideFileResourcePathname
    *          see {@link #create(String)}'s {@code overrideFileResourcePathname}
@@ -225,7 +215,7 @@ public class DrillConfig extends NestedConfig {
       configInfo.getOverrideFileName() : overrideFileResourcePathname;
 
     // 1. Load defaults configuration file.
-    Config fallback = null;
+    Config fallback = ConfigFactory.empty();
     final ClassLoader[] classLoaders = ClasspathHelper.classLoaders();
     for (ClassLoader classLoader : classLoaders) {
       final URL url =

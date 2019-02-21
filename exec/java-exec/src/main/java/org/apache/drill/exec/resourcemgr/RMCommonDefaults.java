@@ -17,28 +17,18 @@
  */
 package org.apache.drill.exec.resourcemgr;
 
-import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.resourcemgr.exception.QueueSelectionException;
-import org.apache.drill.exec.resourcemgr.selectionpolicy.QueueSelectionPolicy;
+public final class RMCommonDefaults {
 
-import java.util.Map;
+  public static final int MAX_ADMISSIBLE_DEFAULT = 10;
 
-/**
- * Interface which defines the implementation of a hierarchical configuration for all the ResourcePool that will be
- * used for ResourceManagement
- */
-public interface ResourcePoolTree {
+  public static final int MAX_WAITING_DEFAULT = 10;
 
-  ResourcePool getRootPool();
+  public static final int MAX_WAIT_TIMEOUT_IN_MS_DEFAULT = 30000;
 
-  Map<String, QueryQueueConfig> getAllLeafQueues();
+  public static final boolean WAIT_FOR_PREFERRED_NODES_DEFAULT = true;
 
-  double getResourceShare();
+  public static final double ROOT_POOL_DEFAULT_MEMORY_PERCENT = 0.9;
 
-  QueueAssignmentResult selectAllQueues(QueryContext queryContext);
+  public static final String ROOT_POOL_DEFAULT_QUEUE_SELECTION_POLICY = "bestfit";
 
-  QueryQueueConfig selectOneQueue(QueryContext queryContext, NodeResources queryMaxNodeResource)
-    throws QueueSelectionException;
-
-  QueueSelectionPolicy getSelectionPolicyInUse();
 }

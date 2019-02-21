@@ -32,4 +32,9 @@ public abstract class AbstractResourcePoolSelector implements ResourcePoolSelect
   }
 
   public abstract boolean isQuerySelected(QueryContext queryContext);
+
+  @Override
+  public String toString() {
+    return SELECTOR_TYPE.getTypeName();
+  }
 }

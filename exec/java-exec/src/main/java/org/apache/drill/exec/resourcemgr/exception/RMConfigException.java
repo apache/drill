@@ -18,7 +18,6 @@
 package org.apache.drill.exec.resourcemgr.exception;
 
 public class RMConfigException extends Exception {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RMConfigException.class);
   public RMConfigException(String message) {
     super(message);
   }

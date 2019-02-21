@@ -19,13 +19,20 @@ package org.apache.drill.exec.resourcemgr;
 
 public class NodeResources {
 
+  private int version;
+
   private long memoryInBytes;
 
   private int numVirtualCpu;
 
-  NodeResources(long memoryInBytes, int numVirtualCpu) {
+  public NodeResources(long memoryInBytes, int numVirtualCpu) {
+    this(memoryInBytes, numVirtualCpu, 1);
+  }
+
+  public NodeResources(long memoryInBytes, int numPhysicalCpu, int vFactor) {
     this.memoryInBytes = memoryInBytes;
-    this.numVirtualCpu = numVirtualCpu;
+    this.numVirtualCpu = numPhysicalCpu * vFactor;
+    this.version = 1;
   }
 
   public long getMemoryInBytes() {
@@ -33,14 +40,19 @@ public class NodeResources {
   }
 
   public long getMemoryInMB() {
-    return Math.round(memoryInBytes / 1024);
+    return Math.round((memoryInBytes / 1024L) / 1024L);
   }
 
   public long getMemoryInGB() {
-    return Math.round(memoryInBytes / (1024 * 1024));
+    return Math.round(getMemoryInMB() / 1024L);
   }
 
   public int getNumVirtualCpu() {
     return numVirtualCpu;
+  }
+
+  @Override
+  public String toString() {
+    return "{ Version: " + version + ", MemoryInBytes: " + memoryInBytes + ", VirtualCPU: " + numVirtualCpu + " }";
   }
 }

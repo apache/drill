@@ -18,23 +18,35 @@
 package org.apache.drill.exec.resourcemgr.selectionpolicy;
 
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.ResourcePool;
 import org.apache.drill.exec.resourcemgr.exception.QueueSelectionException;
 
 import java.util.List;
 
-public class DefaultQueueSelection implements QueueSelectionPolicy {
+/**
+ * Helps to select the first default queue in the list of all the provided queues. If there is no default queue
+ * present it throws {@link QueueSelectionException}. Default queue is a queue associated with {@link ResourcePool}
+ * which has {@link org.apache.drill.exec.resourcemgr.selectors.DefaultSelector} assigned to it
+ */
+public class DefaultQueueSelection extends AbstractQueueSelectionPolicy {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultQueueSelection.class);
 
+  public DefaultQueueSelection() {
+    super("default");
+  }
+
   @Override
-  public ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext) throws QueueSelectionException {
+  public ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext,
+                                  NodeResources maxResourcePerNode) throws QueueSelectionException {
     for (ResourcePool pool : allPools) {
       if (pool.isDefaultPool()) {
+        logger.debug("Selected default pool: {} for the query: {}", pool.getPoolName(), queryContext.getQueryId());
         return pool;
       }
     }
 
     throw new QueueSelectionException(String.format("There is no default pool to select from list of pools provided " +
-      "for the query. Details[Pools list: {}, Query: {}", allPools, queryContext.getQueryId()));
+      "for the query: %s", queryContext.getQueryId()));
   }
 }

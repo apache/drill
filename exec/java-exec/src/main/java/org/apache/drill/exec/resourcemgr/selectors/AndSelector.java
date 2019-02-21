@@ -19,16 +19,24 @@ package org.apache.drill.exec.resourcemgr.selectors;
 
 import com.typesafe.config.Config;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
+
+import java.util.List;
 
 public class AndSelector extends ComplexSelectors {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AndSelector.class);
 
-  AndSelector(Config configValue) {
+  AndSelector(List<? extends Config> configValue) throws RMConfigException {
     super(SelectorType.AND, configValue);
   }
 
   @Override
   public boolean isQuerySelected(QueryContext queryContext) {
-    return false;
+    for (ResourcePoolSelector childSelector : childSelectors) {
+      if (!childSelector.isQuerySelected(queryContext)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

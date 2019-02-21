@@ -19,6 +19,7 @@ package org.apache.drill.exec.resourcemgr.selectors;
 
 import com.typesafe.config.Config;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,14 +29,33 @@ public abstract class ComplexSelectors extends AbstractResourcePoolSelector {
 
   protected final List<ResourcePoolSelector> childSelectors = new ArrayList<>();
 
-  ComplexSelectors(SelectorType type, Config selectorConfig) {
+  ComplexSelectors(SelectorType type, List<? extends Config> selectorConfig) throws RMConfigException {
     super(type);
-    // parse the config and populate all the child selectors
+    parseAndCreateChildSelectors(selectorConfig);
   }
 
-  // TODO: Need to implement
-  private void parseAndCreateChildSelectors(Config selectorConfig) {
+  private void parseAndCreateChildSelectors(List<? extends Config> childConfigs) throws RMConfigException {
+    for (Config childConfig : childConfigs) {
+      childSelectors.add(ResourcePoolSelectorFactory.createSelector(childConfig));
+    }
+
+    if (childSelectors.size() < 2) {
+      throw new RMConfigException(String.format("For complex selector OR and AND it is expected to have atleast 2 " +
+        "selectors in the list but found %d", childSelectors.size()));
+    }
   }
 
   public abstract boolean isQuerySelected(QueryContext queryContext);
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{ SelectorType: ").append(super.toString());
+    sb.append(", of selectors [");
+    for (ResourcePoolSelector childSelector : childSelectors) {
+      sb.append(childSelector.toString()).append(", ");
+    }
+    sb.append("]}");
+    return sb.toString();
+  }
 }

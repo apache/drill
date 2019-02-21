@@ -35,4 +35,9 @@ public class DefaultSelector extends AbstractResourcePoolSelector {
   public boolean isQuerySelected(QueryContext queryContext) {
     return true;
   }
+
+  @Override
+  public String toString() {
+    return "{SelectorType: " + super.toString() + "}";
+  }
 }
