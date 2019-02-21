@@ -70,6 +70,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
 
   @AfterClass
   public static void teardown() throws IOException {
+    fragContext.close();
     fs.close();
   }
 
@@ -294,6 +295,10 @@ public class TestParquetFilterPushDown extends PlanTestBase {
 
     PlanTestBase.testPlanMatchingPatterns(sql + "a < 1 or a > 1", new String[]{"numRowGroups=3"}); // No filter pruning
     PlanTestBase.testPlanMatchingPatterns(sql + "a < 1 or a > 2", new String[]{"numRowGroups=2"}, new String[]{"Filter\\("}); //Filter pruning
+
+    // Partial filter pruning
+    testParquetFilterPruning(sql + "a >=1 and cast(a as varchar) like '%3%'", 1, 2, new String[]{">\\($1, 1\\)"});
+    testParquetFilterPruning(sql + "a >=1 and a/3>=1", 2, 2, new String[]{">\\($1, 1\\)"});
   }
 
   @Test
@@ -642,6 +647,15 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     assertEquals(RowsMatch.NONE, isNotTrue.matches(re));
     ParquetIsPredicate isNotFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
     assertEquals(RowsMatch.ALL, isNotFalse.matches(re));
+  }
+
+  @Test
+  public void testParquetSingleRowGroupFilterRemoving() throws Exception {
+    test("create table dfs.tmp.`singleRowGroupTable` as select * from cp.`tpch/nation.parquet`");
+
+    String query = "select * from dfs.tmp.`singleRowGroupTable` where n_nationkey > -1";
+
+    testParquetFilterPruning(query, 25, 1, new String[]{"Filter\\("});
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

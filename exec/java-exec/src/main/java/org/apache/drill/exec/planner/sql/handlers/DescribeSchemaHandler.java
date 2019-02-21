@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDescribeSchema;
@@ -35,7 +36,6 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.dfs.FileSystemSchemaFactory;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
@@ -111,12 +111,12 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
     Object workspaces = configMap.remove("workspaces");
     if (workspaces != null) {
       Map map = (Map) workspaces;
-      String key = names.size() > 1 ? names.get(1) : FileSystemSchemaFactory.DEFAULT_WS_NAME;
+      String key = names.size() > 1 ? names.get(1) : SchemaFactory.DEFAULT_WS_NAME;
       Object workspace = map.get(key);
       if (workspace != null) {
         Map workspaceMap = (Map) map.get(key);
         configMap.putAll(workspaceMap);
-      } else if (FileSystemSchemaFactory.DEFAULT_WS_NAME.equals(key)) {
+      } else if (SchemaFactory.DEFAULT_WS_NAME.equals(key)) {
         configMap.putAll(mapper.convertValue(WorkspaceConfig.DEFAULT, Map.class));
       }
     }

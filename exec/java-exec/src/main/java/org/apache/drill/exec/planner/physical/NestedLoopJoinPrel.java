@@ -46,6 +46,11 @@ public class NestedLoopJoinPrel  extends JoinPrel {
     super(cluster, traits, left, right, condition, joinType);
   }
 
+  public NestedLoopJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+                            JoinRelType joinType, boolean semijoin) throws InvalidRelException {
+    super(cluster, traits, left, right, condition, joinType, semijoin);
+  }
+
   @Override
   public Join copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
     try {

@@ -26,11 +26,10 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.ojai.Value;
 import org.ojai.store.QueryCondition;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import com.mapr.db.impl.ConditionImpl;
 import com.mapr.db.impl.MapRDBImpl;
 

@@ -30,7 +30,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,6 +39,7 @@ import org.junit.rules.ExpectedException;
 import java.util.Map;
 
 import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -131,10 +131,10 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     try {
       test("drop table parquet_table_700");
     } catch (UserException e) {
-      Assert.assertTrue(e.getMessage().contains("PERMISSION ERROR"));
+      assertTrue(e.getMessage().contains("PERMISSION ERROR"));
       dropFailed = true;
     }
-    Assert.assertTrue("Permission checking failed during drop table", dropFailed);
+    assertTrue("Permission checking failed during drop table", dropFailed);
   }
 
   @Test // DRILL-3037
@@ -176,12 +176,9 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   @Test
   public void testShowFilesInWSWithNoPermissionsForQueryUser() throws Exception {
     updateClient(user2);
-
-    thrown.expect(UserRemoteException.class);
-    thrown.expectMessage(containsString("Permission denied: user=drillTestUser2, " +
-        "access=READ_EXECUTE, inode=\"/drill_test_grp_1_700\":drillTestUser1:drill_test_grp_1:drwx------"));
     // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
-    test("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME);
+    int count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME));
+    assertEquals(0, count);
   }
 
   @Test
@@ -280,7 +277,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     final String query = "CREATE VIEW " + viewName + " AS SELECT " +
         "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;";
-    final String expErrorMsg = "PERMISSION ERROR: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/drill_test_grp_0_755/";
+    final String expErrorMsg = "PERMISSION ERROR: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/drill_test_grp_0_755";
     errorMsgTestHelper(query, expErrorMsg);
 
     // SHOW TABLES is expected to return no records as view creation fails above.
@@ -351,7 +348,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("Permission denied: user=drillTestUser2, " +
-        "access=WRITE, inode=\"/drill_test_grp_0_755/"));
+        "access=WRITE, inode=\"/drill_test_grp_0_755"));
 
     test("CREATE TABLE %s AS SELECT c_custkey, c_nationkey " +
         "FROM cp.`tpch/customer.parquet` ORDER BY c_custkey", tableName);

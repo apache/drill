@@ -82,6 +82,7 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.store.dfs.FileSelection;
 import static org.apache.calcite.util.Static.RESOURCE;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -118,6 +119,14 @@ public class SqlConverter {
   private VolcanoPlanner planner;
   private boolean useRootSchema = false;
 
+  static {
+    /*
+     * Sets value to false to avoid simplifying project expressions
+     * during creating new projects since it may cause changing data mode
+     * which causes to assertion errors during type validation
+     */
+    Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
+  }
 
   public SqlConverter(QueryContext context) {
     this.settings = context.getPlannerSettings();
@@ -372,13 +381,6 @@ public class SqlConverter {
         new SqlToRelConverter(new Expander(), validator, catalog, cluster, DrillConvertletTable.INSTANCE,
             sqlToRelConverterConfig);
 
-    /*
-     * Sets value to false to avoid simplifying project expressions
-     * during creating new projects since it may cause changing data mode
-     * which causes to assertion errors during type validation
-     */
-    Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
-
     //To avoid unexpected column errors set a value of top to false
     final RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, false);
     return rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
@@ -624,7 +626,8 @@ public class SqlConverter {
 
     private List<String> getTemporaryNames(List<String> names) {
       if (mightBeTemporaryTable(names, session.getDefaultSchemaPath(), drillConfig)) {
-        String temporaryTableName = session.resolveTemporaryTableName(names.get(names.size() - 1));
+        String tableName = FileSelection.removeLeadingSlash(names.get(names.size() - 1));
+        String temporaryTableName = session.resolveTemporaryTableName(tableName);
         if (temporaryTableName != null) {
           List<String> temporaryNames = new ArrayList<>(SchemaUtilites.getSchemaPathAsList(temporarySchema));
           temporaryNames.add(temporaryTableName);

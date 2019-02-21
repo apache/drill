@@ -213,10 +213,11 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(ParsingError));
   RecordBatchDef_descriptor_ = file->message_type(6);
-  static const int RecordBatchDef_offsets_[3] = {
+  static const int RecordBatchDef_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordBatchDef, record_count_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordBatchDef, field_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordBatchDef, carries_two_byte_selection_vector_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordBatchDef, affected_rows_count_),
   };
   RecordBatchDef_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -302,10 +303,11 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       sizeof(QueryResult));
   QueryResult_QueryState_descriptor_ = QueryResult_descriptor_->enum_type(0);
   QueryData_descriptor_ = file->message_type(11);
-  static const int QueryData_offsets_[3] = {
+  static const int QueryData_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryData, query_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryData, row_count_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryData, def_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryData, affected_rows_count_),
   };
   QueryData_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -673,117 +675,119 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "\013method_name\030\004 \001(\t\022\030\n\020is_native_method\030\005"
     " \001(\010\"\\\n\014ParsingError\022\024\n\014start_column\030\002 \001"
     "(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001("
-    "\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022\024\n\014"
-    "record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.exec"
-    ".shared.SerializedField\022)\n!carries_two_b"
-    "yte_selection_vector\030\003 \001(\010\"\205\001\n\010NamePart\022"
-    "(\n\004type\030\001 \001(\0162\032.exec.shared.NamePart.Typ"
-    "e\022\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.sh"
-    "ared.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY"
-    "\020\001\"\324\001\n\017SerializedField\022%\n\nmajor_type\030\001 \001"
-    "(\0132\021.common.MajorType\022(\n\tname_part\030\002 \001(\013"
-    "2\025.exec.shared.NamePart\022+\n\005child\030\003 \003(\0132\034"
-    ".exec.shared.SerializedField\022\023\n\013value_co"
-    "unt\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\025\n\rbu"
-    "ffer_length\030\007 \001(\005\"7\n\nNodeStatus\022\017\n\007node_"
-    "id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\263\002\n\013Q"
-    "ueryResult\0228\n\013query_state\030\001 \001(\0162#.exec.s"
-    "hared.QueryResult.QueryState\022&\n\010query_id"
-    "\030\002 \001(\0132\024.exec.shared.QueryId\022(\n\005error\030\003 "
-    "\003(\0132\031.exec.shared.DrillPBError\"\227\001\n\nQuery"
-    "State\022\014\n\010STARTING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMP"
-    "LETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\032\n\026CAN"
-    "CELLATION_REQUESTED\020\005\022\014\n\010ENQUEUED\020\006\022\r\n\tP"
-    "REPARING\020\007\022\014\n\010PLANNING\020\010\"p\n\tQueryData\022&\n"
-    "\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022\021\n"
-    "\trow_count\030\002 \001(\005\022(\n\003def\030\003 \001(\0132\033.exec.sha"
-    "red.RecordBatchDef\"\330\001\n\tQueryInfo\022\r\n\005quer"
-    "y\030\001 \001(\t\022\r\n\005start\030\002 \001(\003\0222\n\005state\030\003 \001(\0162#."
-    "exec.shared.QueryResult.QueryState\022\017\n\004us"
-    "er\030\004 \001(\t:\001-\022\'\n\007foreman\030\005 \001(\0132\026.exec.Dril"
-    "lbitEndpoint\022\024\n\014options_json\030\006 \001(\t\022\022\n\nto"
-    "tal_cost\030\007 \001(\001\022\025\n\nqueue_name\030\010 \001(\t:\001-\"\263\004"
-    "\n\014QueryProfile\022 \n\002id\030\001 \001(\0132\024.exec.shared"
-    ".QueryId\022$\n\004type\030\002 \001(\0162\026.exec.shared.Que"
-    "ryType\022\r\n\005start\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005qu"
-    "ery\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\013"
-    "2\026.exec.DrillbitEndpoint\0222\n\005state\030\010 \001(\0162"
-    "#.exec.shared.QueryResult.QueryState\022\027\n\017"
-    "total_fragments\030\t \001(\005\022\032\n\022finished_fragme"
-    "nts\030\n \001(\005\022;\n\020fragment_profile\030\013 \003(\0132!.ex"
-    "ec.shared.MajorFragmentProfile\022\017\n\004user\030\014"
-    " \001(\t:\001-\022\r\n\005error\030\r \001(\t\022\024\n\014verboseError\030\016"
-    " \001(\t\022\020\n\010error_id\030\017 \001(\t\022\022\n\nerror_node\030\020 \001"
-    "(\t\022\024\n\014options_json\030\021 \001(\t\022\017\n\007planEnd\030\022 \001("
-    "\003\022\024\n\014queueWaitEnd\030\023 \001(\003\022\022\n\ntotal_cost\030\024 "
-    "\001(\001\022\025\n\nqueue_name\030\025 \001(\t:\001-\022\017\n\007queryId\030\026 "
-    "\001(\t\"t\n\024MajorFragmentProfile\022\031\n\021major_fra"
-    "gment_id\030\001 \001(\005\022A\n\026minor_fragment_profile"
-    "\030\002 \003(\0132!.exec.shared.MinorFragmentProfil"
-    "e\"\350\002\n\024MinorFragmentProfile\022)\n\005state\030\001 \001("
-    "\0162\032.exec.shared.FragmentState\022(\n\005error\030\002"
-    " \001(\0132\031.exec.shared.DrillPBError\022\031\n\021minor"
-    "_fragment_id\030\003 \001(\005\0226\n\020operator_profile\030\004"
-    " \003(\0132\034.exec.shared.OperatorProfile\022\022\n\nst"
-    "art_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memo"
-    "ry_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022("
-    "\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpoint"
-    "\022\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progress\030\013"
-    " \001(\003\"\377\001\n\017OperatorProfile\0221\n\rinput_profil"
-    "e\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023\n\013o"
-    "perator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022"
-    "\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 "
-    "\001(\003\022#\n\033peak_local_memory_allocated\030\007 \001(\003"
-    "\022(\n\006metric\030\010 \003(\0132\030.exec.shared.MetricVal"
-    "ue\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProfile\022"
-    "\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007sch"
-    "emas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001"
-    " \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_value"
-    "\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.s"
-    "hared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022functi"
-    "on_signature\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmec"
-    "hanism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001"
-    "(\0162\027.exec.shared.SaslStatus*5\n\nRpcChanne"
-    "l\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER"
-    "\020\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n"
-    "\010PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_S"
-    "TATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020"
-    "\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022"
-    "\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005"
-    "\022\032\n\026CANCELLATION_REQUESTED\020\006*\222\t\n\020CoreOpe"
-    "ratorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAS"
-    "T_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE"
-    "\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HAS"
-    "H_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGI"
-    "NG_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDE"
-    "R\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013"
-    "\022\032\n\026RANGE_PARTITION_SENDER\020\014\022\n\n\006SCREEN\020\r"
-    "\022\034\n\030SELECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAM"
-    "ING_AGGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTER"
-    "NAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_"
-    "SORT\020\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHI"
-    "VE_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\r"
-    "MOCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017D"
-    "IRECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEX"
-    "T_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_"
-    "SCHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025"
-    "\n\021PRODUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020"
-    "!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rA"
-    "VRO_SUB_SCAN\020$\022\021\n\rPCAP_SUB_SCAN\020%\022\022\n\016KAF"
-    "KA_SUB_SCAN\020&\022\021\n\rKUDU_SUB_SCAN\020\'\022\013\n\007FLAT"
-    "TEN\020(\022\020\n\014LATERAL_JOIN\020)\022\n\n\006UNNEST\020*\022,\n(H"
-    "IVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN\020"
-    "+\022\r\n\tJDBC_SCAN\020,\022\022\n\016REGEX_SUB_SCAN\020-\022\023\n\017"
-    "MAPRDB_SUB_SCAN\020.\022\022\n\016MONGO_SUB_SCAN\020/\022\017\n"
-    "\013KUDU_WRITER\0200\022\026\n\022OPEN_TSDB_SUB_SCAN\0201\022\017"
-    "\n\013JSON_WRITER\0202\022\026\n\022HTPPD_LOG_SUB_SCAN\0203\022"
-    "\022\n\016IMAGE_SUB_SCAN\0204\022\025\n\021SEQUENCE_SUB_SCAN"
-    "\0205\022\023\n\017PARTITION_LIMIT\0206\022\023\n\017PCAPNG_SUB_SC"
-    "AN\0207\022\022\n\016RUNTIME_FILTER\0208\022\017\n\013ROWKEY_JOIN\020"
-    "9*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSAS"
-    "L_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_"
-    "SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.apache"
-    ".drill.exec.protoB\rUserBitSharedH\001", 5474);
+    "\005\022\017\n\007end_row\030\005 \001(\005\"\233\001\n\016RecordBatchDef\022\024\n"
+    "\014record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.exe"
+    "c.shared.SerializedField\022)\n!carries_two_"
+    "byte_selection_vector\030\003 \001(\010\022\033\n\023affected_"
+    "rows_count\030\004 \001(\005\"\205\001\n\010NamePart\022(\n\004type\030\001 "
+    "\001(\0162\032.exec.shared.NamePart.Type\022\014\n\004name\030"
+    "\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.shared.NameP"
+    "art\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY\020\001\"\324\001\n\017Ser"
+    "ializedField\022%\n\nmajor_type\030\001 \001(\0132\021.commo"
+    "n.MajorType\022(\n\tname_part\030\002 \001(\0132\025.exec.sh"
+    "ared.NamePart\022+\n\005child\030\003 \003(\0132\034.exec.shar"
+    "ed.SerializedField\022\023\n\013value_count\030\004 \001(\005\022"
+    "\027\n\017var_byte_length\030\005 \001(\005\022\025\n\rbuffer_lengt"
+    "h\030\007 \001(\005\"7\n\nNodeStatus\022\017\n\007node_id\030\001 \001(\005\022\030"
+    "\n\020memory_footprint\030\002 \001(\003\"\263\002\n\013QueryResult"
+    "\0228\n\013query_state\030\001 \001(\0162#.exec.shared.Quer"
+    "yResult.QueryState\022&\n\010query_id\030\002 \001(\0132\024.e"
+    "xec.shared.QueryId\022(\n\005error\030\003 \003(\0132\031.exec"
+    ".shared.DrillPBError\"\227\001\n\nQueryState\022\014\n\010S"
+    "TARTING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n"
+    "\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\032\n\026CANCELLATION_"
+    "REQUESTED\020\005\022\014\n\010ENQUEUED\020\006\022\r\n\tPREPARING\020\007"
+    "\022\014\n\010PLANNING\020\010\"\215\001\n\tQueryData\022&\n\010query_id"
+    "\030\001 \001(\0132\024.exec.shared.QueryId\022\021\n\trow_coun"
+    "t\030\002 \001(\005\022(\n\003def\030\003 \001(\0132\033.exec.shared.Recor"
+    "dBatchDef\022\033\n\023affected_rows_count\030\004 \001(\005\"\330"
+    "\001\n\tQueryInfo\022\r\n\005query\030\001 \001(\t\022\r\n\005start\030\002 \001"
+    "(\003\0222\n\005state\030\003 \001(\0162#.exec.shared.QueryRes"
+    "ult.QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007forem"
+    "an\030\005 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014opti"
+    "ons_json\030\006 \001(\t\022\022\n\ntotal_cost\030\007 \001(\001\022\025\n\nqu"
+    "eue_name\030\010 \001(\t:\001-\"\263\004\n\014QueryProfile\022 \n\002id"
+    "\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 \001"
+    "(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003 \001("
+    "\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 "
+    "\001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.DrillbitEndp"
+    "oint\0222\n\005state\030\010 \001(\0162#.exec.shared.QueryR"
+    "esult.QueryState\022\027\n\017total_fragments\030\t \001("
+    "\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020fragmen"
+    "t_profile\030\013 \003(\0132!.exec.shared.MajorFragm"
+    "entProfile\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005error\030\r \001"
+    "(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010error_id\030\017 \001"
+    "(\t\022\022\n\nerror_node\030\020 \001(\t\022\024\n\014options_json\030\021"
+    " \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014queueWaitEnd\030\023 "
+    "\001(\003\022\022\n\ntotal_cost\030\024 \001(\001\022\025\n\nqueue_name\030\025 "
+    "\001(\t:\001-\022\017\n\007queryId\030\026 \001(\t\"t\n\024MajorFragment"
+    "Profile\022\031\n\021major_fragment_id\030\001 \001(\005\022A\n\026mi"
+    "nor_fragment_profile\030\002 \003(\0132!.exec.shared"
+    ".MinorFragmentProfile\"\350\002\n\024MinorFragmentP"
+    "rofile\022)\n\005state\030\001 \001(\0162\032.exec.shared.Frag"
+    "mentState\022(\n\005error\030\002 \001(\0132\031.exec.shared.D"
+    "rillPBError\022\031\n\021minor_fragment_id\030\003 \001(\005\0226"
+    "\n\020operator_profile\030\004 \003(\0132\034.exec.shared.O"
+    "peratorProfile\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010en"
+    "d_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017max"
+    "_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132\026.e"
+    "xec.DrillbitEndpoint\022\023\n\013last_update\030\n \001("
+    "\003\022\025\n\rlast_progress\030\013 \001(\003\"\377\001\n\017OperatorPro"
+    "file\0221\n\rinput_profile\030\001 \003(\0132\032.exec.share"
+    "d.StreamProfile\022\023\n\013operator_id\030\003 \001(\005\022\025\n\r"
+    "operator_type\030\004 \001(\005\022\023\n\013setup_nanos\030\005 \001(\003"
+    "\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_local_me"
+    "mory_allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132\030.e"
+    "xec.shared.MetricValue\022\022\n\nwait_nanos\030\t \001"
+    "(\003\"B\n\rStreamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007"
+    "batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013Metric"
+    "Value\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_value\030\002"
+    " \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n\010Registry\022\035"
+    "\n\003jar\030\001 \003(\0132\020.exec.shared.Jar\"/\n\003Jar\022\014\n\004"
+    "name\030\001 \001(\t\022\032\n\022function_signature\030\002 \003(\t\"W"
+    "\n\013SaslMessage\022\021\n\tmechanism\030\001 \001(\t\022\014\n\004data"
+    "\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec.shared.Sas"
+    "lStatus*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014"
+    "\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryType\022\007\n\003S"
+    "QL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECU"
+    "TION\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207\001\n\rFragm"
+    "entState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCA"
+    "TION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCAN"
+    "CELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQ"
+    "UESTED\020\006*\222\t\n\020CoreOperatorType\022\021\n\rSINGLE_"
+    "SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FILTER"
+    "\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n"
+    "\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDER\020\006"
+    "\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030ORD"
+    "ERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022"
+    "UNORDERED_RECEIVER\020\013\022\032\n\026RANGE_PARTITION_"
+    "SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR"
+    "_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nT"
+    "OP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020"
+    "\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_RO"
+    "W_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYS"
+    "TEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016P"
+    "ARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013"
+    "TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON"
+    "_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n"
+    "\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020"
+    " \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NES"
+    "TED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$\022\021\n\rPC"
+    "AP_SUB_SCAN\020%\022\022\n\016KAFKA_SUB_SCAN\020&\022\021\n\rKUD"
+    "U_SUB_SCAN\020\'\022\013\n\007FLATTEN\020(\022\020\n\014LATERAL_JOI"
+    "N\020)\022\n\n\006UNNEST\020*\022,\n(HIVE_DRILL_NATIVE_PAR"
+    "QUET_ROW_GROUP_SCAN\020+\022\r\n\tJDBC_SCAN\020,\022\022\n\016"
+    "REGEX_SUB_SCAN\020-\022\023\n\017MAPRDB_SUB_SCAN\020.\022\022\n"
+    "\016MONGO_SUB_SCAN\020/\022\017\n\013KUDU_WRITER\0200\022\026\n\022OP"
+    "EN_TSDB_SUB_SCAN\0201\022\017\n\013JSON_WRITER\0202\022\026\n\022H"
+    "TPPD_LOG_SUB_SCAN\0203\022\022\n\016IMAGE_SUB_SCAN\0204\022"
+    "\025\n\021SEQUENCE_SUB_SCAN\0205\022\023\n\017PARTITION_LIMI"
+    "T\0206\022\023\n\017PCAPNG_SUB_SCAN\0207\022\022\n\016RUNTIME_FILT"
+    "ER\0208\022\017\n\013ROWKEY_JOIN\0209*g\n\nSaslStatus\022\020\n\014S"
+    "ASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN"
+    "_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FA"
+    "ILED\020\004B.\n\033org.apache.drill.exec.protoB\rU"
+    "serBitSharedH\001", 5534);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   UserCredentials::default_instance_ = new UserCredentials();
@@ -3076,6 +3080,7 @@ void ParsingError::Swap(ParsingError* other) {
 const int RecordBatchDef::kRecordCountFieldNumber;
 const int RecordBatchDef::kFieldFieldNumber;
 const int RecordBatchDef::kCarriesTwoByteSelectionVectorFieldNumber;
+const int RecordBatchDef::kAffectedRowsCountFieldNumber;
 #endif  // !_MSC_VER
 
 RecordBatchDef::RecordBatchDef()
@@ -3096,6 +3101,7 @@ void RecordBatchDef::SharedCtor() {
   _cached_size_ = 0;
   record_count_ = 0;
   carries_two_byte_selection_vector_ = false;
+  affected_rows_count_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -3133,6 +3139,7 @@ void RecordBatchDef::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     record_count_ = 0;
     carries_two_byte_selection_vector_ = false;
+    affected_rows_count_ = 0;
   }
   field_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -3187,6 +3194,22 @@ bool RecordBatchDef::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(32)) goto parse_affected_rows_count;
+        break;
+      }
+
+      // optional int32 affected_rows_count = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_affected_rows_count:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &affected_rows_count_)));
+          set_has_affected_rows_count();
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -3225,6 +3248,11 @@ void RecordBatchDef::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(3, this->carries_two_byte_selection_vector(), output);
   }
 
+  // optional int32 affected_rows_count = 4;
+  if (has_affected_rows_count()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->affected_rows_count(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -3250,6 +3278,11 @@ void RecordBatchDef::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(3, this->carries_two_byte_selection_vector(), target);
   }
 
+  // optional int32 affected_rows_count = 4;
+  if (has_affected_rows_count()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->affected_rows_count(), target);
+  }
+
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -3271,6 +3304,13 @@ int RecordBatchDef::ByteSize() const {
     // optional bool carries_two_byte_selection_vector = 3;
     if (has_carries_two_byte_selection_vector()) {
       total_size += 1 + 1;
+    }
+
+    // optional int32 affected_rows_count = 4;
+    if (has_affected_rows_count()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->affected_rows_count());
     }
 
   }
@@ -3315,6 +3355,9 @@ void RecordBatchDef::MergeFrom(const RecordBatchDef& from) {
     if (from.has_carries_two_byte_selection_vector()) {
       set_carries_two_byte_selection_vector(from.carries_two_byte_selection_vector());
     }
+    if (from.has_affected_rows_count()) {
+      set_affected_rows_count(from.affected_rows_count());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -3341,6 +3384,7 @@ void RecordBatchDef::Swap(RecordBatchDef* other) {
     std::swap(record_count_, other->record_count_);
     field_.Swap(&other->field_);
     std::swap(carries_two_byte_selection_vector_, other->carries_two_byte_selection_vector_);
+    std::swap(affected_rows_count_, other->affected_rows_count_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -4699,6 +4743,7 @@ void QueryResult::Swap(QueryResult* other) {
 const int QueryData::kQueryIdFieldNumber;
 const int QueryData::kRowCountFieldNumber;
 const int QueryData::kDefFieldNumber;
+const int QueryData::kAffectedRowsCountFieldNumber;
 #endif  // !_MSC_VER
 
 QueryData::QueryData()
@@ -4722,6 +4767,7 @@ void QueryData::SharedCtor() {
   query_id_ = NULL;
   row_count_ = 0;
   def_ = NULL;
+  affected_rows_count_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -4766,6 +4812,7 @@ void QueryData::Clear() {
     if (has_def()) {
       if (def_ != NULL) def_->::exec::shared::RecordBatchDef::Clear();
     }
+    affected_rows_count_ = 0;
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -4816,6 +4863,22 @@ bool QueryData::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(32)) goto parse_affected_rows_count;
+        break;
+      }
+
+      // optional int32 affected_rows_count = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_affected_rows_count:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &affected_rows_count_)));
+          set_has_affected_rows_count();
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -4855,6 +4918,11 @@ void QueryData::SerializeWithCachedSizes(
       3, this->def(), output);
   }
 
+  // optional int32 affected_rows_count = 4;
+  if (has_affected_rows_count()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->affected_rows_count(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -4880,6 +4948,11 @@ void QueryData::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         3, this->def(), target);
+  }
+
+  // optional int32 affected_rows_count = 4;
+  if (has_affected_rows_count()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->affected_rows_count(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -4912,6 +4985,13 @@ int QueryData::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->def());
+    }
+
+    // optional int32 affected_rows_count = 4;
+    if (has_affected_rows_count()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->affected_rows_count());
     }
 
   }
@@ -4950,6 +5030,9 @@ void QueryData::MergeFrom(const QueryData& from) {
     if (from.has_def()) {
       mutable_def()->::exec::shared::RecordBatchDef::MergeFrom(from.def());
     }
+    if (from.has_affected_rows_count()) {
+      set_affected_rows_count(from.affected_rows_count());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -4976,6 +5059,7 @@ void QueryData::Swap(QueryData* other) {
     std::swap(query_id_, other->query_id_);
     std::swap(row_count_, other->row_count_);
     std::swap(def_, other->def_);
+    std::swap(affected_rows_count_, other->affected_rows_count_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

@@ -37,6 +37,7 @@ import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 // package private
@@ -106,7 +107,17 @@ class DataServerRequestHandler implements RequestHandler<DataServerConnection> {
     if (dBody == null) {
       return;
     }
-    RuntimeFilterWritable runtimeFilterWritable = new RuntimeFilterWritable(runtimeFilterBDef, (DrillBuf) dBody);
+    List<Integer> bfSizeInBytes = runtimeFilterBDef.getBloomFilterSizeInBytesList();
+    int boomFilterNum = bfSizeInBytes.size();
+    DrillBuf data = (DrillBuf) dBody;
+    DrillBuf[] bufs = new DrillBuf[boomFilterNum];
+    int index = 0;
+    for (int i = 0; i < boomFilterNum; i++) {
+      int length = bfSizeInBytes.get(i);
+      bufs[i] = data.slice(index, length);
+      index = index + length;
+    }
+    RuntimeFilterWritable runtimeFilterWritable = new RuntimeFilterWritable(runtimeFilterBDef, bufs);
     AckSender ackSender = new AckSender(sender);
     ackSender.increment();
     try {

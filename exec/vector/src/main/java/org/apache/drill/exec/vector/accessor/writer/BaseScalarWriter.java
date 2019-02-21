@@ -129,7 +129,7 @@ import io.netty.buffer.DrillBuf;
  * a roll-over when a vector overflows.
  */
 
-public abstract class BaseScalarWriter extends AbstractScalarWriter {
+public abstract class BaseScalarWriter extends AbstractScalarWriterImpl {
 
   public static final int MIN_BUFFER_SIZE = 256;
 

@@ -518,7 +518,8 @@ public class WorkspaceSchemaFactory {
       List<DotDrillFile> files = Collections.emptyList();
       try {
         try {
-          files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()), tableName, DotDrillType.VIEW);
+          files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()),
+              FileSelection.removeLeadingSlash(tableName), DotDrillType.VIEW);
         } catch (AccessControlException e) {
           if (!schemaConfig.getIgnoreAuthErrors()) {
             logger.debug(e.getMessage());

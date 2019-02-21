@@ -132,6 +132,11 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
         return IterOutcome.OK;
       }
 
+      if (rightUpstream == IterOutcome.NONE) {
+        rkJoinState = RowKeyJoinState.DONE;
+        state = BatchState.DONE;
+        return rightUpstream;
+      }
       rightUpstream = next(right);
 
       logger.debug("right input IterOutcome: {}", rightUpstream);

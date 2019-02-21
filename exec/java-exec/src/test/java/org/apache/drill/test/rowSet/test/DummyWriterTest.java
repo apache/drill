@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
@@ -32,7 +32,6 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
 import org.apache.drill.exec.vector.accessor.writer.MapWriter;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 public class DummyWriterTest extends SubOperatorTest {
@@ -133,8 +132,8 @@ public class DummyWriterTest extends SubOperatorTest {
 
     // Mark schema as non-projected
 
-    ((AbstractColumnMetadata) schema.metadata("m1")).setProjected(false);
-    ((AbstractColumnMetadata) schema.metadata("m2")).setProjected(false);
+    schema.metadata("m1").setProjected(false);
+    schema.metadata("m2").setProjected(false);
 
     // Create the writers
 

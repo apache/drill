@@ -31,7 +31,6 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_T
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_TYPE;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -436,14 +435,13 @@ public abstract class InfoSchemaRecordGenerator<S> {
           String defaultLocation = wsSchema.getDefaultLocation();
           FileSystem fs = wsSchema.getFS();
           boolean recursive = optionManager.getBoolean(ExecConstants.LIST_FILES_RECURSIVELY);
-          FileSystemUtil.listAll(fs, new Path(defaultLocation), recursive).forEach(
+          // add URI to the path to ensure that directory objects are skipped (see S3AFileSystem.listStatus method)
+          FileSystemUtil.listAllSafe(fs, new Path(fs.getUri().toString(), defaultLocation), recursive).forEach(
               fileStatus -> records.add(new Records.File(schemaName, wsSchema, fileStatus))
           );
         }
       } catch (ClassCastException | UnsupportedOperationException e) {
         // ignore the exception since either this is not a Drill schema or schema does not support files listing
-      } catch (IOException e) {
-        logger.warn("Failure while trying to list files", e);
       }
     }
   }

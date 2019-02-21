@@ -24,9 +24,8 @@ import org.apache.calcite.avatica.UnregisteredDriver;
 import java.sql.SQLException;
 import java.util.Properties;
 
-
 /**
- * Partial implementation of {@link net.hydromatic.avatica.AvaticaFactory}
+ * Partial implementation of {@link AvaticaFactory}
  * (factory for main JDBC objects) for Drill's JDBC driver.
  * <p>
  *   Handles JDBC version number.

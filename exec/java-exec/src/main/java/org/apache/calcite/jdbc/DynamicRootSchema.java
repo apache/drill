@@ -25,6 +25,8 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.impl.AbstractSchema;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -117,6 +119,14 @@ public class DynamicRootSchema extends DynamicSchema {
       }
     } catch(ExecutionSetupException | IOException ex) {
       logger.warn("Failed to load schema for \"" + schemaName + "\"!", ex);
+      // We can't proceed further without a schema, throw a runtime exception.
+      UserException.Builder exceptBuilder =
+          UserException
+              .resourceError(ex)
+              .message("Failed to load schema for \"" + schemaName + "\"!")
+              .addContext(ex.getClass().getName() + ": " + ex.getMessage())
+              .addContext(UserExceptionUtils.getUserHint(ex)); //Provide hint if it exists
+      throw exceptBuilder.build(logger);
     }
   }
 

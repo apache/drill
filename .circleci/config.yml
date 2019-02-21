@@ -16,24 +16,26 @@
 version: 2
 general:
 jobs:
-  build:
+  build_jdk8:
     machine:
       enabled: true
       image: circleci/classic:latest
     parallelism: 1 # TODO: 1. Configuring Parallel Jobs for Running Tests https://circleci.com/docs/2.0/parallelism-faster-jobs/
 
-
     working_directory: ~/drill
 
     steps:
     - checkout
-
+    - restore_cache:
+        keys:
+        - m2-{{ checksum "pom.xml" }}
+        - m2- # used if checksum fails
     - run:
         name: Update maven version
         # TODO: Could be removed, once Machine Executor image is updated https://github.com/circleci/image-builder/issues/140
         # and the possibility of specifying Maven version is added https://github.com/circleci/image-builder/issues/143
         command:
-          curl -fsSL https://git.io/vpDIf | bash -s -- 3.5.4
+          curl -fsSL https://git.io/vpDIf | bash -s -- 3.6.0
     - run:
         name: Update packages list
         command:
@@ -45,7 +47,150 @@ jobs:
     - run:
         name: Drill project build
         # TODO: 2. Optimizing Maven Builds on CircleCI - https://circleci.com/blog/optimizing-maven-builds-on-circleci/
-        # TODO: 3. Caching Dependencies - https://circleci.com/docs/2.0/caching/
-        # TODO: 4. Resolving memory issues without "SlowTest" and "UnlikelyTest" excludedGroups in the build
+        # TODO: 3. Resolving memory issues without "SlowTest" and "UnlikelyTest" excludedGroups in the build
         command:
           mvn install -Drat.skip=false -Dlicense.skip=false -DmemoryMb=2560 -DdirectMemoryMb=4608 -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest"
+    - save_cache:
+        paths:
+          - ~/.m2
+        key: m2-{{ checksum "pom.xml" }}
+
+  build_jdk9:
+    machine:
+      enabled: true
+      image: circleci/classic:latest
+    parallelism: 1
+
+    working_directory: ~/drill
+
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - m2-{{ checksum "pom.xml" }}
+        - m2- # used if checksum fails
+    - run:
+        name: Update packages list
+        command:
+          sudo apt-get update
+    - run:
+        name: Install java 9
+        command:
+          sudo apt-get -y install openjdk-9-jdk
+    - run:
+        name: Set default java 9
+        command:
+          sudo update-java-alternatives --set java-1.9.0-openjdk-amd64
+    - run:
+        name: Update maven version
+        command:
+          curl -fsSL https://git.io/vpDIf | bash -s -- 3.6.0
+    - run:
+        name: Install libaio1.so library for MySQL integration tests
+        command:
+          sudo apt-get install libaio1 libaio-dev
+    - run:
+        name: Drill project build
+        command:
+          mvn install -Drat.skip=false -Dlicense.skip=false -DmemoryMb=2560 -DdirectMemoryMb=4608 -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest"
+    - save_cache:
+        paths:
+          - ~/.m2
+        key: m2-{{ checksum "pom.xml" }}
+
+  build_jdk10:
+    machine:
+      enabled: true
+      image: circleci/classic:latest
+    parallelism: 1
+
+    working_directory: ~/drill
+
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - m2-{{ checksum "pom.xml" }}
+        - m2- # used if checksum fails
+    - run:
+        name: Update packages list
+        command:
+          sudo apt-get update
+    - run:
+        name: Install java 10
+        command:
+          sudo apt-get -y install openjdk-10-jdk
+    - run:
+        name: Set default java 10
+        command:
+          sudo update-java-alternatives --set java-1.10.0-openjdk-amd64
+    - run:
+        name: Update maven version
+        command:
+          curl -fsSL https://git.io/vpDIf | bash -s -- 3.6.0
+    - run:
+        name: Install libaio1.so library for MySQL integration tests
+        command:
+          sudo apt-get install libaio1 libaio-dev
+    - run:
+        name: Drill project build
+        command:
+          mvn install -Drat.skip=false -Dlicense.skip=false -DmemoryMb=2560 -DdirectMemoryMb=4608 -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest"
+    - save_cache:
+        paths:
+          - ~/.m2
+        key: m2-{{ checksum "pom.xml" }}
+
+  build_jdk11:
+    machine:
+      enabled: true
+      image: circleci/classic:latest
+    parallelism: 1
+
+    working_directory: ~/drill
+
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - m2-{{ checksum "pom.xml" }}
+        - m2- # used if checksum fails
+    - run:
+        name: Update packages list
+        command:
+          sudo apt-get update
+    - run:
+        name: Install java 11
+        command:
+          sudo apt-get -y install openjdk-11-jdk
+    - run:
+        name: Set default java 11
+        command:
+          sudo update-java-alternatives --set java-1.11.0-openjdk-amd64
+    - run:
+        name: Update maven version
+        command:
+          curl -fsSL https://git.io/vpDIf | bash -s -- 3.6.0
+    - run:
+        name: Install libaio1.so library for MySQL integration tests
+        command:
+          sudo apt-get install libaio1 libaio-dev
+    - run:
+        name: Drill project build
+        # Set forkCount to 1 since tests use more memory and memory limitations for CircleCI is reached
+        # for default value of forkCount.
+        command:
+          mvn install -Drat.skip=false -Dlicense.skip=false -DmemoryMb=2560 -DdirectMemoryMb=4608 -DforkCount=1 -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest"
+    - save_cache:
+        paths:
+          - ~/.m2
+        key: m2-{{ checksum "pom.xml" }}
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+    - build_jdk8
+    - build_jdk9
+    - build_jdk10
+    - build_jdk11

@@ -23,18 +23,17 @@
 <script src="/static/js/dagre-d3.min.js"></script>
 <script src="/static/js/graph.js"></script>
 <script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
-<#if model.isOnlyImpersonationEnabled()>
-    <script src="/static/js/jquery.form.js"></script>
-    <script src="/static/js/querySubmission.js"></script>
-</#if>
-  <!-- Ace Libraries for Syntax Formatting -->
-  <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
-  <!-- Disabled in favour of dynamic: script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8" -->
-  <script src="/dynamic/mode-sql.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/theme-sqlserver.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/snippets/sql.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/mode-snippets.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/jquery.form.js"></script>
+<script src="/static/js/querySubmission.js"></script>
+<!-- Ace Libraries for Syntax Formatting -->
+<script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
+<!-- Disabled in favour of dynamic: script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8" -->
+<script src="/dynamic/mode-sql.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace-code-editor/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace-code-editor/theme-sqlserver.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace-code-editor/snippets/sql.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace-code-editor/mode-snippets.js" type="text/javascript" charset="utf-8"></script>
+<link href="/static/css/drill-dataTables.sortable.css" rel="stylesheet">
 
 <script>
     var globalconfig = {
@@ -48,8 +47,40 @@
         "lengthChange": false,
         "paging": false,
         "info": false
-      }
-    );} );
+      });
+      //Enable Warnings by making it visible
+      checkForWarnings();
+    });
+
+    //Check for Warnings
+    function checkForWarnings() {
+      //No Progress Warning
+      let noProgressFragmentCount = document.querySelectorAll('td[class=no-progress-tag]').length;
+      let majorFragmentCount = document.querySelectorAll('#fragment-overview table tbody tr').length;
+      toggleWarning("noProgressWarning", majorFragmentCount, noProgressFragmentCount);
+
+      //Spill To Disk Warnings
+      let spillCount = document.querySelectorAll('td[class=spill-tag]').length;
+      toggleWarning("spillToDiskWarning", true, (spillCount > 0));
+
+      //Slow Scan Warnings
+      let longScanWaitCount = document.querySelectorAll('td[class=scan-wait-tag]').length;
+      toggleWarning("longScanWaitWarning", true, (longScanWaitCount > 0));
+    }
+
+    //Show Warnings
+    function toggleWarning(warningElemId, expectedVal, actualVal) {
+        if (expectedVal == actualVal) {
+            document.getElementById(warningElemId).style.display="block";
+        } else {
+            closeWarning(warningElemId);
+        }
+    }
+
+    //Close Warning
+    function closeWarning(warningElemId) {
+        document.getElementById(warningElemId).style.display="none";
+    }
 
     //Close the cancellation status popup
     function refreshStatus() {
@@ -67,19 +98,6 @@
     };
 
 </script>
-<style>
-/* DataTables Sorting: inherited via sortable class */
-table.sortable thead .sorting,.sorting_asc,.sorting_desc {
-  background-repeat: no-repeat;
-  background-position: center right;
-  cursor: pointer;
-}
-/* Sorting Symbols */
-table.sortable thead .sorting { background-image: url("/static/img/black-unsorted.gif"); }
-table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
-table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
-</style>
-
 </#macro>
 
 <#macro page_body>
@@ -144,11 +162,14 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
               </label>
             </div>
             </div>
-            <button class="btn btn-default" type=<#if model.isOnlyImpersonationEnabled()>"button" onclick="doSubmitQueryWithUserName()"<#else>"submit"</#if>>
+            <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>submitQuery()</#if>">
             Re-run query
             </button>
           </form>
       </p>
+
+<#include "*/runningQuery.ftl">
+
       <p>
       <form action="/profiles/cancel/${model.queryId}" method="GET">
         <div class="form-group">
@@ -189,7 +210,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
 
   <div class="page-header"></div>
   <h3>Query Profile: <span style='font-size:85%'>${model.getQueryId()}</span>
-  <#if model.getQueryStateDisplayName() == "Prepared" || model.getQueryStateDisplayName() == "Planning" || model.getQueryStateDisplayName() == "Enqueued" || model.getQueryStateDisplayName() == "Starting">
+  <#if model.getQueryStateDisplayName() == "Prepared" || model.getQueryStateDisplayName() == "Planning" || model.getQueryStateDisplayName() == "Enqueued" || model.getQueryStateDisplayName() == "Starting" || model.getQueryStateDisplayName() == "Running">
     <div  style="display: inline-block;">
       <button type="button" id="cancelBtn" class="btn btn-warning btn-sm" onclick="cancelQuery()" > Cancel </button>
     </div>
@@ -211,7 +232,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
   </div>
   </#if>
   </h3>
-  
+
   <div class="panel-group" id="query-profile-accordion">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -288,38 +309,23 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     </div>
   </div>
 
-  <#assign options = model.getOptions()>
-  <#if (options?keys?size > 0)>
+  <#assign sessionOptions = model.getSessionOptions()>
+  <#assign queryOptions = model.getQueryOptions()>
+  <#if (sessionOptions?keys?size > 0 || queryOptions?keys?size > 0) >
     <div class="page-header"></div>
-    <h3>Session Options</h3>
-    <div class="panel-group" id="session-options-accordion">
+    <h3>Options</h3>
+    <div class="panel-group" id="options-accordion">
       <div class="panel panel-default">
         <div class="panel-heading">
           <h4 class="panel-title">
-            <a data-toggle="collapse" href="#session-options-overview">
+            <a data-toggle="collapse" href="#options-overview">
               Overview
             </a>
           </h4>
         </div>
-        <div id="session-options-overview" class="panel-collapse collapse in">
-          <div class="panel-body">
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <#list options?keys as name>
-                  <tr>
-                    <td>${name}</td>
-                    <td>${options[name]}</td>
-                  </tr>
-                </#list>
-              </tbody>
-            </table>
-          </div>
+        <div id="options-overview" class="panel-collapse collapse in">
+          <@list_options options=sessionOptions scope="Session" />
+          <@list_options options=queryOptions scope="Query" />
         </div>
       </div>
     </div>
@@ -340,26 +346,31 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       <div id="fragment-overview" class="panel-collapse collapse">
         <div class="panel-body">
           <svg id="fragment-overview-canvas" class="center-block"></svg>
+          <div id="noProgressWarning" style="display:none;cursor:help" class="panel panel-warning">
+            <div class="panel-heading" title="Check if any of the Drillbits are waiting for data from a SCAN operator, or might actually be hung with its VM thread being busy." style="cursor:pointer">
+            <span class="glyphicon glyphicon-alert" style="font-size:125%">&#xe209;</span> <b>WARNING:</b> No fragments have made any progress in the last <b>${model.getNoProgressWarningThreshold()}</b> seconds. (See <span style="font-style:italic;font-weight:bold">Last Progress</span> below)
+            </div>
+          </div>
           ${model.getFragmentsOverview()?no_esc}
         </div>
       </div>
-    </div>
-    <#list model.getFragmentProfiles() as frag>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" href="#${frag.getId()}">
-            ${frag.getDisplayName()}
-          </a>
-        </h4>
-      </div>
-      <div id="${frag.getId()}" class="panel-collapse collapse">
-        <div class="panel-body">
-          ${frag.getContent()?no_esc}
+      <#list model.getFragmentProfiles() as frag>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" href="#${frag.getId()}">
+              ${frag.getDisplayName()}
+            </a>
+          </h4>
+        </div>
+        <div id="${frag.getId()}" class="panel-collapse collapse">
+          <div class="panel-body">
+            ${frag.getContent()?no_esc}
+          </div>
         </div>
       </div>
+      </#list>
     </div>
-    </#list>
   </div>
 
   <div class="page-header"></div>
@@ -376,6 +387,17 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       </div>
       <div id="operator-overview" class="panel-collapse collapse">
         <div class="panel-body">
+          <div id="spillToDiskWarning" style="display:none;cursor:help" class="panel panel-warning" title="Spills occur because a buffered operator didn't get enough memory to hold data in memory. Increase the memory or ensure that number of spills &lt; 2">
+            <div class="panel-heading"><span class="glyphicon glyphicon-alert" style="font-size:125%">&#xe209;</span> <b>WARNING:</b> Some operators have data spilled to disk. This will result in performance loss. (See <span style="font-style:italic;font-weight:bold">Avg Peak Memory</span> and <span style="font-style:italic;font-weight:bold">Max Peak Memory</span> below)
+            <button type="button" class="close" onclick="closeWarning('spillToDiskWarning')" style="font-size:180%">&times;</button>
+            </div>
+          </div>
+          <div id="longScanWaitWarning" style="display:none;cursor:help" class="panel panel-warning">
+            <div class="panel-heading" title="Check if any of the Drillbits are waiting for data from a SCAN operator, or might actually be hung with its VM thread being busy." style="cursor:pointer">
+            <span class="glyphicon glyphicon-alert" style="font-size:125%">&#xe209;</span> <b>WARNING:</b> Some of the SCAN operators spent more time waiting for the data than processing it. (See <span style="font-style:italic;font-weight:bold">Avg Wait Time</span> as compared to <span style="font-style:italic;font-weight:bold">Average Process Time</span> for the <b>SCAN</b> operators below)
+            <button type="button" class="close" onclick="closeWarning('longScanWaitWarning')" style="font-size:180%">&times;</button>
+            </div>
+          </div>
           ${model.getOperatorsOverview()?no_esc}
         </div>
       </div>
@@ -428,13 +450,32 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     <script>
     //Inject Spilled Tags
     $(window).on('load', function () {
-      var spillLabel = document.getElementsByClassName("spill-tag");
-      var i;
-      for (i = 0; i < spillLabel.length; i++) {
-        var content = spillLabel[i].innerHTML;
-        spillLabel[i].innerHTML = "<span class=\"glyphicon glyphicon-download-alt\">&nbsp;</span>"+content;
-      }
+      injectIconByClass("spill-tag","glyphicon-download-alt");
+      injectIconByClass("time-skew-tag","glyphicon-time");
+      injectSlowScanIcon();
     });
+
+    //Inject Glyphicon by Class tag
+    function injectIconByClass(tagLabel, tagIcon) {
+        //Inject Spill icons
+        var tagElemList = document.getElementsByClassName(tagLabel);
+        var i;
+        for (i = 0; i < tagElemList.length; i++) {
+            var content = tagElemList[i].innerHTML;
+            tagElemList[i].innerHTML = "<span class=\"glyphicon "+tagIcon+"\">&nbsp;</span>"+content;
+        }
+    }
+
+    //Inject PNG icon for slow
+    function injectSlowScanIcon() {
+        //Inject Spill icons
+        var tagElemList = document.getElementsByClassName("scan-wait-tag");
+        var i;
+        for (i = 0; i < tagElemList.length; i++) {
+            var content = tagElemList[i].innerHTML;
+            tagElemList[i].innerHTML = "<img src='/static/img/turtle.png' alt='slow'> "+content;
+        }
+    }
 
     //Configuration for Query Viewer in Profile
     ace.require("ace/ext/language_tools");
@@ -521,10 +562,35 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     document.getElementById('queryForm')
             .addEventListener('keydown', function(e) {
       if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
-      if (e.target.form) doSubmitQueryWithUserName();
+      if (e.target.form) 
+        <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>submitQuery()</#if>;
     });
     </script>
 
+</#macro>
+
+<#macro list_options options scope>
+ <#if (options?keys?size > 0) >
+   <div class="panel-body">
+     <h4>${scope} Options</h4>
+     <table id="${scope}_options_table" class="table table-bordered">
+       <thead>
+         <tr>
+           <th>Name</th>
+           <th>Value</th>
+         </tr>
+       </thead>
+         <tbody>
+           <#list options?keys as name>
+             <tr>
+               <td>${name}</td>
+               <td>${options[name]}</td>
+             </tr>
+           </#list>
+         </tbody>
+     </table>
+   </div>
+ </#if>
 </#macro>
 
 <@page_html/>

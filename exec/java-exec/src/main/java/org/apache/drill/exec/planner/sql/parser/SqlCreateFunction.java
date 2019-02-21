@@ -36,7 +36,7 @@ public class SqlCreateFunction extends DrillSqlCall {
 
   private final SqlNode jar;
 
-  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_FUNCTION", SqlKind.OTHER) {
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_FUNCTION", SqlKind.OTHER_DDL) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlCreateFunction(pos, operands[0]);

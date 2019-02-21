@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.15.0-SNAPSHOT</version>
+    <version>1.16.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
@@ -241,7 +241,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.18.1</version>
+        <version>2.22.0</version>
         <executions>
           <execution>
             <goals>
@@ -268,6 +268,7 @@
             <app.class.path>${app.class.path}</app.class.path>
             <project.version>${project.version}</project.version>
           </systemPropertyVariables>
+          <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
       </plugin>
 
@@ -333,6 +334,7 @@
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
               <exclude>io.netty:netty-tcnative:jar:*</exclude>
+              <exclude>org.honton.chas.hocon:jackson-dataformat-hocon:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -510,7 +512,7 @@
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                   </message>
-                  <maxsize>39500000</maxsize>
+                  <maxsize>40000000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -648,6 +650,7 @@
                     <exclude>commons-io:commons-io</exclude>
                     <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
                     <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
+                    <exclude>org.honton.chas.hocon:jackson-dataformat-hocon:*</exclude>
                   </excludes>
                 </artifactSet>
                 <relocations>
@@ -853,6 +856,12 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>travis</id>
+      <properties>
+        <skipTests>true</skipTests>
+      </properties>
     </profile>
   </profiles>
 

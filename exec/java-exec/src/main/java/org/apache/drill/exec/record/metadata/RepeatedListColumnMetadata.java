@@ -28,10 +28,9 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
   /**
    * Indicates we don't know the number of dimensions.
    */
-
   public static final int UNKNOWN_DIMENSIONS = -1;
 
-  private AbstractColumnMetadata childSchema;
+  private ColumnMetadata childSchema;
 
   public RepeatedListColumnMetadata(MaterializedField field) {
     super(field);
@@ -44,7 +43,7 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
     }
   }
 
-  public RepeatedListColumnMetadata(String name, AbstractColumnMetadata childSchema) {
+  public RepeatedListColumnMetadata(String name, ColumnMetadata childSchema) {
     super(name, MinorType.LIST, DataMode.REPEATED);
     if (childSchema != null) {
       Preconditions.checkArgument(childSchema.isArray());
@@ -55,7 +54,7 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
   public void childSchema(ColumnMetadata childMetadata) {
     Preconditions.checkState(childSchema == null);
     Preconditions.checkArgument(childMetadata.mode() == DataMode.REPEATED);
-    childSchema = (AbstractColumnMetadata) childMetadata;
+    childSchema = childMetadata;
   }
 
   @Override
@@ -84,7 +83,7 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
-  public AbstractColumnMetadata copy() {
+  public ColumnMetadata copy() {
     return new RepeatedListColumnMetadata(name, childSchema);
   }
 
@@ -100,4 +99,10 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
     return childSchema == null ? UNKNOWN_DIMENSIONS
         : childSchema.dimensions() + 1;
   }
+
+  @Override
+  public String typeString() {
+    return "ARRAY<" + childSchema.typeString() + ">";
+  }
+
 }

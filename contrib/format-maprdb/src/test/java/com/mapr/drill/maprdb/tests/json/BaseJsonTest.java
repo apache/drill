@@ -30,7 +30,6 @@ import com.mapr.drill.maprdb.tests.MaprDBTestsSuite;
 
 public class BaseJsonTest extends BaseTestQuery {
   protected static final String SCHEMA = "hbase.root";
-  
   protected String format(final String sql) {
     return String.format(sql, SCHEMA, getTablePath());
   }

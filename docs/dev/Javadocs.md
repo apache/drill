@@ -15,6 +15,6 @@
 
 ## Viewing In IntelliJ
 
- 1. Go to `target/set/apidocs/index.html` in IntelliJ's project view.
- 2. Right click on `target/set/apidocs/index.html`
+ 1. Go to `target/site/apidocs/index.html` in IntelliJ's project view.
+ 2. Right click on `target/site/apidocs/index.html`
  3. Select **Open in Browser**.

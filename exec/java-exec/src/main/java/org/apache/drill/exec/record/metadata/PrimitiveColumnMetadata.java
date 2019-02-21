@@ -23,15 +23,51 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 
 /**
- * Primitive (non-map) column. Describes non-nullable, nullable and
- * array types (which differ only in mode, but not in metadata structure.)
+ * Primitive (non-map) column. Describes non-nullable, nullable and array types
+ * (which differ only in mode, but not in metadata structure.)
+ * <p>
+ * Metadata is of two types:
+ * <ul>
+ * <li>Storage metadata that describes how the column is materialized in a
+ * vector. Storage metadata is immutable because revising an existing vector is
+ * a complex operation.</li>
+ * <li>Supplemental metadata used when reading or writing the column.
+ * Supplemental metadata can be changed after the column is created, though it
+ * should generally be set before invoking code that uses the metadata.</li>
+ * </ul>
  */
 
 public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
-  protected int expectedWidth;
+  /**
+   * Expected (average) width for variable-width columns.
+   */
+
+  private int expectedWidth;
+
+  /**
+   * Default value to use for filling a vector when no real data is
+   * available, such as for columns added in new files but which does not
+   * exist in existing files. The ultimate default value is the SQL null
+   * value, which works only for nullable columns.
+   */
+
+  private Object defaultValue;
+
+  /**
+   * Factory for an optional shim writer that translates from the type of
+   * data available to the code that creates the vectors on the one hand,
+   * and the actual type of the column on the other. For example, a shim
+   * might parse a string form of a date into the form stored in vectors.
+   * <p>
+   * The default is to use the "natural" type: that is, to insert no
+   * conversion shim.
+   */
+
+  private ColumnConversionFactory shimFactory;
 
   public PrimitiveColumnMetadata(MaterializedField schema) {
     super(schema);
@@ -71,7 +107,7 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
-  public AbstractColumnMetadata copy() {
+  public ColumnMetadata copy() {
     return new PrimitiveColumnMetadata(this);
   }
 
@@ -97,6 +133,22 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
       expectedWidth = Math.max(1, width);
     }
   }
+
+  @Override
+  public void setDefaultValue(Object value) {
+    defaultValue = value;
+  }
+
+  @Override
+  public Object defaultValue() { return defaultValue; }
+
+  @Override
+  public void setTypeConverter(ColumnConversionFactory factory) {
+    shimFactory = factory;
+  }
+
+  @Override
+  public ColumnConversionFactory typeConverter() { return shimFactory; }
 
   @Override
   public ColumnMetadata cloneEmpty() {
@@ -128,4 +180,50 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public MaterializedField emptySchema() { return schema(); }
+
+  @Override
+  public String typeString() {
+    StringBuilder builder = new StringBuilder();
+    if (isArray()) {
+      builder.append("ARRAY<");
+    }
+
+    switch (type) {
+      case VARDECIMAL:
+        builder.append("DECIMAL");
+        break;
+      case FLOAT4:
+        builder.append("FLOAT");
+        break;
+      case FLOAT8:
+        builder.append("DOUBLE");
+        break;
+      case BIT:
+        builder.append("BOOLEAN");
+        break;
+      case INTERVALYEAR:
+        builder.append("INTERVAL YEAR");
+        break;
+      case INTERVALDAY:
+        builder.append("INTERVAL DAY");
+        break;
+      default:
+        // other minor types names correspond to SQL-like equivalents
+        builder.append(type.name());
+    }
+
+    if (precision() > 0) {
+      builder.append("(").append(precision());
+      if (scale() > 0) {
+        builder.append(", ").append(scale());
+      }
+      builder.append(")");
+    }
+
+    if (isArray()) {
+      builder.append(">");
+    }
+    return builder.toString();
+  }
+
 }

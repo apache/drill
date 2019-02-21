@@ -32,6 +32,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
@@ -40,7 +41,6 @@ import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
@@ -93,8 +93,7 @@ public class TestSorter extends DrillTest {
     try {
       sorter.sortBatch(rowSet.container(), rowSet.getSv2());
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(rowSet);
+      RowSetUtilities.verify(expected, rowSet);
       sorter.close();
     } finally {
       opContext.close();
@@ -240,8 +239,7 @@ public class TestSorter extends DrillTest {
     }
 
     protected void doVerify(DataItem[] expected, RowSet expectedRows, RowSet actual) {
-      new RowSetComparison(expectedRows)
-            .verifyAndClearAll(actual);
+      RowSetUtilities.verify(expectedRows, actual);
     }
 
     protected abstract void doSort(DataItem[] expected);

@@ -35,13 +35,13 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 import java.util.Iterator;
@@ -135,7 +135,6 @@ public class BloomFilterTest {
 
   @Test
   public void testNotExist() throws Exception {
-
     Drillbit bit = new Drillbit(c, RemoteServiceSet.getLocalServiceSet(), ClassPathScanner.fromPrescan(c));
     bit.run();
     DrillbitContext bitContext = bit.getContext();
@@ -192,6 +191,12 @@ public class BloomFilterTest {
     long hashCode = probeHash64.hash64Code(0, 0, 0);
     boolean contain = bloomFilter.find(hashCode);
     Assert.assertFalse(contain);
+    bloomFilter.getContent().close();
+    vectorContainer.clear();
+    probeVectorContainer.clear();
+    context.close();
+    bitContext.close();
+    bit.close();
   }
 
 
@@ -254,6 +259,12 @@ public class BloomFilterTest {
     long hashCode = probeHash64.hash64Code(0, 0, 0);
     boolean contain = bloomFilter.find(hashCode);
     Assert.assertTrue(contain);
+    bloomFilter.getContent().close();
+    vectorContainer.clear();
+    probeVectorContainer.clear();
+    context.close();
+    bitContext.close();
+    bit.close();
   }
 
 
@@ -324,5 +335,11 @@ public class BloomFilterTest {
     long hashCode = probeHash64.hash64Code(0, 0, 0);
     boolean contain = bloomFilter.find(hashCode);
     Assert.assertTrue(contain);
+    bloomFilter.getContent().close();
+    vectorContainer.clear();
+    probeVectorContainer.clear();
+    context.close();
+    bitContext.close();
+    bit.close();
   }
 }

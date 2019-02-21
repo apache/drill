@@ -67,9 +67,9 @@ public class SSLConfigClient extends SSLConfig {
     // the dependency on netty-tcnative with the correct classifier for the platform you use.
     // This can be done by enabling the openssl profile.
     // If the IDE is Eclipse, it requires you to install an additional Eclipse plugin available here:
-    // http://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+    // http://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/1.6.1/os-maven-plugin-1.6.1.jar
     // or from your local maven repository:
-    // ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+    // ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.6.1/os-maven-plugin-1.6.1.jar
     // Note that installing this plugin may require you to start with a new workspace
     provider = getStringProperty(DrillProperties.TLS_PROVIDER, DEFAULT_SSL_PROVIDER);
   }

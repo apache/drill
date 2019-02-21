@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -31,13 +32,16 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -63,6 +67,8 @@ public class StatusResources {
   public static final String PATH_INTERNAL_OPTIONS_JSON = "/internal_options" + REST_API_SUFFIX;
   public static final String PATH_OPTIONS = "/options";
   public static final String PATH_INTERNAL_OPTIONS = "/internal_options";
+  //Used to access current filter state in WebUI
+  private static final String CURRENT_FILTER_PARAM = "filter";
 
   @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
@@ -90,7 +96,7 @@ public class StatusResources {
     OptionList optionList = internal ? optionManager.getInternalOptionList(): optionManager.getPublicOptionList();
 
     for (OptionValue option : optionList) {
-      options.add(new OptionWrapper(option.name, option.getValue(), option.accessibleScopes, option.kind, option.scope));
+      options.add(new OptionWrapper(option.name, option.getValue(), optionManager.getDefault(option.name).getValue().toString(), option.accessibleScopes, option.kind, option.scope));
     }
 
     Collections.sort(options, new Comparator<OptionWrapper>() {
@@ -118,27 +124,35 @@ public class StatusResources {
     return getSystemOptionsJSONHelper(true);
   }
 
-  private Viewable getSystemOptionsHelper(boolean internal) {
+  //Generate model-view for WebUI (PATH_OPTIONS and PATH_INTERNAL_OPTIONS)
+  private Viewable getSystemOptionsHelper(boolean internal, UriInfo uriInfo) {
+    List<OptionWrapper> options = getSystemOptionsJSONHelper(internal);
+    List<String> fltrList = new ArrayList<>(work.getContext().getConfig().getStringList(ExecConstants.HTTP_WEB_OPTIONS_FILTERS));
+    String currFilter = (uriInfo != null) ? uriInfo.getQueryParameters().getFirst(CURRENT_FILTER_PARAM) : null;
+    if (currFilter == null) {
+      currFilter = "";
+    }
+
     return ViewableWithPermissions.create(authEnabled.get(),
       "/rest/options.ftl",
       sc,
-      getSystemOptionsJSONHelper(internal));
+      new OptionsListing(options, fltrList, currFilter));
   }
 
   @GET
   @Path(StatusResources.PATH_OPTIONS)
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getSystemPublicOptions() {
-    return getSystemOptionsHelper(false);
+  public Viewable getSystemPublicOptions(@Context UriInfo uriInfo) {
+    return getSystemOptionsHelper(false, uriInfo);
   }
 
   @GET
   @Path(StatusResources.PATH_INTERNAL_OPTIONS)
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getSystemInternalOptions() {
-    return getSystemOptionsHelper(true);
+  public Viewable getSystemInternalOptions(@Context UriInfo uriInfo) {
+    return getSystemOptionsHelper(true, uriInfo);
   }
 
   @SuppressWarnings("resource")
@@ -160,9 +174,34 @@ public class StatusResources {
     }
 
     if (optionManager.getOptionDefinition(name).getMetaData().isInternal()) {
-      return getSystemInternalOptions();
+      return getSystemInternalOptions(null);
     } else {
-      return getSystemPublicOptions();
+      return getSystemPublicOptions(null);
+    }
+  }
+
+  /**
+   * Data Model for rendering /options on webUI
+   */
+  public static class OptionsListing {
+    private final List<OptionWrapper> options;
+    private final List<String> filters;
+    private final String dynamicFilter;
+
+    public OptionsListing(List<OptionWrapper> optList, List<String> fltrList, String currFilter) {
+      this.options = optList;
+      this.filters = fltrList;
+      this.dynamicFilter = currFilter;
+    }
+
+    public List<OptionWrapper> getOptions() {
+      return options;
+    }
+    public List<String> getFilters() {
+      return filters;
+    }
+    public String getDynamicFilter() {
+      return dynamicFilter;
     }
   }
 
@@ -171,6 +210,7 @@ public class StatusResources {
 
     private String name;
     private Object value;
+    private String defaultValue;
     private OptionValue.AccessibleScopes accessibleScopes;
     private String kind;
     private String optionScope;
@@ -178,11 +218,13 @@ public class StatusResources {
     @JsonCreator
     public OptionWrapper(@JsonProperty("name") String name,
                          @JsonProperty("value") Object value,
+                         @JsonProperty("defaultValue") String defaultValue,
                          @JsonProperty("accessibleScopes") OptionValue.AccessibleScopes type,
                          @JsonProperty("kind") Kind kind,
                          @JsonProperty("optionScope") OptionValue.OptionScope scope) {
       this.name = name;
       this.value = value;
+      this.defaultValue = defaultValue;
       this.accessibleScopes = type;
       this.kind = kind.name();
       this.optionScope = scope.name();
@@ -201,6 +243,10 @@ public class StatusResources {
       return value;
     }
 
+    public String getDefaultValue() {
+      return defaultValue;
+    }
+
     public OptionValue.AccessibleScopes getAccessibleScopes() {
       return accessibleScopes;
     }
@@ -215,7 +261,7 @@ public class StatusResources {
 
     @Override
     public String toString() {
-      return "OptionWrapper{" + "name='" + name + '\'' + ", value=" + value + ", accessibleScopes=" + accessibleScopes + ", kind='" + kind + '\'' + ", scope='" + optionScope + '\'' +'}';
+      return "OptionWrapper{" + "name='" + name + '\'' + ", value=" + value + ", default=" + defaultValue + ", accessibleScopes=" + accessibleScopes + ", kind='" + kind + '\'' + ", scope='" + optionScope + '\'' +'}';
     }
   }
 }

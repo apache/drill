@@ -21,6 +21,7 @@ import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.hadoop.fs.Path;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.Assert;
 import org.junit.experimental.categories.Category;
@@ -28,16 +29,19 @@ import org.junit.experimental.categories.Category;
 @Category(SqlTest.class)
 public class TestDropTable extends PlanTestBase {
 
-  private static final String CREATE_SIMPLE_TABLE = "create table %s as select 1 from cp.`employee.json`";
-  private static final String CREATE_SIMPLE_VIEW = "create view %s as select 1 from cp.`employee.json`";
-  private static final String DROP_TABLE = "drop table %s";
-  private static final String DROP_TABLE_IF_EXISTS = "drop table if exists %s";
-  private static final String DROP_VIEW_IF_EXISTS = "drop view if exists %s";
-  private static final String BACK_TICK = "`";
+  private static final String CREATE_SIMPLE_TABLE = "create table `%s` as select 1 from cp.`employee.json`";
+  private static final String CREATE_SIMPLE_VIEW = "create view `%s` as select 1 from cp.`employee.json`";
+  private static final String DROP_TABLE = "drop table `%s`";
+  private static final String DROP_TABLE_IF_EXISTS = "drop table if exists `%s`";
+  private static final String DROP_VIEW_IF_EXISTS = "drop view if exists `%s`";
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    test("use dfs.tmp");
+  }
 
   @Test
   public void testDropJsonTable() throws Exception {
-    test("use dfs.tmp");
     test("alter session set `store.format` = 'json'");
 
     final String tableName = "simple_json";
@@ -55,7 +59,6 @@ public class TestDropTable extends PlanTestBase {
 
   @Test
   public void testDropParquetTable() throws Exception {
-    test("use dfs.tmp");
     final String tableName = "simple_json";
 
     // create a parquet table
@@ -72,7 +75,6 @@ public class TestDropTable extends PlanTestBase {
 
   @Test
   public void testDropTextTable() throws Exception {
-    test("use dfs.tmp");
     test("alter session set `store.format` = 'csv'");
     final String csvTable = "simple_csv";
 
@@ -118,7 +120,6 @@ public class TestDropTable extends PlanTestBase {
 
   @Test
   public void testNonHomogenousDrop() throws Exception {
-    test("use dfs.tmp");
     final String tableName = "homogenous_table";
 
     // create a parquet table
@@ -127,7 +128,7 @@ public class TestDropTable extends PlanTestBase {
     // create a json table within the same directory
     test("alter session set `store.format` = 'json'");
     final String nestedJsonTable = tableName + Path.SEPARATOR + "json_table";
-    test(CREATE_SIMPLE_TABLE, BACK_TICK + nestedJsonTable + BACK_TICK);
+    test(CREATE_SIMPLE_TABLE, nestedJsonTable);
 
     boolean dropFailed = false;
     // this should fail, because the directory contains non-homogenous files
@@ -142,7 +143,7 @@ public class TestDropTable extends PlanTestBase {
 
     // drop the individual json table
     testBuilder()
-        .sqlQuery(DROP_TABLE, BACK_TICK + nestedJsonTable + BACK_TICK)
+        .sqlQuery(DROP_TABLE, nestedJsonTable)
         .unOrdered()
         .baselineColumns("ok", "summary")
         .baselineValues(true, String.format("Table [%s] dropped", nestedJsonTable))
@@ -174,7 +175,6 @@ public class TestDropTable extends PlanTestBase {
   @Category(UnlikelyTest.class)
   public void testDropTableIfExistsWhileTableExists() throws Exception {
     final String existentTableName = "test_table_exists";
-    test("use dfs.tmp");
 
     // successful dropping of existent table
     test(CREATE_SIMPLE_TABLE, existentTableName);
@@ -190,7 +190,6 @@ public class TestDropTable extends PlanTestBase {
   @Category(UnlikelyTest.class)
   public void testDropTableIfExistsWhileTableDoesNotExist() throws Exception {
     final String nonExistentTableName = "test_table_not_exists";
-    test("use dfs.tmp");
 
     // dropping of non existent table without error
     testBuilder()
@@ -205,9 +204,7 @@ public class TestDropTable extends PlanTestBase {
   @Category(UnlikelyTest.class)
   public void testDropTableIfExistsWhileItIsAView() throws Exception {
     final String viewName = "test_view";
-    try{
-      test("use dfs.tmp");
-
+    try {
       // dropping of non existent table without error if the view with such name is existed
       test(CREATE_SIMPLE_VIEW, viewName);
       testBuilder()
@@ -218,6 +215,22 @@ public class TestDropTable extends PlanTestBase {
           .go();
     } finally {
       test(DROP_VIEW_IF_EXISTS, viewName);
+    }
+  }
+
+  @Test
+  public void testDropTableNameStartsWithSlash() throws Exception {
+    String tableName = "test_table_starts_with_slash_drop";
+    try {
+      test(CREATE_SIMPLE_TABLE, tableName);
+      testBuilder()
+          .sqlQuery(DROP_TABLE, "/" + tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Table [%s] dropped", tableName))
+          .go();
+    } finally {
+      test(DROP_TABLE_IF_EXISTS, tableName);
     }
   }
 }

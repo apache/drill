@@ -24,7 +24,7 @@
   <parent>
     <artifactId>tools-parent</artifactId>
     <groupId>org.apache.drill.tools</groupId>
-    <version>1.15.0-SNAPSHOT</version>
+    <version>1.16.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-fmpp-maven-plugin</artifactId>
@@ -40,7 +40,7 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
-      <version>3.3.3</version>
+      <version>${lowestMavenVersion}</version>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
-      <version>3.3.3</version>
+      <version>${lowestMavenVersion}</version>
     </dependency>
     <dependency>
       <groupId>com.googlecode.fmpp-maven-plugin</groupId>

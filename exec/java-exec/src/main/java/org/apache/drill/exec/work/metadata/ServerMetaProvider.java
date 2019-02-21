@@ -138,7 +138,8 @@ public class ServerMetaProvider {
           .setIdentifierQuoteString(config.quoting().string)
           .setIdentifierCasing(getIdentifierCasing(config.unquotedCasing(), config.caseSensitive()))
           .setQuotedIdentifierCasing(getIdentifierCasing(config.quotedCasing(), config.caseSensitive()))
-          .addAllSqlKeywords(Splitter.on(",").split(metadata.getJdbcKeywords()));
+          .addAllSqlKeywords(Splitter.on(",").split(metadata.getJdbcKeywords()))
+          .setCurrentSchema(session.getDefaultSchemaPath());
         respBuilder.setServerMeta(metaBuilder);
         respBuilder.setStatus(RequestStatus.OK);
       } catch(Throwable t) {

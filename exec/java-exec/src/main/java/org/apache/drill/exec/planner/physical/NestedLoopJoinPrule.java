@@ -94,7 +94,7 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
 
       if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
         createBroadcastPlan(call, join, join.getCondition(), PhysicalJoinType.NESTEDLOOP_JOIN,
-            left, right, null /* left collation */, null /* right collation */, false);
+            left, right, null /* left collation */, null /* right collation */);
       }
 
     } catch (InvalidRelException e) {

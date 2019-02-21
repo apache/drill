@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
+import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -61,7 +62,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DEFAULT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
@@ -267,7 +267,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
     StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getDfsTestTmpDir(), TMP_SCHEMA);
     StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getRootDir(), ROOT_SCHEMA);
-    StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getRootDir(), DEFAULT_SCHEMA);
+    StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getRootDir(), SchemaFactory.DEFAULT_WS_NAME);
 
     // Create the mock data plugin
 

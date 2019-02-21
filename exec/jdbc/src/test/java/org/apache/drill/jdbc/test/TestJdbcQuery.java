@@ -18,6 +18,7 @@
 package org.apache.drill.jdbc.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -26,6 +27,7 @@ import java.sql.Statement;
 import java.sql.Types;
 
 import org.apache.drill.categories.JdbcTest;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -402,5 +404,111 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
      withNoDefaultSchema()
         .sql("SELECT CONVERT_FROM(columns[1], 'JSON') as col1 from cp.`empty.csv`")
         .returns("");
+  }
+
+  @Test
+  public void testResultSetIsNotReturnedSet() throws Exception {
+    try (Connection conn = connect();
+         Statement s = conn.createStatement()) {
+
+      s.execute(String.format("SET `%s` = false", ExecConstants.RETURN_RESULT_SET_FOR_DDL));
+
+      // Set any option
+      s.execute(String.format("SET `%s` = 'json'", ExecConstants.OUTPUT_FORMAT_OPTION));
+      assertNull("No result", s.getResultSet());
+    }
+  }
+
+  @Test
+  public void testResultSetIsNotReturnedCTAS() throws Exception {
+    String tableName = "dfs.tmp.`ctas`";
+
+    try (Connection conn = connect();
+         Statement s = conn.createStatement()) {
+      s.execute(String.format("SET `%s` = false", ExecConstants.RETURN_RESULT_SET_FOR_DDL));
+
+      s.execute(String.format("CREATE TABLE %s AS SELECT * FROM cp.`employee.json`", tableName));
+      assertNull("No result", s.getResultSet());
+    } finally {
+      execute("DROP TABLE IF EXISTS %s", tableName);
+    }
+  }
+
+  @Test
+  public void testResultSetIsNotReturnedCreateView() throws Exception {
+    String viewName = "dfs.tmp.`cv`";
+
+    try (Connection conn = connect();
+         Statement s = conn.createStatement()) {
+      s.execute(String.format("SET `%s` = false", ExecConstants.RETURN_RESULT_SET_FOR_DDL));
+
+      s.execute(String.format("CREATE VIEW %s AS SELECT * FROM cp.`employee.json`", viewName));
+      assertNull("No result", s.getResultSet());
+    } finally {
+      execute("DROP VIEW IF EXISTS %s", viewName);
+    }
+  }
+
+  @Test
+  public void testResultSetIsNotReturnedDropTable() throws Exception {
+    String tableName = "dfs.tmp.`dt`";
+
+    try (Connection conn = connect();
+         Statement s = conn.createStatement()) {
+      s.execute(String.format("SET `%s` = false", ExecConstants.RETURN_RESULT_SET_FOR_DDL));
+
+      s.execute(String.format("CREATE TABLE %s AS SELECT * FROM cp.`employee.json`", tableName));
+
+      s.execute(String.format("DROP TABLE %s", tableName));
+      assertNull("No result", s.getResultSet());
+    }
+  }
+
+  @Test
+  public void testResultSetIsNotReturnedDropView() throws Exception {
+    String viewName = "dfs.tmp.`dv`";
+
+    try (Connection conn = connect();
+         Statement stmt = conn.createStatement()) {
+      stmt.execute(String.format("SET `%s` = false", ExecConstants.RETURN_RESULT_SET_FOR_DDL));
+
+      stmt.execute(String.format("CREATE VIEW %s AS SELECT * FROM cp.`employee.json`", viewName));
+
+      stmt.execute(String.format("DROP VIEW %s", viewName));
+      assertNull("No result", stmt.getResultSet());
+    }
+  }
+
+  @Test
+  public void testResultSetIsNotReturnedUse() throws Exception {
+    try (Connection conn = connect();
+         Statement s = conn.createStatement()) {
+      s.execute(String.format("SET `%s` = false", ExecConstants.RETURN_RESULT_SET_FOR_DDL));
+
+      s.execute("USE dfs.tmp");
+      assertNull("No result", s.getResultSet());
+    }
+  }
+
+  @Test
+  public void testResultSetIsNotReturnedRefreshMetadata() throws Exception {
+    String tableName = "dfs.tmp.`rm`";
+
+    try (Connection conn = connect();
+         Statement s = conn.createStatement()) {
+      s.execute(String.format("SET `%s` = false", ExecConstants.RETURN_RESULT_SET_FOR_DDL));
+
+      s.execute(String.format("CREATE TABLE %s AS SELECT * FROM cp.`employee.json`", tableName));
+
+      s.execute(String.format("REFRESH TABLE METADATA %s", tableName));
+      assertNull("No result", s.getResultSet());
+    }
+  }
+
+  private static void execute(String sql, Object... params) throws Exception {
+    try (Connection conn = connect();
+         Statement s = conn.createStatement()) {
+      s.execute(String.format(sql, params));
+    }
   }
 }

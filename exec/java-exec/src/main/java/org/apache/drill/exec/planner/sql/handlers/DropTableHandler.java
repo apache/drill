@@ -17,15 +17,12 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.tools.RelConversionException;
-import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -34,6 +31,7 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.dfs.FileSelection;
 
 // SqlHandler for dropping a table.
 public class DropTableHandler extends DefaultSqlHandler {
@@ -54,15 +52,15 @@ public class DropTableHandler extends DefaultSqlHandler {
    * raise exception otherwise
    */
   @Override
-  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
+  public PhysicalPlan getPlan(SqlNode sqlNode) {
     SqlDropTable dropTableNode = ((SqlDropTable) sqlNode);
-    String originalTableName = dropTableNode.getName();
+    String originalTableName = FileSelection.removeLeadingSlash(dropTableNode.getName());
     SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
     List<String> tableSchema = dropTableNode.getSchema();
     DrillConfig drillConfig = context.getConfig();
     UserSession session = context.getSession();
 
-    AbstractSchema temporarySchema = resolveToTemporarySchema(tableSchema, defaultSchema, drillConfig);
+    AbstractSchema temporarySchema = SchemaUtilites.resolveToTemporarySchema(tableSchema, defaultSchema, drillConfig);
     boolean isTemporaryTable = session.isTemporaryTable(temporarySchema, drillConfig, originalTableName);
 
     if (isTemporaryTable) {
@@ -83,23 +81,6 @@ public class DropTableHandler extends DefaultSqlHandler {
     String message = String.format("%s [%s] dropped", isTemporaryTable ? "Temporary table" : "Table", originalTableName);
     logger.info(message);
     return DirectPlan.createDirectPlan(context, true, message);
-  }
-
-  /**
-   * If table schema is not indicated in sql call, returns temporary workspace.
-   * If schema is indicated, resolves to mutable table schema.
-   *
-   * @param tableSchema table schema
-   * @param defaultSchema default schema
-   * @param config drill config
-   * @return resolved schema
-   */
-  private AbstractSchema resolveToTemporarySchema(List<String> tableSchema, SchemaPlus defaultSchema, DrillConfig config) {
-    if (tableSchema.size() == 0) {
-      return SchemaUtilites.getTemporaryWorkspace(defaultSchema, config);
-    } else {
-      return SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
-    }
   }
 
 }

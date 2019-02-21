@@ -21,38 +21,68 @@
 <#macro page_head>
     <script type="text/javascript" language="javascript"  src="/static/js/jquery.dataTables-1.10.16.min.js"> </script>
     <script type="text/javascript" language="javascript" src="/static/js/dataTables.colVis-1.1.0.min.js"></script>
+    <script>
+    //Alter System Values
+    function alterSysOption(optionName, optionValue, optionKind) {
+        var currHref = location.href;
+        var redirectHref = currHref.replace(/(.?filter=).*/,"");
+        //Read filter value and apply to reload with new filter
+        var reApplyFilter = $("#searchBox").val();
+        if (reApplyFilter != null && reApplyFilter.trim().length > 0) {
+            redirectHref = redirectHref + "?filter=" + reApplyFilter.trim();
+        } else { //Apply filter for updated field
+            redirectHref = redirectHref + "?filter=" + optionName;
+        }
+        $.post("/option/"+optionName, {kind: optionKind, name: optionName, value: optionValue}, function () {
+            //Remove existing filters
+            location.href=redirectHref;
+        });
+    }
+
+    //Read Values and apply
+    function alterSysOptionUsingId(optionRawName) {
+        //Escaping '.' for id search
+        let optionName = optionRawName.replace(/\./gi, "\\.");
+        //Extracting datatype from the form
+        let optionKind = $("#"+optionName+" input[name='kind']").attr("value");
+        //Extracting value from the form's INPUT element
+        let optionValue = $("#"+optionName+" input[name='value']").val();
+        if (optionKind == "BOOLEAN") {
+            //Extracting boolean value from the form's SELECT element (since this is a dropdown input)
+            optionValue = $("#"+optionName+" select[name='value']").val();
+        } else if (optionKind != "STRING") { //i.e. it is a number (FLOAT/DOUBLE/LONG)
+            if (isNaN(optionValue)) {
+                alert(optionValue+" is not a valid number for option: "+optionName);
+                return;
+            }
+        }
+        alterSysOption(optionRawName, optionValue, optionKind);
+    }
+    </script>
     <!-- List of Option Descriptions -->
     <script src="/dynamic/options.describe.js"></script>
     <link href="/static/css/dataTables.colVis-1.1.0.min.css" rel="stylesheet">
     <link href="/static/css/dataTables.jqueryui.css" rel="stylesheet">
     <link href="/static/css/jquery-ui-1.10.3.min.css" rel="stylesheet">
-<style>
-/* DataTables Sorting: inherited via sortable class */
-table.sortable thead .sorting,.sorting_asc,.sorting_desc {
-  background-repeat: no-repeat;
-  background-position: center right;
-  cursor: pointer;
-}
-/* Sorting Symbols */
-table.sortable thead .sorting { background-image: url("/static/img/black-unsorted.gif"); }
-table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
-table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
-</style>
+    <link href="/static/css/drill-dataTables.sortable.css" rel="stylesheet">
 </#macro>
 
 <#macro page_body>
   <div class="page-header">
   </div>
-  <div class="btn-group btn-group-sm" style="display:inline-block;">
-  <button type="button" class="btn" style="cursor:default;font-weight:bold;" > Quick Filters </button>
-  <button type="button" class="btn btn-info" onclick="inject(this.innerHTML);">planner</button>
-  <button type="button" class="btn btn-info" onclick="inject(this.innerHTML);">store</button>
-  <button type="button" class="btn btn-info" onclick="inject(this.innerHTML);">parquet</button>
-  <button type="button" class="btn btn-info" onclick="inject(this.innerHTML);">hashagg</button>
-  <button type="button" class="btn btn-info" onclick="inject(this.innerHTML);">hashjoin</button>
-  </div>
   <div class="col-xs-4">
-  <input id="searchBox"  name="searchBox" class="form-control" type="text" value="" placeholder="Search options...">
+    <div class="input-group input-sm" >
+      <input id="searchBox" name="searchBox" class="form-control" type="text" value="" placeholder="Search options...">
+        <div class="input-group-btn">
+          <button class="btn btn-default" type="button" onclick="$('#searchBox').val('').focus();" title="Clear search" style="font-weight:bold">&times;</button>
+        </div> 
+    </div>
+  </div>
+  <div class="btn-group btn-group-sm" style="padding-top:0.5%;">
+  <button type="button" class="btn" style="cursor:default;font-weight:bold;" > Quick Filters </button>
+  <#list model.getFilters() as filter>
+  <button type="button" class="btn btn-info" onclick="inject(this.innerHTML);">${filter}</button>
+  </#list>
   </div>
 
   <div class="table-responsive">
@@ -64,13 +94,11 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
           <th style="width:45%">DESCRIPTION</th>
         </tr>
       </thead>
-      <tbody>
-        <#assign i = 1>
-        <#list model as option>
+      <tbody><#assign i = 1><#list model.getOptions() as option>
           <tr id="row-${i}">
             <td style="font-family:Courier New; vertical-align:middle" id='optionName'>${option.getName()}</td>
             <td>
-              <form class="form-inline" role="form" action="/option/${option.getName()}" method="POST">
+              <form class="form-inline" role="form" id="${option.getName()}">
                 <div class="form-group">
                 <input type="hidden" class="form-control" name="kind" value="${option.getKind()}">
                 <input type="hidden" class="form-control" name="name" value="${option.getName()}">
@@ -84,7 +112,9 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
                     <input type="text" class="form-control" placeholder="${option.getValueAsString()}" name="value" value="${option.getValueAsString()}">
                   </#if>
                     <div class="input-group-btn">
-                      <button class="btn btn-default" type="submit">Update</button>
+                      <button class="btn btn-default" type="button" onclick="alterSysOptionUsingId('${option.getName()}')">Update</button>
+                      <button class="btn btn-default" type="button" onclick="alterSysOption('${option.getName()}','${option.getDefaultValue()}', '${option.getKind()}')" <#if option.getDefaultValue() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
+                      title="Reset to ${option.getDefaultValue()}"</#if>>Default</button>
                     </div>
                   </div>
                 </div>
@@ -112,24 +142,33 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
             "infoEmpty": "No options available",
             "infoFiltered": ""
         }
-      } );
+      });
 
     //Draw when the table is ready
     $(document).ready(function() {
       //Inject Descriptions for table
       let size = $('#optionsTbl tbody tr').length;
       for (i = 1; i <= size; i++) {
-      let currRow = $("#row-"+i);
+        let currRow = $("#row-"+i);
         let optionName = currRow.find("#optionName").text();
         let setOptDescrip = currRow.find("#description").text(getDescription(optionName));
       }
 
       // Draw DataTable
       optTable.rows().invalidate().draw();
+
+      //Re-Inject Filter keyword here
+      let explicitFltr = "";
+      if (window.location.search.indexOf("filter=") >= 1) {
+        //Select 1st occurrence (Chrome accepts 1st of duplicates)
+        let kvPair=window.location.search.substr(1).split('&')[0];
+        explicitFltr=kvPair.split('=')[1]
+        inject(explicitFltr);
+      }
     });
 
     //EventListener to update table when changes are detected
-    $('#searchBox').on('keyup change', function () {
+    $('#searchBox').on('keyup focus change', function () {
       optTable.search(this.value).draw().toString();
     });
 

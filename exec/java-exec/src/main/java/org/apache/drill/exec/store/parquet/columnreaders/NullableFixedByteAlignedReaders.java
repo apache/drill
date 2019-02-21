@@ -111,6 +111,9 @@ public class NullableFixedByteAlignedReaders {
     NullableFixedBinaryAsTimeStampReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                               ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableTimeStampVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+
+      // The width of each element of the TimeStampVector is 8 bytes (64 bits) instead of 12 bytes.
+      dataTypeLengthInBits = NullableTimeStampHolder.WIDTH * 8;
     }
 
     @Override
@@ -127,8 +130,6 @@ public class NullableFixedByteAlignedReaders {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
         }
       }
-      // The width of each element of the TimeStampVector is 8 bytes (64 bits) instead of 12 bytes.
-      dataTypeLengthInBits = NullableTimeStampHolder.WIDTH * 8;
     }
   }
 

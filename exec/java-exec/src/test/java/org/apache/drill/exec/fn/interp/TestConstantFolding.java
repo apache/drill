@@ -19,19 +19,16 @@ package org.apache.drill.exec.fn.interp;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import mockit.integration.junit4.JMockit;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.List;
 
-@RunWith(JMockit.class)
 @Category(SqlTest.class)
 public class TestConstantFolding extends PlanTestBase {
 

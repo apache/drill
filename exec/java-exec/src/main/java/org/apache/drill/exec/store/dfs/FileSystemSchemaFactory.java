@@ -47,8 +47,6 @@ import org.apache.hadoop.fs.Path;
  */
 public class FileSystemSchemaFactory extends AbstractSchemaFactory {
 
-  public static final String DEFAULT_WS_NAME = "default";
-
   public static final String LOCAL_FS_SCHEME = "file";
 
   private List<WorkspaceSchemaFactory> factories;

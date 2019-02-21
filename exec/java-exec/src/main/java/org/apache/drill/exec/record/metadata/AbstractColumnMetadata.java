@@ -21,6 +21,8 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
+import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 
 /**
  * Abstract definition of column metadata. Allows applications to create
@@ -34,7 +36,6 @@ import org.apache.drill.exec.record.MaterializedField;
  * since maps (and the row itself) will, by definition, differ between
  * the two views.
  */
-
 public abstract class AbstractColumnMetadata implements ColumnMetadata {
 
   // Capture the key schema information. We cannot use the MaterializedField
@@ -87,7 +88,8 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
     expectedElementCount = from.expectedElementCount;
   }
 
-  protected void bind(TupleSchema parentTuple) { }
+  @Override
+  public void bind(TupleMetadata parentTuple) { }
 
   @Override
   public String name() { return name; }
@@ -179,6 +181,20 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
   public boolean isProjected() { return projected; }
 
   @Override
+  public void setDefaultValue(Object value) { }
+
+  @Override
+  public Object defaultValue() { return null; }
+
+  @Override
+  public void setTypeConverter(ColumnConversionFactory factory) {
+    throw new UnsupportedConversionError("Type conversion not supported for non-scalar writers");
+  }
+
+  @Override
+  public ColumnConversionFactory typeConverter() { return null; }
+
+  @Override
   public String toString() {
     final StringBuilder buf = new StringBuilder()
         .append("[")
@@ -205,5 +221,33 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
         .toString();
   }
 
-  public abstract AbstractColumnMetadata copy();
+  @Override
+  public String typeString() {
+    return majorType().toString();
+  }
+
+  @Override
+  public String columnString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("`").append(escapeSpecialSymbols(name())).append("`");
+    builder.append(" ");
+    builder.append(typeString());
+
+    // Drill does not have nullability notion for complex types
+    if (!isNullable() && !isArray() && !isMap()) {
+      builder.append(" NOT NULL");
+    }
+
+    return builder.toString();
+  }
+
+  /**
+   * If given value contains backticks (`) or backslashes (\), escapes them.
+   *
+   * @param value string value
+   * @return updated value
+   */
+  private String escapeSpecialSymbols(String value) {
+    return value.replaceAll("(\\\\)|(`)", "\\\\$0");
+  }
 }

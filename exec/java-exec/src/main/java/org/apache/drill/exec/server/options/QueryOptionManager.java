@@ -19,6 +19,9 @@ package org.apache.drill.exec.server.options;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * {@link OptionManager} that holds options within {@link org.apache.drill.exec.ops.QueryContext}.
  */
@@ -31,9 +34,14 @@ public class QueryOptionManager extends InMemoryOptionManager {
 
   @Override
   public OptionList getOptionList() {
-    OptionList list = super.getOptionList();
-    list.merge(fallback.getOptionList());
-    return list;
+    Map<String, OptionValue> optionMap = new HashMap<>();
+    for (OptionValue option : fallback.getOptionList()) {
+      optionMap.put(option.name, option);
+    }
+    for (OptionValue option : super.getOptionList()) {
+      optionMap.put(option.name, option);
+    }
+    return new OptionList(optionMap.values());
   }
 
   @Override

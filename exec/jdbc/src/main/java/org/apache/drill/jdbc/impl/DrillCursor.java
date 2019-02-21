@@ -29,6 +29,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.drill.jdbc.DrillStatement;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
@@ -58,7 +59,7 @@ import org.slf4j.Logger;
 import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 
-class DrillCursor implements Cursor {
+public class DrillCursor implements Cursor {
 
   ////////////////////////////////////////
   // ResultsListener:
@@ -325,7 +326,7 @@ class DrillCursor implements Cursor {
    * <p>
    *   (Relates to {@link #loadInitialSchema()}'s calling
    *   {@link #nextRowInternally()} one "extra" time (extra relative to number
-   *   of {@link ResultSet#next()} calls) at the beginning to get first batch
+   *   of {@link java.sql.ResultSet#next()} calls) at the beginning to get first batch
    *   and schema before {@code Statement.execute...(...)} even returns.)
    * </p>
    */
@@ -450,7 +451,7 @@ class DrillCursor implements Cursor {
    * <p>
    *   Is to be called (once) from {@link #loadInitialSchema} for
    *   {@link DrillResultSetImpl#execute()}, and then (repeatedly) from
-   *   {@link #next()} for {@link AvaticaResultSet#next()}.
+   *   {@link #next()} for {@link org.apache.calcite.avatica.AvaticaResultSet#next()}.
    * </p>
    *
    * @return  whether cursor is positioned at a row (false when after end of
@@ -469,12 +470,11 @@ class DrillCursor implements Cursor {
         QueryDataBatch qrb = resultsListener.getNext();
 
         // (Apparently:)  Skip any spurious empty batches (batches that have
-        // zero rows and/or null data, other than the first batch (which carries
+        // zero rows and null data, other than the first batch (which carries
         // the (initial) schema but no rows)).
-        if ( afterFirstBatch ) {
-          while ( qrb != null
-                  && ( qrb.getHeader().getRowCount() == 0
-                      || qrb.getData() == null ) ) {
+        if (afterFirstBatch) {
+          while (qrb != null
+              && (qrb.getHeader().getRowCount() == 0 && qrb.getData() == null)) {
             // Empty message--dispose of and try to get another.
             logger.warn( "Spurious batch read: {}", qrb );
 
@@ -498,6 +498,13 @@ class DrillCursor implements Cursor {
           // to next().
 
           currentRecordNumber = 0;
+
+          if (qrb.getHeader().hasAffectedRowsCount()) {
+            int updateCount = qrb.getHeader().getAffectedRowsCount();
+            int currentUpdateCount = statement.getUpdateCount() == -1 ? 0 : statement.getUpdateCount();
+            ((DrillStatement) statement).setUpdateCount(updateCount + currentUpdateCount);
+            ((DrillStatement) statement).setResultSet(null);
+          }
 
           final boolean schemaChanged;
           try {
@@ -549,7 +556,7 @@ class DrillCursor implements Cursor {
    * Advances to first batch to load schema data into result set metadata.
    * <p>
    *   To be called once from {@link DrillResultSetImpl#execute()} before
-   *   {@link #next()} is called from {@link AvaticaResultSet#next()}.
+   *   {@link #next()} is called from {@link org.apache.calcite.avatica.AvaticaResultSet#next()}.
    * <p>
    */
   void loadInitialSchema() throws SQLException {

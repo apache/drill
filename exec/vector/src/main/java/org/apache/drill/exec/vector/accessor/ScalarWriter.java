@@ -21,8 +21,6 @@ import java.math.BigDecimal;
 
 import org.joda.time.Period;
 
-import org.apache.drill.exec.vector.accessor.ColumnWriter.ScalarListenable;
-
 /**
  * Represents a scalar value: a required column, a nullable column,
  * or one element within an array of scalars.
@@ -44,41 +42,7 @@ import org.apache.drill.exec.vector.accessor.ColumnWriter.ScalarListenable;
  * {@see ScalarElementReader}
  */
 
-public interface ScalarWriter extends ColumnWriter, ScalarListenable {
-
-  /**
-   * Listener (callback) for vector overflow events. To be optionally
-   * implemented and bound by the client code of the writer. If no
-   * listener is bound, and a vector overflows, then an exception is
-   * thrown.
-   */
-
-  public interface ColumnWriterListener {
-
-    /**
-     * Alert the listener that a vector has overflowed. Upon return,
-     * all writers must have a new set of buffers available, ready
-     * to accept the in-flight value that triggered the overflow.
-     *
-     * @param writer the writer that triggered the overflow
-     */
-
-    void overflowed(ScalarWriter writer);
-
-    /**
-     * A writer wants to expand its vector. Allows the listener to
-     * either allow the growth, or trigger and overflow to limit
-     * batch size.
-     *
-     * @param writer the writer that wishes to grow its vector
-     * @param delta the amount by which the vector is to grow
-     * @return true if the vector can be grown, false if the writer
-     * should instead trigger an overflow by calling
-     * <tt>overflowed()</tt>
-     */
-
-    boolean canExpand(ScalarWriter writer, int delta);
-  }
+public interface ScalarWriter extends ColumnWriter {
 
   /**
    * Describe the type of the value. This is a compression of the

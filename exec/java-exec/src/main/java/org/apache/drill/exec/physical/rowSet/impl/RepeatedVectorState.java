@@ -23,7 +23,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
+import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 /**
@@ -47,7 +47,7 @@ public class RepeatedVectorState implements VectorState {
     // vector, and the scalar (value) portion of the array writer.
 
     arrayWriter = (AbstractArrayWriter) writer;
-    AbstractScalarWriter colWriter = (AbstractScalarWriter) writer.scalar();
+    AbstractScalarWriterImpl colWriter = (AbstractScalarWriterImpl) writer.entry().events();
     valuesState = SimpleVectorState.vectorState(writer.schema(), colWriter, vector.getDataVector());
 
     // Create the offsets state with the offset vector portion of the repeated

@@ -50,6 +50,7 @@ public final class QueryData implements Externalizable, Message<QueryData>, Sche
     private QueryId queryId;
     private int rowCount;
     private RecordBatchDef def;
+    private int affectedRowsCount;
 
     public QueryData()
     {
@@ -94,6 +95,19 @@ public final class QueryData implements Externalizable, Message<QueryData>, Sche
     public QueryData setDef(RecordBatchDef def)
     {
         this.def = def;
+        return this;
+    }
+
+    // affectedRowsCount
+
+    public int getAffectedRowsCount()
+    {
+        return affectedRowsCount;
+    }
+
+    public QueryData setAffectedRowsCount(int affectedRowsCount)
+    {
+        this.affectedRowsCount = affectedRowsCount;
         return this;
     }
 
@@ -162,6 +176,9 @@ public final class QueryData implements Externalizable, Message<QueryData>, Sche
                     message.def = input.mergeObject(message.def, RecordBatchDef.getSchema());
                     break;
 
+                case 4:
+                    message.affectedRowsCount = input.readInt32();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -181,6 +198,9 @@ public final class QueryData implements Externalizable, Message<QueryData>, Sche
         if(message.def != null)
              output.writeObject(3, message.def, RecordBatchDef.getSchema(), false);
 
+
+        if(message.affectedRowsCount != 0)
+            output.writeInt32(4, message.affectedRowsCount, false);
     }
 
     public String getFieldName(int number)
@@ -190,6 +210,7 @@ public final class QueryData implements Externalizable, Message<QueryData>, Sche
             case 1: return "queryId";
             case 2: return "rowCount";
             case 3: return "def";
+            case 4: return "affectedRowsCount";
             default: return null;
         }
     }
@@ -206,6 +227,7 @@ public final class QueryData implements Externalizable, Message<QueryData>, Sche
         __fieldMap.put("queryId", 1);
         __fieldMap.put("rowCount", 2);
         __fieldMap.put("def", 3);
+        __fieldMap.put("affectedRowsCount", 4);
     }
     
 }

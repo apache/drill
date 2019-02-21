@@ -20,10 +20,10 @@ package org.apache.drill.exec.vector.accessor.writer;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.VariantWriter.VariantWriterListener;
+import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractFixedWidthWriter.BaseFixedWidthWriter;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl.UnionShim;
 import org.apache.drill.exec.vector.complex.UnionVector;
@@ -42,7 +42,7 @@ public class UnionVectorShim implements UnionShim {
 
   static class DefaultListener implements VariantWriterListener {
 
-    private UnionVectorShim shim;
+    private final UnionVectorShim shim;
 
     private DefaultListener(UnionVectorShim shim) {
       this.shim = shim;
@@ -57,8 +57,8 @@ public class UnionVectorShim implements UnionShim {
       // will already be in the variant schema by the time we add the
       // writer to the variant writer in a few steps from now.
 
-      ValueVector memberVector = shim.vector.getMember(type);
-      ColumnMetadata memberSchema = shim.writer.variantSchema().addType(type);
+      final ValueVector memberVector = shim.vector.getMember(type);
+      final ColumnMetadata memberSchema = shim.writer.variantSchema().addType(type);
       return ColumnWriterFactory.buildColumnWriter(memberSchema, memberVector);
     }
 
@@ -100,7 +100,7 @@ public class UnionVectorShim implements UnionShim {
   @Override
   public void bindWriter(UnionWriterImpl writer) {
     this.writer = writer;
-    ColumnWriterIndex index = writer.index();
+    final ColumnWriterIndex index = writer.index();
     if (index != null) {
       bindIndex(index);
     }
@@ -115,6 +115,12 @@ public class UnionVectorShim implements UnionShim {
       }
     }
   }
+
+  // Unions are complex: the listener should bind to the individual components
+  // as they are created.
+
+  @Override
+  public void bindListener(ColumnWriterListener listener) { }
 
   @Override
   public void setNull() {
@@ -133,7 +139,7 @@ public class UnionVectorShim implements UnionShim {
 
   @Override
   public ObjectWriter member(MinorType type) {
-    AbstractObjectWriter colWriter = variants[type.ordinal()];
+    final AbstractObjectWriter colWriter = variants[type.ordinal()];
     if (colWriter != null) {
       return colWriter;
     }
@@ -150,14 +156,14 @@ public class UnionVectorShim implements UnionShim {
 
   @Override
   public AbstractObjectWriter addMember(ColumnMetadata schema) {
-    AbstractObjectWriter colWriter = (AbstractObjectWriter) writer.listener().addMember(schema);
+    final AbstractObjectWriter colWriter = (AbstractObjectWriter) writer.listener().addMember(schema);
     addMember(colWriter);
     return colWriter;
   }
 
   @Override
   public AbstractObjectWriter addMember(MinorType type) {
-    AbstractObjectWriter colWriter = (AbstractObjectWriter) writer.listener().addType(type);
+    final AbstractObjectWriter colWriter = (AbstractObjectWriter) writer.listener().addType(type);
     addMember(colWriter);
     return colWriter;
   }
@@ -189,7 +195,7 @@ public class UnionVectorShim implements UnionShim {
    */
 
   public void addMemberWriter(AbstractObjectWriter colWriter) {
-    MinorType type = colWriter.schema().type();
+    final MinorType type = colWriter.schema().type();
     assert variants[type.ordinal()] == null;
     variants[type.ordinal()] = colWriter;
   }
@@ -283,7 +289,10 @@ public class UnionVectorShim implements UnionShim {
    * @return the writer for the types vector
    */
 
-  public ColumnWriter typeWriter() { return typeWriter; }
+  public AbstractScalarWriterImpl typeWriter() { return typeWriter; }
+
+  @Override
+  public int writeIndex() { return typeWriter.writeIndex(); }
 
   @Override
   public int lastWriteIndex() { return typeWriter.lastWriteIndex(); }
@@ -300,5 +309,12 @@ public class UnionVectorShim implements UnionShim {
 
   public void initTypeIndex(int typeFillCount) {
     ((BaseFixedWidthWriter) typeWriter).setLastWriteIndex(typeFillCount);
+  }
+
+  @Override
+  public void dump(HierarchicalFormatter format) {
+    format.startObject(this).attribute("typeWriter");
+    typeWriter.dump(format);
+    format.endObject();
   }
 }

@@ -98,6 +98,7 @@ public final class ServerMeta implements Externalizable, Message<ServerMeta>, Sc
     private String tableTerm;
     private Boolean transactionSupported;
     private List<UnionSupport> unionSupport;
+    private String currentSchema;
 
     public ServerMeta()
     {
@@ -743,6 +744,19 @@ public final class ServerMeta implements Externalizable, Message<ServerMeta>, Sc
         return this;
     }
 
+    // currentSchema
+
+    public String getCurrentSchema()
+    {
+        return currentSchema;
+    }
+
+    public ServerMeta setCurrentSchema(String currentSchema)
+    {
+        this.currentSchema = currentSchema;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -968,6 +982,9 @@ public final class ServerMeta implements Externalizable, Message<ServerMeta>, Sc
                     if(message.unionSupport == null)
                         message.unionSupport = new ArrayList<UnionSupport>();
                     message.unionSupport.add(UnionSupport.valueOf(input.readEnum()));
+                    break;
+                case 50:
+                    message.currentSchema = input.readString();
                     break;
                 default:
                     input.handleUnknownField(number, this);
@@ -1197,6 +1214,9 @@ public final class ServerMeta implements Externalizable, Message<ServerMeta>, Sc
                     output.writeEnum(49, unionSupport.number, true);
             }
         }
+
+        if(message.currentSchema != null)
+            output.writeString(50, message.currentSchema, false);
     }
 
     public String getFieldName(int number)
@@ -1252,6 +1272,7 @@ public final class ServerMeta implements Externalizable, Message<ServerMeta>, Sc
             case 47: return "tableTerm";
             case 48: return "transactionSupported";
             case 49: return "unionSupport";
+            case 50: return "currentSchema";
             default: return null;
         }
     }
@@ -1314,6 +1335,7 @@ public final class ServerMeta implements Externalizable, Message<ServerMeta>, Sc
         __fieldMap.put("tableTerm", 47);
         __fieldMap.put("transactionSupported", 48);
         __fieldMap.put("unionSupport", 49);
+        __fieldMap.put("currentSchema", 50);
     }
     
 }

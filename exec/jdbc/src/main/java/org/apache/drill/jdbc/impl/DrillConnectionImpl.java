@@ -34,6 +34,7 @@ import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 import org.apache.calcite.avatica.AvaticaConnection;
@@ -44,6 +45,7 @@ import org.apache.calcite.avatica.Meta.MetaResultSet;
 import org.apache.calcite.avatica.NoSuchStatementException;
 import org.apache.calcite.avatica.QueryState;
 import org.apache.calcite.avatica.UnregisteredDriver;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -52,9 +54,12 @@ import org.apache.drill.exec.client.InvalidConnectionInfoException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillConnection;
@@ -65,7 +70,6 @@ import org.slf4j.Logger;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DEFAULT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
@@ -81,7 +85,7 @@ import static org.apache.drill.exec.util.StoragePluginTestUtils.updateSchemaLoca
 // (Was abstract to avoid errors _here_ if newer versions of JDBC added
 // interface methods, but now newer versions would probably use Java 8's default
 // methods for compatibility.)
-class DrillConnectionImpl extends AvaticaConnection
+public class DrillConnectionImpl extends AvaticaConnection
                           implements DrillConnection {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
@@ -95,7 +99,7 @@ class DrillConnectionImpl extends AvaticaConnection
   private RemoteServiceSet serviceSet;
 
 
-  protected DrillConnectionImpl(DriverImpl driver, AvaticaFactory factory,
+  public DrillConnectionImpl(DriverImpl driver, AvaticaFactory factory,
                                 String url, Properties info) throws SQLException {
     super(driver, factory, url, info);
 
@@ -583,6 +587,33 @@ class DrillConnectionImpl extends AvaticaConnection
   }
 
   @Override
+  public void setSchema(String schema) throws SQLException {
+    checkOpen();
+    try {
+      client.runQuery(UserBitShared.QueryType.SQL, String.format("use %s", schema));
+    } catch (RpcException e) {
+      throw new SQLException("Error when setting schema", e);
+    }
+  }
+
+  @Override
+  public String getSchema() throws SQLException {
+    checkOpen();
+    try {
+      UserProtos.GetServerMetaResp response = client.getServerMeta().get();
+      if (response.getStatus() != UserProtos.RequestStatus.OK) {
+        UserBitShared.DrillPBError drillError = response.getError();
+        throw new SQLException("Error when getting server meta: " + drillError.getMessage());
+      }
+      UserProtos.ServerMeta serverMeta = response.getServerMeta();
+      String currentSchema = serverMeta.hasCurrentSchema() ? serverMeta.getCurrentSchema() : null;
+      return StringUtils.isEmpty(currentSchema) ? null : currentSchema;
+    } catch (InterruptedException | ExecutionException e) {
+      throw new SQLException("Error when getting server meta", e);
+    }
+  }
+
+  @Override
   public void abort(Executor executor) throws SQLException {
     checkOpen();
     try {
@@ -666,7 +697,7 @@ class DrillConnectionImpl extends AvaticaConnection
         if (dfsDefaultPath == null) {
           logger.warn(logMessage, UNIT_TEST_DFS_DEFAULT_PROP);
         } else {
-          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsDefaultPath), DEFAULT_SCHEMA);
+          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsDefaultPath), SchemaFactory.DEFAULT_WS_NAME);
         }
       }
     } catch(Throwable e) {

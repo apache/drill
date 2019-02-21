@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.common;
 import java.io.IOException;
 import java.util.List;
 
+import com.sun.codemodel.JExpression;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -63,6 +64,10 @@ public class ChainedHashTable {
       GeneratorMapping.create("setupInterior" /* setup method */, "isKeyMatchInternalBuild" /* eval method */,
           null /* reset */, null /* cleanup */);
 
+  private static final GeneratorMapping BOTH_KEYS_NULL =
+    GeneratorMapping.create("setupInterior" /* setup method */, "areBothKeysNull" /* eval method */,
+      null /* reset */, null /* cleanup */);
+
   private static final GeneratorMapping KEY_MATCH_PROBE =
       GeneratorMapping.create("setupInterior" /* setup method */, "isKeyMatchInternalProbe" /* eval method */,
           null /* reset */, null /* cleanup */);
@@ -95,10 +100,14 @@ public class ChainedHashTable {
 
   private final MappingSet KeyMatchIncomingBuildMapping =
       new MappingSet("incomingRowIdx", null, "incomingBuild", null, SETUP_INTERIOR_CONSTANT, KEY_MATCH_BUILD);
+  private final MappingSet bothKeysNullIncomingBuildMapping =
+    new MappingSet("incomingRowIdx", null, "incomingBuild", null, SETUP_INTERIOR_CONSTANT, BOTH_KEYS_NULL);
   private final MappingSet KeyMatchIncomingProbeMapping =
       new MappingSet("incomingRowIdx", null, "incomingProbe", null, SETUP_INTERIOR_CONSTANT, KEY_MATCH_PROBE);
   private final MappingSet KeyMatchHtableMapping =
       new MappingSet("htRowIdx", null, "htContainer", null, SETUP_INTERIOR_CONSTANT, KEY_MATCH_BUILD);
+  private final MappingSet bothKeysNullHtableMapping =
+    new MappingSet("htRowIdx", null, "htContainer", null, SETUP_INTERIOR_CONSTANT, BOTH_KEYS_NULL);
   private final MappingSet KeyMatchHtableProbeMapping =
       new MappingSet("htRowIdx", null, "htContainer", null, SETUP_INTERIOR_CONSTANT, KEY_MATCH_PROBE);
   private final MappingSet GetHashIncomingBuildMapping =
@@ -120,6 +129,8 @@ public class ChainedHashTable {
   private RecordBatch incomingBuild;
   private RecordBatch incomingProbe;
   private final RecordBatch outgoing;
+
+  private enum SetupWork {DO_BUILD, DO_PROBE, CHECK_BOTH_NULLS};
 
   public ChainedHashTable(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
                           RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing) {
@@ -208,12 +219,16 @@ public class ChainedHashTable {
       i++;
     }
 
-
+    // Only in case of a join: Generate a special method to check if both the new key and the existing key (in this HT bucket) are nulls
+    // (used by Hash-Join to avoid creating a long hash-table chain of null keys, which can lead to useless O(n^2) work on that chain.)
+    // The logic is: Nulls match on build, and don't match on probe. Note that this logic covers outer joins as well.
+    setupIsKeyMatchInternal(cgInner, bothKeysNullIncomingBuildMapping, bothKeysNullHtableMapping, keyExprsBuild,
+        htConfig.getComparators(), htKeyFieldIds, SetupWork.CHECK_BOTH_NULLS);
     // generate code for isKeyMatch(), setValue(), getHash() and outputRecordKeys()
     setupIsKeyMatchInternal(cgInner, KeyMatchIncomingBuildMapping, KeyMatchHtableMapping, keyExprsBuild,
-        htConfig.getComparators(), htKeyFieldIds);
+        htConfig.getComparators(), htKeyFieldIds, SetupWork.DO_BUILD);
     setupIsKeyMatchInternal(cgInner, KeyMatchIncomingProbeMapping, KeyMatchHtableProbeMapping, keyExprsProbe,
-        htConfig.getComparators(), htKeyFieldIds);
+        htConfig.getComparators(), htKeyFieldIds, SetupWork.DO_PROBE);
 
     setupSetValue(cgInner, keyExprsBuild, htKeyFieldIds);
     if (outgoing != null) {
@@ -224,8 +239,8 @@ public class ChainedHashTable {
     }
     setupOutputRecordKeys(cgInner, htKeyFieldIds, outKeyFieldIds);
 
-    setupGetHash(cg /* use top level code generator for getHash */, GetHashIncomingBuildMapping, incomingBuild, keyExprsBuild, false);
-    setupGetHash(cg /* use top level code generator for getHash */, GetHashIncomingProbeMapping, incomingProbe, keyExprsProbe, true);
+    setupGetHash(cg /* use top level code generator for getHash */, GetHashIncomingBuildMapping, incomingBuild, keyExprsBuild);
+    setupGetHash(cg /* use top level code generator for getHash */, GetHashIncomingProbeMapping, incomingProbe, keyExprsProbe);
 
     HashTable ht = context.getImplementationClass(top);
     ht.setup(htConfig, allocator, incomingBuild.getContainer(), incomingProbe, outgoing, htContainerOrig, context, cgInner);
@@ -234,10 +249,19 @@ public class ChainedHashTable {
   }
 
   private void setupIsKeyMatchInternal(ClassGenerator<HashTable> cg, MappingSet incomingMapping, MappingSet htableMapping,
-      LogicalExpression[] keyExprs, List<Comparator> comparators, TypedFieldId[] htKeyFieldIds) {
+      LogicalExpression[] keyExprs, List<Comparator> comparators, TypedFieldId[] htKeyFieldIds, SetupWork work) {
+
+    boolean checkIfBothNulls = work == SetupWork.CHECK_BOTH_NULLS;
+
+    // Regular key matching may return false in the middle (i.e., some pair of columns did not match), and true only if all matched;
+    // but "both nulls" check returns the opposite logic (i.e., true when one pair of nulls is found, need check no more)
+    JExpression midPointResult = checkIfBothNulls ? JExpr.TRUE : JExpr.FALSE;
+    JExpression finalResult = checkIfBothNulls ? JExpr.FALSE : JExpr.TRUE;
+
     cg.setMappingSet(incomingMapping);
 
-    if (keyExprs == null || keyExprs.length == 0) {
+    if (keyExprs == null || keyExprs.length == 0 ||
+        checkIfBothNulls && ! comparators.contains(Comparator.EQUALS)) { // e.g. for Hash-Aggr, or non-equi join
       cg.getEvalBlock()._return(JExpr.FALSE);
       return;
     }
@@ -253,28 +277,29 @@ public class ChainedHashTable {
 
       JConditional jc;
 
-      // codegen for nullable columns if nulls are not equal
-      if (comparators.get(i) == Comparator.EQUALS
-          && left.isOptional() && right.isOptional()) {
-        jc = cg.getEvalBlock()._if(left.getIsSet().eq(JExpr.lit(0)).
+      if ( work != SetupWork.DO_BUILD ) {  // BUILD runs this logic in a separate method - areBothKeysNull()
+        // codegen for the special case when both columns are null (i.e., return early with midPointResult)
+        if (comparators.get(i) == Comparator.EQUALS
+            && left.isOptional() && right.isOptional()) {
+          jc = cg.getEvalBlock()._if(left.getIsSet().eq(JExpr.lit(0)).
             cand(right.getIsSet().eq(JExpr.lit(0))));
-        jc._then()._return(JExpr.FALSE);
+          jc._then()._return(midPointResult);
+        }
       }
+      if ( ! checkIfBothNulls ) { // generate comparison code (at least one of the two columns' values is non-null)
+        final LogicalExpression f = FunctionGenerationHelper.getOrderingComparatorNullsHigh(left, right, context.getFunctionRegistry());
 
-      final LogicalExpression f =
-          FunctionGenerationHelper
-          .getOrderingComparatorNullsHigh(left, right, context.getFunctionRegistry());
+        HoldingContainer out = cg.addExpr(f, ClassGenerator.BlkCreateMode.FALSE);
 
-      HoldingContainer out = cg.addExpr(f, ClassGenerator.BlkCreateMode.FALSE);
+        // check if two values are not equal (comparator result != 0)
+        jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
-      // check if two values are not equal (comparator result != 0)
-      jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
-
-      jc._then()._return(JExpr.FALSE);
+        jc._then()._return(midPointResult);
+      }
     }
 
-    // All key expressions compared equal, so return TRUE
-    cg.getEvalBlock()._return(JExpr.TRUE);
+    // All key expressions compared the same way, so return the appropriate final result
+    cg.getEvalBlock()._return(finalResult);
   }
 
   private void setupSetValue(ClassGenerator<HashTable> cg, LogicalExpression[] keyExprs,
@@ -304,8 +329,8 @@ public class ChainedHashTable {
     }
   }
 
-  private void setupGetHash(ClassGenerator<HashTable> cg, MappingSet incomingMapping, VectorAccessible batch, LogicalExpression[] keyExprs,
-                            boolean isProbe) throws SchemaChangeException {
+  private void setupGetHash(ClassGenerator<HashTable> cg, MappingSet incomingMapping, VectorAccessible batch, LogicalExpression[] keyExprs)
+    throws SchemaChangeException {
 
     cg.setMappingSet(incomingMapping);
 

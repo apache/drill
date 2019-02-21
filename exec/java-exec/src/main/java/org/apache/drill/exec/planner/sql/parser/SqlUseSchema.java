@@ -38,8 +38,7 @@ import java.util.List;
  */
 public class SqlUseSchema extends DrillSqlCall {
 
-  public static final SqlSpecialOperator OPERATOR =
-      new SqlSpecialOperator("USE_SCHEMA", SqlKind.OTHER){
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("USE_SCHEMA", SqlKind.OTHER_DDL) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlUseSchema(pos, (SqlIdentifier) operands[0]);

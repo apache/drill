@@ -95,7 +95,8 @@ public class ${className} {
         <#if unit == "Month">
       out.value = months;
         <#elseif unit == "Quarter">
-      out.value = months / 4;
+      // Quarter has 3 month
+      out.value = months / 3;
         <#elseif unit == "Year">
       out.value = months / org.apache.drill.exec.vector.DateUtilities.yearsToMonths;
         </#if>

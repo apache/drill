@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.vector.RepeatedVarCharVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;

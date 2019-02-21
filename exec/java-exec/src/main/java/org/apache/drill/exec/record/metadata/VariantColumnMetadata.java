@@ -32,7 +32,7 @@ public class VariantColumnMetadata extends AbstractColumnMetadata {
     super(schema);
     variantSchema = new VariantSchema();
     variantSchema.bind(this);
-    List<MinorType> types = null;
+    List<MinorType> types;
     if (type() == MinorType.UNION) {
       types = schema.getType().getSubTypeList();
     } else {
@@ -104,7 +104,7 @@ public class VariantColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
-  public AbstractColumnMetadata copy() {
+  public ColumnMetadata copy() {
     // TODO Auto-generated method stub
     assert false;
     return null;

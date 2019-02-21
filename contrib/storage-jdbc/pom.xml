@@ -23,7 +23,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.15.0-SNAPSHOT</version>
+    <version>1.16.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-storage</artifactId>
@@ -31,10 +31,7 @@
   <name>contrib/jdbc-storage-plugin</name>
 
   <properties>
-    <mysql.connector.version>5.1.36</mysql.connector.version>
-    <derby.database.name>drill_derby_test</derby.database.name>
-    <mysql.database.name>drill_mysql_test</mysql.database.name>
-    <skipTests>false</skipTests>
+    <mysql.connector.version>8.0.13</mysql.connector.version>
   </properties>
 
   <dependencies>
@@ -60,214 +57,36 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derbyclient</artifactId>
-      <version>10.11.1.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derbynet</artifactId>
-      <version>10.11.1.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
       <version>${mysql.connector.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.wix</groupId>
+      <artifactId>wix-embedded-mysql</artifactId>
+      <version>4.2.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.4.197</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-      </testResource>
-    </testResources>
     <plugins>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <!--
-          Forking multiple processes can cause race conditions with the initialization of
-          the test databases.
+            Forking multiple processes can cause race conditions with the initialization of
+            the test databases.
           -->
           <forkCount combine.self="override">1</forkCount>
-          <excludes>
-            <exclude>**/*</exclude>
-          </excludes>
         </configuration>
-      </plugin>
-      <plugin>
-        <!-- Because the JDBC tests are somewhat heavyweight, we only run them in the 'verify' phase -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.18.1</version>
-        <configuration>
-          <forkCount combine.self="override">1</forkCount>
-          <systemPropertyVariables>
-            <derby.port>${derby.reserved.port}</derby.port>
-            <mysql.port>${mysql.reserved.port}</mysql.port>
-            <mysql.name>${mysql.database.name}</mysql.name>
-          </systemPropertyVariables>
-          <includes>
-            <include>**/*IT.java</include>
-          </includes>
-        </configuration>
-        <executions>
-          <execution>
-            <id>run-IT-Tests</id>
-            <phase>integration-test</phase>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <!-- Allows us to reserve ports for external servers that we will launch  -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.9.1</version>
-        <executions>
-          <execution>
-            <id>reserve-network-port</id>
-            <goals>
-              <goal>reserve-network-port</goal>
-            </goals>
-            <phase>process-resources</phase>
-            <configuration>
-              <portNames>
-                <portName>derby.reserved.port</portName>
-                <portName>mysql.reserved.port</portName>
-              </portNames>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.8</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <skip>${skipTests}</skip>
-              <artifactItems>
-                <artifactItem>
-                  <!-- This will download a MySQL distribution and use it to run tests against -->
-                  <groupId>com.jcabi</groupId>
-                  <artifactId>mysql-dist</artifactId>
-                  <version>5.6.14</version>
-                  <classifier>${mysql.classifier}</classifier>
-                  <type>zip</type>
-                  <overWrite>false</overWrite>
-                  <outputDirectory>${project.build.directory}/mysql-dist</outputDirectory>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <!-- Allows us to run tests against an in-memory Derby database -->
-        <groupId>com.btmatthews.maven.plugins.inmemdb</groupId>
-        <artifactId>inmemdb-maven-plugin</artifactId>
-        <version>1.4.3</version>
-        <configuration>
-          <monitorKey>inmemdb</monitorKey>
-          <monitorPort>11527</monitorPort>
-          <skip>${skipTests}</skip>
-        </configuration>
-        <executions>
-          <execution>
-            <id>run</id>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <phase>pre-integration-test</phase>
-            <configuration>
-              <daemon>true</daemon>
-              <type>derby</type>
-              <database>${derby.database.name}</database>
-              <username>root</username>
-              <password>root</password>
-              <port>${derby.reserved.port}</port>
-              <sources>
-                <script>
-                  <sourceFile>${basedir}/src/test/resources/derby-test-data.sql</sourceFile>
-                </script>
-              </sources>
-            </configuration>
-          </execution>
-          <execution>
-            <id>stop</id>
-            <goals>
-              <goal>stop</goal>
-            </goals>
-            <phase>post-integration-test</phase>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>com.jcabi</groupId>
-        <artifactId>jcabi-mysql-maven-plugin</artifactId>
-        <version>0.9</version>
-        <executions>
-          <execution>
-            <id>mysql-test</id>
-            <goals>
-              <goal>classify</goal>
-              <goal>start</goal>
-              <goal>stop</goal>
-            </goals>
-            <configuration>
-              <skip>${skipTests}</skip>
-              <port>${mysql.reserved.port}</port>
-              <data>${project.build.directory}/mysql-data</data>
-              <clearexistingdata>true</clearexistingdata>
-              <dbname>${mysql.database.name}</dbname>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>sql-maven-plugin</artifactId>
-        <version>1.5</version>
-        <dependencies>
-          <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>${mysql.connector.version}</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <skip>${skipTests}</skip>
-          <driver>com.mysql.jdbc.Driver</driver>
-          <username>root</username>
-          <password>root</password>
-          <url>jdbc:mysql://localhost:${mysql.reserved.port}/${mysql.database.name}</url>
-        </configuration>
-        <executions>
-          <execution>
-            <id>create-tables</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>execute</goal>
-            </goals>
-            <configuration>
-              <orderFile>ascending</orderFile>
-              <fileset>
-                <basedir>${basedir}/src/test/resources</basedir>
-                <includes>
-                  <include>mysql-test-data.sql</include>
-                </includes>
-              </fileset>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

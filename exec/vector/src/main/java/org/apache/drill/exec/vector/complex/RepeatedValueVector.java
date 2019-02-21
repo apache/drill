@@ -19,7 +19,6 @@ package org.apache.drill.exec.vector.complex;
 
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.ContainerVectorLike;
 
 /**
  * An abstraction representing repeated value vectors.
@@ -31,7 +30,7 @@ import org.apache.drill.exec.vector.complex.ContainerVectorLike;
  */
 public interface RepeatedValueVector extends ValueVector, ContainerVectorLike {
 
-  final static int DEFAULT_REPEAT_PER_RECORD = 5;
+  int DEFAULT_REPEAT_PER_RECORD = 5;
 
   /**
    * Returns the underlying offset vector or null if none exists.

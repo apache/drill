@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.sql;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
@@ -25,10 +28,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.File;
-import java.nio.file.Paths;
-import java.util.List;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
@@ -39,6 +38,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   @BeforeClass
   public static void setupTestFiles() {
     dirTestWatcher.copyResourceToRoot(Paths.get("nation"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("avro", "map_string_to_long.avro"));
   }
 
   @Test
@@ -103,9 +103,10 @@ public class TestViewSupport extends TestBaseViewSupport {
         null,
         "SELECT * FROM cp.`region.json` ORDER BY `region_id`",
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
-        new String[] { "region_id", "sales_city", "sales_state_province", "sales_district", "sales_region",
-            "sales_country", "sales_district_id" },
-        ImmutableList.of(new Object[] { 0L, "None", "None", "No District", "No Region", "No Country", 0L })
+        baselineColumns("region_id", "sales_city", "sales_state_province", "sales_district",
+                        "sales_region", "sales_country", "sales_district_id"),
+        baselineRows(row(0L, "None", "None", "No District",
+                        "No Region", "No Country", 0L))
     );
   }
 
@@ -116,11 +117,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         null,
         "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id`",
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[] { "region_id", "sales_city" },
-        ImmutableList.of(
-            new Object[] { 0L, "None" },
-            new Object[] { 1L, "San Francisco" }
-        )
+        baselineColumns("region_id", "sales_city"),
+        baselineRows(row(0L, "None"), row(1L, "San Francisco"))
     );
   }
 
@@ -131,11 +129,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         "(regionid, salescity)",
         "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id`",
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[] { "regionid", "salescity" },
-        ImmutableList.of(
-            new Object[] { 0L, "None" },
-            new Object[] { 1L, "San Francisco" }
-        )
+        baselineColumns("regionid", "salescity"),
+        baselineRows(row(0L, "None"), row(1L, "San Francisco"))
     );
   }
 
@@ -146,11 +141,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         null,
         "SELECT * FROM cp.`region.json` ORDER BY `region_id`",
         "SELECT region_id, sales_city FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[] { "region_id", "sales_city" },
-        ImmutableList.of(
-            new Object[] { 0L, "None" },
-            new Object[] { 1L, "San Francisco" }
-        )
+        baselineColumns("region_id", "sales_city"),
+        baselineRows(row(0L, "None"), row(1L, "San Francisco"))
     );
   }
 
@@ -161,11 +153,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         null,
         "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id`",
         "SELECT region_id, sales_city FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[] { "region_id", "sales_city" },
-        ImmutableList.of(
-            new Object[] { 0L, "None" },
-            new Object[] { 1L, "San Francisco" }
-        )
+        baselineColumns("region_id", "sales_city"),
+        baselineRows(row(0L, "None"), row(1L, "San Francisco"))
     );
   }
 
@@ -176,11 +165,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         null,
         "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id`",
         "SELECT sales_city FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[] { "sales_city" },
-        ImmutableList.of(
-            new Object[] { "None" },
-            new Object[] { "San Francisco" }
-        )
+        baselineColumns("sales_city"),
+        baselineRows(row("None"), row("San Francisco"))
     );
   }
 
@@ -191,11 +177,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         "(regionid, salescity)",
         "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id` LIMIT 2",
         "SELECT regionid, salescity FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[] { "regionid", "salescity" },
-        ImmutableList.of(
-            new Object[] { 0L, "None" },
-            new Object[] { 1L, "San Francisco" }
-        )
+        baselineColumns("regionid", "salescity"),
+        baselineRows(row(0L, "None"), row(1L, "San Francisco"))
     );
   }
 
@@ -206,11 +189,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         "(regionid, salescity)",
         "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id` DESC",
         "SELECT regionid FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[]{"regionid"},
-        ImmutableList.of(
-            new Object[]{109L},
-            new Object[]{108L}
-        )
+        baselineColumns("regionid"),
+        baselineRows(row(109L), row(108L))
     );
   }
 
@@ -222,11 +202,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         null,
         "SELECT region_id FROM cp.`region.json` UNION SELECT employee_id FROM cp.`employee.json`",
         "SELECT regionid FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[]{"regionid"},
-        ImmutableList.of(
-            new Object[]{110L},
-            new Object[]{108L}
-        )
+        baselineColumns("regionid"),
+        baselineRows(row(110L), row(108L))
     );
   }
 
@@ -244,8 +221,8 @@ public class TestViewSupport extends TestBaseViewSupport {
 
       queryViewHelper(
           String.format("SELECT region_id FROM %s.`%s` LIMIT 1", DFS_TMP_SCHEMA, outerView),
-          new String[] { "region_id" },
-          ImmutableList.of(new Object[] { 0L })
+          baselineColumns("region_id"),
+          baselineRows(row(0L))
       );
     } finally {
       dropViewHelper(DFS_TMP_SCHEMA, outerView, DFS_TMP_SCHEMA);
@@ -268,10 +245,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         null,
         viewDef,
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
-        new String[]{"n_nationkey", "n_name", "n_regionkey", "n_comment"},
-        ImmutableList.of(
-            new Object[]{0, "ALGERIA", 0, " haggle. carefully final deposits detect slyly agai"}
-        )
+        baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment"),
+        baselineRows(row(0, "ALGERIA", 0, " haggle. carefully final deposits detect slyly agai"))
     );
   }
 
@@ -303,8 +278,8 @@ public class TestViewSupport extends TestBaseViewSupport {
 
       // Make sure the new view created returns the data expected.
       queryViewHelper(String.format("SELECT * FROM %s.`%s` LIMIT 1", DFS_TMP_SCHEMA, viewName),
-          new String[]{"sales_state_province"},
-          ImmutableList.of(new Object[]{"None"})
+          baselineColumns("sales_state_province"),
+          baselineRows(row("None"))
       );
     } finally {
       dropViewHelper(DFS_TMP_SCHEMA, viewName, DFS_TMP_SCHEMA);
@@ -360,8 +335,8 @@ public class TestViewSupport extends TestBaseViewSupport {
 
       // Make sure the view created returns the data expected.
       queryViewHelper(String.format("SELECT * FROM %s.`%s` LIMIT 1", DFS_TMP_SCHEMA, viewName),
-        new String[]{"region_id", "sales_city"},
-        ImmutableList.of(new Object[]{0L, "None"})
+          baselineColumns("region_id", "sales_city"),
+          baselineRows(row(0L, "None"))
       );
     } finally {
       dropViewHelper(DFS_TMP_SCHEMA, viewName, DFS_TMP_SCHEMA);
@@ -381,8 +356,8 @@ public class TestViewSupport extends TestBaseViewSupport {
 
       // Make sure the view created returns the data expected.
       queryViewHelper(String.format("SELECT * FROM %s.`%s` LIMIT 1", DFS_TMP_SCHEMA, viewName),
-        new String[]{"region_id", "sales_city"},
-        ImmutableList.of(new Object[]{0L, "None"})
+          baselineColumns("region_id", "sales_city"),
+          baselineRows(row(0L, "None"))
       );
     } finally {
       dropViewHelper(DFS_TMP_SCHEMA, viewName, DFS_TMP_SCHEMA);
@@ -483,8 +458,8 @@ public class TestViewSupport extends TestBaseViewSupport {
       createViewHelper("tmp", viewName, DFS_TMP_SCHEMA, null,
           "SELECT CAST(`employee_id` AS INTEGER) AS `employeeid`\n" + "FROM `cp`.`employee.json`");
 
-      final String[] baselineColumns = new String[] { "employeeid" };
-      final List<Object[]> baselineValues = ImmutableList.of(new Object[] { 1156 });
+      final String[] baselineColumns = baselineColumns("employeeid");
+      final List<Object[]> baselineValues = baselineRows(row(1156));
 
       // Query view from current schema "dfs" by referring to the view using "tmp.viewName"
       queryViewHelper(
@@ -520,8 +495,8 @@ public class TestViewSupport extends TestBaseViewSupport {
       // Create a view with full schema identifier and refer the "region.json" as without schema.
       createViewHelper(DFS_TMP_SCHEMA, viewName, DFS_TMP_SCHEMA, null, "SELECT region_id, sales_city FROM `region.json`");
 
-      final String[] baselineColumns = new String[] { "region_id", "sales_city" };
-      final List<Object[]> baselineValues = ImmutableList.of(new Object[]{109L, "Santa Fe"});
+      final String[] baselineColumns = baselineColumns("region_id", "sales_city");
+      final List<Object[]> baselineValues = baselineRows(row(109L, "Santa Fe"));
 
       // Query the view
       queryViewHelper(
@@ -634,10 +609,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         "(regionid1, regionid2)",
         "SELECT region_id, region_id FROM cp.`region.json` LIMIT 1",
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME",
-        new String[]{"regionid1", "regionid2"},
-        ImmutableList.of(
-            new Object[]{0L, 0L}
-        )
+        baselineColumns("regionid1", "regionid2"),
+        baselineRows(row(0L, 0L))
     );
   }
 
@@ -650,10 +623,8 @@ public class TestViewSupport extends TestBaseViewSupport {
         "SELECT t1.region_id, t2.region_id FROM cp.`region.json` t1 JOIN cp.`region.json` t2 " +
             "ON t1.region_id = t2.region_id LIMIT 1",
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME",
-        new String[]{"regionid1", "regionid2"},
-        ImmutableList.of(
-            new Object[]{0L, 0L}
-        )
+        baselineColumns("regionid1", "regionid2"),
+        baselineRows(row(0L, 0L))
     );
   }
 
@@ -692,7 +663,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   @Category(UnlikelyTest.class)
   public void showProperMsgWhenTryingToDropAViewInImmutableSchema() throws Exception{
     errorMsgTestHelper("DROP VIEW cp.nonExistentView",
-        "Unable to create or drop tables/views. Schema [cp] is immutable.");
+        "Unable to create or drop objects. Schema [cp] is immutable.");
   }
 
   @Test // DRILL-2423
@@ -751,4 +722,103 @@ public class TestViewSupport extends TestBaseViewSupport {
         .baselineValues("HeadQuarters")
         .go();
   }
+
+  @Test
+  public void testDropViewNameStartsWithSlash() throws Exception {
+    String viewName = "view_name_starts_with_slash_drop";
+    try {
+      test("CREATE VIEW `%s`.`%s` AS SELECT * FROM cp.`region.json`", DFS_TMP_SCHEMA, viewName);
+      testBuilder()
+          .sqlQuery("DROP VIEW `%s`.`%s`", DFS_TMP_SCHEMA, "/" + viewName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true,
+              String.format("View [%s] deleted successfully from schema [%s].", viewName, DFS_TMP_SCHEMA))
+          .go();
+    } finally {
+      test("DROP VIEW IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, viewName);
+    }
+  }
+
+  @Test
+  public void testViewIsCreatedWithinWorkspace() throws Exception {
+    String viewName = "view_created_within_workspace";
+    try {
+      test("CREATE VIEW `%s`.`%s` AS SELECT * FROM cp.`region.json`", DFS_TMP_SCHEMA, "/" + viewName);
+      testBuilder()
+          .sqlQuery("SELECT region_id FROM `%s`.`%s` LIMIT 1", DFS_TMP_SCHEMA, viewName)
+          .unOrdered()
+          .baselineColumns("region_id")
+          .baselineValues(0L)
+          .go();
+    } finally {
+      test("DROP VIEW IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, viewName);
+    }
+  }
+
+  @Test
+  public void testViewIsFoundWithinWorkspaceWhenNameStartsWithSlash() throws Exception {
+    String viewName = "view_found_within_workspace";
+    try {
+      test("CREATE VIEW `%s`.`%s` AS SELECT * FROM cp.`region.json`", DFS_TMP_SCHEMA, viewName);
+      testBuilder()
+          .sqlQuery("SELECT region_id FROM `%s`.`%s` LIMIT 1", DFS_TMP_SCHEMA, "/" + viewName)
+          .unOrdered()
+          .baselineColumns("region_id")
+          .baselineValues(0L)
+          .go();
+    } finally {
+      test("DROP VIEW IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, viewName);
+    }
+  }
+
+  @Test // DRILL-6944
+  public void testSelectMapColumnOfNewlyCreatedView() throws Exception {
+    try {
+      test("CREATE VIEW dfs.tmp.`mapf_view` AS SELECT `mapf` FROM dfs.`avro/map_string_to_long.avro`");
+      test("SELECT * FROM dfs.tmp.`mapf_view`");
+      testBuilder()
+          .sqlQuery("SELECT `mapf`['ki'] as ki FROM dfs.tmp.`mapf_view`")
+          .unOrdered()
+          .baselineColumns("ki")
+          .baselineValues(1L)
+          .go();
+    } finally {
+      test("DROP VIEW IF EXISTS dfs.tmp.`mapf_view`");
+    }
+  }
+
+  @Test // DRILL-6944
+  public void testMapTypeFullyQualifiedInNewlyCreatedView() throws Exception {
+    try {
+      test("CREATE VIEW dfs.tmp.`mapf_view` AS SELECT `mapf` FROM dfs.`avro/map_string_to_long.avro`");
+      testPlanWithAttributesMatchingPatterns("SELECT * FROM dfs.tmp.`mapf_view`", new String[]{
+          "Screen : rowType = RecordType\\(\\(VARCHAR\\(65535\\), BIGINT\\) MAP mapf\\)",
+          "Project\\(mapf=\\[\\$0\\]\\) : rowType = RecordType\\(\\(VARCHAR\\(65535\\), BIGINT\\) MAP mapf\\)",
+          "Scan.*avro/map_string_to_long.avro.*rowType = RecordType\\(\\(VARCHAR\\(65535\\), BIGINT\\) MAP mapf\\)"
+      }, null);
+    } finally {
+      test("DROP VIEW IF EXISTS dfs.tmp.`mapf_view`");
+    }
+  }
+
+  @Test // DRILL-6944
+  public void testMapColumnOfOlderViewWithUntypedMap() throws Exception {
+    test("SELECT * FROM cp.`view/vw_before_drill_6944.view.drill`");
+    testBuilder()
+        .sqlQuery("SELECT `mapf`['ki'] as ki FROM cp.`view/vw_before_drill_6944.view.drill`")
+        .unOrdered()
+        .baselineColumns("ki")
+        .baselineValues(1L)
+        .go();
+  }
+
+  @Test // DRILL-6944
+  public void testMapTypeTreatedAsAnyInOlderViewWithUntypedMap() throws Exception {
+    testPlanWithAttributesMatchingPatterns("SELECT * FROM cp.`view/vw_before_drill_6944.view.drill`", new String[]{
+        "Screen : rowType = RecordType\\(ANY mapf\\)",
+        "Project.mapf=.CAST\\(\\$0\\):ANY NOT NULL.*"
+    }, null);
+  }
+
 }

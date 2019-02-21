@@ -22,11 +22,13 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.fn.impl.ValueVectorHashHelper;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.config.RuntimeFilterPOP;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -36,14 +38,13 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.work.filter.BloomFilter;
-import org.apache.drill.exec.work.filter.RuntimeFilterSink;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A RuntimeFilterRecordBatch steps over the ScanBatch. If the ScanBatch participates
@@ -59,12 +60,21 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
   private List<String> toFilterFields;
   private List<BloomFilter> bloomFilters;
   private RuntimeFilterWritable current;
-  private RuntimeFilterWritable previous;
   private int originalRecordCount;
+  private long filteredRows = 0l;
+  private long appliedTimes = 0l;
+  private int batchTimes = 0;
+  private boolean waited = false;
+  private boolean enableRFWaiting;
+  private long maxWaitingTime;
+  private long rfIdentifier;
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RuntimeFilterRecordBatch.class);
 
   public RuntimeFilterRecordBatch(RuntimeFilterPOP pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(pop, context, incoming);
+    enableRFWaiting = context.getOptions().getOption(ExecConstants.HASHJOIN_RUNTIME_FILTER_WAITING_ENABLE_KEY).bool_val;
+    maxWaitingTime = context.getOptions().getOption(ExecConstants.HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME_KEY).num_val;
+    this.rfIdentifier = pop.getIdentifier();
   }
 
   @Override
@@ -89,7 +99,6 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
 
   @Override
   protected IterOutcome doWork() {
-    container.transferIn(incoming.getContainer());
     originalRecordCount = incoming.getRecordCount();
     sv2.setBatchActualRecordCount(originalRecordCount);
     try {
@@ -97,6 +106,8 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
     } catch (SchemaChangeException e) {
       throw new UnsupportedOperationException(e);
     }
+    container.transferIn(incoming.getContainer());
+    updateStats();
     return getFinalOutcome(false);
   }
 
@@ -155,21 +166,11 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
    * schema change hash64 should be reset and this method needs to be called again.
    */
   private void setupHashHelper() {
-    final RuntimeFilterSink runtimeFilterSink = context.getRuntimeFilterSink();
-    // Check if RuntimeFilterWritable was received by the minor fragment or not
-    if (!runtimeFilterSink.containOne()) {
+    current = context.getRuntimeFilter(rfIdentifier);
+    if (current == null) {
       return;
     }
-    if (runtimeFilterSink.hasFreshOne()) {
-      RuntimeFilterWritable freshRuntimeFilterWritable = runtimeFilterSink.fetchLatestDuplicatedAggregatedOne();
-      if (current == null) {
-        current = freshRuntimeFilterWritable;
-        previous = freshRuntimeFilterWritable;
-      } else {
-        previous = current;
-        current = freshRuntimeFilterWritable;
-        previous.close();
-      }
+    if (bloomFilters == null) {
       bloomFilters = current.unwrap();
     }
     // Check if HashHelper is initialized or not
@@ -189,8 +190,7 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
           ValueVectorReadExpression toHashFieldExp = new ValueVectorReadExpression(typedFieldId);
           hashFieldExps.add(toHashFieldExp);
         }
-        hash64 = hashHelper.getHash64(hashFieldExps.toArray(new LogicalExpression[hashFieldExps.size()]),
-          typedFieldIds.toArray(new TypedFieldId[typedFieldIds.size()]));
+        hash64 = hashHelper.getHash64(hashFieldExps.toArray(new LogicalExpression[hashFieldExps.size()]), typedFieldIds.toArray(new TypedFieldId[typedFieldIds.size()]));
       } catch (Exception e) {
         throw UserException.internalError(e).build(logger);
       }
@@ -208,9 +208,11 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
       sv2.setRecordCount(0);
       return;
     }
-    final RuntimeFilterSink runtimeFilterSink = context.getRuntimeFilterSink();
+    current = context.getRuntimeFilter(rfIdentifier);
+    timedWaiting();
+    batchTimes++;
     sv2.allocateNew(originalRecordCount);
-    if (!runtimeFilterSink.containOne()) {
+    if (current == null) {
       // means none of the rows are filtered out hence set all the indexes
       for (int i = 0; i < originalRecordCount; ++i) {
         sv2.setIndex(i, i);
@@ -222,26 +224,42 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
     setupHashHelper();
     //To make each independent bloom filter work together to construct a final filter result: BitSet.
     BitSet bitSet = new BitSet(originalRecordCount);
-    for (int i = 0; i < toFilterFields.size(); i++) {
-      BloomFilter bloomFilter = bloomFilters.get(i);
-      String fieldName = toFilterFields.get(i);
-      computeBitSet(field2id.get(fieldName), bloomFilter, bitSet);
-    }
 
+    int filterSize = toFilterFields.size();
     int svIndex = 0;
-    int tmpFilterRows = 0;
-    for (int i = 0; i < originalRecordCount; i++) {
-      boolean contain = bitSet.get(i);
-      if (contain) {
-        sv2.setIndex(svIndex, i);
-        svIndex++;
-      } else {
-        tmpFilterRows++;
+    if (filterSize == 1) {
+      BloomFilter bloomFilter = bloomFilters.get(0);
+      String fieldName = toFilterFields.get(0);
+      int fieldId = field2id.get(fieldName);
+      for (int rowIndex = 0; rowIndex < originalRecordCount; rowIndex++) {
+        long hash = hash64.hash64Code(rowIndex, 0, fieldId);
+        boolean contain = bloomFilter.find(hash);
+        if (contain) {
+          sv2.setIndex(svIndex, rowIndex);
+          svIndex++;
+        } else {
+          filteredRows++;
+        }
+      }
+    } else {
+      for (int i = 0; i < toFilterFields.size(); i++) {
+        BloomFilter bloomFilter = bloomFilters.get(i);
+        String fieldName = toFilterFields.get(i);
+        computeBitSet(field2id.get(fieldName), bloomFilter, bitSet);
+      }
+      for (int i = 0; i < originalRecordCount; i++) {
+        boolean contain = bitSet.get(i);
+        if (contain) {
+          sv2.setIndex(svIndex, i);
+          svIndex++;
+        } else {
+          filteredRows++;
+        }
       }
     }
 
-    logger.debug("RuntimeFiltered has filtered out {} rows from incoming with {} rows",
-      tmpFilterRows, originalRecordCount);
+
+    appliedTimes++;
     sv2.setRecordCount(svIndex);
   }
 
@@ -262,5 +280,35 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
     logger.error("RuntimeFilterRecordBatch[container={}, selectionVector={}, toFilterFields={}, "
         + "originalRecordCount={}, batchSchema={}]",
         container, sv2, toFilterFields, originalRecordCount, incoming.getSchema());
+  }
+
+  public enum Metric implements MetricDef {
+    FILTERED_ROWS, APPLIED_TIMES;
+
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
+
+  public void updateStats() {
+    stats.setLongStat(Metric.FILTERED_ROWS, filteredRows);
+    stats.setLongStat(Metric.APPLIED_TIMES, appliedTimes);
+  }
+
+  private void timedWaiting() {
+    if (!enableRFWaiting || waited) {
+      return;
+    }
+    //Downstream HashJoinBatch prefetch first batch from both sides in buildSchema phase hence waiting is done post that phase
+    if (current == null && batchTimes > 0) {
+      waited = true;
+      try {
+        stats.startWait();
+        current = context.getRuntimeFilter(rfIdentifier, maxWaitingTime, TimeUnit.MILLISECONDS);
+      } finally {
+        stats.stopWait();
+      }
+    }
   }
 }

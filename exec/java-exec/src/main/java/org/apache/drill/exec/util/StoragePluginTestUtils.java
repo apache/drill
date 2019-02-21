@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -43,11 +44,10 @@ public class StoragePluginTestUtils {
   public static final String DFS_PLUGIN_NAME = "dfs";
 
   public static final String TMP_SCHEMA = "tmp";
-  public static final String DEFAULT_SCHEMA = "default";
   public static final String ROOT_SCHEMA = "root";
 
   public static final String DFS_TMP_SCHEMA = DFS_PLUGIN_NAME + "." + TMP_SCHEMA;
-  public static final String DFS_DEFAULT_SCHEMA = DFS_PLUGIN_NAME + "." + DEFAULT_SCHEMA;
+  public static final String DFS_DEFAULT_SCHEMA = DFS_PLUGIN_NAME + "." + SchemaFactory.DEFAULT_WS_NAME;
   public static final String DFS_ROOT_SCHEMA = DFS_PLUGIN_NAME + "." + ROOT_SCHEMA;
 
   public static final String UNIT_TEST_PROP_PREFIX = "drillJDBCUnitTests";

@@ -115,7 +115,7 @@ public class QueryWrapper {
     }
 
     // Return the QueryResult.
-    return new QueryResult(queryId, webUserConnection.columns, webUserConnection.results);
+    return new QueryResult(queryId, webUserConnection, webUserConnection.results);
   }
 
   //Detect possible excess heap
@@ -127,12 +127,17 @@ public class QueryWrapper {
     private final String queryId;
     public final Collection<String> columns;
     public final List<Map<String, String>> rows;
+    public final List<String> metadata;
+    public final String queryState;
 
-    public QueryResult(QueryId queryId, Collection<String> columns, List<Map<String, String>> rows) {
-      this.queryId = QueryIdHelper.getQueryId(queryId);
-      this.columns = columns;
-      this.rows = rows;
-    }
+    //DRILL-6847:  Modified the constructor so that the method has access to all the properties in webUserConnection
+    public QueryResult(QueryId queryId, WebUserConnection webUserConnection, List<Map<String, String>> rows) {
+        this.queryId = QueryIdHelper.getQueryId(queryId);
+        this.columns = webUserConnection.columns;
+        this.metadata = webUserConnection.metadata;
+        this.queryState = webUserConnection.getQueryState();
+        this.rows = rows;
+      }
 
     public String getQueryId() {
       return queryId;

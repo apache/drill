@@ -99,7 +99,7 @@ void protobuf_AssignDesc_BitData_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(FragmentRecordBatch));
   RuntimeFilterBDef_descriptor_ = file->message_type(3);
-  static const int RuntimeFilterBDef_offsets_[7] = {
+  static const int RuntimeFilterBDef_offsets_[8] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RuntimeFilterBDef, query_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RuntimeFilterBDef, major_fragment_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RuntimeFilterBDef, minor_fragment_id_),
@@ -107,6 +107,7 @@ void protobuf_AssignDesc_BitData_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RuntimeFilterBDef, bloom_filter_size_in_bytes_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RuntimeFilterBDef, probe_fields_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RuntimeFilterBDef, hj_op_id_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RuntimeFilterBDef, rf_identifier_),
   };
   RuntimeFilterBDef_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -178,16 +179,17 @@ void protobuf_AddDesc_BitData_2eproto() {
     " \003(\005\022!\n\031sending_major_fragment_id\030\004 \001(\005\022"
     "!\n\031sending_minor_fragment_id\030\005 \001(\005\022(\n\003de"
     "f\030\006 \001(\0132\033.exec.shared.RecordBatchDef\022\023\n\013"
-    "isLastBatch\030\007 \001(\010\"\321\001\n\021RuntimeFilterBDef\022"
+    "isLastBatch\030\007 \001(\010\"\350\001\n\021RuntimeFilterBDef\022"
     "&\n\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022"
     "\031\n\021major_fragment_id\030\002 \001(\005\022\031\n\021minor_frag"
     "ment_id\030\003 \001(\005\022\022\n\nto_foreman\030\004 \001(\010\022\"\n\032blo"
     "om_filter_size_in_bytes\030\005 \003(\005\022\024\n\014probe_f"
-    "ields\030\006 \003(\t\022\020\n\010hj_op_id\030\007 \001(\005*n\n\007RpcType"
-    "\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n"
-    "\020REQ_RECORD_BATCH\020\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n"
-    "\022REQ_RUNTIME_FILTER\020\005B(\n\033org.apache.dril"
-    "l.exec.protoB\007BitDataH\001", 903);
+    "ields\030\006 \003(\t\022\020\n\010hj_op_id\030\007 \001(\005\022\025\n\rrf_iden"
+    "tifier\030\010 \001(\003*n\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007"
+    "\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BATCH"
+    "\020\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n\022REQ_RUNTIME_FILT"
+    "ER\020\005B(\n\033org.apache.drill.exec.protoB\007Bit"
+    "DataH\001", 926);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitData.proto", &protobuf_RegisterTypes);
   BitClientHandshake::default_instance_ = new BitClientHandshake();
@@ -1210,6 +1212,7 @@ const int RuntimeFilterBDef::kToForemanFieldNumber;
 const int RuntimeFilterBDef::kBloomFilterSizeInBytesFieldNumber;
 const int RuntimeFilterBDef::kProbeFieldsFieldNumber;
 const int RuntimeFilterBDef::kHjOpIdFieldNumber;
+const int RuntimeFilterBDef::kRfIdentifierFieldNumber;
 #endif  // !_MSC_VER
 
 RuntimeFilterBDef::RuntimeFilterBDef()
@@ -1234,6 +1237,7 @@ void RuntimeFilterBDef::SharedCtor() {
   minor_fragment_id_ = 0;
   to_foreman_ = false;
   hj_op_id_ = 0;
+  rf_identifier_ = GOOGLE_LONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1277,6 +1281,7 @@ void RuntimeFilterBDef::Clear() {
     minor_fragment_id_ = 0;
     to_foreman_ = false;
     hj_op_id_ = 0;
+    rf_identifier_ = GOOGLE_LONGLONG(0);
   }
   bloom_filter_size_in_bytes_.Clear();
   probe_fields_.Clear();
@@ -1404,6 +1409,22 @@ bool RuntimeFilterBDef::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(64)) goto parse_rf_identifier;
+        break;
+      }
+
+      // optional int64 rf_identifier = 8;
+      case 8: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_rf_identifier:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &rf_identifier_)));
+          set_has_rf_identifier();
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -1467,6 +1488,11 @@ void RuntimeFilterBDef::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt32(7, this->hj_op_id(), output);
   }
 
+  // optional int64 rf_identifier = 8;
+  if (has_rf_identifier()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(8, this->rf_identifier(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -1517,6 +1543,11 @@ void RuntimeFilterBDef::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(7, this->hj_op_id(), target);
   }
 
+  // optional int64 rf_identifier = 8;
+  if (has_rf_identifier()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(8, this->rf_identifier(), target);
+  }
+
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -1559,6 +1590,13 @@ int RuntimeFilterBDef::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->hj_op_id());
+    }
+
+    // optional int64 rf_identifier = 8;
+    if (has_rf_identifier()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->rf_identifier());
     }
 
   }
@@ -1622,6 +1660,9 @@ void RuntimeFilterBDef::MergeFrom(const RuntimeFilterBDef& from) {
     if (from.has_hj_op_id()) {
       set_hj_op_id(from.hj_op_id());
     }
+    if (from.has_rf_identifier()) {
+      set_rf_identifier(from.rf_identifier());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -1652,6 +1693,7 @@ void RuntimeFilterBDef::Swap(RuntimeFilterBDef* other) {
     bloom_filter_size_in_bytes_.Swap(&other->bloom_filter_size_in_bytes_);
     probe_fields_.Swap(&other->probe_fields_);
     std::swap(hj_op_id_, other->hj_op_id_);
+    std::swap(rf_identifier_, other->rf_identifier_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

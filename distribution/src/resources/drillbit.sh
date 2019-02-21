@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -87,6 +87,7 @@ export args
 
 # Set default scheduling priority
 DRILL_NICENESS=${DRILL_NICENESS:-0}
+GRACEFUL_FILE=$DRILL_HOME/$GRACEFUL_SIGFILE
 
 waitForProcessEnd()
 {
@@ -94,11 +95,19 @@ waitForProcessEnd()
   commandName=$2
   kill_drillbit=$3
   processedAt=`date +%s`
+  triggered_shutdown=false
   origcnt=${DRILL_STOP_TIMEOUT:-120}
   while kill -0 $pidKilled > /dev/null 2>&1;
    do
      echo -n "."
      sleep 1;
+     #Incase of graceful shutdown, create graceful file and wait till the process ends.
+     if [ "$kill_drillbit" = false ]; then
+       if [ "$triggered_shutdown" = false ]; then
+         touch $GRACEFUL_FILE
+         triggered_shutdown=true
+       fi
+     fi
      if [ "$kill_drillbit" = true ] ; then
         # if process persists more than $DRILL_STOP_TIMEOUT (default 120 sec) no mercy
         if [ $(( `date +%s` - $processedAt )) -gt $origcnt ]; then
@@ -123,6 +132,15 @@ check_before_start()
     if kill -0 `cat $pidFile` > /dev/null 2>&1; then
       echo "$command is already running as process `cat $pidFile`.  Stop it first."
       exit 1
+    fi
+  fi
+   #remove any previous uncleaned graceful file
+  if [ -f "$GRACEFUL_FILE" ]; then
+    rm $GRACEFUL_FILE
+    rm_status=$?
+    if [ $rm_status -ne 0 ];then
+        echo "Error: Failed to remove $GRACEFUL_FILE!"
+        exit $rm_status
     fi
   fi
 }
@@ -204,7 +222,9 @@ stop_bit ( )
     if kill -0 $pidToKill > /dev/null 2>&1; then
       echo "Stopping $command"
       echo "`date` Terminating $command pid $pidToKill" >> "$DRILLBIT_LOG_PATH"
-      kill $pidToKill > /dev/null 2>&1
+      if [ $kill_drillbit = true ]; then
+        kill $pidToKill > /dev/null 2>&1
+      fi
       waitForProcessEnd $pidToKill $command $kill_drillbit
       retval=0
     else

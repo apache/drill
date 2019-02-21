@@ -21,18 +21,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.IntColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.ScalarWriter.ColumnWriterListener;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the int writer as a typical example of a fixed-width
@@ -40,6 +42,7 @@ import org.junit.Test;
  * overflow, and filling in empty values.
  */
 
+@Category(RowSetTests.class)
 public class TestFixedWidthWriter extends SubOperatorTest {
 
   public static class TestIndex implements ColumnWriterIndex {

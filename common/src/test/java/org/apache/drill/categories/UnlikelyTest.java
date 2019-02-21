@@ -18,7 +18,7 @@
 package org.apache.drill.categories;
 
 /**
- * This is a category for tests which target very specific bugs or that excercise corner cases that your unlikely to break.
+ * This is a category for tests which target very specific bugs or that exercise  corner cases that your unlikely to break.
  */
 public interface UnlikelyTest {
 }

@@ -556,6 +556,25 @@ public class TestJoinNullable extends BaseTestQuery {
     }
   }
 
+  // Full join with USING clause uses COALESCE internally
+  @Test // DRILL-6962
+  public void testFullJoinUsingUntypedNullColumn() throws Exception {
+    try {
+      enableJoin(true, true);
+      String query = "select * from " +
+          "(select n_nationkey, n_name, coalesce(unk1, unk2) as not_exists from cp.`tpch/nation.parquet`) t1 full join " +
+          "(select r_name, r_comment, coalesce(unk1, unk2) as not_exists from cp.`tpch/region.parquet`) t2 " +
+          "using (not_exists)";
+      testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .expectsNumRecords(30)
+          .go();
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
   public void nullMixedComparatorEqualJoinHelper(final String query) throws Exception {
     testBuilder()
         .sqlQuery(query)

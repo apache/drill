@@ -44,13 +44,14 @@ import org.apache.drill.exec.record.metadata.TupleNameSpace;
  * <p>
  * Examples:<br>
  * <code>m</code><br>
- * If m turns out to be a map, project all members of m.<br>
+ * If <code>m</code> turns out to be a map, project all members of
+ * <code>m</code>.<br>
  * <code>m.a</code><br>
- * Column m must be a map. Project only column a.<br>
+ * Column <code>m</code> must be a map. Project only column <code>a</code>.<br>
  * <code>m, m.a</code><br>
  * Tricky case. We interpret this as projecting only the "a" element of map m.
  * <p>
- * The projection set is build from a list of columns, represented as
+ * The projection set is built from a list of columns, represented as
  * {@link SchemaPath} objects, provided by the physical plan. The structure of
  * <tt>SchemaPath</tt> is a bit awkward:
  * <p>

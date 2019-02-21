@@ -26,6 +26,8 @@ import java.io.IOException;
  */
 public interface SchemaFactory {
 
+  String DEFAULT_WS_NAME = "default";
+
   /**
    * Register the schemas provided by this SchemaFactory implementation under the given parent schema.
    *

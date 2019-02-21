@@ -4,7 +4,7 @@
 
    To build an Apache Drill docker image, you need to have the following software installed on your system to successfully complete a build. 
   * [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-  * [Maven 3.3.1 or greater](https://maven.apache.org/download.cgi)
+  * [Maven 3.3.3 or greater](https://maven.apache.org/download.cgi)
   * [Docker CE](https://store.docker.com/search?type=edition&offering=community)
   
    If you are using an older Mac or PC, additionally configure [docker-machine](https://docs.docker.com/machine/overview/#what-is-docker-machine) on your system

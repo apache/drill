@@ -39,6 +39,10 @@ public abstract class PathSegment {
       this(Integer.parseInt(numberAsText), child);
     }
 
+    public ArraySegment(String numberAsText) {
+      this(Integer.parseInt(numberAsText), null);
+    }
+
     public ArraySegment(int index, PathSegment child) {
       super(child);
       this.index = index;
@@ -105,7 +109,7 @@ public abstract class PathSegment {
 
     @Override
     public PathSegment clone() {
-      PathSegment seg = index < 0 ? new ArraySegment(null) : new ArraySegment(index);
+      PathSegment seg = index < 0 ? new ArraySegment((PathSegment) null) : new ArraySegment(index);
       if (getChild() != null) {
         seg.setChild(getChild().clone());
       }
@@ -114,7 +118,7 @@ public abstract class PathSegment {
 
     @Override
     public ArraySegment cloneWithNewChild(PathSegment newChild) {
-      ArraySegment seg = index < 0 ? new ArraySegment(null) : new ArraySegment(index);
+      ArraySegment seg = index < 0 ? new ArraySegment((PathSegment) null) : new ArraySegment(index);
       if (getChild() != null) {
         seg.setChild(getChild().cloneWithNewChild(newChild));
       } else {

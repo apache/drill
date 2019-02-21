@@ -87,7 +87,7 @@ public class DrillPushRowKeyJoinToScanRule extends RelOptRule {
   }
 
   public static DrillPushRowKeyJoinToScanRule JOIN = new DrillPushRowKeyJoinToScanRule(
-      RelOptHelper.any(DrillJoinRel.class), "DrillPushRowKeyJoinToScanRule_Join", new MatchRelJ());
+      RelOptHelper.any(DrillJoin.class), "DrillPushRowKeyJoinToScanRule_Join", new MatchRelJ());
 
   public static class MatchRelJ implements MatchFunction<RowKeyJoinCallContext> {
     /*
@@ -150,7 +150,7 @@ public class DrillPushRowKeyJoinToScanRule extends RelOptRule {
      * plan nodes. It tries to identify some RelNode sequences e.g. Filter-Project-Scan and generates
      * the context based on the identified sequence.
      */
-    private RowKeyJoinCallContext generateContext(RelOptRuleCall call, DrillJoinRel joinRel,
+    private RowKeyJoinCallContext generateContext(RelOptRuleCall call, DrillJoin joinRel,
       RelNode joinChildRel, RowKey rowKeyLoc, int rowKeyPos, boolean swapInputs) {
       List<RelNode> matchingRels;
       // Sequence of rels (PFPS, FPS, PS, FS, S) matched for this rule
@@ -199,7 +199,7 @@ public class DrillPushRowKeyJoinToScanRule extends RelOptRule {
 
     @Override
     public boolean match(RelOptRuleCall call) {
-      DrillJoinRel joinRel = call.rel(0);
+      DrillJoin joinRel = call.rel(0);
       //Perform validity checks
       logger.debug("DrillPushRowKeyJoinToScanRule begin()");
       return canPushRowKeyJoinToScan(joinRel, call.getPlanner()).left;
@@ -207,7 +207,7 @@ public class DrillPushRowKeyJoinToScanRule extends RelOptRule {
 
     @Override
     public RowKeyJoinCallContext onMatch(RelOptRuleCall call) {
-      DrillJoinRel joinRel = call.rel(0);
+      DrillJoin joinRel = call.rel(0);
       /*
        * Find which side of the join (left/right) has the primary-key column. Then find which sequence of rels
        * is present on that side of the join. We will need this sequence to correctly transform the left
@@ -234,7 +234,7 @@ public class DrillPushRowKeyJoinToScanRule extends RelOptRule {
   /* Assumption : Only the non-rowkey side needs to be checked. The row-key side does not have
    * any blocking operators for the transformation to work
    */
-  private static boolean canSwapJoinInputs(DrillJoinRel joinRel, RowKey rowKeyLocation) {
+  private static boolean canSwapJoinInputs(DrillJoin joinRel, RowKey rowKeyLocation) {
     // We cannot swap the join inputs if the join is a semi-join. We determine it indirectly, by
     // checking for the presence of a aggregating Aggregate Rel (computes aggregates e.g. sum).
     if (rowKeyLocation == RowKey.LEFT
@@ -281,7 +281,7 @@ public class DrillPushRowKeyJoinToScanRule extends RelOptRule {
    * whether the rowkey is present on the left/right side of the join and its 0-based index in the projection of that
    * side.
    */
-  private static Pair<Boolean, Pair<RowKey, Integer>> canPushRowKeyJoinToScan(DrillJoinRel joinRel, RelOptPlanner planner) {
+  private static Pair<Boolean, Pair<RowKey, Integer>> canPushRowKeyJoinToScan(DrillJoin joinRel, RelOptPlanner planner) {
     RowKey rowKeyLoc = RowKey.NONE;
     logger.debug("canPushRowKeyJoinToScan(): Check: Rel={}", joinRel);
 
@@ -506,7 +506,7 @@ public class DrillPushRowKeyJoinToScanRule extends RelOptRule {
     }
   }
 
-  private void doOnMatch(RelOptRuleCall call, int rowKeyPosition, boolean swapInputs, DrillJoinRel joinRel,
+  private void doOnMatch(RelOptRuleCall call, int rowKeyPosition, boolean swapInputs, DrillJoin joinRel,
       DrillProjectRel upperProjectRel, DrillFilterRel filterRel, DrillProjectRel lowerProjectRel, DrillScanRel scanRel) {
     // Swap the inputs, when necessary (i.e. when the primary-key col is on the right-side of the join)
     logger.debug("Transforming: Swapping of join inputs is required!");
@@ -537,7 +537,7 @@ public class DrillPushRowKeyJoinToScanRule extends RelOptRule {
     logger.debug("Transforming: LeftKeys={}, LeftRowType={}, RightKeys={}, RightRowType={}",
         leftJoinKeys, leftRel.getRowType(), rightJoinKeys, right.getRowType());
     RowKeyJoinRel rowKeyJoin = new RowKeyJoinRel(joinRel.getCluster(), joinRel.getTraitSet(), leftRel, right,
-        joinCondition, joinRel.getJoinType());
+        joinCondition, joinRel.getJoinType(), joinRel instanceof DrillSemiJoinRel);
     logger.info("Transforming: SUCCESS: Register runtime filter pushdown plan (rowkeyjoin)");
     call.transformTo(rowKeyJoin);
   }

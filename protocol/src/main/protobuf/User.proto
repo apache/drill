@@ -652,6 +652,8 @@ message ServerMeta {
     optional bool                       transaction_supported = 48;
     // UNION support
     repeated UnionSupport               union_support = 49;
+    // current schema
+    optional string                     current_schema = 50;
 }
 
 /*

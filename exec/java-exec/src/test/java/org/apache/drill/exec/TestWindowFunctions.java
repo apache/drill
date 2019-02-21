@@ -543,6 +543,7 @@ public class TestWindowFunctions extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testRankWithGroupBy() throws Exception {
     final String query = "select dense_rank() over (order by l_suppkey) as rank1 " +
         " from cp.`tpch/lineitem.parquet` group by l_partkey, l_suppkey order by 1 desc limit 1";
@@ -792,6 +793,7 @@ public class TestWindowFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-3679, DRILL-3680
+  @Category(UnlikelyTest.class)
   public void testWindowFunInNestSubQ() throws Exception {
     final String query =
         " select n_nationkey , n_regionkey , " +
@@ -855,6 +857,7 @@ public class TestWindowFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-2330
+  @Category(UnlikelyTest.class)
   public void testNestedAggregates() throws Exception {
 
     final String query = "select sum(min(l_extendedprice))"

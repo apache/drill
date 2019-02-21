@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.rowSet.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
@@ -30,7 +29,6 @@ import org.apache.drill.exec.record.metadata.TupleSchema;
  * and "hyper" cases. Deals primarily with the structure of the model,
  * which is common between the two physical implementations.
  */
-
 public abstract class BaseTupleModel implements TupleModel {
 
   public static abstract class BaseColumnModel implements ColumnModel {
@@ -61,10 +59,9 @@ public abstract class BaseTupleModel implements TupleModel {
 
   /**
    * Descriptive schema associated with the columns above. Unlike a
-   * {@link VectorContainer}, this abstraction keeps the schema in sync
+   * {@link org.apache.drill.exec.record.VectorContainer}, this abstraction keeps the schema in sync
    * with vectors as columns are added.
    */
-
   protected final TupleSchema schema;
 
   public BaseTupleModel() {
@@ -107,9 +104,8 @@ public abstract class BaseTupleModel implements TupleModel {
    *
    * @param column column implementation to add
    */
-
   protected void addBaseColumn(BaseColumnModel column) {
-    schema.add((AbstractColumnMetadata) column.schema());
+    schema.add(column.schema());
     columns.add(column);
     assert columns.size() == schema.size();
   }

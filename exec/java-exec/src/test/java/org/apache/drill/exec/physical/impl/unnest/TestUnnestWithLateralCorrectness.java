@@ -37,9 +37,10 @@ import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.planner.common.DrillLateralJoinRelBase;
 import org.apache.drill.exec.planner.common.DrillUnnestRelBase;
-import org.apache.drill.exec.planner.logical.DrillLogicalTestutils;
+import org.apache.drill.exec.planner.logical.DrillLogicalTestUtils;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.mock.MockStorePOP;
 import org.apache.drill.exec.vector.ValueVector;
@@ -48,7 +49,6 @@ import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -590,7 +590,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
     // project is required to rename the columns so as to disambiguate the same column name from
     // unnest operator and the regular scan.
-    final Project projectPopConfig = new Project(DrillLogicalTestutils.parseExprs("unnestColumn", "unnestColumn1",
+    final Project projectPopConfig = new Project(DrillLogicalTestUtils.parseExprs("unnestColumn", "unnestColumn1",
       unnestPopConfig.getImplicitColumn(), unnestPopConfig.getImplicitColumn()), null);
 
     final ProjectRecordBatch projectBatch =
@@ -899,12 +899,12 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
     // Create intermediate Project
     final Project projectPopConfig1 =
-        new Project(DrillLogicalTestutils.parseExprs("unnestColumn.colB", "colB",
+        new Project(DrillLogicalTestUtils.parseExprs("unnestColumn.colB", "colB",
           unnestPopConfig1.getImplicitColumn(), unnestPopConfig1.getImplicitColumn()), unnestPopConfig1);
     final ProjectRecordBatch projectBatch1 =
         new ProjectRecordBatch(projectPopConfig1, unnestBatch1, fixture.getFragmentContext());
     final Project projectPopConfig2 =
-        new Project(DrillLogicalTestutils.parseExprs("colB", "unnestColumn2",
+        new Project(DrillLogicalTestUtils.parseExprs("colB", "unnestColumn2",
           unnestPopConfig2.getImplicitColumn(), unnestPopConfig2.getImplicitColumn()), unnestPopConfig2);
     final ProjectRecordBatch projectBatch2 =
         new ProjectRecordBatch(projectPopConfig2, unnestBatch2, fixture.getFragmentContext());

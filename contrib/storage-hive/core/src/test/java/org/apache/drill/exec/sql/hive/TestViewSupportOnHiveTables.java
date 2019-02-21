@@ -17,26 +17,34 @@
  */
 package org.apache.drill.exec.sql.hive;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import java.util.Objects;
+
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.sql.TestBaseViewSupport;
-import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import static org.apache.drill.exec.hive.HiveTestBase.HIVE_TEST_FIXTURE;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
-  protected static HiveTestDataGenerator hiveTest;
 
   @BeforeClass
-  public static void generateHive() throws Exception{
-    hiveTest = HiveTestDataGenerator.getInstance(dirTestWatcher);
-    hiveTest.addHiveTestPlugin(getDrillbitContext().getStorage());
+  public static void setUp() throws Exception {
+    Objects.requireNonNull(HIVE_TEST_FIXTURE, "Failed to configure Hive storage plugin, " +
+        "because HiveTestBase.HIVE_TEST_FIXTURE isn't initialized!")
+        .getPluginManager().addHivePluginTo(bits);
+  }
+
+  @AfterClass
+  public static void tearDown() throws Exception {
+    if (HIVE_TEST_FIXTURE != null) {
+      HIVE_TEST_FIXTURE.getPluginManager().removeHivePluginFrom(bits);
+    }
   }
 
   @Test
@@ -46,8 +54,8 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
         null,
         "SELECT * FROM hive.kv",
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
-        new String[] { "key", "value"},
-        ImmutableList.of(new Object[] { 1, " key_1" })
+        baselineColumns("key", "value"),
+        baselineRows(row( 1, " key_1" ))
     );
   }
 
@@ -58,8 +66,8 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
         null,
         "SELECT * FROM hive.kv",
         "SELECT key, `value` FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
-        new String[] { "key", "value" },
-        ImmutableList.of(new Object[] { 1, " key_1" })
+        baselineColumns("key", "value"),
+        baselineRows(row(1, " key_1"))
     );
   }
 
@@ -70,8 +78,8 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
         null,
         "SELECT * FROM hive.kv",
         "SELECT `value` FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
-        new String[] { "value" },
-        ImmutableList.of(new Object[] { " key_1" })
+        baselineColumns("value"),
+        baselineRows(row(" key_1"))
     );
   }
 
@@ -82,8 +90,8 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
         null,
         "SELECT key, `value` FROM hive.kv",
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
-        new String[] { "key", "value" },
-        ImmutableList.of(new Object[] { 1, " key_1" })
+        baselineColumns("key", "value"),
+        baselineRows(row(1, " key_1"))
     );
   }
 
@@ -94,8 +102,8 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
         null,
         "SELECT key, `value` FROM hive.kv",
         "SELECT key, `value` FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
-        new String[] { "key", "value" },
-        ImmutableList.of(new Object[] { 1, " key_1" })
+        baselineColumns("key", "value"),
+        baselineRows(row(1, " key_1"))
     );
   }
 
@@ -103,17 +111,11 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
   public void testInfoSchemaWithHiveView() throws Exception {
     testBuilder()
         .optionSettingQueriesForTestQuery("USE hive.`default`")
-        .sqlQuery("SELECT * FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME = 'hiveview'")
+        .sqlQuery("SELECT * FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME = 'hive_view'")
         .unOrdered()
         .baselineColumns("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME", "VIEW_DEFINITION")
-        .baselineValues("DRILL", "hive.default", "hiveview", "SELECT `kv`.`key`, `kv`.`value` FROM `default`.`kv`")
+        .baselineValues("DRILL", "hive.default", "hive_view", "SELECT `kv`.`key`, `kv`.`value` FROM `default`.`kv`")
         .go();
   }
 
-  @AfterClass
-  public static void cleanupHiveTestData() throws Exception{
-    if (hiveTest != null) {
-      hiveTest.deleteHiveTestPlugin(getDrillbitContext().getStorage());
-    }
-  }
 }

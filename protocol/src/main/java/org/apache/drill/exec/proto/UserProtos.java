@@ -32959,6 +32959,33 @@ public final class UserProtos {
      * </pre>
      */
     org.apache.drill.exec.proto.UserProtos.UnionSupport getUnionSupport(int index);
+
+    // optional string current_schema = 50;
+    /**
+     * <code>optional string current_schema = 50;</code>
+     *
+     * <pre>
+     * current schema
+     * </pre>
+     */
+    boolean hasCurrentSchema();
+    /**
+     * <code>optional string current_schema = 50;</code>
+     *
+     * <pre>
+     * current schema
+     * </pre>
+     */
+    java.lang.String getCurrentSchema();
+    /**
+     * <code>optional string current_schema = 50;</code>
+     *
+     * <pre>
+     * current schema
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getCurrentSchemaBytes();
   }
   /**
    * Protobuf type {@code exec.user.ServerMeta}
@@ -33471,6 +33498,11 @@ public final class UserProtos {
                 }
               }
               input.popLimit(oldLimit);
+              break;
+            }
+            case 402: {
+              bitField1_ |= 0x00000020;
+              currentSchema_ = input.readBytes();
               break;
             }
           }
@@ -35145,6 +35177,61 @@ public final class UserProtos {
       return unionSupport_.get(index);
     }
 
+    // optional string current_schema = 50;
+    public static final int CURRENT_SCHEMA_FIELD_NUMBER = 50;
+    private java.lang.Object currentSchema_;
+    /**
+     * <code>optional string current_schema = 50;</code>
+     *
+     * <pre>
+     * current schema
+     * </pre>
+     */
+    public boolean hasCurrentSchema() {
+      return ((bitField1_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional string current_schema = 50;</code>
+     *
+     * <pre>
+     * current schema
+     * </pre>
+     */
+    public java.lang.String getCurrentSchema() {
+      java.lang.Object ref = currentSchema_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          currentSchema_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string current_schema = 50;</code>
+     *
+     * <pre>
+     * current schema
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getCurrentSchemaBytes() {
+      java.lang.Object ref = currentSchema_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        currentSchema_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       allTablesSelectable_ = false;
       blobIncludedInMaxRowSize_ = false;
@@ -35195,6 +35282,7 @@ public final class UserProtos {
       tableTerm_ = "";
       transactionSupported_ = false;
       unionSupport_ = java.util.Collections.emptyList();
+      currentSchema_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -35360,6 +35448,9 @@ public final class UserProtos {
       }
       for (int i = 0; i < unionSupport_.size(); i++) {
         output.writeEnum(49, unionSupport_.get(i).getNumber());
+      }
+      if (((bitField1_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(50, getCurrentSchemaBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -35621,6 +35712,10 @@ public final class UserProtos {
         size += dataSize;
         size += 2 * unionSupport_.size();
       }
+      if (((bitField1_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(50, getCurrentSchemaBytes());
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
       return size;
@@ -35840,6 +35935,8 @@ public final class UserProtos {
         bitField1_ = (bitField1_ & ~0x00008000);
         unionSupport_ = java.util.Collections.emptyList();
         bitField1_ = (bitField1_ & ~0x00010000);
+        currentSchema_ = "";
+        bitField1_ = (bitField1_ & ~0x00020000);
         return this;
       }
 
@@ -36087,6 +36184,10 @@ public final class UserProtos {
           bitField1_ = (bitField1_ & ~0x00010000);
         }
         result.unionSupport_ = unionSupport_;
+        if (((from_bitField1_ & 0x00020000) == 0x00020000)) {
+          to_bitField1_ |= 0x00000020;
+        }
+        result.currentSchema_ = currentSchema_;
         result.bitField0_ = to_bitField0_;
         result.bitField1_ = to_bitField1_;
         onBuilt();
@@ -36363,6 +36464,11 @@ public final class UserProtos {
             ensureUnionSupportIsMutable();
             unionSupport_.addAll(other.unionSupport_);
           }
+          onChanged();
+        }
+        if (other.hasCurrentSchema()) {
+          bitField1_ |= 0x00020000;
+          currentSchema_ = other.currentSchema_;
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -40127,6 +40233,104 @@ public final class UserProtos {
         return this;
       }
 
+      // optional string current_schema = 50;
+      private java.lang.Object currentSchema_ = "";
+      /**
+       * <code>optional string current_schema = 50;</code>
+       *
+       * <pre>
+       * current schema
+       * </pre>
+       */
+      public boolean hasCurrentSchema() {
+        return ((bitField1_ & 0x00020000) == 0x00020000);
+      }
+      /**
+       * <code>optional string current_schema = 50;</code>
+       *
+       * <pre>
+       * current schema
+       * </pre>
+       */
+      public java.lang.String getCurrentSchema() {
+        java.lang.Object ref = currentSchema_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          currentSchema_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string current_schema = 50;</code>
+       *
+       * <pre>
+       * current schema
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getCurrentSchemaBytes() {
+        java.lang.Object ref = currentSchema_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          currentSchema_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string current_schema = 50;</code>
+       *
+       * <pre>
+       * current schema
+       * </pre>
+       */
+      public Builder setCurrentSchema(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00020000;
+        currentSchema_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string current_schema = 50;</code>
+       *
+       * <pre>
+       * current schema
+       * </pre>
+       */
+      public Builder clearCurrentSchema() {
+        bitField1_ = (bitField1_ & ~0x00020000);
+        currentSchema_ = getDefaultInstance().getCurrentSchema();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string current_schema = 50;</code>
+       *
+       * <pre>
+       * current schema
+       * </pre>
+       */
+      public Builder setCurrentSchemaBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00020000;
+        currentSchema_ = value;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:exec.user.ServerMeta)
     }
 
@@ -41921,7 +42125,7 @@ public final class UserProtos {
       "verMetaResp\022(\n\006status\030\001 \001(\0162\030.exec.user." +
       "RequestStatus\022*\n\013server_meta\030\002 \001(\0132\025.exe" +
       "c.user.ServerMeta\022(\n\005error\030\003 \001(\0132\031.exec." +
-      "shared.DrillPBError\"\377\r\n\nServerMeta\022\035\n\025al" +
+      "shared.DrillPBError\"\227\016\n\nServerMeta\022\035\n\025al" +
       "l_tables_selectable\030\001 \001(\010\022%\n\035blob_includ" +
       "ed_in_max_row_size\030\002 \001(\010\022\030\n\020catalog_at_s" +
       "tart\030\003 \001(\010\022\031\n\021catalog_separator\030\004 \001(\t\022\024\n" +
@@ -41966,70 +42170,70 @@ public final class UserProtos {
       "ySupport\022\030\n\020system_functions\030. \003(\t\022\022\n\nta" +
       "ble_term\030/ \001(\t\022\035\n\025transaction_supported\030" +
       "0 \001(\010\022.\n\runion_support\0301 \003(\0162\027.exec.user" +
-      ".UnionSupport\"\353\001\n\010RunQuery\0221\n\014results_mo",
-      "de\030\001 \001(\0162\033.exec.user.QueryResultsMode\022$\n" +
-      "\004type\030\002 \001(\0162\026.exec.shared.QueryType\022\014\n\004p" +
-      "lan\030\003 \001(\t\0221\n\tfragments\030\004 \003(\0132\036.exec.bit." +
-      "control.PlanFragment\022E\n\031prepared_stateme" +
-      "nt_handle\030\005 \001(\0132\".exec.user.PreparedStat" +
-      "ementHandle*\320\003\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007" +
-      "\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014C" +
-      "ANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027\n\023RE" +
-      "SUME_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_PLAN_FR" +
-      "AGMENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET_SCHEM",
-      "AS\020\017\022\016\n\nGET_TABLES\020\020\022\017\n\013GET_COLUMNS\020\021\022\035\n" +
-      "\031CREATE_PREPARED_STATEMENT\020\026\022\023\n\017GET_SERV" +
-      "ER_META\020\010\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDL" +
-      "E\020\007\022\030\n\024QUERY_PLAN_FRAGMENTS\020\r\022\014\n\010CATALOG" +
-      "S\020\022\022\013\n\007SCHEMAS\020\023\022\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020" +
-      "\025\022\026\n\022PREPARED_STATEMENT\020\027\022\017\n\013SERVER_META" +
-      "\020\t\022\020\n\014QUERY_RESULT\020\n\022\020\n\014SASL_MESSAGE\020\030*H" +
-      "\n\013SaslSupport\022\030\n\024UNKNOWN_SASL_SUPPORT\020\000\022" +
-      "\r\n\tSASL_AUTH\020\001\022\020\n\014SASL_PRIVACY\020\002*#\n\020Quer" +
-      "yResultsMode\022\017\n\013STREAM_FULL\020\001*q\n\017Handsha",
-      "keStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MIS" +
-      "MATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAIL" +
-      "URE\020\004\022\021\n\rAUTH_REQUIRED\020\005*D\n\rRequestStatu" +
-      "s\022\022\n\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020" +
-      "\002\022\013\n\007TIMEOUT\020\003*Y\n\023ColumnSearchability\022\031\n" +
-      "\025UNKNOWN_SEARCHABILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CH" +
-      "AR\020\002\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022ColumnUpdat" +
-      "ability\022\030\n\024UNKNOWN_UPDATABILITY\020\000\022\r\n\tREA" +
-      "D_ONLY\020\001\022\014\n\010WRITABLE\020\002*1\n\016CollateSupport" +
-      "\022\016\n\nCS_UNKNOWN\020\000\022\017\n\013CS_GROUP_BY\020\001*J\n\027Cor",
-      "relationNamesSupport\022\013\n\007CN_NONE\020\001\022\026\n\022CN_" +
-      "DIFFERENT_NAMES\020\002\022\n\n\006CN_ANY\020\003*\271\003\n\027DateTi" +
-      "meLiteralsSupport\022\016\n\nDL_UNKNOWN\020\000\022\013\n\007DL_" +
-      "DATE\020\001\022\013\n\007DL_TIME\020\002\022\020\n\014DL_TIMESTAMP\020\003\022\024\n" +
-      "\020DL_INTERVAL_YEAR\020\004\022\025\n\021DL_INTERVAL_MONTH" +
-      "\020\005\022\023\n\017DL_INTERVAL_DAY\020\006\022\024\n\020DL_INTERVAL_H" +
-      "OUR\020\007\022\026\n\022DL_INTERVAL_MINUTE\020\010\022\026\n\022DL_INTE" +
-      "RVAL_SECOND\020\t\022\035\n\031DL_INTERVAL_YEAR_TO_MON" +
-      "TH\020\n\022\033\n\027DL_INTERVAL_DAY_TO_HOUR\020\013\022\035\n\031DL_" +
-      "INTERVAL_DAY_TO_MINUTE\020\014\022\035\n\031DL_INTERVAL_",
-      "DAY_TO_SECOND\020\r\022\036\n\032DL_INTERVAL_HOUR_TO_M" +
-      "INUTE\020\016\022\036\n\032DL_INTERVAL_HOUR_TO_SECOND\020\017\022" +
-      " \n\034DL_INTERVAL_MINUTE_TO_SECOND\020\020*Y\n\016Gro" +
-      "upBySupport\022\013\n\007GB_NONE\020\001\022\022\n\016GB_SELECT_ON" +
-      "LY\020\002\022\024\n\020GB_BEYOND_SELECT\020\003\022\020\n\014GB_UNRELAT" +
-      "ED\020\004*x\n\020IdentifierCasing\022\016\n\nIC_UNKNOWN\020\000" +
-      "\022\023\n\017IC_STORES_LOWER\020\001\022\023\n\017IC_STORES_MIXED" +
-      "\020\002\022\023\n\017IC_STORES_UPPER\020\003\022\025\n\021IC_SUPPORTS_M" +
-      "IXED\020\004*X\n\rNullCollation\022\016\n\nNC_UNKNOWN\020\000\022" +
-      "\017\n\013NC_AT_START\020\001\022\r\n\tNC_AT_END\020\002\022\013\n\007NC_HI",
-      "GH\020\003\022\n\n\006NC_LOW\020\004*E\n\016OrderBySupport\022\016\n\nOB" +
-      "_UNKNOWN\020\000\022\020\n\014OB_UNRELATED\020\001\022\021\n\rOB_EXPRE" +
-      "SSION\020\002*\226\001\n\020OuterJoinSupport\022\016\n\nOJ_UNKNO" +
-      "WN\020\000\022\013\n\007OJ_LEFT\020\001\022\014\n\010OJ_RIGHT\020\002\022\013\n\007OJ_FU" +
-      "LL\020\003\022\r\n\tOJ_NESTED\020\004\022\022\n\016OJ_NOT_ORDERED\020\005\022" +
-      "\014\n\010OJ_INNER\020\006\022\031\n\025OJ_ALL_COMPARISON_OPS\020\007" +
-      "*\204\001\n\017SubQuerySupport\022\016\n\nSQ_UNKNOWN\020\000\022\021\n\r" +
-      "SQ_CORRELATED\020\001\022\024\n\020SQ_IN_COMPARISON\020\002\022\020\n" +
-      "\014SQ_IN_EXISTS\020\003\022\020\n\014SQ_IN_INSERT\020\004\022\024\n\020SQ_" +
-      "IN_QUANTIFIED\020\005*;\n\014UnionSupport\022\r\n\tU_UNK",
-      "NOWN\020\000\022\013\n\007U_UNION\020\001\022\017\n\013U_UNION_ALL\020\002B+\n\033" +
-      "org.apache.drill.exec.protoB\nUserProtosH" +
-      "\001"
+      ".UnionSupport\022\026\n\016current_schema\0302 \001(\t\"\353\001",
+      "\n\010RunQuery\0221\n\014results_mode\030\001 \001(\0162\033.exec." +
+      "user.QueryResultsMode\022$\n\004type\030\002 \001(\0162\026.ex" +
+      "ec.shared.QueryType\022\014\n\004plan\030\003 \001(\t\0221\n\tfra" +
+      "gments\030\004 \003(\0132\036.exec.bit.control.PlanFrag" +
+      "ment\022E\n\031prepared_statement_handle\030\005 \001(\0132" +
+      "\".exec.user.PreparedStatementHandle*\320\003\n\007" +
+      "RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODB" +
+      "YE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n" +
+      "\017REQUEST_RESULTS\020\005\022\027\n\023RESUME_PAUSED_QUER" +
+      "Y\020\013\022\034\n\030GET_QUERY_PLAN_FRAGMENTS\020\014\022\020\n\014GET",
+      "_CATALOGS\020\016\022\017\n\013GET_SCHEMAS\020\017\022\016\n\nGET_TABL" +
+      "ES\020\020\022\017\n\013GET_COLUMNS\020\021\022\035\n\031CREATE_PREPARED" +
+      "_STATEMENT\020\026\022\023\n\017GET_SERVER_META\020\010\022\016\n\nQUE" +
+      "RY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\030\n\024QUERY_PLA" +
+      "N_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022\022\013\n\007SCHEMAS\020\023" +
+      "\022\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_ST" +
+      "ATEMENT\020\027\022\017\n\013SERVER_META\020\t\022\020\n\014QUERY_RESU" +
+      "LT\020\n\022\020\n\014SASL_MESSAGE\020\030*H\n\013SaslSupport\022\030\n" +
+      "\024UNKNOWN_SASL_SUPPORT\020\000\022\r\n\tSASL_AUTH\020\001\022\020" +
+      "\n\014SASL_PRIVACY\020\002*#\n\020QueryResultsMode\022\017\n\013",
+      "STREAM_FULL\020\001*q\n\017HandshakeStatus\022\013\n\007SUCC" +
+      "ESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n\013AUTH_" +
+      "FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004\022\021\n\rAUTH_RE" +
+      "QUIRED\020\005*D\n\rRequestStatus\022\022\n\016UNKNOWN_STA" +
+      "TUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y" +
+      "\n\023ColumnSearchability\022\031\n\025UNKNOWN_SEARCHA" +
+      "BILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003" +
+      "\022\007\n\003ALL\020\004*K\n\022ColumnUpdatability\022\030\n\024UNKNO" +
+      "WN_UPDATABILITY\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRIT" +
+      "ABLE\020\002*1\n\016CollateSupport\022\016\n\nCS_UNKNOWN\020\000",
+      "\022\017\n\013CS_GROUP_BY\020\001*J\n\027CorrelationNamesSup" +
+      "port\022\013\n\007CN_NONE\020\001\022\026\n\022CN_DIFFERENT_NAMES\020" +
+      "\002\022\n\n\006CN_ANY\020\003*\271\003\n\027DateTimeLiteralsSuppor" +
+      "t\022\016\n\nDL_UNKNOWN\020\000\022\013\n\007DL_DATE\020\001\022\013\n\007DL_TIM" +
+      "E\020\002\022\020\n\014DL_TIMESTAMP\020\003\022\024\n\020DL_INTERVAL_YEA" +
+      "R\020\004\022\025\n\021DL_INTERVAL_MONTH\020\005\022\023\n\017DL_INTERVA" +
+      "L_DAY\020\006\022\024\n\020DL_INTERVAL_HOUR\020\007\022\026\n\022DL_INTE" +
+      "RVAL_MINUTE\020\010\022\026\n\022DL_INTERVAL_SECOND\020\t\022\035\n" +
+      "\031DL_INTERVAL_YEAR_TO_MONTH\020\n\022\033\n\027DL_INTER" +
+      "VAL_DAY_TO_HOUR\020\013\022\035\n\031DL_INTERVAL_DAY_TO_",
+      "MINUTE\020\014\022\035\n\031DL_INTERVAL_DAY_TO_SECOND\020\r\022" +
+      "\036\n\032DL_INTERVAL_HOUR_TO_MINUTE\020\016\022\036\n\032DL_IN" +
+      "TERVAL_HOUR_TO_SECOND\020\017\022 \n\034DL_INTERVAL_M" +
+      "INUTE_TO_SECOND\020\020*Y\n\016GroupBySupport\022\013\n\007G" +
+      "B_NONE\020\001\022\022\n\016GB_SELECT_ONLY\020\002\022\024\n\020GB_BEYON" +
+      "D_SELECT\020\003\022\020\n\014GB_UNRELATED\020\004*x\n\020Identifi" +
+      "erCasing\022\016\n\nIC_UNKNOWN\020\000\022\023\n\017IC_STORES_LO" +
+      "WER\020\001\022\023\n\017IC_STORES_MIXED\020\002\022\023\n\017IC_STORES_" +
+      "UPPER\020\003\022\025\n\021IC_SUPPORTS_MIXED\020\004*X\n\rNullCo" +
+      "llation\022\016\n\nNC_UNKNOWN\020\000\022\017\n\013NC_AT_START\020\001",
+      "\022\r\n\tNC_AT_END\020\002\022\013\n\007NC_HIGH\020\003\022\n\n\006NC_LOW\020\004" +
+      "*E\n\016OrderBySupport\022\016\n\nOB_UNKNOWN\020\000\022\020\n\014OB" +
+      "_UNRELATED\020\001\022\021\n\rOB_EXPRESSION\020\002*\226\001\n\020Oute" +
+      "rJoinSupport\022\016\n\nOJ_UNKNOWN\020\000\022\013\n\007OJ_LEFT\020" +
+      "\001\022\014\n\010OJ_RIGHT\020\002\022\013\n\007OJ_FULL\020\003\022\r\n\tOJ_NESTE" +
+      "D\020\004\022\022\n\016OJ_NOT_ORDERED\020\005\022\014\n\010OJ_INNER\020\006\022\031\n" +
+      "\025OJ_ALL_COMPARISON_OPS\020\007*\204\001\n\017SubQuerySup" +
+      "port\022\016\n\nSQ_UNKNOWN\020\000\022\021\n\rSQ_CORRELATED\020\001\022" +
+      "\024\n\020SQ_IN_COMPARISON\020\002\022\020\n\014SQ_IN_EXISTS\020\003\022" +
+      "\020\n\014SQ_IN_INSERT\020\004\022\024\n\020SQ_IN_QUANTIFIED\020\005*",
+      ";\n\014UnionSupport\022\r\n\tU_UNKNOWN\020\000\022\013\n\007U_UNIO" +
+      "N\020\001\022\017\n\013U_UNION_ALL\020\002B+\n\033org.apache.drill" +
+      ".exec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -42215,7 +42419,7 @@ public final class UserProtos {
           internal_static_exec_user_ServerMeta_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_ServerMeta_descriptor,
-              new java.lang.String[] { "AllTablesSelectable", "BlobIncludedInMaxRowSize", "CatalogAtStart", "CatalogSeparator", "CatalogTerm", "CollateSupport", "ColumnAliasingSupported", "ConvertSupport", "CorrelationNamesSupport", "DateTimeFunctions", "DateTimeLiteralsSupport", "GroupBySupport", "IdentifierCasing", "IdentifierQuoteString", "LikeEscapeClauseSupported", "MaxBinaryLiteralLength", "MaxCatalogNameLength", "MaxCharLiteralLength", "MaxColumnNameLength", "MaxColumnsInGroupBy", "MaxColumnsInOrderBy", "MaxColumnsInSelect", "MaxCursorNameLength", "MaxLogicalLobSize", "MaxRowSize", "MaxSchemaNameLength", "MaxStatementLength", "MaxStatements", "MaxTableNameLength", "MaxTablesInSelect", "MaxUserNameLength", "NullCollation", "NullPlusNonNullEqualsNull", "NumericFunctions", "OrderBySupport", "OuterJoinSupport", "QuotedIdentifierCasing", "ReadOnly", "SchemaTerm", "SearchEscapeString", "SelectForUpdateSupported", "SpecialCharacters", "SqlKeywords", "StringFunctions", "SubquerySupport", "SystemFunctions", "TableTerm", "TransactionSupported", "UnionSupport", });
+              new java.lang.String[] { "AllTablesSelectable", "BlobIncludedInMaxRowSize", "CatalogAtStart", "CatalogSeparator", "CatalogTerm", "CollateSupport", "ColumnAliasingSupported", "ConvertSupport", "CorrelationNamesSupport", "DateTimeFunctions", "DateTimeLiteralsSupport", "GroupBySupport", "IdentifierCasing", "IdentifierQuoteString", "LikeEscapeClauseSupported", "MaxBinaryLiteralLength", "MaxCatalogNameLength", "MaxCharLiteralLength", "MaxColumnNameLength", "MaxColumnsInGroupBy", "MaxColumnsInOrderBy", "MaxColumnsInSelect", "MaxCursorNameLength", "MaxLogicalLobSize", "MaxRowSize", "MaxSchemaNameLength", "MaxStatementLength", "MaxStatements", "MaxTableNameLength", "MaxTablesInSelect", "MaxUserNameLength", "NullCollation", "NullPlusNonNullEqualsNull", "NumericFunctions", "OrderBySupport", "OuterJoinSupport", "QuotedIdentifierCasing", "ReadOnly", "SchemaTerm", "SearchEscapeString", "SelectForUpdateSupported", "SpecialCharacters", "SqlKeywords", "StringFunctions", "SubquerySupport", "SystemFunctions", "TableTerm", "TransactionSupported", "UnionSupport", "CurrentSchema", });
           internal_static_exec_user_RunQuery_descriptor =
             getDescriptor().getMessageTypes().get(30);
           internal_static_exec_user_RunQuery_fieldAccessorTable = new

@@ -33,6 +33,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.cache.VectorSerializer.Reader;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.DirTestWatcher;
@@ -41,10 +42,8 @@ import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSetWriter;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -149,8 +148,7 @@ public class TestBatchSerialization extends DrillTest {
       result = fixture.wrap(reader.read(), reader.sv2());
     }
 
-    new RowSetComparison(expected)
-      .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
     outFile.delete();
   }
 
