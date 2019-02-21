@@ -23,12 +23,13 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.r.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -36,7 +37,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestLogReader extends ClusterTest {
+public class r extends ClusterTest {
 
   public static final String DATE_ONLY_PATTERN = "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) .*";
 
