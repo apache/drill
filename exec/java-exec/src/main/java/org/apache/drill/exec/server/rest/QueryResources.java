@@ -84,8 +84,7 @@ public class QueryResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable submitQuery(@FormParam("query") String query,
                               @FormParam("queryType") String queryType,
-                              @FormParam("autoLimit") String autoLimit
-                              ) throws Exception {
+                              @FormParam("autoLimit") String autoLimit) throws Exception {
     try {
       final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
       final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType, autoLimit));
@@ -137,7 +136,7 @@ public class QueryResources {
     private final String queryId;
     private final String rowsPerPageValues;
     private final String queryState;
-    private final Integer autoLimitedRowCount;
+    private final int autoLimitedRowCount;
 
     public TabularResult(QueryResult result, String rowsPerPageValuesAsStr) {
       rowsPerPageValues = rowsPerPageValuesAsStr;
@@ -184,7 +183,7 @@ public class QueryResources {
 
     //Used by results.ftl to indicate autoLimited resultset
     public boolean isResultSetAutoLimited() {
-      return autoLimitedRowCount != null && rows.size() == autoLimitedRowCount;
+      return autoLimitedRowCount > 0 && rows.size() == autoLimitedRowCount;
     }
 
     //Used by results.ftl to indicate autoLimited resultset size

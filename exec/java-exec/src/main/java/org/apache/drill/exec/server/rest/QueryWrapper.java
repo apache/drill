@@ -47,7 +47,7 @@ public class QueryWrapper {
 
   private final String query;
   private final String queryType;
-  private final Integer autoLimitRowCount;
+  private final int autoLimitRowCount;
 
   private static MemoryMXBean memMXBean = ManagementFactory.getMemoryMXBean();
 
@@ -55,7 +55,7 @@ public class QueryWrapper {
   public QueryWrapper(@JsonProperty("query") String query, @JsonProperty("queryType") String queryType, @JsonProperty("autoLimit") String autoLimit) {
     this.query = query;
     this.queryType = queryType.toUpperCase();
-    this.autoLimitRowCount = autoLimit != null && autoLimit.matches("[0-9]+") ? new Integer(autoLimit) : null;
+    this.autoLimitRowCount = autoLimit != null && autoLimit.matches("[0-9]+") ? Integer.valueOf(autoLimit) : 0;
   }
 
   @JsonCreator
@@ -79,7 +79,7 @@ public class QueryWrapper {
     final RunQuery runQuery = RunQuery.newBuilder().setType(getType())
         .setPlan(getQuery())
         .setResultsMode(QueryResultsMode.STREAM_FULL)
-        .setAutolimitRowcount(autoLimitRowCount == null ? 0 : autoLimitRowCount)
+        .setAutolimitRowcount(autoLimitRowCount)
         .build();
 
     webUserConnection.setAutoLimitRowCount(autoLimitRowCount);
@@ -138,7 +138,7 @@ public class QueryWrapper {
     public final List<Map<String, String>> rows;
     public final List<String> metadata;
     public final String queryState;
-    public final Integer attemptedAutoLimit;
+    public final int attemptedAutoLimit;
 
     //DRILL-6847:  Modified the constructor so that the method has access to all the properties in webUserConnection
     public QueryResult(QueryId queryId, WebUserConnection webUserConnection, List<Map<String, String>> rows) {

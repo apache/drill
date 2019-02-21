@@ -209,7 +209,7 @@ public class DrillSqlWorker {
   }
 
   private static SqlNode wrapWithAutoLimit(SqlNode sqlNode, QueryContext context) {
-    SqlNumericLiteral autoLimitLiteral = SqlLiteral.createExactNumeric(context.getAutoLimitRowCount().toString(), SqlParserPos.ZERO);
+    SqlNumericLiteral autoLimitLiteral = SqlLiteral.createExactNumeric(String.valueOf(context.getAutoLimitRowCount()), SqlParserPos.ZERO);
     if (sqlNode.getKind() == SqlKind.ORDER_BY) {
       SqlOrderBy orderBy = (SqlOrderBy) sqlNode;
       return new SqlOrderBy(orderBy.getParserPosition(), orderBy.query, orderBy.orderList, orderBy.offset, autoLimitLiteral);
