@@ -27,25 +27,29 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import java.io.IOException;
 import java.util.List;
 
-public class RuntimeFilterPrel extends SinglePrel{
+public class RuntimeFilterPrel extends SinglePrel {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RuntimeFilterPrel.class);
 
-  public RuntimeFilterPrel(Prel child){
+  private long identifier;
+
+  public RuntimeFilterPrel(Prel child, long identifier){
     super(child.getCluster(), child.getTraitSet(), child);
+    this.identifier = identifier;
   }
 
-  public RuntimeFilterPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child) {
+  public RuntimeFilterPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, long identifier) {
     super(cluster, traits, child);
+    this.identifier = identifier;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new RuntimeFilterPrel(this.getCluster(), traitSet, inputs.get(0));
+    return new RuntimeFilterPrel(this.getCluster(), traitSet, inputs.get(0), identifier);
   }
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    RuntimeFilterPOP r =  new RuntimeFilterPOP( ((Prel)getInput()).getPhysicalOperator(creator));
+    RuntimeFilterPOP r =  new RuntimeFilterPOP( ((Prel)getInput()).getPhysicalOperator(creator), identifier);
     return creator.addMetadata(this, r);
   }
 

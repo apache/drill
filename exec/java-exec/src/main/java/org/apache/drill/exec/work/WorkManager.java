@@ -379,11 +379,16 @@ public class WorkManager implements AutoCloseable {
       return runningFragments.get(handle);
     }
 
+    /**
+     * receive the RuntimeFilter thorough the wire
+     * @param runtimeFilter
+     */
     public void receiveRuntimeFilter(final RuntimeFilterWritable runtimeFilter) {
       BitData.RuntimeFilterBDef runtimeFilterDef = runtimeFilter.getRuntimeFilterBDef();
       boolean toForeman = runtimeFilterDef.getToForeman();
       QueryId queryId = runtimeFilterDef.getQueryId();
       String queryIdStr = QueryIdHelper.getQueryId(queryId);
+      runtimeFilter.retainBuffers(1);
       //to foreman
       if (toForeman) {
         Foreman foreman = queries.get(queryId);
@@ -393,13 +398,14 @@ public class WorkManager implements AutoCloseable {
             public void run() {
               final Thread currentThread = Thread.currentThread();
               final String originalName = currentThread.getName();
-              currentThread.setName(queryIdStr + ":foreman:registerRuntimeFilter");
+              currentThread.setName(queryIdStr + ":foreman:routeRuntimeFilter");
               try {
-                foreman.getRuntimeFilterRouter().registerRuntimeFilter(runtimeFilter);
+                foreman.getRuntimeFilterRouter().register(runtimeFilter);
               } catch (Exception e) {
                 logger.warn("Exception while registering the RuntimeFilter", e);
               } finally {
                 currentThread.setName(originalName);
+                runtimeFilter.close();
               }
             }
           });

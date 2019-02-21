@@ -36,7 +36,6 @@ import org.apache.drill.exec.physical.rowSet.impl.UnionState.UnionColumnState;
 import org.apache.drill.exec.physical.rowSet.impl.UnionState.UnionVectorState;
 import org.apache.drill.exec.physical.rowSet.project.ImpliedTupleRequest;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.PrimitiveColumnMetadata;
 import org.apache.drill.exec.record.metadata.ProjectionType;
@@ -76,7 +75,6 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * the list metadata must contain that one type so the code knows how to build
  * the nullable array writer for that column.
  */
-
 public class ColumnBuilder {
 
   private ColumnBuilder() { }
@@ -85,16 +83,15 @@ public class ColumnBuilder {
    * Implementation of the work to add a new column to this tuple given a
    * schema description of the column.
    *
+   * @param parent container
    * @param columnSchema schema of the column
    * @return writer for the new column
    */
-
   public static ColumnState buildColumn(ContainerState parent, ColumnMetadata columnSchema) {
 
     // Indicate projection in the metadata.
 
-    ((AbstractColumnMetadata) columnSchema).setProjected(
-        parent.projectionType(columnSchema.name()) != ProjectionType.UNPROJECTED);
+    columnSchema.setProjected(parent.projectionType(columnSchema.name()) != ProjectionType.UNPROJECTED);
 
     // Build the column
 
@@ -165,7 +162,7 @@ public class ColumnBuilder {
           (NullableVector) vector);
     } else {
       vectorState = SimpleVectorState.vectorState(columnSchema,
-            colWriter.scalar(), vector);
+            colWriter.events(), vector);
     }
 
     // Create the column state which binds the vector and writer together.
@@ -218,8 +215,7 @@ public class ColumnBuilder {
       vector = null;
       vectorState = new NullVectorState();
     }
-    final TupleObjectWriter mapWriter = MapWriter.buildMap(columnSchema,
-        vector, new ArrayList<AbstractObjectWriter>());
+    final TupleObjectWriter mapWriter = MapWriter.buildMap(columnSchema, vector, new ArrayList<>());
     final SingleMapState mapState = new SingleMapState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()),
         parent.projectionSet().mapProjection(columnSchema.name()));
@@ -256,8 +252,7 @@ public class ColumnBuilder {
     // Create the writer using the offset vector
 
     final AbstractObjectWriter writer = MapWriter.buildMapArray(
-        columnSchema, mapVector,
-        new ArrayList<AbstractObjectWriter>());
+        columnSchema, mapVector, new ArrayList<>());
 
     // Wrap the offset vector in a vector state
 
@@ -266,7 +261,7 @@ public class ColumnBuilder {
       offsetVectorState = new OffsetVectorState(
           (((AbstractArrayWriter) writer.array()).offsetWriter()),
           offsetVector,
-          writer.array().entry());
+          writer.array().entry().events());
     } else {
       offsetVectorState = new NullVectorState();
     }
@@ -293,11 +288,10 @@ public class ColumnBuilder {
    * in a join column, say.) Still, Drill supports unions, so the code here
    * does so. Unions are fully tested in the row set writer mechanism.
    *
-   * @param parent
-   * @param columnSchema
-   * @return
+   * @param parent container
+   * @param columnSchema column schema
+   * @return column
    */
-
   private static ColumnState buildUnion(ContainerState parent, ColumnMetadata columnSchema) {
     assert columnSchema.isVariant() && ! columnSchema.isArray();
 
@@ -403,7 +397,8 @@ public class ColumnBuilder {
 
     // Create the list vector state that tracks the list vector lifecycle.
 
-    final ListVectorState vectorState = new ListVectorState(listWriter, memberState.writer(), listVector);
+    final ListVectorState vectorState = new ListVectorState(listWriter,
+        memberState.writer().events(), listVector);
 
     // Assemble it all into a union column state.
 
@@ -510,7 +505,7 @@ public class ColumnBuilder {
     // For a repeated list, we only care about
 
     final RepeatedListVectorState vectorState = new RepeatedListVectorState(
-        arrayWriter.array(), vector);
+        arrayWriter, vector);
 
     // Build the container that tracks the array contents
 

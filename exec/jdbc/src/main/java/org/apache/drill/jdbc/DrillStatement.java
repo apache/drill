@@ -17,6 +17,8 @@
  */
 package org.apache.drill.jdbc;
 
+import org.apache.calcite.avatica.AvaticaResultSet;
+
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -60,4 +62,7 @@ public interface DrillStatement extends Statement {
   @Override
   boolean isClosed();
 
+  void setResultSet(AvaticaResultSet resultSet);
+
+  void setUpdateCount(int value);
 }

@@ -179,27 +179,65 @@ SqlNodeList ParseRequiredFieldList(String relType) :
 }
 
 /**
- * Parses a create view or replace existing view statement.
- *   CREATE { [OR REPLACE] VIEW | VIEW [IF NOT EXISTS] | VIEW } view_name [ (field1, field2 ...) ] AS select_statement
- */
-SqlNode SqlCreateOrReplaceView() :
+* Rarses CREATE [OR REPLACE] command for VIEW, TABLE or SCHEMA.
+*/
+SqlNode SqlCreateOrReplace() :
 {
     SqlParserPos pos;
-    SqlIdentifier viewName;
-    SqlNode query;
-    SqlNodeList fieldList;
-    String createViewType = "SIMPLE";
+    String createType = "SIMPLE";
+    boolean isTemporary = false;
 }
 {
     <CREATE> { pos = getPos(); }
-    [ <OR> <REPLACE> { createViewType = "OR_REPLACE"; } ]
-    <VIEW>
+    [ <OR> <REPLACE> { createType = "OR_REPLACE"; } ]
+    [ <TEMPORARY> { isTemporary = true; } ]
+    (
+        <VIEW>
+            {
+                if (isTemporary) {
+                    throw new ParseException("Create view statement does not allow <TEMPORARY> keyword.");
+                }
+                return SqlCreateView(pos, createType);
+            }
+    |
+        <TABLE>
+            {
+                if (createType == "OR_REPLACE") {
+                    throw new ParseException("Create table statement does not allow <OR><REPLACE>.");
+                }
+                return SqlCreateTable(pos, isTemporary);
+
+            }
+    |
+        <SCHEMA>
+             {
+                 if (isTemporary) {
+                     throw new ParseException("Create schema statement does not allow <TEMPORARY> keyword.");
+                 }
+                 return SqlCreateSchema(pos, createType);
+             }
+    )
+}
+
+/**
+ * Parses a create view or replace existing view statement.
+ * after CREATE OR REPLACE VIEW statement which is handled in the SqlCreateOrReplace method.
+ *
+ * CREATE { [OR REPLACE] VIEW | VIEW [IF NOT EXISTS] | VIEW } view_name [ (field1, field2 ...) ] AS select_statement
+ */
+SqlNode SqlCreateView(SqlParserPos pos, String createType) :
+{
+    SqlIdentifier viewName;
+    SqlNode query;
+    SqlNodeList fieldList;
+}
+{
     [
         <IF> <NOT> <EXISTS> {
-            if (createViewType == "OR_REPLACE") {
+            if (createType == "OR_REPLACE") {
                 throw new ParseException("Create view statement cannot have both <OR REPLACE> and <IF NOT EXISTS> clause");
             }
-            createViewType = "IF_NOT_EXISTS";
+            createType = "IF_NOT_EXISTS";
         }
     ]
     viewName = CompoundIdentifier()
@@ -207,49 +245,28 @@ SqlNode SqlCreateOrReplaceView() :
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
-        return new SqlCreateView(pos, viewName, fieldList, query, SqlLiteral.createCharString(createViewType, getPos()));
+        return new SqlCreateView(pos, viewName, fieldList, query, SqlLiteral.createCharString(createType, getPos()));
     }
 }
 
 /**
- * Parses a drop view or drop view if exists statement.
- * DROP VIEW [IF EXISTS] view_name;
- */
-SqlNode SqlDropView() :
-{
-    SqlParserPos pos;
-    boolean viewExistenceCheck = false;
-}
-{
-    <DROP> { pos = getPos(); }
-    <VIEW>
-    [ <IF> <EXISTS> { viewExistenceCheck = true; } ]
-    {
-        return new SqlDropView(pos, CompoundIdentifier(), viewExistenceCheck);
-    }
-}
-
-/**
- * Parses a CTAS or CTTAS statement.
+ * Parses a CTAS or CTTAS statement after CREATE [TEMPORARY] TABLE statement
+ * which is handled in the SqlCreateOrReplace method.
+ *
  * CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tblname [ (field1, field2, ...) ] AS select_statement.
  */
-SqlNode SqlCreateTable() :
+SqlNode SqlCreateTable(SqlParserPos pos, boolean isTemporary) :
 {
-    SqlParserPos pos;
     SqlIdentifier tblName;
     SqlNodeList fieldList;
     SqlNodeList partitionFieldList;
     SqlNode query;
-    boolean isTemporary = false;
     boolean tableNonExistenceCheck = false;
 }
 {
     {
         partitionFieldList = SqlNodeList.EMPTY;
     }
-    <CREATE> { pos = getPos(); }
-    ( <TEMPORARY> { isTemporary = true; } )?
-    <TABLE>
     ( <IF> <NOT> <EXISTS> { tableNonExistenceCheck = true; } )?
     tblName = CompoundIdentifier()
     fieldList = ParseOptionalFieldList("Table")
@@ -266,20 +283,182 @@ SqlNode SqlCreateTable() :
 }
 
 /**
- * Parses a drop table or drop table if exists statement.
- * DROP TABLE [IF EXISTS] table_name;
+* Parses create table schema statement after CREATE OR REPLACE SCHEMA statement
+* which is handled in the SqlCreateOrReplace method.
+*
+* CREATE [OR REPLACE] SCHEMA
+* [
+*   LOAD 'file:///path/to/raw_schema'
+* |
+*   (
+*     col1 int,
+*     col2 varchar(10) not null
+*   )
+* ]
+* [FOR TABLE dfs.my_table]
+* [PATH 'file:///path/to/schema']
+* [PROPERTIES ('prop1'='val1', 'prop2'='val2')]
+*/
+SqlNode SqlCreateSchema(SqlParserPos pos, String createType) :
+{
+    SqlCharStringLiteral schema = null;
+    SqlNode load = null;
+    SqlIdentifier table = null;
+    SqlNode path = null;
+    SqlNodeList properties = null;
+}
+{
+    {
+            token_source.pushState();
+            token_source.SwitchTo(SCH);
+    }
+    (
+        <LOAD>
+        {
+            load = StringLiteral();
+        }
+    |
+        <PAREN_STRING>
+        {
+            schema = SqlLiteral.createCharString(token.image, getPos());
+        }
+    )
+    (
+        <FOR> <TABLE> { table = CompoundIdentifier(); }
+        |
+        <PATH>
+        {
+            path = StringLiteral();
+            if (createType == "OR_REPLACE") {
+                throw new ParseException("<OR REPLACE> cannot be used with <PATH> property.");
+            }
+        }
+    )
+    [
+        <PROPERTIES> <LPAREN>
+        {
+            properties = new SqlNodeList(getPos());
+            addProperty(properties);
+        }
+        (
+            <COMMA>
+            { addProperty(properties); }
+        )*
+        <RPAREN>
+    ]
+    {
+        return new SqlSchema.Create(pos, schema, load, table, path, properties,
+            SqlLiteral.createCharString(createType, getPos()));
+    }
+}
+
+/**
+* Helper method to add string literals divided by equals into SqlNodeList.
+*/
+void addProperty(SqlNodeList properties) :
+{}
+{
+    { properties.add(StringLiteral()); }
+    <EQ>
+    { properties.add(StringLiteral()); }
+}
+
+<SCH> SKIP :
+{
+    " "
+|   "\t"
+|   "\n"
+|   "\r"
+}
+
+<SCH> TOKEN : {
+    < LOAD: "LOAD" > { popState(); }
+  | < NUM: <DIGIT> (" " | "\t" | "\n" | "\r")* >
+    // once schema is found, swich back to initial lexical state
+    // must be enclosed in the parentheses
+    // inside may have left parenthesis only if number precededs (covers cases with varchar(10)),
+    // if left parenthesis is present in column name, it must be escaped with backslash
+  | < PAREN_STRING: <LPAREN> ((~[")"]) | (<NUM> ")") | ("\\)"))+ <RPAREN> > { popState(); }
+}
+
+/**
+ * Parses DROP command for VIEW, TABLE and SCHEMA.
  */
-SqlNode SqlDropTable() :
+SqlNode SqlDrop() :
 {
     SqlParserPos pos;
-    boolean tableExistenceCheck = false;
 }
 {
     <DROP> { pos = getPos(); }
-    <TABLE>
+    (
+        <VIEW>
+        {
+            return SqlDropView(pos);
+        }
+    |
+        <TABLE>
+        {
+            return SqlDropTable(pos);
+        }
+    |
+        <SCHEMA>
+        {
+            return SqlDropSchema(pos);
+        }
+    )
+}
+
+/**
+ * Parses a drop view or drop view if exists statement
+ * after DROP VIEW statement which is handled in SqlDrop method.
+ *
+ * DROP VIEW [IF EXISTS] view_name;
+ */
+SqlNode SqlDropView(SqlParserPos pos) :
+{
+    boolean viewExistenceCheck = false;
+}
+{
+    [ <IF> <EXISTS> { viewExistenceCheck = true; } ]
+    {
+        return new SqlDropView(pos, CompoundIdentifier(), viewExistenceCheck);
+    }
+}
+
+/**
+ * Parses a drop table or drop table if exists statement
+ * after DROP TABLE statement which is handled in SqlDrop method.
+ *
+ * DROP TABLE [IF EXISTS] table_name;
+ */
+SqlNode SqlDropTable(SqlParserPos pos) :
+{
+    boolean tableExistenceCheck = false;
+}
+{
     [ <IF> <EXISTS> { tableExistenceCheck = true; } ]
     {
         return new SqlDropTable(pos, CompoundIdentifier(), tableExistenceCheck);
+    }
+}
+
+/**
+* Parses drop schema or drop schema if exists statement
+* after DROP SCHEMA statement which is handled in SqlDrop method.
+*
+* DROP SCHEMA [IF EXISTS]
+* FOR TABLE dfs.my_table
+*/
+SqlNode SqlDropSchema(SqlParserPos pos) :
+{
+    SqlIdentifier table = null;
+    boolean existenceCheck = false;
+}
+{
+    [ <IF> <EXISTS> { existenceCheck = true; } ]
+    <FOR> <TABLE> { table = CompoundIdentifier(); }
+    {
+        return new SqlSchema.Drop(pos, table, SqlLiteral.createBoolean(existenceCheck, getPos()));
     }
 }
 

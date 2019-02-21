@@ -23,10 +23,20 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 
 public class IteratorValidator extends AbstractSingle{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidator.class);
+  /* isRepeatable flag will be set to true if this validator is created by a Repeatable pipeline.
+   * In a repeatable pipeline some state transitions are valid i.e downstream operator
+   * can call the upstream operator even after receiving NONE.
+   */
+  public final boolean isRepeatable;
 
-  public IteratorValidator(PhysicalOperator child) {
+  public IteratorValidator(PhysicalOperator child, boolean repeatable) {
     super(child);
     setCost(child.getCost());
+    this.isRepeatable = repeatable;
+  }
+
+  public IteratorValidator(PhysicalOperator child) {
+    this(child, false);
   }
 
   @Override
@@ -36,7 +46,7 @@ public class IteratorValidator extends AbstractSingle{
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new IteratorValidator(child);
+    return new IteratorValidator(child, isRepeatable);
   }
 
   @Override

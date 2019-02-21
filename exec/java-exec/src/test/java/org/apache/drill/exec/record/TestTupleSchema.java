@@ -34,24 +34,23 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.metadata.ColumnBuilder;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
 import org.apache.drill.exec.record.metadata.MapColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.PrimitiveColumnMetadata;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.record.metadata.VariantColumnMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.schema.ColumnBuilder;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**
  * Test the tuple and column metadata, including extended attributes.
  */
-
 public class TestTupleSchema extends SubOperatorTest {
 
   /**
@@ -452,7 +451,7 @@ public class TestTupleSchema extends SubOperatorTest {
   @Test
   public void testNonEmptyRootTuple() {
 
-    TupleMetadata root = new TupleSchema();
+    TupleSchema root = new TupleSchema();
 
     MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REQUIRED );
     ColumnMetadata colA = root.add(fieldA);
@@ -529,11 +528,11 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // A tuple is equivalent to its copy.
 
-    assertTrue(root.isEquivalent(((TupleSchema) root).copy()));
+    assertTrue(root.isEquivalent(root.copy()));
 
     // And it is equivalent to the round trip to a batch schema.
 
-    BatchSchema batchSchema = ((TupleSchema) root).toBatchSchema(SelectionVectorMode.NONE);
+    BatchSchema batchSchema = root.toBatchSchema(SelectionVectorMode.NONE);
     assertTrue(root.isEquivalent(MetadataUtils.fromFields(batchSchema)));
   }
 
@@ -549,7 +548,7 @@ public class TestTupleSchema extends SubOperatorTest {
   @Test
   public void testMapTupleFromMetadata() {
 
-    TupleMetadata root = new TupleSchema();
+    TupleSchema root = new TupleSchema();
 
     MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.MAP, DataMode.REQUIRED);
     ColumnMetadata colA = root.add(fieldA);
@@ -606,7 +605,7 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // Copying should be deep.
 
-    TupleMetadata root2 = ((TupleSchema) root).copy();
+    TupleMetadata root2 = root.copy();
     assertEquals(2, root2.metadata(0).mapSchema().metadata(0).mapSchema().metadata(0).mapSchema().size());
     assert(root.isEquivalent(root2));
 
@@ -791,7 +790,7 @@ public class TestTupleSchema extends SubOperatorTest {
           .addList()
             .addType(MinorType.FLOAT8)
             .addType(MinorType.DECIMAL18)
-            .buildNested()
+            .resumeUnion()
           .resumeSchema()
         .buildSchema();
 

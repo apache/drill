@@ -87,8 +87,8 @@ public class ParquetRGFilterEvaluator {
     }
 
     Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(materializedFilter);
-    ParquetFilterPredicate parquetPredicate = (ParquetFilterPredicate) ParquetFilterBuilder.buildParquetFilterPredicate(
-        materializedFilter, constantBoundaries, udfUtilities);
+    ParquetFilterPredicate parquetPredicate = ParquetFilterBuilder.buildParquetFilterPredicate(
+        materializedFilter, constantBoundaries, udfUtilities, true);
 
     return matches(parquetPredicate, columnStatisticsMap, rowCount);
   }

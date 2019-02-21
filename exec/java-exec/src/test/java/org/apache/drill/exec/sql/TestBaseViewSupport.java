@@ -17,10 +17,12 @@
  */
 package org.apache.drill.exec.sql;
 
+import org.apache.drill.PlanTestBase;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -28,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Base class for view tests. It has utility methods which can be used when writing tests for views on tables
  * in different storage engines such as Hive, HBase etc.
  */
-public class TestBaseViewSupport extends BaseTestQuery {
+public class TestBaseViewSupport extends PlanTestBase {
   private static AtomicInteger viewSeqNum = new AtomicInteger(0);
 
   /**
@@ -208,5 +210,41 @@ public class TestBaseViewSupport extends BaseTestQuery {
     } finally {
       dropViewHelper(finalSchema, viewName, finalSchema);
     }
+  }
+
+  /**
+   * Convenient method for defining baselineColumns to be passed into
+   * view helper methods.
+   *
+   * @param names column names varargs
+   * @return column names array
+   */
+  protected static String[] baselineColumns(String... names) {
+    return names;
+  }
+
+  /**
+   * Convenient method for grouping of expected rows into
+   * list of Object arrays, where each array represents concrete
+   * row. This method is used for defining baselineValues and passing it to
+   * view helper methods.
+   *
+   * @param rows rows in form of Object[] varargs
+   * @return list of rows
+   */
+  protected static List<Object[]> baselineRows(Object[]... rows) {
+    return Collections.unmodifiableList(Arrays.asList(rows));
+  }
+
+  /**
+   * Helper method for conversion of Object varargs into
+   * array of objects. Used for passing rows into
+   * {@link TestBaseViewSupport#baselineRows(Object[]...)}
+   *
+   * @param columns Object varargs
+   * @return array of passed objects
+   */
+  protected static Object[] row(Object... columns) {
+    return columns;
   }
 }

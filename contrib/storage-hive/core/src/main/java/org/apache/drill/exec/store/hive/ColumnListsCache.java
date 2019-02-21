@@ -17,14 +17,15 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Table;
-
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.Table;
 
 /**
  * The class represents "cache" for partition and table columns.
@@ -46,8 +47,8 @@ public class ColumnListsCache {
   }
 
   public ColumnListsCache() {
-    this.fields = Lists.newArrayList();
-    this.keys = Maps.newHashMap();
+    this.fields = new ArrayList<>();
+    this.keys = new HashMap<>();
   }
 
   /**
@@ -83,14 +84,22 @@ public class ColumnListsCache {
    * or null if index is negative or greater than fields list size
    */
   public List<FieldSchema> getColumns(int index) {
-    if (index >= 0 && index < fields.size()) {
-      return fields.get(index);
-    } else {
-      return null;
-    }
+   return (index > -1 && index < fields.size()) ? fields.get(index) : null;
+  }
+
+  /**
+   * Safely retrieves Hive table columns from cache.
+   *
+   * @return list of table columns defined in hive
+   */
+  public List<FieldSchema> getTableSchemaColumns() {
+    List<FieldSchema> tableSchemaColumns = getColumns(0);
+    Preconditions.checkNotNull(tableSchemaColumns, "Failed to get columns for Hive table from cache.");
+    return tableSchemaColumns;
   }
 
   public List<List<FieldSchema>> getFields() {
-    return Lists.newArrayList(fields);
+    return new ArrayList<>(fields);
   }
+
 }

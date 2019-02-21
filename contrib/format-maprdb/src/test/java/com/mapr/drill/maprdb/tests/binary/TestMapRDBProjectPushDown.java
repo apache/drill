@@ -43,5 +43,4 @@ public class TestMapRDBProjectPushDown extends TestHBaseProjectPushDown {
   public static void tearDownAfterClass() throws Exception {
     MaprDBTestsSuite.cleanupTests();
   }
-  
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -302,6 +302,17 @@ export DRILLBIT_CODE_CACHE_SIZE=${DRILLBIT_CODE_CACHE_SIZE:-"1G"}
 export DRILLBIT_OPTS="-Xms$DRILL_HEAP -Xmx$DRILL_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY"
 export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:ReservedCodeCacheSize=$DRILLBIT_CODE_CACHE_SIZE -Ddrill.exec.enable-epoll=false"
 
+# Check that java is newer than 1.8
+"$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.8" > /dev/null
+if [ $? -gt 0 ]; then
+  # Allow reflective access on Java 9+
+  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/java.lang=ALL-UNNAMED"
+  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/sun.nio.ch=ALL-UNNAMED"
+  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/java.nio=ALL-UNNAMED"
+  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED"
+  export DRILLBIT_OPTS="$DRILLBIT_OPTS --illegal-access=permit"
+fi
+
 
 # Under YARN, the log directory is usually YARN-provided. Replace any
 # value that may have been set in drill-env.sh.
@@ -334,6 +345,7 @@ fi
 # provided in drill-env.sh.
 
 export DRILL_PID_DIR=${DRILL_PID_DIR:-$DRILL_HOME}
+export GRACEFUL_SIGFILE=${GRACEFUL_SIGFILE:-"graceful"}
 
 # Prepare log file prefix and the main Drillbit log file.
 

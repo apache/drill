@@ -23,15 +23,17 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl.ResultSetOptions;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests of the row limit functionality of the result set loader. The
@@ -45,6 +47,7 @@ import org.junit.Test;
  * the row limit turns out to be too large.)
  */
 
+@Category(RowSetTests.class)
 public class TestResultSetLoaderLimits extends SubOperatorTest {
 
   /**

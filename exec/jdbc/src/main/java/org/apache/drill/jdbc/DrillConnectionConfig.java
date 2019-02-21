@@ -35,7 +35,7 @@ import org.apache.calcite.avatica.ConnectionConfigImpl;
  *  <p>
  *    In the meantime, clients must not use the fact that
  *    {@code DrillConnectionConfig} currently extends
- *    {@link net.hydromatic.avatica.ConnectionConfigImpl}.  They must call only
+ *    {@link ConnectionConfigImpl}.  They must call only
  *    methods declared directly in DrillConnectionConfig (or inherited Object).
  *  </p>
  */

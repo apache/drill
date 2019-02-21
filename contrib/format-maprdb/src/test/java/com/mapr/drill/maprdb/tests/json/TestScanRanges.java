@@ -30,7 +30,6 @@ import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.AwaitableUserResultsListener;
 import org.apache.drill.exec.store.sys.PersistentStore;
-import org.apache.drill.exec.work.foreman.QueryManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -83,8 +82,8 @@ public class TestScanRanges extends BaseJsonTest {
       table.flush();
       DBTests.waitForRowCount(table.getPath(), TOTAL_ROW_COUNT);
 
-      setSessionOption("planner.width.max_per_node", "5");
-   }
+      setSessionOption("planner.width.max_per_node", 5);
+    }
   }
 
   @AfterClass

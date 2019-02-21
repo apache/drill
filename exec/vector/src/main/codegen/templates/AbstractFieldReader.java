@@ -29,9 +29,9 @@ package org.apache.drill.exec.vector.complex.impl;
  * This class is generated using freemarker and the ${.template_name} template.
  */
 @SuppressWarnings("unused")
-abstract class AbstractFieldReader extends AbstractBaseReader implements FieldReader {
+public abstract class AbstractFieldReader extends AbstractBaseReader implements FieldReader {
 
-  AbstractFieldReader() {
+  public AbstractFieldReader() {
   }
 
   /**

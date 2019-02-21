@@ -23,9 +23,9 @@ import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -176,6 +176,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testFix4449() throws Exception {
     runSQL("CREATE TABLE dfs.tmp.`4449` PARTITION BY(l_discount) AS SELECT l_orderkey, l_discount FROM cp.`tpch/lineitem.parquet`");
     runSQL("REFRESH TABLE METADATA dfs.tmp.`4449`");
@@ -642,6 +643,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testInnerMetadataFilesAreAbsent() throws Exception {
     final String innerMetaCorruptedTable = "inner_meta_corrupted_table";
     File dataDir = dirTestWatcher.copyResourceToRoot(
@@ -814,6 +816,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4139
+  @Category(UnlikelyTest.class)
   public void testPartitionPruningWithIsNull() throws Exception {
     try {
       test("create table dfs.tmp.`t6/a` as\n" +
@@ -897,6 +900,28 @@ public class TestParquetMetadataCache extends PlanTestBase {
             .schemaBaseLine(expectedSchema)
             .build()
             .run();
+  }
+
+  @Test
+  public void testAutoRefreshPartitionPruning() throws Exception {
+    test("create table dfs.tmp.`orders` partition by (o_orderstatus) as\n" +
+        "select * from cp.`tpch/orders.parquet`");
+
+    test("refresh table metadata dfs.tmp.`orders`");
+
+    File ordersTable = new File(dirTestWatcher.getDfsTestTmpDir(), "orders");
+
+    // sets last-modified time of directory greater than the time of cache file to force metadata cache file auto-refresh
+    assertTrue("Unable to change the last-modified time of table directory",
+        ordersTable.setLastModified(new File(ordersTable, Metadata.METADATA_FILENAME).lastModified() + 100500));
+
+    String query = "select * from dfs.tmp.`orders`\n" +
+        "where o_orderstatus = 'O' and o_orderdate < '1995-03-10'";
+    PlanTestBase.testPlanOneExpectedPattern(query, "numRowGroups=1");
+
+    int actualRowCount = testSql(query);
+    assertEquals("Row count does not match the expected value", 1, actualRowCount);
+    // TODO: Check that metadata cache file is actually regenerated, once Drill will use JDK version with resolved JDK-8177809.
   }
 
   /**

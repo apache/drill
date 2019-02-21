@@ -29,6 +29,7 @@ import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
 import org.apache.drill.exec.record.VectorInitializer;
 import org.apache.drill.exec.record.VectorInitializer.AllocationHint;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -36,7 +37,6 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**

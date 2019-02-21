@@ -39,7 +39,6 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
-  @Ignore
   public void testGroupBy() throws Exception {
     String expectedColNames = " \"columns\" : [ \"`marital_status`\" ]";
     testPhysicalPlan(
@@ -48,7 +47,6 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
-  @Ignore
   public void testOrderBy() throws Exception {
     String expectedColNames = "\"columns\" : [ \"`employee_id`\", \"`full_name`\", \"`first_name`\", \"`last_name`\" ]";
     testPhysicalPlan("select employee_id , full_name, first_name , last_name "
@@ -57,7 +55,6 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
-  @Ignore
   public void testExprInSelect() throws Exception {
     String expectedColNames = "\"columns\" : [ \"`employee_id`\", \"`full_name`\", \"`first_name`\", \"`last_name`\" ]";
     testPhysicalPlan(
@@ -67,7 +64,6 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
-  @Ignore
   public void testExprInWhere() throws Exception {
     String expectedColNames = "\"columns\" : [ \"`employee_id`\", \"`full_name`\", \"`first_name`\", \"`last_name`\" ]";
     testPhysicalPlan(
@@ -291,10 +287,24 @@ public class TestProjectPushDown extends PlanTestBase {
     final String query = "SELECT L.L_QUANTITY FROM cp.`tpch/lineitem.parquet` L, cp.`tpch/orders.parquet` O" +
         " WHERE cast(L.L_ORDERKEY as int) = cast(O.O_ORDERKEY as int)";
     final String[] expectedPatterns = {
-        ".*HashJoin.*", "Project.*\\(L_QUANTITY.*CAST\\(\\$0\\)\\:INTEGER.*", "Project.*CAST\\(\\$0\\)\\:INTEGER.*"};
+        ".*HashJoin.*", "Project.*\\(L_QUANTITY\\=\\[\\$0\\].*CAST\\(\\$1\\)\\:INTEGER.*", "Project.*CAST\\(\\$0\\)\\:INTEGER.*"};
     // L_ORDERKEY, O_ORDERKEY should not be present in the projects below the join
     final String[] excludedPatterns = {".*Project\\(L_ORDERKEY=.*", ".*Project\\(O_ORDERKEY=.*"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPatterns, excludedPatterns);
+  }
+
+  @Test
+  public void testProjectPushdownAfterFilterRemoving() throws Exception {
+    test("create table dfs.tmp.`nation` as\n" +
+        "select * from cp.`tpch/nation.parquet` where n_regionkey < 10");
+    try {
+      // filter will be removed form the plan
+      String query = "select n_nationkey from dfs.tmp.`nation` where n_regionkey < 10";
+      PlanTestBase.testPlanMatchingPatterns(query,
+          new String[]{"columns\\=\\[`n_nationkey`\\]"}, new String[]{"n_regionkey"});
+    } finally {
+      test("drop table if exists dfs.tmp.`nation`");
+    }
   }
 
   protected void testPushDown(PushDownTestInstance test) throws Exception {

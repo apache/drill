@@ -36,9 +36,9 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.fn.impl.testing;
 
-import mockit.integration.junit4.JMockit;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
@@ -25,7 +24,6 @@ import org.apache.drill.common.exceptions.UserException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -37,7 +35,6 @@ import java.time.LocalTime;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertThat;
 
-@RunWith(JMockit.class)
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestDateConversions extends BaseTestQuery {
 

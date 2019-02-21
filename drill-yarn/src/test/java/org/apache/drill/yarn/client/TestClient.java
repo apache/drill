@@ -105,6 +105,7 @@ public class TestClient {
     } catch (SimulatedExitException e) {
       assert (e.exitCode == -1);
       assertTrue(TestContext.getOut().contains("Usage: "));
+      TestContext.resetOutput();
     }
 
     // Bogus command
@@ -115,16 +116,7 @@ public class TestClient {
     } catch (SimulatedExitException e) {
       assert (e.exitCode == -1);
       assertTrue(TestContext.getOut().contains("Usage: "));
-    }
-
-    // Help command
-
-    try {
-      DrillOnYarn.run(new String[] { "help" });
-      fail();
-    } catch (SimulatedExitException e) {
-      assert (e.exitCode == -1);
-      assertTrue(TestContext.getOut().contains("Usage: "));
+      TestContext.resetOutput();
     }
   }
 

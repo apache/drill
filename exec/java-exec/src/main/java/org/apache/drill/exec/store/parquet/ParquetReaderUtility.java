@@ -389,6 +389,11 @@ public class ParquetReaderUtility {
           minBytes = Base64.decodeBase64(minBytes);
           maxBytes = hasSingleValue ? minBytes : Base64.decodeBase64(maxBytes);
         }
+      } else if (minValue instanceof Binary && maxValue instanceof Binary) {
+        // for the case when cache file was auto-refreshed, values from parquet footers are used,
+        // so there is no need to convert values, but they should be set in ColumnMetadata
+        minBytes = ((Binary) minValue).getBytes();
+        maxBytes = ((Binary) maxValue).getBytes();
       }
     }
 

@@ -24,13 +24,13 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>18</version>
+    <version>21</version>
     <relativePath />
   </parent>
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.15.0-SNAPSHOT</version>
+  <version>1.16.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
@@ -38,18 +38,22 @@
   <url>http://drill.apache.org/</url>
 
   <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
+
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <dep.junit.version>4.12</dep.junit.version>
-    <dep.slf4j.version>1.7.6</dep.slf4j.version>
+    <dep.slf4j.version>1.7.25</dep.slf4j.version>
     <shaded.guava.version>23.0</shaded.guava.version>
     <guava.version>19.0</guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.10.0</parquet.version>
-    <calcite.version>1.17.0-drill-r1</calcite.version>
-    <avatica.version>1.12.0</avatica.version>
-    <janino.version>3.0.10</janino.version>
-    <sqlline.version>1.5.0</sqlline.version>
+    <calcite.version>1.18.0-drill-r0</calcite.version>
+    <avatica.version>1.13.0</avatica.version>
+    <janino.version>3.0.11</janino.version>
+    <sqlline.version>1.6.0</sqlline.version>
     <jackson.version>2.9.5</jackson.version>
     <jackson.databind.version>2.9.5</jackson.databind.version>
     <zookeeper.version>3.4.12</zookeeper.version>
@@ -64,7 +68,7 @@
     <maven.embedder.version>3.5.3</maven.embedder.version>
     <curator.version>2.7.1</curator.version>
     <wiremock.standalone.version>2.5.1</wiremock.standalone.version>
-    <jmockit.version>1.39</jmockit.version>
+    <jmockit.version>1.43</jmockit.version>
     <logback.version>1.0.13</logback.version>
     <mockito.version>2.18.3</mockito.version>
     <!--
@@ -72,22 +76,27 @@
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated.
     -->
     <hive.version>2.3.2</hive.version>
-    <hadoop.version>2.7.1</hadoop.version>
-    <hbase.version>1.1.3</hbase.version>
+    <hadoop.version>2.7.4</hadoop.version>
+    <hbase.version>2.1.1</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.26-incubating</freemarker.version>
-    <javassist.version>3.22.0-GA</javassist.version>
+    <javassist.version>3.24.0-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.8.2</avro.version>
     <metrics.version>4.0.2</metrics.version>
+    <asm.version>7.0</asm.version>
     <excludedGroups />
     <memoryMb>4096</memoryMb>
     <directMemoryMb>4096</directMemoryMb>
-    <additionalparam>-Xdoclint:none</additionalparam>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
     <docker.repository>drill/apache-drill</docker.repository>
+    <antlr.version>4.7.1</antlr.version>
+    <lowestMavenVersion>3.3.3</lowestMavenVersion>
+    <commons.net.version>3.6</commons.net.version>
+    <commons.validator.version>1.6</commons.validator.version>
+    <commons.text.version>1.6</commons.text.version>
   </properties>
 
   <scm>
@@ -314,6 +323,7 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
+        <version>0.13</version>
         <executions>
           <execution>
             <id>rat-checks</id>
@@ -393,12 +403,11 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.12.1</version>
         <dependencies>
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>7.8.2</version>
+            <version>8.16</version>
           </dependency>
         </dependencies>
         <configuration>
@@ -408,7 +417,7 @@
           <consoleOutput>true</consoleOutput>
           <includeResources>true</includeResources>
           <includeTestResources>true</includeTestResources>
-          <resourceIncludes>**/*.properties,**/*.conf,**/*.json,**/*.xml</resourceIncludes>
+          <resourceIncludes>**/*.properties,**/*.conf,**/*.xml</resourceIncludes>
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
           <configLocation>src/main/resources/checkstyle-config.xml</configLocation>
           <suppressionsLocation>src/main/resources/checkstyle-suppressions.xml</suppressionsLocation>
@@ -441,7 +450,7 @@
             </manifest>
             <manifestEntries>
               <Extension-Name>org.apache.drill</Extension-Name>
-              <Built-By>${username}</Built-By>
+              <Built-By>${user.name}</Built-By>
               <url>http://drill.apache.org/</url>
             </manifestEntries>
           </archive>
@@ -469,8 +478,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
           <maxmem>2048m</maxmem>
           <useIncrementalCompilation>false</useIncrementalCompilation>
           <fork>true</fork>
@@ -489,10 +496,10 @@
             <configuration>
               <rules>
                 <requireMavenVersion>
-                  <version>[3.3.1,4)</version>
+                  <version>[{$lowestMavenVersion},4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>[1.8,1.9)</version>
+                  <version>[1.8,12)</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
@@ -525,7 +532,7 @@
       <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
-        <version>2.1.9</version>
+        <version>2.2.5</version>
         <executions>
           <execution>
             <id>for-jars</id>
@@ -570,7 +577,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.1.0</version>
           <executions>
             <execution>
               <goals>
@@ -585,6 +591,7 @@
           <version>3.0</version>
           <configuration>
             <aggregate>true</aggregate>
+            <!--suppress UnresolvedMavenProperty -->
             <header>${maven.multiModuleProjectDirectory}/header</header>
             <excludes>
               <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
@@ -647,6 +654,20 @@
               <exclude>KEYS</exclude>
               <exclude>header</exclude>
               <exclude>**/.drill.parquet_metadata</exclude>
+              <exclude>**/*.mov</exclude>
+              <exclude>**/*.mp4</exclude>
+              <exclude>**/*.avi</exclude>
+              <exclude>**/*.pcx</exclude>
+              <exclude>**/*.webp</exclude>
+              <exclude>**/*.pcapng</exclude>
+              <exclude>**/*.psd</exclude>
+              <exclude>**/*.pcx</exclude>
+              <exclude>**/*.log1</exclude>
+              <exclude>**/*.log2</exclude>
+              <exclude>**/*.sqllog</exclude>
+              <exclude>**/*.sqllog2</exclude>
+              <exclude>**/*.wav</exclude>
+              <exclude>**/control</exclude>
               <!-- TODO DRILL-4336: try to avoid the need to add this -->
               <exclude>dependency-reduced-pom.xml</exclude>
             </excludes>
@@ -663,6 +684,17 @@
               <linux>SLASHSTAR_STYLE</linux>
               <boost>SLASHSTAR_STYLE</boost>
               <cmake>SCRIPT_STYLE</cmake>
+              <g4>SLASHSTAR_STYLE</g4>
+              <runbit>SCRIPT_STYLE</runbit>
+              <runexec>SCRIPT_STYLE</runexec>
+              <drill-conf>SCRIPT_STYLE</drill-conf>
+              <sqlline>SCRIPT_STYLE</sqlline>
+              <drillbit>SCRIPT_STYLE</drillbit>
+              <dumpcat>SCRIPT_STYLE</dumpcat>
+              <drill-localhost>SCRIPT_STYLE</drill-localhost>
+              <submit_plan>SCRIPT_STYLE</submit_plan>
+              <drill-embedded>SCRIPT_STYLE</drill-embedded>
+              <conffiles>SCRIPT_STYLE</conffiles>
             </mapping>
           </configuration>
           <executions>
@@ -675,17 +707,17 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>2.6</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.2</version>
+          <version>3.8.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>1.3.1</version>
+          <version>3.0.0-M2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>3.0.0</version>
         </plugin>
         <plugin> <!-- classpath scanning  -->
           <groupId>org.codehaus.mojo</groupId>
@@ -710,7 +742,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.17</version>
+          <version>3.0.0-M2</version>
           <executions>
             <execution>
               <id>default-test</id>
@@ -722,7 +754,7 @@
             <dependency>
               <groupId>org.apache.maven.surefire</groupId>
               <artifactId>surefire-junit47</artifactId>
-              <version>2.19.1</version>
+              <version>3.0.0-M2</version>
             </dependency>
           </dependencies>
           <configuration>
@@ -735,6 +767,8 @@
               -Djava.net.preferIPv4Stack=true
               -Djava.awt.headless=true
               -XX:+CMSClassUnloadingEnabled -ea
+              -Djdk.attach.allowAttachSelf=true
+              -javaagent:${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar
             </argLine>
             <forkCount>${forkCount}</forkCount>
             <reuseForks>true</reuseForks>
@@ -745,12 +779,12 @@
               <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
             </systemPropertyVariables>
             <excludedGroups>${excludedGroups}</excludedGroups>
+            <useSystemClassLoader>false</useSystemClassLoader>
           </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
-          <version>2.5.2</version>
           <configuration>
             <useReleaseProfile>false</useReleaseProfile>
             <pushChanges>false</pushChanges>
@@ -852,7 +886,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.2.1</version>
           <executions>
             <execution>
               <phase>package</phase>
@@ -862,6 +896,28 @@
             </execution>
           </executions>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.10.4</version> <!--the 3.0.1 version causes failures on the release:prepare stage-->
+          <configuration>
+            <additionalparam>-Xdoclint:none</additionalparam>
+          </configuration>
+        </plugin>
+
+        <!--Note: apache-21.pom has the latest versions of apache-rat-plugin, maven-dependency-plugin and
+        maven-clean-plugin. Once the newer versions are needed and present in maven repo, the plugins versions can be
+        overridden here-->
       </plugins>
     </pluginManagement>
   </build>
@@ -925,7 +981,7 @@
       <!-- JMockit needs to be on class path before JUnit. -->
       <groupId>org.jmockit</groupId>
       <artifactId>jmockit</artifactId>
-      <version>1.39</version>
+      <version>${jmockit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -939,7 +995,7 @@
            long as Mockito _contains_ older Hamcrest classes.  See DRILL-2130. -->
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>2.18.3</version>
+      <version>2.23.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -994,14 +1050,35 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.apache.drill</groupId>
-        <artifactId>drill-shaded-guava</artifactId>
-        <version>${shaded.guava.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>${guava.version}</version>
+        <groupId>org.apache.calcite</groupId>
+        <artifactId>calcite-core</artifactId>
+        <version>${calcite.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.calcite.avatica</groupId>
+            <artifactId>avatica-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-jdk1.5</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.calcite.avatica</groupId>
@@ -1021,6 +1098,16 @@
             <groupId>com.google.protobuf</groupId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.drill</groupId>
+        <artifactId>drill-shaded-guava</artifactId>
+        <version>${shaded.guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
       </dependency>
       <dependency>
         <groupId>org.msgpack</groupId>
@@ -1644,6 +1731,37 @@
           </exclusion>
         </exclusions>
       </dependency>
+      <dependency>
+        <groupId>org.antlr</groupId>
+        <artifactId>antlr4-runtime</artifactId>
+        <version>${antlr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>sqlline</groupId>
+        <artifactId>sqlline</artifactId>
+        <version>${sqlline.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-net</groupId>
+        <artifactId>commons-net</artifactId>
+        <version>${commons.net.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-validator</groupId>
+        <artifactId>commons-validator</artifactId>
+        <version>${commons.validator.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>${commons.text.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -1655,11 +1773,11 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>net.ju-n.maven.plugins</groupId>
+            <groupId>net.nicoulaj.maven.plugins</groupId>
             <artifactId>checksum-maven-plugin</artifactId>
-            <version>1.2</version>
             <executions>
               <execution>
+                <id>source-release-checksum</id>
                 <goals>
                   <goal>artifacts</goal>
                 </goals>
@@ -1669,28 +1787,18 @@
               <algorithms>
                 <algorithm>SHA-512</algorithm>
               </algorithms>
-              <failOnError>false</failOnError>
             </configuration>
           </plugin>
-          <!-- override the parent assembly execution to customize the assembly
-            descriptor and final name -->
+
+          <!-- override the parent assembly execution to customize the assembly final name -->
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
             <executions>
               <execution>
                 <id>source-release-assembly</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
                 <configuration>
-                  <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
                   <appendAssemblyId>false</appendAssemblyId>
-                  <descriptors>
-                    <descriptor>src/main/resources/assemblies/source-assembly.xml</descriptor>
-                  </descriptors>
                   <finalName>apache-drill-${project.version}-src</finalName>
-                  <tarLongFileMode>gnu</tarLongFileMode>
                 </configuration>
               </execution>
             </executions>
@@ -2303,44 +2411,6 @@
             <version>2.7.1</version>
           </dependency>
           <dependency>
-            <groupId>sqlline</groupId>
-            <artifactId>sqlline</artifactId>
-            <version>${sqlline.version}</version>
-          </dependency>
-
-          <dependency>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-core</artifactId>
-            <version>${calcite.version}</version>
-            <exclusions>
-              <exclusion>
-                <groupId>org.apache.calcite.avatica</groupId>
-                <artifactId>avatica-core</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>org.jgrapht</groupId>
-                <artifactId>jgrapht-jdk1.5</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>com.fasterxml.jackson.core</groupId>
-                 <artifactId>jackson-core</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>com.fasterxml.jackson.core</groupId>
-                 <artifactId>jackson-databind</artifactId>
-              </exclusion>
-            </exclusions>
-          </dependency>
-
-          <dependency>
             <groupId>net.sf.jpam</groupId>
             <artifactId>jpam</artifactId>
             <version>1.1</version>
@@ -2367,7 +2437,7 @@
           <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
-            <version>1.52</version>
+            <version>1.60</version>
           </dependency>
 
           <!-- Test Dependencies -->
@@ -2702,11 +2772,6 @@
                 <artifactId>commons-logging</artifactId>
               </exclusion>
             </exclusions>
-          </dependency>
-          <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4-runtime</artifactId>
-            <version>4.5</version>
           </dependency>
           <dependency>
             <groupId>org.apache.hive</groupId>
@@ -3313,9 +3378,9 @@
     <profile>
       <!--
         If the IDE is Eclipse, it requires you to install an additional Eclipse plugin available here:
-        http://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+        http://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/1.6.1/os-maven-plugin-1.6.1.jar
         or from your local maven repository:
-        ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+        ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.6.1/os-maven-plugin-1.6.1.jar
         Note that installing this plugin may require you to start with a new workspace
       -->
       <id>openssl</id>

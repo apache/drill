@@ -434,4 +434,17 @@ public class TestDrillParquetReader extends BaseTestQuery {
         .build().run();
   }
 
+  @Test // DRILL-6856
+  public void testIsTrueOrNullCondition() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT col_bln " +
+            "FROM cp.`parquetFilterPush/blnTbl/0_0_2.parquet` " +
+            "WHERE col_bln IS true OR col_bln IS null " +
+            "ORDER BY col_bln")
+        .ordered()
+        .baselineColumns("col_bln")
+        .baselineValuesForSingleColumn(true, null)
+        .go();
+  }
+
 }

@@ -19,10 +19,10 @@ package org.apache.drill.exec.client;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import jline.console.completer.StringsCompleter;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.jline.reader.impl.completer.StringsCompleter;
 import sqlline.Application;
 import sqlline.CommandHandler;
 import sqlline.OutputFormat;
@@ -81,17 +81,22 @@ public class DrillSqlLineApplication extends Application {
   }
 
   @Override
-  public String getInfoMessage() throws Exception {
+  public String getInfoMessage() {
     if (config.hasPath(INFO_MESSAGE_TEMPLATE_CONF)) {
       String quote = "";
       if (config.hasPath(QUOTES_CONF)) {
         List<String> quotes = config.getStringList(QUOTES_CONF);
         quote = quotes.get(new Random().nextInt(quotes.size()));
       }
-      return String.format(config.getString(INFO_MESSAGE_TEMPLATE_CONF), DrillVersionInfo.getVersion(), quote);
+      return String.format(config.getString(INFO_MESSAGE_TEMPLATE_CONF), getVersion(), quote);
     }
 
     return super.getInfoMessage();
+  }
+
+  @Override
+  public String getVersion() {
+    return DrillVersionInfo.getVersion();
   }
 
   @Override

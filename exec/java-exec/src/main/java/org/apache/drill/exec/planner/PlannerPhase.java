@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.drill.exec.planner.logical.DrillSemiJoinRule;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet.Builder;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -163,6 +164,14 @@ public enum PlannerPhase {
       return PlannerPhase.mergedRuleSets(
           RuleSets.ofList(rules),
           getStorageRules(context, plugins, this)
+      );
+    }
+  },
+
+  SEMIJOIN_CONVERSION("Pushing down semi joins") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(
+              RuleSets.ofList(DrillSemiJoinRule.JOIN)
       );
     }
   },
@@ -379,10 +388,6 @@ public enum PlannerPhase {
             DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY,
                 optimizerRulesContext.getFunctionRegistry())
             );
-    if (optimizerRulesContext.getPlannerSettings().isHashJoinEnabled() &&
-        optimizerRulesContext.getPlannerSettings().isSemiJoinEnabled()) {
-      basicRules.add(RuleInstance.SEMI_JOIN_PROJECT_RULE);
-    }
 
     return RuleSets.ofList(basicRules.build());
   }
@@ -447,7 +452,8 @@ public enum PlannerPhase {
             // estimation of filter operator, after filter is pushed down to scan.
 
             ParquetPushDownFilter.getFilterOnProject(optimizerRulesContext),
-            ParquetPushDownFilter.getFilterOnScan(optimizerRulesContext)
+            ParquetPushDownFilter.getFilterOnScan(optimizerRulesContext),
+            DrillPushProjectIntoScanRule.DRILL_PHYSICAL_INSTANCE
         )
         .build();
 

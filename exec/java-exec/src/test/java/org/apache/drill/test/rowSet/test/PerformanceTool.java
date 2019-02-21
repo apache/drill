@@ -24,6 +24,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.NullableIntVector;
@@ -34,8 +35,6 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObj
 import org.apache.drill.exec.vector.accessor.writer.NullableScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.ScalarArrayWriter;
 import org.apache.drill.test.OperatorFixture;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 /**

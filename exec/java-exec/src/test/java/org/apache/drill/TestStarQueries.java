@@ -23,8 +23,8 @@ import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -150,6 +150,7 @@ public class TestStarQueries extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testSelStarOrderByLimit() throws Exception{
     testBuilder()
         .ordered()
@@ -186,6 +187,7 @@ public class TestStarQueries extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testSelStarJoin() throws Exception {
     testBuilder()
         .ordered()
@@ -325,6 +327,7 @@ public class TestStarQueries extends BaseTestQuery {
   }
 
   @Test  // join two SubQuery, each having select * : regular columns appear in the select , where and on clause, group by, order by.
+  @Category(UnlikelyTest.class)
   public void testSelStarSubQJoin() throws Exception {
     // select clause, where.
     test(" select n.n_nationkey, n.n_name, n.n_regionkey, r.r_name \n" +

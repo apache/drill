@@ -56,6 +56,7 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
     private List<Integer> bloomFilterSizeInBytes;
     private List<String> probeFields;
     private int hjOpId;
+    private long rfIdentifier;
 
     public RuntimeFilterBDef()
     {
@@ -155,6 +156,19 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
         return this;
     }
 
+    // rfIdentifier
+
+    public long getRfIdentifier()
+    {
+        return rfIdentifier;
+    }
+
+    public RuntimeFilterBDef setRfIdentifier(long rfIdentifier)
+    {
+        this.rfIdentifier = rfIdentifier;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -235,6 +249,9 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
                 case 7:
                     message.hjOpId = input.readInt32();
                     break;
+                case 8:
+                    message.rfIdentifier = input.readInt64();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -277,6 +294,9 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
 
         if(message.hjOpId != 0)
             output.writeInt32(7, message.hjOpId, false);
+
+        if(message.rfIdentifier != 0)
+            output.writeInt64(8, message.rfIdentifier, false);
     }
 
     public String getFieldName(int number)
@@ -290,6 +310,7 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
             case 5: return "bloomFilterSizeInBytes";
             case 6: return "probeFields";
             case 7: return "hjOpId";
+            case 8: return "rfIdentifier";
             default: return null;
         }
     }
@@ -310,6 +331,7 @@ public final class RuntimeFilterBDef implements Externalizable, Message<RuntimeF
         __fieldMap.put("bloomFilterSizeInBytes", 5);
         __fieldMap.put("probeFields", 6);
         __fieldMap.put("hjOpId", 7);
+        __fieldMap.put("rfIdentifier", 8);
     }
     
 }

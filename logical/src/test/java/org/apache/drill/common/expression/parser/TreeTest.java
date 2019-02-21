@@ -17,103 +17,113 @@
  */
 package org.apache.drill.common.expression.parser;
 
-import java.io.IOException;
-
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
+import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.parser.ExprParser.parse_return;
+import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.test.DrillTest;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
 
 public class TreeTest extends DrillTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TreeTest.class);
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void escapeStringLiteral() throws Exception {
+  public void escapeStringLiteral() {
     String expr = "func(`identifier`, '\\\\d+', 0, 'fjds')";
-    testExpressionParsing(expr);
+    testExpressionParsing(expr, expr);
   }
 
   @Test
-  public void escapeQuotedIdentifier() throws Exception {
+  public void escapeQuotedIdentifier() {
     String expr = "`a\\\\b` + `c'd`";
-    testExpressionParsing(expr);
+    testExpressionParsing(expr, "add(`a\\\\b`, `c'd`)");
   }
 
   @Test
-  public void testIfWithCase() throws Exception{
-    testExpressionParsing("if ($F1) then case when (_MAP.R_NAME = 'AFRICA') then 2 else 4 end else if(4==3) then 1 else if(x==3) then 7 else (if(2==1) then 6 else 4 end) end");
+  public void testIfWithCase() {
+    testExpressionParsing("if ($F1) then case when (_MAP.R_NAME = 'AFRICA') then 2 else 4 end else if(4==3) then 1 else if(x==3) then 7 else (if(2==1) then 6 else 4 end) end",
+      "( if (equal(`x`, 3)  ) then (7 )  else ( ( if (equal(2, 1)  ) then (6 )  else (4 )  end  )  )  end  )");
   }
 
   @Test
-  public void testAdd() throws Exception{
-    testExpressionParsing("2+2");
+  public void testAdd() {
+    testExpressionParsing("2+2", "add(2, 2)");
   }
 
   @Test
-  public void testIf() throws Exception{
-    testExpressionParsing("if ('blue.red') then 'orange' else if (false) then 1 else 0 end");
+  public void testIf() {
+    testExpressionParsing("if ('blue.red') then 'orange' else if (false) then 1 else 0 end",
+      "( if (false ) then (1 )  else (0 )  end  )");
   }
 
   @Test
-  public void testQuotedIdentifier() throws Exception{
-    testExpressionParsing("`hello friend`.`goodbye`");
+  public void testQuotedIdentifier() {
+    String expr = "`hello friend`.`goodbye`";
+    testExpressionParsing(expr, expr);
   }
 
   @Test
-  public void testSpecialQuoted() throws Exception{
-    testExpressionParsing("`*0` + `*` ");
+  public void testSpecialQuoted() {
+    testExpressionParsing("`*0` + `*` ", "add(`*0`, `*`)");
   }
 
   @Test
-  public void testQuotedIdentifier2() throws Exception{
-    testExpressionParsing("`hello friend`.goodbye");
+  public void testQuotedIdentifier2() {
+    testExpressionParsing("`hello friend`.goodbye", "`hello friend`.`goodbye`");
   }
 
   @Test
-  public void testComplexIdentifier() throws Exception{
-    testExpressionParsing("goodbye[4].`hello`");
+  public void testComplexIdentifier() {
+    testExpressionParsing("goodbye[4].`hello`", "`goodbye`[4].`hello`");
   }
 
   @Test // DRILL-2606
-  public void testCastToBooleanExpr() throws Exception{
-    testExpressionParsing("cast( (cast( (`bool_col` ) as VARCHAR(100) ) ) as BIT )");
+  public void testCastToBooleanExpr() {
+    String expr = "cast( (cast( (`bool_col` ) as VARCHAR(100) ) ) as BIT )";
+    testExpressionParsing(expr, expr);
   }
 
-  private LogicalExpression parseExpression(String expr) throws RecognitionException, IOException{
+  @Test
+  public void testComments() {
+    testExpressionParsing("cast /* block comment */ ( // single comment\n" +
+      "1 as int)", "cast( (1 ) as INT )");
+  }
 
-    ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-    CommonTokenStream tokens = new CommonTokenStream(lexer);
+  @Test
+  public void testParsingException() {
+    thrown.expect(ExpressionParsingException.class);
+    thrown.expectMessage(containsString("mismatched input 'i' expecting"));
+    testExpressionParsing("cast(1 as i)", "");
+  }
 
-    ExprParser parser = new ExprParser(tokens);
-    parse_return ret = parser.parse();
+  @Test
+  public void testFunctionCallWithoutParams() {
+    String expr = "now()";
+    testExpressionParsing(expr, expr);
+  }
 
-    return ret.e;
+  /**
+   * Attempt to parse an expression.  Once parsed, convert it to a string and then parse it again to make sure serialization works.
+   */
+  private void testExpressionParsing(String expr, String expected) {
+    LogicalExpression e1 = LogicalExpressionParser.parse(expr);
+    String newStringExpr = serializeExpression(e1);
+    assertEquals(expected, newStringExpr.trim());
+    LogicalExpressionParser.parse(newStringExpr);
   }
 
   private String serializeExpression(LogicalExpression expr){
-
     ExpressionStringBuilder b = new ExpressionStringBuilder();
     StringBuilder sb = new StringBuilder();
     expr.accept(b, sb);
     return sb.toString();
   }
 
-  /**
-   * Attempt to parse an expression.  Once parsed, convert it to a string and then parse it again to make sure serialization works.
-   * @param expr
-   * @throws RecognitionException
-   * @throws IOException
-   */
-  private void testExpressionParsing(String expr) throws RecognitionException, IOException{
-    logger.debug("-----" + expr + "-----");
-    LogicalExpression e = parseExpression(expr);
-
-    String newStringExpr = serializeExpression(e);
-    logger.debug(newStringExpr);
-    LogicalExpression e2 = parseExpression(newStringExpr);
-  }
 }

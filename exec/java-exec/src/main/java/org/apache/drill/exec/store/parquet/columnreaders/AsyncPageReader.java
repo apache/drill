@@ -417,6 +417,13 @@ class AsyncPageReader extends PageReader {
       if (totalValuesRead >= totalValuesCount) {
         try {
           queue.put(ReadStatus.EMPTY);
+          // Some InputStreams (like S3ObjectInputStream) should be closed
+          // as soon as possible to make the connection reusable.
+          try {
+            parent.inputStream.close();
+          } catch (IOException e) {
+            logger.trace(String.format("[%s]: Failure while closing InputStream", name), e);
+          }
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
           // Do nothing.

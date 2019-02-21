@@ -26,7 +26,6 @@ import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.logical.PlanProperties.PlanType;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
-import org.apache.calcite.rel.RelNode;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 

@@ -26,10 +26,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
@@ -55,8 +57,8 @@ import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for readers and writers for union and list types.
@@ -68,6 +70,7 @@ import org.junit.Test;
  * and other operators. Some assembly required for future use.)
  */
 
+@Category(RowSetTests.class)
 public class TestVariantAccessors extends SubOperatorTest {
 
   @Test
@@ -84,7 +87,7 @@ public class TestVariantAccessors extends SubOperatorTest {
             .resumeUnion()
           .addList()
             .addType(MinorType.VARCHAR)
-            .buildNested()
+            .resumeUnion()
           .resumeSchema()
         .buildSchema();
 
@@ -216,7 +219,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertFalse(vr.isNull());
-    assertTrue(vr.dataType() == MinorType.INT);
+    assertSame(vr.dataType(), MinorType.INT);
     assertSame(intReader, vr.scalar());
     assertNotNull(vr.member());
     assertSame(vr.scalar(), vr.member().scalar());
@@ -229,7 +232,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertFalse(vr.isNull());
-    assertTrue(vr.dataType() == MinorType.VARCHAR);
+    assertSame(vr.dataType(), MinorType.VARCHAR);
     assertSame(strReader, vr.scalar());
     assertFalse(strReader.isNull());
     assertEquals("fred", strReader.getString());
@@ -250,7 +253,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertFalse(vr.isNull());
-    assertTrue(vr.dataType() == MinorType.FLOAT8);
+    assertSame(vr.dataType(), MinorType.FLOAT8);
     assertSame(floatReader, vr.scalar());
     assertFalse(floatReader.isNull());
     assertEquals(123.45, vr.scalar().getDouble(), 0.001);
@@ -261,7 +264,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertFalse(vr.isNull());
-    assertTrue(vr.dataType() == MinorType.INT);
+    assertSame(vr.dataType(), MinorType.INT);
     assertTrue(intReader.isNull());
 
     // Int 20
@@ -321,7 +324,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
           .addList()
             .addType(MinorType.FLOAT8)
-            .buildNested()
+            .resumeUnion()
           .resumeSchema()
         .buildSchema();
 
@@ -1054,7 +1057,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertFalse(vr.isNull());
-    assertTrue(vr.dataType() == MinorType.INT);
+    assertSame(vr.dataType(), MinorType.INT);
     assertSame(vr.scalar(MinorType.INT), vr.scalar());
     assertNotNull(vr.member());
     assertSame(vr.scalar(), vr.member().scalar());
@@ -1062,7 +1065,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertFalse(vr.isNull());
-    assertTrue(vr.dataType() == MinorType.VARCHAR);
+    assertSame(vr.dataType(), MinorType.VARCHAR);
     assertSame(vr.scalar(MinorType.VARCHAR), vr.scalar());
     assertEquals("fred", vr.scalar().getString());
 
@@ -1073,7 +1076,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertFalse(vr.isNull());
-    assertTrue(vr.dataType() == MinorType.FLOAT8);
+    assertSame(vr.dataType(), MinorType.FLOAT8);
     assertSame(vr.scalar(MinorType.FLOAT8), vr.scalar());
     assertEquals(123.45, vr.scalar().getDouble(), 0.001);
 
@@ -1093,7 +1096,7 @@ public class TestVariantAccessors extends SubOperatorTest {
           .addType(MinorType.INT)
           .addList()
             .addType(MinorType.VARCHAR)
-            .buildNested()
+            .resumeUnion()
           .resumeSchema()
         .buildSchema();
 

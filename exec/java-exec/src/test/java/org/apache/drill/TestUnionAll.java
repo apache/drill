@@ -27,10 +27,10 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -213,6 +213,7 @@ public class TestUnionAll extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testUnionAllViewExpandableStar() throws Exception {
     try {
       test("use dfs.tmp");
@@ -661,6 +662,7 @@ public class TestUnionAll extends BaseTestQuery {
   }
 
   @Test // see DRILL-2746
+  @Category(UnlikelyTest.class)
   public void testInListOnUnionAll() throws Exception {
     String query = "select n_nationkey \n" +
         "from (select n1.n_nationkey from cp.`tpch/nation.parquet` n1 inner join cp.`tpch/region.parquet` r1 on n1.n_regionkey = r1.r_regionkey \n" +

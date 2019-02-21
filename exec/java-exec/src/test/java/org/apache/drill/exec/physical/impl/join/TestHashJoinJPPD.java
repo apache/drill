@@ -40,9 +40,9 @@ public class TestHashJoinJPPD extends PhysicalOpUnitTestBase {
   public void testBroadcastHashJoin1Cond() {
     List<BloomFilterDef> bloomFilterDefs = new ArrayList<>();
     int numBytes = BloomFilter.optimalNumOfBytes(2600, 0.01);
-    BloomFilterDef bloomFilterDef = new BloomFilterDef(numBytes, true, "lft");
+    BloomFilterDef bloomFilterDef = new BloomFilterDef(numBytes, true, "lft", "rgt");
     bloomFilterDefs.add(bloomFilterDef);
-    RuntimeFilterDef runtimeFilterDef = new RuntimeFilterDef(true, false, bloomFilterDefs, false );
+    RuntimeFilterDef runtimeFilterDef = new RuntimeFilterDef(true, false, bloomFilterDefs, false, -1);
     HashJoinPOP joinConf = new HashJoinPOP(null, null,
       Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.INNER, runtimeFilterDef);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 4);
@@ -71,11 +71,11 @@ public class TestHashJoinJPPD extends PhysicalOpUnitTestBase {
   public void testBroadcastHashJoin2Cond() {
     List<BloomFilterDef> bloomFilterDefs = new ArrayList<>();
     int numBytes = BloomFilter.optimalNumOfBytes(2600, 0.01);
-    BloomFilterDef bloomFilterDef = new BloomFilterDef(numBytes, true, "lft");
-    BloomFilterDef bloomFilterDef1 = new BloomFilterDef(numBytes, true, "a");
+    BloomFilterDef bloomFilterDef = new BloomFilterDef(numBytes, true, "lft", "rgt");
+    BloomFilterDef bloomFilterDef1 = new BloomFilterDef(numBytes, true, "a", "b");
     bloomFilterDefs.add(bloomFilterDef);
     bloomFilterDefs.add(bloomFilterDef1);
-    RuntimeFilterDef runtimeFilterDef = new RuntimeFilterDef(true, false, bloomFilterDefs, false );
+    RuntimeFilterDef runtimeFilterDef = new RuntimeFilterDef(true, false, bloomFilterDefs, false, -1);
     HashJoinPOP joinConf = new HashJoinPOP(null, null,
       Lists.newArrayList(joinCond("lft", "EQUALS", "rgt"), joinCond("a", "EQUALS", "b")), JoinRelType.INNER, runtimeFilterDef);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 4);

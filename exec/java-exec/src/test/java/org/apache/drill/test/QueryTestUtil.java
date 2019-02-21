@@ -17,6 +17,9 @@
  */
 package org.apache.drill.test;
 
+import java.io.IOException;
+import java.net.BindException;
+import java.net.ServerSocket;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -41,11 +44,15 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.util.VectorUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utilities useful for tests that issue SQL queries.
  */
 public class QueryTestUtil {
+  private static final Logger logger = LoggerFactory.getLogger(QueryTestUtil.class);
+
   /**
    * Constructor. All methods are static.
    */
@@ -286,4 +293,26 @@ public class QueryTestUtil {
     drillbitContext.getCompiler().flushCache();
   }
 
+  /**
+   * Checks that port with specified number is free and returns it.
+   * Otherwise, increases port number and checks until free port is found
+   * or the number of attempts is reached specified numberOfAttempts
+   *
+   * @param portNumber     initial port number
+   * @param numberOfAttempts max number of attempts to find port with greater number
+   * @return free port number
+   * @throws BindException if free port was not found and all attempts were used.
+   */
+  public static int getFreePortNumber(int portNumber, int numberOfAttempts) throws IOException {
+    for (int i = portNumber; i <= portNumber + numberOfAttempts; i++) {
+      try (ServerSocket socket = new ServerSocket(i)) {
+        return socket.getLocalPort();
+      } catch (BindException e) {
+        logger.warn("Port {} is already in use.", i);
+      }
+    }
+
+    throw new BindException(String.format("Free port could not be found in the range [%s-%s].\n" +
+        "Please release any of used ports in this range.", portNumber, portNumber + numberOfAttempts));
+  }
 }

@@ -18,6 +18,9 @@
 package org.apache.drill.exec.vector.accessor.writer;
 
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.WriterPosition;
+import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
  * Internal interface used to control the behavior
@@ -37,7 +40,7 @@ import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
  * calls, can change.
  */
 
-public interface WriterEvents {
+public interface WriterEvents extends WriterPosition {
 
   /**
    * Tracks the write state of a tuple or variant to allow applying the correct
@@ -72,6 +75,40 @@ public interface WriterEvents {
   }
 
   /**
+   * Listener (callback) for vector overflow events. To be optionally
+   * implemented and bound by the client code of the writer. If no
+   * listener is bound, and a vector overflows, then an exception is
+   * thrown.
+   */
+
+  interface ColumnWriterListener {
+
+    /**
+     * Alert the listener that a vector has overflowed. Upon return,
+     * all writers must have a new set of buffers available, ready
+     * to accept the in-flight value that triggered the overflow.
+     *
+     * @param writer the writer that triggered the overflow
+     */
+
+    void overflowed(ScalarWriter writer);
+
+    /**
+     * A writer wants to expand its vector. Allows the listener to
+     * either allow the growth, or trigger and overflow to limit
+     * batch size.
+     *
+     * @param writer the writer that wishes to grow its vector
+     * @param delta the amount by which the vector is to grow
+     * @return true if the vector can be grown, false if the writer
+     * should instead trigger an overflow by calling
+     * <tt>overflowed()</tt>
+     */
+
+    boolean canExpand(ScalarWriter writer, int delta);
+  }
+
+  /**
    * Bind the writer to a writer index.
    *
    * @param index the writer index (top level or nested for
@@ -79,6 +116,19 @@ public interface WriterEvents {
    */
 
   void bindIndex(ColumnWriterIndex index);
+
+  /**
+   * Bind a listener to the underlying vector writer. This listener reports on vector
+   * events (overflow, growth), and so is called only when the writer is backed by
+   * a vector. The listener is ignored (and never called) for dummy (non-projected)
+   * columns. If the column is compound (such as for a nullable or repeated column,
+   * or for a map), then the writer is bound to the individual components.
+   *
+   * @param listener
+   *          the vector event listener to bind
+   */
+
+  void bindListener(ColumnWriterListener listener);
 
   /**
    * Start a write (batch) operation. Performs any vector initialization
@@ -143,4 +193,6 @@ public interface WriterEvents {
    */
 
   void postRollover();
+
+  abstract void dump(HierarchicalFormatter format);
 }

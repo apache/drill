@@ -91,7 +91,7 @@ public class TestEncodedFieldPaths extends BaseJsonTest {
 
     // plan test
     final String[] expectedPlan = {"JsonTableGroupScan.*indexName=encoded_fields_userdata_index.*" + // scan on index
-                                   "columns=\\[`_id`, `age`\\]", 
+                                   "columns=\\[`_id`, `age`\\]",
                                    "RestrictedJsonTableGroupScan.*" + // restricted scan on the table with encoded name
                                    "columns=\\[`age`, `\\$\\$ENC00L5UWIADDN5SGK4Y`, `\\$\\$document`, `_id`\\]",
                                    "RowKeyJoin"};                             // join on row_key

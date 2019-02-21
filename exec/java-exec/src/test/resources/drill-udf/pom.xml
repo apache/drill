@@ -28,6 +28,8 @@
   <version>1.0</version>
 
   <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
     <jar.finalName>${project.name}</jar.finalName>
     <custom.buildDirectory>${project.basedir}/target</custom.buildDirectory>
     <drill.version>1.13.0</drill.version>
@@ -58,7 +60,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
+        <version>3.8.0</version>
         <configuration>
           <includes>
             <include>${include.files}</include>
@@ -68,7 +70,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>2.4</version>
+        <version>3.0.1</version>
         <configuration>
           <finalName>${jar.finalName}</finalName>
           <includes>

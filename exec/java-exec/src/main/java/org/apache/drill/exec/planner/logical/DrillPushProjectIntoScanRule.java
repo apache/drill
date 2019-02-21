@@ -25,10 +25,16 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.planner.common.DrillProjectRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil.ProjectPushInfo;
+import org.apache.drill.exec.planner.common.DrillScanRelBase;
+import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.ProjectPrel;
+import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.util.Utilities;
 
 import java.io.IOException;
@@ -43,12 +49,45 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
   public static final RelOptRule INSTANCE =
       new DrillPushProjectIntoScanRule(LogicalProject.class,
           EnumerableTableScan.class,
-          "DrillPushProjIntoEnumerableScan");
+          "DrillPushProjIntoEnumerableScan") {
+
+        @Override
+        protected boolean skipScanConversion(RelDataType projectRelDataType, TableScan scan) {
+          // do not allow skipping conversion of EnumerableTableScan to DrillScanRel if rule is applicable
+          return false;
+        }
+      };
 
   public static final RelOptRule DRILL_LOGICAL_INSTANCE =
       new DrillPushProjectIntoScanRule(LogicalProject.class,
           DrillScanRel.class,
           "DrillPushProjIntoDrillRelScan");
+
+  public static final RelOptRule DRILL_PHYSICAL_INSTANCE =
+      new DrillPushProjectIntoScanRule(ProjectPrel.class,
+          ScanPrel.class,
+          "DrillPushProjIntoScanPrel") {
+
+        @Override
+        protected ScanPrel createScan(TableScan scan, ProjectPushInfo projectPushInfo) {
+          ScanPrel drillScan = (ScanPrel) scan;
+
+          return new ScanPrel(drillScan.getCluster(),
+              drillScan.getTraitSet().plus(Prel.DRILL_PHYSICAL),
+              drillScan.getGroupScan().clone(projectPushInfo.getFields()),
+              projectPushInfo.createNewRowType(drillScan.getCluster().getTypeFactory()),
+              drillScan.getTable());
+        }
+
+        @Override
+        protected ProjectPrel createProject(Project project, TableScan newScan, List<RexNode> newProjects) {
+          return new ProjectPrel(project.getCluster(),
+              project.getTraitSet().plus(Prel.DRILL_PHYSICAL),
+              newScan,
+              newProjects,
+              project.getRowType());
+        }
+      };
 
   private DrillPushProjectIntoScanRule(Class<? extends Project> projectClass, Class<? extends TableScan> scanClass, String description) {
     super(RelOptHelper.some(projectClass, RelOptHelper.any(scanClass)), description);
@@ -56,38 +95,30 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final Project project = call.rel(0);
-    final TableScan scan = call.rel(1);
+    Project project = call.rel(0);
+    TableScan scan = call.rel(1);
 
     try {
-
       if (scan.getRowType().getFieldList().isEmpty()) {
         return;
       }
 
       ProjectPushInfo projectPushInfo = DrillRelOptUtil.getFieldsInformation(scan.getRowType(), project.getProjects());
-      if (!canPushProjectIntoScan(scan.getTable(), projectPushInfo)) {
+      if (!canPushProjectIntoScan(scan.getTable(), projectPushInfo)
+          || skipScanConversion(projectPushInfo.createNewRowType(project.getCluster().getTypeFactory()), scan)) {
+        // project above scan may be removed in ProjectRemoveRule for the case when it is trivial
         return;
       }
 
-      final DrillScanRel newScan =
-          new DrillScanRel(scan.getCluster(),
-              scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-              scan.getTable(),
-              projectPushInfo.createNewRowType(project.getInput().getCluster().getTypeFactory()),
-              projectPushInfo.getFields());
+      DrillScanRelBase newScan = createScan(scan, projectPushInfo);
 
       List<RexNode> newProjects = new ArrayList<>();
       for (RexNode n : project.getChildExps()) {
         newProjects.add(n.accept(projectPushInfo.getInputReWriter()));
       }
 
-      final DrillProjectRel newProject =
-          new DrillProjectRel(project.getCluster(),
-              project.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-              newScan,
-              newProjects,
-              project.getRowType());
+      DrillProjectRelBase newProject =
+          createProject(project, newScan, newProjects);
 
       if (ProjectRemoveRule.isTrivial(newProject)) {
         call.transformTo(newScan);
@@ -97,6 +128,52 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
     } catch (IOException e) {
       throw new DrillRuntimeException(e);
     }
+  }
+
+  /**
+   * Checks whether conversion of input {@code TableScan} instance to target
+   * {@code TableScan} may be omitted.
+   *
+   * @param projectRelDataType project rel data type
+   * @param scan               TableScan to be checked
+   * @return true if specified {@code TableScan} has the same row type as specified.
+   */
+  protected boolean skipScanConversion(RelDataType projectRelDataType, TableScan scan) {
+    return projectRelDataType.equals(scan.getRowType());
+  }
+
+  /**
+   * Creates new {@code DrillProjectRelBase} instance with specified {@code TableScan newScan} child
+   * and {@code List<RexNode> newProjects} expressions using specified {@code Project project} as prototype.
+   *
+   * @param project     the prototype of resulting project
+   * @param newScan     new project child
+   * @param newProjects new project expressions
+   * @return new project instance
+   */
+  protected DrillProjectRelBase createProject(Project project, TableScan newScan, List<RexNode> newProjects) {
+    return new DrillProjectRel(project.getCluster(),
+        project.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+        newScan,
+        newProjects,
+        project.getRowType());
+  }
+
+  /**
+   * Creates new {@code DrillScanRelBase} instance with row type and fields list
+   * obtained from specified {@code ProjectPushInfo projectPushInfo}
+   * using specified {@code TableScan scan} as prototype.
+   *
+   * @param scan            the prototype of resulting scan
+   * @param projectPushInfo the source of row type and fields list
+   * @return new scan instance
+   */
+  protected DrillScanRelBase createScan(TableScan scan, ProjectPushInfo projectPushInfo) {
+    return new DrillScanRel(scan.getCluster(),
+        scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+        scan.getTable(),
+        projectPushInfo.createNewRowType(scan.getCluster().getTypeFactory()),
+        projectPushInfo.getFields());
   }
 
   /**

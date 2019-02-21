@@ -29,6 +29,7 @@ import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.accessor.WriterPosition;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriter;
+import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
 
 /**
  * Base class for a single vector. Handles the bulk of work for that vector.
@@ -41,7 +42,7 @@ public abstract class SingleVectorState implements VectorState {
 
   public abstract static class SimpleVectorState extends SingleVectorState {
 
-    public SimpleVectorState(WriterPosition writer,
+    public SimpleVectorState(WriterEvents writer,
         ValueVector mainVector) {
       super(writer, mainVector);
     }
@@ -74,7 +75,7 @@ public abstract class SingleVectorState implements VectorState {
 
   public static class FixedWidthVectorState extends SimpleVectorState {
 
-     public FixedWidthVectorState(WriterPosition writer, ValueVector mainVector) {
+     public FixedWidthVectorState(WriterEvents writer, ValueVector mainVector) {
       super(writer, mainVector);
     }
 
@@ -82,6 +83,23 @@ public abstract class SingleVectorState implements VectorState {
     public int allocateVector(ValueVector vector, int cardinality) {
       ((FixedWidthVector) vector).allocateNew(cardinality);
       return vector.getAllocatedSize();
+    }
+  }
+
+  public static class IsSetVectorState extends FixedWidthVectorState {
+
+    public IsSetVectorState(WriterEvents writer, ValueVector mainVector) {
+      super(writer, mainVector);
+    }
+
+    @Override
+    public int allocateVector(ValueVector vector, int cardinality) {
+      int size = super.allocateVector(vector, cardinality);
+
+      // IsSet ("bit") vectors rely on values being initialized to zero (unset.)
+
+      ((FixedWidthVector) vector).zeroVector();
+      return size;
     }
   }
 
@@ -95,7 +113,7 @@ public abstract class SingleVectorState implements VectorState {
 
     private final ColumnMetadata schema;
 
-    public VariableWidthVectorState(ColumnMetadata schema, WriterPosition writer, ValueVector mainVector) {
+    public VariableWidthVectorState(ColumnMetadata schema, WriterEvents writer, ValueVector mainVector) {
       super(writer, mainVector);
       this.schema = schema;
     }
@@ -130,13 +148,13 @@ public abstract class SingleVectorState implements VectorState {
 
     private WriterPosition childWriter;
 
-    public OffsetVectorState(WriterPosition writer, ValueVector mainVector,
+    public OffsetVectorState(WriterEvents writer, ValueVector mainVector,
         WriterPosition childWriter) {
       super(writer, mainVector);
       this.childWriter = childWriter;
     }
 
-    public void setChildWriter(WriterPosition childWriter) {
+    public void setChildWriter(WriterEvents childWriter) {
       this.childWriter = childWriter;
     }
 
@@ -207,11 +225,11 @@ public abstract class SingleVectorState implements VectorState {
     }
   }
 
-  protected final WriterPosition writer;
+  protected final WriterEvents writer;
   protected final ValueVector mainVector;
   protected ValueVector backupVector;
 
-  public SingleVectorState(WriterPosition writer, ValueVector mainVector) {
+  public SingleVectorState(WriterEvents writer, ValueVector mainVector) {
     this.writer = writer;
     this.mainVector = mainVector;
   }
@@ -342,7 +360,7 @@ public abstract class SingleVectorState implements VectorState {
   @Override
   public boolean isProjected() { return true; }
 
-  public static SimpleVectorState vectorState(ColumnMetadata schema, WriterPosition writer, ValueVector mainVector) {
+  public static SimpleVectorState vectorState(ColumnMetadata schema, WriterEvents writer, ValueVector mainVector) {
     if (schema.isVariableWidth()) {
       return new VariableWidthVectorState(schema, writer, mainVector);
     } else {

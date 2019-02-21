@@ -23,7 +23,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.15.0-SNAPSHOT</version>
+    <version>1.16.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-kudu-storage</artifactId>
@@ -112,7 +112,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.8</version>
         <executions>
           <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put 
             it under ${project.build.directory}/codegen/data where all freemarker data 

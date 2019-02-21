@@ -119,7 +119,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
     String query = String.format("select * from %s limit 1", DATAFILE);
     String testName = "ctas_nested_datetime";
     try {
-      test("alter session set store.format = 'json'");
+      test("alter session set `store.format` = 'json'");
       test("alter session set store.json.extended_types = false");
       test("use dfs.tmp");
       test("create table " + testName + "_json as " + query);
@@ -129,7 +129,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
       testBuilder().sqlQuery(readQuery).ordered().jsonBaselineFile("baseline_nested_datetime.json").build().run();
     } finally {
       test("drop table " + testName + "_json");
-      test("alter session reset store.format ");
+      test("alter session reset `store.format` ");
       test("alter session reset store.json.extended_types ");
     }
   }
@@ -142,7 +142,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
     String query = String.format("select * from %s limit 1", DATAFILE);
     String testName = "ctas_nested_datetime_extended";
     try {
-      test("alter session set store.format = 'json'");
+      test("alter session set `store.format` = 'json'");
       test("alter session set store.json.extended_types = true");
       test("use dfs.tmp");
       test("create table " + testName + "_json as " + query);
@@ -152,7 +152,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
       testBuilder().sqlQuery(readQuery).ordered().jsonBaselineFile("datetime.parquet").build().run();
     } finally {
       test("drop table " + testName + "_json");
-      test("alter session reset store.format ");
+      test("alter session reset `store.format` ");
       test("alter session reset store.json.extended_types ");
     }
   }
@@ -165,7 +165,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
     String query = String.format("select * from %s limit 1", DATAFILE);
     String testName = "ctas_nested_datetime_extended";
     try {
-      test("alter session set store.format = 'parquet'");
+      test("alter session set `store.format` = 'parquet'");
       test("use dfs.tmp");
       test("create table " + testName + "_parquet as " + query);
 
@@ -174,7 +174,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
       testBuilder().sqlQuery(readQuery).ordered().jsonBaselineFile("datetime.parquet").build().run();
     } finally {
       test("drop table " + testName + "_parquet");
-      test("alter session reset store.format ");
+      test("alter session reset `store.format` ");
     }
   }
 

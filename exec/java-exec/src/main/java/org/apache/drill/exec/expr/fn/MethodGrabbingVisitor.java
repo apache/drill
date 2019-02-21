@@ -21,10 +21,13 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.Java;
 import org.codehaus.janino.Java.AbstractClassDeclaration;
 import org.codehaus.janino.Java.MethodDeclarator;
+import org.codehaus.janino.Unparser;
 import org.codehaus.janino.util.AbstractTraverser;
+import org.codehaus.janino.util.DeepCopier;
 
 public class MethodGrabbingVisitor {
 
@@ -64,9 +67,59 @@ public class MethodGrabbingVisitor {
     @Override
     public void traverseMethodDeclarator(MethodDeclarator methodDeclarator) {
       if (captureMethods) {
+        // Generates a "labeled statement".
+        // This code takes code from the method body, wraps it into the labeled statement
+        // and replaces all the return statements by break command with label.
+        //
+        // For example, the following method
+        //    public void foo(int a) {
+        //      if (a < 0) {
+        //        return;
+        //      } else {
+        //        do something;
+        //      }
+        //    }
+        //
+        // will be converted to
+        //    MethodClassName_foo: {
+        //      if (a < 0) {
+        //        break MethodClassName_foo;
+        //      } else {
+        //        do something;
+        //      }
+        //    }
+
+        // Constructs a name of the resulting label
+        // using methods class name and method name itself.
+        String[] fQCN = methodDeclarator.getDeclaringType().getClassName().split("\\.");
+        String returnLabel = fQCN[fQCN.length - 1] + "_" + methodDeclarator.name;
+        Java.Block methodBodyBlock = new Java.Block(methodDeclarator.getLocation());
+
+        // DeepCopier implementation which returns break statement with label
+        // instead if return statement.
+        DeepCopier returnStatementReplacer = new DeepCopier() {
+          @Override
+          public Java.BlockStatement copyReturnStatement(Java.ReturnStatement subject) {
+            return new Java.BreakStatement(subject.getLocation(), returnLabel);
+          }
+        };
+        try {
+          // replaces return statements and stores the result into methodBodyBlock
+          methodBodyBlock.addStatements(
+              returnStatementReplacer.copyBlockStatements(methodDeclarator.optionalStatements));
+        } catch (CompileException e) {
+          throw new RuntimeException(e);
+        }
+
+        // wraps method code with replaced return statements into label statement.
+        Java.LabeledStatement labeledStatement =
+            new Java.LabeledStatement(methodDeclarator.getLocation(), returnLabel, methodBodyBlock);
+
+        // Unparse the labeled statement.
         StringWriter writer = new StringWriter();
-        ModifiedUnparser unparser = new ModifiedUnparser(writer);
-        unparser.visitMethodDeclarator(methodDeclarator);
+        Unparser unparser = new Unparser(writer);
+        // unparses labeledStatement and stores unparsed code into writer
+        unparser.unparseBlockStatement(labeledStatement);
         unparser.close();
         writer.flush();
         methods.put(methodDeclarator.name, writer.getBuffer().toString());

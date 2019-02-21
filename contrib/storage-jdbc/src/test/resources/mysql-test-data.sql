@@ -1,14 +1,10 @@
-
-set global time_zone = "+00:00";
-
 use drill_mysql_test;
 
-create table x (
+create table caseSensitiveTable (
   a   BLOB
 );
 
-insert into x (a) values ('this is a test');
-
+insert into caseSensitiveTable (a) values ('this is a test');
 
 create table person (
   person_id       INT NOT NULL AUTO_INCREMENT PRIMARY KEY,

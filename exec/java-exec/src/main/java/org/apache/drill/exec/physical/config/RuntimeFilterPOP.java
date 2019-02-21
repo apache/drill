@@ -31,9 +31,12 @@ public class RuntimeFilterPOP extends AbstractSingle {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RuntimeFilterPOP.class);
 
+  private long identifier;
+
   @JsonCreator
-  public RuntimeFilterPOP(@JsonProperty("child") PhysicalOperator child) {
+  public RuntimeFilterPOP(@JsonProperty("child") PhysicalOperator child, @JsonProperty("identifier")long identifier) {
     super(child);
+    this.identifier = identifier;
   }
 
   @Override
@@ -43,7 +46,7 @@ public class RuntimeFilterPOP extends AbstractSingle {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new RuntimeFilterPOP(child);
+    return new RuntimeFilterPOP(child, identifier);
   }
 
   @Override
@@ -54,5 +57,14 @@ public class RuntimeFilterPOP extends AbstractSingle {
   @Override
   public int getOperatorType() {
     return CoreOperatorType.RUNTIME_FILTER_VALUE;
+  }
+
+
+  public long getIdentifier() {
+    return identifier;
+  }
+
+  public void setIdentifier(long identifier) {
+    this.identifier = identifier;
   }
 }

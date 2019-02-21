@@ -35,6 +35,7 @@ import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.joda.time.LocalTime;
 import org.ojai.Value;
 import org.ojai.types.ODate;
@@ -42,7 +43,6 @@ import org.ojai.types.OTime;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
-import com.mapr.db.rowcol.KeyValueBuilder;
 import com.mapr.db.util.SqlHelper;
 
 import org.ojai.types.OTimestamp;
@@ -51,8 +51,8 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
 
   private String functionName;
   private Boolean success;
-  private Value value;
-  private SchemaPath path;
+  protected Value value;
+  protected SchemaPath path;
 
   public CompareFunctionsProcessor(String functionName) {
     this.functionName = functionName;
@@ -69,13 +69,45 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     return false;
   }
 
+  /**
+   * Converts specified function call to be pushed into maprDB JSON scan.
+   *
+   * @param call function call to be pushed
+   * @return CompareFunctionsProcessor instance which contains converted function call
+   */
   public static CompareFunctionsProcessor process(FunctionCall call) {
+    return processWithEvaluator(call, new CompareFunctionsProcessor(call.getName()));
+  }
+
+  /**
+   * Converts specified function call to be pushed into maprDB JSON scan.
+   * For the case when timestamp value is used, it is converted to UTC timezone
+   * before converting to {@link OTimestamp} instance.
+   *
+   * @param call function call to be pushed
+   * @return CompareFunctionsProcessor instance which contains converted function call
+   */
+  public static CompareFunctionsProcessor processWithTimeZoneOffset(FunctionCall call) {
+    CompareFunctionsProcessor processor = new CompareFunctionsProcessor(call.getName()) {
+      @Override
+      protected boolean visitTimestampExpr(SchemaPath path, TimeStampExpression valueArg) {
+        // converts timestamp value from local time zone to UTC since the record reader
+        // reads the timestamp in local timezone if the readTimestampWithZoneOffset flag is enabled
+        long timeStamp = valueArg.getTimeStamp() - DateUtility.TIMEZONE_OFFSET_MILLIS;
+        this.value = KeyValueBuilder.initFrom(new OTimestamp(timeStamp));
+        this.path = path;
+        return true;
+      }
+    };
+    return processWithEvaluator(call, processor);
+  }
+
+  private static CompareFunctionsProcessor processWithEvaluator(FunctionCall call, CompareFunctionsProcessor evaluator) {
     String functionName = call.getName();
     LogicalExpression nameArg = call.args.get(0);
-    LogicalExpression valueArg = call.args.size() >= 2? call.args.get(1) : null;
-    CompareFunctionsProcessor evaluator = new CompareFunctionsProcessor(functionName);
+    LogicalExpression valueArg = call.args.size() >= 2 ? call.args.get(1) : null;
 
-    //if (valueArg != null) {
+    if (valueArg != null) {
       if (VALUE_EXPRESSION_CLASSES.contains(nameArg.getClass())) {
         LogicalExpression swapArg = valueArg;
         valueArg = nameArg;
@@ -83,7 +115,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         evaluator.functionName = COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(functionName);
       }
       evaluator.success = nameArg.accept(evaluator, valueArg);
-    //}
+    }
 
     return evaluator;
   }
@@ -187,12 +219,15 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     }
 
     if (valueArg instanceof TimeStampExpression) {
-      this.value = KeyValueBuilder.initFrom(new OTimestamp(((TimeStampExpression)valueArg).getTimeStamp()));
-      this.path = path;
-      return true;
+      return visitTimestampExpr(path, (TimeStampExpression) valueArg);
     }
-
     return false;
+  }
+
+  protected boolean visitTimestampExpr(SchemaPath path, TimeStampExpression valueArg) {
+    this.value = KeyValueBuilder.initFrom(new OTimestamp(valueArg.getTimeStamp()));
+    this.path = path;
+    return true;
   }
 
   private static final ImmutableSet<Class<? extends LogicalExpression>> VALUE_EXPRESSION_CLASSES;

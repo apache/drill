@@ -17,17 +17,15 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import java.sql.SQLException;
-
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Handler;
 
-class DrillHandler implements Handler {
+public class DrillHandler implements Handler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHandler.class);
 
   @Override
-  public void onConnectionInit(AvaticaConnection c) throws SQLException {
+  public void onConnectionInit(AvaticaConnection c) {
   }
 
   @Override

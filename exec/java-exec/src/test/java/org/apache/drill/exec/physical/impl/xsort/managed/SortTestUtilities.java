@@ -32,15 +32,14 @@ import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.xsort.managed.PriorityQueueCopierWrapper.BatchMerger;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
-import org.apache.drill.test.rowSet.RowSetComparison;
-
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class SortTestUtilities {
@@ -126,8 +125,7 @@ public class SortTestUtilities {
       for (RowSet expectedSet : expected) {
         assertTrue(merger.next());
         RowSet rowSet = DirectRowSet.fromContainer(dest);
-        new RowSetComparison(expectedSet)
-              .verifyAndClearAll(rowSet);
+        RowSetUtilities.verify(expectedSet, rowSet);
       }
       assertFalse(merger.next());
     }

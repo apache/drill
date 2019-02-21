@@ -20,6 +20,7 @@ package org.apache.drill.exec.record.metadata;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -45,20 +46,20 @@ public class TupleSchema implements TupleMetadata {
   public TupleMetadata copy() {
     TupleMetadata tuple = new TupleSchema();
     for (ColumnMetadata md : this) {
-      tuple.addColumn(((AbstractColumnMetadata) md).copy());
+      tuple.addColumn(md.copy());
     }
     return tuple;
   }
 
   @Override
   public ColumnMetadata add(MaterializedField field) {
-    AbstractColumnMetadata md = MetadataUtils.fromField(field);
+    ColumnMetadata md = MetadataUtils.fromField(field);
     add(md);
     return md;
   }
 
   public ColumnMetadata addView(MaterializedField field) {
-    AbstractColumnMetadata md = MetadataUtils.fromView(field);
+    ColumnMetadata md = MetadataUtils.fromView(field);
     add(md);
     return md;
   }
@@ -70,15 +71,14 @@ public class TupleSchema implements TupleMetadata {
    * @param md the custom column metadata which must have the correct
    * index set (from {@link #size()}
    */
-
-  public void add(AbstractColumnMetadata md) {
+  public void add(ColumnMetadata md) {
     md.bind(this);
     nameSpace.add(md.name(), md);
   }
 
   @Override
   public int addColumn(ColumnMetadata column) {
-    add((AbstractColumnMetadata) column);
+    add(column);
     return size() - 1;
   }
 
@@ -145,6 +145,11 @@ public class TupleSchema implements TupleMetadata {
     return cols;
   }
 
+  @Override
+  public List<ColumnMetadata> toMetadataList() {
+    return new ArrayList<>(nameSpace.entries());
+  }
+
   public BatchSchema toBatchSchema(SelectionVectorMode svMode) {
     return new BatchSchema(svMode, toFieldList());
   }
@@ -178,19 +183,24 @@ public class TupleSchema implements TupleMetadata {
   public boolean isRoot() { return parentMap == null; }
 
   @Override
+  public String schemaString() {
+    return nameSpace.entries().stream()
+      .map(ColumnMetadata::columnString)
+      .collect(Collectors.joining(", "));
+  }
+
+  @Override
   public String toString() {
-    StringBuilder buf = new StringBuilder()
+    StringBuilder builder = new StringBuilder()
         .append("[")
         .append(getClass().getSimpleName())
         .append(" ");
-    boolean first = true;
-    for (ColumnMetadata md : nameSpace) {
-      if (! first) {
-        buf.append(", ");
-      }
-      buf.append(md.toString());
-    }
-    buf.append("]");
-    return buf.toString();
+
+    builder.append(nameSpace.entries().stream()
+      .map(ColumnMetadata::toString)
+      .collect(Collectors.joining(", ")));
+
+    builder.append("]");
+    return builder.toString();
   }
 }

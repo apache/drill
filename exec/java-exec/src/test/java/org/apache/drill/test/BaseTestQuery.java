@@ -17,7 +17,6 @@
  */
 package org.apache.drill.test;
 
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DEFAULT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
 import static org.hamcrest.core.StringContains.containsString;
@@ -35,6 +34,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
@@ -194,7 +194,7 @@ public class BaseTestQuery extends ExecTest {
       StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry,
         dirTestWatcher.getRootDir(), ROOT_SCHEMA);
       StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry,
-        dirTestWatcher.getRootDir(), DEFAULT_SCHEMA);
+        dirTestWatcher.getRootDir(), SchemaFactory.DEFAULT_WS_NAME);
     }
 
     if (!properties.containsKey(DrillProperties.DRILLBIT_CONNECTION)) {

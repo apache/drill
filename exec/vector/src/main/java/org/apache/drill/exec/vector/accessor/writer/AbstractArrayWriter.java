@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.accessor.writer;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
+import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
@@ -95,7 +96,7 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
 
   public static class ArrayObjectWriter extends AbstractObjectWriter {
 
-    private AbstractArrayWriter arrayWriter;
+    private final AbstractArrayWriter arrayWriter;
 
     public ArrayObjectWriter(AbstractArrayWriter arrayWriter) {
       this.arrayWriter = arrayWriter;
@@ -103,6 +104,9 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
 
     @Override
     public ArrayWriter array() { return arrayWriter; }
+
+    @Override
+    public ColumnWriter writer() { return arrayWriter; }
 
     @Override
     public WriterEvents events() { return arrayWriter; }
@@ -266,6 +270,12 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
   }
 
   @Override
+  public void bindListener(ColumnWriterListener listener) {
+    elementObjWriter.events().bindListener(listener);
+    offsetsWriter.bindListener(listener);
+  }
+
+  @Override
   public ObjectType type() { return ObjectType.ARRAY; }
 
   @Override
@@ -342,6 +352,7 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
 
   public OffsetVectorWriter offsetWriter() { return offsetsWriter; }
 
+  @Override
   public void dump(HierarchicalFormatter format) {
     format
       .startObject(this)

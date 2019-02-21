@@ -56,16 +56,12 @@ import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-
-import mockit.integration.junit4.JMockit;
 
 /**
  * Unit tests for Avro record reader.
  */
-@RunWith(JMockit.class)
 public class AvroFormatTest extends BaseTestQuery {
 
   // XXX

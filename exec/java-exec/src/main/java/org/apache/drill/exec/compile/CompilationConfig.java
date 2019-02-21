@@ -24,5 +24,5 @@ public class CompilationConfig {
    * Never use asm.Opcodes values directly in calls that require them. Use ASM_OPCODES
    * instead, so that we can change it here once for all references.
    */
-  public final static int ASM_API_VERSION = Opcodes.ASM5;
+  public final static int ASM_API_VERSION = Opcodes.ASM7;
 }

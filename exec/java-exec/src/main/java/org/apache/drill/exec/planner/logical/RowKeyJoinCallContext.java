@@ -34,7 +34,7 @@ public class RowKeyJoinCallContext {
   private int rowKeyPos;
   // swapping of row-key join inputs necessary
   private boolean swapInputs;
-  private DrillJoinRel joinRel;
+  private DrillJoin joinRel;
   // rels on the rowkey side of the join to be transformed
   private DrillProjectRel upperProjectRel;
   private DrillFilterRel filterRel;
@@ -42,7 +42,7 @@ public class RowKeyJoinCallContext {
   private DrillScanRel scanRel;
 
   public RowKeyJoinCallContext (RelOptRuleCall call, RowKey rowKeyLoc, int rowKeyPos, boolean swapInputs,
-      DrillJoinRel joinRel, DrillProjectRel upperProjectRel, DrillFilterRel filterRel, DrillProjectRel lowerProjectRel,
+      DrillJoin joinRel, DrillProjectRel upperProjectRel, DrillFilterRel filterRel, DrillProjectRel lowerProjectRel,
           DrillScanRel scanRel) {
     this.call = call;
     this.rowKeyLoc = rowKeyLoc;
@@ -71,7 +71,7 @@ public class RowKeyJoinCallContext {
     return swapInputs;
   }
 
-  public DrillJoinRel getJoinRel() {
+  public DrillJoin getJoinRel() {
     return joinRel;
   }
 

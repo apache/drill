@@ -593,7 +593,11 @@ public class TypeInferenceUtils {
         case SECOND:
         case MINUTE:
         case HOUR:
-          sqlTypeName = SqlTypeName.TIMESTAMP;
+          if (inputTypeName == SqlTypeName.TIME) {
+            sqlTypeName = SqlTypeName.TIME;
+          } else {
+            sqlTypeName = SqlTypeName.TIMESTAMP;
+          }
           break;
         default:
           sqlTypeName = SqlTypeName.ANY;

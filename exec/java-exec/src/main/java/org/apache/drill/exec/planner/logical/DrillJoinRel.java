@@ -189,4 +189,9 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
         inputs.left, inputs.right, rexCondition, join.getJoinType());
     return joinRel;
   }
+
+  @Override
+  public boolean isSemiJoin() {
+    return false;
+  }
 }

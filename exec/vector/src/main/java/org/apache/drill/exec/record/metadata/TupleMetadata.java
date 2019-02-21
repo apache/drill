@@ -43,13 +43,12 @@ import org.apache.drill.exec.record.MaterializedField;
  * In the future, this structure will also gather metadata useful
  * for vector processing such as expected widths and so on.
  */
-
 public interface TupleMetadata extends Iterable<ColumnMetadata> {
 
   /**
    * Add a new column to the schema.
    *
-   * @param columnSchema
+   * @param field materialized field
    * @return the index of the new column
    */
   ColumnMetadata add(MaterializedField field);
@@ -73,8 +72,15 @@ public interface TupleMetadata extends Iterable<ColumnMetadata> {
    * @return a list of the top-level fields. Maps contain their child
    * fields
    */
-
   List<MaterializedField> toFieldList();
+
+  /**
+   * Returns schema as list of <tt>ColumnMetadata</tt> objects
+   * which can be used to create JSON schema object.
+   *
+   * @return a list of metadata for each column
+   */
+  List<ColumnMetadata> toMetadataList();
 
   /**
    * Full name of the column. Note: this name cannot be used to look up
@@ -87,4 +93,12 @@ public interface TupleMetadata extends Iterable<ColumnMetadata> {
 
   String fullName(ColumnMetadata column);
   String fullName(int index);
+
+  /**
+   * Converts schema metadata into string representation
+   * accepted by the table schema parser.
+   *
+   * @return schema metadata string representation
+   */
+  String schemaString();
 }

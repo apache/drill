@@ -40,7 +40,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * REFRESH TABLE METADATA tblname
  */
 public class SqlRefreshMetadata extends DrillSqlCall {
-  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("REFRESH_TABLE_METADATA", SqlKind.OTHER) {
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("REFRESH_TABLE_METADATA", SqlKind.OTHER_DDL) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlRefreshMetadata(pos, (SqlIdentifier) operands[0]);

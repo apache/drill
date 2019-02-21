@@ -4078,6 +4078,8 @@ public final class SchemaUserProtos
                     output.writeBool(48, message.getTransactionSupported(), false);
                 for(org.apache.drill.exec.proto.UserProtos.UnionSupport unionSupport : message.getUnionSupportList())
                     output.writeEnum(49, unionSupport.getNumber(), true);
+                if(message.hasCurrentSchema())
+                    output.writeString(50, message.getCurrentSchema(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.ServerMeta message)
             {
@@ -4265,6 +4267,9 @@ public final class SchemaUserProtos
                         case 49:
                             builder.addUnionSupport(org.apache.drill.exec.proto.UserProtos.UnionSupport.valueOf(input.readEnum()));
                             break;
+                        case 50:
+                            builder.setCurrentSchema(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -4354,6 +4359,7 @@ public final class SchemaUserProtos
                 case 47: return "tableTerm";
                 case 48: return "transactionSupported";
                 case 49: return "unionSupport";
+                case 50: return "currentSchema";
                 default: return null;
             }
         }
@@ -4414,6 +4420,7 @@ public final class SchemaUserProtos
             fieldMap.put("tableTerm", 47);
             fieldMap.put("transactionSupported", 48);
             fieldMap.put("unionSupport", 49);
+            fieldMap.put("currentSchema", 50);
         }
     }
 

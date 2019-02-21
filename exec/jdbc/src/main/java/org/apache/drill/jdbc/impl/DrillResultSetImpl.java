@@ -35,8 +35,6 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -47,7 +45,6 @@ import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.QueryState;
 import org.apache.calcite.avatica.util.Cursor;
-import org.apache.calcite.avatica.util.Cursor.Accessor;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
@@ -58,13 +55,13 @@ import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 /**
  * Drill's implementation of {@link java.sql.ResultSet}.
  */
-class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
+public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @SuppressWarnings("unused")
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(DrillResultSetImpl.class);
 
   private final DrillConnectionImpl connection;
-  private volatile boolean hasPendingCancelationNotification = false;
+  private volatile boolean hasPendingCancellationNotification = false;
 
   //Timeout Support Variables
   private Stopwatch elapsedTimer;
@@ -90,8 +87,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   protected void checkOpen() throws SQLException {
     if (isClosed()) {
-      if (cursor instanceof DrillCursor && hasPendingCancelationNotification) {
-        hasPendingCancelationNotification = false;
+      if (cursor instanceof DrillCursor && hasPendingCancellationNotification) {
+        hasPendingCancellationNotification = false;
         throw new ExecutionCanceledSqlException(
             "SQL statement execution canceled; ResultSet now closed.");
       } else {
@@ -119,7 +116,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   protected void cancel() {
     if (cursor instanceof DrillCursor) {
-      hasPendingCancelationNotification = true;
+      hasPendingCancellationNotification = true;
       ((DrillCursor) cursor).cancel();
     } else {
       super.cancel();
@@ -1267,15 +1264,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
     connection.getDriver().handler.onStatementExecute(statement, null);
 
     if (signature.cursorFactory != null) {
-      // Avatica accessors have to be wrapped to match Drill behaviour regarding exception thrown
       super.execute();
-      List<Accessor> wrappedAccessorList = new ArrayList<>(accessorList.size());
-      for(Accessor accessor: accessorList) {
-        wrappedAccessorList.add(new WrappedAccessor(accessor));
-      }
-      this.accessorList = wrappedAccessorList;
-    }
-    else {
+    } else {
       DrillCursor drillCursor = new DrillCursor(connection, statement, signature);
       //Getting handle to elapsed timer for timeout purposes
       this.elapsedTimer = drillCursor.getElapsedTimer();

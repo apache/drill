@@ -17,23 +17,26 @@
  */
 package org.apache.drill.exec.impersonation.hive;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.calcite.schema.Schema.TableType;
-import org.apache.drill.test.TestBuilder;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
+import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.shims.ShimLoader;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.drill.exec.store.hive.HiveTestDataGenerator.createFileWithPermissions;
+import static org.apache.drill.exec.hive.HiveTestUtilities.createDirWithPosixPermissions;
+import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 
@@ -49,10 +52,12 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   protected static final String studentDef = "CREATE TABLE %s.%s" +
       "(rownum int, name string, age int, gpa float, studentnum bigint) " +
       "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE";
+
   protected static final String voterDef = "CREATE TABLE %s.%s" +
       "(voter_id int,name varchar(30), age tinyint, registration string, " +
       "contributions double,voterzone smallint,create_time timestamp) " +
       "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE";
+
   protected static final String partitionStudentDef = "CREATE TABLE %s.%s" +
       "(rownum INT, name STRING, gpa FLOAT, studentnum BIGINT) " +
       "partitioned by (age INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE";
@@ -60,8 +65,8 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   protected static void prepHiveConfAndData() throws Exception {
     hiveConf = new HiveConf();
 
-    File scratchDir = createFileWithPermissions(dirTestWatcher.getRootDir(), "scratch_dir");
-    File localScratchDir = createFileWithPermissions(dirTestWatcher.getRootDir(), "local_scratch_dir");
+    File scratchDir = createDirWithPosixPermissions(dirTestWatcher.getRootDir(), "scratch_dir");
+    File localScratchDir = createDirWithPosixPermissions(dirTestWatcher.getRootDir(), "local_scratch_dir");
     File metaStoreDBDir = new File(dirTestWatcher.getRootDir(), "metastore_db");
 
     // Configure metastore persistence db location on local filesystem
@@ -132,8 +137,8 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     testBuilder.go();
   }
 
-  protected void fromInfoSchemaHelper(final String pluginName, final String db, List<String> expectedTables, List<TableType> expectedTableTypes) throws Exception {
-    final String dbQualified = pluginName + "." + db;
+  protected void fromInfoSchemaHelper(final String db, List<String> expectedTables, List<TableType> expectedTableTypes) throws Exception {
+    final String dbQualified = hivePluginName + "." + db;
     final TestBuilder testBuilder = testBuilder()
         .sqlQuery("SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE \n" +
             "FROM INFORMATION_SCHEMA.`TABLES` \n" +
@@ -157,4 +162,39 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     // exit. As each metastore server instance is using its own resources and not sharing it with other metastore
     // server instances this should be ok.
   }
+
+  static void queryView(String viewName) throws Exception {
+    String query = String.format("SELECT rownum FROM %s.tmp.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, viewName);
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("rownum")
+        .baselineValues(1)
+        .go();
+  }
+
+  static void queryViewNotAuthorized(String viewName) throws Exception {
+    String query = String.format("SELECT rownum FROM %s.tmp.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, viewName);
+    errorMsgTestHelper(query, String.format(
+        "Not authorized to read view [%s] in schema [%s.tmp]", viewName, MINI_DFS_STORAGE_PLUGIN_NAME));
+  }
+
+  static void createTableWithStoragePermissions(final Driver hiveDriver, final String db, final String tbl, final String tblDef,
+                                                final String tblData, final String user, final String group, final short permissions) throws Exception {
+    createTable(hiveDriver, db, tbl, tblDef, tblData);
+    setStoragePermissions(db, tbl, user, group, permissions);
+  }
+
+  static void setStoragePermissions(String db, String tbl, String user, String group, short permissions) throws IOException {
+    final Path p = getWhPathForHiveObject(db, tbl);
+    fs.setPermission(p, new FsPermission(permissions));
+    fs.setOwner(p, user, group);
+  }
+
+  static void createTable(final Driver driver, final String db, final String tbl, final String tblDef,
+                          final String data) throws Exception {
+    executeQuery(driver, String.format(tblDef, db, tbl));
+    executeQuery(driver, String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE %s.%s", data, db, tbl));
+  }
+
 }

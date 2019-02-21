@@ -20,7 +20,7 @@
 -->
 <configuration>
 
-<!-- 
+<!--
   <appender name="SOCKET" class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
     <Compressing>true</Compressing>
     <ReconnectionDelay>10000</ReconnectionDelay>

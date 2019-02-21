@@ -37,7 +37,7 @@ import org.apache.calcite.sql.SqlWriter;
 import java.util.List;
 
 public class SqlCreateView extends DrillSqlCall {
-  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_VIEW", SqlKind.OTHER) {
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_VIEW", SqlKind.CREATE_VIEW) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlCreateView(pos, (SqlIdentifier) operands[0], (SqlNodeList) operands[1], operands[2], (SqlLiteral) operands[3]);
@@ -47,19 +47,15 @@ public class SqlCreateView extends DrillSqlCall {
   private SqlIdentifier viewName;
   private SqlNodeList fieldList;
   private SqlNode query;
-  private SqlLiteral createViewType;
-
-  public enum SqlCreateViewType {
-    SIMPLE, OR_REPLACE, IF_NOT_EXISTS
-  }
+  private SqlLiteral createType;
 
   public SqlCreateView(SqlParserPos pos, SqlIdentifier viewName, SqlNodeList fieldList,
-                       SqlNode query, SqlLiteral createViewType) {
+                       SqlNode query, SqlLiteral createType) {
     super(pos);
     this.viewName = viewName;
     this.query = query;
     this.fieldList = fieldList;
-    this.createViewType = createViewType;
+    this.createType = createType;
   }
 
   @Override
@@ -73,14 +69,14 @@ public class SqlCreateView extends DrillSqlCall {
     ops.add(viewName);
     ops.add(fieldList);
     ops.add(query);
-    ops.add(createViewType);
+    ops.add(createType);
     return ops;
   }
 
   @Override
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("CREATE");
-    switch (SqlCreateViewType.valueOf(createViewType.toValue())) {
+    switch (SqlCreateType.valueOf(createType.toValue())) {
       case SIMPLE:
         writer.keyword("VIEW");
         break;
@@ -135,6 +131,6 @@ public class SqlCreateView extends DrillSqlCall {
 
   public SqlNode getQuery() { return query; }
 
-  public SqlCreateViewType getcreateViewType() { return SqlCreateViewType.valueOf(createViewType.toValue()); }
+  public SqlCreateType getSqlCreateType() { return SqlCreateType.valueOf(createType.toValue()); }
 
 }

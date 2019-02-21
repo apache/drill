@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.15.0-SNAPSHOT</version>
+    <version>1.16.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-jdbc</artifactId>
   <name>exec/JDBC Driver using dependencies</name>
@@ -185,6 +185,12 @@
           <scope>test</scope>
         </dependency>
       </dependencies>
+    </profile>
+    <profile>
+      <id>travis</id>
+      <properties>
+        <skipTests>true</skipTests>
+      </properties>
     </profile>
   </profiles>
 </project>

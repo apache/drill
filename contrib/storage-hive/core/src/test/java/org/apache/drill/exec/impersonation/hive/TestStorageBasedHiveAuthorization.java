@@ -17,13 +17,15 @@
  */
 package org.apache.drill.exec.impersonation.hive;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.drill.categories.HiveStorageTest;
-import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.ql.Driver;
@@ -36,11 +38,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.Collections;
-import java.util.Map;
-
+import static java.util.Collections.emptyList;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
+import static org.apache.drill.shaded.guava.com.google.common.collect.Lists.newArrayList;
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.DYNAMICPARTITIONINGMODE;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_CBO_ENABLED;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_AUTHENTICATOR_MANAGER;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_AUTHORIZATION_AUTH_READS;
@@ -51,7 +53,6 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_AUTO_CREAT
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_PRE_EVENT_LISTENERS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.DYNAMICPARTITIONINGMODE;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation {
@@ -61,12 +62,12 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
   // Tables in "db_general"
   private static final String g_student_u0_700 = "student_u0_700";
+  private static final String g_vw_g_student_u0_700 = "vw_u0_700_student_u0_700";
   private static final String g_student_u0g0_750 = "student_u0g0_750";
   private static final String g_student_all_755 = "student_all_755";
   private static final String g_voter_u1_700 = "voter_u1_700";
   private static final String g_voter_u2g1_750 = "voter_u2g1_750";
   private static final String g_voter_all_755 = "voter_all_755";
-
   private static final String g_partitioned_student_u0_700 = "partitioned_student_u0_700";
 
   // DB whose warehouse directory has permissions 700 and owned by user0
@@ -75,6 +76,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   // Tables in "db_u0_only"
   private static final String u0_student_all_755 = "student_all_755";
   private static final String u0_voter_all_755 = "voter_all_755";
+  private static final String u0_vw_voter_all_755 = "vw_voter_all_755";
 
   // DB whose warehouse directory has permissions 750 and owned by user1 and group1
   private static final String db_u1g1_only = "db_u1g1_only";
@@ -91,25 +93,26 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   // Create a view on "v_student_u0g0_750". View is owned by user1:group1 and has permissions 750
   private static final String v_student_u1g1_750 = "v_student_u1g1_750";
 
-  private static final String query_v_student_u0g0_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750);
-
-  private static final String query_v_student_u1g1_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u1g1_750);
-
   // Create a view on "partitioned_student_u0_700". View is owned by user0:group0 and has permissions 750
   private static final String v_partitioned_student_u0g0_750 = "v_partitioned_student_u0g0_750";
 
   // Create a view on "v_partitioned_student_u0g0_750". View is owned by user1:group1 and has permissions 750
   private static final String v_partitioned_student_u1g1_750 = "v_partitioned_student_u1g1_750";
 
-  private static final String query_v_partitioned_student_u0g0_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp",
-      v_partitioned_student_u0g0_750);
+  // rwx  -   -
+  // 1. Only owning user have read, write and execute rights
+  private static final short _700 = (short) 0700;
 
-  private static final String query_v_partitioned_student_u1g1_750 = String.format(
-      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp",
-      v_partitioned_student_u1g1_750);
+  // rwx  r-x -
+  // 1. Owning user have read, write and execute rights
+  // 2. Owning group have read and execute rights
+  private static final short _750 = (short) 0750;
+
+  // rwx  r-x r-x
+  // 1. Owning user have read, write and execute rights
+  // 2. Owning group have read and execute rights
+  // 3. Others have read and execute rights
+  private static final short _755 = (short) 0755;
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -119,7 +122,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     startHiveMetaStore();
     startDrillCluster(true);
     addHiveStoragePlugin(getHivePluginConfig());
-    addMiniDfsBasedStorage(Maps.<String, WorkspaceConfig>newHashMap());
+    addMiniDfsBasedStorage(new HashMap<>());
     generateTestData();
   }
 
@@ -145,6 +148,41 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     return hiveConfig;
   }
 
+  /*
+   * User       Groups
+   * <br/>
+   * user0  |   group0
+   * user1  |   group0, group1
+   * user2  |   group1, group2
+   *
+   * Generating database objects with permissions:
+   * <p>
+   * |                                         | org1Users[0] | org1Users[1] | org1Users[2]
+   * ---------------------------------------------------------------------------------------
+   * db_general                                |      +       |      +       |      +       |
+   * db_general.g_student_u0_700               |      +       |      -       |      -       |
+   * db_general.g_student_u0g0_750             |      +       |      +       |      -       |
+   * db_general.g_student_all_755              |      +       |      +       |      +       |
+   * db_general.g_voter_u1_700                 |      -       |      +       |      -       |
+   * db_general.g_voter_u2g1_750               |      -       |      +       |      +       |
+   * db_general.g_voter_all_755                |      +       |      +       |      +       |
+   * db_general.g_partitioned_student_u0_700   |      +       |      -       |      -       |
+   * db_general.g_vw_g_student_u0_700          |      +       |      -       |      -       |
+   * |                                         |              |              |              |
+   * db_u0_only                                |      +       |      -       |      -       |
+   * db_u0_only.u0_student_all_755             |      +       |      -       |      -       |
+   * db_u0_only.u0_voter_all_755               |      +       |      -       |      -       |
+   * db_u0_only.u0_vw_voter_all_755            |      +       |      -       |      -       |
+   * |                                         |              |              |              |
+   * db_u1g1_only                              |      -       |      +       |      +       |
+   * db_u1g1_only.u1g1_student_all_755         |      -       |      +       |      +       |
+   * db_u1g1_only.u1g1_student_u1_700          |      -       |      +       |      -       |
+   * db_u1g1_only.u1g1_voter_all_755           |      -       |      +       |      +       |
+   * db_u1g1_only.u1g1_voter_u1_700            |      -       |      +       |      -       |
+   * ---------------------------------------------------------------------------------------
+   *
+   * @throws Exception - if view creation failed
+   */
   private static void generateTestData() throws Exception {
 
     // Generate Hive test tables
@@ -153,46 +191,85 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     final Driver driver = new Driver(hiveConf);
 
     executeQuery(driver, "CREATE DATABASE " + db_general);
+    createTableWithStoragePermissions(driver,
+        db_general, g_student_u0_700,
+        studentDef, studentData,
+        org1Users[0], org1Groups[0],
+        _700);
+    createHiveView(driver, db_general,
+        g_vw_g_student_u0_700, g_student_u0_700);
 
-    createTable(driver,
-        db_general, g_student_u0_700, studentDef, studentData, org1Users[0], org1Groups[0], (short) 0700);
-    createTable(driver,
-        db_general, g_student_u0g0_750, studentDef, studentData, org1Users[0], org1Groups[0], (short) 0750);
-    createTable(driver,
-        db_general, g_student_all_755, studentDef, studentData, org1Users[2], org1Groups[2], (short) 0755);
-    createTable(driver,
-        db_general, g_voter_u1_700, voterDef, voterData, org1Users[1], org1Groups[1], (short) 0700);
-    createTable(driver,
-        db_general, g_voter_u2g1_750, voterDef, voterData, org1Users[2], org1Groups[1], (short) 0750);
-    createTable(driver,
-        db_general, g_voter_all_755, voterDef, voterData, org1Users[1], org1Groups[1], (short) 0755);
+    createTableWithStoragePermissions(driver,
+        db_general, g_student_u0g0_750,
+        studentDef, studentData,
+        org1Users[0], org1Groups[0],
+        _750);
+    createTableWithStoragePermissions(driver,
+        db_general, g_student_all_755,
+        studentDef, studentData,
+        org1Users[2], org1Groups[2],
+        _755);
+    createTableWithStoragePermissions(driver,
+        db_general, g_voter_u1_700,
+        voterDef, voterData,
+        org1Users[1], org1Groups[1],
+        _700);
+    createTableWithStoragePermissions(driver,
+        db_general, g_voter_u2g1_750,
+        voterDef, voterData,
+        org1Users[2], org1Groups[1],
+        _750);
+    createTableWithStoragePermissions(driver,
+        db_general, g_voter_all_755,
+        voterDef, voterData,
+        org1Users[1], org1Groups[1],
+        _755);
 
     createPartitionedTable(driver,
-        db_general, g_partitioned_student_u0_700, partitionStudentDef,
-        "INSERT OVERWRITE TABLE %s.%s PARTITION(age) SELECT rownum, name, age, gpa, studentnum FROM %s.%s",
-        g_student_all_755, org1Users[0], org1Groups[0], (short) 0700);
+        org1Users[0], org1Groups[0]
+    );
 
-    changeDBPermissions(db_general, (short) 0755, org1Users[0], org1Groups[0]);
+    changeDBPermissions(db_general, _755, org1Users[0], org1Groups[0]);
 
     executeQuery(driver, "CREATE DATABASE " + db_u1g1_only);
 
-    createTable(driver,
-        db_u1g1_only, u1g1_student_all_755, studentDef, studentData, org1Users[1], org1Groups[1], (short) 0755);
-    createTable(driver,
-        db_u1g1_only, u1g1_student_u1_700, studentDef, studentData, org1Users[1], org1Groups[1], (short) 0700);
-    createTable(driver,
-        db_u1g1_only, u1g1_voter_all_755, voterDef, voterData, org1Users[1], org1Groups[1], (short) 0755);
-    createTable(driver,
-        db_u1g1_only, u1g1_voter_u1_700, voterDef, voterData, org1Users[1], org1Groups[1], (short) 0700);
+    createTableWithStoragePermissions(driver,
+        db_u1g1_only, u1g1_student_all_755,
+        studentDef, studentData,
+        org1Users[1], org1Groups[1],
+        _755);
+    createTableWithStoragePermissions(driver,
+        db_u1g1_only, u1g1_student_u1_700,
+        studentDef, studentData,
+        org1Users[1], org1Groups[1],
+        _700);
+    createTableWithStoragePermissions(driver,
+        db_u1g1_only, u1g1_voter_all_755,
+        voterDef, voterData,
+        org1Users[1], org1Groups[1],
+        _755);
+    createTableWithStoragePermissions(driver,
+        db_u1g1_only, u1g1_voter_u1_700,
+        voterDef, voterData,
+        org1Users[1], org1Groups[1],
+        _700);
 
-    changeDBPermissions(db_u1g1_only, (short) 0750, org1Users[1], org1Groups[1]);
+    changeDBPermissions(db_u1g1_only, _750, org1Users[1], org1Groups[1]);
+
 
     executeQuery(driver, "CREATE DATABASE " + db_u0_only);
-
-    createTable(driver, db_u0_only, u0_student_all_755, studentDef, studentData, org1Users[0], org1Groups[0], (short) 0755);
-    createTable(driver, db_u0_only, u0_voter_all_755, voterDef, voterData, org1Users[0], org1Groups[0], (short) 0755);
-
-    changeDBPermissions(db_u0_only, (short) 0700, org1Users[0], org1Groups[0]);
+    createTableWithStoragePermissions(driver,
+        db_u0_only, u0_student_all_755,
+        studentDef, studentData,
+        org1Users[0], org1Groups[0],
+        _755);
+    createTableWithStoragePermissions(driver,
+        db_u0_only, u0_voter_all_755,
+        voterDef, voterData,
+        org1Users[0], org1Groups[0],
+        _755);
+    createHiveView(driver, db_u0_only, u0_vw_voter_all_755, u0_voter_all_755);
+    changeDBPermissions(db_u0_only, _700, org1Users[0], org1Groups[0]);
 
     createView(org1Users[0], org1Groups[0], v_student_u0g0_750,
         String.format("SELECT rownum, name, age, studentnum FROM %s.%s.%s",
@@ -209,31 +286,25 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
         String.format("SELECT rownum, name, age FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", v_partitioned_student_u0g0_750));
   }
 
-  private static void createPartitionedTable(final Driver hiveDriver, final String db, final String tbl,
-      final String tblDef, final String loadTblDef, final String loadTbl, final String user, final String group,
-      final short permissions) throws Exception {
-    executeQuery(hiveDriver, String.format(tblDef, db, tbl));
-    executeQuery(hiveDriver, String.format(loadTblDef, db, tbl, db, loadTbl));
-
-    final Path p = getWhPathForHiveObject(db, tbl);
-    fs.setPermission(p, new FsPermission(permissions));
+  private static void createPartitionedTable(final Driver hiveDriver, final String user, final String group) throws Exception {
+    executeQuery(hiveDriver, String.format(partitionStudentDef, db_general, g_partitioned_student_u0_700));
+    executeQuery(hiveDriver, String.format("INSERT OVERWRITE TABLE %s.%s PARTITION(age) SELECT rownum, name, age, gpa, studentnum FROM %s.%s",
+        db_general, g_partitioned_student_u0_700, db_general, g_student_all_755));
+    final Path p = getWhPathForHiveObject(TestStorageBasedHiveAuthorization.db_general, TestStorageBasedHiveAuthorization.g_partitioned_student_u0_700);
+    fs.setPermission(p, new FsPermission(TestStorageBasedHiveAuthorization._700));
     fs.setOwner(p, user, group);
   }
 
-  private static void createTable(final Driver hiveDriver, final String db, final String tbl, final String tblDef,
-      final String tblData, final String user, final String group, final short permissions) throws Exception {
-    executeQuery(hiveDriver, String.format(tblDef, db, tbl));
-    executeQuery(hiveDriver, String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE %s.%s", tblData, db, tbl));
-    final Path p = getWhPathForHiveObject(db, tbl);
-    fs.setPermission(p, new FsPermission(permissions));
-    fs.setOwner(p, user, group);
-  }
-
-  private static void changeDBPermissions(final String db, final short perm, final String u, final String g)
-      throws Exception {
+  private static void changeDBPermissions(final String db, final short perm, final String u, final String g) throws Exception {
     Path p = getWhPathForHiveObject(db, null);
     fs.setPermission(p, new FsPermission(perm));
     fs.setOwner(p, u, g);
+  }
+
+
+  private static void  createHiveView(Driver driver, String db, String viewName, String tableName) throws IOException {
+    executeQuery(driver, String.format("CREATE OR REPLACE VIEW %s.%s AS SELECT * FROM %s.%s LIMIT 1",
+        db, viewName, db, tableName));
   }
 
   // Irrespective of each db permissions, all dbs show up in "SHOW SCHEMAS"
@@ -251,123 +322,302 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   }
 
   /**
-   * "SHOW TABLE" output for a db, should only contain the tables that the user
-   * has access to read. If the user has no read access to the db, the list will be always empty even if the user has
-   * read access to the tables inside the db.
+   * Should only contain the tables that the user
+   * has access to read.
+   *
    * @throws Exception
    */
   @Test
-  public void showTablesUser0() throws Exception {
+  public void user0_db_general_showTables() throws Exception {
     updateClient(org1Users[0]);
+    showTablesHelper(db_general, ImmutableList.of(
+        g_student_u0_700,
+        g_student_u0g0_750,
+        g_student_all_755,
+        g_voter_all_755,
+        g_partitioned_student_u0_700,
+        g_vw_g_student_u0_700
+    ));
+  }
 
-    showTablesHelper(db_general,
+  @Test
+  public void user0_db_u0_only_showTables() throws Exception {
+    updateClient(org1Users[0]);
+    showTablesHelper(db_u0_only, ImmutableList.of(
+        u0_student_all_755,
+        u0_voter_all_755,
+        u0_vw_voter_all_755
+    ));
+  }
+
+  /**
+   * If the user has no read access to the db, the list will be always empty even if the user has
+   * read access to the tables inside the db.
+   */
+  @Test
+  public void user0_db_u1g1_only_showTables() throws Exception {
+    updateClient(org1Users[0]);
+    showTablesHelper(db_u1g1_only, emptyList());
+  }
+
+  @Test
+  public void user0_db_general_infoSchema() throws Exception {
+    updateClient(org1Users[0]);
+    fromInfoSchemaHelper(db_general,
         ImmutableList.of(
             g_student_u0_700,
             g_student_u0g0_750,
             g_student_all_755,
             g_voter_all_755,
-            g_partitioned_student_u0_700
-        ));
-
-    showTablesHelper(db_u0_only,
+            g_partitioned_student_u0_700,
+            g_vw_g_student_u0_700
+        ),
         ImmutableList.of(
-            u0_student_all_755,
-            u0_voter_all_755
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.VIEW
         ));
-
-    showTablesHelper(db_u1g1_only, Collections.<String>emptyList());
   }
 
   @Test
-  public void fromInfoSchemaUser0() throws Exception {
+  public void user0_db_u0_only_infoSchema() throws Exception {
     updateClient(org1Users[0]);
-
-    fromInfoSchemaHelper(
-        hivePluginName,
-        db_general,
+    fromInfoSchemaHelper(db_u0_only,
         ImmutableList.of(
-            g_student_u0_700,
+            u0_student_all_755,
+            u0_voter_all_755,
+            u0_vw_voter_all_755
+        ),
+        ImmutableList.of(
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.VIEW
+        ));
+  }
+
+  @Test
+  public void user0_db_u1g1_only_infoSchema() throws Exception {
+    updateClient(org1Users[0]);
+    fromInfoSchemaHelper(db_u1g1_only, emptyList(), emptyList());
+  }
+
+  /**
+   * user0 is 700 owner
+   */
+  @Test
+  public void user0_allowed_g_student_u0_700() throws Exception {
+    updateClient(org1Users[0]);
+    queryHiveTableOrView(db_general, g_student_u0_700);
+  }
+
+  @Test
+  public void user0_allowed_g_vw_u0_700_over_g_student_u0_700() throws Exception {
+    updateClient(org1Users[0]);
+    queryHiveTableOrView(db_general, g_vw_g_student_u0_700);
+  }
+
+  @Test
+  public void user1_forbidden_g_vw_u0_700_over_g_student_u0_700() throws Exception {
+    updateClient(org1Users[1]);
+    queryHiveViewFailed(db_general, g_vw_g_student_u0_700);
+  }
+
+  @Test
+  public void user2_forbidden_g_vw_u0_700_over_g_student_u0_700() throws Exception {
+    updateClient(org1Users[2]);
+    queryHiveViewFailed(db_general, g_vw_g_student_u0_700);
+  }
+
+  @Test
+  public void user0_allowed_u0_vw_voter_all_755() throws Exception {
+    updateClient(org1Users[0]);
+    queryHiveTableOrView(db_u0_only, u0_vw_voter_all_755);
+  }
+
+  @Test
+  public void user1_forbidden_u0_vw_voter_all_755() throws Exception {
+    updateClient(org1Users[1]);
+    queryHiveViewFailed(db_u0_only, u0_vw_voter_all_755);
+  }
+
+  @Test
+  public void user2_forbidden_u0_vw_voter_all_755() throws Exception {
+    updateClient(org1Users[2]);
+    queryHiveViewFailed(db_u0_only, u0_vw_voter_all_755);
+  }
+
+  private void queryHiveViewFailed(String db, String viewName) throws Exception {
+    errorMsgTestHelper(
+        String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, viewName),
+        "Failure validating a view your query is dependent upon.");
+  }
+
+  /**
+   * user0 is 750 owner
+   */
+  @Test
+  public void user0_allowed_g_student_u0g0_750() throws Exception {
+    updateClient(org1Users[0]);
+    queryHiveTableOrView(db_general, g_student_u0g0_750);
+  }
+
+  /**
+   * table owned by user2 and group2,
+   * but user0 can access because Others allowed to read and execute
+   */
+  @Test
+  public void user0_allowed_g_student_all_755() throws Exception {
+    updateClient(org1Users[0]);
+    queryHiveTableOrView(db_general, g_student_all_755);
+  }
+
+  /**
+   * user0 can't access because, user1 is 700 owner
+   */
+  @Test
+  public void user0_forbidden_g_voter_u1_700() throws Exception{
+    updateClient(org1Users[0]);
+    queryTableNotFound(db_general, g_voter_u1_700);
+  }
+
+  /**
+   * user0 can't access, because only user2 and group1 members
+   */
+  @Test
+  public void user0_forbidden_g_voter_u2g1_750() throws Exception{
+    updateClient(org1Users[0]);
+    queryTableNotFound(db_general, g_voter_u2g1_750);
+  }
+
+  /**
+   * user0 allowed because others have r-x access. Despite
+   * of user1 and group1 ownership over the table.
+   */
+  @Test
+  public void user0_allowed_g_voter_all_755() throws Exception {
+    updateClient(org1Users[0]);
+    queryHiveTableOrView(db_general, g_voter_all_755);
+  }
+
+  /**
+   * user0 is 755 owner
+   */
+  @Test
+  public void user0_allowed_u0_student_all_755() throws Exception {
+    updateClient(org1Users[0]);
+    queryHiveTableOrView(db_u0_only, u0_student_all_755);
+  }
+
+  /**
+   * user0 is 755 owner
+   */
+  @Test
+  public void user0_allowed_u0_voter_all_755() throws Exception {
+    updateClient(org1Users[0]);
+    queryHiveTableOrView(db_u0_only, u0_voter_all_755);
+  }
+
+  /**
+   * user0 is 700 owner
+   */
+  @Test
+  public void user0_allowed_g_partitioned_student_u0_700() throws Exception {
+    updateClient(org1Users[0]);
+    queryHiveTableOrView(db_general, g_partitioned_student_u0_700);
+  }
+
+  /**
+   * user0 doesn't have access to database db_u1g1_only
+   */
+  @Test
+  public void user0_forbidden_u1g1_student_all_755() throws Exception {
+    updateClient(org1Users[0]);
+    queryTableNotFound(db_u1g1_only, u1g1_student_all_755);
+  }
+
+  @Test
+  public void user0_allowed_v_student_u0g0_750() throws Exception {
+    updateClient(org1Users[0]);
+    queryView(v_student_u0g0_750);
+  }
+
+  @Test
+  public void user0_forbidden_v_student_u1g1_750() throws Exception {
+    updateClient(org1Users[0]);
+    queryViewNotAuthorized(v_student_u1g1_750);
+  }
+
+  @Test
+  public void user0_allowed_v_partitioned_student_u0g0_750() throws Exception {
+    updateClient(org1Users[0]);
+    queryView(v_partitioned_student_u0g0_750);
+  }
+
+  @Test
+  public void user0_forbidden_v_partitioned_student_u1g1_750() throws Exception {
+    updateClient(org1Users[0]);
+    queryViewNotAuthorized(v_partitioned_student_u1g1_750);
+  }
+
+  @Test
+  public void user1_db_general_showTables() throws Exception {
+    updateClient(org1Users[1]);
+    showTablesHelper(db_general, ImmutableList.of(
+        g_student_u0g0_750,
+        g_student_all_755,
+        g_voter_u1_700,
+        g_voter_u2g1_750,
+        g_voter_all_755,
+        g_vw_g_student_u0_700
+    ));
+  }
+
+  @Test
+  public void user1_db_u1g1_only_showTables() throws Exception {
+    updateClient(org1Users[1]);
+    showTablesHelper(db_u1g1_only, ImmutableList.of(
+        u1g1_student_all_755,
+        u1g1_student_u1_700,
+        u1g1_voter_all_755,
+        u1g1_voter_u1_700
+    ));
+  }
+
+  @Test
+  public void user1_db_u0_only_showTables() throws Exception {
+    updateClient(org1Users[1]);
+    showTablesHelper(db_u0_only, newArrayList(u0_vw_voter_all_755));
+  }
+
+  @Test
+  public void user1_db_general_infoSchema() throws Exception {
+    updateClient(org1Users[1]);
+    fromInfoSchemaHelper(db_general,
+        ImmutableList.of(
             g_student_u0g0_750,
             g_student_all_755,
+            g_voter_u1_700,
+            g_voter_u2g1_750,
             g_voter_all_755,
-            g_partitioned_student_u0_700
+            g_vw_g_student_u0_700
         ),
         ImmutableList.of(
             TableType.TABLE,
             TableType.TABLE,
             TableType.TABLE,
             TableType.TABLE,
-            TableType.TABLE
-        ));
-
-    fromInfoSchemaHelper(
-        hivePluginName,
-        db_u0_only,
-        ImmutableList.of(
-            u0_student_all_755,
-            u0_voter_all_755
-        ),
-        ImmutableList.of(
             TableType.TABLE,
-            TableType.TABLE
+            TableType.VIEW
         ));
-
-    fromInfoSchemaHelper(
-        hivePluginName,
-        db_u1g1_only,
-        Collections.<String>emptyList(),
-        Collections.<TableType>emptyList());
   }
 
   @Test
-  public void showTablesUser1() throws Exception {
+  public void user1_db_u1g1_only_infoSchema() throws Exception {
     updateClient(org1Users[1]);
-
-    showTablesHelper(db_general,
-        ImmutableList.of(
-            g_student_u0g0_750,
-            g_student_all_755,
-            g_voter_u1_700,
-            g_voter_u2g1_750,
-            g_voter_all_755
-        ));
-
-    showTablesHelper(db_u1g1_only,
-        ImmutableList.of(
-            u1g1_student_all_755,
-            u1g1_student_u1_700,
-            u1g1_voter_all_755,
-            u1g1_voter_u1_700
-        ));
-
-    showTablesHelper(db_u0_only, Collections.<String>emptyList());
-  }
-
-  @Test
-  public void fromInfoSchemaUser1() throws Exception {
-    updateClient(org1Users[1]);
-
-    fromInfoSchemaHelper(
-        hivePluginName,
-        db_general,
-        ImmutableList.of(
-            g_student_u0g0_750,
-            g_student_all_755,
-            g_voter_u1_700,
-            g_voter_u2g1_750,
-            g_voter_all_755
-        ),
-        ImmutableList.of(
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE
-        ));
-
-    fromInfoSchemaHelper(
-        hivePluginName,
-        db_u1g1_only,
+    fromInfoSchemaHelper(db_u1g1_only,
         ImmutableList.of(
             u1g1_student_all_755,
             u1g1_student_u1_700,
@@ -380,55 +630,159 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             TableType.TABLE,
             TableType.TABLE
         ));
-
-    fromInfoSchemaHelper(
-        hivePluginName,
-        db_u0_only,
-        Collections.<String>emptyList(),
-        Collections.<TableType>emptyList());
   }
 
   @Test
-  public void showTablesUser2() throws Exception {
-    updateClient(org1Users[2]);
+  public void user1_db_u0_only_infoSchema() throws Exception {
+    updateClient(org1Users[1]);
+    fromInfoSchemaHelper(db_u0_only,
+        newArrayList(u0_vw_voter_all_755), newArrayList(TableType.VIEW));
+  }
 
-    showTablesHelper(db_general,
-        ImmutableList.of(
-            g_student_all_755,
-            g_voter_u2g1_750,
-            g_voter_all_755
-        ));
+  /**
+   * user1 can't access, because user0 is 700 owner
+   */
+  @Test
+  public void user1_forbidden_g_student_u0_700() throws Exception {
+    updateClient(org1Users[1]);
+    queryTableNotFound(db_general, g_student_u0_700);
+  }
 
-    showTablesHelper(db_u1g1_only,
-        ImmutableList.of(
-            u1g1_student_all_755,
-            u1g1_voter_all_755
-        ));
+  /**
+   * user1 allowed because he's a member of group0
+   */
+  @Test
+  public void user1_allowed_g_student_u0g0_750() throws Exception {
+    updateClient(org1Users[1]);
+    queryHiveTableOrView(db_general, g_student_u0g0_750);
+  }
 
-    showTablesHelper(db_u0_only, Collections.<String>emptyList());
+  /**
+   * user1 allowed because Others have r-x access
+   */
+  @Test
+  public void user1_allowed_g_student_all_755() throws Exception {
+    updateClient(org1Users[1]);
+    queryHiveTableOrView(db_general, g_student_all_755);
+  }
+
+  /**
+   * user1 is 700 owner
+   */
+  @Test
+  public void user1_allowed_g_voter_u1_700() throws Exception {
+    updateClient(org1Users[1]);
+    queryHiveTableOrView(db_general, g_voter_u1_700);
+  }
+
+  /**
+   * user1 allowed because he's member of group1
+   */
+  @Test
+  public void user1_allowed_g_voter_u2g1_750() throws Exception {
+    updateClient(org1Users[1]);
+    queryHiveTableOrView(db_general, g_voter_u2g1_750);
+  }
+
+  /**
+   * user1 is 755 owner
+   */
+  @Test
+  public void user1_allowed_g_voter_all_755() throws Exception {
+    updateClient(org1Users[1]);
+    queryHiveTableOrView(db_general, g_voter_all_755);
+  }
+
+  /**
+   * here access restricted at db level, only user0 can access  db_u0_only
+   */
+  @Test
+  public void user1_forbidden_u0_student_all_755() throws Exception {
+    updateClient(org1Users[1]);
+    queryTableNotFound(db_u0_only, u0_student_all_755);
+  }
+
+  /**
+   * here access restricted at db level, only user0 can access db_u0_only
+   */
+  @Test
+  public void user1_forbidden_u0_voter_all_755() throws Exception {
+    updateClient(org1Users[1]);
+    queryTableNotFound(db_u0_only, u0_voter_all_755);
   }
 
   @Test
-  public void fromInfoSchemaUser2() throws Exception {
-    updateClient(org1Users[2]);
+  public void user1_allowed_v_student_u0g0_750() throws Exception {
+    updateClient(org1Users[1]);
+    queryView(v_student_u0g0_750);
+  }
 
-    fromInfoSchemaHelper(
-        hivePluginName,
-        db_general,
+  @Test
+  public void user1_allowed_v_student_u1g1_750() throws Exception {
+    updateClient(org1Users[1]);
+    queryView(v_student_u1g1_750);
+  }
+
+  @Test
+  public void user1_allowed_v_partitioned_student_u0g0_750() throws Exception {
+    updateClient(org1Users[1]);
+    queryView(v_partitioned_student_u0g0_750);
+  }
+
+  @Test
+  public void user1_allowed_v_partitioned_student_u1g1_750() throws Exception {
+    updateClient(org1Users[1]);
+    queryView(v_partitioned_student_u1g1_750);
+  }
+
+  @Test
+  public void user2_db_general_showTables() throws Exception {
+    updateClient(org1Users[2]);
+    showTablesHelper(db_general, ImmutableList.of(
+        g_student_all_755,
+        g_voter_u2g1_750,
+        g_voter_all_755,
+        g_vw_g_student_u0_700
+    ));
+  }
+
+  @Test
+  public void user2_db_u1g1_only_showTables() throws Exception {
+    updateClient(org1Users[2]);
+    showTablesHelper(db_u1g1_only, ImmutableList.of(
+        u1g1_student_all_755,
+        u1g1_voter_all_755
+    ));
+  }
+
+  @Test
+  public void user2_db_u0_only_showTables() throws Exception {
+    updateClient(org1Users[2]);
+    showTablesHelper(db_u0_only, newArrayList(u0_vw_voter_all_755));
+  }
+
+  @Test
+  public void user2_db_general_infoSchema() throws Exception {
+    updateClient(org1Users[2]);
+    fromInfoSchemaHelper(db_general,
         ImmutableList.of(
             g_student_all_755,
             g_voter_u2g1_750,
-            g_voter_all_755
+            g_voter_all_755,
+            g_vw_g_student_u0_700
         ),
         ImmutableList.of(
             TableType.TABLE,
             TableType.TABLE,
-            TableType.TABLE
+            TableType.TABLE,
+            TableType.VIEW
         ));
+  }
 
-    fromInfoSchemaHelper(
-        hivePluginName,
-        db_u1g1_only,
+  @Test
+  public void user2_db_u1g1_only_infoSchema() throws Exception {
+    updateClient(org1Users[2]);
+    fromInfoSchemaHelper(db_u1g1_only,
         ImmutableList.of(
             u1g1_student_all_755,
             u1g1_voter_all_755
@@ -437,141 +791,109 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             TableType.TABLE,
             TableType.TABLE
         ));
-
-    fromInfoSchemaHelper(
-        hivePluginName,
-        db_u0_only,
-        Collections.<String>emptyList(),
-        Collections.<TableType>emptyList());
-  }
-
-  // Try to read the tables "user0" has access to read in db_general.
-  @Test
-  public void selectUser0_db_general() throws Exception {
-    updateClient(org1Users[0]);
-
-    test(String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_general, g_student_u0_700));
-    test(String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_general, g_student_all_755));
-    test(String.format("SELECT * FROM hive.%s.%s ORDER BY name DESC LIMIT 2", db_general, g_voter_all_755));
-
-    test(String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_general, g_partitioned_student_u0_700));
-  }
-
-  // Try to read the table that "user0" has access to read in db_u0_only
-  @Test
-  public void selectUser0_db_u0_only() throws Exception {
-    updateClient(org1Users[0]);
-
-    test(String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_u0_only, u0_student_all_755));
-    test(String.format("SELECT * FROM hive.%s.%s ORDER BY name DESC LIMIT 2", db_u0_only, u0_voter_all_755));
-  }
-
-  // Try to read the tables "user0" has no access to read in db_u1g1_only
-  @Test
-  public void selectUser0_db_u1g1_only() throws Exception {
-    updateClient(org1Users[0]);
-
-    errorMsgTestHelper(
-        String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_u1g1_only, u1g1_student_all_755),
-        String.format("Object '%s' not found within 'hive.%s'", u1g1_student_all_755, db_u1g1_only));
-  }
-
-  // Try to read the tables "user1" has access to read in db_general.
-  @Test
-  public void selectUser1_db_general() throws Exception {
-    updateClient(org1Users[1]);
-
-    test(String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_general, g_student_u0g0_750));
-    test(String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_general, g_student_all_755));
-    test(String.format("SELECT * FROM hive.%s.%s ORDER BY name DESC LIMIT 2", db_general, g_voter_u2g1_750));
-  }
-
-  // Try to read the tables "user1" has no access to read in db_u0_only
-  @Test
-  public void selectUser1_db_u0_only() throws Exception {
-    updateClient(org1Users[1]);
-
-    errorMsgTestHelper(
-        String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_u0_only, u0_student_all_755),
-        String.format("Object '%s' not found within 'hive.%s'", u0_student_all_755, db_u0_only));
-  }
-
-  private static void queryViewHelper(final String queryUser, final String query) throws Exception {
-    updateClient(queryUser);
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("rownum")
-        .baselineValues(1)
-        .go();
   }
 
   @Test
-  public void selectUser0_v_student_u0g0_750() throws Exception {
-    queryViewHelper(org1Users[0], query_v_student_u0g0_750);
-  }
-
-  @Test
-  public void selectUser1_v_student_u0g0_750() throws Exception {
-    queryViewHelper(org1Users[1], query_v_student_u0g0_750);
-  }
-
-  @Test
-  public void selectUser2_v_student_u0g0_750() throws Exception {
+  public void user2_db_u0_only_infoSchema() throws Exception {
     updateClient(org1Users[2]);
-    errorMsgTestHelper(query_v_student_u0g0_750, String.format(
-        "Not authorized to read view [v_student_u0g0_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
+    fromInfoSchemaHelper(db_u0_only, newArrayList(u0_vw_voter_all_755),
+        newArrayList(TableType.VIEW));
   }
 
+  /**
+   * user2 can't access, because user0 is 700 owner
+   */
   @Test
-  public void selectUser0_v_student_u1g1_750() throws Exception {
-    updateClient(org1Users[0]);
-    errorMsgTestHelper(query_v_student_u1g1_750, String.format(
-        "Not authorized to read view [v_student_u1g1_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
-  }
-
-  @Test
-  public void selectUser1_v_student_u1g1_750() throws Exception {
-    queryViewHelper(org1Users[1], query_v_student_u1g1_750);
-  }
-
-  @Test
-  public void selectUser2_v_student_u1g1_750() throws Exception {
-    queryViewHelper(org1Users[2], query_v_student_u1g1_750);
-  }
-
-  @Test
-  public void selectUser0_v_partitioned_student_u0g0_750() throws Exception {
-    queryViewHelper(org1Users[0], query_v_partitioned_student_u0g0_750);
-  }
-
-  @Test
-  public void selectUser1_v_partitioned_student_u0g0_750() throws Exception {
-    queryViewHelper(org1Users[1], query_v_partitioned_student_u0g0_750);
-  }
-
-  @Test
-  public void selectUser2_v_partitioned_student_u0g0_750() throws Exception {
+  public void user2_forbidden_g_student_u0_700() throws Exception {
     updateClient(org1Users[2]);
-    errorMsgTestHelper(query_v_partitioned_student_u0g0_750, String.format(
-        "Not authorized to read view [v_partitioned_student_u0g0_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
+    queryTableNotFound(db_general, g_student_u0_700);
+  }
+
+  /**
+   * user2 can't access, only user0 and group0 members have access
+   */
+  @Test
+  public void user2_forbidden_g_student_u0g0_750() throws Exception {
+    updateClient(org1Users[2]);
+    queryTableNotFound(db_general, g_student_u0_700);
+  }
+
+  /**
+   * user2 is 755 owner
+   */
+  @Test
+  public void user2_allowed_g_student_all_755() throws Exception {
+    updateClient(org1Users[2]);
+    queryHiveTableOrView(db_general, g_student_all_755);
+  }
+
+  /**
+   * user2 can't access, because user1 is 700 owner
+   */
+  @Test
+  public void user2_forbidden_g_voter_u1_700() throws Exception {
+    updateClient(org1Users[2]);
+    queryTableNotFound(db_general, g_voter_u1_700);
+  }
+
+  /**
+   * user2 is 750 owner
+   */
+  @Test
+  public void user2_allowed_g_voter_u2g1_750() throws Exception {
+    updateClient(org1Users[2]);
+    queryHiveTableOrView(db_general, g_voter_u2g1_750);
+  }
+
+  /**
+   * user2 is member of group1
+   */
+  @Test
+  public void user2_allowed_g_voter_all_755() throws Exception {
+    updateClient(org1Users[2]);
+    queryHiveTableOrView(db_general, g_voter_all_755);
+  }
+
+  /**
+   * here access restricted at db level, only user0 can access db_u0_only
+   */
+  @Test
+  public void user2_forbidden_u0_student_all_755() throws Exception {
+    updateClient(org1Users[2]);
+    queryTableNotFound(db_u0_only, u0_student_all_755);
+  }
+
+  /**
+   * here access restricted at db level, only user0 can access db_u0_only
+   */
+  @Test
+  public void user2_forbidden_u0_voter_all_755() throws Exception {
+    updateClient(org1Users[2]);
+    queryTableNotFound(db_u0_only, u0_voter_all_755);
   }
 
   @Test
-  public void selectUser0_v_partitioned_student_u1g1_750() throws Exception {
-    updateClient(org1Users[0]);
-    errorMsgTestHelper(query_v_partitioned_student_u1g1_750, String.format(
-        "Not authorized to read view [v_partitioned_student_u1g1_750] in schema [%s.tmp]", MINI_DFS_STORAGE_PLUGIN_NAME));
+  public void user2_forbidden_v_student_u0g0_750() throws Exception {
+    updateClient(org1Users[2]);
+    queryViewNotAuthorized(v_student_u0g0_750);
   }
 
   @Test
-  public void selectUser1_v_partitioned_student_u1g1_750() throws Exception {
-    queryViewHelper(org1Users[1], query_v_partitioned_student_u1g1_750);
+  public void user2_allowed_v_student_u1g1_750() throws Exception {
+    updateClient(org1Users[2]);
+    queryView(v_student_u1g1_750);
   }
 
   @Test
-  public void selectUser2_v_partitioned_student_u1g1_750() throws Exception {
-    queryViewHelper(org1Users[2], query_v_partitioned_student_u1g1_750);
+  public void user2_forbidden_v_partitioned_student_u0g0_750() throws Exception {
+    updateClient(org1Users[2]);
+    queryViewNotAuthorized(v_partitioned_student_u0g0_750);
+  }
+
+  @Test
+  public void user2_allowed_v_partitioned_student_u1g1_750() throws Exception {
+    updateClient(org1Users[2]);
+    queryView(v_partitioned_student_u1g1_750);
   }
 
   @AfterClass
@@ -579,4 +901,15 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     stopMiniDfsCluster();
     stopHiveMetaStore();
   }
+
+  private static void queryHiveTableOrView(String db, String table) throws Exception {
+    test(String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, table));
+  }
+
+  private static void queryTableNotFound(String db, String table) throws Exception {
+    errorMsgTestHelper(
+        String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, table),
+        String.format("Object '%s' not found within 'hive.%s'", table, db));
+  }
+
 }

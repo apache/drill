@@ -180,7 +180,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
     // build a list of DFSDirPartitionLocation.
     for (final List<String> dirs : dirToFileMap.keySet()) {
-      locations.add( new DFSDirPartitionLocation((String [])dirs.toArray(), dirToFileMap.get(dirs)));
+      locations.add( new DFSDirPartitionLocation(dirs.toArray(new String[dirs.size()]), dirToFileMap.get(dirs)));
     }
 
     locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);

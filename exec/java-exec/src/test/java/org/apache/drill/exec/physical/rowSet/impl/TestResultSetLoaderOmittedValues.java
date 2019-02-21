@@ -23,22 +23,25 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 
+@Category(RowSetTests.class)
 public class TestResultSetLoaderOmittedValues extends SubOperatorTest {
 
   /**
@@ -158,8 +161,7 @@ public class TestResultSetLoaderOmittedValues extends SubOperatorTest {
         .addRow( 10, "",    null,    0, null, strArray())
         .build();
 
-    new RowSetComparison(expected)
-        .verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
@@ -321,8 +323,7 @@ public class TestResultSetLoaderOmittedValues extends SubOperatorTest {
         .addRow(13, null)
         .build();
 //    expected.print();
-    new RowSetComparison(expected)
-      .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
 
     rsLoader.close();
   }

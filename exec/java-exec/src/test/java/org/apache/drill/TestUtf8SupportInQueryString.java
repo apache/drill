@@ -19,19 +19,16 @@ package org.apache.drill;
 
 import mockit.Mock;
 import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.nio.charset.Charset;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
-@RunWith(JMockit.class)
 public class TestUtf8SupportInQueryString extends BaseTestQuery {
 
   @Test

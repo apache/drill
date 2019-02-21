@@ -40,12 +40,8 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
 
   @Test
   public void testListDirectoriesWithFilter() throws IOException {
-    List<FileStatus> statuses = FileSystemUtil.listDirectories(fs, base, false, new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().endsWith("a");
-      }
-    });
+    List<FileStatus> statuses = FileSystemUtil.listDirectories(fs, base, false,
+      (PathFilter) path -> path.getName().endsWith("a"));
     assertEquals("Directory count should match", 3, statuses.size());
 
     Collections.sort(statuses);
@@ -62,12 +58,8 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
 
   @Test
   public void testListDirectoriesRecursiveWithFilter() throws IOException {
-    List<FileStatus> statuses = FileSystemUtil.listDirectories(fs, base, true, new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().endsWith("a");
-      }
-    });
+    List<FileStatus> statuses = FileSystemUtil.listDirectories(fs, base, true,
+      (PathFilter) path -> path.getName().endsWith("a"));
     assertEquals("Directory count should match", 4, statuses.size());
 
     Collections.sort(statuses);
@@ -79,12 +71,8 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
 
   @Test
   public void testListDirectoriesEmptyResult() throws IOException {
-    List<FileStatus> statuses = FileSystemUtil.listDirectories(fs, base, false, new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().startsWith("abc");
-      }
-    });
+    List<FileStatus> statuses = FileSystemUtil.listDirectories(fs, base, false,
+      (PathFilter) path -> path.getName().startsWith("abc"));
     assertEquals("Directory count should match", 0, statuses.size());
   }
 
@@ -96,12 +84,8 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
 
   @Test
   public void testListFilesWithFilter() throws IOException {
-    List<FileStatus> statuses = FileSystemUtil.listFiles(fs, new Path(base, "a"), false, new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().endsWith(".txt");
-      }
-    });
+    List<FileStatus> statuses = FileSystemUtil.listFiles(fs, new Path(base, "a"), false,
+      (PathFilter) path -> path.getName().endsWith(".txt"));
     assertEquals("File count should match", 3, statuses.size());
 
     Collections.sort(statuses);
@@ -118,12 +102,8 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
 
   @Test
   public void testListFilesRecursiveWithFilter() throws IOException {
-    List<FileStatus> statuses = FileSystemUtil.listFiles(fs, base, true, new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().endsWith("a") || path.getName().endsWith(".txt");
-      }
-    });
+    List<FileStatus> statuses = FileSystemUtil.listFiles(fs, base, true,
+      (PathFilter) path -> path.getName().endsWith("a") || path.getName().endsWith(".txt"));
 
     assertEquals("File count should match", 8, statuses.size());
   }
@@ -142,12 +122,8 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
 
   @Test
   public void testListAllWithFilter() throws IOException {
-    List<FileStatus> statuses = FileSystemUtil.listAll(fs, new Path(base, "a"), false, new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().endsWith("a") || path.getName().endsWith(".txt");
-      }
-    });
+    List<FileStatus> statuses = FileSystemUtil.listAll(fs, new Path(base, "a"), false,
+      (PathFilter) path -> path.getName().endsWith("a") || path.getName().endsWith(".txt"));
     assertEquals("Directory and file count should match", 4, statuses.size());
   }
 
@@ -159,34 +135,21 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
 
   @Test
   public void testListAllRecursiveWithFilter() throws IOException {
-    List<FileStatus> statuses = FileSystemUtil.listAll(fs, new Path(base, "a"), true, new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().endsWith("a") || path.getName().endsWith(".txt");
-      }
-    });
+    List<FileStatus> statuses = FileSystemUtil.listAll(fs, new Path(base, "a"), true,
+      (PathFilter) path -> path.getName().endsWith("a") || path.getName().endsWith(".txt"));
     assertEquals("Directory and file count should match", 7, statuses.size());
   }
 
   @Test
   public void testListAllEmptyResult() throws IOException {
-    List<FileStatus> statuses = FileSystemUtil.listAll(fs, base, false, new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().startsWith("xyz");
-      }
-    });
+    List<FileStatus> statuses = FileSystemUtil.listAll(fs, base, false,
+      (PathFilter) path -> path.getName().startsWith("xyz"));
     assertEquals("Directory and file count should match", 0, statuses.size());
   }
 
   @Test
   public void testMergeFiltersWithMissingParameters() {
-    PathFilter filter = new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().startsWith("a");
-      }
-    };
+    PathFilter filter = path -> path.getName().startsWith("a");
 
     assertEquals("Should have returned initial filter", filter, FileSystemUtil.mergeFilters(filter, null));
     assertEquals("Should have returned initial filter", filter, FileSystemUtil.mergeFilters(filter, new PathFilter[]{}));
@@ -197,19 +160,8 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
   public void mergeFiltersTrue() {
     Path file = new Path("abc.txt");
 
-    PathFilter firstFilter = new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().startsWith("a");
-      }
-    };
-
-    PathFilter secondFilter = new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().endsWith(".txt");
-      }
-    };
+    PathFilter firstFilter = path -> path.getName().startsWith("a");
+    PathFilter secondFilter = path -> path.getName().endsWith(".txt");
 
     assertTrue("Path should have been included in the path list", FileSystemUtil.mergeFilters(firstFilter, secondFilter).accept(file));
     assertTrue("Path should have been included in the path list", FileSystemUtil.mergeFilters(firstFilter, new PathFilter[] {secondFilter}).accept(file));
@@ -219,22 +171,32 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
   public void mergeFiltersFalse() {
     Path file = new Path("abc.txt");
 
-    PathFilter firstFilter = new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().startsWith("a");
-      }
-    };
-
-    PathFilter secondFilter = new PathFilter() {
-      @Override
-      public boolean accept(Path path) {
-        return path.getName().endsWith(".csv");
-      }
-    };
+    PathFilter firstFilter = path -> path.getName().startsWith("a");
+    PathFilter secondFilter = path -> path.getName().endsWith(".csv");
 
     assertFalse("Path should have been excluded from the path list", FileSystemUtil.mergeFilters(firstFilter, secondFilter).accept(file));
     assertFalse("Path should have been excluded from the path list", FileSystemUtil.mergeFilters(firstFilter, new PathFilter[] {secondFilter}).accept(file));
+  }
+
+  @Test
+  public void testListDirectoriesSafe() {
+    Path file = new Path(base, "missing");
+    List<FileStatus> fileStatuses = FileSystemUtil.listDirectoriesSafe(fs, file, true);
+    assertTrue("Should return empty result", fileStatuses.isEmpty());
+  }
+
+  @Test
+  public void testListFilesSafe() {
+    Path file = new Path(base, "missing.txt");
+    List<FileStatus> fileStatuses = FileSystemUtil.listFilesSafe(fs, file, true);
+    assertTrue("Should return empty result", fileStatuses.isEmpty());
+  }
+
+  @Test
+  public void testListAllSafe() {
+    Path file = new Path(base, "missing");
+    List<FileStatus> fileStatuses = FileSystemUtil.listAllSafe(fs, file, true);
+    assertTrue("Should return empty result", fileStatuses.isEmpty());
   }
 
 }

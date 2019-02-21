@@ -21,15 +21,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
-import org.apache.drill.common.expression.parser.ExprLexer;
-import org.apache.drill.common.expression.parser.ExprParser;
-import org.apache.drill.common.expression.parser.ExprParser.parse_return;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
@@ -179,23 +174,16 @@ public class SchemaPath extends LogicalExpressionBase {
     if (expr == null || expr.isEmpty()) {
       return null;
     }
-    try {
-      if (SchemaPath.DYNAMIC_STAR.equals(expr)) {
-        return SchemaPath.getSimplePath(expr);
-      }
-      ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-      CommonTokenStream tokens = new CommonTokenStream(lexer);
-      ExprParser parser = new ExprParser(tokens);
 
-      parse_return ret = parser.parse();
+    if (SchemaPath.DYNAMIC_STAR.equals(expr)) {
+      return SchemaPath.getSimplePath(expr);
+    }
 
-      if (ret.e instanceof SchemaPath) {
-        return (SchemaPath) ret.e;
-      } else {
-        throw new IllegalStateException("Schema path is not a valid format.");
-      }
-    } catch (RecognitionException e) {
-      throw new RuntimeException(e);
+    LogicalExpression logicalExpression = LogicalExpressionParser.parse(expr);
+    if (logicalExpression instanceof SchemaPath) {
+      return (SchemaPath) logicalExpression;
+    } else {
+      throw new IllegalStateException(String.format("Schema path is not a valid format: %s.", logicalExpression));
     }
   }
 

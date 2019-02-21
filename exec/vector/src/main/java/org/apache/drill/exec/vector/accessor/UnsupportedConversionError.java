@@ -28,7 +28,7 @@ public class UnsupportedConversionError extends UnsupportedOperationException {
 
   private static final long serialVersionUID = 1L;
 
-  private UnsupportedConversionError(String message) {
+  public UnsupportedConversionError(String message) {
     super(message);
   }
 

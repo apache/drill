@@ -21,16 +21,18 @@
 <#macro page_head>
 
 <script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
+<link href="/static/css/drill-dataTables.sortable.css" rel="stylesheet">
 <script>
     $(document).ready(function() {
       $.each(["running","completed"], function(i, key) {
         $("#profileList_"+key).DataTable( {
-          //Preserve order
-          "ordering": false,
+          //Permit sorting-by-column
+          "ordering": true,
+          "order": [[0, "desc"]],
           "searching": true,
           "paging": true,
           "pagingType": "full_numbers",
-          "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+          "lengthMenu": [[${model.getQueriesPerPage()}, -1], [${model.getQueriesPerPage()}, "All"]],
           "lengthChange": true,
           "info": true,
           //Ref: https://legacy.datatables.net/ref#sDom
@@ -193,7 +195,7 @@
 
 <#macro list_queries queries stateList>
     <div class="table-responsive">
-        <table id="profileList_${stateList}" class="table table-hover dataTable" role="grid">
+        <table id="profileList_${stateList}" class="table table-hover sortable dataTable" role="grid">
             <thead>
             <tr role="row">
                 <#if stateList == "running" >
@@ -213,7 +215,7 @@
                 <#if stateList == "running" >
                 <td><input type="checkbox" name="cancelQ" value="${query.getQueryId()}"/></td>
                 </#if>
-                <td>${query.getTime()}</td>
+                <td data-order='${query.getStartTime()}'>${query.getTime()}</td>
                 <td>${query.getUser()}</td>
                 <td>
                     <a href="/profiles/${query.getQueryId()}">
@@ -221,7 +223,7 @@
                     </a>
                 </td>
                 <td>${query.getState()}</td>
-                <td>${query.getDuration()}</td>
+                <td data-order='${query.getEndTime() - query.getStartTime()}'>${query.getDuration()}</td>
                 <td>${query.getForeman()}</td>
             </tr>
             </#list>

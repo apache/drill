@@ -45,4 +45,7 @@ public interface DrillJoin extends DrillRelNode {
 
   /* Right RelNode of the Join Relation */
   RelNode getRight();
+
+  /* Does semi-join? */
+  boolean isSemiJoin();
 }

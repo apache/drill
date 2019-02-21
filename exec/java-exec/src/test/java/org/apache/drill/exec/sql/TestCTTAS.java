@@ -446,6 +446,67 @@ public class TestCTTAS extends BaseTestQuery {
         .go();
   }
 
+  @Test
+  public void testTemporaryTableWithAndWithoutLeadingSlashAreTheSame() throws Exception {
+    String tablename = "table_with_and_without_slash_create";
+
+    try {
+      test("CREATE TEMPORARY TABLE %s AS SELECT * FROM cp.`region.json`", tablename);
+
+      expectUserRemoteExceptionWithMessage(
+          String.format("VALIDATION ERROR: A table or view with given name [%s] already exists in schema [%s]",
+          tablename, DFS_TMP_SCHEMA));
+
+      test(String.format("CREATE TEMPORARY TABLE `%s` AS SELECT * FROM cp.`employee.json`", "/" + tablename));
+    } finally {
+      test("DROP TABLE IF EXISTS %s", tablename);
+    }
+  }
+
+  @Test
+  public void testSelectFromTemporaryTableWithAndWithoutLeadingSlash() throws Exception {
+    String tableName = "select_from_table_with_and_without_slash";
+
+    try {
+      test("CREATE TEMPORARY TABLE %s AS SELECT * FROM cp.`region.json`", tableName);
+
+      String query = "SELECT region_id FROM `%s` LIMIT 1";
+
+      testBuilder()
+          .sqlQuery(query, tableName)
+          .unOrdered()
+          .baselineColumns("region_id")
+          .baselineValues(0L)
+          .go();
+
+      testBuilder()
+          .sqlQuery(query, "/" + tableName)
+          .unOrdered()
+          .baselineColumns("region_id")
+          .baselineValues(0L)
+          .go();
+    } finally {
+      test("DROP TABLE IF EXISTS %s", tableName);
+    }
+  }
+
+  @Test
+  public void testDropTemporaryTableNameStartsWithSlash() throws Exception {
+    String tableName = "table_starts_with_slash_drop";
+
+    try {
+      test("CREATE TEMPORARY TABLE `%s` AS SELECT 1 FROM cp.`employee.json`", tableName);
+      testBuilder()
+          .sqlQuery("DROP TABLE `%s`", "/" + tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Temporary table [%s] dropped", tableName))
+          .go();
+    } finally {
+      test("DROP TABLE IF EXISTS %s", tableName);
+    }
+  }
+
   private void expectUserRemoteExceptionWithMessage(String message) {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString(message));

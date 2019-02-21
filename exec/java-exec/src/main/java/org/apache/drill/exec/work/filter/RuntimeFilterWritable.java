@@ -22,6 +22,7 @@ import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,13 +40,15 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable{
   private String identifier;
 
   public RuntimeFilterWritable(BitData.RuntimeFilterBDef runtimeFilterBDef, DrillBuf... data) {
+    List<Integer> bfSizeInBytes = runtimeFilterBDef.getBloomFilterSizeInBytesList();
+    int bufArrLen = data.length;
+    Preconditions.checkArgument(bfSizeInBytes.size() == bufArrLen, "the input DrillBuf number does not match the metadata definition!");
     this.runtimeFilterBDef = runtimeFilterBDef;
     this.data = data;
     this.identifier = "majorFragmentId:" + runtimeFilterBDef.getMajorFragmentId()
       + ",minorFragmentId:" + runtimeFilterBDef.getMinorFragmentId()
       + ", srcOperatorId:" + runtimeFilterBDef.getHjOpId();
   }
-
 
   public BitData.RuntimeFilterBDef getRuntimeFilterBDef() {
     return runtimeFilterBDef;
@@ -101,6 +104,27 @@ public class RuntimeFilterWritable implements AutoCloseables.Closeable{
       i++;
     }
     return new RuntimeFilterWritable(runtimeFilterBDef, cloned);
+  }
+
+  public void retainBuffers(final int increment) {
+    if (increment <= 0) {
+      return;
+    }
+    for (final DrillBuf buf : data) {
+      buf.retain(increment);
+    }
+  }
+  //TODO: Not used currently because of DRILL-6826
+  public RuntimeFilterWritable newRuntimeFilterWritable(BufferAllocator bufferAllocator) {
+    int bufNum = data.length;
+    DrillBuf [] newBufs = new DrillBuf[bufNum];
+    int i = 0;
+    for (DrillBuf buf : data) {
+      DrillBuf transferredBuffer = buf.transferOwnership(bufferAllocator).buffer;
+      newBufs[i] = transferredBuffer;
+      i++;
+    }
+    return new RuntimeFilterWritable(this.runtimeFilterBDef, newBufs);
   }
 
   public String toString() {

@@ -19,10 +19,13 @@ package org.apache.drill.exec.physical.impl.join;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -203,11 +206,14 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   private int originalPartition = -1; // the partition a secondary reads from
   IntVector read_right_HV_vector; // HV vector that was read from the spilled batch
   private int maxBatchesInMemory;
-  private List<BloomFilter> bloomFilters = new ArrayList<>();
   private List<String> probeFields = new ArrayList<>(); // keep the same sequence with the bloomFilters
   private boolean enableRuntimeFilter;
   private RuntimeFilterReporter runtimeFilterReporter;
   private ValueVectorHashHelper.Hash64 hash64;
+  private Map<BloomFilter, Integer> bloomFilter2buildId = new HashMap<>();
+  private Map<BloomFilterDef, Integer> bloomFilterDef2buildId = new HashMap<>();
+  private List<BloomFilter> bloomFilters = new ArrayList<>();
+  private boolean bloomFiltersGenerated = false;
 
   /**
    * This holds information about the spilled partitions for the build and probe side.
@@ -614,33 +620,41 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
         //
         //  (recursively) Handle the spilled partitions, if any
         //
-        if (!buildSideIsEmpty.booleanValue() && !spilledState.isEmpty()) {
-          // Get the next (previously) spilled partition to handle as incoming
-          HashJoinSpilledPartition currSp = spilledState.getNextSpilledPartition();
+        if (!buildSideIsEmpty.booleanValue()) {
+          while (!spilledState.isEmpty()) {  // "while" is only used for skipping; see "continue" below
 
-          // Create a BUILD-side "incoming" out of the inner spill file of that partition
-          buildBatch = new SpilledRecordbatch(currSp.innerSpillFile, currSp.innerSpilledBatches, context, buildSchema, oContext, spillSet);
-          // The above ctor call also got the first batch; need to update the outcome
-          rightUpstream = ((SpilledRecordbatch) buildBatch).getInitialOutcome();
+            // Get the next (previously) spilled partition to handle as incoming
+            HashJoinSpilledPartition currSp = spilledState.getNextSpilledPartition();
 
-          if (currSp.outerSpilledBatches > 0) {
-            // Create a PROBE-side "incoming" out of the outer spill file of that partition
-            probeBatch = new SpilledRecordbatch(currSp.outerSpillFile, currSp.outerSpilledBatches, context, probeSchema, oContext, spillSet);
+            // If the outer is empty (and it's not a right/full join) - try the next spilled partition
+            if (currSp.outerSpilledBatches == 0 && !joinIsRightOrFull) {
+              continue;
+            }
+
+            // Create a BUILD-side "incoming" out of the inner spill file of that partition
+            buildBatch = new SpilledRecordbatch(currSp.innerSpillFile, currSp.innerSpilledBatches, context, buildSchema, oContext, spillSet);
             // The above ctor call also got the first batch; need to update the outcome
-            leftUpstream = ((SpilledRecordbatch) probeBatch).getInitialOutcome();
-          } else {
-            probeBatch = left; // if no outer batch then reuse left - needed for updateIncoming()
-            leftUpstream = IterOutcome.NONE;
-            hashJoinProbe.changeToFinalProbeState();
+            rightUpstream = ((SpilledRecordbatch) buildBatch).getInitialOutcome();
+
+            if (currSp.outerSpilledBatches > 0) {
+              // Create a PROBE-side "incoming" out of the outer spill file of that partition
+              probeBatch = new SpilledRecordbatch(currSp.outerSpillFile, currSp.outerSpilledBatches, context, probeSchema, oContext, spillSet);
+              // The above ctor call also got the first batch; need to update the outcome
+              leftUpstream = ((SpilledRecordbatch) probeBatch).getInitialOutcome();
+            } else {
+              probeBatch = left; // if no outer batch then reuse left - needed for updateIncoming()
+              leftUpstream = IterOutcome.NONE;
+              hashJoinProbe.changeToFinalProbeState();
+            }
+
+            spilledState.updateCycle(stats, currSp, spilledStateUpdater);
+            state = BatchState.FIRST;  // TODO need to determine if this is still necessary since prefetchFirstBatchFromBothSides sets this
+
+            prefetchedBuild.setValue(false);
+            prefetchedProbe.setValue(false);
+
+            return innerNext(); // start processing the next spilled partition "recursively"
           }
-
-          spilledState.updateCycle(stats, currSp, spilledStateUpdater);
-          state = BatchState.FIRST;  // TODO need to determine if this is still necessary since prefetchFirstBatchFromBothSides sets this
-
-          prefetchedBuild.setValue(false);
-          prefetchedProbe.setValue(false);
-
-          return innerNext(); // start processing the next spilled partition "recursively"
         }
 
       } else {
@@ -749,6 +763,24 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       enableRuntimeFilter = false;
       return;
     }
+    RuntimeFilterDef runtimeFilterDef = popConfig.getRuntimeFilterDef();
+    List<BloomFilterDef> bloomFilterDefs = runtimeFilterDef.getBloomFilterDefs();
+    for (BloomFilterDef bloomFilterDef : bloomFilterDefs) {
+      String buildField = bloomFilterDef.getBuildField();
+      SchemaPath schemaPath = new SchemaPath(new PathSegment.NameSegment(buildField), ExpressionPosition.UNKNOWN);
+      TypedFieldId typedFieldId = buildBatch.getValueVectorId(schemaPath);
+      if (typedFieldId == null) {
+        missingField = true;
+        break;
+      }
+      int fieldId = typedFieldId.getFieldIds()[0];
+      bloomFilterDef2buildId.put(bloomFilterDef, fieldId);
+    }
+    if (missingField) {
+      logger.info("As some build side join key fields not found, runtime filter was disabled");
+      enableRuntimeFilter = false;
+      return;
+    }
     ValueVectorHashHelper hashHelper = new ValueVectorHashHelper(buildBatch, context);
     try {
       hash64 = hashHelper.getHash64(keyExprsBuild, buildSideTypeFieldIds);
@@ -787,11 +819,12 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
   }
 
+  /**
+   * Note:
+   * This method can not be called again as part of recursive call of executeBuildPhase() to handle spilled build partitions.
+   */
   private void initializeRuntimeFilter() {
-    if (!enableRuntimeFilter) {
-      return;
-    }
-    if (runtimeFilterReporter != null) {
+    if (!enableRuntimeFilter || bloomFiltersGenerated) {
       return;
     }
     runtimeFilterReporter = new RuntimeFilterReporter((ExecutorFragmentContext) context);
@@ -801,13 +834,16 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     if (runtimeFilterDef != null) {
       List<BloomFilterDef> bloomFilterDefs = runtimeFilterDef.getBloomFilterDefs();
       for (BloomFilterDef bloomFilterDef : bloomFilterDefs) {
+        int buildFieldId = bloomFilterDef2buildId.get(bloomFilterDef);
         int numBytes = bloomFilterDef.getNumBytes();
         String probeField =  bloomFilterDef.getProbeField();
         probeFields.add(probeField);
         BloomFilter bloomFilter = new BloomFilter(numBytes, context.getAllocator());
         bloomFilters.add(bloomFilter);
+        bloomFilter2buildId.put(bloomFilter, buildFieldId);
       }
     }
+    bloomFiltersGenerated = true;
   }
 
   /**
@@ -971,27 +1007,26 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
         // Fall through
       case OK:
         batchMemoryManager.update(buildBatch, RIGHT_INDEX, 0, true);
+        final int currentRecordCount = buildBatch.getRecordCount();
+        //create runtime filter
+        if (spilledState.isFirstCycle() && enableRuntimeFilter) {
+          //create runtime filter and send out async
+          for (BloomFilter bloomFilter : bloomFilter2buildId.keySet()) {
+            int fieldId = bloomFilter2buildId.get(bloomFilter);
+            for (int ind = 0; ind < currentRecordCount; ind++) {
+              long hashCode = hash64.hash64Code(ind, 0, fieldId);
+              bloomFilter.insert(hashCode);
+            }
+          }
+        }
         // Special treatment (when no spill, and single partition) -- use the incoming vectors as they are (no row copy)
         if ( numPartitions == 1 ) {
           partitions[0].appendBatch(buildBatch);
           break;
         }
-        final int currentRecordCount = buildBatch.getRecordCount();
 
         if (!spilledState.isFirstCycle()) {
           read_right_HV_vector = (IntVector) buildBatch.getContainer().getLast();
-        }
-        //create runtime filter
-        if (spilledState.isFirstCycle() && enableRuntimeFilter) {
-          //create runtime filter and send out async
-          int condFieldIndex = 0;
-          for (BloomFilter bloomFilter : bloomFilters) {
-            for (int ind = 0; ind < currentRecordCount; ind++) {
-              long hashCode = hash64.hash64Code(ind, 0, condFieldIndex);
-              bloomFilter.insert(hashCode);
-            }
-            condFieldIndex++;
-          }
         }
 
         // For every record in the build batch, hash the key columns and keep the result
@@ -1019,9 +1054,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     }
 
     if (spilledState.isFirstCycle() && enableRuntimeFilter) {
-      if (bloomFilters.size() > 0) {
+      if (bloomFilter2buildId.size() > 0) {
         int hashJoinOpId = this.popConfig.getOperatorId();
-        runtimeFilterReporter.sendOut(bloomFilters, probeFields, this.popConfig.getRuntimeFilterDef().isSendToForeman(), hashJoinOpId);
+        runtimeFilterReporter.sendOut(bloomFilters, probeFields, this.popConfig.getRuntimeFilterDef(), hashJoinOpId);
       }
     }
 
@@ -1229,7 +1264,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
       "configured output batch size: %d", configuredBatchSize);
 
-    enableRuntimeFilter = context.getOptions().getOption(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER);
+    enableRuntimeFilter = context.getOptions().getOption(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER) && popConfig.getRuntimeFilterDef() != null;
   }
 
   /**

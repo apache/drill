@@ -32,12 +32,14 @@ import java.util.Arrays;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
@@ -62,9 +64,8 @@ import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
-
+import org.junit.experimental.categories.Category;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 /**
@@ -75,6 +76,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
  * be made to work in the result set loader layer.
  */
 
+@Category(RowSetTests.class)
 public class TestResultSetLoaderUnions extends SubOperatorTest {
 
   @Test
@@ -219,7 +221,7 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
     // Make a bit bigger to overflow early.
 
     final int strLength = 600;
-    final byte value[] = new byte[strLength - 6];
+    final byte[] value = new byte[strLength - 6];
     Arrays.fill(value, (byte) 'X');
     final String strValue = new String(value, Charsets.UTF_8);
     int count = 0;
@@ -633,7 +635,7 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
         .addList("a")
           .addList()
             .addType(MinorType.INT)
-            .buildNested()
+            .resumeUnion()
           .resumeSchema()
         .buildSchema();
     final RowSet expected = new RowSetBuilder(fixture.allocator(), expectedSchema)

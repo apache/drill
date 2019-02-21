@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
-import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.FixedWidthVectorState;
+import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.IsSetVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.SimpleVectorState;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.NullableVector;
@@ -31,15 +31,15 @@ public class NullableVectorState implements VectorState {
   private final ColumnMetadata schema;
   private final NullableScalarWriter writer;
   private final NullableVector vector;
-  private final SimpleVectorState bitsState;
-  private final SimpleVectorState valuesState;
+  private final VectorState bitsState;
+  private final VectorState valuesState;
 
   public NullableVectorState(AbstractObjectWriter writer, NullableVector vector) {
     this.schema = writer.schema();
     this.vector = vector;
 
-    this.writer = (NullableScalarWriter) writer.scalar();
-    bitsState = new FixedWidthVectorState(this.writer.bitsWriter(), vector.getBitsVector());
+    this.writer = (NullableScalarWriter) writer.events();
+    bitsState = new IsSetVectorState(this.writer.bitsWriter(), vector.getBitsVector());
     valuesState = SimpleVectorState.vectorState(this.writer.schema(),
         this.writer.baseWriter(), vector.getValuesVector());
   }

@@ -18,16 +18,11 @@
 package org.apache.drill.exec;
 
 import com.codahale.metrics.MetricRegistry;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
+import org.apache.drill.common.parser.LogicalExpressionParser;
 import mockit.Mock;
 import mockit.MockUp;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.parser.ExprLexer;
-import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.exec.compile.CodeCompilerTestFactory;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
@@ -48,7 +43,6 @@ import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.DateFormatSymbols;
 import java.util.Locale;
@@ -94,17 +88,6 @@ public class ExecTest extends DrillTest {
     return FileSystem.get(configuration);
   }
 
-  /**
-   * Create a temp directory to store the given <i>dirName</i>.
-   * Directory will be deleted on exit.
-   * @param dirName directory name
-   * @return Full path including temp parent directory and given directory name.
-   */
-  public static String getTempDir(final String dirName) {
-    final File dir = Files.createTempDir();
-    return dir.getAbsolutePath() + File.separator + dirName;
-  }
-
   protected DrillbitContext mockDrillbitContext() throws Exception {
     final DrillbitContext context = mock(DrillbitContext.class);
 
@@ -118,12 +101,8 @@ public class ExecTest extends DrillTest {
     return context;
   }
 
-  protected LogicalExpression parseExpr(String expr) throws RecognitionException {
-    final ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-    final CommonTokenStream tokens = new CommonTokenStream(lexer);
-    final ExprParser parser = new ExprParser(tokens);
-    final ExprParser.parse_return ret = parser.parse();
-    return ret.e;
+  public LogicalExpression parseExpr(String expr) {
+    return LogicalExpressionParser.parse(expr);
   }
 
   /**

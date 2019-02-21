@@ -161,7 +161,7 @@ public class ClassGenerator<T>{
       // from the JDK Modifier values to the JCodeModel JMod values: the
       // values are different.
 
-      int mods = JMod.PRIVATE + JMod.FINAL;
+      int mods = JMod.FINAL;
       if ((innerClass.getModifiers() & Modifier.STATIC) != 0) {
         mods += JMod.STATIC;
       }
@@ -370,7 +370,7 @@ public class ClassGenerator<T>{
       // all new fields will be declared in the class from innerClassGenerator
       if (innerClassGenerator == null) {
         try {
-          JDefinedClass innerClazz = clazz._class(JMod.PRIVATE, clazz.name() + "0");
+          JDefinedClass innerClazz = clazz._class(JMod.NONE, clazz.name() + "0");
           innerClassGenerator = new ClassGenerator<>(codeGenerator, mappings, sig, evaluationVisitor, innerClazz, model, optionManager);
         } catch (JClassAlreadyExistsException e) {
           throw new DrillRuntimeException(e);

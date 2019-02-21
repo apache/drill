@@ -33,8 +33,21 @@
   <table><tr>
     <td align='left'>
       <button type="button"  title="Open in new window" onclick="popOutProfile('${model.getQueryId()}');" class="btn btn-default btn-sm">
-      <b>Query Profile:</b> ${model.getQueryId()} <span class="glyphicon glyphicon-new-window"/></button>
-     </td><td align="right" width="100%">
+      <b>Query Profile:</b> ${model.getQueryId()} <#switch model.getQueryState()>
+        <#case "COMPLETED">
+          <span class="label label-success">
+          <#break>
+        <#case "CANCELED">
+          <span class="label label-warning">
+          <#break>
+        <#case "FAILED">
+          <span class="label label-danger">
+          <#break>
+        <#default>
+          <span class="label label-default">
+      </#switch>${model.getQueryState()}</span>&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-new-window"/></button>
+     </td>
+     <td align="right" width="100%">
        <div class="input-group">
          <span class="input-group-addon" style="font-size:95%">Delimiter </span>
          <input id="delimitBy" type="text" class="form-control input-sm" name="delimitBy" title="Specify delimiter" placeholder="Required" maxlength="2" size="2" value=",">
@@ -74,7 +87,7 @@
       $('#result').dataTable( {
         "aaSorting": [],
         "scrollX" : true,
-        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        "lengthMenu": [[${model.getRowsPerPageValues()},-1], [${model.getRowsPerPageValues()},"ALL"]],
         "lengthChange": true,
         "dom": '<"H"lCfr>t<"F"ip>',
         "jQueryUI" : true

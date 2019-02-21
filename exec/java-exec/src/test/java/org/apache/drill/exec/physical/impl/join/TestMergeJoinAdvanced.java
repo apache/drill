@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.test.TestTools;
 import org.apache.drill.categories.OperatorTest;
@@ -75,6 +76,7 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
   }
 
   @Test
+  @Category({UnlikelyTest.class})
   public void testJoinWithDifferentTypesInCondition() throws Exception {
     String query = "select count(*) col1 from " +
         "(select t1.date_opt from cp.`parquet/date_dictionary.parquet` t1, cp.`parquet/timestamp_table.parquet` t2 " +
@@ -180,6 +182,7 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
   }
 
   @Test
+  @Category({UnlikelyTest.class})
   public void testMergeLeftJoinLargeLeft() throws Exception {
     testMultipleBatchJoin(5000L, 1000L, "left", 5000L * 1000L + 2L);
   }
@@ -218,6 +221,7 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
   }
 
   @Test
+  @Category({UnlikelyTest.class})
   public void testDrill4165() throws Exception {
     final String query = "select count(*) cnt from cp.`tpch/lineitem.parquet` l1, cp.`tpch/lineitem.parquet` l2 " +
         "where l1.l_partkey = l2.l_partkey and l1.l_suppkey < 30 and l2.l_suppkey < 30";
@@ -292,6 +296,7 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
   }
 
   @Test // DRILL-6491
+  @Category({UnlikelyTest.class})
   public void testFullJoinIsNotSupported() throws Exception {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(CoreMatchers.containsString("SYSTEM ERROR: CannotPlanException"));

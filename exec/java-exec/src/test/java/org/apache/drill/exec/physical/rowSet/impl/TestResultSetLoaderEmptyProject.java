@@ -24,21 +24,23 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
-
+import org.junit.experimental.categories.Category;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
+@Category(RowSetTests.class)
 public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
 
   /**
@@ -156,8 +158,7 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
     for (int i = 0; i < rowCount; i++) {
       builder.addRow(0, 0);
     }
-    new RowSetComparison(builder.build())
-        .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));
+    RowSetUtilities.verify(builder.build(), fixture.wrap(rsLoader.harvest()));
 
     rsLoader.close();
   }
