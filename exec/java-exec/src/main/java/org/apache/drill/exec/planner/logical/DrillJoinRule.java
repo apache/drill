@@ -86,6 +86,12 @@ public class DrillJoinRule extends RelOptRule {
     }
 
     try {
+      if (join.isSemiJoin()) {
+        RelNode joinRel = new DrillSemiJoinRel(join.getCluster(), traits, convertedLeft, convertedRight, newJoinCondition,
+            leftKeys, rightKeys);
+        call.transformTo(joinRel);
+        return;
+      }
       if (!addFilter) {
        RelNode joinRel = new DrillJoinRel(join.getCluster(), traits, convertedLeft, convertedRight, newJoinCondition,
                                          join.getJoinType(), leftKeys, rightKeys);

@@ -727,7 +727,6 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         Aggregate newAggregate = aggregate.copy(
             aggregate.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
             newInput,
-            aggregate.indicator,
             aggregate.getGroupSet(),
             aggregate.getGroupSets(),
             aggregate.getAggCallList()

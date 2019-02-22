@@ -59,7 +59,7 @@
     </dependency>
 
     <dependency>
-      <groupId>com.github.vvysotskyi.drill-calcite</groupId>
+      <groupId>${calcite.groupId}</groupId>
       <artifactId>calcite-core</artifactId>
     </dependency>
 

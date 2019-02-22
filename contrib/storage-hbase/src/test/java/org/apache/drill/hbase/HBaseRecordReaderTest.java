@@ -81,15 +81,15 @@ public class HBaseRecordReaderTest extends BaseHBaseTest {
       .baselineValues(
         "a1".getBytes(),
         mapOf("c3", "23".getBytes()),
-        mapOf("c3", "23".getBytes()))
+        mapOf("c1", "21".getBytes(), "c2", "22".getBytes()))
       .baselineValues(
         "a2".getBytes(),
         mapOf("c3", "13".getBytes()),
-        mapOf("c3", "13".getBytes()))
+        mapOf("c1", "11".getBytes(), "c2", "12".getBytes()))
       .baselineValues(
         "a3".getBytes(),
         mapOf("c3", "33".getBytes()),
-        mapOf("c3", "33".getBytes()))
+        mapOf("c1", "31".getBytes(), "c2", "32".getBytes()))
       .go();
   }
 

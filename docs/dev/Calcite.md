@@ -1,7 +1,7 @@
 # Drill-specific commits in Apache Calcite
 
 Currently, Drill uses Apache Calcite with additional changes, required for Drill. All the commits were left after 
-update from Calcite `1.4.0` to Calcite `1.15.0` and weren't merged to the Calcite's master yet since there is no consensus on them in Calcite community.
+update from Calcite `1.4.0` to Calcite `1.15.0` (3 commits) and from Calcite `1.18.0` to Calcite `1.20.0` (1 commit) and weren't merged to the Calcite's master yet since there is no consensus on them in Calcite community.
 
 List of Jiras with Drill-specific commits:
 
@@ -10,6 +10,7 @@ List of Jiras with Drill-specific commits:
 |[CALCITE-2018](https://issues.apache.org/jira/browse/CALCITE-2018)|Queries failed with AssertionError: rel has lower cost than best cost of subset|Pull request with the fix was created ([PR-552](https://github.com/apache/calcite/pull/552)), but [CALCITE-2166](https://issues.apache.org/jira/browse/CALCITE-2166) which blocks it was found and is not resolved yet.|
 |[CALCITE-2087](https://issues.apache.org/jira/browse/CALCITE-2087)|Add new method to ViewExpander interface to allow passing SchemaPlus.|Pull request into Apache Calcite was created, but it was declined. See conversation in Jira.|
 |[CALCITE-1178](https://issues.apache.org/jira/browse/CALCITE-1178)|Allow SqlBetweenOperator to compare DATE and TIMESTAMP|SQL spec does not allow to compare datetime types if they have different `<primary datetime field>`s. Therefore Calcite community won’t accept these changes. Similar issues were reported in [CALCITE-2829](https://issues.apache.org/jira/browse/CALCITE-2829) and in [CALCITE-2745](https://issues.apache.org/jira/browse/CALCITE-2745).|
+|[CALCITE-3121](https://issues.apache.org/jira/browse/CALCITE-3121)|VolcanoPlanner hangs due to removing ORDER BY from sub-query|Pull request was open to revert changes ([PR-1264](https://github.com/apache/calcite/pull/1264)) which remove ORDER BY clause; it wasn't merged, because aforementioned changes only unveiled the issue and no proper solution is available yet.|
 
 # Drill-Calcite repository
 

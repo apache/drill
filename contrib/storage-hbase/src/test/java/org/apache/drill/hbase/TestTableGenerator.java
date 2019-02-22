@@ -177,7 +177,7 @@ public class TestTableGenerator {
     }
 
     HTableDescriptor desc = new HTableDescriptor(tableName);
-    desc.addFamily(new HColumnDescriptor("f"));
+    desc.addFamily(new HColumnDescriptor("f0"));
     desc.addFamily(new HColumnDescriptor("F"));
     if (numberRegions > 1) {
       admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions - 1));
@@ -188,20 +188,20 @@ public class TestTableGenerator {
     BufferedMutator table = conn.getBufferedMutator(tableName);
 
     Put p = new Put("a1".getBytes());
-    p.addColumn("f".getBytes(), "c1".getBytes(), "21".getBytes());
-    p.addColumn("f".getBytes(), "c2".getBytes(), "22".getBytes());
+    p.addColumn("f0".getBytes(), "c1".getBytes(), "21".getBytes());
+    p.addColumn("f0".getBytes(), "c2".getBytes(), "22".getBytes());
     p.addColumn("F".getBytes(), "c3".getBytes(), "23".getBytes());
     table.mutate(p);
 
     p = new Put("a2".getBytes());
-    p.addColumn("f".getBytes(), "c1".getBytes(), "11".getBytes());
-    p.addColumn("f".getBytes(), "c2".getBytes(), "12".getBytes());
+    p.addColumn("f0".getBytes(), "c1".getBytes(), "11".getBytes());
+    p.addColumn("f0".getBytes(), "c2".getBytes(), "12".getBytes());
     p.addColumn("F".getBytes(), "c3".getBytes(), "13".getBytes());
     table.mutate(p);
 
     p = new Put("a3".getBytes());
-    p.addColumn("f".getBytes(), "c1".getBytes(), "31".getBytes());
-    p.addColumn("f".getBytes(), "c2".getBytes(), "32".getBytes());
+    p.addColumn("f0".getBytes(), "c1".getBytes(), "31".getBytes());
+    p.addColumn("f0".getBytes(), "c2".getBytes(), "32".getBytes());
     p.addColumn("F".getBytes(), "c3".getBytes(), "33".getBytes());
     table.mutate(p);
 

@@ -59,7 +59,7 @@ public class TestLateLimit0Optimization extends BaseTestQuery {
         "  STRING_BINARY(CONVERT_TO(r_regionkey, 'BIGINT')) as l_be,\n" +
         "  STRING_BINARY(CONVERT_TO(r_name, 'UTF8')) u8,\n" +
         "  STRING_BINARY(CONVERT_TO(r_name, 'UTF16')) u16,\n" +
-        "  STRING_BINARY(CONVERT_TO(r_regionkey, 'INT_HADOOPV')) as l_be\n" +
+        "  STRING_BINARY(CONVERT_TO(r_regionkey, 'INT_HADOOPV')) as i_ha\n" +
         "FROM cp.`tpch/region.parquet`");
   }
 

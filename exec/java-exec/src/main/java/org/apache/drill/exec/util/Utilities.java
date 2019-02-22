@@ -19,11 +19,14 @@ package org.apache.drill.exec.util;
 
 import java.util.Collection;
 import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.planner.cost.DrillDefaultRelMetadataProvider;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -127,5 +130,11 @@ public class Utilities {
       default:
         return null;
     }
+  }
+
+  public static JaninoRelMetadataProvider registerJaninoRelMetadataProvider() {
+    JaninoRelMetadataProvider relMetadataProvider = JaninoRelMetadataProvider.of(DrillDefaultRelMetadataProvider.INSTANCE);
+    RelMetadataQuery.THREAD_PROVIDERS.set(relMetadataProvider);
+    return relMetadataProvider;
   }
 }

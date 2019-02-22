@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.fn.hive;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -149,7 +150,7 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .sqlQuery("select last_day(to_date('1994-02-01','yyyy-MM-dd')) as `LAST_DAY` from (VALUES(1))")
         .unOrdered()
         .baselineColumns("LAST_DAY")
-        .baselineValues("1994-02-28")
+        .baselineValues(LocalDate.parse("1994-02-28"))
         .go();
   }
 

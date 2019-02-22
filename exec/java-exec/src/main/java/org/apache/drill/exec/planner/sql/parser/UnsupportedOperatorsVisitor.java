@@ -79,8 +79,8 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
 
   @Override
   public SqlNode visit(SqlDataTypeSpec type) {
-    for(String strType : disabledType) {
-      if(type.getTypeName().getSimple().equalsIgnoreCase(strType)) {
+    for (String strType : disabledType) {
+      if (type.getTypeName().getSimple().equalsIgnoreCase(strType)) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.DATA_TYPE,
             type.getTypeName().getSimple() + " is not supported\n" +
             "See Apache Drill JIRA: DRILL-1959");
@@ -94,24 +94,24 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
   @Override
   public SqlNode visit(SqlCall sqlCall) {
     // Inspect the window functions
-    if(sqlCall instanceof SqlSelect) {
+    if (sqlCall instanceof SqlSelect) {
       SqlSelect sqlSelect = (SqlSelect) sqlCall;
 
       checkGrouping((sqlSelect));
 
       checkRollupCubeGrpSets(sqlSelect);
 
-      for(SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
+      for (SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
         // If the window function is used with an alias,
         // enter the first operand of AS operator
-        if(nodeInSelectList.getKind() == SqlKind.AS
+        if (nodeInSelectList.getKind() == SqlKind.AS
             && (((SqlCall) nodeInSelectList).getOperandList().get(0).getKind() == SqlKind.OVER)) {
           nodeInSelectList = ((SqlCall) nodeInSelectList).getOperandList().get(0);
         }
 
-        if(nodeInSelectList.getKind() == SqlKind.OVER) {
+        if (nodeInSelectList.getKind() == SqlKind.OVER) {
           // Throw exceptions if window functions are disabled
-          if(!context.getOptions().getOption(ExecConstants.ENABLE_WINDOW_FUNCTIONS).bool_val) {
+          if (!context.getOptions().getOption(ExecConstants.ENABLE_WINDOW_FUNCTIONS).bool_val) {
             unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
                 "Window functions are disabled\n" +
                 "See Apache Drill JIRA: DRILL-2559");
@@ -120,12 +120,12 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
 
           // DRILL-3182, DRILL-3195
           SqlCall over = (SqlCall) nodeInSelectList;
-          if(over.getOperandList().get(0) instanceof SqlCall) {
+          if (over.getOperandList().get(0) instanceof SqlCall) {
             SqlCall function = (SqlCall) over.getOperandList().get(0);
 
             // DRILL-3182
             // Window function with DISTINCT qualifier is temporarily disabled
-            if(function.getFunctionQuantifier() != null
+            if (function.getFunctionQuantifier() != null
                 && function.getFunctionQuantifier().getValue() == SqlSelectKeyword.DISTINCT) {
               unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
                   "DISTINCT for window aggregate functions is not currently supported\n" +
@@ -174,7 +174,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     // DRILL-3188
     // Disable frame which is other than the default
     // (i.e., BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-    if(sqlCall instanceof SqlWindow) {
+    if (sqlCall instanceof SqlWindow) {
       SqlWindow window = (SqlWindow) sqlCall;
 
       SqlNode lowerBound = window.getLowerBound();
@@ -188,7 +188,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       // RANGE UNBOUNDED PRECEDING
       // RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
       // RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-      if(window.getOrderList().size() != 0
+      if (window.getOrderList().size() != 0
           && !window.isRows()
           && SqlWindow.isUnboundedPreceding(lowerBound)
           && (upperBound == null || SqlWindow.isCurrentRow(upperBound) || SqlWindow.isUnboundedFollowing(upperBound))) {
@@ -214,13 +214,13 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       // When OVER clause doesn't contain an ORDER BY clause, the following are equivalent to the default frame:
       // RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
       // ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-      if(window.getOrderList().size() == 0
+      if (window.getOrderList().size() == 0
           && SqlWindow.isUnboundedPreceding(lowerBound)
           && SqlWindow.isUnboundedFollowing(upperBound)) {
         isSupported = true;
       }
 
-      if(!isSupported) {
+      if (!isSupported) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
             "This type of window frame is currently not supported \n" +
             "See Apache Drill JIRA: DRILL-3188");
@@ -228,7 +228,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
 
       // DRILL-3189: Disable DISALLOW PARTIAL
-      if(!window.isAllowPartial()) {
+      if (!window.isAllowPartial()) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
             "Disallowing partial windows is currently not supported \n" +
             "See Apache Drill JIRA: DRILL-3189");
@@ -237,7 +237,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     }
 
     // Disable unsupported Intersect, Except
-    if(sqlCall.getKind() == SqlKind.INTERSECT || sqlCall.getKind() == SqlKind.EXCEPT) {
+    if (sqlCall.getKind() == SqlKind.INTERSECT || sqlCall.getKind() == SqlKind.EXCEPT) {
       unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
           sqlCall.getOperator().getName() + " is not supported\n" +
           "See Apache Drill JIRA: DRILL-1921");
@@ -245,11 +245,11 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     }
 
     // Disable unsupported JOINs
-    if(sqlCall.getKind() == SqlKind.JOIN) {
+    if (sqlCall.getKind() == SqlKind.JOIN) {
       SqlJoin join = (SqlJoin) sqlCall;
 
       // Block Natural Join
-      if(join.isNatural()) {
+      if (join.isNatural()) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
             "NATURAL JOIN is not supported\n" +
             "See Apache Drill JIRA: DRILL-1986");
@@ -267,8 +267,8 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     }
 
     // Disable Function
-    for(String strOperator : disabledOperators) {
-      if(sqlCall.getOperator().isName(strOperator)) {
+    for (String strOperator : disabledOperators) {
+      if (sqlCall.getOperator().isName(strOperator, true)) { // true is passed to preserve previous behavior
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
             sqlCall.getOperator().getName() + " is not supported\n" +
             "See Apache Drill JIRA: DRILL-2115");
@@ -277,7 +277,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     }
 
     // Disable complex functions incorrect placement
-    if(sqlCall instanceof SqlSelect) {
+    if (sqlCall instanceof SqlSelect) {
       SqlSelect sqlSelect = (SqlSelect) sqlCall;
 
       for (SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
@@ -299,9 +299,9 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
         }
       }
 
-      if(sqlSelect.hasOrderBy()) {
+      if (sqlSelect.hasOrderBy()) {
         for (SqlNode sqlNode : sqlSelect.getOrderList()) {
-          if(containsFlatten(sqlNode)) {
+          if (containsFlatten(sqlNode)) {
             unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
                 "Flatten function is not supported in Order By\n" +
                 "See Apache Drill JIRA: DRILL-2181");
@@ -315,9 +315,9 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
         }
       }
 
-      if(sqlSelect.getGroup() != null) {
-        for(SqlNode sqlNode : sqlSelect.getGroup()) {
-          if(containsFlatten(sqlNode)) {
+      if (sqlSelect.getGroup() != null) {
+        for (SqlNode sqlNode : sqlSelect.getGroup()) {
+          if (containsFlatten(sqlNode)) {
             unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
                 "Flatten function is not supported in Group By\n" +
                 "See Apache Drill JIRA: DRILL-2181");
@@ -331,17 +331,17 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
         }
       }
 
-      if(sqlSelect.isDistinct()) {
-        for(SqlNode column : sqlSelect.getSelectList()) {
-          if(column.getKind() ==  SqlKind.AS) {
-            if(containsFlatten(((SqlCall) column).getOperandList().get(0))) {
+      if (sqlSelect.isDistinct()) {
+        for (SqlNode column : sqlSelect.getSelectList()) {
+          if (column.getKind() ==  SqlKind.AS) {
+            if (containsFlatten(((SqlCall) column).getOperandList().get(0))) {
               unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
                   "Flatten function is not supported in Distinct\n" +
                   "See Apache Drill JIRA: DRILL-2181");
               throw new UnsupportedOperationException();
             }
           } else {
-            if(containsFlatten(column)) {
+            if (containsFlatten(column)) {
               unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
                   "Flatten function is not supported in Distinct\n" +
                   "See Apache Drill JIRA: DRILL-2181");
@@ -352,9 +352,9 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
     }
 
-    if(DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(sqlCall.getOperator()) instanceof SqlCountAggFunction) {
-      for(SqlNode sqlNode : sqlCall.getOperandList()) {
-        if(containsFlatten(sqlNode)) {
+    if (DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(sqlCall.getOperator()) instanceof SqlCountAggFunction) {
+      for (SqlNode sqlNode : sqlCall.getOperandList()) {
+        if (containsFlatten(sqlNode)) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
               "Flatten function in aggregate functions is not supported\n" +
               "See Apache Drill JIRA: DRILL-2181");

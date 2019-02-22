@@ -47,15 +47,15 @@ import java.util.List;
  * Aggregation implemented in Drill.
  */
 public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel {
-  /** Creates a DrillAggregateRel. */
-  public DrillAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator, ImmutableBitSet groupSet,
-      List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)  {
-    super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls);
+
+  public DrillAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, ImmutableBitSet groupSet,
+                           List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)  {
+    super(cluster, traits, child, groupSet, groupSets, aggCalls);
   }
 
   @Override
-  public Aggregate copy(RelTraitSet traitSet, RelNode input, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
-    return new DrillAggregateRel(getCluster(), traitSet, input, indicator, groupSet, groupSets, aggCalls);
+  public Aggregate copy(RelTraitSet traitSet, RelNode input, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
+    return new DrillAggregateRel(getCluster(), traitSet, input, groupSet, groupSets, aggCalls);
   }
 
   @Override

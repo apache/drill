@@ -30,5 +30,6 @@ public class DrillDefaultRelMetadataProvider {
       .of(DrillRelMdRowCount.SOURCE,
           DrillRelMdDistinctRowCount.SOURCE,
           DrillRelMdSelectivity.SOURCE,
+          DrillRelMdMaxRowCount.SOURCE,
           DefaultRelMetadataProvider.INSTANCE));
 }

@@ -121,12 +121,11 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
   public AggPrelBase(RelOptCluster cluster,
                      RelTraitSet traits,
                      RelNode child,
-                     boolean indicator,
                      ImmutableBitSet groupSet,
                      List<ImmutableBitSet> groupSets,
                      List<AggregateCall> aggCalls,
                      OperatorPhase phase) throws InvalidRelException {
-    super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls);
+    super(cluster, traits, child, groupSet, groupSets, aggCalls);
     this.operPhase = phase;
     createKeysAndExprs();
   }

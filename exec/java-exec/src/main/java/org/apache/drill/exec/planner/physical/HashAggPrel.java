@@ -41,19 +41,17 @@ public class HashAggPrel extends AggPrelBase implements Prel{
   public HashAggPrel(RelOptCluster cluster,
                      RelTraitSet traits,
                      RelNode child,
-                     boolean indicator,
                      ImmutableBitSet groupSet,
                      List<ImmutableBitSet> groupSets,
                      List<AggregateCall> aggCalls,
                      OperatorPhase phase) throws InvalidRelException {
-    super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls, phase);
+    super(cluster, traits, child, groupSet, groupSets, aggCalls, phase);
   }
 
   @Override
-  public Aggregate copy(RelTraitSet traitSet, RelNode input, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
+  public Aggregate copy(RelTraitSet traitSet, RelNode input, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
     try {
-      return new HashAggPrel(getCluster(), traitSet, input, indicator, groupSet, groupSets, aggCalls,
-          this.getOperatorPhase());
+      return new HashAggPrel(getCluster(), traitSet, input, groupSet, groupSets, aggCalls, this.getOperatorPhase());
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }

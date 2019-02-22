@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import org.apache.calcite.sql.validate.SqlNameMatcher;
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -101,18 +102,18 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   @Override
   public void lookupOperatorOverloads(SqlIdentifier opName, SqlFunctionCategory category,
-                                      SqlSyntax syntax, List<SqlOperator> operatorList) {
+      SqlSyntax syntax, List<SqlOperator> operatorList, SqlNameMatcher nameMatcher) {
     if (isInferenceEnabled()) {
-      populateFromTypeInference(opName, category, syntax, operatorList);
+      populateFromTypeInference(opName, category, syntax, operatorList, nameMatcher);
     } else {
-      populateFromWithoutTypeInference(opName, category, syntax, operatorList);
+      populateFromWithoutTypeInference(opName, category, syntax, operatorList, nameMatcher);
     }
   }
 
   private void populateFromTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
-                                         SqlSyntax syntax, List<SqlOperator> operatorList) {
+                                         SqlSyntax syntax, List<SqlOperator> operatorList, SqlNameMatcher nameMatcher) {
     final List<SqlOperator> calciteOperatorList = Lists.newArrayList();
-    inner.lookupOperatorOverloads(opName, category, syntax, calciteOperatorList);
+    inner.lookupOperatorOverloads(opName, category, syntax, calciteOperatorList, nameMatcher);
     if (!calciteOperatorList.isEmpty()) {
       for (SqlOperator calciteOperator : calciteOperatorList) {
         if (calciteToWrapper.containsKey(calciteOperator)) {
@@ -133,8 +134,8 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   }
 
   private void populateFromWithoutTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
-                                                SqlSyntax syntax, List<SqlOperator> operatorList) {
-    inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
+                                                SqlSyntax syntax, List<SqlOperator> operatorList, SqlNameMatcher nameMatcher) {
+    inner.lookupOperatorOverloads(opName, category, syntax, operatorList, nameMatcher);
     if (operatorList.isEmpty() && (syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
       List<SqlOperator> drillOps = drillOperatorsWithoutInferenceMap.get(opName.getSimple().toLowerCase());
       if (drillOps != null) {

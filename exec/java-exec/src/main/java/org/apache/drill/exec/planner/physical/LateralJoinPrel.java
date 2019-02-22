@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptCluster;
@@ -29,7 +30,6 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
-import org.apache.calcite.sql.SemiJoinType;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.commons.collections.ListUtils;
 import org.apache.drill.common.expression.SchemaPath;
@@ -49,14 +49,14 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
 
 
   protected LateralJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, boolean excludeCorrelateCol,
-                            CorrelationId correlationId, ImmutableBitSet requiredColumns, SemiJoinType semiJoinType) {
+                            CorrelationId correlationId, ImmutableBitSet requiredColumns, JoinRelType semiJoinType) {
     super(cluster, traits, left, right, excludeCorrelateCol, correlationId, requiredColumns, semiJoinType);
   }
 
   @Override
   public Correlate copy(RelTraitSet traitSet,
                         RelNode left, RelNode right, CorrelationId correlationId,
-                        ImmutableBitSet requiredColumns, SemiJoinType joinType) {
+                        ImmutableBitSet requiredColumns, JoinRelType joinType) {
     return new LateralJoinPrel(this.getCluster(), this.getTraitSet(), left, right, this.excludeCorrelateColumn, correlationId, requiredColumns,
         this.getJoinType());
   }
@@ -67,12 +67,12 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
     PhysicalOperator leftPop = ((Prel)left).getPhysicalOperator(creator);
     PhysicalOperator rightPop = ((Prel)right).getPhysicalOperator(creator);
 
-    SemiJoinType jtype = this.getJoinType();
+    JoinRelType jtype = this.getJoinType();
     List<SchemaPath> excludedColumns = new ArrayList<>();
     if (getColumn() != null) {
       excludedColumns.add(getColumn());
     }
-    LateralJoinPOP ljoin = new LateralJoinPOP(leftPop, rightPop, jtype.toJoinType(), DrillLateralJoinRelBase.IMPLICIT_COLUMN, excludedColumns);
+    LateralJoinPOP ljoin = new LateralJoinPOP(leftPop, rightPop, jtype, DrillLateralJoinRelBase.IMPLICIT_COLUMN, excludedColumns);
     return creator.addMetadata(this, ljoin);
   }
 
