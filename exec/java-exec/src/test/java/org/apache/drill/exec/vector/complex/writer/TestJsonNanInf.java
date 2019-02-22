@@ -251,7 +251,7 @@ public class TestJsonNanInf extends BaseTestQuery {
     batch.release();
     batchLoader.clear();
  }
-  
+
   @Test
   public void testConvertToJsonFunction() throws Exception {
     String table = "nan_test.csv";
