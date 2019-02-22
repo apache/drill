@@ -43,17 +43,39 @@ function closePopup() {
 function doSubmitQueryWithUserName() {
     userName = document.getElementById("userName").value;
     if (!userName.trim()) {
-        alert("Please fill in User Name field");
+        populateAndShowAlert('userNameMissing', null);
+        $("#userName").focus();
         return;
     }
     //Wrap and Submit query
-    wrapAndSubmitQuery();
+    doSubmitQueryWithAutoLimit();
 }
 
-//Wrap & Submit Query (invoked directly if impersonation is not enabled)
-function wrapAndSubmitQuery() {
+//Perform autoLimit check before submitting (invoked directly if impersonation is not enabled)
+function doSubmitQueryWithAutoLimit() {
+    let origQueryText = $('#query').attr('value');
+    if (origQueryText == null || origQueryText.trim().length == 0) {
+        populateAndShowAlert("queryMissing", null);
+        $("#query").focus();
+        return;
+    }
     //Wrap if required
-    wrapQuery();
+    let mustWrapWithLimit = $('input[name="forceLimit"]:checked').length > 0;
+    //Clear field when submitting if not mustWrapWithLimit
+    if (!mustWrapWithLimit) {
+      //Wipe out any numeric entry in the field before
+      $('#queryLimit').attr('value', '');
+    } else {
+      let autoLimitValue=document.getElementById('queryLimit').value;
+      let positiveIntRegex = new RegExp("^[1-9]\\d*$");
+      let isValidRowCount = positiveIntRegex.test(autoLimitValue);
+      if (!isValidRowCount) {
+        let alertValues = {'_autoLimitValue_': autoLimitValue };
+        populateAndShowAlert("invalidRowCount", alertValues);
+        $('#queryLimit').focus();
+        return;
+      }
+    }
     //Submit query
     submitQuery();
 }
@@ -82,26 +104,4 @@ function submitQuery() {
             alert(errorThrown);
         }
     });
-}
-
-//Wraps a query with Limit by directly changing the query in the hidden textbox in the UI (see /query.ftl)
-function wrapQuery() {
-    var origQueryText = $('#query').attr('value');
-    //dBug: console.log("Query Input:" + origQueryText);
-    var mustWrapWithLimit = $('input[name="forceLimit"]:checked').length > 0;
-    if (mustWrapWithLimit) {
-        var semicolonIdx = origQueryText.lastIndexOf(';');
-        //Check and eliminate trailing semicolon
-        if (semicolonIdx  == origQueryText.length-1 ) {
-          origQueryText = origQueryText.substring(0, semicolonIdx)
-        }
-        var qLimit = $('#queryLimit').val();
-        var wrappedQuery = "-- [autoLimit: " + qLimit + " rows]\nselect * from (\n" + origQueryText + "\n) limit " + qLimit;
-        //dBug: console.log("Query Output:" + wrappedQuery);
-        //Wrapping Query
-        $('#query').attr('value', wrappedQuery);
-    } else {
-        //Do not change the query
-        //dBug: console.log("Query Output:" + origQueryText);
-    }
 }

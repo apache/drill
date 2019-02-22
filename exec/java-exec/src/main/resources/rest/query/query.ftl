@@ -39,6 +39,8 @@
     Sample SQL query: <strong>SELECT * FROM cp.`employee.json` LIMIT 20</strong>
   </div>
 
+<#include "*/alertModals.ftl">
+
 <#include "*/runningQuery.ftl">
 
   <#if model.isOnlyImpersonationEnabled()>
@@ -77,7 +79,7 @@
       <input class="form-control" type="hidden" id="query" name="query"/>
     </div>
 
-    <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>wrapAndSubmitQuery()</#if>">
+    <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
       Submit
     </button>
     <input type="checkbox" name="forceLimit" value="limit" <#if model.isAutoLimitEnabled()>checked</#if>> Limit results to <input type="text" id="queryLimit" min="0" value="${model.getDefaultRowsAutoLimited()}" size="6" pattern="[0-9]*"> rows <span class="glyphicon glyphicon-info-sign" onclick="alert('Limits the number of records retrieved in the query')" style="cursor:pointer"></span>
@@ -127,7 +129,7 @@
             .addEventListener('keydown', function(e) {
       if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
       if (e.target.form) //Submit [Wrapped] Query 
-        <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>wrapAndSubmitQuery()</#if>;
+        <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>;
     });
   </script>
 </#macro>

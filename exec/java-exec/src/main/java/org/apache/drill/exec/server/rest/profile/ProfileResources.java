@@ -376,8 +376,13 @@ public class ProfileResources {
   @Path("/profiles/{queryid}")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getProfile(@PathParam("queryid") String queryId){
-    ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId), work.getContext().getConfig());
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/profile.ftl", sc, wrapper);
+    try {
+      ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId), work.getContext().getConfig());
+      return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/profile.ftl", sc, wrapper);
+    } catch (Exception | Error e) {
+      logger.error("Exception was thrown when fetching profile {} :\n{}", queryId, e);
+      return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
+    }
   }
 
   @SuppressWarnings("resource")

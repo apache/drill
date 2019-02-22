@@ -69,8 +69,6 @@
     //Submit Cancellations & show status
     function cancelSelection() {
         let checkedBoxes = document.querySelectorAll('input[name=cancelQ]:checked');
-        //dBug
-        console.log("Cancelling => " + checkedBoxes.length);
         let checkedCount = checkedBoxes.length;
         if (checkedCount == 0)  return;
 
@@ -154,15 +152,18 @@
       <strong>No running queries.</strong>
     </div>
   </#if>
+
+  <#include "*/alertModals.ftl">
+
   <table width="100%">
     <script type="text/javascript" language="javascript">
     //Validate that the fetch number is valid
     function checkMaxFetch() {
       var maxFetch = document.forms["profileFetch"]["max"].value;
-      console.log("maxFetch: " + maxFetch);
       if (isNaN(maxFetch) || (maxFetch < 1) || (maxFetch > 100000) ) {
-        alert("Invalid Entry: " + maxFetch + "\n" +
-               "Please enter a valid number of profiles to fetch (1 to 100000) ");
+        let alertValues = {'_fetchSize_': maxFetch };
+        populateAndShowAlert('invalidProfileFetchSize', alertValues);
+        $("#fetchMax").focus();
         return false;
       }
       return true;

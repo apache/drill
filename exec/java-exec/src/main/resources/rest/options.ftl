@@ -52,7 +52,10 @@
             optionValue = $("#"+optionName+" select[name='value']").val();
         } else if (optionKind != "STRING") { //i.e. it is a number (FLOAT/DOUBLE/LONG)
             if (isNaN(optionValue)) {
-                alert(optionValue+" is not a valid number for option: "+optionName);
+                let actualOptionName=optionName.replace(/\\\./gi, ".");
+                let alertValues = {'_numericOption_': optionValue, '_optionName_': actualOptionName };
+                populateAndShowAlert('invalidOptionValue', alertValues);
+                $("#"+optionName+" input[name='value']").focus();
                 return;
             }
         }
@@ -84,7 +87,7 @@
   <button type="button" class="btn btn-info" onclick="inject(this.innerHTML);">${filter}</button>
   </#list>
   </div>
-
+  <#include "*/alertModals.ftl">
   <div class="table-responsive">
     <table id='optionsTbl' class="table table-striped table-condensed display sortable" style="table-layout: auto; width=100%;">
       <thead>

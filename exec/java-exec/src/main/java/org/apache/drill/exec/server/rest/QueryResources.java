@@ -92,8 +92,8 @@ public class QueryResources {
       final String rowsPerPageValuesAsStr = Joiner.on(",").join(rowsPerPageValues);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/result.ftl", sc, new TabularResult(result, rowsPerPageValuesAsStr));
     } catch (Exception | Error e) {
-      logger.error("Query from Web UI Failed", e);
-      return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/errorMessage.ftl", sc, e);
+      logger.error("Query from Web UI Failed: {}", e);
+      return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
     }
   }
 
