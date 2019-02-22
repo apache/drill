@@ -157,7 +157,7 @@ public class TestLogReader extends ClusterTest {
     
     RowSetBuilder builder = client.rowSetBuilder(expectedSchema);
     
-    for (int i = 0; i < 15990 / 3; i++) {
+    for (int i = 0; i < 9990 / 3; i++) {
       builder.addRow(2017, 12, 17);
       builder.addRow(2017, 12, 18);
       builder.addRow(2017, 12, 19);
