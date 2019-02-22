@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexChecker;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
@@ -140,12 +142,12 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
       List<String> rightFields,
       List<Integer> leftKeys,
       List<Integer> rightKeys) {
-    List<RexNode> conjuncts = RelOptUtil.conjunctions(this.getCondition());
-    short i=0;
+    List<RexNode> conjuncts = getConjuncts();
 
+    short i = 0;
     for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
       final RexNode conditionExpr = conjuncts.get(i++);
-      final SqlKind kind  = conditionExpr.getKind();
+      SqlKind kind = conditionExpr.getKind();
       if (kind != SqlKind.EQUALS && kind != SqlKind.IS_NOT_DISTINCT_FROM) {
         throw UserException.unsupportedError()
             .message("Unsupported comparator in join condition %s", conditionExpr)
@@ -156,6 +158,20 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
           FieldReference.getWithQuotedRef(leftFields.get(pair.left)),
           FieldReference.getWithQuotedRef(rightFields.get(pair.right))));
     }
+  }
+
+  // todo: remove this method after CALCITE-3174 is resolved
+  private List<RexNode> getConjuncts() {
+    List<RexNode> conjunctions = RelOptUtil.conjunctions(getCondition());
+    RexBuilder rexBuilder = getCluster().getRexBuilder();
+    for (int i = 0; i < conjunctions.size(); i++) {
+      RexNode node = conjunctions.get(i);
+      if (node instanceof RexCall) {
+        conjunctions.set(i,
+            RelOptUtil.collapseExpandedIsNotDistinctFromExpr((RexCall) node, rexBuilder));
+      }
+    }
+    return conjunctions;
   }
 
   public boolean isSemiJoin() {

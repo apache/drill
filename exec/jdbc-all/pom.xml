@@ -300,8 +300,8 @@
             </includes>
             <excludes>
               <exclude>io.protostuff:*</exclude>
-              <exclude>com.github.vvysotskyi.drill-calcite:calcite-core</exclude>
-              <exclude>com.github.vvysotskyi.drill-calcite:calcite-linq4j</exclude>
+              <exclude>${calcite.groupId}:calcite-core</exclude>
+              <exclude>${calcite.groupId}:calcite-linq4j</exclude>
               <exclude>org.pentaho:*</exclude>
               <exclude>org.msgpack:*</exclude>
               <exclude>xerces:*</exclude>
@@ -615,8 +615,8 @@
                   <excludes>
                     <exclude>org.slf4j:jcl-over-slf4j</exclude>
                     <exclude>io.protostuff:*</exclude>
-                    <exclude>com.github.vvysotskyi.drill-calcite:calcite-core</exclude>
-                    <exclude>com.github.vvysotskyi.drill-calcite:calcite-linq4j</exclude>
+                    <exclude>${calcite.groupId}:calcite-core</exclude>
+                    <exclude>${calcite.groupId}:calcite-linq4j</exclude>
                     <exclude>org.pentaho:*</exclude>
                     <exclude>org.msgpack:*</exclude>
                     <exclude>xerces:*</exclude>

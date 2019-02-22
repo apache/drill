@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mapr.db.json;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
 import org.ojai.Value;
@@ -54,6 +55,15 @@ public class JsonConditionBuilder extends AbstractExprVisitor<JsonScanSpec, Void
   public boolean isAllExpressionsConverted() {
     // TODO Auto-generated method stub
     return allExpressionsConverted;
+  }
+
+  @Override
+  public JsonScanSpec visitSchemaPath(SchemaPath path, Void value) throws RuntimeException {
+    String fieldPath = FieldPathHelper.schemaPath2FieldPath(path).asPathString();
+    QueryCondition cond = MapRDBImpl.newCondition().is(fieldPath, Op.EQUAL, true);
+    return new JsonScanSpec(groupScan.getTableName(),
+        groupScan.getIndexDesc(),
+        cond.build());
   }
 
   @Override

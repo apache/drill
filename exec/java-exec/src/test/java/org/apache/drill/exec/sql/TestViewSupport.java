@@ -821,4 +821,28 @@ public class TestViewSupport extends TestBaseViewSupport {
     }, null);
   }
 
+  @Test
+  @Category(UnlikelyTest.class)
+  public void testViewContainingWithClauseAndUnionAllInDefinition() throws Exception{
+    String viewName = "test_view";
+    try {
+      String viewDefinition = "create or replace view %s.`%s` as " +
+          "with tbl_un as " +
+          "(" +
+          "(select c_name from cp.`tpch/customer.parquet` limit 1)" +
+          "union all " +
+          "(select c_name from cp.`tpch/customer.parquet` limit 1 offset 1) " +
+          ") " +
+          "select * from tbl_un";
+      test(viewDefinition, DFS_TMP_SCHEMA, viewName);
+      testBuilder()
+          .sqlQuery("select * from %s.`%s`", DFS_TMP_SCHEMA, viewName)
+          .unOrdered()
+          .baselineColumns("c_name")
+          .baselineValuesForSingleColumn("Customer#000000001", "Customer#000000002")
+          .go();
+    } finally {
+      test("drop view if exists %s.`%s`", DFS_TMP_SCHEMA, viewName);
+    }
+  }
 }

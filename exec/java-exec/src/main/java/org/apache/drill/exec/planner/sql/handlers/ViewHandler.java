@@ -66,7 +66,8 @@ public abstract class ViewHandler extends DefaultSqlHandler {
       // Disallow temporary tables usage in view definition
       config.getConverter().disallowTemporaryTables();
       // Store the viewSql as view def SqlNode is modified as part of the resolving the new table definition below.
-      final String viewSql = createView.getQuery().toString();
+      // Use of parentheses is forced to ensure expressions are read correctly.
+      final String viewSql = createView.getQuery().toSqlString(null, true).getSql();
       final ConvertedRelNode convertedRelNode = validateAndConvert(createView.getQuery());
       final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
       final RelNode queryRelNode = convertedRelNode.getConvertedNode();

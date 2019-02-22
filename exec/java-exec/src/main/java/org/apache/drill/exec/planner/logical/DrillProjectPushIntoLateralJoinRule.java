@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class DrillProjectPushIntoLateralJoinRule extends RelOptRule {
 
   public static final DrillProjectPushIntoLateralJoinRule INSTANCE =
@@ -72,11 +71,12 @@ public class DrillProjectPushIntoLateralJoinRule extends RelOptRule {
     final RelNode convertedRight = convert(right, right.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
 
     final RelTraitSet traits = corr.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
+    boolean trivial = DrillRelOptUtil.isTrivialProject(origProj, true);
     RelNode relNode = new DrillLateralJoinRel(corr.getCluster(),
                             traits, convertedLeft, convertedRight, true, corr.getCorrelationId(),
                             corr.getRequiredColumns(), corr.getJoinType());
 
-    if (!DrillRelOptUtil.isTrivialProject(origProj, true)) {
+    if (!trivial) {
       Map<Integer, Integer> mapWithoutCorr = buildMapWithoutCorrColumn(corr, correlationIndex);
       List<RexNode> outputExprs = DrillRelOptUtil.transformExprs(origProj.getCluster().getRexBuilder(), origProj.getChildExps(), mapWithoutCorr);
 

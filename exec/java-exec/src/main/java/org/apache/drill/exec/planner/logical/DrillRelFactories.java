@@ -144,9 +144,9 @@ public class DrillRelFactories {
   private static class DrillAggregateFactoryImpl implements RelFactories.AggregateFactory {
 
     @Override
-    public RelNode createAggregate(RelNode input, boolean indicator, ImmutableBitSet groupSet,
+    public RelNode createAggregate(RelNode input, ImmutableBitSet groupSet,
                                    com.google.common.collect.ImmutableList<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
-      return new DrillAggregateRel(input.getCluster(), input.getTraitSet().plus(DRILL_LOGICAL), input, indicator, groupSet, groupSets, aggCalls);
+      return new DrillAggregateRel(input.getCluster(), input.getTraitSet().plus(DRILL_LOGICAL), input, groupSet, groupSets, aggCalls);
     }
   }
 }

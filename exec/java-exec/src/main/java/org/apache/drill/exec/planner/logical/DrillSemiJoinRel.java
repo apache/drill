@@ -18,26 +18,28 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.core.SemiJoin;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.LogicalSemiJoin;
+import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DrillSemiJoinRel extends SemiJoin implements DrillJoin, DrillRel {
+public class DrillSemiJoinRel extends DrillJoinRelBase implements DrillJoin, DrillRel {
 
   public DrillSemiJoinRel(
           RelOptCluster cluster,
@@ -45,28 +47,29 @@ public class DrillSemiJoinRel extends SemiJoin implements DrillJoin, DrillRel {
           RelNode left,
           RelNode right,
           RexNode condition,
-          ImmutableIntList leftKeys,
-          ImmutableIntList rightKeys) {
+          List<Integer> leftKeys,
+          List<Integer> rightKeys) {
     super(cluster,
           traitSet,
           left,
           right,
           condition,
-          leftKeys,
-          rightKeys);
+          JoinRelType.SEMI);
+    this.leftKeys = leftKeys;
+    this.rightKeys = rightKeys;
   }
 
-  public static SemiJoin create(RelNode left, RelNode right, RexNode condition,
-                                ImmutableIntList leftKeys, ImmutableIntList rightKeys) {
+  public static DrillSemiJoinRel create(RelNode left, RelNode right, RexNode condition,
+                                        List<Integer> leftKeys, List<Integer> rightKeys) {
     final RelOptCluster cluster = left.getCluster();
     return new DrillSemiJoinRel(cluster, cluster.traitSetOf(DrillRel.DRILL_LOGICAL), left,
             right, condition, leftKeys, rightKeys);
   }
 
   @Override
-  public SemiJoin copy(RelTraitSet traitSet, RexNode condition,
+  public DrillSemiJoinRel copy(RelTraitSet traitSet, RexNode condition,
                                  RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
-    Preconditions.checkArgument(joinType == JoinRelType.INNER);
+    Preconditions.checkArgument(joinType == JoinRelType.SEMI);
     final JoinInfo joinInfo = JoinInfo.of(left, right, condition);
     Preconditions.checkArgument(joinInfo.isEqui());
     return new DrillSemiJoinRel(getCluster(), traitSet, left, right, condition,
@@ -99,8 +102,9 @@ public class DrillSemiJoinRel extends SemiJoin implements DrillJoin, DrillRel {
     return new LogicalSemiJoin(leftOp, rightOp, conditions, joinType);
   }
 
+  // This method is the same as in Calcite and is here to ensure SemiJoin's behavior
   @Override
-  public boolean isSemiJoin() {
-    return true;
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    return planner.getCostFactory().makeTinyCost();
   }
 }

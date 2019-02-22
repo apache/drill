@@ -53,6 +53,7 @@ public class FunctionGenerationHelper {
   public static final String IS_NOT_TRUE = "isnottrue";
   public static final String IS_FALSE = "isfalse";
   public static final String IS_NOT_FALSE = "isnotfalse";
+  public static final String NOT = "not";
 
   /**
    * Finds ordering comparator ("compare_to...") FunctionHolderExpression with

@@ -28,7 +28,7 @@ public class DrillScanRule  extends RelOptRule {
 
   private DrillScanRule() {
     super(RelOptHelper.any(EnumerableTableScan.class),
-        DrillRelFactories.LOGICAL_BUILDER, "DrillTableRule");
+        DrillRelFactories.LOGICAL_BUILDER, "DrillScanRule");
   }
 
   @Override

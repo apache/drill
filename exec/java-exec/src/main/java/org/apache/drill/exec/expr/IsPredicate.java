@@ -230,6 +230,7 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
       case FunctionGenerationHelper.IS_NOT_TRUE:
         return createIsNotTruePredicate(expr);
       case FunctionGenerationHelper.IS_FALSE:
+      case FunctionGenerationHelper.NOT:
         return createIsFalsePredicate(expr);
       case FunctionGenerationHelper.IS_NOT_FALSE:
         return createIsNotFalsePredicate(expr);

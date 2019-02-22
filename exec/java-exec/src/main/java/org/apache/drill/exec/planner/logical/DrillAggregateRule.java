@@ -51,7 +51,7 @@ public class DrillAggregateRule extends RelOptRule {
 
     final RelTraitSet traits = aggregate.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
-    call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput, aggregate.indicator,
+    call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput,
         aggregate.getGroupSet(), aggregate.getGroupSets(), aggregate.getAggCallList()));
   }
 }

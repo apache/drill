@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
@@ -29,7 +30,6 @@ import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.sql.SemiJoinType;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.ExecConstants;
@@ -47,7 +47,7 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
   final private static double CORRELATE_MEM_COPY_COST = DrillCostBase.MEMORY_TO_CPU_RATIO * DrillCostBase.BASE_CPU_COST;
   final public boolean excludeCorrelateColumn;
   public DrillLateralJoinRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, boolean excludeCorrelateCol,
-                               CorrelationId correlationId, ImmutableBitSet requiredColumns, SemiJoinType semiJoinType) {
+                               CorrelationId correlationId, ImmutableBitSet requiredColumns, JoinRelType semiJoinType) {
     super(cluster, traits, left, right, correlationId, requiredColumns, semiJoinType);
     this.excludeCorrelateColumn = excludeCorrelateCol;
   }
@@ -73,7 +73,7 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
       case LEFT:
       case INNER:
         return constructRowType(SqlValidatorUtil.deriveJoinRowType(left.getRowType(),
-          removeImplicitField(right.getRowType()), joinType.toJoinType(),
+          removeImplicitField(right.getRowType()), joinType,
           getCluster().getTypeFactory(), null,
           ImmutableList.of()));
       case ANTI:

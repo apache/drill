@@ -240,7 +240,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         return oldAggRel.getCluster().getRexBuilder().addAggCall(
             oldCall,
             oldAggRel.getGroupCount(),
-            oldAggRel.indicator,
             newCalls,
             aggCallMapping,
             ImmutableList.of(getFieldType(
@@ -303,7 +302,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       return rexBuilder.addAggCall(
           oldCall,
           nGroups,
-          oldAggRel.indicator,
           newCalls,
           aggCallMapping,
           oldArgTypes);
@@ -347,7 +345,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         rexBuilder.addAggCall(
             sumCall,
             nGroups,
-            oldAggRel.indicator,
             newCalls,
             aggCallMapping,
             ImmutableList.of(avgInputType));
@@ -356,7 +353,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         rexBuilder.addAggCall(
             countCall,
             nGroups,
-            oldAggRel.indicator,
             newCalls,
             aggCallMapping,
             ImmutableList.of(avgInputType));
@@ -386,7 +382,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         rexBuilder.addAggCall(
             countCall,
             nGroups,
-            oldAggRel.indicator,
             newCalls,
             aggCallMapping,
             ImmutableList.of(avgInputType));
@@ -449,7 +444,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         rexBuilder.addAggCall(
             sumZeroCall,
             nGroups,
-            oldAggRel.indicator,
             newCalls,
             aggCallMapping,
             ImmutableList.of(argType));
@@ -463,7 +457,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         rexBuilder.addAggCall(
             countCall,
             nGroups,
-            oldAggRel.indicator,
             newCalls,
             aggCallMapping,
             ImmutableList.of(argType));
@@ -535,7 +528,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         rexBuilder.addAggCall(
             sumArgSquaredAggCall,
             nGroups,
-            oldAggRel.indicator,
             newCalls,
             aggCallMapping,
             ImmutableList.of(argType));
@@ -554,7 +546,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
           rexBuilder.addAggCall(
               sumArgAggCall,
               nGroups,
-              oldAggRel.indicator,
               newCalls,
               aggCallMapping,
               ImmutableList.of(argType));
@@ -571,7 +562,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         rexBuilder.addAggCall(
             countArgAggCall,
             nGroups,
-            oldAggRel.indicator,
             newCalls,
             aggCallMapping,
             ImmutableList.of(argType));
@@ -679,7 +669,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       List<AggregateCall> newCalls) {
     RelOptCluster cluster = inputRel.getCluster();
     return new LogicalAggregate(cluster, cluster.traitSetOf(Convention.NONE),
-        inputRel, oldAggRel.indicator, oldAggRel.getGroupSet(), oldAggRel.getGroupSets(), newCalls);
+        inputRel, oldAggRel.getGroupSet(), oldAggRel.getGroupSets(), newCalls);
   }
 
   private RelDataType getFieldType(RelNode relNode, int i) {
@@ -730,7 +720,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
           oldAggRel.getCluster().getRexBuilder()
               .addAggCall(sumZeroCall,
                   oldAggRel.getGroupCount(),
-                  oldAggRel.indicator,
                   newAggregateCalls,
                   aggCallMapping,
                   ImmutableList.of(argType));
@@ -743,7 +732,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
           oldAggRel.getCluster(),
           oldAggRel.getTraitSet(),
           oldAggRel.getInput(),
-          oldAggRel.indicator,
           oldAggRel.getGroupSet(),
           oldAggRel.getGroupSets(),
           newAggregateCalls));

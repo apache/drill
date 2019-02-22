@@ -20,9 +20,10 @@ package org.apache.drill.exec.planner.logical;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.CorrelationId;
-import org.apache.calcite.sql.SemiJoinType;
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.logical.data.LateralJoin;
 import org.apache.drill.common.logical.data.LogicalOperator;
@@ -31,20 +32,24 @@ import org.apache.drill.exec.planner.common.DrillLateralJoinRelBase;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class DrillLateralJoinRel extends DrillLateralJoinRelBase implements DrillRel {
 
-  protected DrillLateralJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, boolean includeCorrelateVar,
-                                CorrelationId correlationId, ImmutableBitSet requiredColumns, SemiJoinType semiJoinType) {
-    super(cluster, traits, left, right, includeCorrelateVar, correlationId, requiredColumns, semiJoinType);
+  protected DrillLateralJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, boolean excludeCorrelateCol,
+                                CorrelationId correlationId, ImmutableBitSet requiredColumns, JoinRelType semiJoinType) {
+    super(cluster, traits, left, right, excludeCorrelateCol, correlationId, requiredColumns, semiJoinType);
   }
 
   @Override
   public Correlate copy(RelTraitSet traitSet,
         RelNode left, RelNode right, CorrelationId correlationId,
-        ImmutableBitSet requiredColumns, SemiJoinType joinType) {
+        ImmutableBitSet requiredColumns, JoinRelType joinType) {
     return new DrillLateralJoinRel(this.getCluster(), this.getTraitSet(), left, right, this.excludeCorrelateColumn, correlationId, requiredColumns,
         this.getJoinType());
+  }
+
+  @Override
+  public RelWriter explainTerms(RelWriter pw) {
+    return super.explainTerms(pw).item("exclude correlate column: ", excludeCorrelateColumn);
   }
 
   @Override

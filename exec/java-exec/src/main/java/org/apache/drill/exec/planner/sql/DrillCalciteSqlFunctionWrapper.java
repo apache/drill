@@ -21,6 +21,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlFunction;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlSyntax;
@@ -58,6 +59,11 @@ public class DrillCalciteSqlFunctionWrapper extends SqlFunction implements Drill
         wrappedFunction.getParamTypes(),
         wrappedFunction.getFunctionType());
     this.operator = wrappedFunction;
+  }
+
+  @Override
+  public SqlNode rewriteCall(SqlValidator validator, SqlCall call) {
+    return operator.rewriteCall(validator, call);
   }
 
   @Override
