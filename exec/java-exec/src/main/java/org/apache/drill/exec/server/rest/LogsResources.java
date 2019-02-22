@@ -56,6 +56,7 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_RO
 @Path("/")
 @RolesAllowed(ADMIN_ROLE)
 public class LogsResources {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogsResources.class);
 
   @Inject DrillRestServer.UserAuthEnabled authEnabled;
   @Inject SecurityContext sc;
@@ -96,8 +97,13 @@ public class LogsResources {
   @Path("/log/{name}/content")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getLog(@PathParam("name") String name) throws IOException {
-    LogContent content = getLogJSON(name);
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/logs/log.ftl", sc, content);
+    try {
+      LogContent content = getLogJSON(name);
+      return ViewableWithPermissions.create(authEnabled.get(), "/rest/logs/log.ftl", sc, content);
+    } catch (Exception | Error e) {
+      logger.error("Exception was thrown when fetching log {} :\n{}", name, e);
+      return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
+    }
   }
 
   @GET

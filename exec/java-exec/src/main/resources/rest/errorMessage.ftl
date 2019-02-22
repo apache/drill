@@ -17,12 +17,21 @@
     limitations under the License.
 
 -->
-<html>
+<#include "*/generic.ftl">
+<#macro page_head>
+</#macro>
 
-<pre>
-${model.printStackTrace()}
-</pre>
+<#macro page_body>
+  <div class="page-header">
+  </div>
+<!-- Rendering Panel -->
+  <div class="panel panel-danger">
+    <div class="panel-heading" style="white-space:pre;font-size:110%;padding:0px 0px">
+      <span class="glyphicon glyphicon-alert" style="font-size:125%;">&#xe209;</span>   <strong>${model.getClass().getSimpleName()} :</strong> 	${model.getMessage()?split("\n")[0]}
+    </div>
+    <div class="panel-body"><span style="font-family:courier,monospace;white-space:pre-wrap">${model}</span></div>
+  </div>
+  <a class="btn btn-default" id="backBtn" style="display:inline" onclick="window.history.back()"><span class="glyphicon glyphicon-step-backward"></span> Back</a>
+</#macro>
 
-
-
-<html>
+<@page_html/>

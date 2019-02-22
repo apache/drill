@@ -162,12 +162,13 @@
               </label>
             </div>
             </div>
-            <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>submitQuery()</#if>">
+            <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
             Re-run query
             </button>
           </form>
       </p>
 
+<#include "*/alertModals.ftl">
 <#include "*/runningQuery.ftl">
 
       <p>
@@ -563,7 +564,7 @@
             .addEventListener('keydown', function(e) {
       if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
       if (e.target.form) 
-        <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>submitQuery()</#if>;
+        <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>;
     });
     </script>
 
