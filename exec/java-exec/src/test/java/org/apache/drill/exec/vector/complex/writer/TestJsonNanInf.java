@@ -247,7 +247,10 @@ public class TestJsonNanInf extends BaseTestQuery {
     List<QueryDataBatch> results = testSqlWithResults(query);
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
     assertTrue("Query result must contain 1 row", results.size() == 1);
-  }
+    QueryDataBatch batch = results.get(0);
+    batch.release();
+    batchLoader.clear();
+ }
   
   @Test
   public void testConvertToJsonFunction() throws Exception {
