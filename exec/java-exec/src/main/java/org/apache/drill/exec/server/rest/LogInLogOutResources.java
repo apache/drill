@@ -69,7 +69,7 @@ public class LogInLogOutResources {
       // is forwarded to the redirect page.
       final HttpSession session = request.getSession(true);
       final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, "UTF-8")).build();
-      session.setAttribute(FormAuthenticator.__J_URI, destURI.toString());
+      session.setAttribute(FormAuthenticator.__J_URI, destURI.getPath());
     }
   }
 
