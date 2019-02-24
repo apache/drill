@@ -24,7 +24,7 @@ import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
 
 /**
  * Represents a partition column (usually dir0, dir1, ...). This is an implicit
- * column that has a vaiable part: the partition index.
+ * column that has a variable part: the partition index.
  */
 
 public class PartitionColumn extends MetadataColumn {
