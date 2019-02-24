@@ -158,7 +158,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
    */
 
   @Test
-  public void testWildcardAndFileMetaata() {
+  public void testWildcardAndFileMetadata() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
@@ -185,7 +185,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
    */
 
   @Test
-  public void testWildcardAndFileMetaataMixed() {
+  public void testWildcardAndFileMetadataMixed() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),

@@ -125,6 +125,6 @@ public class ScanTestUtils {
   public static List<SchemaPath> projectAllWithMetadata(int dirCount) {
     return RowSetTestUtils.concat(
         RowSetTestUtils.projectAll(),
-        expandMetadata(2));
+        expandMetadata(dirCount));
   }
 }

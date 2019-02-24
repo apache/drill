@@ -140,7 +140,8 @@ public class TestScanLevelProjection extends SubOperatorTest {
   }
 
   /**
-   * Simulate a SELECT * query by passing "*" as a column name.
+   * Simulate a SELECT * query by passing "**" (Drill's internal representation
+   * of the wildcard) as a column name.
    */
 
   @Test

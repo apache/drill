@@ -30,8 +30,7 @@ public class RowSetTestUtils {
   public static List<SchemaPath> projectList(String... names) {
     List<SchemaPath> selected = new ArrayList<>();
     for (String name : names) {
-      if (name.equals(SchemaPath.DYNAMIC_STAR) ||
-          name.equals("*")) {
+      if (name.equals(SchemaPath.DYNAMIC_STAR)) {
         selected.add(SchemaPath.STAR_COLUMN);
       } else {
         selected.add(SchemaPath.parseFromString(name));

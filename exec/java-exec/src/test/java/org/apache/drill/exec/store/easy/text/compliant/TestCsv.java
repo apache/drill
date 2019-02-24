@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
@@ -134,12 +133,11 @@ public class TestCsv extends ClusterTest {
     String sql = "SELECT A, b, C FROM `dfs.data`.`%s`";
     RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("A", MinorType.VARCHAR)
         .add("b", MinorType.VARCHAR)
         .add("C", MinorType.VARCHAR)
-        .build();
-    assertTrue(expectedSchema.isEquivalent(actual.batchSchema()));
+        .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow("10", "foo", "bar")
@@ -168,12 +166,11 @@ public class TestCsv extends ClusterTest {
     String sql = "SELECT * FROM `dfs.data`.`%s`";
     RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
         .add("b", MinorType.VARCHAR)
         .add("c", MinorType.VARCHAR)
-        .build();
-    assertTrue(expectedSchema.isEquivalent(actual.batchSchema()));
+        .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow("10", "foo", "bar")
@@ -190,11 +187,10 @@ public class TestCsv extends ClusterTest {
     String sql = "SELECT A, filename FROM `dfs.data`.`%s`";
     RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("A", MinorType.VARCHAR)
         .addNullable("filename", MinorType.VARCHAR)
-        .build();
-    assertTrue(expectedSchema.isEquivalent(actual.batchSchema()));
+        .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow("10", CASE2_FILE_NAME)
@@ -211,16 +207,64 @@ public class TestCsv extends ClusterTest {
     String sql = "SELECT *, filename FROM `dfs.data`.`%s`";
     RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
         .add("b", MinorType.VARCHAR)
         .add("c", MinorType.VARCHAR)
         .addNullable("filename", MinorType.VARCHAR)
-        .build();
-    assertTrue(expectedSchema.isEquivalent(actual.batchSchema()));
+        .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow("10", "foo", "bar", CASE2_FILE_NAME)
+        .build();
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * CSV does not allow explicit use of dir0, dir1, etc. columns. Treated
+   * as undefined nullable int columns.
+   * <p>
+   * Note that the class path storage plugin does not support directories
+   * (partitions). It is unclear if that should show up here as the
+   * partition column names being undefined (hence Nullable INT) or should
+   * they still be defined, but set to a null Nullable VARCHAR?
+   */
+  @Test
+  public void testPartitionColsWildcard() throws IOException {
+    String sql = "SELECT *, dir0, dir5 FROM `dfs.data`.`%s`";
+    RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .add("b", MinorType.VARCHAR)
+        .add("c", MinorType.VARCHAR)
+        .addNullable("dir0", MinorType.INT)
+        .addNullable("dir5", MinorType.INT)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("10", "foo", "bar", null, null)
+        .build();
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * CSV does not allow explicit use of dir0, dir1, etc. columns. Treated
+   * as undefined nullable int columns.
+   */
+  @Test
+  public void testPartitionColsExplicit() throws IOException {
+    String sql = "SELECT a, dir0, dir5 FROM `dfs.data`.`%s`";
+    RowSet actual = client.queryBuilder().sql(sql, CASE2_FILE_NAME).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .addNullable("dir0", MinorType.INT)
+        .addNullable("dir5", MinorType.INT)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("10", null, null)
         .build();
     RowSetUtilities.verify(expected, actual);
   }
