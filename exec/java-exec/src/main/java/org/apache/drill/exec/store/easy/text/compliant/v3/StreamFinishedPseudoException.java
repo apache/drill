@@ -15,34 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.base;
+package org.apache.drill.exec.store.easy.text.compliant.v3;
 
-import java.io.IOException;
+class StreamFinishedPseudoException extends RuntimeException {
 
-import org.apache.drill.exec.store.dfs.FileSelection;
+  public static final StreamFinishedPseudoException INSTANCE = new StreamFinishedPseudoException();
 
-public abstract class AbstractFileGroupScan extends AbstractGroupScan implements FileGroupScan {
+  private StreamFinishedPseudoException() {
+    super("", null, false, true);
 
-  public AbstractFileGroupScan(String userName) {
-    super(userName);
   }
 
-  public AbstractFileGroupScan(AbstractFileGroupScan that) {
-    super(that);
-  }
-
-  @Override
-  public void modifyFileSelection(FileSelection selection) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public FileGroupScan clone(FileSelection selection) throws IOException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public boolean supportsPartitionFilterPushdown() {
-    return true;
-  }
 }

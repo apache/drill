@@ -42,7 +42,8 @@ public class EasySubScan extends AbstractSubScan{
   private final List<FileWorkImpl> files;
   private final EasyFormatPlugin<?> formatPlugin;
   private final List<SchemaPath> columns;
-  private Path selectionRoot;
+  private final Path selectionRoot;
+  private final int partitionDepth;
 
   @JsonCreator
   public EasySubScan(
@@ -52,7 +53,8 @@ public class EasySubScan extends AbstractSubScan{
       @JsonProperty("format") FormatPluginConfig formatConfig,
       @JacksonInject StoragePluginRegistry engineRegistry,
       @JsonProperty("columns") List<SchemaPath> columns,
-      @JsonProperty("selectionRoot") Path selectionRoot
+      @JsonProperty("selectionRoot") Path selectionRoot,
+      @JsonProperty("partitionDepth") int partitionDepth
       ) throws ExecutionSetupException {
     super(userName);
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
@@ -60,50 +62,40 @@ public class EasySubScan extends AbstractSubScan{
     this.files = files;
     this.columns = columns;
     this.selectionRoot = selectionRoot;
+    this.partitionDepth = partitionDepth;
   }
 
-  public EasySubScan(String userName, List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, List<SchemaPath> columns,
-      Path selectionRoot){
+  public EasySubScan(String userName, List<FileWorkImpl> files, EasyFormatPlugin<?> plugin,
+      List<SchemaPath> columns, Path selectionRoot, int partitionDepth) {
     super(userName);
     this.formatPlugin = plugin;
     this.files = files;
     this.columns = columns;
     this.selectionRoot = selectionRoot;
+    this.partitionDepth = partitionDepth;
   }
 
   @JsonProperty
-  public Path getSelectionRoot() {
-    return selectionRoot;
-  }
+  public Path getSelectionRoot() { return selectionRoot; }
+
+  @JsonProperty
+  public int getPartitionDepth() { return partitionDepth; }
 
   @JsonIgnore
-  public EasyFormatPlugin<?> getFormatPlugin(){
-    return formatPlugin;
-  }
+  public EasyFormatPlugin<?> getFormatPlugin() { return formatPlugin; }
 
   @JsonProperty("files")
-  public List<FileWorkImpl> getWorkUnits() {
-    return files;
-  }
+  public List<FileWorkImpl> getWorkUnits() { return files; }
 
   @JsonProperty("storage")
-  public StoragePluginConfig getStorageConfig(){
-    return formatPlugin.getStorageConfig();
-  }
+  public StoragePluginConfig getStorageConfig() { return formatPlugin.getStorageConfig(); }
 
   @JsonProperty("format")
-  public FormatPluginConfig getFormatConfig(){
-    return formatPlugin.getConfig();
-  }
+  public FormatPluginConfig getFormatConfig() { return formatPlugin.getConfig(); }
 
   @JsonProperty("columns")
-  public List<SchemaPath> getColumns(){
-    return columns;
-  }
+  public List<SchemaPath> getColumns() { return columns; }
 
   @Override
-  public int getOperatorType() {
-    return formatPlugin.getReaderOperatorType();
-  }
-
+  public int getOperatorType() { return formatPlugin.getReaderOperatorType(); }
 }

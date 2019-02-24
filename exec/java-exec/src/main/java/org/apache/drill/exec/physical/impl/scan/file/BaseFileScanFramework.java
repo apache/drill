@@ -69,6 +69,7 @@ public abstract class BaseFileScanFramework<T extends BaseFileScanFramework.File
   private List<FileSplit> spilts = new ArrayList<>();
   private Iterator<FileSplit> splitIter;
   private Path scanRootDir;
+  private int partitionDepth;
   protected DrillFileSystem dfs;
   private FileMetadataManager metadataManager;
 
@@ -82,12 +83,18 @@ public abstract class BaseFileScanFramework<T extends BaseFileScanFramework.File
 
   /**
    * Specify the selection root for a directory scan, if any.
-   * Used to populate partition columns.
+   * Used to populate partition columns. Also, specify the maximum
+   * partition depth.
+   *
    * @param rootPath Hadoop file path for the directory
+   * @param partitionDepth maximum partition depth across all files
+   * within this logical scan operator (files in this scan may be
+   * shallower)
    */
 
-  public void setSelectionRoot(Path rootPath) {
+  public void setSelectionRoot(Path rootPath, int partitionDepth) {
     this.scanRootDir = rootPath;
+    this.partitionDepth = partitionDepth;
   }
 
   @Override
@@ -122,7 +129,10 @@ public abstract class BaseFileScanFramework<T extends BaseFileScanFramework.File
 
     metadataManager = new FileMetadataManager(
         context.getFragmentContext().getOptions(),
+        true, // Expand partition columns with wildcard
+        false, // Put partition columns after table columns
         scanRootDir,
+        partitionDepth,
         paths);
     scanOrchestrator.withMetadata(metadataManager);
   }

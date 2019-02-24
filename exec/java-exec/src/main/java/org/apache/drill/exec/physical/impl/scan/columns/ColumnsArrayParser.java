@@ -24,7 +24,7 @@ import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.Scan
 import org.apache.drill.exec.physical.impl.scan.project.UnresolvedColumn;
 import org.apache.drill.exec.physical.rowSet.project.RequestedColumnImpl;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
-import org.apache.drill.exec.store.easy.text.compliant.RepeatedVarCharOutput;
+import org.apache.drill.exec.store.easy.text.compliant.v3.TextReader;
 
 /**
  * Parses the `columns` array. Doing so is surprisingly complex.
@@ -113,14 +113,14 @@ public class ColumnsArrayParser implements ScanProjectionParser {
 
     if (inCol.isArray()) {
       int maxIndex = inCol.maxIndex();
-      if (maxIndex > RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS) {
+      if (maxIndex > TextReader.MAXIMUM_NUMBER_COLUMNS) {
         throw UserException
           .validationError()
           .message(String.format(
               "`columns`[%d] index out of bounds, max supported size is %d",
-              maxIndex, RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS))
+              maxIndex, TextReader.MAXIMUM_NUMBER_COLUMNS))
           .addContext("Column", inCol.name())
-          .addContext("Maximum index", RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS)
+          .addContext("Maximum index", TextReader.MAXIMUM_NUMBER_COLUMNS)
           .build(logger);
       }
     }

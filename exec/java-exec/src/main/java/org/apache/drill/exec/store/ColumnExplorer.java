@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -55,14 +54,30 @@ public class ColumnExplorer {
    */
   public ColumnExplorer(OptionManager optionManager, List<SchemaPath> columns) {
     this.partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
-    this.columns = columns;
-    this.isStarQuery = columns != null && Utilities.isStarQuery(columns);
     this.selectedPartitionColumns = Lists.newArrayList();
     this.tableColumns = Lists.newArrayList();
     this.allImplicitColumns = initImplicitFileColumns(optionManager);
     this.selectedImplicitColumns = CaseInsensitiveMap.newHashMap();
+    if (columns == null) {
+      isStarQuery = false;
+      this.columns = null;
+    } else {
+      this.columns = columns;
+      this.isStarQuery = columns != null && Utilities.isStarQuery(columns);
+      init();
+    }
+  }
 
-    init();
+  /**
+   * Constructor for using the column explorer to probe existing columns in the
+   * {@link ProjectRecordBatch}.
+   */
+  // TODO: This is awkward. This class is being used for two distinct things:
+  // 1. The definition of the metadata columns, and
+  // 2. The projection of metadata columns in a particular query.
+  // Would be better to separate these two concepts.
+  public ColumnExplorer(OptionManager optionManager) {
+    this(optionManager, null);
   }
 
   /**
@@ -123,6 +138,15 @@ public class ColumnExplorer {
     return matcher.matches();
   }
 
+  public boolean isImplicitColumn(String name) {
+    return isPartitionColumn(partitionDesignator, name) ||
+           isImplicitFileColumn(name);
+  }
+
+  public boolean isImplicitFileColumn(String name) {
+    return allImplicitColumns.get(name) != null;
+  }
+
   /**
    * Returns list with partition column names.
    * For the case when table has several levels of nesting, max level is chosen.
@@ -132,10 +156,23 @@ public class ColumnExplorer {
    * @return list with partition column names.
    */
   public static List<String> getPartitionColumnNames(FileSelection selection, SchemaConfig schemaConfig) {
-    int partitionsCount = 0;
+    int partitionsCount = getPartitionDepth(selection);
+
+    String partitionColumnLabel = schemaConfig.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+    List<String> partitions = Lists.newArrayList();
+
+    // generates partition column names: dir0, dir1 etc.
+    for (int i = 0; i < partitionsCount; i++) {
+      partitions.add(partitionColumnLabel + i);
+    }
+    return partitions;
+  }
+
+  public static int getPartitionDepth(FileSelection selection) {
     // a depth of table root path
     int rootDepth = selection.getSelectionRoot().depth();
 
+    int partitionsCount = 0;
     for (Path file : selection.getFiles()) {
       // Calculates partitions count for the concrete file:
       // depth of file path - depth of table root path - 1.
@@ -145,15 +182,7 @@ public class ColumnExplorer {
       // max depth of files path should be used to handle all partitions
       partitionsCount = Math.max(partitionsCount, currentPartitionsCount);
     }
-
-    String partitionColumnLabel = schemaConfig.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
-    List<String> partitions = new ArrayList<>();
-
-    // generates partition column names: dir0, dir1 etc.
-    for (int i = 0; i < partitionsCount; i++) {
-      partitions.add(partitionColumnLabel + i);
-    }
-    return partitions;
+    return partitionsCount;
   }
 
   /**

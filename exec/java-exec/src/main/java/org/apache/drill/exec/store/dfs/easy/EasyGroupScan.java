@@ -32,6 +32,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -57,9 +58,11 @@ import org.apache.hadoop.fs.Path;
 public class EasyGroupScan extends AbstractFileGroupScan {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyGroupScan.class);
 
-  private FileSelection selection;
   private final EasyFormatPlugin<?> formatPlugin;
+  private FileSelection selection;
+  private int partitionDepth;
   private int maxWidth;
+  private int minWidth = 1;
   private List<SchemaPath> columns;
 
   private ListMultimap<Integer, CompleteFileWork> mappings;
@@ -104,9 +107,23 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     initFromSelection(selection, formatPlugin);
   }
 
-  @JsonIgnore
-  public Iterable<CompleteFileWork> getWorkIterable() {
-    return () -> Iterators.unmodifiableIterator(chunks.iterator());
+  public EasyGroupScan(
+      String userName,
+      FileSelection selection,
+      EasyFormatPlugin<?> formatPlugin,
+      List<SchemaPath> columns,
+      Path selectionRoot,
+      int minWidth
+      ) throws IOException{
+    this(userName, selection, formatPlugin, columns, selectionRoot);
+
+    // Set the minimum width of this reader. Primarily used for testing
+    // to force parallelism even for small test files.
+    // See ExecConstants.MIN_READER_WIDTH
+    this.minWidth = Math.max(1, Math.min(minWidth, maxWidth));
+
+    // Compute the maximum partition depth across all files.
+    partitionDepth = ColumnExplorer.getPartitionDepth(selection);
   }
 
   private EasyGroupScan(final EasyGroupScan that) {
@@ -118,17 +135,23 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     chunks = that.chunks;
     endpointAffinities = that.endpointAffinities;
     maxWidth = that.maxWidth;
+    minWidth = that.minWidth;
     mappings = that.mappings;
+    partitionDepth = that.partitionDepth;
+  }
+
+  @JsonIgnore
+  public Iterable<CompleteFileWork> getWorkIterable() {
+    return () -> Iterators.unmodifiableIterator(chunks.iterator());
   }
 
   private void initFromSelection(FileSelection selection, EasyFormatPlugin<?> formatPlugin) throws IOException {
-    @SuppressWarnings("resource")
     final DrillFileSystem dfs = ImpersonationUtil.createFileSystem(getUserName(), formatPlugin.getFsConf());
     this.selection = selection;
     BlockMapBuilder b = new BlockMapBuilder(dfs, formatPlugin.getContext().getBits());
-    this.chunks = b.generateFileWork(selection.getStatuses(dfs), formatPlugin.isBlockSplittable());
-    this.maxWidth = chunks.size();
-    this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
+    chunks = b.generateFileWork(selection.getStatuses(dfs), formatPlugin.isBlockSplittable());
+    maxWidth = chunks.size();
+    endpointAffinities = AffinityCreator.getAffinityMap(chunks);
   }
 
   public Path getSelectionRoot() {
@@ -136,10 +159,15 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   }
 
   @Override
+  @JsonIgnore
+  public int getMinParallelizationWidth() {
+    return minWidth;
+  }
+
+  @Override
   public int getMaxParallelizationWidth() {
     return maxWidth;
   }
-
 
   @Override
   public ScanStats getScanStats(final PlannerSettings settings) {
@@ -163,7 +191,6 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     return columns;
   }
 
-
   @JsonIgnore
   public FileSelection getFileSelection() {
     return selection;
@@ -179,7 +206,6 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     assert children == null || children.isEmpty();
     return new EasyGroupScan(this);
   }
-
 
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
@@ -217,7 +243,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     Preconditions.checkArgument(!filesForMinor.isEmpty(),
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
-    EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin, columns, selectionRoot);
+    EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin,
+        columns, selectionRoot, partitionDepth);
     subScan.setOperatorId(this.getOperatorId());
     return subScan;
   }
@@ -275,5 +302,4 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return formatPlugin.supportsPushDown();
   }
-
 }

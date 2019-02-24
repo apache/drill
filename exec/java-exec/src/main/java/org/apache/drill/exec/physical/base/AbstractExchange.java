@@ -31,7 +31,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 public abstract class AbstractExchange extends AbstractSingle implements Exchange {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractExchange.class);
 
   // Ephemeral info for generating execution fragments.
   protected int senderMajorFragmentId;
@@ -77,7 +76,7 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
   }
 
   /**
-   * Get a default endpoint affinity map where affinity of a Drillbit is proportional to the number of its occurrances
+   * Get a default endpoint affinity map where affinity of a Drillbit is proportional to the number of its occurrences
    * in given endpoint list.
    *
    * @param fragmentEndpoints Drillbit endpoint assignments of fragments.
@@ -110,7 +109,6 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
     this.senderMajorFragmentId = majorFragmentId;
     setupSenders(senderLocations);
   }
-
 
   @Override
   public final void setupReceivers(int majorFragmentId, List<DrillbitEndpoint> receiverLocations) throws PhysicalOperatorSetupException {

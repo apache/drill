@@ -64,7 +64,10 @@ public class TestColumnsArray extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
+        false, // Don't expand partition columns for wildcard
+        false, // N/A
         new Path("hdfs:///w"),
+        FileMetadataManager.AUTO_PARTITION_DEPTH,
         Lists.newArrayList(filePath));
 
     // ...and the columns array manager

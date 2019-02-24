@@ -25,8 +25,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
-public abstract class AbstractSubScan extends AbstractBase implements SubScan{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSubScan.class);
+public abstract class AbstractSubScan extends AbstractBase implements SubScan {
 
   public AbstractSubScan(String userName) {
     super(userName);

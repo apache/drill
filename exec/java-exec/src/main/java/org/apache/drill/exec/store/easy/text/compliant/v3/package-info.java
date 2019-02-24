@@ -15,34 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.base;
-
-import java.io.IOException;
-
-import org.apache.drill.exec.store.dfs.FileSelection;
-
-public abstract class AbstractFileGroupScan extends AbstractGroupScan implements FileGroupScan {
-
-  public AbstractFileGroupScan(String userName) {
-    super(userName);
-  }
-
-  public AbstractFileGroupScan(AbstractFileGroupScan that) {
-    super(that);
-  }
-
-  @Override
-  public void modifyFileSelection(FileSelection selection) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public FileGroupScan clone(FileSelection selection) throws IOException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public boolean supportsPartitionFilterPushdown() {
-    return true;
-  }
-}
+/**
+ * Version 3 of the text reader. Hosts the "compliant" text reader on
+ * the row set framework.
+ */
+package org.apache.drill.exec.store.easy.text.compliant.v3;

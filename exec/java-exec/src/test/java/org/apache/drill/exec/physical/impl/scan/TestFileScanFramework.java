@@ -103,6 +103,7 @@ public class TestFileScanFramework extends SubOperatorTest {
   public abstract static class BaseFileScanOpFixture extends AbstractScanOpFixture {
 
     protected Path selectionRoot = MOCK_ROOT_PATH;
+    protected int partitionDepth = 3;
     protected List<FileWork> files = new ArrayList<>();
     protected Configuration fsConfig = new Configuration();
 
@@ -116,7 +117,7 @@ public class TestFileScanFramework extends SubOperatorTest {
     protected abstract BaseFileScanFramework<?> buildFramework();
 
     private void configureFileScan(BaseFileScanFramework<?> framework) {
-      framework.setSelectionRoot(selectionRoot);
+      framework.setSelectionRoot(selectionRoot, partitionDepth);
     }
   }
 
@@ -311,10 +312,11 @@ public class TestFileScanFramework extends SubOperatorTest {
         .add(ScanTestUtils.SUFFIX_COL, MinorType.VARCHAR)
         .addNullable(ScanTestUtils.partitionColName(0), MinorType.VARCHAR)
         .addNullable(ScanTestUtils.partitionColName(1), MinorType.VARCHAR)
+        .addNullable(ScanTestUtils.partitionColName(2), MinorType.VARCHAR)
         .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow(30, "fred", MOCK_FILE_FQN, MOCK_FILE_PATH, MOCK_FILE_NAME, MOCK_SUFFIX, MOCK_DIR0, MOCK_DIR1)
-        .addRow(40, "wilma", MOCK_FILE_FQN, MOCK_FILE_PATH, MOCK_FILE_NAME, MOCK_SUFFIX, MOCK_DIR0, MOCK_DIR1)
+        .addRow(30, "fred", MOCK_FILE_FQN, MOCK_FILE_PATH, MOCK_FILE_NAME, MOCK_SUFFIX, MOCK_DIR0, MOCK_DIR1, null)
+        .addRow(40, "wilma", MOCK_FILE_FQN, MOCK_FILE_PATH, MOCK_FILE_NAME, MOCK_SUFFIX, MOCK_DIR0, MOCK_DIR1, null)
         .build();
     RowSetComparison verifier = new RowSetComparison(expected);
     assertEquals(expected.batchSchema(), scan.batchAccessor().getSchema());

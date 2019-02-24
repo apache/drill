@@ -593,7 +593,6 @@ public class Foreman implements Runnable {
         new BasicOptimizer.BasicOptimizationContext(queryContext), plan);
   }
 
-
   /**
    * Manages the end-state processing for Foreman.
    *
@@ -726,7 +725,6 @@ public class Foreman implements Runnable {
       }
     }
 
-    @SuppressWarnings("resource")
     @Override
     public void close() {
       Preconditions.checkState(!isClosed);
