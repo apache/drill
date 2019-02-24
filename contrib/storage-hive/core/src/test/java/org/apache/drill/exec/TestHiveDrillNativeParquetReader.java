@@ -301,4 +301,22 @@ public class TestHiveDrillNativeParquetReader extends HiveTestBase {
       .go();
   }
 
+  @Test
+  public void testInt96TimestampConversionWithNativeReader() throws Exception {
+    String query = "select timestamp_field from hive.readtest_parquet";
+
+    try {
+      setSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP, true);
+
+      testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .baselineColumns("timestamp_field")
+          .baselineValues(DateUtility.parseBest("2013-07-05 17:01:00"))
+          .baselineValues(new Object[]{null})
+          .go();
+    } finally {
+      resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
+  }
 }
