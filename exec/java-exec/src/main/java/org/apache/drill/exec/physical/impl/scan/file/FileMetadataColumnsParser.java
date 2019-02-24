@@ -46,6 +46,8 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
 
   private boolean hasImplicitCols;
 
+  private boolean expandPartitionsAtEnd;
+
   public FileMetadataColumnsParser(FileMetadataManager metadataManager) {
     this.metadataManager = metadataManager;
     partitionPattern = Pattern.compile(metadataManager.partitionDesignator + "(\\d+)", Pattern.CASE_INSENSITIVE);
@@ -123,8 +125,10 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
   }
 
   private void buildWildcard() {
-    if (metadataManager.useLegacyWildcardExpansion &&
-        metadataManager.useLegacyExpansionLocation) {
+    if (!metadataManager.useLegacyWildcardExpansion) {
+      return;
+    }
+    if (metadataManager.useLegacyExpansionLocation) {
 
       // Star column: this is a SELECT * query.
 
@@ -134,6 +138,8 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
       // set is constant across all files.
 
       expandPartitions();
+    } else {
+      expandPartitionsAtEnd = true;
     }
   }
 
@@ -144,8 +150,7 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
     // feature to expand partitions for wildcards, and we want the
     // partitions after data columns.
 
-    if (builder.hasWildcard() && metadataManager.useLegacyWildcardExpansion &&
-        ! metadataManager.useLegacyExpansionLocation) {
+    if (expandPartitionsAtEnd) {
       expandPartitions();
     }
   }

@@ -525,7 +525,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   public static final String EXPLAIN_PLAN_JSON = "json";
 
   public static ClusterFixtureBuilder builder(BaseDirTestWatcher dirTestWatcher) {
-      ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
+    ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
          .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, MAX_WIDTH_PER_NODE);
     Properties props = new Properties();
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);

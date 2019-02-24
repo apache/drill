@@ -111,7 +111,7 @@ public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionA
     final ScanStats stats = this.getGroupScan().getScanStats(settings);
     final int columnCount = this.getRowType().getFieldCount();
 
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return planner.getCostFactory().makeCost(stats.getRecordCount() * columnCount, stats.getCpuCost(), stats.getDiskCost());
     }
 

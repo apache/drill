@@ -366,7 +366,7 @@ public class QueryBuilder {
     }
   }
 
-  public QueryRowSetIterator rowSetIterator( ) {
+  public QueryRowSetIterator rowSetIterator() {
     return new QueryRowSetIterator(client.allocator(), withEventListener());
   }
 

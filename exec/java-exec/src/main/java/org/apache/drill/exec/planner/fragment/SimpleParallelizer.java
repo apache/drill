@@ -179,7 +179,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
   public void initFragmentWrappers(Fragment rootFragment, PlanningSet planningSet) {
     planningSet.get(rootFragment);
 
-    for(ExchangeFragmentPair fragmentPair : rootFragment) {
+    for (ExchangeFragmentPair fragmentPair : rootFragment) {
       initFragmentWrappers(fragmentPair.getNode(), planningSet);
     }
   }
@@ -193,7 +193,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
   private static Set<Wrapper> constructFragmentDependencyGraph(PlanningSet planningSet) {
 
     // Set up dependency of fragments based on the affinity of exchange that separates the fragments.
-    for(Wrapper currentFragmentWrapper : planningSet) {
+    for (Wrapper currentFragmentWrapper : planningSet) {
       ExchangeFragmentPair sendingExchange = currentFragmentWrapper.getNode().getSendingExchangePair();
       if (sendingExchange != null) {
         ParallelizationDependency dependency = sendingExchange.getExchange().getParallelizationDependency();
@@ -209,17 +209,17 @@ public class SimpleParallelizer implements ParallelizationParameters {
 
     // Identify leaf fragments. Leaf fragments are fragments that have no other fragments depending on them for
     // parallelization info. First assume all fragments are leaf fragments. Go through the fragments one by one and
-    // remove the fragment on which the current fragment depends on.
+    // remove the fragment on which the current fragment depends.
 
     final Set<Wrapper> roots = Sets.newHashSet();
-    for(Wrapper w : planningSet) {
+    for (Wrapper w : planningSet) {
       roots.add(w);
     }
 
-    for(Wrapper wrapper : planningSet) {
+    for (Wrapper wrapper : planningSet) {
       final List<Wrapper> fragmentDependencies = wrapper.getFragmentDependencies();
       if (fragmentDependencies != null && fragmentDependencies.size() > 0) {
-        for(Wrapper dependency : fragmentDependencies) {
+        for (Wrapper dependency : fragmentDependencies) {
           if (roots.contains(dependency)) {
             roots.remove(dependency);
           }
@@ -241,7 +241,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
       return;
     }
 
-    // First parallelize fragments on which this fragment depends on.
+    // First parallelize fragments on which this fragment depends.
     final List<Wrapper> fragmentDependencies = fragmentWrapper.getFragmentDependencies();
     if (fragmentDependencies != null && fragmentDependencies.size() > 0) {
       for(Wrapper dependency : fragmentDependencies) {
@@ -288,20 +288,20 @@ public class SimpleParallelizer implements ParallelizationParameters {
         Preconditions.checkArgument(op instanceof FragmentRoot);
         FragmentRoot root = (FragmentRoot) op;
 
-        FragmentHandle handle = FragmentHandle //
-            .newBuilder() //
-            .setMajorFragmentId(wrapper.getMajorFragmentId()) //
-            .setMinorFragmentId(minorFragmentId) //
-            .setQueryId(queryId) //
+        FragmentHandle handle = FragmentHandle
+            .newBuilder()
+            .setMajorFragmentId(wrapper.getMajorFragmentId())
+            .setMinorFragmentId(minorFragmentId)
+            .setQueryId(queryId)
             .build();
 
-        PlanFragment fragment = PlanFragment.newBuilder() //
-            .setForeman(foremanNode) //
-            .setHandle(handle) //
-            .setAssignment(wrapper.getAssignedEndpoint(minorFragmentId)) //
-            .setLeafFragment(isLeafFragment) //
+        PlanFragment fragment = PlanFragment.newBuilder()
+            .setForeman(foremanNode)
+            .setHandle(handle)
+            .setAssignment(wrapper.getAssignedEndpoint(minorFragmentId))
+            .setLeafFragment(isLeafFragment)
             .setContext(queryContextInfo)
-            .setMemInitial(wrapper.getInitialAllocation())//
+            .setMemInitial(wrapper.getInitialAllocation())
             .setMemMax(wrapper.getMaxAllocation())
             .setCredentials(session.getCredentials())
             .addAllCollector(CountRequiredFragments.getCollectors(root))

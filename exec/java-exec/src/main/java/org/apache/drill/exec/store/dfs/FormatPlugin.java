@@ -73,5 +73,4 @@ public interface FormatPlugin {
   Configuration getFsConf();
   DrillbitContext getContext();
   String getName();
-
 }

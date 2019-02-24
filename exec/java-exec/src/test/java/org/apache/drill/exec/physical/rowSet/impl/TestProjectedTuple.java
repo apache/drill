@@ -35,7 +35,6 @@ import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTupleImpl;
 import org.apache.drill.exec.record.metadata.ProjectionType;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -353,9 +352,10 @@ public class TestProjectedTuple {
     assertEquals(ProjectionType.UNPROJECTED, projSet.projectionType("foo"));
   }
 
-  @Test
-  @Ignore("Drill syntax does not support map arrays")
-  public void testMapArray() {
+  //@Test
+  //@Ignore("Drill syntax does not support map arrays")
+  @SuppressWarnings("unused")
+  private void testMapArray() {
     RequestedTuple projSet = RequestedTupleImpl.parse(
         RowSetTestUtils.projectList("a[1].x"));
     List<RequestedColumn> cols = projSet.projections();

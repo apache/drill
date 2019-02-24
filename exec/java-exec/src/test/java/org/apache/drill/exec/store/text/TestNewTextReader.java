@@ -61,6 +61,8 @@ public class TestNewTextReader extends BaseTestQuery {
       fail("Query should have failed");
     } catch(UserRemoteException ex) {
       assertEquals(ErrorType.DATA_READ, ex.getErrorType());
+      // Change to the following if V3 is enabled
+      // assertEquals(ErrorType.VALIDATION, ex.getErrorType());
       assertTrue("Error message should contain " + COL_NAME, ex.getMessage().contains(COL_NAME));
     }
   }
