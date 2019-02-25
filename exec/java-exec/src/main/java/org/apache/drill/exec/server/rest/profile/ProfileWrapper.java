@@ -64,7 +64,7 @@ public class ProfileWrapper {
   private final boolean onlyImpersonationEnabled;
   private Map<String, String> physicalOperatorMap;
   private final String noProgressWarningThreshold;
-  private final Integer defaultAutoLimit;
+  private final int defaultAutoLimit;
 
   public ProfileWrapper(final QueryProfile profile, DrillConfig drillConfig) {
     this.profile = profile;
@@ -160,7 +160,7 @@ public class ProfileWrapper {
     return profile.getAutoLimit();
   }
 
-  public Integer getDefaultAutoLimit() {
+  public int getDefaultAutoLimit() {
     return defaultAutoLimit;
   }
 
