@@ -66,22 +66,4 @@ public interface UserClientConnection {
    * @return Return the client node address.
    */
   SocketAddress getRemoteAddress();
-
-  /**
-   * Sets an autolimit on the size of records to be sent back on the connection
-   * @param autoLimitRowCount Max number of records to be sent back to WebServer
-   * @return
-   */
-  default void setAutoLimitRowCount(int autoLimitRowCount) {
-    // NoOp: Required as part of WebUserConnection (DRILL-6960)
-  }
-
-  /**
-   * Gets the max size of records to be sent back by the query
-   * @return Max number of records to be sent back to WebServer
-   */
-  default int getAutoLimitRowCount() {
-    return 0;
-  }
-
 }

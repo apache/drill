@@ -82,6 +82,8 @@ public class QueryWrapper {
         .setAutolimitRowcount(autoLimitRowCount)
         .build();
 
+    webUserConnection.setAutoLimitRowCount(autoLimitRowCount);
+
     // Submit user query to Drillbit work queue.
     final QueryId queryId = workManager.getUserWorker().submitWork(webUserConnection, runQuery);
 
