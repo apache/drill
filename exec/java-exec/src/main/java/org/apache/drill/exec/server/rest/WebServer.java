@@ -467,8 +467,10 @@ public class WebServer implements AutoCloseable {
     if (embeddedJetty != null) {
       embeddedJetty.stop();
     }
-    //Deleting temp directory
-    FileUtils.deleteDirectory(getTmpJavaScriptDir());
+    //Deleting temp directory, if it exists
+    if (tmpJavaScriptDir != null) {
+      FileUtils.deleteDirectory(tmpJavaScriptDir);
+    }
   }
 
   /**
