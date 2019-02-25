@@ -172,7 +172,7 @@ public class QueryResources {
       return rows;
     }
 
-    //Used by results.ftl to render default number of pages per row
+    // Used by results.ftl to render default number of pages per row
     public String getRowsPerPageValues() {
       return rowsPerPageValues;
     }
@@ -181,12 +181,12 @@ public class QueryResources {
       return queryState;
     }
 
-    //Used by results.ftl to indicate autoLimited resultset
+    // Used by results.ftl to indicate autoLimited resultset
     public boolean isResultSetAutoLimited() {
       return autoLimitedRowCount > 0 && rows.size() == autoLimitedRowCount;
     }
 
-    //Used by results.ftl to indicate autoLimited resultset size
+    // Used by results.ftl to indicate autoLimited resultset size
     public int getAutoLimitedRowCount() {
       return autoLimitedRowCount;
     }
