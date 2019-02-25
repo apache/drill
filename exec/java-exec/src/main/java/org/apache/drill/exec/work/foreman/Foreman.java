@@ -582,6 +582,8 @@ public class Foreman implements Runnable {
   private void runSQL(final String sql) throws ExecutionSetupException {
     final Pointer<String> textPlan = new Pointer<>();
     final PhysicalPlan plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
+    // For WebUserConnection, this allows the results page to indicate its application
+    this.initiatingClient.setAutoLimitRowCount(queryContext.getAutoLimitRowCount());
     runPhysicalPlan(plan, textPlan);
   }
 

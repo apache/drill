@@ -203,7 +203,8 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
    * Sets an autolimit on the size of records to be sent back on the connection
    * @param autoLimitRowCount Max number of records to be sent back to WebServer
    */
-  void setAutoLimitRowCount(int autoLimitRowCount) {
+  @Override
+  public void setAutoLimitRowCount(int autoLimitRowCount) {
     this.autoLimitRowCount = autoLimitRowCount;
   }
 
@@ -211,6 +212,7 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
    * Gets the max size of records to be sent back by the query
    * @return Max number of records to be sent back to WebServer
    */
+  @Override
   public int getAutoLimitRowCount() {
     return this.autoLimitRowCount;
   }
