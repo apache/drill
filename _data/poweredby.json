@@ -1,0 +1,60 @@
+{
+  "companies": [
+    {
+      "name": "Ericsson",
+      "logo": {
+        "fileName": "erricssonLogo.png",
+        "width": 65,
+        "height": 60
+      },
+      "description": "Ericsson uses Drill to run analytics on wireless network activity on their devices and provide utilization reports to wireless network providers. Drill provides the ability to run SQL analytics on a large number of data sources at once."
+    },
+    {
+      "name": "Intuit",
+      "logo": {
+        "fileName": "intuitLogo.png",
+        "width": 120,
+        "height": 60
+      },
+      "description": "At Intuit, SBSEG Data Platform team uses Apache Drill to analyze and generate reports from Kafka clickstream topics. The biggest advantage with Apache Drill is it's union type support for click stream data which is in JSON format."
+    },
+    {
+      "name": "Sanchez Energy",
+      "logo": {
+        "fileName": "sanchezLogo.png",
+        "width": 145,
+        "height": 60
+      },
+      "description": "Sanchez Energy uses Drill to run analytics using SQL against a rich variety of data captured from a variety of data sources - structured and semi-structured to power real time applications and decision making."
+    },
+    {
+      "name": "RedBus",
+      "logo": {
+        "fileName": "redbusLogo.png",
+        "width": 115,
+        "height": 60
+      },
+      "description": "RedBus, India’s largest online bus ticketing platform uses Apache Drill's REST APIs for querying and executing ETL flows from a mix of Mongo, Kafka and S3 data stores.",
+      "link": "https://medium.com/redbus-in/data-lake-formation-with-aws-glue-apache-drill-9f770a738100"
+    },
+    {
+      "name": "TransUnion",
+      "logo": {
+        "fileName": "transunionLogo2.jpg",
+        "width": 70,
+        "height": 60
+      },
+      "description": "TransUnion is using Drill for their internal BI and reporting applications. They chose Drill after doing a POC with all major SQL on Hadoop engines."
+    },
+    {
+      "name": "Ant Financial",
+      "logo": {
+        "fileName": "antFinancialLogo.png",
+        "width": 130,
+        "height": 60
+      },
+      "description": "At FinAnt, we use Apache Drill to do some ad-hoc queries, service data analytics.",
+      "link": "https://dawn.cs.stanford.edu/assets/logos/members/ant.png"
+    }
+  ]
+}
