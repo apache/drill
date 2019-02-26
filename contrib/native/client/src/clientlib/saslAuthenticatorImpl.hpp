@@ -71,6 +71,7 @@ private:
 
     const DrillUserProperties *const m_pUserProperties;
     sasl_conn_t *m_pConnection;
+    std::vector<sasl_callback_t> m_callbacks;
     std::string m_username;
     sasl_secret_t *m_ppwdSecret;
     EncryptionContext *m_pEncryptCtxt;
