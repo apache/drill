@@ -2311,9 +2311,14 @@ void DrillClientImpl::shutdownSocket(){
 
     // Delete the saslAuthenticatorImpl instance since connection is broken. It will recreated on next
     // call to connect.
-    if(m_saslAuthenticator != NULL) {
-        delete m_saslAuthenticator;
-        m_saslAuthenticator = NULL;
+    if (m_saslAuthenticator != NULL) {
+        {
+            boost::mutex::scoped_lock lock(m_sasl_dispose_mutex);
+            if (m_saslAuthenticator != NULL) {
+                delete m_saslAuthenticator;
+                m_saslAuthenticator = NULL;
+            }
+        }
     }
 
     // Reset the SASL states.
