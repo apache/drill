@@ -21,21 +21,21 @@ public class DrillExecConfigFileInfo implements ConfigFileInfo {
 
   @Override
   public String getDefaultFileName() {
-    return CommonConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME;
+    return ConfigConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME;
   }
 
   @Override
   public String getModuleFileName() {
-    return CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME;
+    return ConfigConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME;
   }
 
   @Override
   public String getDistributionFileName() {
-    return CommonConstants.CONFIG_DISTRIBUTION_RESOURCE_PATHNAME;
+    return ConfigConstants.CONFIG_DISTRIBUTION_RESOURCE_PATHNAME;
   }
 
   @Override
   public String getOverrideFileName() {
-    return CommonConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME;
+    return ConfigConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME;
   }
 }

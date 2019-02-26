@@ -15,27 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.config;
-
-public class DrillRMConfigFileInfo implements ConfigFileInfo {
-
-  @Override
-  public String getDefaultFileName() {
-    return ConfigConstants.RM_CONFIG_DEFAULT_RESOURCE_PATHNAME;
-  }
-
-  @Override
-  public String getModuleFileName() {
-    return null;
-  }
-
-  @Override
-  public String getDistributionFileName() {
-    return ConfigConstants.RM_CONFIG_DISTRIBUTION_RESOURCE_PATHNAME;
-  }
-
-  @Override
-  public String getOverrideFileName() {
-    return ConfigConstants.RM_CONFIG_OVERRIDE_RESOURCE_PATHNAME;
-  }
-}
+/**
+ * This package will contain all the components of resource manager in Drill.
+ */
+package org.apache.drill.exec.resourcemgr;

@@ -15,27 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.config;
+package org.apache.drill.exec.resourcemgr.config;
 
-public class DrillRMConfigFileInfo implements ConfigFileInfo {
+import org.apache.drill.exec.resourcemgr.config.selectionpolicy.QueueSelectionPolicy.SelectionPolicy;
 
-  @Override
-  public String getDefaultFileName() {
-    return ConfigConstants.RM_CONFIG_DEFAULT_RESOURCE_PATHNAME;
-  }
+/**
+ * Defines all the default values used for the optional configurations for ResourceManagement
+ */
+public final class RMCommonDefaults {
 
-  @Override
-  public String getModuleFileName() {
-    return null;
-  }
+  public static final int MAX_ADMISSIBLE_QUERY_COUNT = 10;
 
-  @Override
-  public String getDistributionFileName() {
-    return ConfigConstants.RM_CONFIG_DISTRIBUTION_RESOURCE_PATHNAME;
-  }
+  public static final int MAX_WAITING_QUERY_COUNT = 10;
 
-  @Override
-  public String getOverrideFileName() {
-    return ConfigConstants.RM_CONFIG_OVERRIDE_RESOURCE_PATHNAME;
-  }
+  public static final int MAX_WAIT_TIMEOUT_IN_MS = 30_000;
+
+  public static final boolean WAIT_FOR_PREFERRED_NODES = true;
+
+  public static final double ROOT_POOL_DEFAULT_MEMORY_PERCENT = 0.9;
+
+  public static final SelectionPolicy ROOT_POOL_DEFAULT_QUEUE_SELECTION_POLICY = SelectionPolicy.BESTFIT;
+
 }

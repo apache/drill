@@ -27,20 +27,20 @@ package org.apache.drill.exec.resourcemgr;
  */
 public class NodeResources {
 
-  private int version;
+  private final int version;
 
-  private long memoryInBytes;
+  private final long memoryInBytes;
 
-  private int numVirtualCpu;
+  private final int numVirtualCpu;
 
   public NodeResources(long memoryInBytes, int numVirtualCpu) {
-    this(memoryInBytes, numVirtualCpu, 1);
+    this.memoryInBytes = memoryInBytes;
+    this.numVirtualCpu = numVirtualCpu;
+    this.version = 1;
   }
 
   public NodeResources(long memoryInBytes, int numPhysicalCpu, int vFactor) {
-    this.memoryInBytes = memoryInBytes;
-    this.numVirtualCpu = numPhysicalCpu * vFactor;
-    this.version = 1;
+    this(memoryInBytes, numPhysicalCpu * vFactor);
   }
 
   public long getMemoryInBytes() {

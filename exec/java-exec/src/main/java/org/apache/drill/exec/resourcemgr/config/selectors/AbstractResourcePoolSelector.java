@@ -15,27 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.config;
+package org.apache.drill.exec.resourcemgr.config.selectors;
 
-public class DrillRMConfigFileInfo implements ConfigFileInfo {
+import org.apache.drill.exec.ops.QueryContext;
 
-  @Override
-  public String getDefaultFileName() {
-    return ConfigConstants.RM_CONFIG_DEFAULT_RESOURCE_PATHNAME;
+public abstract class AbstractResourcePoolSelector implements ResourcePoolSelector {
+
+  protected final SelectorType SELECTOR_TYPE;
+
+  AbstractResourcePoolSelector(SelectorType type) {
+    SELECTOR_TYPE = type;
   }
 
-  @Override
-  public String getModuleFileName() {
-    return null;
+  public SelectorType getSelectorType() {
+    return SELECTOR_TYPE;
   }
 
-  @Override
-  public String getDistributionFileName() {
-    return ConfigConstants.RM_CONFIG_DISTRIBUTION_RESOURCE_PATHNAME;
-  }
+  public abstract boolean isQuerySelected(QueryContext queryContext);
 
   @Override
-  public String getOverrideFileName() {
-    return ConfigConstants.RM_CONFIG_OVERRIDE_RESOURCE_PATHNAME;
+  public String toString() {
+    return SELECTOR_TYPE.toString();
   }
 }

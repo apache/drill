@@ -21,9 +21,9 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.resourcemgr.ResourcePoolTree;
-import org.apache.drill.exec.resourcemgr.ResourcePoolTreeImpl;
-import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
+import org.apache.drill.exec.resourcemgr.config.ResourcePoolTree;
+import org.apache.drill.exec.resourcemgr.config.ResourcePoolTreeImpl;
+import org.apache.drill.exec.resourcemgr.config.exception.RMConfigException;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.foreman.Foreman;
 

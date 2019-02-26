@@ -139,7 +139,7 @@ public class DrillConfig extends NestedConfig {
    * @param overrideFileResourcePathname
    *          the classpath resource pathname of the file to use for
    *          configuration override purposes; {@code null} specifies to use the
-   *          default pathname ({@link CommonConstants#CONFIG_OVERRIDE_RESOURCE_PATHNAME}) (does
+   *          default pathname ({@link ConfigConstants#CONFIG_OVERRIDE_RESOURCE_PATHNAME}) (does
    *          <strong>not</strong> specify to suppress trying to load an
    *          overrides file)
    *  @return A merged Config object.

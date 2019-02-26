@@ -19,7 +19,10 @@ package org.apache.drill.exec.resourcemgr;
 
 import org.apache.drill.categories.ResourceManagerTest;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.resourcemgr.selectors.AclSelector;
+import org.apache.drill.exec.resourcemgr.config.QueryQueueConfig;
+import org.apache.drill.exec.resourcemgr.config.RMCommonDefaults;
+import org.apache.drill.exec.resourcemgr.config.ResourcePoolTree;
+import org.apache.drill.exec.resourcemgr.config.selectors.AclSelector;
 import org.apache.drill.exec.work.foreman.rm.DefaultResourceManager;
 import org.apache.drill.exec.work.foreman.rm.DistributedResourceManager;
 import org.apache.drill.exec.work.foreman.rm.ResourceManager;
@@ -61,19 +64,19 @@ public final class TestRMConfigLoad extends DrillTest {
         8 * 1024L, poolTree.getRootPool().getMaxQueryMemoryPerNode());
       assertEquals("queue_selection_policy in drill-rm-default is not configured with expected default value",
         RMCommonDefaults.ROOT_POOL_DEFAULT_QUEUE_SELECTION_POLICY,
-        poolTree.getSelectionPolicyInUse().getSelectionPolicyName());
+        poolTree.getSelectionPolicyInUse().getSelectionPolicy());
       assertEquals("memory share of root pool in drill-rm-default is not configured with expected default value",
         RMCommonDefaults.ROOT_POOL_DEFAULT_MEMORY_PERCENT, poolTree.getResourceShare(), 0);
 
       final QueryQueueConfig defaultQueue = poolTree.getRootPool().getQueuryQueue();
       assertEquals("max_admissible in drill-rm-default is not configured with expected default value",
-        RMCommonDefaults.MAX_ADMISSIBLE_DEFAULT, defaultQueue.getMaxAdmissibleQueries());
+        RMCommonDefaults.MAX_ADMISSIBLE_QUERY_COUNT, defaultQueue.getMaxAdmissibleQueries());
       assertEquals("max_waiting in drill-rm-default is not configured with expected default value",
-        RMCommonDefaults.MAX_WAITING_DEFAULT, defaultQueue.getMaxWaitingQueries());
+        RMCommonDefaults.MAX_WAITING_QUERY_COUNT, defaultQueue.getMaxWaitingQueries());
       assertEquals("max_wait_timeout in drill-rm-default is not configured with expected default value",
-        RMCommonDefaults.MAX_WAIT_TIMEOUT_IN_MS_DEFAULT, defaultQueue.getWaitTimeoutInMs());
+        RMCommonDefaults.MAX_WAIT_TIMEOUT_IN_MS, defaultQueue.getWaitTimeoutInMs());
       assertEquals("wait_for_preferred_nodes in drill-rm-default is not configured with expected default value",
-        RMCommonDefaults.WAIT_FOR_PREFERRED_NODES_DEFAULT, defaultQueue.waitForPreferredNodes());
+        RMCommonDefaults.WAIT_FOR_PREFERRED_NODES, defaultQueue.waitForPreferredNodes());
     }
   }
 

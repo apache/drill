@@ -15,27 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.config;
+package org.apache.drill.exec.resourcemgr.config.exception;
 
-public class DrillRMConfigFileInfo implements ConfigFileInfo {
-
-  @Override
-  public String getDefaultFileName() {
-    return ConfigConstants.RM_CONFIG_DEFAULT_RESOURCE_PATHNAME;
+/**
+ * Used in case of error while selecting a queue for a given query
+ */
+public class QueueSelectionException extends Exception {
+  public QueueSelectionException(String msg) {
+    super(msg);
   }
 
-  @Override
-  public String getModuleFileName() {
-    return null;
-  }
-
-  @Override
-  public String getDistributionFileName() {
-    return ConfigConstants.RM_CONFIG_DISTRIBUTION_RESOURCE_PATHNAME;
-  }
-
-  @Override
-  public String getOverrideFileName() {
-    return ConfigConstants.RM_CONFIG_OVERRIDE_RESOURCE_PATHNAME;
+  public QueueSelectionException(String msg, Exception ex) {
+    super(msg, ex);
   }
 }

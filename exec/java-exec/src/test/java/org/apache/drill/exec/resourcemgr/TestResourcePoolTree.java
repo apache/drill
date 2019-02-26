@@ -23,7 +23,12 @@ import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.categories.ResourceManagerTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.resourcemgr.exception.RMConfigException;
+import org.apache.drill.exec.resourcemgr.config.QueueAssignmentResult;
+import org.apache.drill.exec.resourcemgr.config.ResourcePool;
+import org.apache.drill.exec.resourcemgr.config.ResourcePoolImpl;
+import org.apache.drill.exec.resourcemgr.config.ResourcePoolTree;
+import org.apache.drill.exec.resourcemgr.config.ResourcePoolTreeImpl;
+import org.apache.drill.exec.resourcemgr.config.exception.RMConfigException;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -37,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.apache.drill.exec.resourcemgr.RMCommonDefaults.ROOT_POOL_DEFAULT_QUEUE_SELECTION_POLICY;
+import static org.apache.drill.exec.resourcemgr.config.RMCommonDefaults.ROOT_POOL_DEFAULT_QUEUE_SELECTION_POLICY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -137,7 +142,7 @@ public final class TestResourcePoolTree {
     assertEquals("Expected and actual leaf queue names are different", expectedLeafQueue,
       configTree.getAllLeafQueues().keySet());
     assertEquals("Unexpected Selection policy is in use", ROOT_POOL_DEFAULT_QUEUE_SELECTION_POLICY,
-      configTree.getSelectionPolicyInUse().getSelectionPolicyName());
+      configTree.getSelectionPolicyInUse().getSelectionPolicy());
   }
 
   @Test(expected = RMConfigException.class)

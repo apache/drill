@@ -23,7 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.SqlFunctionTest;
-import org.apache.drill.common.config.CommonConstants;
+import org.apache.drill.common.config.ConfigConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
@@ -205,7 +205,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("ok", "summary")
         .baselineValues(false, String.format(summary,
-            CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, jar))
+            ConfigConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, jar))
         .go();
   }
 
