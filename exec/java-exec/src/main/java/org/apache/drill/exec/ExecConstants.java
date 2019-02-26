@@ -911,4 +911,12 @@ public final class ExecConstants {
       new OptionDescription("Controls whether to return result set for CREATE TABLE / VIEW / FUNCTION, DROP TABLE / VIEW / FUNCTION, " +
           "SET, USE, REFRESH METADATA TABLE queries. If set to false affected rows count will be returned instead and result set will be null. " +
           "Affects JDBC connections only. Default is true. (Drill 1.15+)"));
+
+  /**
+   * Options that have a JDBC Statement implementation already in place
+   */
+  public static final String QUERY_MAX_ROWS = "exec.query.max_rows";
+  public static final RangeLongValidator QUERY_MAX_ROWS_VALIDATOR = new RangeLongValidator(QUERY_MAX_ROWS, 0, Integer.MAX_VALUE,
+      new OptionDescription("The maximum number of rows that the query will return. This can be only set at a system level. (Drill 1.16+)"));
+
 }

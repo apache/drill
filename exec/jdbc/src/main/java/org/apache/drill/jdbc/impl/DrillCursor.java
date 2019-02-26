@@ -361,7 +361,12 @@ public class DrillCursor implements Cursor {
             ExecConstants.JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD );
     resultsListener = new ResultsListener(this, batchQueueThrottlingThreshold);
     currentBatchHolder = new RecordBatchLoader(client.getAllocator());
+
+    // Set Query Timeout and MaxRows
+    logger.debug("Setting timeout as {}", this.statement.getQueryTimeout());
     setTimeout(this.statement.getQueryTimeout());
+    logger.debug("Setting maxRows as {}", this.statement.getMaxRows());
+    client.setAutoLimitRowCount(this.statement.getMaxRows());
   }
 
   protected int getCurrentRecordNumber() {

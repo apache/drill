@@ -131,12 +131,6 @@
       if (e.target.form) //Submit [Wrapped] Query 
         <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>;
     });
-
-    //Close Warning
-    function closeWarning(warningElemId) {
-        document.getElementById(warningElemId).style.display="none";
-    }
-
   </script>
 </#macro>
 

@@ -60,6 +60,7 @@ import io.netty.buffer.DrillBuf;
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
 public class QueryContext implements AutoCloseable, OptimizerRulesContext, SchemaConfigInfoProvider {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
 
   private final DrillbitContext drillbitContext;
   private final UserSession session;
@@ -92,7 +93,6 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   public QueryContext(final UserSession session, final DrillbitContext drillbitContext, QueryId queryId, int autoLimitRowCount) {
     this.drillbitContext = drillbitContext;
     this.session = session;
-    this.autoLimitRowCount = autoLimitRowCount;
     this.queryId = queryId;
     queryOptions = new QueryOptionManager(session.getOptions());
     executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());
@@ -106,6 +106,15 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     } else {
       this.table = drillbitContext.getOperatorTable();
     }
+
+    // Checking for limit on ResultSet rowcount and if user attempting to override the system value
+    int sessionMaxRowCount = queryOptions.getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    if (sessionMaxRowCount > 0 && autoLimitRowCount > 0) {
+      this.autoLimitRowCount = Math.min(sessionMaxRowCount, autoLimitRowCount);
+    } else {
+      this.autoLimitRowCount = Math.max(sessionMaxRowCount, autoLimitRowCount);
+    }
+    logger.debug("ResultSet size is auto-limited to {} rows", this.autoLimitRowCount);
 
     queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaPath(), session.getSessionId());
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);

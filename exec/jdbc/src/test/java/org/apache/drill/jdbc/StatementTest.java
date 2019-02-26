@@ -20,6 +20,7 @@ package org.apache.drill.jdbc;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.categories.JdbcTest;
@@ -35,6 +36,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.sql.SQLTimeoutException;
 import java.sql.SQLException;
@@ -46,15 +48,20 @@ import java.sql.SQLException;
 public class StatementTest extends JdbcTestBase {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatementTest.class);
+  private static final Random RANDOMIZER = new Random(20150304);
 
   private static final String SYS_VERSION_SQL = "select * from sys.version";
   private static final String SYS_RANDOM_SQL =
       "SELECT cast(random() as varchar) as myStr FROM (VALUES(1)) " +
       "union SELECT cast(random() as varchar) as myStr FROM (VALUES(1)) " +
       "union SELECT cast(random() as varchar) as myStr FROM (VALUES(1)) ";
+  private static final String SYS_OPTIONS_SQL = "SELECT * FROM sys.options";
+  private static final String SYS_OPTIONS_SQL_LIMIT_10 = "SELECT * FROM sys.options LIMIT 12";
+  private static final String ALTER_SYS_OPTIONS_MAX_ROWS_LIMIT_X = "ALTER SYSTEM SET `"+ExecConstants.QUERY_MAX_ROWS+"`=";
+  // Locks used across StatementTest and PreparedStatementTest
+  static final Semaphore maxRowsSysOptionLock = new Semaphore(1);
 
   private static Connection connection;
-  private static Statement statement;
 
   @BeforeClass
   public static void setUpStatement() throws SQLException {
@@ -96,7 +103,7 @@ public class StatementTest extends JdbcTestBase {
   @Test
   public void testInvalidSetQueryTimeout() throws SQLException {
     try (Statement stmt = connection.createStatement()) {
-      //Setting negative value
+      // Setting negative value
       int valueToSet = -10;
       try {
         stmt.setQueryTimeout(valueToSet);
@@ -112,8 +119,8 @@ public class StatementTest extends JdbcTestBase {
   @Test
   public void testValidSetQueryTimeout() throws SQLException {
     try (Statement stmt = connection.createStatement()) {
-      //Setting positive value
-      int valueToSet = new Random(20150304).nextInt(59)+1;
+      // Setting positive value
+      int valueToSet = RANDOMIZER.nextInt(59)+1;
       logger.info("Setting timeout as {} seconds", valueToSet);
       stmt.setQueryTimeout(valueToSet);
       assertEquals( valueToSet, stmt.getQueryTimeout() );
@@ -144,19 +151,19 @@ public class StatementTest extends JdbcTestBase {
    */
   @Test
   public void testClientTriggeredQueryTimeout() throws Exception {
-    //Setting to a very low value (3sec)
+    // Setting to a very low value (3sec)
     int timeoutDuration = 3;
     int rowsCounted = 0;
     try (Statement stmt = connection.createStatement()) {
       stmt.setQueryTimeout(timeoutDuration);
       logger.info("Set a timeout of {} seconds", stmt.getQueryTimeout());
       ResultSet rs = stmt.executeQuery(SYS_RANDOM_SQL);
-      //Fetch each row and pause (simulate a slow client)
+      // Fetch each row and pause (simulate a slow client)
       try {
         while (rs.next()) {
           rs.getString(1);
           rowsCounted++;
-          //Pause briefly (a second beyond the timeout) before attempting to fetch rows
+          // Pause briefly (a second beyond the timeout) before attempting to fetch rows
           try {
             Thread.sleep( TimeUnit.SECONDS.toMillis(timeoutDuration + 1) );
           } catch (InterruptedException e) {/*DoNothing*/}
@@ -164,7 +171,7 @@ public class StatementTest extends JdbcTestBase {
         }
       } catch (SQLTimeoutException sqlEx) {
         logger.info("Counted "+rowsCounted+" rows before hitting timeout");
-        return; //Successfully return
+        return; // Successfully return
       }
     }
     //Throw an exception to indicate that we shouldn't have reached this point
@@ -176,19 +183,19 @@ public class StatementTest extends JdbcTestBase {
    */
   @Test ( expected = SqlTimeoutException.class )
   public void testServerTriggeredQueryTimeout() throws Exception {
-    //Setting to a very low value (2sec)
+    // Setting to a very low value (2sec)
     int timeoutDuration = 2;
-    //Server will be paused marginally longer than the test timeout
+    // Server will be paused marginally longer than the test timeout
     long serverPause = timeoutDuration + 2;
-    //Additional time for JDBC timeout and server pauses to complete
+    // Additional time for JDBC timeout and server pauses to complete
     int cleanupPause = 3;
 
-    //Simulate a lack of timely server response by injecting a pause in the Screen operator's sending-data RPC
+    // Simulate a lack of timely server response by injecting a pause in the Screen operator's sending-data RPC
     final String controls = Controls.newBuilder()
         .addTimedPause(ScreenCreator.class, "sending-data", 0, TimeUnit.SECONDS.toMillis(serverPause))
         .build();
 
-    //Fetching an exclusive connection since injected pause affects all sessions on the connection
+    // Fetching an exclusive connection since injected pause affects all sessions on the connection
     try ( Connection exclusiveConnection = new Driver().connect( "jdbc:drill:zk=local", null )) {
       try(Statement stmt = exclusiveConnection.createStatement()) {
         assertThat(
@@ -202,9 +209,9 @@ public class StatementTest extends JdbcTestBase {
         stmt.setQueryTimeout(timeoutDuration);
         logger.info("Set a timeout of {} seconds", stmt.getQueryTimeout());
 
-        //Executing a query with the paused server. Expecting timeout to occur here
+        // Executing a query with the paused server. Expecting timeout to occur here
         ResultSet rs = stmt.executeQuery(SYS_VERSION_SQL);
-        //Fetch rows
+        // Fetch rows
         while (rs.next()) {
           rs.getBytes(1);
         }
@@ -212,7 +219,7 @@ public class StatementTest extends JdbcTestBase {
         logger.info("SQLTimeoutException thrown: {}", sqlEx.getMessage());
         throw (SqlTimeoutException) sqlEx;
       } finally {
-        //Pause briefly to wait for server to unblock
+        // Pause briefly to wait for server to unblock
         try {
           Thread.sleep( TimeUnit.SECONDS.toMillis(cleanupPause) );
         } catch (InterruptedException e) {/*DoNothing*/}
@@ -239,4 +246,173 @@ public class StatementTest extends JdbcTestBase {
     }
   }
 
+  ////////////////////////////////////////
+  // Query maxRows methods:
+
+  /**
+   * Test for reading of default max rows
+   */
+  @Test
+  public void   testDefaultGetMaxRows() throws SQLException {
+    try(Statement stmt = connection.createStatement()) {
+      int maxRowsValue = stmt.getMaxRows();
+      assertEquals(0, maxRowsValue);
+    }
+  }
+
+  /**
+   * Test Invalid parameter by giving negative maxRows value
+   */
+  @Test
+  public void testInvalidSetMaxRows() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      // Setting negative value
+      int valueToSet = -10;
+      try {
+        stmt.setMaxRows(valueToSet);
+      } catch ( final SQLException e) {
+        assertThat( e.getMessage(), containsString( "illegal maxRows value: " + valueToSet) );
+      }
+    }
+  }
+
+  /**
+   * Test setting a valid maxRows value
+   */
+  @Test
+  public void testValidSetMaxRows() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      // Setting positive value
+      int valueToSet = RANDOMIZER.nextInt(59)+1;
+      logger.info("Setting maximum resultset size as {} rows", valueToSet);
+      stmt.setMaxRows(valueToSet);
+      assertEquals( valueToSet, stmt.getMaxRows() );
+    }
+  }
+
+  /**
+   * Test setting maxSize as zero (i.e. no Limit)
+   */
+  @Test
+  public void testSetMaxRowsAsZero() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      stmt.setMaxRows(0);
+      stmt.executeQuery(SYS_OPTIONS_SQL);
+      ResultSet rs = stmt.getResultSet();
+      int rowCount = 0;
+      while (rs.next()) {
+        rs.getBytes(1);
+        rowCount++;
+      }
+      assertTrue(rowCount > 0);
+    }
+  }
+
+  /**
+   * Test setting maxSize at a value lower than existing query limit
+   */
+  @Test
+  public void testSetMaxRowsLowerThanQueryLimit() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      int valueToSet = RANDOMIZER.nextInt(9)+1; // range:[1-9]
+      stmt.setMaxRows(valueToSet);
+      stmt.executeQuery(SYS_OPTIONS_SQL_LIMIT_10);
+      ResultSet rs = stmt.getResultSet();
+      int rowCount = 0;
+      while (rs.next()) {
+        rs.getBytes(1);
+        rowCount++;
+      }
+      logger.info("MaxRows was set as {} and query limited to 10 returned a resultSet of {} rows", valueToSet, rowCount);
+      assertEquals(valueToSet, rowCount);
+    }
+  }
+
+  /**
+   * Test setting maxSize at a value higher than existing query limit
+   */
+  @Test
+  public void testSetMaxRowsHigherThanQueryLimit() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      int valueToSet = RANDOMIZER.nextInt(10)+11; // range:[11-20]
+      stmt.setMaxRows(valueToSet);
+      stmt.executeQuery(SYS_OPTIONS_SQL_LIMIT_10);
+      ResultSet rs = stmt.getResultSet();
+      int rowCount = 0;
+      while (rs.next()) {
+        rs.getBytes(1);
+        rowCount++;
+      }
+      logger.info("MaxRows was set as {} and query limited to 10 returned a resultSet of {} rows", valueToSet, rowCount);
+      assertTrue(valueToSet > rowCount);
+    }
+  }
+
+  /**
+   * Test setting maxSize at a value lower than existing SYSTEM limit
+   */
+  @Test
+  public void testSetMaxRowsLowerThanSystemLimit() throws SQLException {
+    int sysValueToSet = RANDOMIZER.nextInt(5)+6; // range:[6-10]
+    setSystemMaxRows(sysValueToSet);
+    try (Statement stmt = connection.createStatement()) {
+      int valueToSet = RANDOMIZER.nextInt(5)+1; // range:[1-5]
+      stmt.setMaxRows(valueToSet);
+      stmt.executeQuery(SYS_OPTIONS_SQL);
+      ResultSet rs = stmt.getResultSet();
+      int rowCount = 0;
+      while (rs.next()) {
+        rs.getBytes(1);
+        rowCount++;
+      }
+      logger.info("MaxRows was set as {} (SystemLimit={} rows) returned a resultSet of {} rows", valueToSet, sysValueToSet, rowCount);
+      assertEquals(valueToSet, rowCount);
+    }
+    setSystemMaxRows(0); // Reset value
+  }
+
+  /**
+   * Test setting maxSize at a value higher than existing SYSTEM limit
+   */
+  @Test
+  public void testSetMaxRowsHigherThanSystemLimit() throws SQLException {
+    int sysValueToSet = RANDOMIZER.nextInt(5)+6; // range:[6-10]
+    setSystemMaxRows(sysValueToSet);
+    try (Statement stmt = connection.createStatement()) {
+      int valueToSet = RANDOMIZER.nextInt(5)+11; // range:[11-15]
+      stmt.setMaxRows(valueToSet);
+      stmt.executeQuery(SYS_OPTIONS_SQL);
+      ResultSet rs = stmt.getResultSet();
+      int rowCount = 0;
+      while (rs.next()) {
+        rs.getBytes(1);
+        rowCount++;
+      }
+      logger.info("MaxRows was set as {} (SystemLimit={} rows) returned a resultSet of {} rows", valueToSet, sysValueToSet, rowCount);
+      assertEquals(sysValueToSet, rowCount);
+    }
+    setSystemMaxRows(0); // Reset value
+  }
+
+
+  // Sets the SystemMaxRows option
+  private void setSystemMaxRows(int sysValueToSet) throws SQLException {
+    // Acquire lock if Non-Zero Value (i.e. a test is in progress)
+    if (sysValueToSet != 0) {
+      maxRowsSysOptionLock.acquireUninterruptibly();
+    }
+    // Setting the value
+    try (Statement stmt = connection.createStatement()) {
+      stmt.executeQuery(ALTER_SYS_OPTIONS_MAX_ROWS_LIMIT_X + sysValueToSet);
+      ResultSet rs = stmt.getResultSet();
+      while (rs.next()) { /*Do Nothing*/ }
+    } catch (SQLException e) {
+      // Release lock either way
+      maxRowsSysOptionLock.release();
+      throw e;
+    }
+    if (sysValueToSet == 0) {
+      maxRowsSysOptionLock.release();
+    }
+  }
 }

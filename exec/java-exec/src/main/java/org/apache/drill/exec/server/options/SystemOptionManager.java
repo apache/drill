@@ -271,7 +271,12 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.FRAG_RUNNER_RPC_TIMEOUT_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, true)),
       new OptionDefinition(ExecConstants.LIST_FILES_RECURSIVELY_VALIDATOR),
       new OptionDefinition(ExecConstants.QUERY_ROWKEYJOIN_BATCHSIZE),
-      new OptionDefinition(ExecConstants.RETURN_RESULT_SET_FOR_DDL_VALIDATOR)
+      new OptionDefinition(ExecConstants.RETURN_RESULT_SET_FOR_DDL_VALIDATOR),
+      /*TODO Remove these comments post-review*/
+      //[AccessibleScopes] Can only be changed at System level and not at session. (since clients already provide those semantics)
+      //[adminOnly] TRUE: Only Admins can change this
+      //[internalOption] FALSE: Users should be able to see this setting even if they cant change it.
+      new OptionDefinition(ExecConstants.QUERY_MAX_ROWS_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false))
     };
 
     CaseInsensitiveMap<OptionDefinition> map = Arrays.stream(definitions)

@@ -54,6 +54,28 @@ public interface DrillStatement extends Statement {
              SQLException;
 
   /**
+   * @throws  SQLException
+   *            Any SQL exception
+   */
+  @Override
+  int getMaxRows() throws SQLException;
+
+  /**
+   * <strong>Drill</strong>:
+   * Supported (for non-zero max rows value).
+   * @throws  AlreadyClosedSqlException
+   *            if connection is closed
+   * @throws  JdbcApiSqlException
+   *            if an invalid parameter value is detected (and not above case)
+   * @throws  SQLException
+   *            Any other exception
+   */  @Override
+  void setMaxRows( int max_rows )
+      throws AlreadyClosedSqlException,
+      JdbcApiSqlException,
+      SQLException;
+
+  /**
    * {@inheritDoc}
    * <p>
    *   <strong>Drill</strong>: Does not throw SQLException.
