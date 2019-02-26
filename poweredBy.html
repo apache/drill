@@ -1,0 +1,17 @@
+---
+layout: page
+title: "Drill Powered By"
+---
+<link href="{{ site.baseurl }}/css/poweredBy.css" rel="stylesheet" type="text/css">
+<div class="int_text">
+    {% for company in site.data.poweredby.companies %}
+    <div class="power_box">
+        <img src="{{ site.baseurl }}/images/logos/{{ company.logo.fileName }}"
+             style="width: {{ company.logo.width }}px;height:{{ company.logo.height }}px">
+        <p> {{ company.description }}</p>
+        {% if company.link %}
+        <a href="{{ company.link }}" target="_blank">Find out more!</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
