@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -82,10 +83,7 @@ import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Optional;
-import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.store.parquet.stat.ColumnStatistics;
 import org.apache.drill.exec.util.DecimalUtility;
@@ -660,27 +658,16 @@ public class ExpressionTreeMaterializer {
       allExpressions.add(conditions.expression);
       allExpressions.add(newElseExpr);
 
-      boolean containsNullExpr = Iterables.any(allExpressions, new Predicate<LogicalExpression>() {
-        @Override
-        public boolean apply(LogicalExpression input) {
-          return input instanceof NullExpression;
-        }
-      });
+      boolean containsNullType = allExpressions.stream()
+          .anyMatch(expression -> expression.getMajorType().getMinorType() == MinorType.NULL);
+      if (containsNullType) {
+        Optional<LogicalExpression> nonNullExpr = allExpressions.stream()
+            .filter(expression -> expression.getMajorType().getMinorType() != MinorType.NULL)
+            .findAny();
 
-      if (containsNullExpr) {
-        Optional<LogicalExpression> nonNullExpr = Iterables.tryFind(allExpressions,
-          new Predicate<LogicalExpression>() {
-            @Override
-            public boolean apply(LogicalExpression input) {
-              return !input.getMajorType().getMinorType().equals(TypeProtos.MinorType.NULL);
-            }
-          }
-        );
-
-        if(nonNullExpr.isPresent()) {
+        if (nonNullExpr.isPresent()) {
           MajorType type = nonNullExpr.get().getMajorType();
           conditions = new IfExpression.IfCondition(conditions.condition, rewriteNullExpression(conditions.expression, type));
-
           newElseExpr = rewriteNullExpression(newElseExpr, type);
         }
       }
@@ -730,9 +717,22 @@ public class ExpressionTreeMaterializer {
     private LogicalExpression rewriteNullExpression(LogicalExpression expr, MajorType type) {
       if(expr instanceof NullExpression) {
         return new TypedNullConstant(type);
+      } else if (expr instanceof IfExpression) {
+        return rewriteIfWithNullExpression((IfExpression) expr, type);
       } else {
         return expr;
       }
+    }
+
+    private LogicalExpression rewriteIfWithNullExpression(IfExpression expr, MajorType type) {
+      IfCondition condition = new IfExpression.IfCondition(expr.ifCondition.condition, rewriteNullExpression(expr.ifCondition.expression, type));
+      LogicalExpression elseExpression = rewriteNullExpression(expr.elseExpression, type);
+      return new IfExpression.Builder()
+          .setPosition(expr.getPosition())
+          .setOutputType(expr.outputType)
+          .setIfCondition(condition)
+          .setElse(elseExpression)
+          .build();
     }
 
     @Override

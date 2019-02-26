@@ -26,7 +26,6 @@ import org.junit.experimental.categories.Category;
 import java.math.BigDecimal;
 
 /**
- * DRILL-4906
  * Tests for handling nullable types in CASE function
  */
 @Category(SqlTest.class)
@@ -157,5 +156,26 @@ public class TestCaseNullableTypes extends BaseTestQuery {
     } finally {
       resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
+  }
+
+  // Coalesce is being transformed to if-else cases
+  @Test
+  public void testCoalesceWithUntypedNullValues() throws Exception {
+    testBuilder()
+        .sqlQuery("select coalesce(coalesce(n_name1, n_name2, n_name), coalesce(n_name3, n_name4), n_name3) res from cp.`tpch/nation.parquet` limit 1")
+        .ordered()
+        .baselineColumns("res")
+        .baselineValues("ALGERIA")
+        .go();
+  }
+
+  @Test
+  public void testCoalesceWithUntypedNullValues_2() throws Exception {
+    testBuilder()
+        .sqlQuery("select coalesce(coalesce(n_name1, n_name2), n_name) res from cp.`tpch/nation.parquet` limit 1")
+        .ordered()
+        .baselineColumns("res")
+        .baselineValues("ALGERIA")
+        .go();
   }
 }
