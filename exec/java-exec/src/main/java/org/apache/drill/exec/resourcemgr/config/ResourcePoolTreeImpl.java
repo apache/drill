@@ -137,10 +137,10 @@ public class ResourcePoolTreeImpl implements ResourcePoolTree {
       throw new QueueSelectionException(String.format("No resource pools to choose from for the query: %s",
         queryContext.getQueryId()));
     } else if (selectedPools.size() == 1) {
-      return selectedPools.get(0).getQueuryQueue();
+      return selectedPools.get(0).getQueryQueue();
     }
 
-    return selectionPolicy.selectQueue(selectedPools, queryContext, queryMaxNodeResource).getQueuryQueue();
+    return selectionPolicy.selectQueue(selectedPools, queryContext, queryMaxNodeResource).getQueryQueue();
   }
 
   /**

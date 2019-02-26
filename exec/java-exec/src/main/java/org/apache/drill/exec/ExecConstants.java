@@ -684,7 +684,7 @@ public final class ExecConstants {
     new OptionDescription("Allows user to set coma separated list of tags for all the queries submitted over a session"));
 
   public static final String RM_QUEUES_WAIT_FOR_PREFERRED_NODES_KEY = "exec.rm.queues.wait_for_preferred_nodes";
-  public static final StringValidator RM_QUEUES_WAIT_FOR_PREFERRED_NODES_VALIDATOR = new StringValidator
+  public static final BooleanValidator RM_QUEUES_WAIT_FOR_PREFERRED_NODES_VALIDATOR = new BooleanValidator
     (RM_QUEUES_WAIT_FOR_PREFERRED_NODES_KEY, new OptionDescription("Allows user to enable/disable " +
       "wait_for_preferred_nodes configuration across rm queues for all the queries submitted over a session"));
 

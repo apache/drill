@@ -67,7 +67,7 @@ public final class TestBestFitSelectionPolicy {
     for (Long poolMemory : poolMemory) {
       final ResourcePool testPool = mock(ResourcePool.class);
       final QueryQueueConfig testPoolQueue = mock(QueryQueueConfig.class);
-      when(testPool.getQueuryQueue()).thenReturn(testPoolQueue);
+      when(testPool.getQueryQueue()).thenReturn(testPoolQueue);
       when(testPoolQueue.getMaxQueryMemoryInMBPerNode()).thenReturn(poolMemory);
       inputPools.add(testPool);
 

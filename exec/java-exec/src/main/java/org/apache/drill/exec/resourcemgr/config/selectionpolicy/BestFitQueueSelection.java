@@ -61,8 +61,8 @@ public class BestFitQueueSelection extends AbstractQueueSelectionPolicy {
   private static class BestFitComparator implements Comparator<ResourcePool> {
     @Override
     public int compare(ResourcePool o1, ResourcePool o2) {
-      long pool1Value = o1.getQueuryQueue().getMaxQueryMemoryInMBPerNode();
-      long pool2Value = o2.getQueuryQueue().getMaxQueryMemoryInMBPerNode();
+      long pool1Value = o1.getQueryQueue().getMaxQueryMemoryInMBPerNode();
+      long pool2Value = o2.getQueryQueue().getMaxQueryMemoryInMBPerNode();
       return Long.compare(pool1Value, pool2Value);
     }
   }
@@ -77,13 +77,11 @@ public class BestFitQueueSelection extends AbstractQueueSelectionPolicy {
 
     allPools.sort(new BestFitComparator());
     final long queryMaxNodeMemory = maxResourcePerNode.getMemoryInMB();
-    ResourcePool selectedPool = null;
+    ResourcePool selectedPool = allPools.get(0);
     for (ResourcePool pool : allPools) {
       selectedPool = pool;
-      long poolMaxNodeMem = pool.getQueuryQueue().getMaxQueryMemoryInMBPerNode();
-      if (poolMaxNodeMem == queryMaxNodeMemory) {
-        break;
-      } else if (poolMaxNodeMem > queryMaxNodeMemory) {
+      long poolMaxNodeMem = pool.getQueryQueue().getMaxQueryMemoryInMBPerNode();
+      if (poolMaxNodeMem >= queryMaxNodeMemory) {
         break;
       }
     }

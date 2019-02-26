@@ -94,7 +94,7 @@ public class ResourcePoolImpl implements ResourcePool {
    */
   @Override
   public boolean isLeafPool() {
-    return childPools == null;
+    return childPools == null && assignedQueue != null;
   }
 
   /**
@@ -118,13 +118,10 @@ public class ResourcePoolImpl implements ResourcePool {
    * ResourcePool which takes in query metadata to determine if a query is allowed in this pool.
    * @param assignmentResult Used to keep track of all selected leaf pools and all rejected pools for given query
    * @param queryContext Contains query metadata like user, groups, tags, etc used by ResourcePoolSelector
-   * @return <tt>true</tt> if given query is selected by this ResourcePool, <tt>false</tt> otherwise
    */
   @Override
-  public boolean visitAndSelectPool(QueueAssignmentResult assignmentResult, QueryContext queryContext) {
-    boolean isSelected = false;
+  public void visitAndSelectPool(QueueAssignmentResult assignmentResult, QueryContext queryContext) {
     if (assignedSelector.isQuerySelected(queryContext)) {
-      isSelected = true;
       if (isLeafPool()) {
         assignmentResult.addSelectedPool(this);
       } else {
@@ -136,8 +133,6 @@ public class ResourcePoolImpl implements ResourcePool {
     } else {
       assignmentResult.addRejectedPool(this);
     }
-
-    return isSelected;
   }
 
   /**
@@ -211,7 +206,7 @@ public class ResourcePoolImpl implements ResourcePool {
    * @return {@link QueryQueueConfig} object for this pool
    */
   @Override
-  public QueryQueueConfig getQueuryQueue() {
+  public QueryQueueConfig getQueryQueue() {
     Preconditions.checkState(isLeafPool() && assignedQueue != null, "QueryQueue is only " +
         "valid for leaf level pools.[Details: PoolName: %s]", poolName);
     return assignedQueue;

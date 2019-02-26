@@ -35,14 +35,31 @@ public interface ResourcePool {
   // Only valid for leaf pool since it will have a queue assigned to it with this configuration
   long getMaxQueryMemoryPerNode();
 
-  boolean visitAndSelectPool(QueueAssignmentResult assignmentResult, QueryContext queryContext);
+  /**
+   * Evaluates this pool selector to see if the query can be admitted in this pool. If yes then evaluates all
+   * the child pools selectors as well. During traversal it builds the QueueAssignment result which consists of all
+   * the selected leaf pools and all rejected intermediate pools.
+   * @param assignmentResult
+   * @param queryContext
+   */
+  void visitAndSelectPool(QueueAssignmentResult assignmentResult, QueryContext queryContext);
 
+  /**
+   * @return Percentage of memory share assigned to this pool
+   */
   double getPoolMemoryShare();
 
   long getPoolMemoryInMB(int numClusterNodes);
 
-  QueryQueueConfig getQueuryQueue();
+  /**
+   * Only valid for leaf pool.
+   * @return Returns queue configuration assigned to this leaf pool
+   */
+  QueryQueueConfig getQueryQueue();
 
+  /**
+   * @return Full path of the resource pool from root to this pool
+   */
   String getFullPath();
 
   ResourcePool getParentPool();

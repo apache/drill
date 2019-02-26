@@ -68,7 +68,7 @@ public final class TestRMConfigLoad extends DrillTest {
       assertEquals("memory share of root pool in drill-rm-default is not configured with expected default value",
         RMCommonDefaults.ROOT_POOL_DEFAULT_MEMORY_PERCENT, poolTree.getResourceShare(), 0);
 
-      final QueryQueueConfig defaultQueue = poolTree.getRootPool().getQueuryQueue();
+      final QueryQueueConfig defaultQueue = poolTree.getRootPool().getQueryQueue();
       assertEquals("max_admissible in drill-rm-default is not configured with expected default value",
         RMCommonDefaults.MAX_ADMISSIBLE_QUERY_COUNT, defaultQueue.getMaxAdmissibleQueries());
       assertEquals("max_waiting in drill-rm-default is not configured with expected default value",
