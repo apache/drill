@@ -31,16 +31,13 @@ import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Iterator;
 import java.util.List;
 
 public class TestLogReader extends ClusterTest {
@@ -147,7 +144,7 @@ public class TestLogReader extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
-  
+
   @Test
   public void testWildcardLargeFile() throws RpcException {
     String sql = "SELECT * FROM cp.`regex/large.log1`";
@@ -158,7 +155,7 @@ public class TestLogReader extends ClusterTest {
         .addNullable("month", MinorType.INT)
         .addNullable("day", MinorType.INT)
         .build();
-    
+
     for (QueryDataBatch queryDataBatch : batches) {
       queryDataBatch.release();
     }
