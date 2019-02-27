@@ -59,21 +59,39 @@ public class ValueVectorElementFormatter {
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_TIMESTAMP),
                         (v, p) -> v.format(getTimestampFormatter(p)));
         }
+        else {
+          return value.toString();
+        }
+        break;
       case DATE:
         if (value instanceof LocalDate) {
           return format((LocalDate) value,
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_DATE),
                         (v, p) -> v.format(getDateFormatter(p)));
         }
+        else {
+          return value.toString();
+        }
+        break;
       case TIME:
         if (value instanceof LocalTime) {
           return format((LocalTime) value,
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_TIME),
                         (v, p) -> v.format(getTimeFormatter(p)));
         }
+        else {
+          return value.toString();
+        }
+        break;
       case VARBINARY:
-        byte[] bytes = (byte[]) value;
-        return org.apache.drill.common.util.DrillStringUtils.toBinaryString(bytes);
+        if(value instanceof byte[]) {
+          byte[] bytes = (byte[]) value;
+          return org.apache.drill.common.util.DrillStringUtils.toBinaryString(bytes);
+        }
+        else {
+          return value.toString();
+        }
+      break;
       default:
         return value.toString();
     }
