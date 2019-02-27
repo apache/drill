@@ -53,8 +53,7 @@
         "width": 130,
         "height": 60
       },
-      "description": "At FinAnt, we use Apache Drill to do some ad-hoc queries, service data analytics.",
-      "link": "https://dawn.cs.stanford.edu/assets/logos/members/ant.png"
+      "description": "At FinAnt, we use Apache Drill to do some ad-hoc queries, service data analytics."
     }
   ]
 }
