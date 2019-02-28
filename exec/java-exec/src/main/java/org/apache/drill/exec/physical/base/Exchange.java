@@ -79,6 +79,23 @@ public interface Exchange extends PhysicalOperator {
   Receiver getReceiver(int minorFragmentId);
 
   /**
+   * Returns the memory requirement for the sender side of the exchange operator.
+   * @param receiverCount number of receivers at the receiving end of this exchange operator.
+   * @param senderCount number of senders sending the rows for this exchange operator.
+   * @return Total memory required by this operator.
+   */
+  long getSenderMemory(int receiverCount, int senderCount);
+
+  /**
+   * Returns the memory requirement for the receiver side of the exchange operator.
+   * @param receiverCount number of receivers receiving the rows sent by the sender side of this
+   *                      exchange operator.
+   * @param senderCount number of senders sending the rows.
+   * @return Total memory required by this operator.
+   */
+  long getReceiverMemory(int receiverCount, int senderCount);
+
+  /**
    * Provide parallelization parameters for sender side of the exchange. Output includes min width,
    * max width and affinity to Drillbits.
    *
