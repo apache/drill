@@ -72,6 +72,17 @@ public interface HashTable {
   void updateBatches() throws SchemaChangeException;
 
   /**
+   *   Computes hash code by applying different hash algorithms to different data types.
+   *   Return the Hash Value for the row in the Build incoming batch at index:
+   *   (Only apply to Hash Aggregate there's no "Build" side -- only one batch - this one)
+   *
+   * @param incomingRowIdx
+   * @return
+   * @throws SchemaChangeException
+   */
+  public int getBuildHashCodeTreatDataTypes(int incomingRowIdx) throws SchemaChangeException;
+
+  /**
    * Computes the hash code for the record at the given index in the build side batch.
    * @param incomingRowIdx The index of the build side record of interest.
    * @return The hash code for the record at the given index in the build side batch.

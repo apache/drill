@@ -113,6 +113,7 @@ public class TestHashJoinAdvanced extends JoinTestBase {
 
   @Test
   public void testJoinWithDifferentTypesInCondition() throws Exception {
+    /**
     String query = "select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 " +
         "where cast(t1.department_id as double) = t2.department_id and t1.employee_id = 1";
 
@@ -123,9 +124,9 @@ public class TestHashJoinAdvanced extends JoinTestBase {
         .baselineColumns("full_name")
         .baselineValues("Sheri Nowmer")
         .go();
+*/
 
-
-    query = "select t1.bigint_col from cp.`jsoninput/implicit_cast_join_1.json` t1, cp.`jsoninput/implicit_cast_join_1.json` t2 " +
+    String query = "select t1.bigint_col from cp.`jsoninput/implicit_cast_join_1.json` t1, cp.`jsoninput/implicit_cast_join_1.json` t2 " +
         " where t1.bigint_col = cast(t2.bigint_col as int) and" + // join condition with bigint and int
         " t1.double_col  = cast(t2.double_col as float) and" + // join condition with double and float
         " t1.bigint_col = cast(t2.bigint_col as double)"; // join condition with bigint and double
@@ -137,7 +138,7 @@ public class TestHashJoinAdvanced extends JoinTestBase {
         .baselineColumns("bigint_col")
         .baselineValues(1L)
         .go();
-
+/**
     query = "select count(*) col1 from " +
         "(select t1.date_opt from cp.`parquet/date_dictionary.parquet` t1, cp.`parquet/timestamp_table.parquet` t2 " +
         "where t1.date_opt = t2.timestamp_col)"; // join condition contains date and timestamp
@@ -148,6 +149,7 @@ public class TestHashJoinAdvanced extends JoinTestBase {
         .baselineColumns("col1")
         .baselineValues(4L)
         .go();
+ */
   }
 
   @Test //DRILL-2197 Left Join with complex type in projection

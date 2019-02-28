@@ -1303,7 +1303,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     int hashCode;
     try {
       // htables[0].updateBatches();
-      hashCode = htables[0].getBuildHashCode(incomingRowIdx);
+      hashCode = htables[0].getBuildHashCodeTreatDataTypes(incomingRowIdx);
     } catch (SchemaChangeException e) {
       throw new UnsupportedOperationException("Unexpected schema change", e);
     }

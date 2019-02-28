@@ -24,7 +24,9 @@ import com.sun.codemodel.JExpression;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -41,9 +43,11 @@ import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
+import org.apache.drill.exec.planner.physical.HashPrelUtil;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -106,6 +110,10 @@ public class ChainedHashTable {
     new MappingSet("htRowIdx", null, "htContainer", null, SETUP_INTERIOR_CONSTANT, BOTH_KEYS_NULL);
   private final MappingSet KeyMatchHtableProbeMapping =
       new MappingSet("htRowIdx", null, "htContainer", null, SETUP_INTERIOR_CONSTANT, KEY_MATCH_PROBE);
+  private final MappingSet GetHashIncomingBuildMapping =
+      new MappingSet("incomingRowIdx", null, "incomingBuild", null, DO_SETUP_CONSTANT, GET_HASH_BUILD);
+  private final MappingSet GetHashIncomingProbeMapping =
+      new MappingSet("incomingRowIdx", null, "incomingProbe", null, DO_SETUP_CONSTANT, GET_HASH_PROBE);
   private final MappingSet SetValueMapping =
       new MappingSet("incomingRowIdx" /* read index */, "htRowIdx" /* write index */,
           "incomingBuild" /* read container */, "htContainer" /* write container */, SETUP_INTERIOR_CONSTANT,
@@ -230,6 +238,9 @@ public class ChainedHashTable {
     }
     setupOutputRecordKeys(cgInner, htKeyFieldIds, outKeyFieldIds);
 
+    setupGetHash(cg /* use top level code generator for getHash */, GetHashIncomingBuildMapping, incomingBuild, keyExprsBuild);
+    setupGetHash(cg /* use top level code generator for getHash */, GetHashIncomingProbeMapping, incomingProbe, keyExprsProbe);
+
     HashTable ht = context.getImplementationClass(top);
     ht.setup(htConfig, allocator, incomingBuild.getContainer(), incomingProbe, outgoing, htContainerOrig, context, cgInner);
 
@@ -315,5 +326,39 @@ public class ChainedHashTable {
       }
 
     }
+  }
+
+  private void setupGetHash(ClassGenerator<HashTable> cg, MappingSet incomingMapping, VectorAccessible batch, LogicalExpression[] keyExprs)
+    throws SchemaChangeException {
+
+    cg.setMappingSet(incomingMapping);
+
+    if (keyExprs == null || keyExprs.length == 0) {
+      cg.getEvalBlock()._return(JExpr.lit(0));
+      return;
+    }
+
+    /*
+     * We use the same logic to generate run time code for the hash function both for hash join and hash
+     * aggregate. For join we need to hash everything as double (both for distribution and for comparison) but
+     * for aggregation we can avoid the penalty of casting to double
+     */
+
+
+    /*
+      Generate logical expression for each key so expression can be split into blocks if number of expressions in method exceeds upper limit.
+      `seedValue` is used as holder to pass generated seed value for the new methods.
+    */
+    String seedValue = "seedValue";
+    LogicalExpression seed = ValueExpressions.getParameterExpression(seedValue, Types.required(TypeProtos.MinorType.INT));
+
+    for (LogicalExpression expr : keyExprs) {
+      LogicalExpression hashExpression = HashPrelUtil.getHashExpression(expr, seed, incomingProbe != null);
+      LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry());
+      HoldingContainer hash = cg.addExpr(materializedExpr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
+      cg.getEvalBlock().assign(JExpr.ref(seedValue), hash.getValue());
+    }
+
+    cg.getEvalBlock()._return(JExpr.ref(seedValue));
   }
 }
