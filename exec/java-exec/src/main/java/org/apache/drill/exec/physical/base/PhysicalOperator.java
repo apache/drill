@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.graph.GraphValue;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.cost.PrelCostEstimates;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -101,10 +102,10 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
   void setOperatorId(int id);
 
   @JsonProperty("cost")
-  void setCost(double cost);
+  void setCost(PrelCostEstimates cost);
 
   @JsonProperty("cost")
-  double getCost();
+  PrelCostEstimates getCost();
 
   /**
    * Name of the user whom to impersonate while setting up the implementation (RecordBatch) of this

@@ -35,7 +35,7 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
   private static final String expectedSubStr = "    \"kafkaScanSpec\" : {\n" +
                                                    "      \"topicName\" : \"drill-pushdown-topic\"\n" +
                                                    "    },\n" +
-                                                   "    \"cost\" : %s.0";
+                                                   "    \"cost\"";
 
   @BeforeClass
   public static void setup() throws Exception {
