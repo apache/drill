@@ -297,12 +297,34 @@ public class ParquetFormatPlugin implements FormatPlugin {
       return super.isReadable(fs, selection, fsPlugin, storageEngineName, schemaConfig);
     }
 
-    private Path getMetadataPath(FileStatus dir) {
-      return new Path(dir.getPath(), Metadata.METADATA_FILENAME);
+    private Path getOldMetadataPath(FileStatus dir) {
+      return new Path(dir.getPath(), Metadata.OLD_METADATA_FILENAME);
     }
 
+    /**
+     * Check if the metadata cache files exist
+     * @param dir the path of the directory
+     * @param fs
+     * @return true if both file metadata and summary cache file exist
+     * @throws IOException in case of problems during accessing files
+     */
     private boolean metaDataFileExists(FileSystem fs, FileStatus dir) throws IOException {
-      return fs.exists(getMetadataPath(dir));
+      boolean fileExists = true;
+      for (String metaFileName : Metadata.CURRENT_METADATA_FILENAMES) {
+        Path path = new Path(dir.getPath(), metaFileName);
+        if (!fs.exists(path)) {
+          fileExists = false;
+        }
+      }
+      if (fileExists) {
+        return true;
+      } else {
+        // Check if the older version of metadata file exists
+        if (fs.exists(getOldMetadataPath(dir))) {
+          return true;
+        }
+      }
+      return false;
     }
 
     boolean isDirReadable(DrillFileSystem fs, FileStatus dir) {
