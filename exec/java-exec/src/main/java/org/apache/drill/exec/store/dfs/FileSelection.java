@@ -35,8 +35,6 @@ import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
-import static org.apache.drill.exec.util.DrillFileSystemUtil.createPathSafe;
-
 /**
  * Jackson serializable description of a file selection.
  */
@@ -360,7 +358,7 @@ public class FileSelection {
       int idx = stringRoot.indexOf(WILD_CARD); // first wild card in the path
       idx = stringRoot.lastIndexOf('/', idx); // file separator right before the first wild card
       String newRoot = stringRoot.substring(0, idx);
-      return createPathSafe(newRoot);
+      return DrillFileSystemUtil.createPathSafe(newRoot);
     } else {
       return new Path(stringRoot);
     }

@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.calcite.plan.RelOptTable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.util.GuavaUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
@@ -212,58 +213,50 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, Path cacheFileRoot,
       boolean wasAllPartitionsPruned, MetadataContext metaContext) throws Exception {
     List<Path> newFiles = new ArrayList<>();
-    for (final PartitionLocation location : newPartitionLocation) {
+    for (PartitionLocation location : newPartitionLocation) {
       if (!location.isCompositePartition()) {
         newFiles.add(location.getEntirePartitionLocation());
       } else {
         final Collection<SimplePartitionLocation> subPartitions = location.getPartitionLocationRecursive();
-        for (final PartitionLocation subPart : subPartitions) {
+        for (PartitionLocation subPart : subPartitions) {
           newFiles.add(subPart.getEntirePartitionLocation());
         }
       }
     }
 
+    FormatSelection formatSelection = (FormatSelection) table.getSelection();
+    FileSelection newFileSelection = new FileSelection(null, newFiles, getBaseTableLocation(),
+        cacheFileRoot, wasAllPartitionsPruned, formatSelection.getSelection().getDirStatus());
+    newFileSelection.setMetaContext(metaContext);
+    RelOptTable relOptTable = scanRel.getTable();
+
     if (scanRel instanceof DrillScanRel) {
-      final FormatSelection formatSelection = (FormatSelection)table.getSelection();
-      final FileSelection newFileSelection = new FileSelection(null, newFiles, getBaseTableLocation(),
-          cacheFileRoot, wasAllPartitionsPruned, formatSelection.getSelection().getDirStatus());
-      newFileSelection.setMetaContext(metaContext);
-      final FileGroupScan newGroupScan =
-          ((FileGroupScan)((DrillScanRel)scanRel).getGroupScan()).clone(newFileSelection);
+      FileGroupScan newGroupScan =
+          ((FileGroupScan) ((DrillScanRel) scanRel).getGroupScan()).clone(newFileSelection);
       return new DrillScanRel(scanRel.getCluster(),
                       scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-                      scanRel.getTable(),
+                      relOptTable,
                       newGroupScan,
                       scanRel.getRowType(),
                       ((DrillScanRel) scanRel).getColumns(),
                       true /*filter pushdown*/);
     } else if (scanRel instanceof EnumerableTableScan) {
-      return createNewTableScanFromSelection((EnumerableTableScan) scanRel, newFiles, cacheFileRoot,
-          wasAllPartitionsPruned, metaContext);
+      FormatSelection newFormatSelection = new FormatSelection(formatSelection.getFormat(), newFileSelection);
+
+      DynamicDrillTable dynamicDrillTable = new DynamicDrillTable(table.getPlugin(), table.getStorageEngineName(),
+          table.getUserName(), newFormatSelection);
+      /* Copy statistics from the original relOptTable */
+      dynamicDrillTable.setStatsTable(table.getStatsTable());
+      DrillTranslatableTable newTable = new DrillTranslatableTable(dynamicDrillTable);
+
+      RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(relOptTable.getRelOptSchema(), relOptTable.getRowType(),
+          newTable, GuavaUtils.convertToUnshadedImmutableList(ImmutableList.of()));
+
+      // return an EnumerableTableScan with fileSelection being part of digest of TableScan node.
+      return DirPrunedEnumerableTableScan.create(scanRel.getCluster(), newOptTableImpl, newFileSelection.toString());
     } else {
       throw new UnsupportedOperationException("Only DrillScanRel and EnumerableTableScan is allowed!");
     }
-  }
-
-  private TableScan createNewTableScanFromSelection(EnumerableTableScan oldScan, List<Path> newFiles,
-      Path cacheFileRoot, boolean wasAllPartitionsPruned, MetadataContext metaContext) {
-    final RelOptTableImpl t = (RelOptTableImpl) oldScan.getTable();
-    // TODO: refactor duplicate code
-    final FormatSelection formatSelection = (FormatSelection) table.getSelection();
-    final FileSelection newFileSelection = new FileSelection(null, newFiles, getBaseTableLocation(),
-            cacheFileRoot, wasAllPartitionsPruned, formatSelection.getSelection().getDirStatus());
-    newFileSelection.setMetaContext(metaContext);
-    final FormatSelection newFormatSelection = new FormatSelection(formatSelection.getFormat(), newFileSelection);
-    final DynamicDrillTable dynamicDrillTable = new DynamicDrillTable(table.getPlugin(), table.getStorageEngineName(),
-            table.getUserName(), newFormatSelection);
-    /* Copy statistics from the original table */
-    dynamicDrillTable.setStatsTable(table.getStatsTable());
-    final DrillTranslatableTable newTable = new DrillTranslatableTable(dynamicDrillTable);
-    final RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(t.getRelOptSchema(), t.getRowType(), newTable,
-            GuavaUtils.convertToUnshadedImmutableList(ImmutableList.of()));
-
-    // return an EnumerableTableScan with fileSelection being part of digest of TableScan node.
-    return DirPrunedEnumerableTableScan.create(oldScan.getCluster(), newOptTableImpl, newFileSelection.toString());
   }
 
   @Override

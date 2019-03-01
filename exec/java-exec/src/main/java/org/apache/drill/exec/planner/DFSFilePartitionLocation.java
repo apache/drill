@@ -24,7 +24,7 @@ import org.apache.hadoop.fs.Path;
  * Class defines a single partition in a DFS table.
  */
 public class DFSFilePartitionLocation extends SimplePartitionLocation {
-  private String[] dirs;
+  private final String[] dirs;
   private final Path file;
 
   public DFSFilePartitionLocation(int max, Path selectionRoot, Path file, boolean hasDirsOnly) {

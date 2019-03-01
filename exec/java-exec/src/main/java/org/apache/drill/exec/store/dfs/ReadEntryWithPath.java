@@ -25,13 +25,13 @@ public class ReadEntryWithPath {
   protected Path path;
 
   // Default constructor is needed for deserialization
-  public ReadEntryWithPath(){}
+  public ReadEntryWithPath() {}
 
   public ReadEntryWithPath(Path path) {
     this.path = path;
   }
 
-  public Path getPath(){
+  public Path getPath() {
    return path;
   }
 

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.rel.core.Filter;
@@ -75,9 +76,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.Path;
-
-import static org.apache.drill.exec.util.DrillFileSystemUtil.createPathSafe;
-
 
 public abstract class PruneScanRule extends StoragePluginOptimizerRule {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PruneScanRule.class);
@@ -422,11 +420,12 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
               break;
             }
           }
-          for (int j=0; j <= index; j++) {
+          for (int j = 0; j <= index; j++) {
             path.append("/")
                 .append(spInfo[j]);
           }
-          cacheFileRoot = Path.mergePaths(descriptor.getBaseTableLocation(), createPathSafe(path.toString()));
+          cacheFileRoot = Path.mergePaths(descriptor.getBaseTableLocation(),
+              DrillFileSystemUtil.createPathSafe(path.toString()));
         }
         if (index != maxIndex) {
           // if multiple partitions are being selected, we should not drop the filter

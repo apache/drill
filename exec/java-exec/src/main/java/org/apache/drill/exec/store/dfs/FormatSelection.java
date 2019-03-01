@@ -33,7 +33,7 @@ public class FormatSelection {
   private FormatPluginConfig format;
   private FileSelection selection;
 
-  public FormatSelection(){}
+  public FormatSelection() {}
 
   @JsonCreator
   public FormatSelection(@JsonProperty("format") FormatPluginConfig format, @JsonProperty("files") List<Path> files){
@@ -42,7 +42,6 @@ public class FormatSelection {
   }
 
   public FormatSelection(FormatPluginConfig format, FileSelection selection) {
-    super();
     this.format = format;
     this.selection = selection;
   }

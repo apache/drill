@@ -18,11 +18,11 @@
 package org.apache.drill.exec.store.dfs;
 
 import static junit.framework.TestCase.fail;
-import static org.apache.drill.exec.util.DrillFileSystemUtil.createPathSafe;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.fs.FileStatus;
@@ -39,8 +39,8 @@ public class TestFileSelection extends BaseTestQuery {
     for (final Object statuses : new Object[] { null, EMPTY_STATUSES}) {
       for (final Object files : new Object[]{null, EMPTY_FILES}) {
         for (final Object root : new Object[]{null, EMPTY_ROOT}) {
-          FileSelection selection =
-              FileSelection.create((List<FileStatus>) statuses, (List<Path>) files, createPathSafe((String) root));
+          FileSelection selection = FileSelection.create((List<FileStatus>) statuses, (List<Path>) files,
+                  DrillFileSystemUtil.createPathSafe((String) root));
           assertNull(selection);
         }
       }

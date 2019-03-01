@@ -133,15 +133,13 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
       DrillFileSystem fs = new DrillFileSystem(plugin.getFormatPlugin(
           formatSelection.getFormat()).getFsConf());
 
-      String selectionRoot = formatSelection.getSelection().getSelectionRoot();
-      if (!selectionRoot.contains(tableName)
-          || !fs.getFileStatus(new Path(selectionRoot)).isDirectory()) {
+      Path selectionRoot = formatSelection.getSelection().getSelectionRoot();
+      if (!selectionRoot.getName().equals(tableName) || !fs.getFileStatus(selectionRoot).isDirectory()) {
         return DrillStatsTable.notSupported(context, tableName);
       }
       // Do not recompute statistics, if stale
-      Path statsFilePath = new Path(new Path(selectionRoot), DotDrillType.STATS.getEnding());
-      if (fs.exists(statsFilePath)
-          && !isStatsStale(fs, statsFilePath)) {
+      Path statsFilePath = new Path(selectionRoot, DotDrillType.STATS.getEnding());
+      if (fs.exists(statsFilePath) && !isStatsStale(fs, statsFilePath)) {
        return DrillStatsTable.notRequired(context, tableName);
       }
     }
@@ -165,13 +163,8 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
     Path parentPath = statsFilePath.getParent();
     FileStatus directoryStatus = fs.getFileStatus(parentPath);
     // Parent directory modified after stats collection?
-    if (directoryStatus.getModificationTime() > statsFileModifyTime) {
-      return true;
-    }
-    if (tableModified(fs, parentPath, statsFileModifyTime)) {
-      return true;
-    }
-    return false;
+    return directoryStatus.getModificationTime() > statsFileModifyTime ||
+        tableModified(fs, parentPath, statsFileModifyTime);
   }
 
   /* Determines if the table was modified after computing statistics based on
@@ -185,10 +178,8 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
         return true;
       }
       // For a directory, we should recursively check sub-directories
-      if (file.isDirectory()) {
-        if (tableModified(fs, file.getPath(), statsModificationTime)) {
-          return true;
-        }
+      if (file.isDirectory() && tableModified(fs, file.getPath(), statsModificationTime)) {
+        return true;
       }
     }
     return false;
@@ -215,8 +206,7 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
 
   /* Converts to Drill logical plan */
   protected DrillRel convertToDrel(RelNode relNode, AbstractSchema schema, String analyzeTableName,
-      double samplePercent)
-      throws RelConversionException, SqlUnsupportedException {
+      double samplePercent) throws SqlUnsupportedException {
     DrillRel convertedRelNode = convertToRawDrel(relNode);
 
     if (convertedRelNode instanceof DrillStoreRel) {
