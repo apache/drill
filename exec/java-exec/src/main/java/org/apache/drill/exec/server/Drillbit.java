@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.server;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -561,10 +560,5 @@ public class Drillbit implements AutoCloseable {
 
     // return as-is
     return s;
-  }
-
-  // Only for testing purposes (DRILL-7056)
-  public File getWebServerTempDirPath() {
-    return this.webServer.getOrCreateTmpJavaScriptDir();
   }
 }

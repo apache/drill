@@ -452,10 +452,8 @@ public class WebServer implements AutoCloseable {
     if (embeddedJetty != null) {
       embeddedJetty.stop();
     }
-    // Deleting temp directory, if it exists
-    if (tmpJavaScriptDir != null) {
-      FileUtils.deleteDirectory(tmpJavaScriptDir);
-    }
+    // Deleting temp directory
+    FileUtils.deleteQuietly(tmpJavaScriptDir);
   }
 
   /**
@@ -497,7 +495,6 @@ public class WebServer implements AutoCloseable {
     // Generated file
     File optionsDescriptionFile = new File(getOrCreateTmpJavaScriptDir(), OPTIONS_DESCRIBE_JS);
     final String file_content_footer = "};";
-    optionsDescriptionFile.deleteOnExit();
     // Create a copy of a template and write with that!
     java.nio.file.Files.copy(optionsDescripTemplateStream, optionsDescriptionFile.toPath());
     logger.info("Will write {} descriptions to {}", numLeftToWrite, optionsDescriptionFile.getAbsolutePath());
@@ -549,7 +546,6 @@ public class WebServer implements AutoCloseable {
 
     // Generated file
     File functionsListFile = new File(getOrCreateTmpJavaScriptDir(), ACE_MODE_SQL_JS);
-    functionsListFile.deleteOnExit();
     // Template source Javascript file
     try (InputStream aceModeSqlTemplateStream = Resource.newClassPathResource(ACE_MODE_SQL_TEMPLATE_JS).getInputStream()) {
       // Create a copy of a template and write with that!
