@@ -21,12 +21,14 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.hadoop.fs.Path;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Constants.SUPPORTED_VERSIONS;
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.ParquetFileMetadata_v4;
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.ParquetTableMetadata_v4;
 import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ParquetFileMetadata_v3;
-import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ParquetTableMetadata_v3;
+import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetFileMetadata;
 
 /**
  * Util class that contains helper methods for converting paths in the table and directory metadata structures
@@ -60,15 +62,20 @@ public class MetadataPathUtils {
    * @param baseDir base parent directory
    * @return list of files with absolute paths
    */
-  public static List<ParquetFileMetadata_v3> convertToFilesWithAbsolutePaths(
-      List<ParquetFileMetadata_v3> files, String baseDir) {
+  public static List<? extends ParquetFileMetadata> convertToFilesWithAbsolutePaths(List<? extends ParquetFileMetadata> files, String baseDir) {
     if (!files.isEmpty()) {
-      List<ParquetFileMetadata_v3> filesWithAbsolutePaths = Lists.newArrayList();
-      for (ParquetFileMetadata_v3 file : files) {
+      List<ParquetFileMetadata> filesWithAbsolutePaths = Lists.newArrayList();
+      for (ParquetFileMetadata file : files) {
         Path relativePath = file.getPath();
+        ParquetFileMetadata fileWithAbsolutePath = null;
         // create a new file if old one contains a relative path, otherwise use an old file
-        ParquetFileMetadata_v3 fileWithAbsolutePath = (relativePath.isAbsolute()) ? file
-            : new ParquetFileMetadata_v3(new Path(baseDir, relativePath), file.length, file.rowGroups);
+        if (file instanceof ParquetFileMetadata_v4) {
+          fileWithAbsolutePath = (relativePath.isAbsolute()) ? file
+              : new ParquetFileMetadata_v4(new Path(baseDir, relativePath), file.getLength(), (List<Metadata_V4.RowGroupMetadata_v4>) file.getRowGroups());
+        } else if (file instanceof ParquetFileMetadata_v3) {
+          fileWithAbsolutePath = (relativePath.isAbsolute()) ? file
+              : new ParquetFileMetadata_v3(new Path(baseDir, relativePath), file.getLength(), (List<Metadata_V3.RowGroupMetadata_v3>) file.getRowGroups());
+        }
         filesWithAbsolutePaths.add(fileWithAbsolutePath);
       }
       return filesWithAbsolutePaths;
@@ -84,19 +91,19 @@ public class MetadataPathUtils {
    * @param baseDir base parent directory
    * @return parquet table metadata with relative paths for the files and directories
    */
-  public static ParquetTableMetadata_v3 createMetadataWithRelativePaths(
-      ParquetTableMetadata_v3 tableMetadataWithAbsolutePaths, Path baseDir) {
+  public static ParquetTableMetadata_v4 createMetadataWithRelativePaths(
+      ParquetTableMetadata_v4 tableMetadataWithAbsolutePaths, Path baseDir) {
     List<Path> directoriesWithRelativePaths = new ArrayList<>();
     for (Path directory : tableMetadataWithAbsolutePaths.getDirectories()) {
       directoriesWithRelativePaths.add(relativize(baseDir, directory));
     }
-    List<ParquetFileMetadata_v3> filesWithRelativePaths = Lists.newArrayList();
-    for (ParquetFileMetadata_v3 file : tableMetadataWithAbsolutePaths.files) {
-      filesWithRelativePaths.add(new ParquetFileMetadata_v3(
+    List<ParquetFileMetadata_v4> filesWithRelativePaths = Lists.newArrayList();
+    for (ParquetFileMetadata_v4 file : (List<ParquetFileMetadata_v4>) tableMetadataWithAbsolutePaths.getFiles()) {
+      filesWithRelativePaths.add(new ParquetFileMetadata_v4(
           relativize(baseDir, file.getPath()), file.length, file.rowGroups));
     }
-    return new ParquetTableMetadata_v3(SUPPORTED_VERSIONS.last().toString(), tableMetadataWithAbsolutePaths,
-        filesWithRelativePaths, directoriesWithRelativePaths, DrillVersionInfo.getVersion());
+    return new ParquetTableMetadata_v4(SUPPORTED_VERSIONS.last().toString(), tableMetadataWithAbsolutePaths,
+        filesWithRelativePaths, directoriesWithRelativePaths, DrillVersionInfo.getVersion(), tableMetadataWithAbsolutePaths.getTotalRowCount(), tableMetadataWithAbsolutePaths.isAllColumnsInteresting());
   }
 
   /**

@@ -154,7 +154,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
           metadata = getRowGroupsMeta();
         }
         tableStatistics.put(TableStatisticsKind.ROW_COUNT.getName(), TableStatisticsKind.ROW_COUNT.mergeStatistics(metadata));
-        columnsStatistics = ParquetTableMetadataUtils.mergeColumnsStatistics(metadata, fields.keySet(), ParquetTableMetadataUtils.PARQUET_STATISTICS);
+        columnsStatistics = ParquetTableMetadataUtils.mergeColumnsStatistics(metadata, fields.keySet(), ParquetTableMetadataUtils.PARQUET_STATISTICS, parquetTableMetadata);
       } else {
         columnsStatistics = new HashMap<>();
         tableStatistics.put(TableStatisticsKind.ROW_COUNT.getName(), getParquetGroupScanStatistics().getRowCount());
@@ -166,6 +166,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
               ColumnStatisticsKind.NULLS_COUNT.getName(), getParquetGroupScanStatistics().getRowCount() - columnValueCount);
           columnsStatistics.put(partitionColumn, new ColumnStatisticsImpl(stats, ParquetTableMetadataUtils.getNaturalNullsFirstComparator()));
         }
+        columnsStatistics.putAll(ParquetTableMetadataUtils.populateNonInterestingColumnsStats(columnsStatistics.keySet(), parquetTableMetadata));
       }
       tableMetadata = new FileTableMetadata(tableName, tableLocation, schema, columnsStatistics, tableStatistics,
           -1, "root", partitionKeys);
@@ -232,7 +233,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
           }
 
           for (Map.Entry<Object, Collection<Path>> valueLocationsEntry : partitionsForValue.asMap().entrySet()) {
-            HashMap<SchemaPath, ColumnStatistics> columnsStatistics = new HashMap<>();
+            Map<SchemaPath, ColumnStatistics> columnsStatistics = new HashMap<>();
 
             Map<String, Object> statistics = new HashMap<>();
             Object partitionKey = valueLocationsEntry.getKey();
@@ -244,8 +245,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
             statistics.put(TableStatisticsKind.ROW_COUNT.getName(), GroupScan.NO_COLUMN_STATS);
             columnsStatistics.put(partitionColumn,
                 new ColumnStatisticsImpl<>(statistics,
-                    ParquetTableMetadataUtils.getComparator(getParquetGroupScanStatistics().getTypeForColumn(partitionColumn).getMinorType())));
-
+                        ParquetTableMetadataUtils.getComparator(getParquetGroupScanStatistics().getTypeForColumn(partitionColumn).getMinorType())));
             partitions.add(new PartitionMetadata(partitionColumn, getTableMetadata().getSchema(),
                 columnsStatistics, statistics, (Set<Path>) valueLocationsEntry.getValue(), tableName, -1));
           }
@@ -313,7 +313,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
           }
         }
 
-        FileMetadata fileMetadata = ParquetTableMetadataUtils.getFileMetadata(fileRowGroups, tableName);
+        FileMetadata fileMetadata = ParquetTableMetadataUtils.getFileMetadata(fileRowGroups, tableName, parquetTableMetadata);
         files.put(fileMetadata.getLocation(), fileMetadata);
       }
     }
@@ -344,4 +344,5 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
   }
 
   protected abstract void initInternal() throws IOException;
+
 }

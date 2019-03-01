@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import java.util.ArrayList;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.OriginalType;
@@ -98,11 +99,13 @@ public class Metadata_V2 {
       return directories;
     }
 
-    @JsonIgnore @Override public List<? extends ParquetFileMetadata> getFiles() {
+    @JsonIgnore
+    @Override public List<? extends ParquetFileMetadata> getFiles() {
       return files;
     }
 
-    @JsonIgnore @Override public void assignFiles(List<? extends ParquetFileMetadata> newFiles) {
+    @JsonIgnore
+    @Override public void assignFiles(List<? extends ParquetFileMetadata> newFiles) {
       this.files = (List<ParquetFileMetadata_v2>) newFiles;
     }
 
@@ -110,40 +113,70 @@ public class Metadata_V2 {
       return true;
     }
 
-    @JsonIgnore @Override public PrimitiveType.PrimitiveTypeName getPrimitiveType(String[] columnName) {
+    @JsonIgnore
+    @Override public PrimitiveType.PrimitiveTypeName getPrimitiveType(String[] columnName) {
       return getColumnTypeInfo(columnName).primitiveType;
     }
 
-    @JsonIgnore @Override public OriginalType getOriginalType(String[] columnName) {
+    @JsonIgnore
+    @Override public OriginalType getOriginalType(String[] columnName) {
       return getColumnTypeInfo(columnName).originalType;
     }
 
-    @JsonIgnore @Override
+    @JsonIgnore
+    @Override
     public Integer getRepetitionLevel(String[] columnName) {
       return null;
     }
 
-    @JsonIgnore @Override
+    @JsonIgnore
+    @Override
     public Integer getDefinitionLevel(String[] columnName) {
       return null;
     }
 
-    @JsonIgnore @Override
+    @JsonIgnore
+    @Override
+    public Integer getScale(String[] columnName) {
+      return null;
+    }
+
+    @JsonIgnore
+    @Override
+    public Integer getPrecision(String[] columnName) {
+      return null;
+    }
+
+    @JsonIgnore
+    @Override
     public boolean isRowGroupPrunable() {
       return false;
     }
 
-    @JsonIgnore @Override public ParquetTableMetadataBase clone() {
+    @JsonIgnore
+    @Override public ParquetTableMetadataBase clone() {
       return new ParquetTableMetadata_v2(metadataVersion, files, directories, columnTypeInfo, drillVersion);
     }
 
-    @JsonIgnore @Override
+    @JsonIgnore
+    @Override
     public String getDrillVersion() {
       return drillVersion;
     }
 
-    @JsonIgnore @Override public String getMetadataVersion() {
+    @JsonIgnore
+    @Override public String getMetadataVersion() {
       return metadataVersion;
+    }
+
+    @JsonIgnore
+    public ConcurrentHashMap<ColumnTypeMetadata_v2.Key, ColumnTypeMetadata_v2> getColumnTypeInfoMap() {
+      return this.columnTypeInfo;
+    }
+
+    @Override
+    public List<? extends MetadataBase.ColumnTypeMetadata> getColumnTypeInfoList() {
+      return new ArrayList<>(this.columnTypeInfo.values());
     }
 
   }
@@ -170,15 +203,18 @@ public class Metadata_V2 {
       return String.format("path: %s rowGroups: %s", path, rowGroups);
     }
 
-    @JsonIgnore @Override public Path getPath() {
+    @JsonIgnore
+    @Override public Path getPath() {
       return path;
     }
 
-    @JsonIgnore @Override public Long getLength() {
+    @JsonIgnore
+    @Override public Long getLength() {
       return length;
     }
 
-    @JsonIgnore @Override public List<? extends RowGroupMetadata> getRowGroups() {
+    @JsonIgnore
+    @Override public List<? extends RowGroupMetadata> getRowGroups() {
       return rowGroups;
     }
   }
@@ -228,7 +264,7 @@ public class Metadata_V2 {
   }
 
 
-  public static class ColumnTypeMetadata_v2 {
+  public static class ColumnTypeMetadata_v2 extends MetadataBase.ColumnTypeMetadata {
     @JsonProperty public String[] name;
     @JsonProperty public PrimitiveType.PrimitiveTypeName primitiveType;
     @JsonProperty public OriginalType originalType;
@@ -300,6 +336,15 @@ public class Metadata_V2 {
           return new Key(key.split("\\."));
         }
       }
+    }
+
+    @Override public PrimitiveType.PrimitiveTypeName getPrimitiveType() {
+      return primitiveType;
+    }
+
+    @Override
+    public String[] getName() {
+      return name;
     }
   }
 

@@ -161,7 +161,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
    */
   private SqlNodeList getColumnList(final SqlRefreshMetadata sqlrefreshMetadata) {
     SqlNodeList columnList = sqlrefreshMetadata.getFieldList();
-    if (columnList == null || !SqlNodeList.isEmptyList(columnList)) {
+    if (SqlNodeList.isEmptyList(columnList)) {
       columnList = new SqlNodeList(SqlParserPos.ZERO);
       columnList.add(new SqlIdentifier(SchemaPath.STAR_COLUMN.rootName(), SqlParserPos.ZERO));
     }

@@ -24,6 +24,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
 import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.ExecErrorConstants;
@@ -62,8 +63,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.apache.drill.exec.store.parquet.metadata.Metadata_V2.ColumnTypeMetadata_v2;
 import static org.apache.drill.exec.store.parquet.metadata.Metadata_V2.ParquetTableMetadata_v2;
-import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ColumnTypeMetadata_v3;
-import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ParquetTableMetadata_v3;
 import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ColumnMetadata;
 import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetTableMetadataBase;
 import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetFileMetadata;
@@ -318,7 +317,7 @@ public class ParquetReaderUtility {
     int minRowGroups = Integer.MAX_VALUE;
     int maxNumColumns = 0;
 
-    // Setting Min / Max values for V2 and V3 versions; for versions V3_3 and above need to do decoding
+    // Setting Min / Max values for V2, V3 and V4 versions; for versions V3_3 and above need to do decoding
     boolean needDecoding = new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 3)) >= 0;
     for (ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
       if ( timer != null ) { // for debugging only
@@ -371,20 +370,12 @@ public class ParquetReaderUtility {
    */
   private static Set<List<String>> getBinaryColumnsNames(ParquetTableMetadataBase parquetTableMetadata) {
     Set<List<String>> names = new HashSet<>();
-    if (parquetTableMetadata instanceof ParquetTableMetadata_v2) {
-      for (ColumnTypeMetadata_v2 columnTypeMetadata :
-        ((ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {
-        if (columnTypeMetadata.primitiveType == PrimitiveTypeName.BINARY
-            || columnTypeMetadata.primitiveType == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
-          names.add(Arrays.asList(columnTypeMetadata.name));
-        }
-      }
-    } else if (parquetTableMetadata instanceof ParquetTableMetadata_v3) {
-      for (ColumnTypeMetadata_v3 columnTypeMetadata :
-        ((ParquetTableMetadata_v3) parquetTableMetadata).columnTypeInfo.values()) {
-        if (columnTypeMetadata.primitiveType == PrimitiveTypeName.BINARY
-            || columnTypeMetadata.primitiveType == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
-          names.add(Arrays.asList(columnTypeMetadata.name));
+    List<? extends MetadataBase.ColumnTypeMetadata> columnTypeMetadataList = parquetTableMetadata.getColumnTypeInfoList();
+    if (columnTypeMetadataList != null) {
+      for (MetadataBase.ColumnTypeMetadata columnTypeMetadata : columnTypeMetadataList) {
+        if (columnTypeMetadata.getPrimitiveType() == PrimitiveTypeName.BINARY
+                || columnTypeMetadata.getPrimitiveType() == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
+          names.add(Arrays.asList(columnTypeMetadata.getName()));
         }
       }
     }

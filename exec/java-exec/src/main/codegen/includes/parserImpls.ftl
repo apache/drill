@@ -472,14 +472,14 @@ SqlNode SqlRefreshMetadata() :
     SqlIdentifier tblName;
     SqlNodeList fieldList = null;
     SqlNode query;
-    boolean allColumns = true;
+    boolean allColumnsInteresting = true;
 }
 {
     <REFRESH> { pos = getPos(); }
     <TABLE>
     <METADATA>
     [
-        <COLUMNS> { allColumns = false; }
+        <COLUMNS> { allColumnsInteresting = false; }
         (   fieldList = ParseRequiredFieldList("Table")
             |
             <NONE>
@@ -487,7 +487,7 @@ SqlNode SqlRefreshMetadata() :
     ]
     tblName = CompoundIdentifier()
     {
-        return new SqlRefreshMetadata(pos, tblName, SqlLiteral.createBoolean(allColumns, getPos()), fieldList);
+        return new SqlRefreshMetadata(pos, tblName, SqlLiteral.createBoolean(allColumnsInteresting, getPos()), fieldList);
     }
 }
 
