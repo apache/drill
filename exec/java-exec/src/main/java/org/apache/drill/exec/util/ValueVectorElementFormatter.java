@@ -52,48 +52,51 @@ public class ValueVectorElementFormatter {
    * @return the formatted value, null if failed
    */
   public String format(Object value, TypeProtos.MinorType minorType) {
+    String str = null;
     switch (minorType) {
       case TIMESTAMP:
         if (value instanceof LocalDateTime) {
-          return format((LocalDateTime) value,
+          str = format((LocalDateTime) value,
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_TIMESTAMP),
                         (v, p) -> v.format(getTimestampFormatter(p)));
         }
         else {
-          return value.toString();
+          str = value.toString();
         }
         break;
       case DATE:
         if (value instanceof LocalDate) {
-          return format((LocalDate) value,
+          str = format((LocalDate) value,
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_DATE),
                         (v, p) -> v.format(getDateFormatter(p)));
         }
         else {
-          return value.toString();
+          str = value.toString();
         }
         break;
       case TIME:
         if (value instanceof LocalTime) {
-          return format((LocalTime) value,
+          str = format((LocalTime) value,
                         options.getString(ExecConstants.WEB_DISPLAY_FORMAT_TIME),
                         (v, p) -> v.format(getTimeFormatter(p)));
         }
         else {
-          return value.toString();
+          str = value.toString();
         }
         break;
       case VARBINARY:
         if(value instanceof byte[]) {
           byte[] bytes = (byte[]) value;
-          return org.apache.drill.common.util.DrillStringUtils.toBinaryString(bytes);
+          str = org.apache.drill.common.util.DrillStringUtils.toBinaryString(bytes);
         }
         else {
-          return value.toString();
+          str = value.toString();
         }
       break;
       default:
-        return value.toString();
+        str = value.toString();
+      
+      return str;
     }
   }
 
