@@ -95,9 +95,8 @@ public class ValueVectorElementFormatter {
       break;
       default:
         str = value.toString();
-      
-      return str;
     }
+    return str;
   }
 
   /**
