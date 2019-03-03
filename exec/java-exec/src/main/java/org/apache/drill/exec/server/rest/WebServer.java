@@ -57,10 +57,8 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ErrorHandler;
-import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -83,7 +81,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.net.BindException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -188,7 +185,7 @@ public class WebServer implements AutoCloseable {
       try {
         embeddedJetty.start();
         return;
-      } catch (BindException e) {
+      } catch (IOException e) {
         if (portHunt) {
           logger.info("Failed to start on port {}, trying port {}", port, ++port, e);
         } else {
@@ -270,14 +267,18 @@ public class WebServer implements AutoCloseable {
   }
 
   /**
-   * @return A {@link SessionHandler} which contains a {@link HashSessionManager}
+   * It creates {@link SessionHandler} instead of jetty-9.3 SessionManager
+   * @see <a href="https://www.eclipse.org/jetty/documentation/9.4.x/upgrading-jetty.html">Session Management</a>
+   *
+   * @param securityHandler Set of initparameters that are used by the Authentication
+   * @return session handler
    */
   private SessionHandler createSessionHandler(final SecurityHandler securityHandler) {
-    SessionManager sessionManager = new HashSessionManager();
-    sessionManager.setMaxInactiveInterval(config.getInt(ExecConstants.HTTP_SESSION_MAX_IDLE_SECS));
+    SessionHandler sessionHandler = new SessionHandler();
+    sessionHandler.setMaxInactiveInterval(config.getInt(ExecConstants.HTTP_SESSION_MAX_IDLE_SECS));
     // response cookie will be returned with HttpOnly flag
-    sessionManager.getSessionCookieConfig().setHttpOnly(true);
-    sessionManager.addEventListener(new HttpSessionListener() {
+    sessionHandler.getSessionCookieConfig().setHttpOnly(true);
+    sessionHandler.addEventListener(new HttpSessionListener() {
       @Override
       public void sessionCreated(HttpSessionEvent se) {
 
@@ -309,7 +310,7 @@ public class WebServer implements AutoCloseable {
       }
     });
 
-    return new SessionHandler(sessionManager);
+    return sessionHandler;
   }
 
   public int getPort() {

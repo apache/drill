@@ -29,6 +29,7 @@ import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.security.authentication.SpnegoAuthenticator;
 import org.eclipse.jetty.server.Authentication;
 import org.eclipse.jetty.server.HttpChannel;
+import org.eclipse.jetty.server.HttpConnection;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.UserIdentity;
@@ -152,7 +153,7 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
         }
 
         response.setContentLength(0);
-        final HttpChannel channel = HttpChannel.getCurrentHttpChannel();
+        final HttpChannel channel = HttpConnection.getCurrentConnection().getHttpChannel();
         final Response base_response = channel.getResponse();
         final Request base_request = channel.getRequest();
         final int redirectCode =

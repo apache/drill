@@ -18,7 +18,7 @@
 package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.eclipse.jetty.security.MappedLoginService.RolePrincipal;
+import org.eclipse.jetty.security.AbstractLoginService;
 
 import java.security.Principal;
 import java.util.List;
@@ -38,11 +38,12 @@ public class DrillUserPrincipal implements Principal {
 
   public static final String[] NON_ADMIN_USER_ROLES = new String[]{AUTHENTICATED_ROLE};
 
-  public static final List<RolePrincipal> ADMIN_PRINCIPALS =
-      ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE), new RolePrincipal(ADMIN_ROLE));
+  public static final List<AbstractLoginService.RolePrincipal> ADMIN_PRINCIPALS =
+      ImmutableList.of(new AbstractLoginService.RolePrincipal(AUTHENTICATED_ROLE),
+          new AbstractLoginService.RolePrincipal(ADMIN_ROLE));
 
-  public static final List<RolePrincipal> NON_ADMIN_PRINCIPALS =
-      ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE));
+  public static final List<AbstractLoginService.RolePrincipal> NON_ADMIN_PRINCIPALS =
+      ImmutableList.of(new AbstractLoginService.RolePrincipal(AUTHENTICATED_ROLE));
 
   private final String userName;
 
