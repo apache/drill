@@ -28,9 +28,7 @@ import org.eclipse.jetty.security.authentication.DeferredAuthentication;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.security.authentication.SpnegoAuthenticator;
 import org.eclipse.jetty.server.Authentication;
-import org.eclipse.jetty.server.HttpChannel;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.UserIdentity;
 
 import javax.servlet.ServletRequest;
@@ -150,15 +148,12 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
             newUri = WebServerConstants.WEBSERVER_ROOT_PATH;
           }
         }
-
         response.setContentLength(0);
-        final HttpChannel channel = HttpChannel.getCurrentHttpChannel();
-        final Response base_response = channel.getResponse();
-        final Request base_request = channel.getRequest();
-        final int redirectCode =
-            base_request.getHttpVersion().getVersion() < HttpVersion.HTTP_1_1.getVersion() ? 302 : 303;
+        Request baseRequest = Request.getBaseRequest(req);
+        int redirectCode =
+            baseRequest.getHttpVersion().getVersion() < HttpVersion.HTTP_1_1.getVersion() ? 302 : 303;
         try {
-          base_response.sendRedirect(redirectCode, res.encodeRedirectURL(newUri));
+          baseRequest.getResponse().sendRedirect(redirectCode, res.encodeRedirectURL(newUri));
         } catch (IOException e) {
           logger.error("DrillSpnegoAuthenticator: Failed while using the redirect URL {} from client {}", newUri,
               req.getRemoteAddr(), e);

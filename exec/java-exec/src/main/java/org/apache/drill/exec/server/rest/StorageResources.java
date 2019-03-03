@@ -86,8 +86,9 @@ public class StorageResources {
             .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s_storage_plugins.%s\"",
                 pluginGroup, format))
             .build()
-        : Response.status(Response.Status.NOT_FOUND.getStatusCode(),
-              String.format("Unknown file type %s for %s Storage Plugin Configs", format, pluginGroup))
+        : Response.status(Response.Status.NOT_FOUND.getStatusCode())
+            .entity(String.format("Unknown \"%s\" file format for \"%s\" Storage Plugin configs group",
+                    format, pluginGroup))
             .build();
   }
 
@@ -146,8 +147,8 @@ public class StorageResources {
         ? Response.ok(getPluginConfig(name))
             .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s.%s\"", name, format))
             .build()
-        : Response.status(Response.Status.NOT_FOUND.getStatusCode(),
-               String.format("Unknown file type %s for Storage Plugin Config: %s", format, name))
+        : Response.status(Response.Status.NOT_FOUND.getStatusCode())
+            .entity(String.format("Unknown \"%s\" file format for \"%s\" Storage Plugin config", format, name))
             .build();
   }
 

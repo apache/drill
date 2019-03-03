@@ -140,7 +140,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
         Thread.sleep(100L);
       }
 
-      if (waitAndAssertDrillbitCount(cluster, zkRefresh)) {
+      if (waitAndAssertDrillbitCount(cluster, zkRefresh, drillbits.length)) {
         return;
       }
       Assert.fail("Timed out");
@@ -178,7 +178,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
         throw new RuntimeException("Failed : HTTP error code : "
                 + conn.getResponseCode());
       }
-      if (waitAndAssertDrillbitCount(cluster, zkRefresh)) {
+      if (waitAndAssertDrillbitCount(cluster, zkRefresh, drillbits.length)) {
         return;
       }
       Assert.fail("Timed out");
@@ -240,24 +240,23 @@ public class TestGracefulShutdown extends BaseTestQuery {
     assertFalse("First drillbit instance should have a temporary Javascript dir deleted", originalDrillbitTempDir.exists());
   }
 
-  private static File getWebServerTempDirPath(Drillbit drillbit) throws IllegalAccessException {
+  private File getWebServerTempDirPath(Drillbit drillbit) throws IllegalAccessException {
     Field webServerField = FieldUtils.getField(drillbit.getClass(), "webServer", true);
     WebServer webServerHandle = (WebServer) FieldUtils.readField(webServerField, drillbit, true);
-    File webServerTempDirPath = webServerHandle.getOrCreateTmpJavaScriptDir();
-    return webServerTempDirPath;
+    return webServerHandle.getOrCreateTmpJavaScriptDir();
   }
 
-  private static boolean waitAndAssertDrillbitCount(ClusterFixture cluster, int zkRefresh) throws InterruptedException {
+  private boolean waitAndAssertDrillbitCount(ClusterFixture cluster, int zkRefresh, int bitsNum)
+      throws InterruptedException {
 
     while (true) {
       Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit()
               .getContext()
               .getClusterCoordinator()
               .getAvailableEndpoints();
-      if (drillbitEndpoints.size() == 2) {
+      if (drillbitEndpoints.size() == bitsNum - 1) {
         return true;
       }
-
       Thread.sleep(zkRefresh);
     }
   }

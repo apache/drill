@@ -83,7 +83,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.net.BindException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -187,7 +186,7 @@ public class WebServer implements AutoCloseable {
       try {
         embeddedJetty.start();
         return;
-      } catch (BindException e) {
+      } catch (IOException e) {
         if (portHunt) {
           logger.info("Failed to start on port {}, trying port {}", port, ++port, e);
         } else {
@@ -269,7 +268,10 @@ public class WebServer implements AutoCloseable {
   }
 
   /**
-   * @return A {@link SessionHandler} which contains a {@link HashSessionManager}
+   * It creates A {@link SessionHandler} which contains a {@link HashSessionManager}
+   *
+   * @param securityHandler Set of initparameters that are used by the Authentication
+   * @return session handler
    */
   private SessionHandler createSessionHandler(final SecurityHandler securityHandler) {
     SessionManager sessionManager = new HashSessionManager();
