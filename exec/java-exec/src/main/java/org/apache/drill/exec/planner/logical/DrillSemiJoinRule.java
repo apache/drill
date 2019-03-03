@@ -41,7 +41,7 @@ import java.util.function.Predicate;
 /**
  * Planner rule that creates a {@code DrillSemiJoinRel} from a
  * {@link org.apache.calcite.rel.core.Join} on top of a
- * {@link org.apache.calcite.rel.logical.LogicalAggregate}.
+ * {@link org.apache.calcite.rel.core.Aggregate}.
  */
 public abstract class DrillSemiJoinRule extends RelOptRule {
   private static final Predicate<Join> IS_LEFT_OR_INNER =
@@ -168,7 +168,7 @@ public abstract class DrillSemiJoinRule extends RelOptRule {
   @Override
   public boolean matches(RelOptRuleCall call) {
     Join join = call.rel(0);
-    DrillAggregateRel agg = call.rel(2);
+    Aggregate agg = call.rel(2);
     if (agg.getAggCallList().size() != 0) { return false; }
     return  isSimpleJoinCondition(join.getCondition()) &&
             isRowTypeSame(join, call.rel(1), call.rel(2).getInput(0));

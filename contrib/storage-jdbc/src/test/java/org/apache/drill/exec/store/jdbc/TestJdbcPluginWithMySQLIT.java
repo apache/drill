@@ -308,4 +308,19 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .baselineValues(5, 5)
         .go();
   }
+
+  @Test
+  public void testSemiJoin() throws Exception {
+    String query =
+        "select person_id from mysql.`drill_mysql_test`.person t1\n" +
+            "where exists (" +
+                "select person_id from mysql.`drill_mysql_test`.person\n" +
+                "where t1.person_id = person_id)";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("person_id")
+        .baselineValuesForSingleColumn(1, 2, 3, 5)
+        .go();
+  }
 }
