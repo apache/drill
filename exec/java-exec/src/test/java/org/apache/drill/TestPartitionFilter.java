@@ -128,6 +128,7 @@ public class TestPartitionFilter extends PlanTestBase {
     String query = "select * from dfs.`multilevel/parquet` where (dir0=1994 and dir1='Q1' and o_custkey < 500) or (dir0=1995 and dir1='Q2' and o_custkey > 500)";
     testIncludeFilter(query, 2, "Filter\\(", 8);
   }
+
   @Test //Parquet: partition filters are ANDed and belong to a top-level OR
   public void testPartitionFilter3_Parquet_from_CTAS() throws Exception {
     String query = "select * from dfs.tmp.parquet where (yr=1994 and qrtr='Q1' and o_custkey < 500) or (yr=1995 and qrtr='Q2' and o_custkey > 500)";

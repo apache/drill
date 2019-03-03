@@ -499,7 +499,6 @@ public class ScanBatch implements CloseableRecordBatch {
       schemaChanged = false;
     }
 
-    @SuppressWarnings("resource")
     private <T extends ValueVector> T addField(MaterializedField field,
         Class<T> clazz, boolean isImplicitField) throws SchemaChangeException {
       Map<String, ValueVector> fieldVectorMap;

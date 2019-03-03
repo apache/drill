@@ -178,7 +178,7 @@ public class TestAnalyze extends BaseTestQuery {
       test("ALTER SESSION SET `planner.slice_target` = 1");
       test("ALTER SESSION SET `store.format` = 'parquet'");
       test("CREATE TABLE dfs.tmp.parquet1 AS SELECT * from dfs.`%s`", tmpLocation);
-      verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquet1 COMPUTE STATISTICS", "11");
+      verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquet1 COMPUTE STATISTICS", "9");
       test("SELECT * FROM dfs.tmp.`parquet1/.stats.drill`");
       test("create table dfs.tmp.flatstats4 as select flatten(`directories`[0].`columns`) as `columns` " +
            "from dfs.tmp.`parquet1/.stats.drill`");
@@ -199,8 +199,6 @@ public class TestAnalyze extends BaseTestQuery {
           .baselineValues("`o_clerk`", 120.0, 120.0, 114L, 15.0)
           .baselineValues("`o_shippriority`", 120.0, 120.0, 1L, 4.0)
           .baselineValues("`o_comment`", 120.0, 120.0, 120L, 46.333333333333336)
-          .baselineValues("`dir0`", 120.0, 120.0, 3L, 4.0)
-          .baselineValues("`dir1`", 120.0, 120.0, 4L, 2.0)
           .go();
     } finally {
       test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);

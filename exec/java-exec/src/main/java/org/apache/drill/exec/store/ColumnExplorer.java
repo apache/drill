@@ -54,14 +54,30 @@ public class ColumnExplorer {
    */
   public ColumnExplorer(OptionManager optionManager, List<SchemaPath> columns) {
     this.partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
-    this.columns = columns;
-    this.isStarQuery = columns != null && Utilities.isStarQuery(columns);
     this.selectedPartitionColumns = Lists.newArrayList();
     this.tableColumns = Lists.newArrayList();
     this.allImplicitColumns = initImplicitFileColumns(optionManager);
     this.selectedImplicitColumns = CaseInsensitiveMap.newHashMap();
+    if (columns == null) {
+      isStarQuery = false;
+      this.columns = null;
+    } else {
+      this.columns = columns;
+      this.isStarQuery = columns != null && Utilities.isStarQuery(columns);
+      init();
+    }
+  }
 
-    init();
+  /**
+   * Constructor for using the column explorer to probe existing columns in the
+   * {@link ProjectRecordBatch}.
+   */
+  // Todo: This is awkward. This class is being used for two distinct things:
+  // 1. The definition of the metadata columns, and
+  // 2. The projection of metadata columns in a particular query.
+  // Would be better to separate these two concepts.
+  public ColumnExplorer(OptionManager optionManager) {
+    this(optionManager, null);
   }
 
   /**
@@ -120,6 +136,11 @@ public class ColumnExplorer {
     Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
     Matcher matcher = pattern.matcher(path);
     return matcher.matches();
+  }
+
+  public boolean isImplicitColumn(String name) {
+    return isPartitionColumn(partitionDesignator, name) ||
+        allImplicitColumns.get(name) != null;
   }
 
   /**

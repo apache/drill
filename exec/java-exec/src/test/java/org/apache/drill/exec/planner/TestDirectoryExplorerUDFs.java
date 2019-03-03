@@ -121,8 +121,8 @@ public class TestDirectoryExplorerUDFs extends PlanTestBase {
     testBuilder()
         .sqlQuery(query, path, tests.get(0).funcName, path)
         .unOrdered()
-        .baselineColumns("columns", "dir0")
-        .baselineValues(list, tests.get(0).expectedFolderName)
+        .baselineColumns("columns")
+        .baselineValues(list)
         .go();
   }
 
