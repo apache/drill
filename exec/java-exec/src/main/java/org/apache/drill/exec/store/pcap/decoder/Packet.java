@@ -40,6 +40,7 @@ public class Packet {
   //            guint32 orig_len;       // actual length of packet */
   //        } pcaprec_hdr_t;
   private long timestamp;
+  private long timestampMicro;
   private int originalLength;
 
   protected byte[] raw;
@@ -159,6 +160,10 @@ public class Packet {
 
   public long getTimestamp() {
     return timestamp;
+  }
+
+  public long getTimestampMicro() {
+    return timestampMicro;
   }
 
   public int getPacketLength() {
@@ -384,16 +389,17 @@ public class Packet {
   }
 
   private void decodePcapHeader(final byte[] header, final boolean byteOrder, final int maxLength, final int offset) {
-    timestamp = getTimestamp(header, byteOrder, offset);
+    timestampMicro = getTimestampMicro(header, byteOrder, offset);
+    timestamp = timestampMicro / 1000L;
     originalLength = getIntFileOrder(byteOrder, header, offset + PacketConstants.ORIGINAL_LENGTH_OFFSET);
     packetLength = getIntFileOrder(byteOrder, header, offset + PacketConstants.ACTUAL_LENGTH_OFFSET);
     Preconditions.checkState(originalLength < maxLength,
         "Packet too long (%d bytes)", originalLength);
   }
 
-  private long getTimestamp(final byte[] header, final boolean byteOrder, final int offset) {
-    return getIntFileOrder(byteOrder, header, offset + PacketConstants.TIMESTAMP_OFFSET) * 1000L +
-        getIntFileOrder(byteOrder, header, offset + PacketConstants.TIMESTAMP_MICRO_OFFSET) / 1000L;
+  private long getTimestampMicro(final byte[] header, final boolean byteOrder, final int offset) {
+    return getIntFileOrder(byteOrder, header, offset + PacketConstants.TIMESTAMP_OFFSET) * 1000000L +
+        getIntFileOrder(byteOrder, header, offset + PacketConstants.TIMESTAMP_MICRO_OFFSET);
   }
 
   private void decodeEtherPacket() {
