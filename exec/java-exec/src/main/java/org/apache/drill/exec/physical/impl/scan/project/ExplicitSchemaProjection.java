@@ -41,6 +41,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  */
 
 public class ExplicitSchemaProjection extends SchemaLevelProjection {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplicitSchemaProjection.class);
 
   public ExplicitSchemaProjection(ScanLevelProjection scanProj,
       TupleMetadata tableSchema,

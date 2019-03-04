@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
@@ -35,9 +36,10 @@ import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
-
+import org.junit.experimental.categories.Category;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
+@Category(RowSetTests.class)
 public class TestColumnsArrayParser extends SubOperatorTest {
 
   /**
@@ -255,5 +257,45 @@ public class TestColumnsArrayParser extends SubOperatorTest {
     assertEquals(FileMetadataColumn.ID, scanProj.columns().get(2).nodeType());
   }
 
-  // TODO: Test Columns element projection
+  /**
+   * If a query is of the form:
+   * <pre><code>
+   * select * from dfs.`multilevel/csv` where columns[1] < 1000
+   * </code><pre>
+   * Then the projection list passed to the scan operator
+   * includes both the wildcard and the `columns` array.
+   * We can ignore one of them.
+   */
+
+  @Test
+  public void testWildcardAndColumns() {
+    ScanLevelProjection scanProj = new ScanLevelProjection(
+        RowSetTestUtils.projectList(
+            SchemaPath.DYNAMIC_STAR,
+            ColumnsArrayManager.COLUMNS_COL),
+        ScanTestUtils.parsers(new ColumnsArrayParser(true)));
+
+    assertFalse(scanProj.projectAll());
+    assertEquals(2, scanProj.requestedCols().size());
+
+    assertEquals(1, scanProj.columns().size());
+    assertEquals(ColumnsArrayManager.COLUMNS_COL, scanProj.columns().get(0).name());
+
+    // Verify column type
+
+    assertEquals(UnresolvedColumnsArrayColumn.ID, scanProj.columns().get(0).nodeType());
+  }
+
+  @Test
+  public void testColumnsAsMap() {
+    try {
+        new ScanLevelProjection(
+          RowSetTestUtils.projectList("columns.x"),
+          ScanTestUtils.parsers(new ColumnsArrayParser(true)));
+        fail();
+    }
+    catch (UserException e) {
+      // Expected
+    }
+  }
 }

@@ -22,6 +22,56 @@
  * or may be "missing" with null values applied. The code here prepares
  * a run-time projection plan based on the actual table schema.
  * <p>
+ * Looks at schema as a set of transforms.
+ * <ul>
+ * <li>Scan-level projection list from the query plan: The list of columns
+ * (or the wildcard) as requested by the user in the query. The planner
+ * determines which columns to project. In Drill, projection is speculative:
+ * it is a list of names which the planner hopes will appear in the data
+ * files. The reader must make up columns (the infamous nullable INT) when
+ * it turns out that no such column exists. Else, the reader must figure out
+ * the data type for any columns that does exist.
+ * <p>
+ * The scan project list defines the set of columns which the scan operator
+ * is obliged to send downstream. Ideally, the scan operator sends exactly the
+ * same schema (the project list with types filled in) for all batches. Since
+ * batches may come from different files, the scan operator is obligated to
+ * unify the schemas from those files (or blocks.)</ul>
+ * <li>Reader (file)-level projection occurs for each reader. A single scan
+ * may use multiple readers to read data. Each reader may offer more information
+ * about the schema. For example, a Parquet reader can obtain schema information
+ * from the Parquet headers. A JDBC reader obtains schema information from the
+ * returned schema. This is called "early schema." File-based readers can at least
+ * add implicit file or partition columns.
+ * <p>
+ * The result is a refined schema: the scan level schema with more information
+ * filled in. For Parquet, all projection information can be filled in. For
+ * CSV or JSON, we can only add file metadata information, but not yet the
+ * actual data schema.</ul>
+ * <li>Batch-level schema: once a reader reads actual data, it now knows
+ * exactly what it read. This is the "schema on read model." Thus, after reading
+ * a batch, any remaining uncertainty about the projected schema is removed.
+ * The actual data defined data types and so on.
+ * <p>
+ * Readers such as JSON and CSV are "late schema": they don't know the data
+ * schema until they read the file. This is true "schema on read." Further, for
+ * JSON, the data may change from one batch to the next as the reader "discovers"
+ * fields that did not appear in earlier batches. This requires some amount of
+ * "schema smoothing": the ability to preserve a consistent output schema even
+ * as the input schema jiggles around some.</ul>
+ * </ul>
+ * <p>
+ * The goal of this mechanism is to handle the above use cases cleanly, in a
+ * common set of classes, and to avoid the need for each reader to figure out
+ * all these issues for themselves (as was the case with earlier versions of
+ * Drill.)
+ * <p>
+ * Because these issues are complex, the code itself is complex. To make the
+ * code easier to manage, each bit of functionality is encapsulated in a
+ * distinct class. Classes combine via composition to create a "framework"
+ * suitable for each kind of reader: whether it be early or late schema,
+ * file-based or something else, etc.
+ * <p>
  * The core concept is one of successive refinement of the project
  * list through a set of rewrites:
  * <ul>

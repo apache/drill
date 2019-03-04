@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadata;
@@ -46,9 +47,10 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
-
+import org.junit.experimental.categories.Category;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
+@Category(RowSetTests.class)
 public class TestFileMetadataProjection extends SubOperatorTest {
 
   @Test

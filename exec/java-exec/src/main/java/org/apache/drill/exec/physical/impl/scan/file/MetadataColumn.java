@@ -44,4 +44,17 @@ public abstract class MetadataColumn extends ResolvedColumn implements ConstantC
   public String name() { return schema.getName(); }
 
   public abstract MetadataColumn resolve(FileMetadata fileInfo, VectorSource source, int sourceIndex);
+
+  @Override
+  public String toString() {
+    return new StringBuilder()
+        .append("[")
+        .append(getClass().getSimpleName())
+        .append(" schema=\"")
+        .append(schema.toString())
+        .append(", value=")
+        .append(value)
+        .append("]")
+        .toString();
+  }
 }

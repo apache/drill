@@ -35,13 +35,23 @@ import org.apache.drill.exec.store.easy.text.compliant.RepeatedVarCharOutput;
  * expands to `columns`.</li>
  * <li>If the columns array appears, then no other table columns
  * can appear.</li>
- * <li>If the columns array appears, then the wildcard cannot also
- * appear, unless that wildcard expanded to be `columns` as
- * described above.</li>
+ * <li>Both 'columns' and the wildcard can appear for queries such
+ * as:<code><pre>
+ * select * from dfs.`multilevel/csv`
+ * where columns[1] < 1000</pre>
+ * </code></li>
  * <li>The query can select specific elements such as `columns`[2].
  * In this case, only array elements can appear, not the unindexed
  * `columns` column.</li>
+ * <li>If is possible for `columns` to appear twice. In this case,
+ * the project operator will make a copy.</li>
  * </ul>
+ * <p>
+ * To handle these cases, the general rule is: allow any number
+ * of wildcard or `columns` appearances in the input projection, but
+ * collapse them all down to a single occurrence of `columns` in the
+ * output projection. (Upstream code will prevent `columns` from
+ * appearing twice in its non-indexed form.)
  * <p>
  * It falls to this parser to detect a not-uncommon user error, a
  * query such as the following:<pre><code>
@@ -83,7 +93,8 @@ public class ColumnsArrayParser implements ScanProjectionParser {
   @Override
   public boolean parse(RequestedColumn inCol) {
     if (requireColumnsArray && inCol.isWildcard()) {
-      expandWildcard();
+      createColumnsCol(
+          new RequestedColumnImpl(builder.rootProjection(), ColumnsArrayManager.COLUMNS_COL));
       return true;
     }
     if (! inCol.nameEquals(ColumnsArrayManager.COLUMNS_COL)) {
@@ -113,41 +124,24 @@ public class ColumnsArrayParser implements ScanProjectionParser {
           .build(logger);
       }
     }
-
-    // Special `columns` array column.
-
-    columnsArrayCol = new UnresolvedColumnsArrayColumn(inCol);
-    builder.addTableColumn(columnsArrayCol);
+    createColumnsCol(inCol);
     return true;
   }
 
-  /**
-   * Query contained SELECT *, and we know that the reader supports only
-   * the `columns` array; go ahead and expand the wildcard to the only
-   * possible column.
-   */
+  private void createColumnsCol(RequestedColumn inCol) {
 
-  private void expandWildcard() {
+    // Special `columns` array column. Allow multiple, but
+    // project only one.
+
     if (columnsArrayCol != null) {
-      throw UserException
-        .validationError()
-        .message("Cannot select columns[] and `*` together")
-        .build(logger);
+      return;
     }
-    columnsArrayCol = new UnresolvedColumnsArrayColumn(
-        new RequestedColumnImpl(builder.rootProjection(), ColumnsArrayManager.COLUMNS_COL));
+    columnsArrayCol = new UnresolvedColumnsArrayColumn(inCol);
     builder.addTableColumn(columnsArrayCol);
   }
 
   @Override
-  public void validate() {
-    if (builder.hasWildcard() && columnsArrayCol != null) {
-      throw UserException
-        .validationError()
-        .message("Cannot select `columns` and `*` together")
-        .build(logger);
-    }
-  }
+  public void validate() { }
 
   @Override
   public void validateColumn(ColumnProjection col) {

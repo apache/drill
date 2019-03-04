@@ -100,8 +100,6 @@ import org.apache.drill.exec.physical.rowSet.project.RequestedTupleImpl;
 
 public class ScanLevelProjection {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanLevelProjection.class);
-
   /**
    * Interface for add-on parsers, avoids the need to create
    * a single, tightly-coupled parser for all types of columns.
@@ -128,12 +126,26 @@ public class ScanLevelProjection {
 
   // Internal state
 
+  protected boolean includesWildcard;
   protected boolean sawWildcard;
 
   // Output
 
   protected List<ColumnProjection> outputCols = new ArrayList<>();
+
+  /**
+   * Projection definition for the scan a whole. Parsed form of the input
+   * projection list.
+   */
+
   protected RequestedTuple outputProjection;
+
+  /**
+   * Projection definition passed to each reader. This is the set of
+   * columns that the reader is asked to provide.
+   */
+
+  protected RequestedTuple readerProjection;
   protected boolean hasWildcard;
   protected boolean emptyProjection = true;
 
@@ -158,6 +170,18 @@ public class ScanLevelProjection {
     for (ScanProjectionParser parser : parsers) {
       parser.bind(this);
     }
+
+    // First pass: check if a wildcard exists.
+
+    for (RequestedColumn inCol : outputProjection.projections()) {
+      if (inCol.isWildcard()) {
+        includesWildcard = true;
+        break;
+      }
+    }
+
+    // Second pass: process remaining columns.
+
     for (RequestedColumn inCol : outputProjection.projections()) {
       if (inCol.isWildcard()) {
         mapWildcard(inCol);
@@ -169,6 +193,23 @@ public class ScanLevelProjection {
     for (ScanProjectionParser parser : parsers) {
       parser.build();
     }
+
+    // Create the reader projection which includes either all columns
+    // (saw a wildcard) or just the unresolved columns (which excludes
+    // implicit columns.)
+
+    List<RequestedColumn> outputProj;
+    if (hasWildcard()) {
+      outputProj = null;
+    } else {
+      outputProj = new ArrayList<>();
+      for (ColumnProjection col : outputCols) {
+        if (col instanceof UnresolvedColumn) {
+          outputProj.add(((UnresolvedColumn) col).element());
+        }
+      }
+    }
+    readerProjection = RequestedTupleImpl.build(outputProj);
   }
 
   /**
@@ -181,6 +222,7 @@ public class ScanLevelProjection {
 
     // Wildcard column: this is a SELECT * query.
 
+    assert includesWildcard;
     if (sawWildcard) {
       throw new IllegalArgumentException("Duplicate * entry in project list");
     }
@@ -245,6 +287,15 @@ public class ScanLevelProjection {
       }
     }
 
+    // If the project list has a wildcard, and the column is not one recognized
+    // by the specialized parsers above, then just ignore it. It is likely a duplicate
+    // column name. In any event, it will be processed by the Project operator on
+    // top of this scan.
+
+    if (includesWildcard) {
+      return;
+    }
+
     // This is a desired table column.
 
     addTableColumn(
@@ -280,15 +331,6 @@ public class ScanLevelProjection {
     for (ColumnProjection outCol : outputCols) {
       for (ScanProjectionParser parser : parsers) {
         parser.validateColumn(outCol);
-      }
-      switch (outCol.nodeType()) {
-      case UnresolvedColumn.UNRESOLVED:
-        if (hasWildcard()) {
-          throw new IllegalArgumentException("Cannot select table columns and * together");
-        }
-        break;
-      default:
-        break;
       }
     }
   }
@@ -332,6 +374,8 @@ public class ScanLevelProjection {
   public boolean projectNone() { return emptyProjection; }
 
   public RequestedTuple rootProjection() { return outputProjection; }
+
+  public RequestedTuple readerProjection() { return readerProjection; }
 
   @Override
   public String toString() {

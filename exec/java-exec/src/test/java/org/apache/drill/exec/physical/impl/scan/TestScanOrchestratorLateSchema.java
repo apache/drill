@@ -18,10 +18,12 @@
 package org.apache.drill.exec.physical.impl.scan;
 
 import static org.junit.Assert.assertFalse;
+
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
-import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
@@ -32,6 +34,7 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the late-schema support in the scan orchestrator. "Late schema" is the case
@@ -43,6 +46,7 @@ import org.junit.Test;
  * that tests for lower-level components have already passed.
  */
 
+@Category(RowSetTests.class)
 public class TestScanOrchestratorLateSchema extends SubOperatorTest {
 
   /**

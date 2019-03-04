@@ -53,6 +53,7 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   protected final AbstractScanFramework<?> basicFramework;
   private final ShimBatchReader<? extends SchemaNegotiator> shim;
   protected TupleMetadata tableSchema;
+  protected boolean isSchemaComplete;
   protected int batchSize = ValueVector.MAX_ROW_COUNT;
 
   public SchemaNegotiatorImpl(AbstractScanFramework<?> framework, ShimBatchReader<? extends SchemaNegotiator> shim) {
@@ -66,8 +67,9 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   }
 
   @Override
-  public void setTableSchema(TupleMetadata schema) {
+  public void setTableSchema(TupleMetadata schema, boolean isComplete) {
     tableSchema = schema;
+    this.isSchemaComplete = schema != null && isComplete;
   }
 
   @Override
@@ -97,4 +99,6 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   public boolean isProjectionEmpty() {
     return basicFramework.scanOrchestrator().isProjectNone();
   }
+
+  public boolean isSchemaComplete() { return isSchemaComplete; }
 }

@@ -73,7 +73,7 @@ import org.apache.drill.exec.record.metadata.TupleNameSpace;
 
 public class RequestedTupleImpl implements RequestedTuple {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RequestedTupleImpl.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RequestedTupleImpl.class);
 
   private final RequestedColumnImpl parent;
   private final TupleNameSpace<RequestedColumn> projection = new TupleNameSpace<>();
@@ -84,6 +84,13 @@ public class RequestedTupleImpl implements RequestedTuple {
 
   public RequestedTupleImpl(RequestedColumnImpl parent) {
     this.parent = parent;
+  }
+
+  public RequestedTupleImpl(List<RequestedColumn> cols) {
+    parent = null;
+    for (RequestedColumn col : cols) {
+      projection.add(col.name(), col);
+    }
   }
 
   @Override
@@ -119,10 +126,43 @@ public class RequestedTupleImpl implements RequestedTuple {
   }
 
   /**
+   * Create a requested tuple projection from a rewritten top-level
+   * projection list. The columns within the list have already been parsed to
+   * pick out arrays, maps and scalars. The list must not include the
+   * wildcard: a wildcard list must be passed in as a null list. An
+   * empty list means project nothing. Null list means project all, else
+   * project only the columns in the list.
+   *
+   * @param projList top-level, parsed columns
+   * @return the tuple projection for the top-leel row
+   */
+
+  public static RequestedTuple build(List<RequestedColumn> projList) {
+    if (projList == null) {
+      return new ImpliedTupleRequest(true);
+    }
+    if (projList.isEmpty()) {
+      return new ImpliedTupleRequest(false);
+    }
+    return new RequestedTupleImpl(projList);
+  }
+
+  /**
    * Parse a projection list. The list should consist of a list of column names;
-   * any wildcards should have been processed by the caller. An empty list means
+   * or wildcards. An empty list means
    * nothing is projected. A null list means everything is projected (that is, a
    * null list here is equivalent to a wildcard in the SELECT statement.)
+   * <p>
+   * The projection list may include both a wildcard and column names (as in
+   * the case of implicit columns.) This results in a final list that both
+   * says that everything is projected, and provides the list of columns.
+   * <p>
+   * Parsing is used at two different times. First, to parse the list from
+   * the physical operator. This has the case above: an explicit wildcard
+   * and/or additional columns. Then, this class is used again to prepare the
+   * physical projection used when reading. In this case, wildcards should
+   * be removed, implicit columns pulled out, and just the list of read-level
+   * columns should remain.
    *
    * @param projList
    *          the list of projected columns, or null if no projection is to be

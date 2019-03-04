@@ -28,8 +28,9 @@ import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
-import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.SchemaSmoother.IncompatibleSchemaException;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
@@ -38,8 +39,10 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Tests schema smoothing at the schema projection level.
@@ -63,7 +66,7 @@ import org.junit.experimental.categories.Category;
  * to a fundamental limitation in Drill:
  * <ul>
  * <li>Drill cannot predict the future: each file (or batch)
- * may have a different schema.</ul>
+ * may have a different schema.</li>
  * <li>Drill does not know about these differences until they
  * occur.</li>
  * <li>The scan operator is obligated to return the same schema
@@ -83,6 +86,105 @@ import org.junit.experimental.categories.Category;
 
 @Category(RowSetTests.class)
 public class TestSchemaSmoothing extends SubOperatorTest {
+
+  /**
+   * Sanity test for the simple, discrete case. The purpose of
+   * discrete is just to run the basic lifecycle in a way that
+   * is compatible with the schema-persistence version.
+   */
+
+  @Test
+  public void testDiscrete() {
+
+    // Set up the file metadata manager
+
+    Path filePathA = new Path("hdfs:///w/x/y/a.csv");
+    Path filePathB = new Path("hdfs:///w/x/y/b.csv");
+    FileMetadataManager metadataManager = new FileMetadataManager(
+        fixture.getOptionManager(),
+        new Path("hdfs:///w"),
+        Lists.newArrayList(filePathA, filePathB));
+
+    // Set up the scan level projection
+
+    ScanLevelProjection scanProj = new ScanLevelProjection(
+        RowSetTestUtils.projectList(ScanTestUtils.FILE_NAME_COL, "a", "b"),
+        ScanTestUtils.parsers(metadataManager.projectionParser()));
+
+    {
+      // Define a file a.csv
+
+      metadataManager.startFile(filePathA);
+
+      // Build the output schema from the (a, b) table schema
+
+      TupleMetadata twoColSchema = new SchemaBuilder()
+          .add("a", MinorType.INT)
+          .addNullable("b", MinorType.VARCHAR, 10)
+          .buildSchema();
+      NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      ResolvedRow rootTuple = new ResolvedRow(builder);
+      new ExplicitSchemaProjection(
+          scanProj, twoColSchema, rootTuple,
+          ScanTestUtils.resolvers(metadataManager));
+
+      // Verify the full output schema
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("filename", MinorType.VARCHAR)
+          .add("a", MinorType.INT)
+          .addNullable("b", MinorType.VARCHAR, 10)
+          .buildSchema();
+
+      // Verify
+
+      List<ResolvedColumn> columns = rootTuple.columns();
+      assertEquals(3, columns.size());
+      assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
+      assertEquals(ScanTestUtils.FILE_NAME_COL, columns.get(0).name());
+      assertEquals("a.csv", ((FileMetadataColumn) columns.get(0)).value());
+      assertEquals(ResolvedTableColumn.ID, columns.get(1).nodeType());
+    }
+    {
+      // Define a file b.csv
+
+      metadataManager.startFile(filePathB);
+
+      // Build the output schema from the (a) table schema
+
+      TupleMetadata oneColSchema = new SchemaBuilder()
+          .add("a", MinorType.INT)
+          .buildSchema();
+      NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      ResolvedRow rootTuple = new ResolvedRow(builder);
+      new ExplicitSchemaProjection(
+          scanProj, oneColSchema, rootTuple,
+          ScanTestUtils.resolvers(metadataManager));
+
+      // Verify the full output schema
+      // Since this mode is "discrete", we don't remember the type
+      // of the missing column. (Instead, it is filled in at the
+      // vector level as part of vector persistence.) During projection, it is
+      // marked with type NULL so that the null column builder will fill in
+      // the proper type.
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("filename", MinorType.VARCHAR)
+          .add("a", MinorType.INT)
+          .addNullable("b", MinorType.NULL)
+          .buildSchema();
+
+      // Verify
+
+      List<ResolvedColumn> columns = rootTuple.columns();
+      assertEquals(3, columns.size());
+      assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
+      assertEquals(ScanTestUtils.FILE_NAME_COL, columns.get(0).name());
+      assertEquals("b.csv", ((FileMetadataColumn) columns.get(0)).value());
+      assertEquals(ResolvedTableColumn.ID, columns.get(1).nodeType());
+      assertEquals(ResolvedNullColumn.ID, columns.get(2).nodeType());
+    }
+  }
 
   /**
    * Low-level test of the smoothing projection, including the exceptions
@@ -463,6 +565,150 @@ public class TestSchemaSmoothing extends SubOperatorTest {
       assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(priorSchema));
     }
   }
+
+  /**
+   * If using the legacy wildcard expansion, reuse schema if partition paths
+   * are the same length.
+   */
+
+  @Test
+  public void testSamePartitionLength() {
+
+    // Set up the file metadata manager
+
+    Path filePathA = new Path("hdfs:///w/x/y/a.csv");
+    Path filePathB = new Path("hdfs:///w/x/y/b.csv");
+    FileMetadataManager metadataManager = new FileMetadataManager(
+        fixture.getOptionManager(),
+        new Path("hdfs:///w"),
+        Lists.newArrayList(filePathA, filePathB));
+
+    // Set up the scan level projection
+
+    ScanLevelProjection scanProj = new ScanLevelProjection(
+        ScanTestUtils.projectAllWithMetadata(2),
+        ScanTestUtils.parsers(metadataManager.projectionParser()));
+
+    // Define the schema smoother
+
+    SchemaSmoother smoother = new SchemaSmoother(scanProj,
+        ScanTestUtils.resolvers(metadataManager));
+
+    TupleMetadata tableSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.VARCHAR)
+        .buildSchema();
+
+    TupleMetadata expectedSchema = ScanTestUtils.expandMetadata(tableSchema, metadataManager, 2);
+    {
+      metadataManager.startFile(filePathA);
+      ResolvedRow rootTuple = doResolve(smoother, tableSchema);
+      assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
+    }
+    {
+      metadataManager.startFile(filePathB);
+      ResolvedRow rootTuple = doResolve(smoother, tableSchema);
+      assertEquals(1, smoother.schemaVersion());
+      assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
+    }
+  }
+
+  /**
+   * If using the legacy wildcard expansion, reuse schema if the new partition path
+   * is shorter than the previous. (Unneeded partitions will be set to null by the
+   * scan projector.)
+   */
+
+  @Test
+  public void testShorterPartitionLength() {
+
+    // Set up the file metadata manager
+
+    Path filePathA = new Path("hdfs:///w/x/y/a.csv");
+    Path filePathB = new Path("hdfs:///w/x/b.csv");
+    FileMetadataManager metadataManager = new FileMetadataManager(
+        fixture.getOptionManager(),
+        new Path("hdfs:///w"),
+        Lists.newArrayList(filePathA, filePathB));
+
+    // Set up the scan level projection
+
+    ScanLevelProjection scanProj = new ScanLevelProjection(
+        ScanTestUtils.projectAllWithMetadata(2),
+        ScanTestUtils.parsers(metadataManager.projectionParser()));
+
+    // Define the schema smoother
+
+    SchemaSmoother smoother = new SchemaSmoother(scanProj,
+        ScanTestUtils.resolvers(metadataManager));
+
+    TupleMetadata tableSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.VARCHAR)
+        .buildSchema();
+
+    TupleMetadata expectedSchema = ScanTestUtils.expandMetadata(tableSchema, metadataManager, 2);
+    {
+      metadataManager.startFile(filePathA);
+      ResolvedRow rootTuple = doResolve(smoother, tableSchema);
+      assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
+    }
+    {
+      metadataManager.startFile(filePathB);
+      ResolvedRow rootTuple = doResolve(smoother, tableSchema);
+      assertEquals(1, smoother.schemaVersion());
+      assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
+    }
+  }
+
+  /**
+   * If using the legacy wildcard expansion, we are able to use the same
+   * schema even if the new partition path is longer than the previous.
+   * Because all file names are provided up front.
+   */
+
+  @Test
+  public void testLongerPartitionLength() {
+
+    // Set up the file metadata manager
+
+    Path filePathA = new Path("hdfs:///w/x/a.csv");
+    Path filePathB = new Path("hdfs:///w/x/y/b.csv");
+    FileMetadataManager metadataManager = new FileMetadataManager(
+        fixture.getOptionManager(),
+        new Path("hdfs:///w"),
+        Lists.newArrayList(filePathA, filePathB));
+
+    // Set up the scan level projection
+
+    ScanLevelProjection scanProj = new ScanLevelProjection(
+        ScanTestUtils.projectAllWithMetadata(2),
+        ScanTestUtils.parsers(metadataManager.projectionParser()));
+
+    // Define the schema smoother
+
+    SchemaSmoother smoother = new SchemaSmoother(scanProj,
+        ScanTestUtils.resolvers(metadataManager));
+
+    TupleMetadata tableSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.VARCHAR)
+        .buildSchema();
+
+    TupleMetadata expectedSchema = ScanTestUtils.expandMetadata(tableSchema, metadataManager, 2);
+    {
+      metadataManager.startFile(filePathA);
+      ResolvedRow rootTuple = doResolve(smoother, tableSchema);
+      assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
+    }
+    {
+      metadataManager.startFile(filePathB);
+      ResolvedRow rootTuple = doResolve(smoother, tableSchema);
+      assertEquals(1, smoother.schemaVersion());
+      assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
+    }
+  }
+
   /**
    * Integrated test across multiple schemas at the batch level.
    */

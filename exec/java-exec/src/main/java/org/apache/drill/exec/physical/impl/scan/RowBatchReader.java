@@ -84,8 +84,6 @@ import org.apache.drill.exec.record.VectorContainer;
 
 public interface RowBatchReader {
 
-  enum Result { OK, LAST_BATCH, EOF }
-
   /**
    * Name used when reporting errors. Can simply be the class name.
    *
@@ -111,6 +109,22 @@ public interface RowBatchReader {
   boolean open();
 
   /**
+   * Called for the first reader within a scan. Allows the reader to
+   * provide an empty batch with only the schema filled in. Readers that
+   * are "early schema" (know the schema up front) should return true
+   * and create an empty batch. Readers that are "late schema" should
+   * return false. In that case, the scan operator will ask the reader
+   * to load an actual data batch, and infer the schema from that batch.
+   * <p>
+   * This step is optional and is purely for performance.
+   *
+   * @return true if this reader can (and has) defined an empty batch
+   * to describe the schema, false otherwise
+   */
+
+  boolean defineSchema();
+
+  /**
    * Read the next batch. Reading continues until either EOF,
    * or until the mutator indicates that the batch is full.
    * The batch is considered valid if it is non-empty. Returning
@@ -129,7 +143,7 @@ public interface RowBatchReader {
    * <tt>next()</tt> should be called again, <tt>false</tt> to indicate
    * that EOF was reached
    *
-   * @throws RutimeException (<tt>UserException</tt> preferred) if an
+   * @throws RuntimeException (<tt>UserException</tt> preferred) if an
    * error occurs that should fail the query.
    */
 
