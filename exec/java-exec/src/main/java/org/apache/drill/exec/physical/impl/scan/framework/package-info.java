@@ -29,7 +29,7 @@
  * is an old version without a new column c, while file B includes the column.
  * And so on.
  * <p>
- * The scan operator here works to ensure schema continuity as much as
+ * The scan operator works to ensure schema continuity as much as
  * possible, smoothing out "soft" schema changes that are simply artifacts of
  * reading a collection of files. Only "hard" changes (true changes) are
  * passed downstream.
@@ -157,5 +157,29 @@
  * output batch in the order specified by the original SELECT list (or table order,
  * if the original SELECT had a wildcard.) Fortunately, this is just involves
  * moving around pointers to vectors; no actual data is moved during projection.
+ *
+ * <h4>Class Structure</h4>
+ *
+ * Some of the key classes here include:
+ * <ul>
+ * <li>{@link RowBatchReader} an extremely simple interface for reading data.
+ * We would like many developers to create new plugins and readers. The simplified
+ * interface pushes all complexity into the scan framework, leaving the reader to
+ * just read.</li>
+ * <li>{@link ShimBatchReader} an implementation of the above that converts from
+ * the simplified API to add additional structure to work with the result set loader.
+ * (The base interface is agnostic about how rows are read.)</li>
+ * <li>{@link ScheamNegotiator} and interface that allows a batch reader to
+ * "negotiate" a schema with the scan framework. The scan framework knows the
+ * columns that are to be projected. The reader knows what columns it can offer.
+ * The schema negotiator works out how to combine the two. It expresses the result
+ * as a result set loader. Column writers are defined for all columns that the
+ * reader wants to read, but only the materialized (projected) columns have actual
+ * vectors behind them. The non-projected columns are "free-wheeling" "dummy"
+ * writers.
+ * </li>
+ *
+ * And, yes, sorry for the terminology. File "readers" read from files, but
+ * use column "writers" to write to value vectors.
  */
 package org.apache.drill.exec.physical.impl.scan.framework;

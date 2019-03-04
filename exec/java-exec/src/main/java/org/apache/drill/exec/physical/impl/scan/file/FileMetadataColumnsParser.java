@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.scan.file;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,6 +40,7 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
   private final FileMetadataManager metadataManager;
   private final Pattern partitionPattern;
   private ScanLevelProjection builder;
+  private final Set<Integer> referencedPartitions = new HashSet<>();
 
   // Output
 
@@ -64,6 +67,11 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
     if (defn != null) {
       return buildMetadataColumn(defn, inCol);
     }
+    if (inCol.isWildcard()) {
+      buildWildcard();
+
+      // Don't consider this a match.
+    }
     return false;
   }
 
@@ -80,11 +88,18 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
 
     // Partition column
 
-    builder.addMetadataColumn(
-        new PartitionColumn(
-          inCol.name(),
-          Integer.parseInt(m.group(1))));
-    hasImplicitCols = true;
+    int partitionIndex = Integer.parseInt(m.group(1));
+    if (! referencedPartitions.contains(partitionIndex)) {
+      builder.addMetadataColumn(
+          new PartitionColumn(
+            inCol.name(),
+            partitionIndex));
+
+      // Remember the partition for later wildcard expansion
+
+      referencedPartitions.add(partitionIndex);
+      hasImplicitCols = true;
+    }
     return true;
   }
 
@@ -107,8 +122,52 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
     return true;
   }
 
+  private void buildWildcard() {
+    if (metadataManager.useLegacyWildcardExpansion &&
+        metadataManager.useLegacyExpansionLocation) {
+
+      // Star column: this is a SELECT * query.
+
+      // Old-style wildcard handling inserts all partition columns in
+      // the scanner, removes them in Project.
+      // Fill in the file metadata columns. Can do here because the
+      // set is constant across all files.
+
+      expandPartitions();
+    }
+  }
+
   @Override
-  public void validate() { }
+  public void validate() {
+
+    // Expand partitions if using a wildcard appears, if using the
+    // feature to expand partitions for wildcards, and we want the
+    // partitions after data columns.
+
+    if (builder.hasWildcard() && metadataManager.useLegacyWildcardExpansion &&
+        ! metadataManager.useLegacyExpansionLocation) {
+      expandPartitions();
+    }
+  }
+
+  private void expandPartitions() {
+
+    // Legacy wildcard expansion: include the file partitions for this file.
+    // This is a disadvantage for a * query: files at different directory
+    // levels will have different numbers of columns. Would be better to
+    // return this data as an array at some point.
+    // Append this after the *, keeping the * for later expansion.
+
+    for (int i = 0; i < metadataManager.partitionCount(); i++) {
+      if (referencedPartitions.contains(i)) {
+        continue;
+      }
+      builder.addMetadataColumn(new PartitionColumn(
+          metadataManager.partitionName(i), i));
+      referencedPartitions.add(i);
+    }
+    hasImplicitCols = true;
+  }
 
   @Override
   public void validateColumn(ColumnProjection outCol) { }

@@ -53,6 +53,31 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
   protected final String partitionDesignator;
   protected List<FileMetadataColumnDefn> implicitColDefns = new ArrayList<>();
   protected Map<String, FileMetadataColumnDefn> fileMetadataColIndex = CaseInsensitiveMap.newHashMap();
+
+  /**
+   * Indicates whether to expand partition columns when the query contains a wildcard.
+   * Supports queries such as the following:<code><pre>
+   * select * from dfs.`partitioned-dir`
+   * </pre><code>
+   * In which the output columns will be (columns, dir0) if the partitioned directory
+   * has one level of nesting.
+   *
+   * See {@link TestImplicitFileColumns#testImplicitColumns}
+   */
+  protected final boolean useLegacyWildcardExpansion;
+
+  /**
+   * In legacy mode, above, Drill expands partition columns whenever the
+   * wildcard appears. Drill 1.1 - 1.11 put expanded partition columns after
+   * data columns. This is actually a better position as it minimizes changes
+   * the row layout for files at different depths. Drill 1.12 moved them before
+   * data columns: at the location of the wildcard.
+   * <p>
+   * This flag, when set, uses the Drill 1.12 position. Later enhancements
+   * can unset this flag to go back to the future: use the preferred location
+   * after other columns.
+   */
+  protected final boolean useLegacyExpansionLocation;
   private final FileMetadataColumnsParser parser;
 
   // Internal state
@@ -84,7 +109,11 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
    */
 
   public FileMetadataManager(OptionSet optionManager,
+      boolean useLegacyWildcardExpansion,
+      boolean useLegacyExpansionLocation,
       Path rootDir, List<Path> files) {
+    this.useLegacyWildcardExpansion = useLegacyWildcardExpansion;
+    this.useLegacyExpansionLocation = useLegacyExpansionLocation;
     scanRootDir = rootDir;
 
     partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
@@ -115,6 +144,11 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
 
       partitionCount = computeMaxPartition(files);
     }
+  }
+
+  public FileMetadataManager(OptionSet optionManager,
+      Path rootDir, List<Path> files) {
+    this(optionManager, false, false, rootDir, files);
   }
 
   private int computeMaxPartition(List<Path> files) {

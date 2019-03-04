@@ -65,9 +65,13 @@ public interface SchemaNegotiator {
    * columns during the read.
    *
    * @param schema the table schema if known at open time
+   * @param isComplete true if the schema is complete: if it can be used
+   * to define an empty schema-only batch for the first reader. Set to
+   * false if the schema is partial: if the reader must read rows to
+   * determine the full schema
    */
 
-  void setTableSchema(TupleMetadata schema);
+  void setTableSchema(TupleMetadata schema, boolean isComplete);
 
   /**
    * Set the preferred batch size (which may be overridden by the

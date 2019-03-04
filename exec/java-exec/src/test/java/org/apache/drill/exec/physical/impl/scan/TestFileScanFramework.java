@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -32,7 +33,7 @@ import org.apache.drill.exec.physical.impl.scan.TestScanOperatorExec.AbstractSca
 import org.apache.drill.exec.physical.impl.scan.file.BaseFileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.file.BaseFileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderCreator;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
@@ -50,6 +51,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests the file metadata extensions to the file operator framework.
@@ -57,6 +59,7 @@ import org.junit.Test;
  * verified the underlying mechanisms.
  */
 
+@Category(RowSetTests.class)
 public class TestFileScanFramework extends SubOperatorTest {
 
   private static final String MOCK_FILE_NAME = "foo.csv";
@@ -117,7 +120,7 @@ public class TestFileScanFramework extends SubOperatorTest {
     }
   }
 
-  public static class FileScanOpFixture extends BaseFileScanOpFixture implements FileReaderCreator {
+  public static class FileScanOpFixture extends BaseFileScanOpFixture implements FileReaderFactory {
 
     protected final List<MockFileReader> readers = new ArrayList<>();
     protected Iterator<MockFileReader> readerIter;
@@ -252,7 +255,7 @@ public class TestFileScanFramework extends SubOperatorTest {
           .add("a", MinorType.INT)
           .addNullable("b", MinorType.VARCHAR, 10)
           .buildSchema();
-      schemaNegotiator.setTableSchema(schema);
+      schemaNegotiator.setTableSchema(schema, true);
       tableLoader = schemaNegotiator.build();
       return true;
     }
@@ -486,7 +489,7 @@ public class TestFileScanFramework extends SubOperatorTest {
             .add("b", MinorType.INT)
             .resumeSchema()
           .buildSchema();
-      schemaNegotiator.setTableSchema(schema);
+      schemaNegotiator.setTableSchema(schema, true);
       tableLoader = schemaNegotiator.build();
       return true;
     }

@@ -32,19 +32,46 @@ import org.apache.hadoop.mapred.FileSplit;
 
 /**
  * The file scan framework adds into the scan framework support for implicit
- * file metadata columns.
+ * file metadata columns. The file scan framework brings together a number of
+ * components:
+ * <ul>
+ * <li>The projection list provided by the physical operator definition. This
+ * list identifies the set of "output" columns whih this framework is obliged
+ * to produce.</li>
+ * <li>The set of files and/or blocks to read.</li>
+ * <li>The file system configuration to use for working with the files
+ * or blocks.</li>
+ * <li>The factory class to create a reader for each of the files or blocks
+ * defined above. (Readers are created one-by-one as files are read.)</li>
+ * <li>Options as defined by the base class.</li>
+ * </ul>
+ * <p>
+ * @See {AbstractScanFramework} for details.
  */
 
 public class FileScanFramework extends BaseFileScanFramework<FileSchemaNegotiator> {
 
-  public interface FileReaderCreator {
+  /**
+   * Creates a batch reader on demand. Unlike earlier versions of Drill,
+   * this framework creates readers one by one, when they are needed.
+   * Doing so avoids excessive resource demands that come from creating
+   * potentially thousands of readers up front.
+   * <p>
+   * The reader itself is unique to each file type. This interface
+   * provides a common interface that this framework can use to create the
+   * file-specific reader on demand.
+   */
+
+  public interface FileReaderFactory {
     ManagedReader<FileSchemaNegotiator> makeBatchReader(
         DrillFileSystem dfs,
         FileSplit split) throws ExecutionSetupException;
   }
 
   /**
-   * Implementation of the file-level schema negotiator.
+   * Implementation of the file-level schema negotiator. At present, no
+   * file-specific features exist. This class shows, however, where we would
+   * add such features.
    */
 
   public static class FileSchemaNegotiatorImpl extends SchemaNegotiatorImpl
@@ -55,12 +82,12 @@ public class FileScanFramework extends BaseFileScanFramework<FileSchemaNegotiato
     }
   }
 
-  private final FileReaderCreator readerCreator;
+  private final FileReaderFactory readerCreator;
 
   public FileScanFramework(List<SchemaPath> projection,
       List<? extends FileWork> files,
       Configuration fsConf,
-      FileReaderCreator readerCreator) {
+      FileReaderFactory readerCreator) {
     super(projection, files, fsConf);
     this.readerCreator = readerCreator;
   }

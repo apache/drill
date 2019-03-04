@@ -22,12 +22,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
-import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.BatchSchema;
@@ -37,8 +38,9 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the early-schema support of the scan orchestrator. "Early schema"
@@ -49,6 +51,7 @@ import org.junit.Test;
  * that tests for lower-level components have already passed.
  */
 
+@Category(RowSetTests.class)
 public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
   /**
@@ -78,16 +81,17 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    // Schema provided, so an empty batch is available to
-    // send downstream.
+    // Simulate a first reader in a scan that can provide an
+    // empty batch to define schema.
 
     {
+      reader.defineSchema();
       SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
           .build();
 
       assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
     }
 
     // Create a batch of data.
@@ -107,8 +111,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .addRow(2, "wilma")
           .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
     }
 
     // Second batch.
@@ -128,8 +132,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .addRow(4, "betty")
           .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
     }
 
     // Explicit reader close. (All other tests are lazy, they
@@ -167,16 +171,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    // Verify empty batch.
-
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
-          .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
+    // Don't bother with an empty batch here or in other tests.
+    // Simulates the second reader in a scan.
 
     // Create a batch of data.
 
@@ -188,15 +184,13 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Verify
 
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
-          .addRow(1, "fred")
-          .addRow(2, "wilma")
-          .build();
+    SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
+        .addRow(1, "fred")
+        .addRow(2, "wilma")
+        .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
 
     scanner.close();
   }
@@ -228,20 +222,10 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    // Verify empty batch.
-
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
         .add("a", MinorType.INT)
         .build();
-   {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-          .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-   }
 
     // Create a batch of data.
 
@@ -253,17 +237,15 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Verify
 
-   {
-     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow("fred", 1)
-        .addRow("wilma", 2)
-        .build();
+   SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+      .addRow("fred", 1)
+      .addRow("wilma", 2)
+      .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-   }
+   RowSetUtilities.verify(expected,
+       fixture.wrap(scanner.output()));
 
-    scanner.close();
+   scanner.close();
   }
 
   /**
@@ -294,21 +276,11 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    // Verify empty batch
-
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .addNullable("c", MinorType.INT)
         .build();
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-          .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-   }
 
    // Create a batch of data.
 
@@ -320,15 +292,13 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Verify
 
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow(1, "fred", null)
-        .addRow(2, "wilma", null)
-        .build();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+      .addRow(1, "fred", null)
+      .addRow(2, "wilma", null)
+      .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
 
     scanner.close();
   }
@@ -369,21 +339,11 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    // Verify empty batch
-
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .addNullable("c", MinorType.VARCHAR)
         .build();
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-          .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-   }
 
     // Create a batch of data.
 
@@ -395,15 +355,13 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Verify
 
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow(1, "fred", null)
-        .addRow(2, "wilma", null)
-        .build();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+      .addRow(1, "fred", null)
+      .addRow(2, "wilma", null)
+      .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
 
     scanner.close();
   }
@@ -440,19 +398,9 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     assertFalse(loader.writer().column("b").schema().isProjected());
 
-    // Verify empty batch.
-
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .build();
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-          .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
 
     // Create a batch of data.
 
@@ -464,15 +412,13 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Verify
 
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow(1)
-        .addRow(2)
-        .build();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+      .addRow(1)
+      .addRow(2)
+      .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
 
     scanner.close();
   }
@@ -516,16 +462,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     BatchSchema expectedSchema = new SchemaBuilder()
         .build();
-    {
-      // Expect an empty schema
-
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-          .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
 
     // Create a batch of data.
 
@@ -545,8 +481,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
         .addRow()
         .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
     }
 
     // Fast path to fill in empty rows
@@ -592,18 +528,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     reader.makeTableLoader(tableSchema);
 
-    // Schema provided, so an empty batch is available to
-    // send downstream.
-
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
-          .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
-
     // Create a batch of data. Because there are no columns, it does
     // not make sense to ready any rows.
 
@@ -616,8 +540,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
           .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
     }
 
     scanner.close();
@@ -650,19 +574,9 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     reader.makeTableLoader(tableSchema);
 
-    // Verify initial empty batch.
-
     BatchSchema expectedSchema = new SchemaBuilder()
         .addNullable("a", MinorType.INT)
         .build();
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-          .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
 
     // Create a batch of data. Because there are no columns, it does
     // not make sense to ready any rows.
@@ -672,16 +586,14 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Verify
 
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-          .build();
-
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .build();
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
 
     scanner.close();
   }
+
   /**
    * The projection mechanism provides "type smoothing": null
    * columns prefer the type of previously-seen non-null columns.
@@ -718,6 +630,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
       ReaderSchemaOrchestrator reader = scanner.startReader();
       reader.makeTableLoader(table1Schema);
+      reader.defineSchema();
       VectorContainer output = scanner.output();
       tracker.trackSchema(output);
       schemaVersion = tracker.schemaVersion();
@@ -737,6 +650,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .buildSchema();
       ReaderSchemaOrchestrator reader = scanner.startReader();
       reader.makeTableLoader(table2Schema);
+      reader.defineSchema();
       VectorContainer output = scanner.output();
       tracker.trackSchema(output);
       assertEquals(schemaVersion, tracker.schemaVersion());
@@ -756,6 +670,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .buildSchema();
       ReaderSchemaOrchestrator reader = scanner.startReader();
       reader.makeTableLoader(table3Schema);
+      reader.defineSchema();
       VectorContainer output = scanner.output();
       tracker.trackSchema(output);
       assertEquals(schemaVersion, tracker.schemaVersion());
@@ -776,6 +691,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .buildSchema();
       ReaderSchemaOrchestrator reader = scanner.startReader();
       reader.makeTableLoader(table2Schema);
+      reader.defineSchema();
       VectorContainer output = scanner.output();
       tracker.trackSchema(output);
       assertEquals(MinorType.BIGINT, output.getSchema().getColumn(0).getType().getMinorType());
@@ -843,8 +759,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .addRow(10, "fred")
           .addRow(20, "wilma")
           .build();
-      new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(projector.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(projector.output()));
     }
     {
       // ... FROM table 2
@@ -874,8 +790,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .addRow(30, null)
           .addRow(40, null)
           .build();
-      new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(projector.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(projector.output()));
     }
     {
       // ... FROM table 3
@@ -899,8 +815,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .addRow(50, "dino")
           .addRow(60, "barney")
           .build();
-      new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(projector.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(projector.output()));
     }
 
     projector.close();
@@ -926,9 +842,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       ReaderSchemaOrchestrator reader = scanner.startReader();
       ResultSetLoader loader = reader.makeTableLoader(schema1);
 
-      tracker.trackSchema(scanner.output());
-      schemaVersion = tracker.schemaVersion();
-
       // Create a batch
 
       reader.startBatch();
@@ -936,6 +849,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
         .addRow("fred")
         .addRow("wilma");
       reader.endBatch();
+      tracker.trackSchema(scanner.output());
+      schemaVersion = tracker.schemaVersion();
 
       // Verify
 
@@ -944,8 +859,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
         .addRow("wilma")
         .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
       scanner.closeReader();
     }
     {
@@ -960,8 +875,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       ReaderSchemaOrchestrator reader = scanner.startReader();
       ResultSetLoader loader = reader.makeTableLoader(schema2);
 
-      tracker.trackSchema(scanner.output());
-      assertEquals(schemaVersion, tracker.schemaVersion());
 
       // Create a batch
 
@@ -973,13 +886,15 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
       // Verify, using persistent schema
 
+      tracker.trackSchema(scanner.output());
+      assertEquals(schemaVersion, tracker.schemaVersion());
       SingleRowSet expected = fixture.rowSetBuilder(schema1)
         .addRow("barney")
         .addRow("betty")
         .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
       scanner.closeReader();
     }
     {
@@ -994,9 +909,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       ReaderSchemaOrchestrator reader = scanner.startReader();
       ResultSetLoader loader = reader.makeTableLoader(schema3);
 
-      tracker.trackSchema(scanner.output());
-      assertEquals(schemaVersion, tracker.schemaVersion());
-
       // Create a batch
 
       reader.startBatch();
@@ -1007,13 +919,16 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
       // Verify, using persistent schema
 
+      tracker.trackSchema(scanner.output());
+      assertEquals(schemaVersion, tracker.schemaVersion());
+
       SingleRowSet expected = fixture.rowSetBuilder(schema1)
         .addRow("bam-bam")
         .addRow("pebbles")
         .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
       scanner.closeReader();
     }
 
@@ -1073,8 +988,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .addRow(10, "fred", 110L)
           .addRow(20, "wilma", 110L)
           .build();
-      new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
 
       scanner.closeReader();
     }
@@ -1100,8 +1015,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .addRow(30, "bambam", 330L)
           .addRow(40, "betty", 440L)
           .build();
-      new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
     }
     {
       // ... FROM table 3
@@ -1125,8 +1040,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
           .addRow(50, "dino", 550L)
           .addRow(60, "barney", 660L)
           .build();
-      new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
     }
 
     scanner.close();

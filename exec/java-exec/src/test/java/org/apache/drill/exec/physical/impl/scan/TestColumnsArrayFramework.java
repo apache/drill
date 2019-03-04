@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -46,7 +47,7 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.junit.Test;
-
+import org.junit.experimental.categories.Category;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 
@@ -54,6 +55,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * Test the columns-array specific behavior in the columns scan framework.
  */
 
+@Category(RowSetTests.class)
 public class TestColumnsArrayFramework extends SubOperatorTest {
 
   private static final Path MOCK_FILE_PATH = new Path("file:/w/x/y/z.csv");
@@ -101,7 +103,7 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
     @Override
     public boolean open(ColumnsSchemaNegotiator negotiator) {
       this.negotiator = negotiator;
-      negotiator.setTableSchema(schema);
+      negotiator.setTableSchema(schema, true);
       negotiator.build();
       return true;
     }
@@ -114,6 +116,11 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
     @Override
     public void close() { }
   }
+
+  /**
+   * Test including a column other than "columns". Occurs when
+   * using implicit columns.
+   */
 
   @Test
   public void testNonColumnsProjection() {
@@ -143,6 +150,10 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
     scanFixture.close();
   }
 
+  /**
+   * Test projecting just the `columns` column.
+   */
+
   @Test
   public void testColumnsProjection() {
 
@@ -171,6 +182,10 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
     scanFixture.close();
   }
 
+  /**
+   * Test including a specific index of `columns` such as
+   * `columns`[1].
+   */
   @Test
   public void testColumnsIndexProjection() {
 

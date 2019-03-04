@@ -37,7 +37,7 @@ public class ImpliedTupleRequest implements RequestedTuple {
       new ImpliedTupleRequest(false);
   public static final List<RequestedColumn> EMPTY_COLS = new ArrayList<>();
 
-  private boolean allProjected;
+  private final boolean allProjected;
 
   public ImpliedTupleRequest(boolean allProjected) {
     this.allProjected = allProjected;

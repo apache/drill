@@ -24,14 +24,21 @@ import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadata;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumnDefn;
+import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ConstantColumnLoader.ConstantColumnSpec;
 import org.apache.drill.exec.physical.rowSet.impl.ResultVectorCacheImpl;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumns;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -108,6 +115,44 @@ public class TestConstantColumnLoader extends SubOperatorTest {
     final SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow("a-value", "b-value")
         .addRow("a-value", "b-value")
+        .build();
+
+    new RowSetComparison(expected)
+        .verifyAndClearAll(fixture.wrap(staticLoader.load(2)));
+    staticLoader.close();
+  }
+
+  @Test
+  public void testFileMetadata() {
+
+    FileMetadata fileInfo = new FileMetadata(new Path("hdfs:///w/x/y/z.csv"), new Path("hdfs:///w"));
+    List<ConstantColumnSpec> defns = new ArrayList<>();
+    FileMetadataColumnDefn iDefn = new FileMetadataColumnDefn(
+        ScanTestUtils.SUFFIX_COL, ImplicitFileColumns.SUFFIX);
+    FileMetadataColumn iCol = new FileMetadataColumn(ScanTestUtils.SUFFIX_COL,
+        iDefn, fileInfo, null, 0);
+    defns.add(iCol);
+
+    String partColName = ScanTestUtils.partitionColName(1);
+    PartitionColumn pCol = new PartitionColumn(partColName, 1, fileInfo, null, 0);
+    defns.add(pCol);
+
+    ResultVectorCacheImpl cache = new ResultVectorCacheImpl(fixture.allocator());
+    ConstantColumnLoader staticLoader = new ConstantColumnLoader(cache, defns);
+
+    // Create a batch
+
+    staticLoader.load(2);
+
+    // Verify
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+        .add(ScanTestUtils.SUFFIX_COL, MinorType.VARCHAR)
+        .addNullable(partColName, MinorType.VARCHAR)
+        .build();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addRow("csv", "y")
+        .addRow("csv", "y")
         .build();
 
     new RowSetComparison(expected)
