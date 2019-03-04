@@ -233,23 +233,20 @@ public class TestGracefulShutdown extends BaseTestQuery {
       try {
         twinDrillbitOnSamePort.run();
         fail("Invocation of 'twinDrillbitOnSamePort.run()' should throw UserException");
-      } catch (UserException e) {
+      } catch (UserException userEx) {
         assertNull("Second drillbit instance should NOT have a temporary Javascript dir", getWebServerTempDirPath(twinDrillbitOnSamePort));
+      } catch (Exception e) {
+        fail("Invocation of 'twinDrillbitOnSamePort.run()' was expected to throw a UserException. Actual exception : "+ e.getMessage());
       }
     }
     // Verify deletion
     assertFalse("First drillbit instance should have a temporary Javascript dir deleted", originalDrillbitTempDir.exists());
   }
 
-  private static File getWebServerTempDirPath(Drillbit drillbit) {
-    File webServerTempDirPath = null;
-    try {
-      Field webServerField = FieldUtils.getField(drillbit.getClass(), "webServer", true);
-      WebServer webServerHandle = (WebServer) FieldUtils.readField(webServerField, drillbit, true);
-      webServerTempDirPath = webServerHandle.getOrCreateTmpJavaScriptDir();
-    } catch (IllegalAccessException e) {
-        e.printStackTrace();
-    }
+  private static File getWebServerTempDirPath(Drillbit drillbit) throws IllegalAccessException {
+    Field webServerField = FieldUtils.getField(drillbit.getClass(), "webServer", true);
+    WebServer webServerHandle = (WebServer) FieldUtils.readField(webServerField, drillbit, true);
+    File webServerTempDirPath = webServerHandle.getOrCreateTmpJavaScriptDir();
     return webServerTempDirPath;
   }
 
