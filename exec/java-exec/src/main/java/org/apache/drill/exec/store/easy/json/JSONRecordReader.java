@@ -61,6 +61,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final FragmentContext fragmentContext;
   private final boolean enableAllTextMode;
   private final boolean enableNanInf;
+  private final boolean enableEscapeAnyChar;
   private final boolean readNumbersAsDouble;
   private final boolean unionEnabled;
   private long parseErrorCount;
@@ -115,6 +116,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     // only enable all text mode if we aren't using embedded content mode.
     this.enableAllTextMode = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
     this.enableNanInf = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR);
+    this.enableEscapeAnyChar = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR);
     this.readNumbersAsDouble = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR);
     this.unionEnabled = embeddedContent == null && fragmentContext.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
     this.skipMalformedJSONRecords = fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR);
@@ -142,7 +144,7 @@ public class JSONRecordReader extends AbstractRecordReader {
 
       this.writer = new VectorContainerWriter(output, unionEnabled);
       if (isSkipQuery()) {
-        this.jsonReader = new CountingJsonReader(fragmentContext.getManagedBuffer(), enableNanInf);
+        this.jsonReader = new CountingJsonReader(fragmentContext.getManagedBuffer(), enableNanInf, enableEscapeAnyChar);
       } else {
         this.jsonReader = new JsonReader.Builder(fragmentContext.getManagedBuffer())
             .schemaPathColumns(ImmutableList.copyOf(getColumns()))
@@ -150,6 +152,7 @@ public class JSONRecordReader extends AbstractRecordReader {
             .skipOuterList(true)
             .readNumbersAsDouble(readNumbersAsDouble)
             .enableNanInf(enableNanInf)
+            .enableEscapeAnyChar(enableEscapeAnyChar)
             .build();
       }
       setupParser();

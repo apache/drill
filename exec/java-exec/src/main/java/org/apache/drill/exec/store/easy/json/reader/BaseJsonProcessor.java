@@ -39,10 +39,17 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
   private static final ObjectMapper DEFAULT_MAPPER = getDefaultMapper();
 
   private static final ObjectMapper NAN_INF_MAPPER = getDefaultMapper()
-      .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
+    .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
+
+  private static final ObjectMapper ESCAPE_ANY_MAPPER = getDefaultMapper()
+    .configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);
+
+  private static final ObjectMapper NAN_INF_AND_ESCAPE_ANY_MAPPER = getDefaultMapper()
+    .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true).configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);
 
   private static final String JACKSON_PARSER_EOF_FILE_MSG = "Unexpected end-of-input:";
   private final boolean enableNanInf;
+  private final boolean enableEscapeAnyChar;
 
   public enum JsonExceptionProcessingState {
     END_OF_STREAM, PROC_SUCCEED
@@ -75,15 +82,20 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
     this.ignoreJSONParseErrors = ignoreJSONParseErrors;
   }
 
-  public BaseJsonProcessor(DrillBuf workBuf, boolean enableNanInf) {
+  public BaseJsonProcessor(DrillBuf workBuf, boolean enableNanInf, boolean enableEscapeAnyChar) {
     this.enableNanInf = enableNanInf;
+    this.enableEscapeAnyChar = enableEscapeAnyChar;
     workBuf = Preconditions.checkNotNull(workBuf);
   }
 
   @Override
   public void setSource(InputStream is) throws IOException {
-    if (enableNanInf) {
+    if (enableNanInf && enableEscapeAnyChar) {
+      parser = NAN_INF_AND_ESCAPE_ANY_MAPPER.getFactory().createParser(is);
+    } else if (enableNanInf) {
       parser = NAN_INF_MAPPER.getFactory().createParser(is);
+    } else if (enableEscapeAnyChar){
+      parser = ESCAPE_ANY_MAPPER.getFactory().createParser(is);
     } else {
       parser = DEFAULT_MAPPER.getFactory().createParser(is);
     }

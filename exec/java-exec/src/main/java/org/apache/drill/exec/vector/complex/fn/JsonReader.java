@@ -74,7 +74,7 @@ public class JsonReader extends BaseJsonProcessor {
   private FieldSelection selection;
 
   private JsonReader(Builder builder) {
-    super(builder.managedBuf, builder.enableNanInf);
+    super(builder.managedBuf, builder.enableNanInf, builder.enableEscapeAnyChar);
     selection = FieldSelection.getFieldSelection(builder.columns);
     workingBuffer = builder.workingBuffer;
     skipOuterList = builder.skipOuterList;
@@ -97,6 +97,7 @@ public class JsonReader extends BaseJsonProcessor {
     private  boolean skipOuterList;
     private  boolean allTextMode;
     private  boolean enableNanInf;
+    private  boolean enableEscapeAnyChar;
 
 
     public Builder(DrillBuf managedBuf) {
@@ -104,9 +105,6 @@ public class JsonReader extends BaseJsonProcessor {
       this.workingBuffer = new WorkingBuffer(managedBuf);
       this.mapOutput = new MapVectorOutput(workingBuffer);
       this.listOutput = new ListVectorOutput(workingBuffer);
-      this.readNumbersAsDouble = false;
-      this.skipOuterList = false;
-      this.allTextMode = false;
       this.enableNanInf = true;
     }
 
@@ -127,6 +125,11 @@ public class JsonReader extends BaseJsonProcessor {
 
     public Builder enableNanInf(boolean enableNanInf) {
       this.enableNanInf = enableNanInf;
+      return this;
+    }
+
+    public Builder enableEscapeAnyChar(boolean enableEscapeAnyChar) {
+      this.enableEscapeAnyChar = enableEscapeAnyChar;
       return this;
     }
 

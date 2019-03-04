@@ -442,6 +442,14 @@ public final class ExecConstants {
   public static final String JSON_READER_NAN_INF_NUMBERS = "store.json.reader.allow_nan_inf";
   public static final BooleanValidator JSON_READER_NAN_INF_NUMBERS_VALIDATOR = new BooleanValidator(JSON_READER_NAN_INF_NUMBERS,
       new OptionDescription("Enables the JSON record reader in Drill to read `NaN` and `Infinity` tokens in JSON data as numbers. Default is true. (Drill 1.13+)"));
+
+  /**
+   * Json reader option that enables parser to escape any characters
+   */
+  public static final String JSON_READER_ESCAPE_ANY_CHAR = "store.json.reader.allow_escape_any_char";
+  public static final BooleanValidator JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR = new BooleanValidator(JSON_READER_ESCAPE_ANY_CHAR,
+    new OptionDescription("Enables the JSON record reader in Drill to escape any character. Default is false. (Drill 1.16+)"));
+
   /**
    * The column label (for directory levels) in results when querying files in a directory
    * E.g.  labels: dir0   dir1<pre>
