@@ -75,6 +75,7 @@ public class TestPcapDecoder extends BaseTestQuery {
     assertEquals("/192.168.0.2", p.getDst_ip().toString());
     assertEquals(161, p.getSrc_port());
     assertEquals(0, p.getDst_port());
+    assertEquals(0, p.getTimestampMicro());
   }
 
   private static void writeHeader(DataOutputStream out) throws IOException {

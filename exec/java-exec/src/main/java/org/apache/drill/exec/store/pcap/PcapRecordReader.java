@@ -242,6 +242,9 @@ public class PcapRecordReader extends AbstractRecordReader {
         case "timestamp":
           setTimestampColumnValue(packet.getTimestamp(), pci, count);
           break;
+        case "timestamp_micro":
+          setLongColumnValue(packet.getTimestampMicro(), pci, count);
+          break;
         case "network":
           setIntegerColumnValue(networkType, pci, count);
           break;
