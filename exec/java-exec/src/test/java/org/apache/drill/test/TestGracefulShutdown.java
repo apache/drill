@@ -234,9 +234,11 @@ public class TestGracefulShutdown extends BaseTestQuery {
         twinDrillbitOnSamePort.run();
         fail("Invocation of 'twinDrillbitOnSamePort.run()' should throw UserException");
       } catch (UserException userEx) {
+        assertThat(userEx.getMessage(), containsString("RESOURCE ERROR: Drillbit could not bind to port"));
         assertNull("Second drillbit instance should NOT have a temporary Javascript dir", getWebServerTempDirPath(twinDrillbitOnSamePort));
       } catch (Exception e) {
         fail("Invocation of 'twinDrillbitOnSamePort.run()' was expected to throw a UserException. Actual exception : "+ e.getMessage());
+        throw e;
       }
     }
     // Verify deletion
