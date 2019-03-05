@@ -197,6 +197,7 @@
         <configuration>
           <excludes>
             <exclude>**/git.properties</exclude>
+            <exclude>**/control</exclude>
             <exclude>**/*.checkstyle</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/README.md</exclude>
