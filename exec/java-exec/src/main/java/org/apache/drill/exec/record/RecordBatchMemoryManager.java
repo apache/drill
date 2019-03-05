@@ -28,6 +28,7 @@ public class RecordBatchMemoryManager {
   protected static final int MIN_NUM_ROWS = 1;
   protected static final int DEFAULT_INPUT_INDEX = 0;
   private int outputRowCount = MAX_NUM_ROWS;
+  private int currentOutgoingTargetOutputRowCount = MAX_NUM_ROWS; // target row count only for the current output batch
   private int outgoingRowWidth;
   private int outputBatchSize;
   private RecordBatchSizer[] sizer;
@@ -144,11 +145,6 @@ public class RecordBatchMemoryManager {
     outputBatchStats = new BatchStats();
   }
 
-  public int update(int inputIndex, int outputPosition) {
-    // by default just return the outputRowCount
-    return getOutputRowCount();
-  }
-
   public void update(int inputIndex) {
   }
 
@@ -166,17 +162,20 @@ public class RecordBatchMemoryManager {
     updateIncomingStats(index);
   }
 
-  public int update(int inputIndex, int outputPosition, boolean useAggregate) {
-    // by default just return the outputRowCount
-    return getOutputRowCount();
+  public void update(int inputIndex, int outputPosition, boolean useAggregate) {
+    throw new IllegalStateException("Should only be called on JoinBatchMemoryManager");
   }
 
-  public int update(RecordBatch batch, int inputIndex, int outputPosition) {
-    return getOutputRowCount();
+  public void update(int inputIndex, int outputPosition) {
+    throw new IllegalStateException("Should only be called on JoinBatchMemoryManager");
   }
 
-  public int update(RecordBatch batch, int inputIndex, int outputPosition, boolean useAggregate) {
-    return getOutputRowCount();
+  public void update(RecordBatch batch, int inputIndex, int outputPosition) {
+    throw new IllegalStateException("Should only be called on JoinBatchMemoryManager");
+  }
+
+  public void update(RecordBatch batch, int inputIndex, int outputPosition, boolean useAggregate) {
+    throw new IllegalStateException("Should only be called on JoinBatchMemoryManager");
   }
 
   public boolean updateIfNeeded(int newOutgoingRowWidth) {
@@ -199,6 +198,9 @@ public class RecordBatchMemoryManager {
     return outputRowCount;
   }
 
+  public int getCurrentOutgoingTargetOutputRowCount() {
+    return currentOutgoingTargetOutputRowCount;
+  }
   /**
    * Given batchSize and rowWidth, this will set output rowCount taking into account
    * the min and max that is allowed.
@@ -209,6 +211,13 @@ public class RecordBatchMemoryManager {
 
   public void setOutputRowCount(int outputRowCount) {
     this.outputRowCount = outputRowCount;
+  }
+
+  public void setCurrentOutgoingTargetOutputRowCount(int newTargetOutputCount) {
+    this.currentOutgoingTargetOutputRowCount = newTargetOutputCount;
+    if ( Integer.highestOneBit(newTargetOutputCount) == newTargetOutputCount ) {
+      this.currentOutgoingTargetOutputRowCount--; // to match the allocation size
+    }
   }
 
   /**

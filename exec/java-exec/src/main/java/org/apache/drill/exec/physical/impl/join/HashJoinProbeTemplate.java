@@ -271,7 +271,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
                 probeBatch.getSchema());
             }
           case OK:
-            setTargetOutputCount(outgoingJoinBatch.getBatchMemoryManager().update(probeBatch, LEFT_INDEX,outputRecords));
+            outgoingJoinBatch.getBatchMemoryManager().update(probeBatch, LEFT_INDEX,outputRecords);
+            setTargetOutputCount(outgoingJoinBatch.getBatchMemoryManager().getCurrentOutgoingTargetOutputRowCount()); // calculated by update()
             recordsToProcess = probeBatch.getRecordCount();
             recordsProcessed = 0;
             // If we received an empty batch do nothing
