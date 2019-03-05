@@ -23,8 +23,10 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.junit.Test;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,18 +37,21 @@ import static org.junit.Assert.assertTrue;
 public class TestSchemaParser {
 
   @Test
-  public void checkQuotedId() {
+  public void checkQuotedIdWithEscapes() {
     String schemaWithEscapes = "`a\\\\b\\`c` INT";
-    assertEquals(schemaWithEscapes, SchemaExprParser.parseSchema(schemaWithEscapes).schemaString());
+    assertEquals(schemaWithEscapes, SchemaExprParser.parseSchema(schemaWithEscapes).metadata(0).columnString());
 
     String schemaWithKeywords = "`INTEGER` INT";
-    assertEquals(schemaWithKeywords, SchemaExprParser.parseSchema(schemaWithKeywords).schemaString());
+    assertEquals(schemaWithKeywords, SchemaExprParser.parseSchema(schemaWithKeywords).metadata(0).columnString());
   }
 
   @Test
   public void testSchemaWithParen() {
-    String schema = "`a` INT NOT NULL, `b` VARCHAR(10)";
-    assertEquals(schema, SchemaExprParser.parseSchema(String.format("(%s)", schema)).schemaString());
+    String schemaWithParen = "(`a` INT NOT NULL, `b` VARCHAR(10))";
+    TupleMetadata schema = SchemaExprParser.parseSchema(schemaWithParen);
+    assertEquals(2, schema.size());
+    assertEquals("`a` INT NOT NULL", schema.metadata("a").columnString());
+    assertEquals("`b` VARCHAR(10)", schema.metadata("b").columnString());
   }
 
   @Test
@@ -54,13 +59,14 @@ public class TestSchemaParser {
     String schemaString = "id\n/*comment*/int\r,//comment\r\nname\nvarchar\t\t\t";
     TupleMetadata schema = SchemaExprParser.parseSchema(schemaString);
     assertEquals(2, schema.size());
-    assertEquals("`id` INT, `name` VARCHAR", schema.schemaString());
+    assertEquals("`id` INT", schema.metadata("id").columnString());
+    assertEquals("`name` VARCHAR", schema.metadata("name").columnString());
   }
 
   @Test
   public void testCaseInsensitivity() {
     String schema = "`Id` InTeGeR NoT NuLl";
-    assertEquals("`Id` INT NOT NULL", SchemaExprParser.parseSchema(schema).schemaString());
+    assertEquals("`Id` INT NOT NULL", SchemaExprParser.parseSchema(schema).metadata(0).columnString());
   }
 
   @Test
@@ -80,10 +86,7 @@ public class TestSchemaParser {
       .buildSchema();
 
     checkSchema("int_col int, integer_col integer not null, bigint_col bigint, " +
-        "float_col float not null, double_col double",
-      schema,
-      "`int_col` INT, `integer_col` INT NOT NULL, `bigint_col` BIGINT, " +
-        "`float_col` FLOAT NOT NULL, `double_col` DOUBLE");
+        "float_col float not null, double_col double", schema);
   }
 
   @Test
@@ -100,10 +103,8 @@ public class TestSchemaParser {
       "col numeric, col_p numeric(5) not null, col_ps numeric(10, 2)"
     );
 
-    String expectedSchema = "`col` DECIMAL, `col_p` DECIMAL(5) NOT NULL, `col_ps` DECIMAL(10, 2)";
-
     schemas.forEach(
-      s -> checkSchema(s, schema, expectedSchema)
+      s -> checkSchema(s, schema)
     );
   }
 
@@ -113,13 +114,12 @@ public class TestSchemaParser {
       .addNullable("col", TypeProtos.MinorType.BIT)
       .buildSchema();
 
-    checkSchema("col boolean", schema, "`col` BOOLEAN");
+    checkSchema("col boolean", schema);
   }
 
   @Test
   public void testCharacterTypes() {
     String schemaPattern = "col %1$s, col_p %1$s(50) not null";
-    String expectedSchema = "`col` %1$s, `col_p` %1$s(50) NOT NULL";
 
     Map<String, TypeProtos.MinorType> properties = new HashMap<>();
     properties.put("char", TypeProtos.MinorType.VARCHAR);
@@ -136,7 +136,7 @@ public class TestSchemaParser {
         .add("col_p", value, 50)
         .buildSchema();
 
-      checkSchema(String.format(schemaPattern, key), schema, String.format(expectedSchema, value.name()));
+      checkSchema(String.format(schemaPattern, key), schema);
     });
   }
 
@@ -151,10 +151,7 @@ public class TestSchemaParser {
       .buildSchema();
 
     checkSchema("time_col time, time_prec_col time(3), date_col date not null, " +
-        "timestamp_col timestamp, timestamp_prec_col timestamp(3)",
-      schema,
-      "`time_col` TIME, `time_prec_col` TIME(3), `date_col` DATE NOT NULL, " +
-        "`timestamp_col` TIMESTAMP, `timestamp_prec_col` TIMESTAMP(3)");
+        "timestamp_col timestamp, timestamp_prec_col timestamp(3)", schema);
   }
 
   @Test
@@ -171,11 +168,7 @@ public class TestSchemaParser {
 
     checkSchema("interval_year_col interval year, interval_month_col interval month, " +
         "interval_day_col interval day, interval_hour_col interval hour, interval_minute_col interval minute, " +
-        "interval_second_col interval second, interval_col interval",
-      schema,
-      "`interval_year_col` INTERVAL YEAR, `interval_month_col` INTERVAL YEAR, " +
-        "`interval_day_col` INTERVAL DAY, `interval_hour_col` INTERVAL DAY, `interval_minute_col` INTERVAL DAY, " +
-        "`interval_second_col` INTERVAL DAY, `interval_col` INTERVAL");
+        "interval_second_col interval second, interval_col interval", schema);
   }
 
   @Test
@@ -201,12 +194,7 @@ public class TestSchemaParser {
         + ", nested_array array<array<int>>"
         + ", map_array array<map<m1 int, m2 varchar>>"
         + ", nested_array_map array<array<map<nm1 int, nm2 varchar>>>",
-      schema,
-      "`simple_array` ARRAY<INT>"
-        + ", `nested_array` ARRAY<ARRAY<INT>>"
-        + ", `map_array` ARRAY<MAP<`m1` INT, `m2` VARCHAR>>"
-        + ", `nested_array_map` ARRAY<ARRAY<MAP<`nm1` INT, `nm2` VARCHAR>>>"
-    );
+      schema);
 
   }
 
@@ -223,9 +211,7 @@ public class TestSchemaParser {
       .resumeSchema()
       .buildSchema();
 
-    checkSchema("map_col map<int_col int, array_col array<int>, nested_map map<m1 int, m2 varchar>>",
-      schema,
-      "`map_col` MAP<`int_col` INT, `array_col` ARRAY<INT>, `nested_map` MAP<`m1` INT, `m2` VARCHAR>>");
+    checkSchema("map_col map<int_col int, array_col array<int>, nested_map map<m1 int, m2 varchar>>", schema);
   }
 
   @Test
@@ -266,14 +252,65 @@ public class TestSchemaParser {
     assertTrue(mapSchema.metadata("m2").isNullable());
   }
 
-  private void checkSchema(String schemaString, TupleMetadata expectedSchema, String expectedSchemaString) {
-    TupleMetadata actualSchema = SchemaExprParser.parseSchema(schemaString);
-    assertEquals(expectedSchema.schemaString(), actualSchema.schemaString());
-    assertEquals(expectedSchemaString, actualSchema.schemaString());
+  @Test
+  public void testFormat() {
+    String value = "`a` DATE NOT NULL FORMAT 'yyyy-MM-dd'";
+    TupleMetadata schema = SchemaExprParser.parseSchema(value);
+    ColumnMetadata columnMetadata = schema.metadata("a");
+    assertEquals("yyyy-MM-dd", columnMetadata.formatValue());
+    assertEquals(value, columnMetadata.columnString());
+  }
 
-    TupleMetadata unparsedSchema = SchemaExprParser.parseSchema(actualSchema.schemaString());
-    assertEquals(unparsedSchema.schemaString(), expectedSchema.schemaString());
-    assertEquals(expectedSchemaString, unparsedSchema.schemaString());
+  @Test
+  public void testDefault() {
+    String value = "`a` INT NOT NULL DEFAULT '12'";
+    TupleMetadata schema = SchemaExprParser.parseSchema(value);
+    ColumnMetadata columnMetadata = schema.metadata("a");
+    assertTrue(columnMetadata.defaultValue() instanceof Integer);
+    assertEquals(12, columnMetadata.defaultValue());
+    assertEquals("12", columnMetadata.defaultStringValue());
+    assertEquals(value, columnMetadata.columnString());
+  }
+
+  @Test
+  public void testFormatAndDefault() {
+    String value = "`a` DATE NOT NULL FORMAT 'yyyy-MM-dd' DEFAULT '2018-12-31'";
+    TupleMetadata schema = SchemaExprParser.parseSchema(value);
+    ColumnMetadata columnMetadata = schema.metadata("a");
+    assertTrue(columnMetadata.defaultValue() instanceof LocalDate);
+    assertEquals(LocalDate.of(2018, 12, 31), columnMetadata.defaultValue());
+    assertEquals("2018-12-31", columnMetadata.defaultStringValue());
+    assertEquals(value, columnMetadata.columnString());
+  }
+
+  @Test
+  public void testColumnProperties() {
+    String value = "`a` INT NOT NULL PROPERTIES { 'k1' = 'v1', 'k2' = 'v2' }";
+    TupleMetadata schema = SchemaExprParser.parseSchema(value);
+
+    ColumnMetadata columnMetadata = schema.metadata("a");
+
+    Map<String, String> properties = new LinkedHashMap<>();
+    properties.put("k1", "v1");
+    properties.put("k2", "v2");
+
+    assertEquals(properties, columnMetadata.properties());
+    assertEquals(value, columnMetadata.columnString());
+  }
+
+  private void checkSchema(String schemaString, TupleMetadata expectedSchema) {
+    TupleMetadata actualSchema = SchemaExprParser.parseSchema(schemaString);
+
+    assertEquals(expectedSchema.size(), actualSchema.size());
+    assertEquals(expectedSchema.properties(), actualSchema.properties());
+
+    expectedSchema.toMetadataList().forEach(
+      expectedMetadata -> {
+        ColumnMetadata actualMetadata = actualSchema.metadata(expectedMetadata.name());
+        assertEquals(expectedMetadata.columnString(), actualMetadata.columnString());
+      }
+    );
+
   }
 
 }

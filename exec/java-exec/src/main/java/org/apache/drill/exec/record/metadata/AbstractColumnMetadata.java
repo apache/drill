@@ -17,12 +17,22 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
 import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Abstract definition of column metadata. Allows applications to create
@@ -36,6 +46,13 @@ import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
  * since maps (and the row itself) will, by definition, differ between
  * the two views.
  */
+@JsonAutoDetect(
+  fieldVisibility = JsonAutoDetect.Visibility.NONE,
+  getterVisibility = JsonAutoDetect.Visibility.NONE,
+  isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+  setterVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+@JsonPropertyOrder({"name", "type", "mode", "format", "default", "properties"})
 public abstract class AbstractColumnMetadata implements ColumnMetadata {
 
   // Capture the key schema information. We cannot use the MaterializedField
@@ -55,6 +72,21 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
    */
 
   protected int expectedElementCount = 1;
+  protected final Map<String, String> properties = new LinkedHashMap<>();
+
+  @JsonCreator
+  public static AbstractColumnMetadata createColumnMetadata(@JsonProperty("name") String name,
+                                                            @JsonProperty("type") String type,
+                                                            @JsonProperty("mode") DataMode mode,
+                                                            @JsonProperty("format") String formatValue,
+                                                            @JsonProperty("default") String defaultValue,
+                                                            @JsonProperty("properties") Map<String, String> properties) {
+    ColumnMetadata columnMetadata = SchemaExprParser.parseColumn(name, type, mode);
+    columnMetadata.setFormatValue(formatValue);
+    columnMetadata.setDefaultFromString(defaultValue);
+    columnMetadata.setProperties(properties);
+    return (AbstractColumnMetadata) columnMetadata;
+  }
 
   public AbstractColumnMetadata(MaterializedField schema) {
     name = schema.getName();
@@ -91,6 +123,7 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
   @Override
   public void bind(TupleMetadata parentTuple) { }
 
+  @JsonProperty("name")
   @Override
   public String name() { return name; }
 
@@ -105,6 +138,7 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
         .build();
   }
 
+  @JsonProperty("mode")
   @Override
   public DataMode mode() { return mode; }
 
@@ -186,10 +220,26 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
   public boolean isProjected() { return projected; }
 
   @Override
+  public void setFormatValue(String value) { }
+
+  @JsonProperty("format")
+  @Override
+  public String formatValue() { return null; }
+
+  @Override
   public void setDefaultValue(Object value) { }
 
   @Override
   public Object defaultValue() { return null; }
+
+  @Override
+  public void setDefaultFromString(String value) { }
+
+  @JsonProperty("default")
+  @Override
+  public String defaultStringValue() {
+    return null;
+  }
 
   @Override
   public void setTypeConverter(ColumnConversionFactory factory) {
@@ -198,6 +248,20 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
 
   @Override
   public ColumnConversionFactory typeConverter() { return null; }
+
+  @Override
+  public void setProperties(Map<String, String> properties) {
+    if (properties == null) {
+      return;
+    }
+    this.properties.putAll(properties);
+  }
+
+  @JsonProperty("properties")
+  @Override
+  public Map<String, String> properties() {
+    return properties;
+  }
 
   @Override
   public String toString() {
@@ -221,11 +285,24 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
       buf.append(", schema: ")
          .append(mapSchema().toString());
     }
+    if (formatValue() != null) {
+      buf.append(", format: ")
+        .append(formatValue());
+    }
+    if (defaultValue() != null) {
+      buf.append(", default: ")
+        .append(defaultStringValue());
+    }
+    if (!properties().isEmpty()) {
+      buf.append(", properties: ")
+        .append(properties());
+    }
     return buf
         .append("]")
         .toString();
   }
 
+  @JsonProperty("type")
   @Override
   public String typeString() {
     return majorType().toString();
@@ -241,6 +318,23 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
     // Drill does not have nullability notion for complex types
     if (!isNullable() && !isArray() && !isMap()) {
       builder.append(" NOT NULL");
+    }
+
+    if (formatValue() != null) {
+      builder.append(" FORMAT '").append(formatValue()).append("'");
+    }
+
+    if (defaultValue() != null) {
+      builder.append(" DEFAULT '").append(defaultStringValue()).append("'");
+    }
+
+    if (!properties().isEmpty()) {
+      builder.append(" PROPERTIES { ");
+      builder.append(properties().entrySet()
+        .stream()
+        .map(e -> String.format("'%s' = '%s'", e.getKey(), e.getValue()))
+        .collect(Collectors.joining(", ")));
+      builder.append(" }");
     }
 
     return builder.toString();

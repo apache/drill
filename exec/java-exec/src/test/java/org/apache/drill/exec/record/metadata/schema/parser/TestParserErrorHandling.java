@@ -30,7 +30,6 @@ public class TestParserErrorHandling {
   public void testUnsupportedType() {
     String schema = "col unk_type";
     thrown.expect(SchemaParsingException.class);
-    thrown.expectMessage("offending symbol [@1,4:11='unk_type',<38>,1:4]: no viable alternative at input");
     SchemaExprParser.parseSchema(schema);
   }
 
@@ -54,7 +53,6 @@ public class TestParserErrorHandling {
   public void testUnquotedId() {
     String schema = "id with space varchar";
     thrown.expect(SchemaParsingException.class);
-    thrown.expectMessage("offending symbol [@1,3:6='with',<38>,1:3]: no viable alternative at input");
     SchemaExprParser.parseSchema(schema);
   }
 
@@ -62,7 +60,6 @@ public class TestParserErrorHandling {
   public void testUnescapedBackTick() {
     String schema = "`c`o`l` varchar";
     thrown.expect(SchemaParsingException.class);
-    thrown.expectMessage("offending symbol [@1,3:3='o',<38>,1:3]: no viable alternative at input");
     SchemaExprParser.parseSchema(schema);
   }
 
@@ -78,7 +75,6 @@ public class TestParserErrorHandling {
   public void testMissingType() {
     String schema = "col not null";
     thrown.expect(SchemaParsingException.class);
-    thrown.expectMessage("offending symbol [@1,4:6='not',<34>,1:4]: no viable alternative at input");
     SchemaExprParser.parseSchema(schema);
   }
 

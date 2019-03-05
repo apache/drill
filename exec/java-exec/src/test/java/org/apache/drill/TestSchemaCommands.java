@@ -39,6 +39,7 @@ import org.junit.rules.ExpectedException;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -273,7 +274,7 @@ public class TestSchemaCommands extends ClusterTest {
   }
 
   @Test
-  public void testCreateWithProperties() throws Exception {
+  public void testCreateWithSchemaProperties() throws Exception {
     File tmpDir = dirTestWatcher.getTmpDir();
     File schemaFile = new File(tmpDir, "schema_for_create_with_properties.schema");
     assertFalse(schemaFile.exists());
@@ -292,16 +293,16 @@ public class TestSchemaCommands extends ClusterTest {
       SchemaContainer schemaContainer = schemaProvider.read();
 
       assertNull(schemaContainer.getTable());
-      assertNotNull(schemaContainer.getSchema());
-      assertNotNull(schemaContainer.getProperties());
+      TupleMetadata schema = schemaContainer.getSchema();
+      assertNotNull(schema);
 
       Map<String, String> properties = new LinkedHashMap<>();
       properties.put("k1", "v1");
       properties.put("k2", "v2");
       properties.put("k3", "v3");
 
-      assertEquals(properties.size(), schemaContainer.getProperties().size());
-      assertEquals(properties, schemaContainer.getProperties());
+      assertEquals(properties.size(), schema.properties().size());
+      assertEquals(properties, schema.properties());
 
     } finally {
       if (schemaFile.exists()) {
@@ -311,7 +312,7 @@ public class TestSchemaCommands extends ClusterTest {
   }
 
   @Test
-  public void testCreateWithoutProperties() throws Exception {
+  public void testCreateWithoutSchemaProperties() throws Exception {
     File tmpDir = dirTestWatcher.getTmpDir();
     File schemaFile = new File(tmpDir, "schema_for_create_without_properties.schema");
     assertFalse(schemaFile.exists());
@@ -329,9 +330,64 @@ public class TestSchemaCommands extends ClusterTest {
       SchemaContainer schemaContainer = schemaProvider.read();
 
       assertNull(schemaContainer.getTable());
-      assertNotNull(schemaContainer.getSchema());
-      assertNotNull(schemaContainer.getProperties());
-      assertEquals(0, schemaContainer.getProperties().size());
+      TupleMetadata schema = schemaContainer.getSchema();
+      assertNotNull(schema);
+      assertNotNull(schema.properties());
+      assertEquals(0, schema.properties().size());
+    } finally {
+      if (schemaFile.exists()) {
+        assertTrue(schemaFile.delete());
+      }
+    }
+  }
+
+  @Test
+  public void testCreateWithVariousColumnProperties() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "schema_for_create_with__various_column_properties.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      testBuilder()
+        .sqlQuery("create schema ( " +
+            "a int not null default '10', " +
+            "b date format 'yyyy-MM-dd' default '2017-01-31', " +
+            "c varchar properties {'k1' = 'v1', 'k2' = 'v2'}) " +
+            "path '%s'",
+          schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Created schema for [%s]", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      assertTrue(schemaProvider.exists());
+
+      SchemaContainer schemaContainer = schemaProvider.read();
+
+      assertNull(schemaContainer.getTable());
+      TupleMetadata schema = schemaContainer.getSchema();
+      assertNotNull(schema);
+
+      assertEquals(3, schema.size());
+
+      ColumnMetadata a = schema.metadata("a");
+      assertTrue(a.defaultValue() instanceof Integer);
+      assertEquals(10, a.defaultValue());
+      assertEquals("10", a.defaultStringValue());
+
+      ColumnMetadata b = schema.metadata("b");
+      assertTrue(b.defaultValue() instanceof LocalDate);
+      assertEquals("yyyy-MM-dd", b.formatValue());
+      assertEquals(LocalDate.parse("2017-01-31"), b.defaultValue());
+      assertEquals("2017-01-31", b.defaultStringValue());
+
+      ColumnMetadata c = schema.metadata("c");
+      Map<String, String> properties = new LinkedHashMap<>();
+      properties.put("k1", "v1");
+      properties.put("k2", "v2");
+      assertEquals(properties, c.properties());
+
+      assertEquals(0, schema.properties().size());
     } finally {
       if (schemaFile.exists()) {
         assertTrue(schemaFile.delete());
@@ -382,8 +438,7 @@ public class TestSchemaCommands extends ClusterTest {
       assertEquals(TypeProtos.MinorType.INT, schema.metadata("i").type());
       assertEquals(TypeProtos.MinorType.VARCHAR, schema.metadata("v").type());
 
-      assertNotNull(schemaContainer.getProperties());
-      assertEquals(2, schemaContainer.getProperties().size());
+      assertEquals(2, schema.properties().size());
     } finally {
       if (rawSchema.exists()) {
         assertTrue(rawSchema.delete());

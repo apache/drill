@@ -24,6 +24,15 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
+import org.joda.time.Period;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 /**
  * Primitive (non-map) column. Describes non-nullable, nullable and array types
@@ -42,11 +51,15 @@ import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 
 public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrimitiveColumnMetadata.class);
+
   /**
    * Expected (average) width for variable-width columns.
    */
 
   private int expectedWidth;
+
+  private String formatValue;
 
   /**
    * Default value to use for filling a vector when no real data is
@@ -135,12 +148,32 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
+  public void setFormatValue(String value) {
+    formatValue = value;
+  }
+
+  @Override
+  public String formatValue() {
+    return formatValue;
+  }
+
+  @Override
   public void setDefaultValue(Object value) {
     defaultValue = value;
   }
 
   @Override
   public Object defaultValue() { return defaultValue; }
+
+  @Override
+  public void setDefaultFromString(String value) {
+    this.defaultValue = valueFromString(value);
+  }
+
+  @Override
+  public String defaultStringValue() {
+    return valueToString(defaultValue);
+  }
 
   @Override
   public void setTypeConverter(ColumnConversionFactory factory) {
@@ -224,6 +257,88 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
       builder.append(">");
     }
     return builder.toString();
+  }
+
+  /**
+   * Converts value in string literal form into Object instance based on {@link MinorType} value.
+   * Returns null in case of error during parsing or unsupported type.
+   *
+   * @param value value in string literal form
+   * @return Object instance
+   */
+  private Object valueFromString(String value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      switch (type) {
+        case INT:
+          return Integer.parseInt(value);
+        case BIGINT:
+          return Long.parseLong(value);
+        case FLOAT4:
+          return Float.parseFloat(value);
+        case FLOAT8:
+          return Double.parseDouble(value);
+        case VARDECIMAL:
+          return new BigDecimal(value);
+        case BIT:
+          return Boolean.parseBoolean(value);
+        case VARCHAR:
+        case VARBINARY:
+          return value;
+        case TIME:
+          DateTimeFormatter timeFormatter = formatValue == null
+            ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+          return LocalTime.parse(value, timeFormatter);
+        case DATE:
+          DateTimeFormatter dateFormatter = formatValue == null
+            ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+          return LocalDate.parse(value, dateFormatter);
+        case TIMESTAMP:
+          DateTimeFormatter dateTimeFormatter = formatValue == null
+            ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+          return ZonedDateTime.parse(value, dateTimeFormatter);
+        case INTERVAL:
+        case INTERVALDAY:
+        case INTERVALYEAR:
+          return Period.parse(value);
+        default:
+          logger.warn("Unsupported type {} for default value {}, ignore and return null", type, value);
+          return null;
+      }
+    } catch (IllegalArgumentException | DateTimeParseException e) {
+      logger.warn("Error while parsing type {} default value {}, ignore and return null", type, value, e);
+      return null;
+    }
+  }
+
+  /**
+   * Converts given value instance into String literal representation based on column metadata type.
+   *
+   * @param value value instance
+   * @return value in string literal representation
+   */
+  private String valueToString(Object value) {
+    if (value == null) {
+      return null;
+    }
+    switch (type) {
+      case TIME:
+        DateTimeFormatter timeFormatter = formatValue == null
+          ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+        return timeFormatter.format((LocalTime) value);
+      case DATE:
+        DateTimeFormatter dateFormatter = formatValue == null
+          ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+        return dateFormatter.format((LocalDate) value);
+      case TIMESTAMP:
+        DateTimeFormatter dateTimeFormatter = formatValue == null
+          ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+        return dateTimeFormatter.format((ZonedDateTime) value);
+      default:
+        return value.toString();
+    }
   }
 
 }

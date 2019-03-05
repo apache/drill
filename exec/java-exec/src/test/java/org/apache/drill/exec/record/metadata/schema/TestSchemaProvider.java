@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record.metadata.schema;
 
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.junit.Rule;
@@ -86,7 +87,7 @@ public class TestSchemaProvider {
     assertEquals(1, metadata.size());
     assertEquals(TypeProtos.MinorType.INT, metadata.metadata("i").type());
 
-    assertEquals(properties, schemaContainer.getProperties());
+    assertEquals(properties, metadata.properties());
 
     SchemaContainer.Version version = schemaContainer.getVersion();
     assertFalse(version.isUndefined());
@@ -134,15 +135,24 @@ public class TestSchemaProvider {
     provider.store("i int, v varchar(10)", properties, StorageStrategy.DEFAULT);
     assertTrue(provider.exists());
 
-    String expectedContent =
-        "{\n"
-      + "  \"schema\" : [\n"
-      + "    \"`i` INT\",\n"
-      + "    \"`v` VARCHAR(10)\"\n"
-      + "  ],\n"
-      + "  \"properties\" : {\n"
-      + "    \"k1\" : \"v1\",\n"
-      + "    \"k2\" : \"v2\"\n"
+    String expectedContent = "{\n"
+      + "  \"schema\" : {\n"
+      + "    \"columns\" : [\n"
+      + "      {\n"
+      + "        \"name\" : \"i\",\n"
+      + "        \"type\" : \"INT\",\n"
+      + "        \"mode\" : \"OPTIONAL\"\n"
+      + "      },\n"
+      + "      {\n"
+      + "        \"name\" : \"v\",\n"
+      + "        \"type\" : \"VARCHAR(10)\",\n"
+      + "        \"mode\" : \"OPTIONAL\"\n"
+      + "      }\n"
+      + "    ],\n"
+      + "    \"properties\" : {\n"
+      + "      \"k1\" : \"v1\",\n"
+      + "      \"k2\" : \"v2\"\n"
+      + "    }\n"
       + "  },\n"
       + "  \"version\" : 1\n"
       + "}";
@@ -166,19 +176,39 @@ public class TestSchemaProvider {
   @Test
   public void testPathProviderRead() throws Exception {
     Path schemaPath = folder.newFile("schema").toPath();
-    Files.write(schemaPath, Collections.singletonList(
-          "{  \n"
-        + "   \"table\":\"tbl\",\n"
-        + "   \"schema\":[  \n"
-        + "      \"`i` INT\",\n"
-        + "      \"`v` VARCHAR\"\n"
-        + "   ],\n"
-        + "   \"properties\" : {\n"
-        + "      \"k1\" : \"v1\",\n"
-        + "      \"k2\" : \"v2\"\n"
-        + "   }\n"
-        + "}\n"
-    ));
+    String schema = "{\n"
+      + "  \"table\" : \"tbl\",\n"
+      + "  \"schema\" : {\n"
+      + "    \"columns\" : [\n"
+      + "      {\n"
+      + "        \"name\" : \"i\",\n"
+      + "        \"type\" : \"INT\",\n"
+      + "        \"mode\" : \"REQUIRED\",\n"
+      + "        \"default\" : \"10\"\n"
+      + "      },\n"
+      + "      {\n"
+      + "        \"name\" : \"a\",\n"
+      + "        \"type\" : \"ARRAY<VARCHAR(10)>\",\n"
+      + "        \"mode\" : \"REPEATED\",\n"
+      + "        \"properties\" : {\n"
+      + "          \"ck1\" : \"cv1\",\n"
+      + "          \"ck2\" : \"cv2\"\n"
+      + "        }\n"
+      + "      },\n"
+      + "      {\n"
+      + "        \"name\" : \"t\",\n"
+      + "        \"type\" : \"DATE\",\n"
+      + "        \"mode\" : \"OPTIONAL\",\n"
+      + "        \"format\" : \"yyyy-mm-dd\"\n"
+      + "      }\n"
+      + "    ],\n"
+      + "    \"properties\" : {\n"
+      + "      \"sk1\" : \"sv1\",\n"
+      + "      \"sk2\" : \"sv2\"\n"
+      + "    }\n"
+      + "  }\n"
+      + "}";
+    Files.write(schemaPath, Collections.singletonList(schema));
     SchemaProvider provider = new PathSchemaProvider(new org.apache.hadoop.fs.Path(schemaPath.toUri().getPath()));
     assertTrue(provider.exists());
     SchemaContainer schemaContainer = provider.read();
@@ -187,14 +217,30 @@ public class TestSchemaProvider {
 
     TupleMetadata metadata = schemaContainer.getSchema();
     assertNotNull(metadata);
-    assertEquals(2, metadata.size());
-    assertEquals(TypeProtos.MinorType.INT, metadata.metadata("i").type());
-    assertEquals(TypeProtos.MinorType.VARCHAR, metadata.metadata("v").type());
+    Map<String, String> schemaProperties = new LinkedHashMap<>();
+    schemaProperties.put("sk1", "sv1");
+    schemaProperties.put("sk2", "sv2");
+    assertEquals(schemaProperties, metadata.properties());
 
-    Map<String, String> properties = new LinkedHashMap<>();
-    properties.put("k1", "v1");
-    properties.put("k2", "v2");
-    assertEquals(properties, schemaContainer.getProperties());
+    assertEquals(3, metadata.size());
+
+    ColumnMetadata i = metadata.metadata("i");
+    assertEquals(TypeProtos.MinorType.INT, i.type());
+    assertEquals(TypeProtos.DataMode.REQUIRED, i.mode());
+    assertEquals(10, i.defaultValue());
+
+    ColumnMetadata a = metadata.metadata("a");
+    assertEquals(TypeProtos.MinorType.VARCHAR, a.type());
+    assertEquals(TypeProtos.DataMode.REPEATED, a.mode());
+    Map<String, String> columnProperties = new LinkedHashMap<>();
+    columnProperties.put("ck1", "cv1");
+    columnProperties.put("ck2", "cv2");
+    assertEquals(columnProperties, a.properties());
+
+    ColumnMetadata t = metadata.metadata("t");
+    assertEquals(TypeProtos.MinorType.DATE, t.type());
+    assertEquals(TypeProtos.DataMode.OPTIONAL, t.mode());
+    assertEquals("yyyy-mm-dd", t.formatValue());
 
     assertTrue(schemaContainer.getVersion().isUndefined());
   }
@@ -213,16 +259,21 @@ public class TestSchemaProvider {
   @Test
   public void testPathProviderReadSchemaWithComments() throws Exception {
     Path schemaPath = folder.newFile("schema").toPath();
-    Files.write(schemaPath, Collections.singletonList(
-          "// my schema file start\n"
-        + "{  \n"
-        + "   \"schema\":[  // start columns list\n"
-        + "      \"`i` INT\"\n"
-        + "   ]\n"
-        + "}\n"
-        + "// schema file end\n"
-        + "/* multiline comment */"
-    ));
+    String schema =  "// my schema file start\n" +
+      "{\n"
+      + "  \"schema\" : {\n"
+      + "    \"columns\" : [ // start columns list\n"
+      + "      {\n"
+      + "        \"name\" : \"i\",\n"
+      + "        \"type\" : \"INT\",\n"
+      + "        \"mode\" : \"OPTIONAL\"\n"
+      + "      }\n"
+      + "    ]\n"
+      + "  }\n"
+      + "}"
+      + "// schema file end\n"
+      + "/* multiline comment */";
+    Files.write(schemaPath, Collections.singletonList(schema));
 
     SchemaProvider provider = new PathSchemaProvider(new org.apache.hadoop.fs.Path(schemaPath.toUri().getPath()));
     assertTrue(provider.exists());
