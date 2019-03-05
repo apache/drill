@@ -23,6 +23,7 @@ import org.antlr.v4.runtime.CodePointCharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
@@ -38,6 +39,21 @@ public class SchemaExprParser {
   public static TupleMetadata parseSchema(String schema) {
     SchemaVisitor visitor = new SchemaVisitor();
     return visitor.visit(initParser(schema).schema());
+  }
+
+  /**
+   * Parses given column name, type and mode into {@link ColumnMetadata} instance.
+   *
+   * @param name column name
+   * @param type column type
+   * @param mode column mode
+   * @return column metadata
+   */
+  public static ColumnMetadata parseColumn(String name, String type, TypeProtos.DataMode mode) {
+    return parseColumn(String.format("`%s` %s %s",
+      name.replaceAll("(\\\\)|(`)", "\\\\$0"),
+      type,
+      TypeProtos.DataMode.REQUIRED == mode ? "not null" : ""));
   }
 
   /**

@@ -23,6 +23,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 
+import java.util.Map;
+
 /**
  * Metadata description of a column including names, types and structure
  * information.
@@ -182,6 +184,10 @@ public interface ColumnMetadata {
 
   int expectedElementCount();
 
+  void setFormatValue(String value);
+
+  String formatValue();
+
   /**
    * Set the default value to use for filling a vector when no real data is
    * available, such as for columns added in new files but which does not
@@ -199,6 +205,21 @@ public interface ColumnMetadata {
    * @return the default value, or null if no default value has been set
    */
   Object defaultValue();
+
+  /**
+   * Parses default value from String based on literal value into Object instance based on {@link MinorType} value.
+   * Sets default value to use for filling a vector when no real data is available.
+   *
+   * @param value the default value in String representation
+   */
+  void setDefaultFromString(String value);
+
+  /**
+   * Returns the default value for this column in String literal representation.
+   *
+   * @return the default value in String literal representation, or null if no default value has been set
+   */
+  String defaultStringValue();
 
   /**
    * Set the factory for an optional shim writer that translates from the type of
@@ -230,6 +251,15 @@ public interface ColumnMetadata {
    */
 
   ColumnMetadata cloneEmpty();
+
+  /**
+   * Sets column properties if not null.
+   *
+   * @param properties column properties
+   */
+  void setProperties(Map<String, String> properties);
+
+  Map<String, String> properties();
 
   /**
    * Reports whether, in this context, the column is projected outside

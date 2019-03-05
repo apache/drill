@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record.metadata;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.exec.record.MaterializedField;
 
@@ -95,10 +96,12 @@ public interface TupleMetadata extends Iterable<ColumnMetadata> {
   String fullName(int index);
 
   /**
-   * Converts schema metadata into string representation
-   * accepted by the table schema parser.
+   * Sets schema properties if not null.
    *
-   * @return schema metadata string representation
+   * @param properties schema properties
    */
-  String schemaString();
+  void setProperties(Map<String, String> properties);
+
+  Map<String, String> properties();
+
 }

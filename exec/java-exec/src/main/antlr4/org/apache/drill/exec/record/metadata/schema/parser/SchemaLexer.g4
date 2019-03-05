@@ -64,10 +64,18 @@ LEFT_PAREN: '(';
 RIGHT_PAREN: ')';
 LEFT_ANGLE_BRACKET: '<';
 RIGHT_ANGLE_BRACKET: '>';
+SINGLE_QUOTE: '\'';
+DOUBLE_QUOTE: '"';
+LEFT_BRACE: '{';
+RIGHT_BRACE: '}';
+EQUALS_SIGN: '=';
 
 NOT: 'NOT';
 NULL: 'NULL';
 AS: 'AS';
+FORMAT: 'FORMAT';
+DEFAULT: 'DEFAULT';
+PROPERTIES: 'PROPERTIES';
 
 NUMBER: [1-9] DIGIT* | '0';
 fragment DIGIT: [0-9];
@@ -83,6 +91,8 @@ ID: ([A-Z$_]) ([A-Z$_] | DIGIT)*;
 // if contains backtick, it should be escaped with backslash (`a\\`b` -> a`b)
 // if contains backslash, it should be escaped as well (`a\\\\b` -> a\b)
 QUOTED_ID: REVERSE_QUOTE (~[`\\] | '\\' [`\\])* REVERSE_QUOTE;
+SINGLE_QUOTED_STRING: SINGLE_QUOTE (~['\\] | '\\' ['\\])* SINGLE_QUOTE;
+DOUBLE_QUOTED_STRING: DOUBLE_QUOTE (~["\\] | '\\' ["\\])* DOUBLE_QUOTE;
 
 // skip
 LINE_COMMENT:  '//' ~[\r\n]* -> skip;
