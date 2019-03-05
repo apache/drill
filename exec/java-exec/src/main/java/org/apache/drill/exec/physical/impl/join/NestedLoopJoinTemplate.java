@@ -192,7 +192,8 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
         leftRecordCount = 0;
         break;
       case OK:
-        setTargetOutputCount(outgoing.getBatchMemoryManager().update(left, LEFT_INDEX,outputIndex));
+        outgoing.getBatchMemoryManager().update(left, LEFT_INDEX,outputIndex);
+        setTargetOutputCount(outgoing.getBatchMemoryManager().getCurrentOutgoingMaxRowCount()); // calculated by update()
         RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT_LEFT,
           outgoing.getBatchMemoryManager().getRecordBatchSizer(LEFT_INDEX),
           outgoing.getRecordBatchStatsContext());
