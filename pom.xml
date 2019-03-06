@@ -85,6 +85,7 @@
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.8.2</avro.version>
     <metrics.version>4.0.2</metrics.version>
+    <jersey.version>2.28</jersey.version>
     <asm.version>7.0</asm.version>
     <excludedGroups />
     <memoryMb>4096</memoryMb>
@@ -334,7 +335,6 @@
           </execution>
         </executions>
         <configuration>
-          <excludeSubprojects>false</excludeSubprojects>
           <excludes>
             <!-- Types log1, log2, sqllog and sqllog2 are used to test he logRegex format plugin. -->
             <exclude>**/*.log1</exclude>
@@ -2450,6 +2450,65 @@
             <version>1.60</version>
           </dependency>
 
+          <!--GlassFish Jersey dependecies-->
+          <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-mvc-freemarker</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-jetty-servlet</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <!--/GlassFish Jersey dependecies-->
+
+          <!--Javax Servlet dependecies-->
+          <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>javax.servlet.jsp-api</artifactId>
+            <version>2.3.3</version>
+            <scope>provided</scope>
+          </dependency>
+          <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>jsp-api</artifactId>
+            <version>2.2</version>
+            <scope>provided</scope>
+          </dependency>
+          <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+            <scope>provided</scope>
+          </dependency>
+          <!--/Javax Servlet dependecies-->
+
           <!-- Test Dependencies -->
           <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -2474,8 +2533,8 @@
                 <artifactId>netty-all</artifactId>
               </exclusion>
               <exclusion>
-                  <groupId>io.netty</groupId>
-                  <artifactId>netty</artifactId>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2524,7 +2583,6 @@
       <id>mapr</id>
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
-        <rat.excludeSubprojects>true</rat.excludeSubprojects>
         <hive.version>2.3.3-mapr-1808</hive.version>
         <hbase.version>1.1.1-mapr-1602-m7-5.2.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1808</hadoop.version>
