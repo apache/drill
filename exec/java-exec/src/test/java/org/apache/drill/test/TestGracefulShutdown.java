@@ -243,8 +243,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
   private File getWebServerTempDirPath(Drillbit drillbit) throws IllegalAccessException {
     Field webServerField = FieldUtils.getField(drillbit.getClass(), "webServer", true);
     WebServer webServerHandle = (WebServer) FieldUtils.readField(webServerField, drillbit, true);
-    File webServerTempDirPath = webServerHandle.getOrCreateTmpJavaScriptDir();
-    return webServerTempDirPath;
+    return webServerHandle.getOrCreateTmpJavaScriptDir();
   }
 
   private boolean waitAndAssertDrillbitCount(ClusterFixture cluster, int zkRefresh, int bitsNum)

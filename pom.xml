@@ -2453,6 +2453,7 @@
             <version>1.60</version>
           </dependency>
 
+          <!--Eclipse Jetty dependecies-->
           <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
@@ -2483,6 +2484,17 @@
             <artifactId>jetty-io</artifactId>
             <version>${jetty.version}</version>
           </dependency>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-webapp</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-xml</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <!--Eclipse Jetty dependecies-->
 
           <!--GlassFish Jersey dependecies-->
           <dependency>
