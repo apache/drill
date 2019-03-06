@@ -45,7 +45,6 @@ import java.util.Collection;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -235,10 +234,6 @@ public class TestGracefulShutdown extends BaseTestQuery {
         fail("Invocation of 'twinDrillbitOnSamePort.run()' should throw UserException");
       } catch (UserException userEx) {
         assertThat(userEx.getMessage(), containsString("RESOURCE ERROR: Drillbit could not bind to port"));
-        assertNull("Second drillbit instance should NOT have a temporary Javascript dir", getWebServerTempDirPath(twinDrillbitOnSamePort));
-      } catch (Exception e) {
-        fail("Invocation of 'twinDrillbitOnSamePort.run()' was expected to throw a UserException. Actual exception : "+ e.getMessage());
-        throw e;
       }
     }
     // Verify deletion
