@@ -81,12 +81,24 @@
           <artifactId>commons-codec</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.bouncycastle</groupId>
-          <artifactId>bcpkix-jdk15on</artifactId>
+          <groupId>org.glassfish.jersey.containers</groupId>
+          <artifactId>jersey-container-jetty-servlet</artifactId>
         </exclusion>
         <exclusion>
-          <artifactId>jersey-container-jetty-servlet</artifactId>
-          <groupId>org.glassfish.jersey.containers</groupId>
+          <groupId>org.glassfish.jersey.media</groupId>
+          <artifactId>jersey-media-multipart</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.ext</groupId>
+          <artifactId>jersey-mvc-freemarker</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.media</groupId>
+          <artifactId>jersey-media-json-jackson</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.inject</groupId>
+          <artifactId>jersey-hk2</artifactId>
         </exclusion>
         <exclusion>
           <artifactId>jetty-server</artifactId>
@@ -99,14 +111,6 @@
         <exclusion>
           <groupId>org.apache.avro</groupId>
           <artifactId>avro-mapred</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jersey-media-multipart</artifactId>
-          <groupId>org.glassfish.jersey.media</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jersey-mvc-freemarker</artifactId>
-          <groupId>org.glassfish.jersey.ext</groupId>
         </exclusion>
         <exclusion>
           <artifactId>jetty-servlet</artifactId>
@@ -157,10 +161,6 @@
           <artifactId>httpdlog-parser</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.glassfish.jersey.media</groupId>
-          <artifactId>jersey-media-json-jackson</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>org.kohsuke</groupId>
           <artifactId>libpam4j</artifactId>
         </exclusion>
@@ -175,6 +175,10 @@
         <exclusion>
           <artifactId>stream</artifactId>
           <groupId>com.clearspring.analytics</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.honton.chas.hocon</groupId>
+          <artifactId>jackson-dataformat-hocon</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -245,7 +249,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.22.0</version>
         <executions>
           <execution>
             <goals>
@@ -338,7 +341,6 @@
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
               <exclude>io.netty:netty-tcnative:jar:*</exclude>
-              <exclude>org.honton.chas.hocon:jackson-dataformat-hocon:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -654,7 +656,6 @@
                     <exclude>commons-io:commons-io</exclude>
                     <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
                     <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
-                    <exclude>org.honton.chas.hocon:jackson-dataformat-hocon:*</exclude>
                   </excludes>
                 </artifactSet>
                 <relocations>

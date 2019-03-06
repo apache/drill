@@ -235,7 +235,6 @@
       <id>mapr</id>
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
-        <rat.excludeSubprojects>true</rat.excludeSubprojects>
       </properties>
       <dependencies>
         <dependency>
