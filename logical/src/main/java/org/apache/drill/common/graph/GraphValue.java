@@ -17,10 +17,6 @@
  */
 package org.apache.drill.common.graph;
 
-
 public interface GraphValue<T> extends Iterable<T>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GraphValue.class);
-
-  public void accept(GraphVisitor<T> visitor);
-
+  void accept(GraphVisitor<T> visitor);
 }

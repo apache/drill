@@ -26,6 +26,8 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -47,7 +49,7 @@ public class TestParquetLimitPushDown extends ClusterTest {
     assertEquals(1, summary.recordCount());
 
     String plan = queryBuilder().sql(query).explainText();
-    assertTrue(plan.contains("numRowGroups=1"));
+    assertThat(plan, containsString("numRowGroups=1"));
   }
 
   @Test
@@ -58,7 +60,7 @@ public class TestParquetLimitPushDown extends ClusterTest {
     assertEquals(1, summary.recordCount());
 
     String plan = queryBuilder().sql(query).explainText();
-    assertTrue(plan.contains("numRowGroups=1"));
+    assertThat(plan, containsString("numRowGroups=1"));
   }
 
   @Test
@@ -69,7 +71,7 @@ public class TestParquetLimitPushDown extends ClusterTest {
     assertEquals(0, summary.recordCount());
 
     String plan = queryBuilder().sql(query).explainText();
-    assertTrue(plan.contains("numRowGroups=1"));
+    assertThat(plan, containsString("numRowGroups=1"));
   }
 
 }

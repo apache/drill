@@ -15,19 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.base;
+package org.apache.drill.metastore;
 
-import java.io.IOException;
-
-import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.hadoop.fs.Path;
 
 /**
- * FileGroupScan operator represents all data which will be scanned from FileSystem by a given physical plan.
+ * A metadata which has specific location.
  */
-public interface FileGroupScan extends GroupScan {
+public interface LocationProvider {
 
-  void modifyFileSelection(FileSelection selection);
-
-  FileGroupScan clone(FileSelection selection) throws IOException;
-
+  /**
+   * Returns location of this metadata.
+   *
+   * @return metadata location
+   */
+  Path getLocation();
 }

@@ -15,19 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.base;
+package org.apache.drill.exec.expr;
 
-import java.io.IOException;
+public interface ExactStatisticsConstants {
+  String MIN_VALUE = "minValue";
+  String MAX_VALUE = "maxValue";
+  String ROW_COUNT = "rowCount";
+  String NULLS_COUNT = "nullsCount";
 
-import org.apache.drill.exec.store.dfs.FileSelection;
-
-/**
- * FileGroupScan operator represents all data which will be scanned from FileSystem by a given physical plan.
- */
-public interface FileGroupScan extends GroupScan {
-
-  void modifyFileSelection(FileSelection selection);
-
-  FileGroupScan clone(FileSelection selection) throws IOException;
-
+  String START = "start";
+  String LENGTH = "length";
 }

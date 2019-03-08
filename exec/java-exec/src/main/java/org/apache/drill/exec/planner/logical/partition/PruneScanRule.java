@@ -264,7 +264,9 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         final ValueVector[] vectors = new ValueVector[descriptor.getMaxHierarchyLevel()];
         for (int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)) {
           SchemaPath column = SchemaPath.getSimplePath(fieldNameMap.get(partitionColumnIndex));
-          MajorType type = descriptor.getVectorType(column, settings);
+          // ParquetPartitionDescriptor.populatePruningVector() expects nullable value vectors,
+          // so force nullability here to avoid class cast exceptions
+          MajorType type = descriptor.getVectorType(column, settings).toBuilder().setMode(TypeProtos.DataMode.OPTIONAL).build();
           MaterializedField field = MaterializedField.create(column.getLastSegment().getNameSegment().getPath(), type);
           ValueVector v = TypeHelper.getNewVector(field, allocator);
           v.allocateNew();

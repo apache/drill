@@ -74,7 +74,7 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   @Override
   @JsonIgnore
   public boolean isDistributed() {
-    return getMaxParallelizationWidth() > 1 ? true : false;
+    return getMaxParallelizationWidth() > 1;
   }
 
   @Override

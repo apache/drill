@@ -17,17 +17,24 @@
  */
 package org.apache.drill.exec.physical.base;
 
-import java.io.IOException;
-
-import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.hadoop.fs.Path;
 
 /**
- * FileGroupScan operator represents all data which will be scanned from FileSystem by a given physical plan.
+ * Interface for providing table, partition, file etc. metadata for specific parquet table.
  */
-public interface FileGroupScan extends GroupScan {
+public interface ParquetTableMetadataProvider extends ParquetMetadataProvider {
 
-  void modifyFileSelection(FileSelection selection);
+  /**
+   * Whether metadata cache files are used for table which belongs to current metadata provider.
+   *
+   * @return true if metadata cache files are used
+   */
+  boolean isUsedMetadataCache();
 
-  FileGroupScan clone(FileSelection selection) throws IOException;
-
+  /**
+   * Returns root table path.
+   *
+   * @return root path of the table
+   */
+  Path getSelectionRoot();
 }

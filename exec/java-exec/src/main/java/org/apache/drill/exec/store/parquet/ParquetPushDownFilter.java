@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
+import org.apache.drill.exec.expr.FilterPredicate;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -27,7 +29,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.exec.expr.stat.ParquetFilterPredicate;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
@@ -145,11 +146,10 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
             new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, pred);
 
         // checks whether predicate may be used for filter pushdown
-        ParquetFilterPredicate parquetFilterPredicate =
-            groupScan.getParquetFilterPredicate(drillPredicate,
+        FilterPredicate parquetFilterPredicate =
+            groupScan.getFilterPredicate(drillPredicate,
                 optimizerContext,
-                optimizerContext.getFunctionRegistry(),
-                optimizerContext.getPlannerSettings().getOptions(), false);
+                optimizerContext.getFunctionRegistry(), optimizerContext.getPlannerSettings().getOptions(), false);
         // collects predicates that contain unsupported for filter pushdown expressions
         // to build filter with them
         if (parquetFilterPredicate == null) {
@@ -172,7 +172,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
 
 
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
-    AbstractParquetGroupScan newGroupScan = groupScan.applyFilter(conditionExp, optimizerContext,
+    AbstractGroupScanWithMetadata newGroupScan = groupScan.applyFilter(conditionExp, optimizerContext,
         optimizerContext.getFunctionRegistry(), optimizerContext.getPlannerSettings().getOptions());
     if (timer != null) {
       logger.debug("Took {} ms to apply filter on parquet row groups. ", timer.elapsed(TimeUnit.MILLISECONDS));
@@ -182,11 +182,11 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
     // For the case when newGroupScan wasn't created, the old one may
     // fully match the filter for the case when row group pruning did not happen.
     if (newGroupScan == null) {
-      if (groupScan.isMatchAllRowGroups()) {
+      if (groupScan.isMatchAllMetadata()) {
         RelNode child = project == null ? scan : project;
         // If current row group fully matches filter,
         // but row group pruning did not happen, remove the filter.
-        if (nonConvertedPredList.size() == 0) {
+        if (nonConvertedPredList.isEmpty()) {
           call.transformTo(child);
         } else if (nonConvertedPredList.size() == predList.size()) {
           // None of the predicates participated in filter pushdown.
@@ -210,9 +210,9 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       newNode = project.copy(project.getTraitSet(), Collections.singletonList(newNode));
     }
 
-    if (newGroupScan.isMatchAllRowGroups()) {
+    if (newGroupScan.isMatchAllMetadata()) {
       // creates filter from the expressions which can't be pushed to the scan
-      if (nonConvertedPredList.size() > 0) {
+      if (!nonConvertedPredList.isEmpty()) {
         newNode = filter.copy(filter.getTraitSet(), newNode,
             RexUtil.composeConjunction(
                 filter.getCluster().getRexBuilder(),

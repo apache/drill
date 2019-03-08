@@ -15,19 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.base;
-
-import java.io.IOException;
-
-import org.apache.drill.exec.store.dfs.FileSelection;
+package org.apache.drill.metastore;
 
 /**
- * FileGroupScan operator represents all data which will be scanned from FileSystem by a given physical plan.
+ * Class represents kind of statistics or metadata, for example it may be min value for column,
+ * or row count for table.
  */
-public interface FileGroupScan extends GroupScan {
+public interface StatisticsKind {
 
-  void modifyFileSelection(FileSelection selection);
+  /**
+   * Returns name which corresponds to the statistics.
+   *
+   * @return statistic kind name
+   */
+  String getName();
 
-  FileGroupScan clone(FileSelection selection) throws IOException;
+  /**
+   * Returns true if current statistics value has the same type as column values,
+   * for example it may be min value etc.
+   *
+   * @return true if current statistics value has the same type as column values
+   */
+  default boolean isValueStatistic() {
+    return false;
+  }
 
+  default boolean isExact() {
+    return false;
+  }
 }

@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.parquet;
+package org.apache.drill.exec.expr;
 
+import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
@@ -25,7 +26,6 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
@@ -42,10 +42,6 @@ import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.expr.holders.VarDecimalHolder;
-import org.apache.drill.exec.expr.stat.ParquetBooleanPredicate;
-import org.apache.drill.exec.expr.stat.ParquetComparisonPredicate;
-import org.apache.drill.exec.expr.stat.ParquetFilterPredicate;
-import org.apache.drill.exec.expr.stat.ParquetIsPredicate;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.slf4j.Logger;
@@ -56,43 +52,43 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A visitor which visits a materialized logical expression, and build ParquetFilterPredicate
+ * A visitor which visits a materialized logical expression, and build FilterPredicate
  * If a visitXXX method returns null, that means the corresponding filter branch is not qualified for push down.
  */
-public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<LogicalExpression>, RuntimeException> {
-  static final Logger logger = LoggerFactory.getLogger(ParquetFilterBuilder.class);
+public class FilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<LogicalExpression>, RuntimeException> {
+  private static final Logger logger = LoggerFactory.getLogger(FilterBuilder.class);
 
-  private final UdfUtilities udfUtilities;
   // Flag to check whether predicate cannot be fully converted
-  // to parquet filter predicate without omitting its parts.
+  // to metadata filter predicate without omitting its parts.
   // It should be set to false for the case when we want to
-  // verify that predicate is fully convertible to parquet filter predicate,
+  // verify that predicate is fully convertible to metadata filter predicate,
   // otherwise null is returned instead of the converted expression.
   private final boolean omitUnsupportedExprs;
+  private final UdfUtilities udfUtilities;
 
   /**
    * @param expr materialized filter expression
    * @param constantBoundaries set of constant expressions
    * @param udfUtilities udf utilities
    *
-   * @return parquet filter predicate
+   * @return metadata filter predicate
    */
-  public static ParquetFilterPredicate buildParquetFilterPredicate(LogicalExpression expr,
-      Set<LogicalExpression> constantBoundaries, UdfUtilities udfUtilities, boolean omitUnsupportedExprs) {
-    LogicalExpression logicalExpression =
-        expr.accept(new ParquetFilterBuilder(udfUtilities, omitUnsupportedExprs), constantBoundaries);
-    if (logicalExpression instanceof ParquetFilterPredicate) {
-      return (ParquetFilterPredicate) logicalExpression;
+  public static FilterPredicate buildFilterPredicate(LogicalExpression expr,
+                                                     Set<LogicalExpression> constantBoundaries,
+                                                     UdfUtilities udfUtilities,
+                                                     boolean omitUnsupportedExprs) {
+    LogicalExpression logicalExpression = expr.accept(new FilterBuilder(udfUtilities, omitUnsupportedExprs), constantBoundaries);
+    if (logicalExpression instanceof FilterPredicate) {
+      return (FilterPredicate) logicalExpression;
     } else if (logicalExpression instanceof TypedFieldExpr) {
       // Calcite simplifies `= true` expression to field name, wrap it with is true predicate
-      return (ParquetFilterPredicate) ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, logicalExpression);
+      return (FilterPredicate) IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, logicalExpression);
     }
     logger.debug("Logical expression {} was not qualified for filter push down", logicalExpression);
     return null;
   }
 
-
-  private ParquetFilterBuilder(UdfUtilities udfUtilities, boolean omitUnsupportedExprs) {
+  private FilterBuilder(UdfUtilities udfUtilities, boolean omitUnsupportedExprs) {
     this.udfUtilities = udfUtilities;
     this.omitUnsupportedExprs = omitUnsupportedExprs;
   }
@@ -104,62 +100,57 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
   }
 
   @Override
-  public LogicalExpression visitTypedFieldExpr(TypedFieldExpr typedFieldExpr, Set<LogicalExpression> value) throws RuntimeException {
+  public LogicalExpression visitTypedFieldExpr(TypedFieldExpr typedFieldExpr, Set<LogicalExpression> value) {
     return typedFieldExpr;
   }
 
   @Override
-  public LogicalExpression visitIntConstant(ValueExpressions.IntExpression intExpr, Set<LogicalExpression> value)
-      throws RuntimeException {
+  public LogicalExpression visitIntConstant(ValueExpressions.IntExpression intExpr, Set<LogicalExpression> value) {
     return intExpr;
   }
 
   @Override
-  public LogicalExpression visitDoubleConstant(ValueExpressions.DoubleExpression dExpr, Set<LogicalExpression> value)
-      throws RuntimeException {
+  public LogicalExpression visitDoubleConstant(ValueExpressions.DoubleExpression dExpr, Set<LogicalExpression> value) {
     return dExpr;
   }
 
   @Override
-  public LogicalExpression visitFloatConstant(ValueExpressions.FloatExpression fExpr, Set<LogicalExpression> value)
-      throws RuntimeException {
+  public LogicalExpression visitFloatConstant(ValueExpressions.FloatExpression fExpr, Set<LogicalExpression> value) {
     return fExpr;
   }
 
   @Override
-  public LogicalExpression visitLongConstant(ValueExpressions.LongExpression intExpr, Set<LogicalExpression> value)
-      throws RuntimeException {
+  public LogicalExpression visitLongConstant(ValueExpressions.LongExpression intExpr, Set<LogicalExpression> value) {
     return intExpr;
   }
 
   @Override
-  public LogicalExpression visitVarDecimalConstant(ValueExpressions.VarDecimalExpression decExpr, Set<LogicalExpression> value)
-      throws RuntimeException {
+  public LogicalExpression visitVarDecimalConstant(ValueExpressions.VarDecimalExpression decExpr, Set<LogicalExpression> value) {
     return decExpr;
   }
 
   @Override
-  public LogicalExpression visitDateConstant(ValueExpressions.DateExpression dateExpr, Set<LogicalExpression> value) throws RuntimeException {
+  public LogicalExpression visitDateConstant(ValueExpressions.DateExpression dateExpr, Set<LogicalExpression> value) {
     return dateExpr;
   }
 
   @Override
-  public LogicalExpression visitTimeStampConstant(ValueExpressions.TimeStampExpression tsExpr, Set<LogicalExpression> value) throws RuntimeException {
+  public LogicalExpression visitTimeStampConstant(ValueExpressions.TimeStampExpression tsExpr, Set<LogicalExpression> value) {
     return tsExpr;
   }
 
   @Override
-  public LogicalExpression visitTimeConstant(ValueExpressions.TimeExpression timeExpr, Set<LogicalExpression> value) throws RuntimeException {
+  public LogicalExpression visitTimeConstant(ValueExpressions.TimeExpression timeExpr, Set<LogicalExpression> value) {
     return timeExpr;
   }
 
   @Override
-  public LogicalExpression visitBooleanConstant(ValueExpressions.BooleanExpression booleanExpression, Set<LogicalExpression> value) throws RuntimeException {
+  public LogicalExpression visitBooleanConstant(ValueExpressions.BooleanExpression booleanExpression, Set<LogicalExpression> value) {
     return booleanExpression;
   }
 
   @Override
-  public LogicalExpression visitQuotedStringConstant(ValueExpressions.QuotedString quotedString, Set<LogicalExpression> value) throws RuntimeException {
+  public LogicalExpression visitQuotedStringConstant(ValueExpressions.QuotedString quotedString, Set<LogicalExpression> value) {
     return quotedString;
   }
 
@@ -179,18 +170,18 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
       } else {
         if (childPredicate instanceof TypedFieldExpr) {
           // Calcite simplifies `= true` expression to field name, wrap it with is true predicate
-          childPredicate = ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, childPredicate);
+          childPredicate = IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, childPredicate);
         }
         childPredicates.add(childPredicate);
       }
     }
 
-    if (childPredicates.size() == 0) {
+    if (childPredicates.isEmpty()) {
       return null; // none leg is qualified, return null.
     } else if (childPredicates.size() == 1) {
       return childPredicates.get(0); // only one leg is qualified, remove boolean op.
     } else {
-      return ParquetBooleanPredicate.createBooleanPredicate(functionName, op.getName(), childPredicates, op.getPosition());
+      return BooleanPredicate.createBooleanPredicate(functionName, op.getName(), childPredicates, op.getPosition());
     }
   }
 
@@ -229,11 +220,10 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
   }
 
   @Override
-  public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression funcHolderExpr, Set<LogicalExpression> value)
-      throws RuntimeException {
+  public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression funcHolderExpr, Set<LogicalExpression> value) {
     FuncHolder holder = funcHolderExpr.getHolder();
 
-    if (! (holder instanceof DrillSimpleFuncHolder)) {
+    if (!(holder instanceof DrillSimpleFuncHolder)) {
       return null;
     }
 
@@ -292,7 +282,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
 
     String funcName = ((DrillSimpleFuncHolder) functionHolderExpression.getHolder()).getRegisteredNames()[0];
 
-    return ParquetComparisonPredicate.createComparisonPredicate(funcName, newArgs.get(0), newArgs.get(1));
+    return ComparisonPredicate.createComparisonPredicate(funcName, newArgs.get(0), newArgs.get(1));
   }
 
   private LogicalExpression handleIsFunction(FunctionHolderExpression functionHolderExpression, Set<LogicalExpression> value) {
@@ -301,13 +291,13 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     if (functionHolderExpression.getHolder() instanceof DrillSimpleFuncHolder) {
       funcName = ((DrillSimpleFuncHolder) functionHolderExpression.getHolder()).getRegisteredNames()[0];
     } else {
-      logger.warn("Can not cast {} to DrillSimpleFuncHolder. Parquet filter pushdown can not handle function.",
+      logger.warn("Can not cast {} to DrillSimpleFuncHolder. Metadata filter pushdown can not handle function.",
           functionHolderExpression.getHolder());
       return null;
     }
     LogicalExpression arg = functionHolderExpression.args.get(0);
 
-    return ParquetIsPredicate.createIsPredicate(funcName, arg.accept(this, value));
+    return IsPredicate.createIsPredicate(funcName, arg.accept(this, value));
   }
 
   private static boolean isCompareFunction(String funcName) {
@@ -345,5 +335,4 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
         .add(FunctionGenerationHelper.IS_NOT_FALSE)
         .build();
   }
-
 }

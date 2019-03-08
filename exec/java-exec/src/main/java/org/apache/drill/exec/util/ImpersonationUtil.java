@@ -210,11 +210,9 @@ public class ImpersonationUtil {
       final OperatorStats stats) {
     DrillFileSystem fs;
     try {
-      fs = proxyUserUgi.doAs(new PrivilegedExceptionAction<DrillFileSystem>() {
-        public DrillFileSystem run() throws Exception {
-          logger.trace("Creating DrillFileSystem for proxy user: " + UserGroupInformation.getCurrentUser());
-          return new DrillFileSystem(fsConf, stats);
-        }
+      fs = proxyUserUgi.doAs((PrivilegedExceptionAction<DrillFileSystem>) () -> {
+        logger.trace("Creating DrillFileSystem for proxy user: " + UserGroupInformation.getCurrentUser());
+        return new DrillFileSystem(fsConf, stats);
       });
     } catch (InterruptedException | IOException e) {
       final String errMsg = "Failed to create DrillFileSystem for proxy user: " + e.getMessage();
