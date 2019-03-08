@@ -134,7 +134,7 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
           formatSelection.getFormat()).getFsConf());
 
       Path selectionRoot = formatSelection.getSelection().getSelectionRoot();
-      if (!selectionRoot.getName().equals(tableName) || !fs.getFileStatus(selectionRoot).isDirectory()) {
+      if (!selectionRoot.toUri().getPath().endsWith(tableName) || !fs.getFileStatus(selectionRoot).isDirectory()) {
         return DrillStatsTable.notSupported(context, tableName);
       }
       // Do not recompute statistics, if stale
