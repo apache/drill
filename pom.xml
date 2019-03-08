@@ -343,6 +343,7 @@
             <exclude>**/*.sqllog2</exclude>
             <exclude>**/*.syslog</exclude>
             <exclude>**/*.syslog1</exclude>
+            <exclude>**/*.ltsv</exclude>
             <exclude>**/*.log</exclude>
             <exclude>**/*.css</exclude>
             <exclude>**/*.js</exclude>
@@ -671,6 +672,7 @@
               <exclude>**/*.log2</exclude>
               <exclude>**/*.sqllog</exclude>
               <exclude>**/*.sqllog2</exclude>
+              <exclude>**/*.ltsv</exclude>
               <exclude>**/*.wav</exclude>
               <exclude>**/control</exclude>
               <!-- TODO DRILL-4336: try to avoid the need to add this -->

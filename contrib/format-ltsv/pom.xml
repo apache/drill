@@ -20,45 +20,37 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
-    <artifactId>drill-root</artifactId>
-    <groupId>org.apache.drill</groupId>
+    <artifactId>drill-contrib-parent</artifactId>
+    <groupId>org.apache.drill.contrib</groupId>
     <version>1.16.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.apache.drill.contrib</groupId>
-  <artifactId>drill-contrib-parent</artifactId>
-  <name>contrib/Parent Pom</name>
-  <packaging>pom</packaging>
-
-  <properties>
-    <skipTests>false</skipTests>
-  </properties>
+  <artifactId>drill-format-ltsv</artifactId>
+  <name>contrib/ltsv-format-plugin</name>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-java-exec</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-java-exec</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-common</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
-  <modules>
-    <module>storage-hbase</module>
-    <module>format-maprdb</module>
-    <module>format-syslog</module>
-    <module>format-ltsv</module>
-    <module>storage-hive</module>
-    <module>storage-mongo</module>
-    <module>storage-jdbc</module>
-    <module>storage-kafka</module>
-    <module>storage-kudu</module>
-    <module>storage-opentsdb</module>
-    <module>data</module>
-    <module>udfs</module>
-  </modules>
-
-  <profiles>
-    <profile>
-      <id>travis</id>
-      <properties>
-        <skipTests>true</skipTests>
-      </properties>
-    </profile>
-  </profiles>
 </project>

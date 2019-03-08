@@ -1032,7 +1032,7 @@ void AddDescriptorsImpl() {
       "entState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCA"
       "TION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCAN"
       "CELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQ"
-      "UESTED\020\006*\351\t\n\020CoreOperatorType\022\021\n\rSINGLE_"
+      "UESTED\020\006*\374\t\n\020CoreOperatorType\022\021\n\rSINGLE_"
       "SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FILTER"
       "\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n"
       "\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDER\020\006"
@@ -1063,14 +1063,14 @@ void AddDescriptorsImpl() {
       "T\0206\022\023\n\017PCAPNG_SUB_SCAN\0207\022\022\n\016RUNTIME_FILT"
       "ER\0208\022\017\n\013ROWKEY_JOIN\0209\022\023\n\017SYSLOG_SUB_SCAN"
       "\020:\022\030\n\024STATISTICS_AGGREGATE\020;\022\020\n\014UNPIVOT_"
-      "MAPS\020<\022\024\n\020STATISTICS_MERGE\020=*g\n\nSaslStat"
-      "us\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020"
-      "SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013"
-      "SASL_FAILED\020\004B.\n\033org.apache.drill.exec.p"
-      "rotoB\rUserBitSharedH\001"
+      "MAPS\020<\022\024\n\020STATISTICS_MERGE\020=\022\021\n\rLTSV_SUB"
+      "_SCAN\020>*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022"
+      "\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n"
+      "\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org."
+      "apache.drill.exec.protoB\rUserBitSharedH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 5621);
+      descriptor, 5640);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   ::protobuf_Types_2eproto::AddDescriptors();
@@ -1311,6 +1311,7 @@ bool CoreOperatorType_IsValid(int value) {
     case 59:
     case 60:
     case 61:
+    case 62:
       return true;
     default:
       return false;
