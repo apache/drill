@@ -355,7 +355,10 @@ public class Metadata_V2 {
      */
     @Override
     public boolean hasSingleValue(long rowCount) {
-      return (mxValue != null && nulls == 0) || nulls == rowCount;
+      if (nulls != null) {
+        return (mxValue != null && nulls == 0) || nulls == rowCount;
+      }
+      return false;
     }
 
     @Override public Object getMinValue() {

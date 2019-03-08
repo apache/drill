@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
+import org.apache.drill.metastore.LocationProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -37,24 +38,12 @@ import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider.LogicalInputSplit;
 import org.apache.drill.exec.store.parquet.AbstractParquetGroupScan;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
-import org.apache.drill.exec.store.parquet.metadata.Metadata;
-import org.apache.drill.exec.store.parquet.RowGroupInfo;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.ql.io.parquet.ProjectionPusher;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -77,8 +66,13 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
                                     @JsonProperty("filter") LogicalExpression filter) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName), columns, entries, readerConfig, filter);
     this.hiveStoragePlugin = (HiveStoragePlugin) engineRegistry.getPlugin(hiveStoragePluginConfig);
-    this.hivePartitionHolder = hivePartitionHolder;
     this.confProperties = confProperties;
+
+    this.metadataProvider = new HiveParquetTableMetadataProvider(entries, hivePartitionHolder, hiveStoragePlugin, readerConfig);
+
+    HiveParquetTableMetadataProvider hiveMetadataProvider = (HiveParquetTableMetadataProvider) this.metadataProvider;
+    this.hivePartitionHolder = hiveMetadataProvider.getHivePartitionHolder();
+    this.fileSet = hiveMetadataProvider.getFileSet();
 
     init();
   }
@@ -102,31 +96,22 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
     super(userName, columns, new ArrayList<>(), readerConfig, filter);
 
     this.hiveStoragePlugin = hiveStoragePlugin;
-    this.hivePartitionHolder = new HivePartitionHolder();
     this.confProperties = confProperties;
 
-    for (LogicalInputSplit logicalInputSplit : logicalInputSplits) {
-      Iterator<InputSplit> iterator = logicalInputSplit.getInputSplits().iterator();
-      // logical input split contains list of splits by files
-      // we need to read path of only one to get file path
-      assert iterator.hasNext();
-      InputSplit split = iterator.next();
-      assert split instanceof FileSplit;
-      FileSplit fileSplit = (FileSplit) split;
-      Path finalPath = fileSplit.getPath();
-      Path pathString = Path.getPathWithoutSchemeAndAuthority(finalPath);
-      entries.add(new ReadEntryWithPath(pathString));
+    this.metadataProvider = new HiveParquetTableMetadataProvider(hiveStoragePlugin, logicalInputSplits, readerConfig);
 
-      // store partition values per path
-      Partition partition = logicalInputSplit.getPartition();
-      if (partition != null) {
-        hivePartitionHolder.add(pathString, partition.getValues());
-      }
-    }
+    HiveParquetTableMetadataProvider hiveMetadataProvider = (HiveParquetTableMetadataProvider) metadataProvider;
+    this.entries = hiveMetadataProvider.getEntries();
+    this.hivePartitionHolder = hiveMetadataProvider.getHivePartitionHolder();
+    this.fileSet = hiveMetadataProvider.getFileSet();
 
     init();
   }
 
+  /**
+   * Copy constructor for shallow partial cloning
+   * @param that old groupScan
+   */
   private HiveDrillNativeParquetScan(HiveDrillNativeParquetScan that) {
     super(that);
     this.hiveStoragePlugin = that.hiveStoragePlugin;
@@ -188,7 +173,7 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
     builder.append("HiveDrillNativeParquetScan [");
     builder.append("entries=").append(entries);
     builder.append(", numFiles=").append(getEntries().size());
-    builder.append(", numRowGroups=").append(rowGroupInfos.size());
+    builder.append(", numRowGroups=").append(getRowGroupsMetadata().size());
 
     String filterString = getFilterString();
     if (!filterString.isEmpty()) {
@@ -202,17 +187,8 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
   }
 
   @Override
-  protected void initInternal() throws IOException {
-    Map<FileStatus, FileSystem> fileStatusConfMap = new LinkedHashMap<>();
-    for (ReadEntryWithPath entry : entries) {
-      Path path = entry.getPath();
-      Configuration conf = new ProjectionPusher().pushProjectionsAndFilters(
-          new JobConf(hiveStoragePlugin.getHiveConf()),
-          path.getParent());
-      FileSystem fs = path.getFileSystem(conf);
-      fileStatusConfMap.put(fs.getFileStatus(Path.getPathWithoutSchemeAndAuthority(path)), fs);
-    }
-    parquetTableMetadata = Metadata.getParquetTableMetadata(fileStatusConfMap, readerConfig);
+  protected RowGroupScanFilterer getFilterer() {
+    return new HiveDrillNativeParquetScanFilterer(this);
   }
 
   @Override
@@ -228,12 +204,28 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
 
   @Override
   protected boolean supportsFileImplicitColumns() {
-    return false;
+    // current group scan should populate directory partition values
+    return true;
   }
 
   @Override
-  protected List<String> getPartitionValues(RowGroupInfo rowGroupInfo) {
-    return hivePartitionHolder.get(rowGroupInfo.getPath());
+  protected List<String> getPartitionValues(LocationProvider locationProvider) {
+    return hivePartitionHolder.get(locationProvider.getLocation());
   }
 
+  /**
+   * Implementation of RowGroupScanFilterer which uses {@link HiveDrillNativeParquetScanFilterer} as source and
+   * builds {@link HiveDrillNativeParquetScanFilterer} instance with filtered metadata.
+   */
+  private class HiveDrillNativeParquetScanFilterer extends RowGroupScanFilterer {
+
+    public HiveDrillNativeParquetScanFilterer(HiveDrillNativeParquetScan source) {
+      super(source);
+    }
+
+    @Override
+    protected AbstractParquetGroupScan getNewScan() {
+      return new HiveDrillNativeParquetScan((HiveDrillNativeParquetScan) source);
+    }
+  }
 }

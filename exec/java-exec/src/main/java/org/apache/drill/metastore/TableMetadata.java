@@ -15,18 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.parquet.stat;
+package org.apache.drill.metastore;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.hadoop.fs.Path;
 
 import java.util.Map;
-import java.util.Set;
 
-public interface ColumnStatCollector {
-  /**
-   * Given a list of fields (SchemaPath), return mapping from field to its corresponding ColumnStatistics
-   * @return
-   */
-  Map<SchemaPath, ColumnStatistics> collectColStat(Set<SchemaPath> fields);
+/**
+ * Metadata which corresponds to the table level.
+ */
+public interface TableMetadata extends BaseMetadata {
 
+  String getTableName();
+  Path getLocation();
+  String getOwner();
+  long getLastModifiedTime();
+  TableMetadata cloneWithStats(Map<SchemaPath, ColumnStatistics> columnStatistics, Map<String, Object> tableStatistics);
 }

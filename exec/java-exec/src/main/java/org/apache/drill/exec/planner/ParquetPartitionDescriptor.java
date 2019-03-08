@@ -53,8 +53,6 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.io.api.Binary;
-import org.joda.time.DateTimeConstants;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,7 +87,7 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   public boolean isPartitionName(String name) {
-    return partitionColumns.contains(name);
+    return partitionColumns.contains(SchemaPath.getSimplePath(name));
   }
 
   @Override
@@ -331,11 +329,11 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
       }
       case DATE: {
         NullableDateVector dateVector = (NullableDateVector) v;
-        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        Long value = groupScan.getPartitionValue(path, column, Long.class);
         if (value == null) {
           dateVector.getMutator().setNull(index);
         } else {
-          dateVector.getMutator().setSafe(index, value * (long) DateTimeConstants.MILLIS_PER_DAY);
+          dateVector.getMutator().setSafe(index, value);
         }
         return;
       }
@@ -402,8 +400,8 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
    */
   private byte[] getBytes(TypeProtos.MinorType type, Object source) {
     byte[] bytes;
-    if (source instanceof Binary) {
-      bytes = ((Binary) source).getBytes();
+    if (source instanceof String) {
+      bytes = ((String) source).getBytes();
     } else if (source instanceof byte[]) {
       bytes = (byte[]) source;
     } else {

@@ -15,19 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr.stat;
+package org.apache.drill.metastore;
 
-public interface ParquetFilterPredicate<T extends Comparable<T>> {
+import java.util.Collection;
+
+/**
+ * This class represents kinds of table statistics which may be received as a union
+ * of other statistics, for example row count may be received as a sum of row counts
+ * of underlying metadata parts.
+ */
+public interface CollectableTableStatisticsKind extends StatisticsKind {
 
   /**
-   * Define the validity of a row group against a filter
-   * <ul>
-   *   <li>ALL : all rows match the filter (can not drop the row group and can prune the filter)
-   *   <li>NONE : no row matches the filter (can drop the row group)
-   *   <li>SOME : some rows only match the filter or the filter can not be applied (can not drop the row group nor the filter)
-   * </ul>
+   * Returns table statistics value received by collecting specified {@link ColumnStatistics}.
+   *
+   * @param statistics list of {@link ColumnStatistics} instances to be collected
+   * @return column statistics value received by collecting specified {@link ColumnStatistics}
    */
-  enum RowsMatch {ALL, NONE, SOME}
-
-  RowsMatch matches(RangeExprEvaluator<T> evaluator);
+  Object mergeStatistics(Collection<? extends BaseMetadata> statistics);
 }

@@ -15,19 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.base;
-
-import java.io.IOException;
-
-import org.apache.drill.exec.store.dfs.FileSelection;
+package org.apache.drill.exec.expr.stat;
 
 /**
- * FileGroupScan operator represents all data which will be scanned from FileSystem by a given physical plan.
+ * Define the validity of a row group against a filter
+ * <ul>
+ * <li>ALL : all rows match the filter (can not drop the row group and can prune the filter)
+ * <li>NONE : no row matches the filter (can drop the row group)
+ * <li>SOME : some rows only match the filter or the filter can not be applied (can not drop the row group nor the filter)
+ * </ul>
  */
-public interface FileGroupScan extends GroupScan {
-
-  void modifyFileSelection(FileSelection selection);
-
-  FileGroupScan clone(FileSelection selection) throws IOException;
-
-}
+public enum RowsMatch {ALL, NONE, SOME}

@@ -15,26 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.parquet.stat;
+package org.apache.drill.exec.expr;
 
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.parquet.column.statistics.Statistics;
+import org.apache.drill.exec.expr.stat.RowsMatch;
 
-public class ColumnStatistics<T extends Comparable<T>> {
-  private final Statistics<T> statistics;
-  private final TypeProtos.MajorType majorType;
-
-  public ColumnStatistics(final Statistics<T> statistics, final TypeProtos.MajorType majorType) {
-    this.statistics = statistics;
-    this.majorType = majorType;
-  }
-
-  public Statistics<T> getStatistics() {
-    return this.statistics;
-  }
-
-  public TypeProtos.MajorType getMajorType() {
-    return this.majorType;
-  }
-
+public interface FilterPredicate<T extends Comparable<T>> {
+  RowsMatch matches(StatisticsProvider<T> evaluator);
 }

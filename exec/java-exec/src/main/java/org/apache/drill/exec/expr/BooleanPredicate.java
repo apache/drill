@@ -15,22 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr.stat;
+package org.apache.drill.exec.expr;
 
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.exec.expr.stat.RowsMatch;
 
 import java.util.List;
 
-/**
- * Boolean predicates for parquet filter pushdown.
- */
-public abstract class ParquetBooleanPredicate<C extends Comparable<C>> extends BooleanOperator
-    implements ParquetFilterPredicate<C> {
+public abstract class BooleanPredicate<C extends Comparable<C>> extends BooleanOperator implements FilterPredicate<C> {
 
-  private ParquetBooleanPredicate(String name, List<LogicalExpression> args, ExpressionPosition pos) {
+  private BooleanPredicate(String name, List<LogicalExpression> args, ExpressionPosition pos) {
     super(name, args, pos);
   }
 
@@ -41,11 +38,8 @@ public abstract class ParquetBooleanPredicate<C extends Comparable<C>> extends B
 
   @SuppressWarnings("unchecked")
   private static <C extends Comparable<C>> LogicalExpression createAndPredicate(
-      String name,
-      List<LogicalExpression> args,
-      ExpressionPosition pos
-  ) {
-    return new ParquetBooleanPredicate<C>(name, args, pos) {
+      String name, List<LogicalExpression> args, ExpressionPosition pos) {
+    return new BooleanPredicate<C>(name, args, pos) {
       /**
        * Evaluates a compound "AND" filter on the statistics of a RowGroup (the filter reads "filterA and filterB").
        * Return value :<ul>
@@ -55,11 +49,11 @@ public abstract class ParquetBooleanPredicate<C extends Comparable<C>> extends B
        * </ul>
        */
       @Override
-      public RowsMatch matches(RangeExprEvaluator<C> evaluator) {
+      public RowsMatch matches(StatisticsProvider<C> evaluator) {
         RowsMatch resultMatch = RowsMatch.ALL;
         for (LogicalExpression child : this) {
-          if (child instanceof ParquetFilterPredicate) {
-            switch (((ParquetFilterPredicate) child).matches(evaluator)) {
+          if (child instanceof FilterPredicate) {
+            switch (((FilterPredicate) child).matches(evaluator)) {
               case NONE:
                 return RowsMatch.NONE;  // No row comply to 1 filter part => can drop RG
               case SOME:
@@ -75,11 +69,8 @@ public abstract class ParquetBooleanPredicate<C extends Comparable<C>> extends B
 
   @SuppressWarnings("unchecked")
   private static <C extends Comparable<C>> LogicalExpression createOrPredicate(
-      String name,
-      List<LogicalExpression> args,
-      ExpressionPosition pos
-  ) {
-    return new ParquetBooleanPredicate<C>(name, args, pos) {
+      String name, List<LogicalExpression> args, ExpressionPosition pos) {
+    return new BooleanPredicate<C>(name, args, pos) {
       /**
        * Evaluates a compound "OR" filter on the statistics of a RowGroup (the filter reads "filterA or filterB").
        * Return value :<ul>
@@ -89,11 +80,11 @@ public abstract class ParquetBooleanPredicate<C extends Comparable<C>> extends B
        * </ul>
        */
       @Override
-      public RowsMatch matches(RangeExprEvaluator<C> evaluator) {
+      public RowsMatch matches(StatisticsProvider<C> evaluator) {
         RowsMatch resultMatch = RowsMatch.NONE;
         for (LogicalExpression child : this) {
-          if (child instanceof ParquetFilterPredicate) {
-            switch (((ParquetFilterPredicate) child).matches(evaluator)) {
+          if (child instanceof FilterPredicate) {
+            switch (((FilterPredicate) child).matches(evaluator)) {
               case ALL:
                 return RowsMatch.ALL;  // One at least is ALL => can drop filter but not RG
               case SOME:
@@ -108,16 +99,12 @@ public abstract class ParquetBooleanPredicate<C extends Comparable<C>> extends B
   }
 
   public static <C extends Comparable<C>> LogicalExpression createBooleanPredicate(
-      String function,
-      String name,
-      List<LogicalExpression> args,
-      ExpressionPosition pos
-  ) {
+      String function, String name, List<LogicalExpression> args, ExpressionPosition pos) {
     switch (function) {
       case "booleanOr":
-        return ParquetBooleanPredicate.<C>createOrPredicate(name, args, pos);
+        return BooleanPredicate.<C>createOrPredicate(name, args, pos);
       case "booleanAnd":
-        return ParquetBooleanPredicate.<C>createAndPredicate(name, args, pos);
+        return BooleanPredicate.<C>createAndPredicate(name, args, pos);
       default:
         logger.warn("Unknown Boolean '{}' predicate.", function);
         return null;

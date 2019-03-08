@@ -15,19 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.base;
+package org.apache.drill.metastore;
 
-import java.io.IOException;
-
-import org.apache.drill.exec.store.dfs.FileSelection;
+import java.util.List;
 
 /**
- * FileGroupScan operator represents all data which will be scanned from FileSystem by a given physical plan.
+ * This class represents kinds of column statistics which may be received as a union
+ * of other statistics, for example column nulls count may be received as a sum of nulls counts
+ * of underlying metadata parts.
  */
-public interface FileGroupScan extends GroupScan {
+public interface CollectableColumnStatisticsKind extends StatisticsKind {
 
-  void modifyFileSelection(FileSelection selection);
-
-  FileGroupScan clone(FileSelection selection) throws IOException;
-
+  /**
+   * Returns column statistics value received by collecting specified {@link ColumnStatistics}.
+   *
+   * @param statistics list of {@link ColumnStatistics} instances to be collected
+   * @return column statistics value received by collecting specified {@link ColumnStatistics}
+   */
+  Object mergeStatistics(List<? extends ColumnStatistics> statistics);
 }

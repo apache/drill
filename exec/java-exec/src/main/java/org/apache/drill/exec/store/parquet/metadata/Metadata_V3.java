@@ -65,7 +65,8 @@ public class Metadata_V3 {
     }
 
     /**
-     * Used for creating the Parquet Metadata cache file
+     * Used for creating the Parquet Metadata cache files and in the process of reading Parquet metadata footers
+     *
      * @param metadataVersion metadata version
      * @param drillVersion  apache drill version
      */

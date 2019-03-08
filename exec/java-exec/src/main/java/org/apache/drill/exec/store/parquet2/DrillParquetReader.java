@@ -339,16 +339,6 @@ public class DrillParquetReader extends AbstractRecordReader {
     }
   }
 
-  static public class ProjectedColumnType {
-    public final String projectedColumnName;
-    public final MessageType type;
-
-    ProjectedColumnType(String projectedColumnName, MessageType type) {
-      this.projectedColumnName = projectedColumnName;
-      this.type = type;
-    }
-  }
-
   @Override
   public String toString() {
     return "DrillParquetReader[pageReadStore=" + pageReadStore + "]";
