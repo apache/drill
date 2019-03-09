@@ -125,7 +125,7 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     @Override
     public void update(int inputIndex) {
       super.update(inputIndex, status.getOutPosition());
-      status.setTargetOutputRowCount(super.getCurrentOutgoingTargetOutputRowCount());
+      status.setTargetOutputRowCount(super.getCurrentOutgoingMaxRowCount());
       RecordBatchIOType type = inputIndex == 0 ? RecordBatchIOType.INPUT_LEFT : RecordBatchIOType.INPUT_RIGHT;
       RecordBatchStats.logRecordBatchStats(type, getRecordBatchSizer(inputIndex), getRecordBatchStatsContext());
     }

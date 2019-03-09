@@ -1183,7 +1183,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
     // For cases where all the previous input were consumed and send with previous output batch. But now we are building
     // a new output batch with new incoming then it will not cause any problem since outputIndex will be 0
     batchMemoryManager.update(inputIndex, outputIndex);
-    final int newOutputRowCount = batchMemoryManager.getCurrentOutgoingTargetOutputRowCount();
+    final int newOutputRowCount = batchMemoryManager.getCurrentOutgoingMaxRowCount();
 
 
     if (isRecordBatchStatsLoggingEnabled()) {

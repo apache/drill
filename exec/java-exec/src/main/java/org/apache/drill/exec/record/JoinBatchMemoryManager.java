@@ -54,7 +54,7 @@ public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
    *     in that batch (i.e., outputPosition). (Need not be a power of two; e.g., 7983).
    *
    *  After every call to update() while the outgoing batch is active, the current target should be updated with (3) by
-   *  calling getCurrentOutgoingTargetOutputRowCount() .
+   *  calling getCurrentOutgoingMaxRowCount() .
    *
    * @param inputIndex  Left (0) or Right (1)
    * @param outputPosition  Position (i.e. number of inserted rows) in the current output batch
@@ -112,7 +112,7 @@ public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
     // The current outgoing batch target count (i.e., max number of rows to put there) is modified to be the current number of rows there
     // plus as many of the future new rows that would fit in the remaining memory (e.g., if the new rows are wider, fewer would fit), but
     // in any case no larger than the size the batch was allocated for (to avoid IOOB on the allocated vectors)
-    setCurrentOutgoingTargetOutputRowCount(Math.min(currentOutputBatchRowCount, outputPosition + numOutputRowsRemaining ));
+    setCurrentOutgoingMaxRowCount(Math.min(currentOutputBatchRowCount, outputPosition + numOutputRowsRemaining ));
   }
 
   /**

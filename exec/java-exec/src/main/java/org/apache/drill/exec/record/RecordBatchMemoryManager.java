@@ -24,11 +24,16 @@ import org.apache.drill.exec.vector.ValueVector;
 import java.util.List;
 
 public class RecordBatchMemoryManager {
-  protected static final int MAX_NUM_ROWS = ValueVector.MAX_ROW_COUNT;
+  // The " - 1 " in the number of rows below was chosen to avoid a waste of (possible) offset vectors memory
+  // where a power-of-2 rows size needlessly doubles the offset vector (see DRILL-5446)
+  protected static final int MAX_NUM_ROWS = ValueVector.MAX_ROW_COUNT - 1;
   protected static final int MIN_NUM_ROWS = 1;
   protected static final int DEFAULT_INPUT_INDEX = 0;
   private int outputRowCount = MAX_NUM_ROWS;
-  private int currentOutgoingTargetOutputRowCount = MAX_NUM_ROWS; // target row count only for the current output batch
+  // max row count allowed in the current output batch; it would never exceed the allocated size (i.e. outputRowCount)
+  // but may go lower (e.g., when early rows are narrow, the outgoing batch can hold many output rows, but if later
+  // the incoming rows become wide, then less (than planned) would fit into the remaining current allocated memory)
+  private int currentOutgoingMaxRowCount = MAX_NUM_ROWS;
   private int outgoingRowWidth;
   private int outputBatchSize;
   private RecordBatchSizer[] sizer;
@@ -198,9 +203,7 @@ public class RecordBatchMemoryManager {
     return outputRowCount;
   }
 
-  public int getCurrentOutgoingTargetOutputRowCount() {
-    return currentOutgoingTargetOutputRowCount;
-  }
+  public int getCurrentOutgoingMaxRowCount() { return currentOutgoingMaxRowCount; }
   /**
    * Given batchSize and rowWidth, this will set output rowCount taking into account
    * the min and max that is allowed.
@@ -211,14 +214,12 @@ public class RecordBatchMemoryManager {
 
   public void setOutputRowCount(int outputRowCount) {
     this.outputRowCount = outputRowCount;
-  }
-
-  public void setCurrentOutgoingTargetOutputRowCount(int newTargetOutputCount) {
-    this.currentOutgoingTargetOutputRowCount = newTargetOutputCount;
-    if ( Integer.highestOneBit(newTargetOutputCount) == newTargetOutputCount ) {
-      this.currentOutgoingTargetOutputRowCount--; // to match the allocation size
+    if ( outputRowCount > MIN_NUM_ROWS &&  Integer.highestOneBit(outputRowCount) == outputRowCount ) {
+      this.outputRowCount--;
     }
   }
+
+  public void setCurrentOutgoingMaxRowCount(int newTargetOutputCount) { this.currentOutgoingMaxRowCount = newTargetOutputCount; }
 
   /**
    * This will adjust rowCount taking into account the min and max that is allowed.
