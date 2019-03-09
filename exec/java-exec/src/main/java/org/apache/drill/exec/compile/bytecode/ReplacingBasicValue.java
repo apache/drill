@@ -49,6 +49,7 @@ public class ReplacingBasicValue extends BasicValue {
     boolean isFunctionReturn = false;
     boolean isFunctionArgument = false;
     boolean isAssignedToMember = false;
+    boolean isAssignedInConditionalBlock = false;
     boolean isThis = false;
 
     /**
@@ -67,6 +68,9 @@ public class ReplacingBasicValue extends BasicValue {
       if (other.isAssignedToMember) {
         isAssignedToMember = true;
       }
+      if (other.isAssignedInConditionalBlock) {
+        isAssignedInConditionalBlock = true;
+      }
       if (other.isThis) {
         isThis = true;
       }
@@ -78,7 +82,7 @@ public class ReplacingBasicValue extends BasicValue {
      * @return whether or not the value is replaceable
      */
     public boolean isReplaceable() {
-      return !(isFunctionReturn || isFunctionArgument || isAssignedToMember || isThis);
+      return !(isFunctionReturn || isFunctionArgument || isAssignedToMember || isAssignedInConditionalBlock || isThis);
     }
 
     /**
@@ -112,6 +116,15 @@ public class ReplacingBasicValue extends BasicValue {
         }
 
         sb.append("member");
+        needSpace = true;
+      }
+
+      if (isAssignedInConditionalBlock) {
+        if (needSpace) {
+          sb.append(' ');
+        }
+
+        sb.append("conditional");
         needSpace = true;
       }
 
@@ -397,12 +410,28 @@ public class ReplacingBasicValue extends BasicValue {
   }
 
   /**
+   * Mark this value as being assigned to a variable inside of conditional block.
+   */
+  public void setAssignedInConditionalBlock() {
+    flagSet.isAssignedInConditionalBlock = true;
+  }
+
+  /**
    * Indicates whether or not this value is assigned to a class member variable.
    *
    * @return whether or not this value is assigned to a class member variable
    */
   public boolean isAssignedToMember() {
     return flagSet.isAssignedToMember;
+  }
+
+  /**
+   * Indicates whether or not this value is assigned to a variable inside of conditional block.
+   *
+   * @return whether or not this value is assigned to a variable inside of conditional block
+   */
+  public boolean isAssignedInConditionalBlock() {
+    return flagSet.isAssignedInConditionalBlock;
   }
 
   /**
