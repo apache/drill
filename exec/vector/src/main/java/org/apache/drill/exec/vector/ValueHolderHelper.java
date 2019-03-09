@@ -20,7 +20,10 @@ package org.apache.drill.exec.vector;
 import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
@@ -42,7 +45,6 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.util.DecimalUtility;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-
 
 public class ValueHolderHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderHelper.class);
@@ -228,5 +230,78 @@ public class ValueHolderHelper {
     dch.buffer.setBytes(0, bytes);
 
     return dch;
+  }
+
+  /**
+   * Returns list of field names which belong to holder corresponding to the specified {@code TypeProtos.MajorType type}.
+   *
+   * @param type type of holder whose fields should be returned
+   * @return list of field names which belong to holder corresponding to the specified {@code TypeProtos.MajorType type}.
+   */
+  public static List<String> getHolderParams(TypeProtos.MajorType type) {
+    ArrayList<String> result = new ArrayList<>();
+    switch (type.getMode()) {
+      case OPTIONAL:
+        result.add("isSet");
+        // fall through
+      case REQUIRED:
+        switch (type.getMinorType()) {
+          case BIGINT:
+          case FLOAT4:
+          case FLOAT8:
+          case INT:
+          case MONEY:
+          case SMALLINT:
+          case TINYINT:
+          case UINT1:
+          case UINT2:
+          case UINT4:
+          case UINT8:
+          case INTERVALYEAR:
+          case DATE:
+          case TIME:
+          case TIMESTAMP:
+          case BIT:
+          case DECIMAL9:
+          case DECIMAL18:
+            result.add("value");
+            return result;
+          case DECIMAL28DENSE:
+          case DECIMAL28SPARSE:
+          case DECIMAL38DENSE:
+          case DECIMAL38SPARSE:
+            result.add("start");
+            result.add("buffer");
+            result.add("scale");
+            result.add("precision");
+            return result;
+          case INTERVAL: {
+            result.add("months");
+            result.add("days");
+            result.add("milliseconds");
+            return result;
+          }
+          case INTERVALDAY: {
+            result.add("days");
+            result.add("milliseconds");
+            return result;
+          }
+          case VARDECIMAL:
+            result.add("scale");
+            result.add("precision");
+            // fall through
+          case VAR16CHAR:
+          case VARBINARY:
+          case VARCHAR:
+            result.add("start");
+            result.add("end");
+            result.add("buffer");
+            return result;
+          case UNION:
+            result.add("reader");
+            return result;
+        }
+    }
+    return result;
   }
 }

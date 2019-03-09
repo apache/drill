@@ -36,9 +36,11 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
+import org.apache.drill.exec.vector.ValueHolderHelper;
+
+import java.util.List;
 
 public class DrillSimpleFuncHolder extends DrillFuncHolder {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSimpleFuncHolder.class);
 
   private final String drillFuncClass;
   // each function should be wrapped unique class loader associated with its jar
@@ -140,12 +142,14 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
 
     JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValueType), getReturnValue().getName(), JExpr._new(g.getHolderType(returnValueType)));
     addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, false);
-    if (sub != topSub) {
-      sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
+
+    List<String> holderFields = ValueHolderHelper.getHolderParams(returnValueType);
+    for (String holderField : holderFields) {
+      sub.assign(out.f(holderField), internalOutput.ref(holderField));
     }
-    sub.assign(out.getHolder(), internalOutput);
+
     if (sub != topSub) {
-      sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
+      sub.assign(out.f("isSet"),JExpr.lit(1));  // Assign null if NULL_IF_NULL mode
     }
 
     g.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", getRegisteredNames()[0]));
