@@ -18,6 +18,7 @@
 package org.apache.drill.exec.fn.hive;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,10 +26,10 @@ import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.compile.ClassCompilerSelector;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.hive.HiveTestBase;
-import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.test.TestBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -114,33 +115,31 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
             .go();
   }
 
-  @Test //DRILL-4868
+  @Test //DRILL-4868 & DRILL-2326
   public void testEmbeddedHiveFunctionCall() throws Exception {
-    // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
-    final OptionValue srOption = QueryTestUtil.setupScalarReplacementOption(bits[0], ClassTransformer.ScalarReplacementOption.TRY);
+    String query =
+        "SELECT convert_from(unhex(key2), 'INT_BE') as intkey \n" +
+        "FROM cp.`functions/conv/conv.json`";
+
+    List<String> compilers = Arrays.asList(ClassCompilerSelector.CompilerPolicy.JANINO.name(),
+        ClassCompilerSelector.CompilerPolicy.JDK.name());
 
     try {
-      final String[] queries = {
-          "SELECT convert_from(unhex(key2), 'INT_BE') as intkey \n" +
-              "FROM cp.`functions/conv/conv.json`",
-      };
+      setSessionOption(ExecConstants.SCALAR_REPLACEMENT_OPTION, ClassTransformer.ScalarReplacementOption.ON.name());
+      for (String compilerName : compilers) {
+        setSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION, compilerName);
 
-      for (String query: queries) {
         testBuilder()
             .sqlQuery(query)
-            .ordered()
+            .unOrdered()
             .baselineColumns("intkey")
-            .baselineValues(1244739896)
-            .baselineValues(new Object[] { null })
-            .baselineValues(1313814865)
-            .baselineValues(1852782897)
+            .baselineValuesForSingleColumn(1244739896, null, 1313814865, 1852782897)
             .build()
             .run();
       }
-
     } finally {
-      // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
+      resetSessionOption(ExecConstants.SCALAR_REPLACEMENT_OPTION);
+      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
     }
   }
 

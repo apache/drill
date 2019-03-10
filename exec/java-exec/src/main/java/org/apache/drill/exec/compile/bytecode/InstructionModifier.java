@@ -434,23 +434,25 @@ public class InstructionModifier extends MethodVisitor {
      *
      * Does the function being called return a holder?
      */
-    final ReplacingBasicValue functionReturn = getFunctionReturn();
-    if (functionReturn != null) {
-      /*
-       * The return of this method is an actual instance of the object we're escaping.
-       * Update so that it gets mapped correctly.
-       */
-      super.visitMethodInsn(opcode, owner, name, desc, itf);
-      functionReturn.markFunctionReturn();
-      return;
+    if (Type.getReturnType(desc) != Type.VOID_TYPE) {
+      ReplacingBasicValue functionReturn = getFunctionReturn();
+      if (functionReturn != null) {
+        /*
+         * The return of this method is an actual instance of the object we're escaping.
+         * Update so that it gets mapped correctly.
+         */
+        super.visitMethodInsn(opcode, owner, name, desc, itf);
+        functionReturn.markFunctionReturn();
+        return;
+      }
     }
 
     /*
      * Holders can't be passed as arguments to methods, because their contents aren't
      * maintained; we use the locals instead. Therefore, complain if any arguments are holders.
      */
-    for(int argDepth = argCount - 1; argDepth >= 0; --argDepth) {
-      final ReplacingBasicValue argValue = peekFromTop(argDepth);
+    for (int argDepth = argCount - 1; argDepth >= 0; --argDepth) {
+      ReplacingBasicValue argValue = peekFromTop(argDepth);
       if (argValue != null) {
         throw new IllegalStateException(
             String.format("Holder types are not allowed to be passed between methods. " +
