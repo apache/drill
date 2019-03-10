@@ -108,4 +108,6 @@ interface LoaderInternals {
    */
 
   boolean writeable();
+
+  ColumnBuilder columnBuilder();
 }

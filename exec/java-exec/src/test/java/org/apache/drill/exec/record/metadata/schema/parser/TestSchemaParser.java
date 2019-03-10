@@ -257,7 +257,7 @@ public class TestSchemaParser {
     String value = "`a` DATE NOT NULL FORMAT 'yyyy-MM-dd'";
     TupleMetadata schema = SchemaExprParser.parseSchema(value);
     ColumnMetadata columnMetadata = schema.metadata("a");
-    assertEquals("yyyy-MM-dd", columnMetadata.formatValue());
+    assertEquals("yyyy-MM-dd", columnMetadata.format());
     assertEquals(value, columnMetadata.columnString());
   }
 
@@ -266,9 +266,9 @@ public class TestSchemaParser {
     String value = "`a` INT NOT NULL DEFAULT '12'";
     TupleMetadata schema = SchemaExprParser.parseSchema(value);
     ColumnMetadata columnMetadata = schema.metadata("a");
-    assertTrue(columnMetadata.defaultValue() instanceof Integer);
-    assertEquals(12, columnMetadata.defaultValue());
-    assertEquals("12", columnMetadata.defaultStringValue());
+    assertTrue(columnMetadata.decodeDefaultValue() instanceof Integer);
+    assertEquals(12, columnMetadata.decodeDefaultValue());
+    assertEquals("12", columnMetadata.defaultValue());
     assertEquals(value, columnMetadata.columnString());
   }
 
@@ -277,9 +277,9 @@ public class TestSchemaParser {
     String value = "`a` DATE NOT NULL FORMAT 'yyyy-MM-dd' DEFAULT '2018-12-31'";
     TupleMetadata schema = SchemaExprParser.parseSchema(value);
     ColumnMetadata columnMetadata = schema.metadata("a");
-    assertTrue(columnMetadata.defaultValue() instanceof LocalDate);
-    assertEquals(LocalDate.of(2018, 12, 31), columnMetadata.defaultValue());
-    assertEquals("2018-12-31", columnMetadata.defaultStringValue());
+    assertTrue(columnMetadata.decodeDefaultValue() instanceof LocalDate);
+    assertEquals(LocalDate.of(2018, 12, 31), columnMetadata.decodeDefaultValue());
+    assertEquals("2018-12-31", columnMetadata.defaultValue());
     assertEquals(value, columnMetadata.columnString());
   }
 

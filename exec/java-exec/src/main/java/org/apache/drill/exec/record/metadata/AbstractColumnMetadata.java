@@ -27,10 +27,9 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
-import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
-import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 
-import java.util.LinkedHashMap;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -53,10 +52,10 @@ import java.util.stream.Collectors;
   setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonPropertyOrder({"name", "type", "mode", "format", "default", "properties"})
-public abstract class AbstractColumnMetadata implements ColumnMetadata {
+public abstract class AbstractColumnMetadata extends AbstractPropertied implements ColumnMetadata {
 
   // Capture the key schema information. We cannot use the MaterializedField
-  // or MajorType because then encode child information that we encode here
+  // or MajorType because they encode child information that we encode here
   // as a child schema. Keeping the two in sync is nearly impossible.
 
   protected final String name;
@@ -64,26 +63,13 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
   protected final DataMode mode;
   protected final int precision;
   protected final int scale;
-  protected boolean projected = true;
-
-  /**
-   * Predicted number of elements per array entry. Default is
-   * taken from the often hard-coded value of 10.
-   */
-
-  protected int expectedElementCount = 1;
-  protected final Map<String, String> properties = new LinkedHashMap<>();
 
   @JsonCreator
   public static AbstractColumnMetadata createColumnMetadata(@JsonProperty("name") String name,
                                                             @JsonProperty("type") String type,
                                                             @JsonProperty("mode") DataMode mode,
-                                                            @JsonProperty("format") String formatValue,
-                                                            @JsonProperty("default") String defaultValue,
                                                             @JsonProperty("properties") Map<String, String> properties) {
     ColumnMetadata columnMetadata = SchemaExprParser.parseColumn(name, type, mode);
-    columnMetadata.setFormatValue(formatValue);
-    columnMetadata.setDefaultFromString(defaultValue);
     columnMetadata.setProperties(properties);
     return (AbstractColumnMetadata) columnMetadata;
   }
@@ -95,9 +81,6 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
     mode = majorType.getMode();
     precision = majorType.getPrecision();
     scale = majorType.getScale();
-    if (isArray()) {
-      expectedElementCount = DEFAULT_ARRAY_SIZE;
-    }
   }
 
   public AbstractColumnMetadata(String name, MinorType type, DataMode mode) {
@@ -106,18 +89,15 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
     this.mode = mode;
     precision = 0;
     scale = 0;
-    if (isArray()) {
-      expectedElementCount = DEFAULT_ARRAY_SIZE;
-    }
   }
 
   public AbstractColumnMetadata(AbstractColumnMetadata from) {
+    super(from);
     name = from.name;
     type = from.type;
     mode = from.mode;
     precision = from.precision;
     scale = from.scale;
-    expectedElementCount = from.expectedElementCount;
   }
 
   @Override
@@ -204,63 +184,80 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
     // makes an error.
 
     if (isArray()) {
-      expectedElementCount = Math.max(1, childCount);
+      PropertyAccessor.set(this, EXPECTED_CARDINALITY_PROP, Math.max(1, childCount));
     }
   }
 
   @Override
-  public int expectedElementCount() { return expectedElementCount; }
+  public int expectedElementCount() {
+    if (isArray()) {
+      // Not set means default size
+      return PropertyAccessor.getInt(this, EXPECTED_CARDINALITY_PROP, DEFAULT_ARRAY_SIZE);
+    } else {
+      // Cardinality always 1 for optional, repeated modes
+      return 1;
+    }
+  }
 
   @Override
   public void setProjected(boolean projected) {
-    this.projected = projected;
-  }
-
-  @Override
-  public boolean isProjected() { return projected; }
-
-  @Override
-  public void setFormatValue(String value) { }
-
-  @JsonProperty("format")
-  @Override
-  public String formatValue() { return null; }
-
-  @Override
-  public void setDefaultValue(Object value) { }
-
-  @Override
-  public Object defaultValue() { return null; }
-
-  @Override
-  public void setDefaultFromString(String value) { }
-
-  @JsonProperty("default")
-  @Override
-  public String defaultStringValue() {
-    return null;
-  }
-
-  @Override
-  public void setTypeConverter(ColumnConversionFactory factory) {
-    throw new UnsupportedConversionError("Type conversion not supported for non-scalar writers");
-  }
-
-  @Override
-  public ColumnConversionFactory typeConverter() { return null; }
-
-  @Override
-  public void setProperties(Map<String, String> properties) {
-    if (properties == null) {
-      return;
+    if (projected) {
+      // Projected is the default
+      setProperty(PROJECTED_PROP, null);
+    } else {
+      PropertyAccessor.set(this, PROJECTED_PROP, projected);
     }
-    this.properties.putAll(properties);
+  }
+
+  @Override
+  public boolean isProjected() {
+    return PropertyAccessor.getBoolean(this, PROJECTED_PROP, true);
+  }
+
+  @Override
+  public void setFormat(String value) {
+    setProperty(FORMAT_PROP, value);
+  }
+
+  @Override
+  public String format() {
+    return property(FORMAT_PROP);
+  }
+
+  @Override
+  public DateTimeFormatter dateTimeFormatter() {
+    throw new UnsupportedOperationException("Date/time not supported for non-scalar columns");
+  }
+
+  @Override
+  public void setDefaultValue(String value) {
+    setProperty(DEFAULT_VALUE_PROP, value);
+  }
+
+  @Override
+  public String defaultValue() {
+    return property(DEFAULT_VALUE_PROP);
+  }
+
+  @Override
+  public Object decodeDefaultValue() {
+    return valueFromString(defaultValue());
+  }
+
+  @Override
+  public Object valueFromString(String value) {
+    throw new UnsupportedOperationException("Value conversion not supported for non-scalar columns");
+  }
+
+  @Override
+  public String valueToString(Object value) {
+    throw new UnsupportedOperationException("Value conversion not supported for non-scalar columns");
   }
 
   @JsonProperty("properties")
   @Override
   public Map<String, String> properties() {
-    return properties;
+    return super.properties();
   }
 
   @Override
@@ -269,14 +266,7 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
         .append("[")
         .append(getClass().getSimpleName())
         .append(" ")
-        .append(schema().toString())
-        .append(", ")
-        .append(projected ? "" : "not ")
-        .append("projected");
-    if (isArray()) {
-      buf.append(", cardinality: ")
-         .append(expectedElementCount);
-    }
+        .append(schema().toString());
     if (variantSchema() != null) {
       buf.append(", variant: ")
          .append(variantSchema().toString());
@@ -285,15 +275,7 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
       buf.append(", schema: ")
          .append(mapSchema().toString());
     }
-    if (formatValue() != null) {
-      buf.append(", format: ")
-        .append(formatValue());
-    }
-    if (defaultValue() != null) {
-      buf.append(", default: ")
-        .append(defaultStringValue());
-    }
-    if (!properties().isEmpty()) {
+    if (hasProperties()) {
       buf.append(", properties: ")
         .append(properties());
     }
@@ -320,21 +302,27 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
       builder.append(" NOT NULL");
     }
 
-    if (formatValue() != null) {
-      builder.append(" FORMAT '").append(formatValue()).append("'");
-    }
+    if (hasProperties()) {
+      if (format() != null) {
+        builder.append(" FORMAT '").append(format()).append("'");
+      }
 
-    if (defaultValue() != null) {
-      builder.append(" DEFAULT '").append(defaultStringValue()).append("'");
-    }
+      if (defaultValue() != null) {
+        builder.append(" DEFAULT '").append(defaultValue()).append("'");
+      }
 
-    if (!properties().isEmpty()) {
-      builder.append(" PROPERTIES { ");
-      builder.append(properties().entrySet()
-        .stream()
-        .map(e -> String.format("'%s' = '%s'", e.getKey(), e.getValue()))
-        .collect(Collectors.joining(", ")));
-      builder.append(" }");
+      Map<String,String> copy = new HashMap<>();
+      copy.putAll(properties());
+      copy.remove(FORMAT_PROP);
+      copy.remove(DEFAULT_VALUE_PROP);
+      if (! copy.isEmpty()) {
+        builder.append(" PROPERTIES { ");
+        builder.append(copy.entrySet()
+          .stream()
+          .map(e -> String.format("'%s' = '%s'", e.getKey(), e.getValue()))
+          .collect(Collectors.joining(", ")));
+        builder.append(" }");
+      }
     }
 
     return builder.toString();

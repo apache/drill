@@ -68,8 +68,8 @@ public class DummyWriterTest extends SubOperatorTest {
 
     // We provide no vector. Factory should build us "dummy" writers.
 
-    writers.add(ColumnWriterFactory.buildColumnWriter(schema.metadata("a"), null));
-    writers.add(ColumnWriterFactory.buildColumnWriter(schema.metadata("b"), null));
+    writers.add(ColumnWriterFactory.buildColumnWriter(schema.metadata("a"), null, null));
+    writers.add(ColumnWriterFactory.buildColumnWriter(schema.metadata("b"), null, null));
     AbstractTupleWriter rootWriter = new RootWriterFixture(schema, writers);
 
     // Events are ignored.
@@ -141,8 +141,8 @@ public class DummyWriterTest extends SubOperatorTest {
       schema.metadata("m1").setProjected(false);
       TupleMetadata mapSchema = schema.metadata("m1").mapSchema();
       List<AbstractObjectWriter> members = new ArrayList<>();
-      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("a"), null));
-      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("b"), null));
+      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("a"), null, null));
+      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("b"), null, null));
       writers.add(MapWriter.buildMapWriter(schema.metadata("m1"), null, members));
     }
 
@@ -150,7 +150,7 @@ public class DummyWriterTest extends SubOperatorTest {
       schema.metadata("m2").setProjected(false);
       TupleMetadata mapSchema = schema.metadata("m2").mapSchema();
       List<AbstractObjectWriter> members = new ArrayList<>();
-      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("c"), null));
+      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("c"), null, null));
       writers.add(MapWriter.buildMapWriter(schema.metadata("m2"), null, members));
     }
 

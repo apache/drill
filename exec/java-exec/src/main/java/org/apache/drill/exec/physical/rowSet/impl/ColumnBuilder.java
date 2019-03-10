@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.rowSet.impl;
 
 import java.util.ArrayList;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -26,6 +27,7 @@ import org.apache.drill.exec.physical.rowSet.impl.ColumnState.PrimitiveColumnSta
 import org.apache.drill.exec.physical.rowSet.impl.ListState.ListVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.RepeatedListState.RepeatedListColumnState;
 import org.apache.drill.exec.physical.rowSet.impl.RepeatedListState.RepeatedListVectorState;
+import org.apache.drill.exec.physical.rowSet.impl.SchemaTransformer.ColumnTransform;
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.OffsetVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.SimpleVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.TupleState.MapArrayState;
@@ -39,10 +41,13 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.PrimitiveColumnMetadata;
 import org.apache.drill.exec.record.metadata.ProjectionType;
+import org.apache.drill.exec.record.metadata.PropertyAccessor;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.convert.AbstractWriteConverter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
@@ -74,43 +79,96 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * The single exception is the case of a list with exactly one type: in this case
  * the list metadata must contain that one type so the code knows how to build
  * the nullable array writer for that column.
+ * <p>
+ * Merges the project list with the column to be built. If the column is not
+ * projected (not in the list), then creates a dummy writer. Issues an error if
+ * the column is projected, but the implied projection type is incompatible with
+ * the actual type. (Such as trying to project an INT as x[0].)
  */
 public class ColumnBuilder {
 
-  private ColumnBuilder() { }
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnBuilder.class);
+
+  /**
+   * Default column transform for an unprojected column. No type conversion
+   * is needed, unprojected columns just "free-wheel": they are along for the
+   * ride, but don't do anything. They do not cause a vector to be materialized.
+   * The client, however, can still write to them, though the data is ignored.
+   */
+  public static class NoOpTransform implements ColumnTransform {
+
+    private final ColumnMetadata columnSchema;
+
+    public NoOpTransform(ColumnMetadata columnSchema) {
+      this.columnSchema = columnSchema;
+    }
+
+    @Override
+    public AbstractWriteConverter newWriter(ScalarWriter baseWriter) {
+      assert false; // Should never be materialized
+      return null;
+    }
+
+    @Override
+    public ProjectionType projectionType() { return ProjectionType.UNPROJECTED; }
+
+    @Override
+    public ColumnMetadata inputSchema() { return columnSchema; }
+
+    @Override
+    public ColumnMetadata outputSchema() { return columnSchema; }
+  }
+
+  private final SchemaTransformer schemaTransformer;
+
+  public ColumnBuilder(SchemaTransformer schemaTransformer) {
+    this.schemaTransformer = schemaTransformer;
+  }
 
   /**
    * Implementation of the work to add a new column to this tuple given a
    * schema description of the column.
    *
    * @param parent container
-   * @param columnSchema schema of the column
+   * @param columnSchema schema of the column as provided by the client
+   * using the result set loader. This is the schema of the data to be
+   * loaded
    * @return writer for the new column
    */
-  public static ColumnState buildColumn(ContainerState parent, ColumnMetadata columnSchema) {
+  public ColumnState buildColumn(ContainerState parent, ColumnMetadata columnSchema) {
 
     // Indicate projection in the metadata.
 
-    columnSchema.setProjected(parent.projectionType(columnSchema.name()) != ProjectionType.UNPROJECTED);
+    ProjectionType projType = parent.projectionType(columnSchema.name());
+    ColumnTransform outputCol;
+    if (projType == ProjectionType.UNPROJECTED) {
+      PropertyAccessor.set(columnSchema, ColumnMetadata.PROJECTED_PROP, false);
+      outputCol = new NoOpTransform(columnSchema);
+    } else {
+
+      // Transform the column from input to output type.
+
+      outputCol = schemaTransformer.transform(columnSchema, projType);
+    }
 
     // Build the column
 
-    switch (columnSchema.structureType()) {
+    switch (outputCol.outputSchema().structureType()) {
     case TUPLE:
-      return buildMap(parent, columnSchema);
+      return buildMap(parent, outputCol);
     case VARIANT:
       // Variant: UNION or (non-repeated) LIST
       if (columnSchema.isArray()) {
         // (non-repeated) LIST (somewhat like a repeated UNION)
-        return buildList(parent, columnSchema);
+        return buildList(parent, outputCol);
       } else {
         // (Non-repeated) UNION
-        return buildUnion(parent, columnSchema);
+        return buildUnion(parent, outputCol);
       }
     case MULTI_ARRAY:
-      return buildRepeatedList(parent, columnSchema);
+      return buildRepeatedList(parent, outputCol);
     default:
-      return buildPrimitive(parent, columnSchema);
+      return buildPrimitive(parent, outputCol);
     }
   }
 
@@ -121,12 +179,38 @@ public class ColumnBuilder {
    * and manages the column.
    *
    * @param columnSchema schema of the new primitive column
+   * @param projType implied projection type for the column
    * @return column state for the new column
    */
 
-  private static ColumnState buildPrimitive(ContainerState parent, ColumnMetadata columnSchema) {
+  private ColumnState buildPrimitive(ContainerState parent, ColumnTransform outputCol) {
+    ProjectionType projType = outputCol.projectionType();
+    ColumnMetadata columnSchema = outputCol.outputSchema();
+
+    // Enforce correspondence between implied type from the projection list
+    // and the actual type of the column.
+
+    switch (projType) {
+    case ARRAY:
+      if (! columnSchema.isArray()) {
+        incompatibleProjection(projType, columnSchema);
+      }
+      break;
+    case TUPLE:
+    case TUPLE_ARRAY:
+      incompatibleProjection(projType, columnSchema);
+      break;
+    default:
+      break;
+    }
+
     ValueVector vector;
-    if (columnSchema.isProjected()) {
+    if (projType == ProjectionType.UNPROJECTED) {
+
+      // Column is not projected. No materialized backing for the column.
+
+      vector = null;
+    } else {
 
       // Create the vector for the column.
 
@@ -138,16 +222,12 @@ public class ColumnBuilder {
       if (parent.vectorCache().isPermissive() && ! vector.getField().isEquivalent(columnSchema.schema())) {
         columnSchema = ((PrimitiveColumnMetadata) columnSchema).mergeWith(vector.getField());
       }
-    } else {
-
-      // Column is not projected. No materialized backing for the column.
-
-      vector = null;
     }
 
     // Create the writer.
 
-    final AbstractObjectWriter colWriter = ColumnWriterFactory.buildColumnWriter(columnSchema, vector);
+    final AbstractObjectWriter colWriter = ColumnWriterFactory.buildColumnWriter(
+        columnSchema, outputCol, vector);
 
     // Build the vector state which manages the vector.
 
@@ -171,6 +251,32 @@ public class ColumnBuilder {
         vectorState);
   }
 
+  private void incompatibleProjection(ProjectionType projType,
+      ColumnMetadata columnSchema) {
+    StringBuilder buf = new StringBuilder()
+      .append("Projection of type ");
+    switch (projType) {
+    case ARRAY:
+      buf.append("array (a[n])");
+      break;
+    case TUPLE:
+      buf.append("tuple (a.x)");
+      break;
+    case TUPLE_ARRAY:
+      buf.append("tuple array (a[n].x");
+      break;
+    default:
+      throw new IllegalStateException("Unexpected projection type: " + projType);
+    }
+    buf.append(" is not compatible with column `")
+      .append(columnSchema.name())
+      .append("` of type ")
+      .append(Types.getSqlTypeName(columnSchema.majorType()));
+    throw UserException.validationError()
+      .message(buf.toString())
+      .build(logger);
+  }
+
   /**
    * Build a new map (single or repeated) column. Except for maps nested inside
    * of unions, no map vector is created
@@ -181,7 +287,8 @@ public class ColumnBuilder {
    * @return column state for the map column
    */
 
-  private static ColumnState buildMap(ContainerState parent, ColumnMetadata columnSchema) {
+  private ColumnState buildMap(ContainerState parent, ColumnTransform outputCol) {
+    ColumnMetadata columnSchema = outputCol.outputSchema();
 
     // When dynamically adding columns, must add the (empty)
     // map by itself, then add columns to the map via separate
@@ -193,16 +300,30 @@ public class ColumnBuilder {
     // Create the vector, vector state and writer.
 
     if (columnSchema.isArray()) {
-      return buildMapArray(parent, columnSchema);
+      return buildMapArray(parent, outputCol);
     } else {
-      return buildSingleMap(parent, columnSchema);
+      return buildSingleMap(parent, outputCol);
     }
   }
 
-  private static ColumnState buildSingleMap(ContainerState parent, ColumnMetadata columnSchema) {
+  private ColumnState buildSingleMap(ContainerState parent, ColumnTransform outputCol) {
+    ProjectionType projType = outputCol.projectionType();
+    ColumnMetadata columnSchema = outputCol.outputSchema();
+
+    switch (projType) {
+    case ARRAY:
+    case TUPLE_ARRAY:
+      incompatibleProjection(projType, columnSchema);
+      break;
+    default:
+      break;
+    }
     MapVector vector;
     VectorState vectorState;
-    if (columnSchema.isProjected()) {
+    if (projType == ProjectionType.UNPROJECTED) {
+      vector = null;
+      vectorState = new NullVectorState();
+    } else {
 
       // Don't get the map vector from the vector cache. Map vectors may
       // have content that varies from batch to batch. Only the leaf
@@ -211,9 +332,6 @@ public class ColumnBuilder {
       assert columnSchema.mapSchema().isEmpty();
       vector = new MapVector(columnSchema.schema(), parent.loader().allocator(), null);
       vectorState = new MapVectorState(vector, new NullVectorState());
-    } else {
-      vector = null;
-      vectorState = new NullVectorState();
     }
     final TupleObjectWriter mapWriter = MapWriter.buildMap(columnSchema, vector, new ArrayList<>());
     final SingleMapState mapState = new SingleMapState(parent.loader(),
@@ -222,13 +340,18 @@ public class ColumnBuilder {
     return new MapColumnState(mapState, mapWriter, vectorState, parent.isVersioned());
   }
 
-  private static ColumnState buildMapArray(ContainerState parent, ColumnMetadata columnSchema) {
+  private ColumnState buildMapArray(ContainerState parent, ColumnTransform outputCol) {
+    ProjectionType projType = outputCol.projectionType();
+    ColumnMetadata columnSchema = outputCol.outputSchema();
 
     // Create the map's offset vector.
 
     RepeatedMapVector mapVector;
     UInt4Vector offsetVector;
-    if (columnSchema.isProjected()) {
+    if (projType == ProjectionType.UNPROJECTED) {
+      mapVector = null;
+      offsetVector = null;
+    } else {
 
       // Creating the map vector will create its contained vectors if we
       // give it a materialized field with children. So, instead pass a clone
@@ -244,9 +367,6 @@ public class ColumnBuilder {
       mapVector = new RepeatedMapVector(mapColSchema.schema(),
           parent.loader().allocator(), null);
       offsetVector = mapVector.getOffsetVector();
-    } else {
-      mapVector = null;
-      offsetVector = null;
     }
 
     // Create the writer using the offset vector
@@ -257,13 +377,13 @@ public class ColumnBuilder {
     // Wrap the offset vector in a vector state
 
     VectorState offsetVectorState;
-    if (columnSchema.isProjected()) {
+    if (projType == ProjectionType.UNPROJECTED) {
+      offsetVectorState = new NullVectorState();
+    } else {
       offsetVectorState = new OffsetVectorState(
           (((AbstractArrayWriter) writer.array()).offsetWriter()),
           offsetVector,
           writer.array().entry().events());
-    } else {
-      offsetVectorState = new NullVectorState();
     }
     final VectorState mapVectorState = new MapVectorState(mapVector, offsetVectorState);
 
@@ -292,12 +412,22 @@ public class ColumnBuilder {
    * @param columnSchema column schema
    * @return column
    */
-  private static ColumnState buildUnion(ContainerState parent, ColumnMetadata columnSchema) {
+  private ColumnState buildUnion(ContainerState parent, ColumnTransform outputCol) {
+    ProjectionType projType = outputCol.projectionType();
+    ColumnMetadata columnSchema = outputCol.outputSchema();
     assert columnSchema.isVariant() && ! columnSchema.isArray();
 
-    if (! columnSchema.isProjected()) {
+    switch (projType) {
+    case ARRAY:
+    case TUPLE:
+    case TUPLE_ARRAY:
+      incompatibleProjection(projType, columnSchema);
+      break;
+    case UNPROJECTED:
       throw new UnsupportedOperationException("Drill does not currently support unprojected union columns: " +
           columnSchema.name());
+    default:
+      break;
     }
 
     // Create the union vector.
@@ -331,7 +461,18 @@ public class ColumnBuilder {
     return new UnionColumnState(parent.loader(), writer, vectorState, unionState);
   }
 
-  private static ColumnState buildList(ContainerState parent, ColumnMetadata columnSchema) {
+  private ColumnState buildList(ContainerState parent, ColumnTransform outputCol) {
+    ProjectionType projType = outputCol.projectionType();
+    ColumnMetadata columnSchema = outputCol.outputSchema();
+
+    switch (projType) {
+    case TUPLE:
+    case TUPLE_ARRAY:
+      incompatibleProjection(projType, columnSchema);
+      break;
+    default:
+      break;
+    }
 
     // If the list has declared a single type, and has indicated that this
     // is the only type expected, then build the list as a nullable array
@@ -341,12 +482,12 @@ public class ColumnBuilder {
     final VariantMetadata variant = columnSchema.variantSchema();
     if (variant.isSimple()) {
       if (variant.size() == 1) {
-        return buildSimpleList(parent, columnSchema);
+        return buildSimpleList(parent, outputCol);
       } else if (variant.size() == 0) {
         throw new IllegalArgumentException("Size of a non-expandable list can't be zero");
       }
     }
-    return buildUnionList(parent, columnSchema);
+    return buildUnionList(parent, outputCol);
   }
 
   /**
@@ -364,7 +505,8 @@ public class ColumnBuilder {
    * @return the column state for the list
    */
 
-  private static ColumnState buildSimpleList(ContainerState parent, ColumnMetadata columnSchema) {
+  private ColumnState buildSimpleList(ContainerState parent, ColumnTransform outputCol) {
+    ColumnMetadata columnSchema = outputCol.outputSchema();
 
     // The variant must have the one and only type.
 
@@ -423,7 +565,8 @@ public class ColumnBuilder {
    * @return the column state for the list
    */
 
-  private static ColumnState buildUnionList(ContainerState parent, ColumnMetadata columnSchema) {
+  private ColumnState buildUnionList(ContainerState parent, ColumnTransform outputCol) {
+    ColumnMetadata columnSchema = outputCol.outputSchema();
 
     // The variant must start out empty.
 
@@ -470,8 +613,10 @@ public class ColumnBuilder {
         listWriter, vectorState, listState);
   }
 
-  private static ColumnState buildRepeatedList(ContainerState parent,
-      ColumnMetadata columnSchema) {
+  private ColumnState buildRepeatedList(ContainerState parent,
+      ColumnTransform outputCol) {
+    ProjectionType projType = outputCol.projectionType();
+    ColumnMetadata columnSchema = outputCol.outputSchema();
 
     assert columnSchema.type() == MinorType.LIST;
     assert columnSchema.mode() == DataMode.REPEATED;
@@ -480,6 +625,15 @@ public class ColumnBuilder {
     // the element type after creating the repeated writer itself.
 
     assert columnSchema.childSchema() == null;
+
+    switch (projType) {
+    case TUPLE:
+    case TUPLE_ARRAY:
+      incompatibleProjection(projType, columnSchema);
+      break;
+    default:
+      break;
+    }
 
     // Build the repeated vector.
 

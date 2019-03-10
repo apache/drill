@@ -20,10 +20,8 @@ package org.apache.drill.exec.record.metadata;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 import org.joda.time.Period;
 
 import java.math.BigDecimal;
@@ -53,43 +51,12 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrimitiveColumnMetadata.class);
 
-  /**
-   * Expected (average) width for variable-width columns.
-   */
-
-  private int expectedWidth;
-
-  private String formatValue;
-
-  /**
-   * Default value to use for filling a vector when no real data is
-   * available, such as for columns added in new files but which does not
-   * exist in existing files. The ultimate default value is the SQL null
-   * value, which works only for nullable columns.
-   */
-
-  private Object defaultValue;
-
-  /**
-   * Factory for an optional shim writer that translates from the type of
-   * data available to the code that creates the vectors on the one hand,
-   * and the actual type of the column on the other. For example, a shim
-   * might parse a string form of a date into the form stored in vectors.
-   * <p>
-   * The default is to use the "natural" type: that is, to insert no
-   * conversion shim.
-   */
-
-  private ColumnConversionFactory shimFactory;
-
   public PrimitiveColumnMetadata(MaterializedField schema) {
     super(schema);
-    expectedWidth = estimateWidth(schema.getType());
   }
 
   public PrimitiveColumnMetadata(String name, MinorType type, DataMode mode) {
     super(name, type, mode);
-    expectedWidth = estimateWidth(Types.withMode(type, mode));
   }
 
   private int estimateWidth(MajorType majorType) {
@@ -116,7 +83,6 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   public PrimitiveColumnMetadata(PrimitiveColumnMetadata from) {
     super(from);
-    expectedWidth = from.expectedWidth;
   }
 
   @Override
@@ -128,7 +94,16 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   public ColumnMetadata.StructureType structureType() { return ColumnMetadata.StructureType.PRIMITIVE; }
 
   @Override
-  public int expectedWidth() { return expectedWidth; }
+  public int expectedWidth() {
+
+    // If the property is not set, estimate width from the type.
+
+    int width = PropertyAccessor.getInt(this, EXPECTED_WIDTH_PROP);
+    if (width == 0) {
+      width = estimateWidth(majorType());
+    }
+    return width;
+  }
 
   @Override
   public int precision() { return precision; }
@@ -143,45 +118,34 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
     // makes an error.
 
     if (isVariableWidth()) {
-      expectedWidth = Math.max(1, width);
+      PropertyAccessor.set(this, EXPECTED_WIDTH_PROP, Math.max(1, width));
     }
   }
 
   @Override
-  public void setFormatValue(String value) {
-    formatValue = value;
+  public DateTimeFormatter dateTimeFormatter() {
+    String formatValue = format();
+    try {
+      switch (type) {
+        case TIME:
+          return formatValue == null
+            ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+        case DATE:
+          formatValue = format();
+          return formatValue == null
+            ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+        case TIMESTAMP:
+          formatValue = format();
+          return formatValue == null
+            ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+        default:
+          throw new IllegalArgumentException("Column is not a date/time type: " + type.toString());
+      }
+    } catch (IllegalArgumentException | DateTimeParseException e) {
+      throw new IllegalArgumentException(String.format("The format \"%s\" is not valid for type %s",
+          formatValue, type), e);
+    }
   }
-
-  @Override
-  public String formatValue() {
-    return formatValue;
-  }
-
-  @Override
-  public void setDefaultValue(Object value) {
-    defaultValue = value;
-  }
-
-  @Override
-  public Object defaultValue() { return defaultValue; }
-
-  @Override
-  public void setDefaultFromString(String value) {
-    this.defaultValue = valueFromString(value);
-  }
-
-  @Override
-  public String defaultStringValue() {
-    return valueToString(defaultValue);
-  }
-
-  @Override
-  public void setTypeConverter(ColumnConversionFactory factory) {
-    shimFactory = factory;
-  }
-
-  @Override
-  public ColumnConversionFactory typeConverter() { return shimFactory; }
 
   @Override
   public ColumnMetadata cloneEmpty() {
@@ -190,9 +154,8 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   public ColumnMetadata mergeWith(MaterializedField field) {
     PrimitiveColumnMetadata merged = new PrimitiveColumnMetadata(field);
-    merged.setExpectedElementCount(expectedElementCount);
-    merged.setExpectedWidth(Math.max(expectedWidth, field.getPrecision()));
-    merged.setProjected(projected);
+    merged.setExpectedWidth(Math.max(expectedWidth(), field.getPrecision()));
+    merged.setProperties(properties());
     return merged;
   }
 
@@ -266,7 +229,8 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
    * @param value value in string literal form
    * @return Object instance
    */
-  private Object valueFromString(String value) {
+  @Override
+  public Object valueFromString(String value) {
     if (value == null) {
       return null;
     }
@@ -288,28 +252,22 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
         case VARBINARY:
           return value;
         case TIME:
-          DateTimeFormatter timeFormatter = formatValue == null
-            ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-          return LocalTime.parse(value, timeFormatter);
+          return LocalTime.parse(value, dateTimeFormatter());
         case DATE:
-          DateTimeFormatter dateFormatter = formatValue == null
-            ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-          return LocalDate.parse(value, dateFormatter);
+          return LocalDate.parse(value, dateTimeFormatter());
         case TIMESTAMP:
-          DateTimeFormatter dateTimeFormatter = formatValue == null
-            ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-          return ZonedDateTime.parse(value, dateTimeFormatter);
+          return ZonedDateTime.parse(value, dateTimeFormatter());
         case INTERVAL:
         case INTERVALDAY:
         case INTERVALYEAR:
           return Period.parse(value);
         default:
-          logger.warn("Unsupported type {} for default value {}, ignore and return null", type, value);
-          return null;
+          throw new IllegalArgumentException("Unsupported conversion: " + type.toString());
       }
     } catch (IllegalArgumentException | DateTimeParseException e) {
-      logger.warn("Error while parsing type {} default value {}, ignore and return null", type, value, e);
-      return null;
+      logger.warn("Error while parsing type {} default value {}", type, value, e);
+      throw new IllegalArgumentException(String.format("The string \"%s\" is not valid for type %s",
+          value, type), e);
     }
   }
 
@@ -319,26 +277,29 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
    * @param value value instance
    * @return value in string literal representation
    */
-  private String valueToString(Object value) {
+  @Override
+  public String valueToString(Object value) {
     if (value == null) {
       return null;
     }
     switch (type) {
       case TIME:
+        String formatValue = format();
         DateTimeFormatter timeFormatter = formatValue == null
           ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
         return timeFormatter.format((LocalTime) value);
       case DATE:
+        formatValue = format();
         DateTimeFormatter dateFormatter = formatValue == null
           ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
         return dateFormatter.format((LocalDate) value);
       case TIMESTAMP:
+        formatValue = format();
         DateTimeFormatter dateTimeFormatter = formatValue == null
           ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
         return dateTimeFormatter.format((ZonedDateTime) value);
       default:
-        return value.toString();
+       return value.toString();
     }
   }
-
 }

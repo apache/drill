@@ -90,7 +90,7 @@ public abstract class ContainerState {
 
     // Create the vector, writer and column state
 
-    ColumnState colState = ColumnBuilder.buildColumn(this, columnSchema);
+    ColumnState colState = loader.columnBuilder().buildColumn(this, columnSchema);
 
     // Add the column to this container
 

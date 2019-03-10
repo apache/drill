@@ -19,11 +19,11 @@ package org.apache.drill.exec.vector.accessor.writer;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
@@ -49,17 +49,12 @@ public abstract class AbstractScalarWriterImpl extends AbstractScalarWriter impl
   public static class ScalarObjectWriter extends AbstractObjectWriter {
 
     private final WriterEvents writerEvents;
-    private ScalarWriter scalarWriter;
+    private final ScalarWriter scalarWriter;
 
-    public ScalarObjectWriter(AbstractScalarWriterImpl scalarWriter) {
-      final ColumnMetadata metadata = scalarWriter.schema();
-      final ColumnConversionFactory factory = metadata.typeConverter();
-      writerEvents = scalarWriter;
-      if (factory == null) {
-        this.scalarWriter = scalarWriter;
-      } else {
-        this.scalarWriter = factory.newWriter(metadata, scalarWriter);
-      }
+    public ScalarObjectWriter(AbstractScalarWriterImpl baseWriter,
+        ColumnConversionFactory conversionFactory) {
+      writerEvents = baseWriter;
+      scalarWriter = convertWriter(conversionFactory, baseWriter);
     }
 
     @Override

@@ -352,10 +352,9 @@ public class TestProjectedTuple {
     assertEquals(ProjectionType.UNPROJECTED, projSet.projectionType("foo"));
   }
 
-  //@Test
-  //@Ignore("Drill syntax does not support map arrays")
-  @SuppressWarnings("unused")
-  private void testMapArray() {
+  @Test
+  // Drill syntax does not support map arrays
+  public void testMapArray() {
     RequestedTuple projSet = RequestedTupleImpl.parse(
         RowSetTestUtils.projectList("a[1].x"));
     List<RequestedColumn> cols = projSet.projections();

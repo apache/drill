@@ -24,6 +24,9 @@ import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 /**
@@ -94,4 +97,13 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
 
   @Override
   public int rowStartIndex() { return 0; }
+
+  @Override
+  public void setDate(LocalDate value) { }
+
+  @Override
+  public void setTime(LocalTime value) { }
+
+  @Override
+  public void setTimestamp(Instant value) { }
 }

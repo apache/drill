@@ -95,10 +95,10 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
       ColumnMetadata columnMetadata = ctx.simple_type().accept(new TypeVisitor(name, mode));
       StringValueVisitor stringValueVisitor = new StringValueVisitor();
       if (ctx.format_value() != null) {
-        columnMetadata.setFormatValue(stringValueVisitor.visit(ctx.format_value().string_value()));
+        columnMetadata.setFormat(stringValueVisitor.visit(ctx.format_value().string_value()));
       }
       if (ctx.default_value() != null) {
-        columnMetadata.setDefaultFromString(stringValueVisitor.visit(ctx.default_value().string_value()));
+        columnMetadata.setDefaultValue(stringValueVisitor.visit(ctx.default_value().string_value()));
       }
       return columnMetadata;
     }

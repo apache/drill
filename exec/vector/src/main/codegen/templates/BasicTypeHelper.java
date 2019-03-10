@@ -35,13 +35,16 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+
 /*
  * This class is generated using freemarker and the ${.template_name} template.
  */
 public class BasicTypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicTypeHelper.class);
 
-  private static final int WIDTH_ESTIMATE = 50;
+  @VisibleForTesting
+  public static final int WIDTH_ESTIMATE = 50;
 
   protected static String buildErrorMessage(final String operation, final MinorType type, final DataMode mode) {
     return String.format("Unable to %s for minor type [%s] and mode [%s]", operation, type, mode);
@@ -61,11 +64,11 @@ public class BasicTypeHelper {
                                minor.class?substring(0, 3) == "MSG"> + WIDTH_ESTIMATE</#if>;
   </#list>
 </#list>
-      case FIXEDCHAR: return major.getPrecision();
-      case FIXED16CHAR: return major.getPrecision();
-      case FIXEDBINARY: return major.getPrecision();
-      case NULL:
-        return 0;
+    case FIXEDCHAR: return major.getPrecision();
+    case FIXED16CHAR: return major.getPrecision();
+    case FIXEDBINARY: return major.getPrecision();
+    case NULL:
+      return 0;
     }
     throw new UnsupportedOperationException(buildErrorMessage("get size", major));
   }
@@ -82,7 +85,7 @@ public class BasicTypeHelper {
       case REPEATED:
         return RepeatedMapVector.class;
       }
-      
+
     case LIST:
       switch (mode) {
       case REPEATED:
@@ -91,7 +94,7 @@ public class BasicTypeHelper {
       case OPTIONAL:
         return ListVector.class;
       }
-    
+
 <#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
@@ -123,7 +126,7 @@ public class BasicTypeHelper {
           return SingleMapReaderImpl.class;
         else
           return SingleLikeRepeatedMapReaderImpl.class;
-      case REPEATED: 
+      case REPEATED:
           return RepeatedMapReaderImpl.class;
       }
     case LIST:
@@ -133,7 +136,7 @@ public class BasicTypeHelper {
       case REPEATED:
         return RepeatedListReaderImpl.class;
       }
-      
+
 <#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
@@ -152,7 +155,7 @@ public class BasicTypeHelper {
       }
       throw new UnsupportedOperationException(buildErrorMessage("get reader class name", type, mode));
   }
-  
+
   public static Class<?> getWriterInterface( MinorType type, DataMode mode){
     switch (type) {
     case UNION: return UnionWriter.class;
@@ -168,7 +171,7 @@ public class BasicTypeHelper {
       }
       throw new UnsupportedOperationException(buildErrorMessage("get writer interface", type, mode));
   }
-  
+
   public static Class<?> getWriterImpl( MinorType type, DataMode mode){
     switch (type) {
     case UNION:
@@ -189,7 +192,7 @@ public class BasicTypeHelper {
       case REPEATED:
         return RepeatedListWriter.class;
       }
-      
+
 <#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
@@ -238,7 +241,7 @@ public class BasicTypeHelper {
   }
 
   public static Class<?> getHolderReaderImpl(MinorType type, DataMode mode) {
-    switch (type) {      
+    switch (type) {
 <#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
@@ -259,27 +262,27 @@ public class BasicTypeHelper {
       }
       throw new UnsupportedOperationException(buildErrorMessage("get holder reader implementation", type, mode));
   }
-  
+
   public static ValueVector getNewVector(String name, BufferAllocator allocator, MajorType type, CallBack callback) {
     MaterializedField field = MaterializedField.create(name, type);
     return getNewVector(field, allocator, callback);
   }
-  
+
   public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator){
     return getNewVector(field, allocator, null);
   }
-  
+
   public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     return getNewVector(field, field.getType(), allocator, callBack);
   }
-  
+
   // Creates an internal or external vector. Internal vectors may have
   // types that disagree with their materialized field.
-  
+
   public static ValueVector getNewVector(MaterializedField field, MajorType type, BufferAllocator allocator, CallBack callBack) {
 
     switch (type.getMinorType()) {
-    
+
     case UNION:
       return new UnionVector(field, allocator, callBack);
 
@@ -444,8 +447,8 @@ public class BasicTypeHelper {
 <#list vv.types as type>
   <#list type.minor as minor>
     case ${minor.class?upper_case} :
-      if ( ((${minor.class}Vector) v1).getAccessor().get(v1index) == 
-           ((${minor.class}Vector) v2).getAccessor().get(v2index) ) 
+      if ( ((${minor.class}Vector) v1).getAccessor().get(v1index) ==
+           ((${minor.class}Vector) v2).getAccessor().get(v2index) )
         return true;
       break;
   </#list>
