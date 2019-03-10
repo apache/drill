@@ -18,7 +18,6 @@
 package org.apache.drill.exec.record.metadata;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.drill.exec.record.MaterializedField;
 
@@ -44,7 +43,7 @@ import org.apache.drill.exec.record.MaterializedField;
  * In the future, this structure will also gather metadata useful
  * for vector processing such as expected widths and so on.
  */
-public interface TupleMetadata extends Iterable<ColumnMetadata> {
+public interface TupleMetadata extends Propertied, Iterable<ColumnMetadata> {
 
   /**
    * Add a new column to the schema.
@@ -94,14 +93,4 @@ public interface TupleMetadata extends Iterable<ColumnMetadata> {
 
   String fullName(ColumnMetadata column);
   String fullName(int index);
-
-  /**
-   * Sets schema properties if not null.
-   *
-   * @param properties schema properties
-   */
-  void setProperties(Map<String, String> properties);
-
-  Map<String, String> properties();
-
 }

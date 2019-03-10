@@ -84,13 +84,16 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 import io.netty.buffer.DrillBuf;
 
+import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 
 /**
- * Basic accessors for most Drill vector types and modes. These are bare-bones
- * accessors: they do only the most rudimentary type conversions. For all,
- * there is only one way to get/set values; they don't convert from, say,
- * a double to an int or visa-versa.
+ * Basic accessors for most Drill vector types and modes. Each class has a bare-bones
+ * accessors that converts from the "native" Drill type to the vectors. Many classes
+ * also have "convenience" methods that convert from other Java types.
  * <p>
  * Writers work only with single vectors. Readers work with either single
  * vectors or a "hyper vector": a collection of vectors indexed together.
@@ -117,7 +120,7 @@ public class ColumnAccessors {
     </#if>
     <#assign varWidth = drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary"  || drillType == "VarDecimal"/>
     <#assign decimal = drillType == "Decimal9" || drillType == "Decimal18" ||
-                       drillType == "Decimal28Sparse" || drillType == "Decimal38Sparse"  || drillType == "VarDecimal"/>
+                       drillType == "Decimal28Sparse" || drillType == "Decimal38Sparse" || drillType == "VarDecimal"/>
     <#if varWidth>
       <#assign accessorType = "byte[]">
       <#assign label = "Bytes">
@@ -345,13 +348,93 @@ public class ColumnAccessors {
       setBytes(bytes, bytes.length);
     }
 
-    <#elseif drillType = "VarDecimal">
+    <#elseif drillType == "VarDecimal">
 
     @Override
     public final void setDecimal(final BigDecimal bd) {
       byte[] barr = bd.unscaledValue().toByteArray();
       int len = barr.length;
       setBytes(barr, len);
+    }
+    <#elseif drillType == "TinyInt" || drillType == "SmallInt" || drillType == "Int">
+
+    @Override
+    public final void setLong(long value) {
+      try {
+        // Catches int overflow. Does not catch overflow for smaller types.
+        setInt(Math.toIntExact(value));
+      } catch (ArithmeticException e) {
+        throw InvalidConversionError.writeError(schema(), value, e);
+      }
+    }
+
+    @Override
+    public final void setDouble(double value) {
+      try {
+        // Catches int overflow. Does not catch overflow from
+        // double. See Math.round for details.
+        setInt(Math.toIntExact(Math.round(value)));
+      } catch (ArithmeticException e) {
+        throw InvalidConversionError.writeError(schema(), value, e);
+      }
+    }
+    <#elseif drillType == "BigInt">
+
+    @Override
+    public final void setInt(int value) {
+      setLong(value);
+    }
+
+    @Override
+    public final void setDouble(double value) {
+      // Does not catch overflow from
+      // double. See Math.round for details.
+      setLong(Math.round(value));
+    }
+    <#elseif drillType == "Float4" || drillType == "Float8">
+
+    @Override
+    public final void setInt(int value) {
+      setDouble(value);
+    }
+
+    @Override
+    public final void setLong(long value) {
+      setDouble(value);
+    }
+    <#elseif decimal>
+
+    @Override
+    public final void setInt(int value) {
+      setDecimal(BigDecimal.valueOf(value));
+    }
+
+    @Override
+    public final void setLong(long value) {
+      setDecimal(BigDecimal.valueOf(value));
+    }
+
+    @Override
+    public final void setDouble(double value) {
+      setDecimal(BigDecimal.valueOf(value));
+    }
+    <#elseif drillType == "Date">
+
+    @Override
+    public final void setDate(LocalDate value) {
+      setLong(value.toDateTimeAtStartOfDay(DateTimeZone.UTC).toInstant().getMillis());
+    }
+    <#elseif drillType == "Time">
+
+    @Override
+    public final void setTime(LocalTime value) {
+      setInt(value.getMillisOfDay());
+    }
+    <#elseif drillType == "TimeStamp">
+
+    @Override
+    public final void setTimestamp(Instant value) {
+      setLong(value.getMillis());
     }
     </#if>
   }

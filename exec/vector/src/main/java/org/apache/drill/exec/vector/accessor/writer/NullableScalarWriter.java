@@ -25,7 +25,11 @@ import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.UInt1ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 public class NullableScalarWriter extends AbstractScalarWriterImpl {
@@ -77,9 +81,11 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   }
 
   public static ScalarObjectWriter build(ColumnMetadata schema,
-      NullableVector nullableVector, BaseScalarWriter baseWriter) {
+      NullableVector nullableVector, BaseScalarWriter baseWriter,
+      ColumnConversionFactory conversionFactory) {
     return new ScalarObjectWriter(
-        new NullableScalarWriter(schema, nullableVector, baseWriter));
+        new NullableScalarWriter(schema, nullableVector, baseWriter),
+        conversionFactory);
   }
 
   public BaseScalarWriter bitsWriter() { return isSetWriter; }
@@ -174,6 +180,27 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   @Override
   public void setPeriod(Period value) {
     baseWriter.setPeriod(value);
+    isSetWriter.setInt(1);
+    writerIndex.nextElement();
+  }
+
+  @Override
+  public void setDate(LocalDate value) {
+    baseWriter.setDate(value);
+    isSetWriter.setInt(1);
+    writerIndex.nextElement();
+  }
+
+  @Override
+  public void setTime(LocalTime value) {
+    baseWriter.setTime(value);
+    isSetWriter.setInt(1);
+    writerIndex.nextElement();
+  }
+
+  @Override
+  public void setTimestamp(Instant value) {
+    baseWriter.setTimestamp(value);
     isSetWriter.setInt(1);
     writerIndex.nextElement();
   }

@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.BaseArrayWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl.ScalarObjectWriter;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
@@ -64,9 +65,10 @@ public class ScalarArrayWriter extends BaseArrayWriter {
   private final ScalarWriter elementWriter;
 
   public ScalarArrayWriter(ColumnMetadata schema,
-      RepeatedValueVector vector, BaseScalarWriter elementWriter) {
+      RepeatedValueVector vector, BaseScalarWriter baseElementWriter,
+      ColumnConversionFactory conversionFactory) {
     super(schema, vector.getOffsetVector(),
-        new ScalarObjectWriter(elementWriter));
+        new ScalarObjectWriter(baseElementWriter, conversionFactory));
 
     // Save the writer from the scalar object writer created above
     // which may have wrapped the element writer in a type convertor.
@@ -75,9 +77,10 @@ public class ScalarArrayWriter extends BaseArrayWriter {
   }
 
   public static ArrayObjectWriter build(ColumnMetadata schema,
-      RepeatedValueVector repeatedVector, BaseScalarWriter elementWriter) {
+      RepeatedValueVector repeatedVector, BaseScalarWriter baseElementWriter,
+      ColumnConversionFactory conversionFactory) {
     return new ArrayObjectWriter(
-        new ScalarArrayWriter(schema, repeatedVector, elementWriter));
+        new ScalarArrayWriter(schema, repeatedVector, baseElementWriter, conversionFactory));
   }
 
   @Override

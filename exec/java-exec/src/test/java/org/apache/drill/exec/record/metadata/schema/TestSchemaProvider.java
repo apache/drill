@@ -184,7 +184,9 @@ public class TestSchemaProvider {
       + "        \"name\" : \"i\",\n"
       + "        \"type\" : \"INT\",\n"
       + "        \"mode\" : \"REQUIRED\",\n"
-      + "        \"default\" : \"10\"\n"
+      + "        \"properties\" : {\n"
+      + "          \"drill.default\" : \"10\"\n"
+      + "        }\n"
       + "      },\n"
       + "      {\n"
       + "        \"name\" : \"a\",\n"
@@ -199,7 +201,9 @@ public class TestSchemaProvider {
       + "        \"name\" : \"t\",\n"
       + "        \"type\" : \"DATE\",\n"
       + "        \"mode\" : \"OPTIONAL\",\n"
-      + "        \"format\" : \"yyyy-mm-dd\"\n"
+      + "        \"properties\" : {\n"
+      + "          \"drill.format\" : \"yyyy-mm-dd\"\n"
+      + "        }\n"
       + "      }\n"
       + "    ],\n"
       + "    \"properties\" : {\n"
@@ -227,7 +231,7 @@ public class TestSchemaProvider {
     ColumnMetadata i = metadata.metadata("i");
     assertEquals(TypeProtos.MinorType.INT, i.type());
     assertEquals(TypeProtos.DataMode.REQUIRED, i.mode());
-    assertEquals(10, i.defaultValue());
+    assertEquals(10, i.decodeDefaultValue());
 
     ColumnMetadata a = metadata.metadata("a");
     assertEquals(TypeProtos.MinorType.VARCHAR, a.type());
@@ -240,7 +244,7 @@ public class TestSchemaProvider {
     ColumnMetadata t = metadata.metadata("t");
     assertEquals(TypeProtos.MinorType.DATE, t.type());
     assertEquals(TypeProtos.DataMode.OPTIONAL, t.mode());
-    assertEquals("yyyy-mm-dd", t.formatValue());
+    assertEquals("yyyy-mm-dd", t.format());
 
     assertTrue(schemaContainer.getVersion().isUndefined());
   }
@@ -279,5 +283,4 @@ public class TestSchemaProvider {
     assertTrue(provider.exists());
     assertNotNull(provider.read());
   }
-
 }

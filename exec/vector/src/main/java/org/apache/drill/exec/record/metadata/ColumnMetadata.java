@@ -17,19 +17,46 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import java.time.format.DateTimeFormatter;
+
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
-
-import java.util.Map;
+import org.apache.drill.exec.vector.accessor.ColumnWriter;
 
 /**
  * Metadata description of a column including names, types and structure
  * information.
  */
-public interface ColumnMetadata {
+public interface ColumnMetadata extends Propertied {
+
+  /**
+   * Predicted number of elements per array entry. Default is
+   * taken from the often hard-coded value of 10.
+   */
+  public static final String EXPECTED_CARDINALITY_PROP = DRILL_PROP_PREFIX + "cardinality";
+
+  /**
+   * Default value represented as a string.
+   */
+  public static final String DEFAULT_VALUE_PROP = DRILL_PROP_PREFIX + "default";
+
+  /**
+   * Expected (average) width for variable-width columns.
+   */
+  public static final String EXPECTED_WIDTH_PROP = DRILL_PROP_PREFIX + "width";
+
+  /**
+   * Optional format to use when converting to/from string values.
+   */
+  public static final String FORMAT_PROP = DRILL_PROP_PREFIX + "format";
+
+  /**
+   * Indicates if the column is projected. Used only for internal
+   * reader-provided schemas.
+   */
+  public static final String PROJECTED_PROP = DRILL_PROP_PREFIX + "projected";
 
   /**
    * Rough characterization of Drill types into metadata categories.
@@ -184,63 +211,46 @@ public interface ColumnMetadata {
 
   int expectedElementCount();
 
-  void setFormatValue(String value);
+  void setFormat(String value);
 
-  String formatValue();
+  String format();
 
   /**
-   * Set the default value to use for filling a vector when no real data is
-   * available, such as for columns added in new files but which does not
-   * exist in existing files. The "default default" is null, which works
-   * only for nullable columns.
+   * Returns the formatter to use for date/time values. Only valid for
+   * date/time columns.
    *
-   * @param value column value, represented as a Java object, acceptable
-   * to the {@link ColumnWriter#setObject()} method for this column's writer.
+   * @return
    */
-  void setDefaultValue(Object value);
+  DateTimeFormatter dateTimeFormatter();
 
   /**
-   * Returns the default value for this column.
-   *
-   * @return the default value, or null if no default value has been set
-   */
-  Object defaultValue();
-
-  /**
-   * Parses default value from String based on literal value into Object instance based on {@link MinorType} value.
-   * Sets default value to use for filling a vector when no real data is available.
+   * Sets the default value property using the string-encoded form of the value.
+   * The default value is used for filling a vector when no real data is available.
    *
    * @param value the default value in String representation
    */
-  void setDefaultFromString(String value);
+  void setDefaultValue(String value);
 
   /**
    * Returns the default value for this column in String literal representation.
    *
-   * @return the default value in String literal representation, or null if no default value has been set
+   * @return the default value in String literal representation, or null if no
+   * default value has been set
    */
-  String defaultStringValue();
+  String defaultValue();
 
   /**
-   * Set the factory for an optional shim writer that translates from the type of
-   * data available to the code that creates the vectors on the one hand,
-   * and the actual type of the column on the other. For example, a shim
-   * might parse a string form of a date into the form stored in vectors.
-   * <p>
-   * The shim must write to the base vector for this column using one of
-   * the supported base writer "set" methods.
-   * <p>
-   * The default is to use the "natural" type: that is, to insert no
-   * conversion shim.
-   */
-  void setTypeConverter(ColumnConversionFactory factory);
-
-  /**
-   * Returns the type conversion shim for this column.
+   * Returns the default value decoded into object form. This is the same as:
+   * <pre><code>decodeValue(defaultValue());
+   * </code></pre>
    *
-   * @return the type conversion factory, or null if none is set
+   * @return the default value decode as an object that can be passed to
+   * the {@link ColumnWriter#setObject()} method.
    */
-  ColumnConversionFactory typeConverter();
+  Object decodeDefaultValue();
+
+  String valueToString(Object value);
+  Object valueFromString(String value);
 
   /**
    * Create an empty version of this column. If the column is a scalar,
@@ -251,15 +261,6 @@ public interface ColumnMetadata {
    */
 
   ColumnMetadata cloneEmpty();
-
-  /**
-   * Sets column properties if not null.
-   *
-   * @param properties column properties
-   */
-  void setProperties(Map<String, String> properties);
-
-  Map<String, String> properties();
 
   /**
    * Reports whether, in this context, the column is projected outside
@@ -292,5 +293,4 @@ public interface ColumnMetadata {
    * @return column metadata string representation
    */
   String columnString();
-
 }

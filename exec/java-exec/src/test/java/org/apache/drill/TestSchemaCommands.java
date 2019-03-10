@@ -371,15 +371,15 @@ public class TestSchemaCommands extends ClusterTest {
       assertEquals(3, schema.size());
 
       ColumnMetadata a = schema.metadata("a");
-      assertTrue(a.defaultValue() instanceof Integer);
-      assertEquals(10, a.defaultValue());
-      assertEquals("10", a.defaultStringValue());
+      assertTrue(a.decodeDefaultValue() instanceof Integer);
+      assertEquals(10, a.decodeDefaultValue());
+      assertEquals("10", a.defaultValue());
 
       ColumnMetadata b = schema.metadata("b");
-      assertTrue(b.defaultValue() instanceof LocalDate);
-      assertEquals("yyyy-MM-dd", b.formatValue());
-      assertEquals(LocalDate.parse("2017-01-31"), b.defaultValue());
-      assertEquals("2017-01-31", b.defaultStringValue());
+      assertTrue(b.decodeDefaultValue() instanceof LocalDate);
+      assertEquals("yyyy-MM-dd", b.format());
+      assertEquals(LocalDate.parse("2017-01-31"), b.decodeDefaultValue());
+      assertEquals("2017-01-31", b.defaultValue());
 
       ColumnMetadata c = schema.metadata("c");
       Map<String, String> properties = new LinkedHashMap<>();

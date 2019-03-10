@@ -27,8 +27,10 @@ import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.record.metadata.VariantSchema;
 
 /**
- * Interface for retrieving and/or creating metadata given
- * a vector.
+ * Interface for retrieving and/or creating metadata given a vector.
+ * Subclasses either generate metadata to match an existing schema
+ * (such as in a vector batch), or walk a metadata schema to drive
+ * writer creation.
  */
 
 public interface MetadataProvider {

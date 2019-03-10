@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.accessor;
+package org.apache.drill.exec.vector.accessor.convert;
 
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 /**
  * Create a column type converter for the given column and base writer.
@@ -26,14 +26,19 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
  * client requires to the type required by the underlying vector as
  * represented by the base writer.
  */
+
 public interface ColumnConversionFactory {
+
   /**
    * Create a type conversion writer for the given column, converting data
-   * to the type needed by the base writer.
+   * to the type needed by the base writer. The caller will bind the
+   * converter to the base column.
+   *
    * @param colDefn column metadata definition
    * @param baseWriter base column writer for the column's vector
    * @return a new scalar writer to insert between the client and
-   * the base vector
+   * the base vector, or null if no conversion is needed
    */
-  ScalarWriter newWriter(ColumnMetadata colDefn, ScalarWriter baseWriter);
+
+  AbstractWriteConverter newWriter(ScalarWriter baseWriter);
 }

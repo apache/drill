@@ -28,7 +28,6 @@ import org.apache.drill.exec.record.MaterializedField;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,14 +46,12 @@ import java.util.stream.Collectors;
   setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonPropertyOrder({"columns", "properties"})
-public class TupleSchema implements TupleMetadata {
+public class TupleSchema extends AbstractPropertied implements TupleMetadata {
 
   private MapColumnMetadata parentMap;
   private final TupleNameSpace<ColumnMetadata> nameSpace = new TupleNameSpace<>();
-  private final Map<String, String> properties = new LinkedHashMap<>();
 
-  public TupleSchema() {
-  }
+  public TupleSchema() { }
 
   @JsonCreator
   public TupleSchema(@JsonProperty("columns") List<AbstractColumnMetadata> columns,
@@ -218,28 +215,20 @@ public class TupleSchema implements TupleMetadata {
       .map(ColumnMetadata::toString)
       .collect(Collectors.joining(", ")));
 
-    if (!properties.isEmpty()) {
+    if (hasProperties()) {
       if (!nameSpace.entries().isEmpty()) {
         builder.append(", ");
       }
-      builder.append("properties: ").append(properties);
+      builder.append("properties: ").append(properties());
     }
 
     builder.append("]");
     return builder.toString();
   }
 
-  @Override
-  public void setProperties(Map<String, String> properties) {
-    if (properties == null) {
-      return;
-    }
-    this.properties.putAll(properties);
-  }
-
   @JsonProperty("properties")
   @Override
   public Map<String, String> properties() {
-    return properties;
+    return super.properties();
   }
 }

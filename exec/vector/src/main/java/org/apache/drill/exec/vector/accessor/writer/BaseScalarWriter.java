@@ -21,6 +21,9 @@ import java.math.BigDecimal;
 
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 import io.netty.buffer.DrillBuf;
@@ -243,6 +246,21 @@ public abstract class BaseScalarWriter extends AbstractScalarWriterImpl {
   @Override
   public void setPeriod(Period value) {
     throw conversionError("Period");
+  }
+
+  @Override
+  public void setDate(LocalDate value) {
+    throw conversionError("LocalDate");
+  }
+
+  @Override
+  public void setTime(LocalTime value) {
+    throw conversionError("LocalTime");
+  }
+
+  @Override
+  public void setTimestamp(Instant value) {
+    throw conversionError("Instant");
   }
 
   @Override

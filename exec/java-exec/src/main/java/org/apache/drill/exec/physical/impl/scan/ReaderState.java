@@ -19,6 +19,8 @@ package org.apache.drill.exec.physical.impl.scan;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.vector.accessor.InvalidConversionError;
+import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 
 /**
  * Manages a row batch reader through its lifecycle. Created when the reader
@@ -223,6 +225,17 @@ class ReaderState {
       // Throw user exceptions as-is
 
       throw e;
+    } catch (UnsupportedConversionError e) {
+
+      // Occurs if the provided schema asks to convert a reader-provided
+      // schema in a way that Drill (or the reader) cannot support.
+      // Example: implicit conversion of a float to an INTERVAL
+      // In such a case, there are no "natural" rules, a reader would have
+      // to provide ad-hoc rules or no conversion is possible.
+
+      throw UserException.validationError(e)
+        .message("Invalid runtime type conversion")
+        .build(logger);
     } catch (Throwable t) {
 
       // Wrap all others in a user exception.
@@ -387,6 +400,16 @@ class ReaderState {
       }
     } catch (UserException e) {
       throw e;
+    } catch (InvalidConversionError e) {
+
+      // Occurs when a specific data value to be converted to another type
+      // is not valid for that conversion. For example, providing the value
+      // "foo" to a string-to-int conversion.
+
+      throw UserException.unsupportedError(e)
+        .message("Invalid data value for automatic type conversion")
+        .addContext("Read failed for reader", reader.name())
+        .build(logger);
     } catch (Throwable t) {
       throw UserException.executionError(t)
         .addContext("Read failed for reader", reader.name())

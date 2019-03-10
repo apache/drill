@@ -19,6 +19,9 @@ package org.apache.drill.exec.vector.accessor;
 
 import java.math.BigDecimal;
 
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 /**
@@ -60,4 +63,7 @@ public interface ScalarWriter extends ColumnWriter {
   void setBytes(byte[] value, int len);
   void setDecimal(BigDecimal value);
   void setPeriod(Period value);
+  void setDate(LocalDate value);
+  void setTime(LocalTime value);
+  void setTimestamp(Instant value);
 }

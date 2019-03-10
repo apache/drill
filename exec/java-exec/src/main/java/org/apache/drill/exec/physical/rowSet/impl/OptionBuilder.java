@@ -25,10 +25,11 @@ import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl.ResultSetO
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * Builder for the options for the row set loader. Reasonable defaults
- * are provided for all options; use these options for test code or
+ * are provided for all options; use the default options for test code or
  * for clients that don't need special settings.
  */
 
@@ -40,8 +41,10 @@ public class OptionBuilder {
   protected ResultVectorCache vectorCache;
   protected TupleMetadata schema;
   protected long maxBatchSize;
+  protected SchemaTransformer schemaTransformer;
 
   public OptionBuilder() {
+    // Start with the default option values.
     ResultSetOptions options = new ResultSetOptions();
     vectorSizeLimit = options.vectorSizeLimit;
     rowCountLimit = options.rowCountLimit;
@@ -52,8 +55,7 @@ public class OptionBuilder {
    * Specify the maximum number of rows per batch. Defaults to
    * {@link BaseValueVector#INITIAL_VALUE_ALLOCATION}. Batches end either
    * when this limit is reached, or when a vector overflows, whichever
-   * occurs first. The limit is capped at
-   * {@link ValueVector#MAX_ROW_COUNT}.
+   * occurs first. The limit is capped at {@link ValueVector#MAX_ROW_COUNT}.
    *
    * @param limit the row count limit
    * @return this builder
@@ -129,10 +131,23 @@ public class OptionBuilder {
     return this;
   }
 
+  /**
+   * Provide an optional higher-level schema transformer which can convert
+   * columns from one type to another.
+   *
+   * @param transform the column conversion factory
+   * @return this builder
+   */
+  public OptionBuilder setSchemaTransform(SchemaTransformer transform) {
+    schemaTransformer = transform;
+    return this;
+  }
+
   // TODO: No setter for vector length yet: is hard-coded
   // at present in the value vector.
 
   public ResultSetOptions build() {
+    Preconditions.checkArgument(projection == null || projectionSet == null);
     return new ResultSetOptions(this);
   }
 }

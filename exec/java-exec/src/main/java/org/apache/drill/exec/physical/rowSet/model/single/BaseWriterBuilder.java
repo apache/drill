@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.rowSet.model.MetadataProvider;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.VectorDescrip;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
 import org.apache.drill.exec.vector.accessor.writer.ListWriterImpl;
@@ -54,7 +55,14 @@ import org.apache.drill.exec.vector.complex.UnionVector;
 
 public abstract class BaseWriterBuilder {
 
-  protected List<AbstractObjectWriter> buildContainerChildren(VectorContainer container, MetadataProvider mdProvider) {
+  private final ColumnConversionFactory conversionFactory;
+
+  protected BaseWriterBuilder(ColumnConversionFactory conversionFactory) {
+    this.conversionFactory = conversionFactory;
+  }
+
+  protected List<AbstractObjectWriter> buildContainerChildren(VectorContainer container,
+      MetadataProvider mdProvider) {
     final List<AbstractObjectWriter> writers = new ArrayList<>();
     for (int i = 0; i < container.getNumberOfColumns(); i++) {
       final ValueVector vector = container.getValueVector(i).getValueVector();
@@ -79,7 +87,7 @@ public abstract class BaseWriterBuilder {
       return buildList(vector, descrip);
 
     default:
-      return ColumnWriterFactory.buildColumnWriter(descrip.metadata, vector);
+      return ColumnWriterFactory.buildColumnWriter(descrip.metadata, conversionFactory, vector);
     }
   }
 
