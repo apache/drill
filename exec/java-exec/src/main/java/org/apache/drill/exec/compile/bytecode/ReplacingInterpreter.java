@@ -83,6 +83,13 @@ public class ReplacingInterpreter extends BasicInterpreter {
   }
 
   @Override
+  public void returnOperation(AbstractInsnNode insn, BasicValue value, BasicValue expected) {
+    if (value instanceof ReplacingBasicValue) {
+      ((ReplacingBasicValue) value).markFunctionReturn();
+    }
+  }
+
+  @Override
   public BasicValue unaryOperation(final AbstractInsnNode insn, final BasicValue value)
       throws AnalyzerException {
     /*
