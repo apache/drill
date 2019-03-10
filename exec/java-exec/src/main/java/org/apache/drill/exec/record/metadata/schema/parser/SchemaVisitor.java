@@ -27,6 +27,7 @@ import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.RepeatedListBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,7 +71,7 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
             List<String> pairValues = pair.string_value().stream()
               .map(stringValueVisitor::visit)
               .collect(Collectors.toList());
-            assert pairValues.size() == 2;
+            Preconditions.checkState(pairValues.size() == 2);
             columnProperties.put(pairValues.get(0), pairValues.get(1));
           }
         );

@@ -27,8 +27,8 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,10 +51,9 @@ public class TupleSchema implements TupleMetadata {
 
   private MapColumnMetadata parentMap;
   private final TupleNameSpace<ColumnMetadata> nameSpace = new TupleNameSpace<>();
-  private final Map<String, String> properties = new HashMap<>();
+  private final Map<String, String> properties = new LinkedHashMap<>();
 
   public TupleSchema() {
-
   }
 
   @JsonCreator

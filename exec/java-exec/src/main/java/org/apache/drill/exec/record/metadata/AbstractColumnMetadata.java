@@ -30,7 +30,7 @@ import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
 import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -72,7 +72,7 @@ public abstract class AbstractColumnMetadata implements ColumnMetadata {
    */
 
   protected int expectedElementCount = 1;
-  protected Map<String, String> properties = new HashMap<>();
+  protected final Map<String, String> properties = new LinkedHashMap<>();
 
   @JsonCreator
   public static AbstractColumnMetadata createColumnMetadata(@JsonProperty("name") String name,

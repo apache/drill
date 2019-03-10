@@ -167,83 +167,12 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public void setDefaultFromString(String value) {
-    if (value == null) {
-      return;
-    }
-    Object objectValue = null;
-    try {
-      switch (type) {
-        case INT:
-          objectValue = Integer.parseInt(value);
-          break;
-        case BIGINT:
-          objectValue = Long.parseLong(value);
-          break;
-        case FLOAT4:
-          objectValue = Float.parseFloat(value);
-          break;
-        case FLOAT8:
-          objectValue = Double.parseDouble(value);
-          break;
-        case VARDECIMAL:
-          objectValue = new BigDecimal(value);
-          break;
-        case BIT:
-          objectValue = Boolean.parseBoolean(value);
-          break;
-        case VARCHAR:
-        case VARBINARY:
-          objectValue = value;
-          break;
-        case TIME:
-          DateTimeFormatter timeFormatter = formatValue == null
-            ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-          objectValue = LocalTime.parse(value, timeFormatter);
-          break;
-        case DATE:
-          DateTimeFormatter dateFormatter = formatValue == null
-            ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-          objectValue = LocalDate.parse(value, dateFormatter);
-          break;
-        case TIMESTAMP:
-          DateTimeFormatter dateTimeFormatter = formatValue == null
-            ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-          objectValue = ZonedDateTime.parse(value, dateTimeFormatter);
-          break;
-        case INTERVAL:
-        case INTERVALDAY:
-        case INTERVALYEAR:
-          objectValue = Period.parse(value);
-          break;
-      }
-    } catch (IllegalArgumentException | DateTimeParseException e) {
-      logger.warn("Error while parsing type {} default value {}", type, value, e);
-    }
-
-    this.defaultValue = objectValue;
+    this.defaultValue = valueFromString(value);
   }
 
   @Override
   public String defaultStringValue() {
-    if (defaultValue == null) {
-      return null;
-    }
-    switch (type) {
-      case TIME:
-        DateTimeFormatter timeFormatter = formatValue == null
-          ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-        return timeFormatter.format((LocalTime) defaultValue);
-      case DATE:
-        DateTimeFormatter dateFormatter = formatValue == null
-          ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-        return dateFormatter.format((LocalDate) defaultValue);
-      case TIMESTAMP:
-        DateTimeFormatter dateTimeFormatter = formatValue == null
-          ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-        return dateTimeFormatter.format((ZonedDateTime) defaultValue);
-      default:
-       return defaultValue.toString();
-    }
+    return valueToString(defaultValue);
   }
 
   @Override
@@ -328,6 +257,88 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
       builder.append(">");
     }
     return builder.toString();
+  }
+
+  /**
+   * Converts value in string literal form into Object instance based on {@link MinorType} value.
+   * Returns null in case of error during parsing or unsupported type.
+   *
+   * @param value value in string literal form
+   * @return Object instance
+   */
+  private Object valueFromString(String value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      switch (type) {
+        case INT:
+          return Integer.parseInt(value);
+        case BIGINT:
+          return Long.parseLong(value);
+        case FLOAT4:
+          return Float.parseFloat(value);
+        case FLOAT8:
+          return Double.parseDouble(value);
+        case VARDECIMAL:
+          return new BigDecimal(value);
+        case BIT:
+          return Boolean.parseBoolean(value);
+        case VARCHAR:
+        case VARBINARY:
+          return value;
+        case TIME:
+          DateTimeFormatter timeFormatter = formatValue == null
+            ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+          return LocalTime.parse(value, timeFormatter);
+        case DATE:
+          DateTimeFormatter dateFormatter = formatValue == null
+            ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+          return LocalDate.parse(value, dateFormatter);
+        case TIMESTAMP:
+          DateTimeFormatter dateTimeFormatter = formatValue == null
+            ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+          return ZonedDateTime.parse(value, dateTimeFormatter);
+        case INTERVAL:
+        case INTERVALDAY:
+        case INTERVALYEAR:
+          return Period.parse(value);
+        default:
+          logger.warn("Unsupported type {} for default value {}, ignore and return null", type, value);
+          return null;
+      }
+    } catch (IllegalArgumentException | DateTimeParseException e) {
+      logger.warn("Error while parsing type {} default value {}, ignore and return null", type, value, e);
+      return null;
+    }
+  }
+
+  /**
+   * Converts given value instance into String literal representation based on column metadata type.
+   *
+   * @param value value instance
+   * @return value in string literal representation
+   */
+  private String valueToString(Object value) {
+    if (value == null) {
+      return null;
+    }
+    switch (type) {
+      case TIME:
+        DateTimeFormatter timeFormatter = formatValue == null
+          ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+        return timeFormatter.format((LocalTime) value);
+      case DATE:
+        DateTimeFormatter dateFormatter = formatValue == null
+          ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+        return dateFormatter.format((LocalDate) value);
+      case TIMESTAMP:
+        DateTimeFormatter dateTimeFormatter = formatValue == null
+          ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+        return dateTimeFormatter.format((ZonedDateTime) value);
+      default:
+        return value.toString();
+    }
   }
 
 }
