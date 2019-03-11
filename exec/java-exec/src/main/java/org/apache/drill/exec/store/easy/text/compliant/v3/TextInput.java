@@ -85,9 +85,12 @@ final class TextInput {
   private boolean endFound = false;
 
   /**
-   * Creates a new instance with the mandatory characters for handling newlines transparently.
-   * lineSeparator the sequence of characters that represent a newline, as defined in {@link Format#getLineSeparator()}
-   * normalizedLineSeparator the normalized newline character (as defined in {@link Format#getNormalizedNewline()}) that is used to replace any lineSeparator sequence found in the input.
+   * Creates a new instance with the mandatory characters for handling newlines
+   * transparently. lineSeparator the sequence of characters that represent a
+   * newline, as defined in {@link Format#getLineSeparator()}
+   * normalizedLineSeparator the normalized newline character (as defined in
+   * {@link Format#getNormalizedNewline()}) that is used to replace any
+   * lineSeparator sequence found in the input.
    */
   public TextInput(TextParsingSettingsV3 settings, InputStream input, DrillBuf readBuffer, long startPos, long endPos) {
     this.lineSeparator = settings.getNewLineDelimiter();
@@ -97,7 +100,7 @@ final class TextInput {
     Preconditions.checkArgument(!isCompressed || startPos == 0, "Cannot use split on compressed stream.");
 
     // splits aren't allowed with compressed data.  The split length will be the compressed size which means we'll normally end prematurely.
-    if(isCompressed && endPos > 0){
+    if (isCompressed && endPos > 0) {
       endPos = Long.MAX_VALUE;
     }
 
@@ -105,10 +108,10 @@ final class TextInput {
     this.seekable = (Seekable) input;
     this.settings = settings;
 
-    if(input instanceof FSDataInputStream){
+    if (input instanceof FSDataInputStream) {
       this.inputFS = (FSDataInputStream) input;
       this.bufferReadable = inputFS.getWrappedStream() instanceof ByteBufferReadable;
-    }else{
+    } else {
       this.inputFS = null;
       this.bufferReadable = false;
     }
@@ -127,7 +130,7 @@ final class TextInput {
   /**
    * Test the input to position for read start.  If the input is a non-zero split or
    * splitFirstLine is enabled, input will move to appropriate complete line.
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   final void start() throws IOException {
     lineCount = 0;
@@ -149,8 +152,9 @@ final class TextInput {
   /**
    * Helper method to get the most recent characters consumed since the last record started.
    * May get an incomplete string since we don't support stream rewind.  Returns empty string for now.
+   *
    * @return String of last few bytes.
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   public String getStringSinceMarkForError() throws IOException {
     return " ";
@@ -163,11 +167,13 @@ final class TextInput {
   public void mark() { }
 
   /**
-   * read some more bytes from the stream.  Uses the zero copy interface if available.  Otherwise, does byte copy.
-   * @throws IOException
+   * Read some more bytes from the stream.  Uses the zero copy interface if available.
+   * Otherwise, does byte copy.
+   *
+   * @throws IOException for input file read errors
    */
   private void read() throws IOException {
-    if(bufferReadable){
+    if (bufferReadable) {
 
       if (remByte != -1) {
         for (int i = 0; i <= remByte; i++) {
@@ -193,8 +199,9 @@ final class TextInput {
 
 
   /**
-   * Read more data into the buffer.  Will also manage split end conditions.
-   * @throws IOException
+   * Read more data into the buffer. Will also manage split end conditions.
+   *
+   * @throws IOException for input file read errors
    */
   private void updateBuffer() throws IOException {
     streamPos = seekable.getPos();
@@ -220,7 +227,7 @@ final class TextInput {
   }
 
   /**
-   * Checks to see if we can go over the end of our bytes constraint on the data.  If so,
+   * Checks to see if we can go over the end of our bytes constraint on the data. If so,
    * adjusts so that we can only read to the last character of the first line that crosses
    * the split boundary.
    */
@@ -247,10 +254,11 @@ final class TextInput {
   }
 
   /**
-   * Get next byte from stream.  Also maintains the current line count.  Will throw a StreamFinishedPseudoException
-   * when the stream has run out of bytes.
+   * Get next byte from stream.  Also maintains the current line count.  Will throw a
+   * {@link StreamFinishedPseudoException} when the stream has run out of bytes.
+   *
    * @return next byte from stream.
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   public final byte nextChar() throws IOException {
     byte byteChar = nextCharNoNewLineCheck();
@@ -284,8 +292,9 @@ final class TextInput {
   /**
    * Get next byte from stream.  Do no maintain any line count  Will throw a StreamFinishedPseudoException
    * when the stream has run out of bytes.
+   *
    * @return next byte from stream.
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   public final byte nextCharNoNewLineCheck() throws IOException {
 
@@ -312,17 +321,20 @@ final class TextInput {
 
   /**
    * Number of lines read since the start of this split.
-   * @return
+   * @return current line count
    */
   public final long lineCount() {
     return lineCount;
   }
 
   /**
-   * Skip forward the number of line delimiters.  If you are in the middle of a line,
+   * Skip forward the number of line delimiters. If you are in the middle of a line,
    * a value of 1 will skip to the start of the next record.
+   *
    * @param lines Number of lines to skip.
-   * @throws IOException
+   * @throws IOException for input file read errors
+   * @throws IllegalArgumentException if unable to skip the requested number
+   * of lines
    */
   public final void skipLines(int lines) throws IOException {
     if (lines < 1) {

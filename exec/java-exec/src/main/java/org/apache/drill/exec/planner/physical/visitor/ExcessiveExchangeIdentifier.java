@@ -196,7 +196,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
         return false;
       }
 
-      int suggestedWidth = (int) Math.ceil((maxRows+1) / targetSliceSize);
+      int suggestedWidth = (int) Math.ceil((maxRows + 1) / targetSliceSize);
 
       int w = Math.min(maxWidth, suggestedWidth);
       if (w < 1) {

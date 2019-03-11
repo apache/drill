@@ -22,14 +22,13 @@ import java.io.InputStream;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.ColumnsSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -46,8 +45,8 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompliantTextBatchReader.class);
 
   private static final int MAX_RECORDS_PER_BATCH = 8096;
-  private static final int READ_BUFFER = 1024*1024;
-  private static final int WHITE_SPACE_BUFFER = 64*1024;
+  private static final int READ_BUFFER = 1024 * 1024;
+  private static final int WHITE_SPACE_BUFFER = 64 * 1024;
 
   // settings to be used while parsing
   private final TextParsingSettingsV3 settings;
@@ -85,7 +84,6 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
    * and the actual reader to be used.
    * @param context  operator context from which buffer's will be allocated and managed
    * @param outputMutator  Used to create the schema in the output record batch
-   * @throws ExecutionSetupException
    */
 
   @Override
@@ -127,11 +125,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
   }
 
   /**
-   * Extract header and use that to setup a set of VarCharVectors
-   *
-   * @param schemaNegotiator
-   * @return
-   * @throws IOException
+   * Extract header and use that to define the reader schema.
    */
 
   private TextOutput openWithHeaders(ColumnsSchemaNegotiator schemaNegotiator) throws IOException {
@@ -141,11 +135,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
     }
     final TupleMetadata schema = new TupleSchema();
     for (final String colName : fieldNames) {
-      schema.add(MaterializedField.create(colName,
-          MajorType.newBuilder()
-            .setMinorType(MinorType.VARCHAR)
-            .setMode(DataMode.REQUIRED)
-            .build()));
+      schema.addColumn(MetadataUtils.newScalar(colName, MinorType.VARCHAR, DataMode.REQUIRED));
     }
     schemaNegotiator.setTableSchema(schema, true);
     writer = schemaNegotiator.build().writer();
@@ -153,31 +143,17 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
   }
 
   /**
-   * Simply use RepeatedVarCharVector
-   *
-   * @param schemaNegotiator
-   * @return
+   * When no headers, create a single array column "columns".
    */
 
   private TextOutput openWithoutHeaders(
       ColumnsSchemaNegotiator schemaNegotiator) {
     final TupleMetadata schema = new TupleSchema();
-    schema.add(MaterializedField.create(ColumnsArrayManager.COLUMNS_COL,
-        MajorType.newBuilder()
-          .setMinorType(MinorType.VARCHAR)
-          .setMode(DataMode.REPEATED)
-          .build()));
+    schema.addColumn(MetadataUtils.newScalar(ColumnsArrayManager.COLUMNS_COL, MinorType.VARCHAR, DataMode.REPEATED));
     schemaNegotiator.setTableSchema(schema, true);
     writer = schemaNegotiator.build().writer();
     return new RepeatedVarCharOutput(writer, schemaNegotiator.projectedIndexes());
   }
-
-  /**
-   * Setup Input using InputStream
-   *
-   * @param output
-   * @throws IOException
-   */
 
   private void openReader(TextOutput output) throws IOException {
     logger.trace("Opening file {}", split.getPath());

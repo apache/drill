@@ -17,17 +17,26 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.accessor.ArrayReader;
+import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,11 +58,28 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
       "30"
   };
 
+  private static String secondSet[] = {
+      "30,barney,betty"
+  };
+
   @BeforeClass
   public static void setup() throws Exception {
     BaseCsvTest.setup(false,  false);
 
     buildFile(TEST_FILE_NAME, sampleData);
+    buildNestedTableWithoutHeaders();
+  }
+
+  protected static void buildNestedTableWithoutHeaders() throws IOException {
+
+    // Two-level partitioned table
+
+    File rootDir = new File(testDir, PART_DIR);
+    rootDir.mkdir();
+    buildFile(new File(rootDir, ROOT_FILE), sampleData);
+    File nestedDir = new File(rootDir, NESTED_DIR);
+    nestedDir.mkdir();
+    buildFile(new File(nestedDir, NESTED_FILE), secondSet);
   }
 
   @Test
@@ -257,5 +283,115 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
         .addSingleCol(strArray("30"))
         .build();
     RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * Test partition expansion. Because the two files are read in the
+   * same scan operator, the schema is consistent.
+   * <p>
+   * V2, since Drill 1.12, puts partition columns ahead of data columns.
+   */
+  @Test
+  public void testPartitionExpansionV2() throws IOException {
+    try {
+      enableV3(false);
+
+      String sql = "SELECT * FROM `dfs.data`.`%s`";
+      Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .addNullable("dir0", MinorType.VARCHAR)
+          .addArray("columns", MinorType.VARCHAR)
+          .buildSchema();
+
+      // Read the two batches.
+
+      for (int i = 0; i < 2; i++) {
+        assertTrue(iter.hasNext());
+        RowSet rowSet = iter.next();
+
+        // Figure out which record this is and test accordingly.
+
+        RowSetReader reader = rowSet.reader();
+        assertTrue(reader.next());
+        ArrayReader ar = reader.array(1);
+        assertTrue(ar.next());
+        String col1 = ar.scalar().getString();
+        if (col1.equals("10")) {
+          RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+              .addRow(null, strArray("10", "foo", "bar"))
+              .addRow(null, strArray("20", "fred", "wilma"))
+              .build();
+          RowSetUtilities.verify(expected, rowSet);
+        } else {
+          RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+              .addRow(NESTED_DIR, strArray("30", "barney", "betty"))
+              .build();
+          RowSetUtilities.verify(expected, rowSet);
+        }
+      }
+      assertFalse(iter.hasNext());
+    } finally {
+      resetV3();
+    }
+  }
+
+  /**
+   * Test partition expansion in V3.
+   * <p>
+   * V3, as in V2 before Drill 1.12, puts partition columns after
+   * data columns (so that data columns don't shift positions if
+   * files are nested to another level.)
+   */
+  @Test
+  public void testPartitionExpansionV3() throws IOException {
+    try {
+      enableV3(true);
+
+      String sql = "SELECT * FROM `dfs.data`.`%s`";
+      Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .addArray("columns", MinorType.VARCHAR)
+          .addNullable("dir0", MinorType.VARCHAR)
+          .buildSchema();
+
+      // First batch is empty; just carries the schema.
+
+      assertTrue(iter.hasNext());
+      RowSet rowSet = iter.next();
+      assertEquals(0, rowSet.rowCount());
+      rowSet.clear();
+
+      // Read the other two batches.
+
+      for (int i = 0; i < 2; i++) {
+        assertTrue(iter.hasNext());
+        rowSet = iter.next();
+
+        // Figure out which record this is and test accordingly.
+
+        RowSetReader reader = rowSet.reader();
+        assertTrue(reader.next());
+        ArrayReader ar = reader.array(0);
+        assertTrue(ar.next());
+        String col1 = ar.scalar().getString();
+        if (col1.equals("10")) {
+          RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+              .addRow(strArray("10", "foo", "bar"), null)
+              .addRow(strArray("20", "fred", "wilma"), null)
+              .build();
+          RowSetUtilities.verify(expected, rowSet);
+        } else {
+          RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+              .addRow(strArray("30", "barney", "betty"), NESTED_DIR)
+              .build();
+          RowSetUtilities.verify(expected, rowSet);
+        }
+      }
+      assertFalse(iter.hasNext());
+    } finally {
+      resetV3();
+    }
   }
 }

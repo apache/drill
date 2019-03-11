@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -63,7 +64,7 @@ public class ColumnExplorer {
       this.columns = null;
     } else {
       this.columns = columns;
-      this.isStarQuery = columns != null && Utilities.isStarQuery(columns);
+      this.isStarQuery = Utilities.isStarQuery(columns);
       init();
     }
   }
@@ -158,8 +159,9 @@ public class ColumnExplorer {
   public static List<String> getPartitionColumnNames(FileSelection selection, SchemaConfig schemaConfig) {
     int partitionsCount = getPartitionDepth(selection);
 
-    String partitionColumnLabel = schemaConfig.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
-    List<String> partitions = Lists.newArrayList();
+    String partitionColumnLabel = schemaConfig.getOption(
+        ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+    List<String> partitions = new ArrayList<>();
 
     // generates partition column names: dir0, dir1 etc.
     for (int i = 0; i < partitionsCount; i++) {

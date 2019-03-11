@@ -66,12 +66,12 @@ public final class TextReader {
   private final byte newLine;
 
   /**
-   * The CsvParser supports all settings provided by {@link CsvParserSettings}, and requires this configuration to be
-   * properly initialized.
+   * The CsvParser supports all settings provided by {@link TextParsingSettingsV3},
+   * and requires this configuration to be properly initialized.
    * @param settings  the parser configuration
    * @param input  input stream
    * @param output  interface to produce output record batch
-   * @param workBuf  working buffer to handle whitespaces
+   * @param workBuf  working buffer to handle whitespace
    */
   public TextReader(TextParsingSettingsV3 settings, TextInput input, TextOutput output, DrillBuf workBuf) {
     this.context = new TextParsingContext(input, output);
@@ -93,7 +93,8 @@ public final class TextReader {
 
   public TextOutput getOutput() { return output; }
 
-  /* Check if the given byte is a white space. As per the univocity text reader
+  /**
+   * Check if the given byte is a white space. As per the univocity text reader
    * any ASCII <= ' ' is considered a white space. However since byte in JAVA is signed
    * we have an additional check to make sure its not negative
    */
@@ -101,7 +102,9 @@ public final class TextReader {
     return b <= ' ' && b > -1;
   }
 
-  // Inform the output interface to indicate we are starting a new record batch
+  /**
+   * Inform the output interface to indicate we are starting a new record batch
+   */
   public void resetForNextBatch() { }
 
   public long getPos() { return input.getPos(); }
@@ -112,7 +115,7 @@ public final class TextReader {
    * We mark the start of the record and if there are any failures encountered (OOM for eg)
    * then we reset the input stream to the marked position
    * @return  true if parsing this record was successful; false otherwise
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   private boolean parseRecord() throws IOException {
     final byte newLine = this.newLine;
@@ -168,7 +171,7 @@ public final class TextReader {
   /**
    * Function parses an individual field and ignores any white spaces encountered
    * by not appending it to the output vector
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   private void parseValueIgnore() throws IOException {
     final byte newLine = this.newLine;
@@ -192,7 +195,7 @@ public final class TextReader {
   /**
    * Function parses an individual field and appends all characters till the delimeter (or newline)
    * to the output, including white spaces
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   private void parseValueAll() throws IOException {
     final byte newLine = this.newLine;
@@ -209,8 +212,11 @@ public final class TextReader {
   }
 
   /**
-   * Function simply delegates the parsing of a single field to the actual implementation based on parsing config
+   * Function simply delegates the parsing of a single field to the actual
+   * implementation based on parsing config
+   *
    * @throws IOException
+   *           for input file read errors
    */
   private void parseValue() throws IOException {
     if (ignoreTrailingWhitespace) {
@@ -225,7 +231,7 @@ public final class TextReader {
    * handles the case when there are non-white space characters in the field
    * after the quoted value.
    * @param prev  previous byte read
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   private void parseQuotedValue(byte prev) throws IOException {
     final byte newLine = this.newLine;
@@ -249,7 +255,9 @@ public final class TextReader {
                 context,
                 "Unescaped quote character '"
                     + quote
-                    + "' inside quoted value of CSV field. To allow unescaped quotes, set 'parseUnescapedQuotes' to 'true' in the CSV parser settings. Cannot parse CSV input.");
+                    + "' inside quoted value of CSV field. To allow unescaped quotes, "
+                    + "set 'parseUnescapedQuotes' to 'true' in the CSV parser settings. "
+                    + "Cannot parse CSV input.");
           }
         }
         output.append(ch);
@@ -305,8 +313,8 @@ public final class TextReader {
 
   /**
    * Captures the entirety of parsing a single field and based on the input delegates to the appropriate function
-   * @return
-   * @throws IOException
+   * @return true if more rows can be read, false if not
+   * @throws IOException for input file read errors
    */
   private final boolean parseField() throws IOException {
 
@@ -340,7 +348,7 @@ public final class TextReader {
 
   /**
    * Helper function to skip white spaces occurring at the current input stream.
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   private void skipWhitespace() throws IOException {
     final byte delimiter = this.delimiter;
@@ -354,7 +362,7 @@ public final class TextReader {
 
   /**
    * Starting point for the reader. Sets up the input interface.
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   public final void start() throws IOException {
     context.stopped = false;
@@ -364,7 +372,7 @@ public final class TextReader {
   /**
    * Parses the next record from the input. Will skip the line if its a comment,
    * this is required when the file contains headers
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   public final boolean parseNext() throws IOException {
     try {
@@ -420,25 +428,13 @@ public final class TextReader {
    * Helper method to handle exceptions caught while processing text files and generate better error messages associated with
    * the exception.
    * @param ex  Exception raised
-   * @return
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
   private TextParsingException handleException(Exception ex) throws IOException {
 
     if (ex instanceof TextParsingException) {
       throw (TextParsingException) ex;
     }
-
-//    if (ex instanceof ArrayIndexOutOfBoundsException) {
-//      // Not clear this exception is still thrown...
-//
-//      ex = UserException
-//          .dataReadError(ex)
-//          .message(
-//              "Drill failed to read your text file.  Drill supports up to %d columns in a text file.  Your file appears to have more than that.",
-//              MAXIMUM_NUMBER_COLUMNS)
-//          .build(logger);
-//    }
 
     String message = null;
     String tmp = input.getStringSinceMarkForError();
@@ -499,15 +495,14 @@ public final class TextReader {
    * Finish the processing of a batch, indicates to the output
    * interface to wrap up the batch
    */
-  public void finishBatch(){
-  }
+  public void finishBatch() { }
 
   /**
    * Invoked once there are no more records and we are done with the
    * current record reader to clean up state.
-   * @throws IOException
+   * @throws IOException for input file read errors
    */
-  public void close() throws IOException{
+  public void close() throws IOException {
     input.close();
   }
 }

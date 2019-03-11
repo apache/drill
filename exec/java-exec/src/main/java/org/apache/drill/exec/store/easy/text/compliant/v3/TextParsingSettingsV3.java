@@ -58,7 +58,7 @@ public class TextParsingSettingsV3 {
     }
   }
 
-  public byte getComment(){
+  public byte getComment() {
     return comment;
   }
 
@@ -78,15 +78,15 @@ public class TextParsingSettingsV3 {
     this.useRepeatedVarChar = useRepeatedVarChar;
   }
 
-  private static byte bSafe(char c, String name){
-    if(c > Byte.MAX_VALUE) {
+  private static byte bSafe(char c, String name) {
+    if (c > Byte.MAX_VALUE) {
       throw new IllegalArgumentException(String.format("Failure validating configuration option %s.  Expected a "
           + "character between 0 and 127 but value was actually %d.", name, (int) c));
     }
     return (byte) c;
   }
 
-  private static byte b(char c){
+  private static byte b(char c) {
     return (byte) c;
   }
 
@@ -115,7 +115,7 @@ public class TextParsingSettingsV3 {
     this.quote = quote;
   }
 
-  public String getLineSeparatorString(){
+  public String getLineSeparatorString() {
     return lineSeparatorString;
   }
 

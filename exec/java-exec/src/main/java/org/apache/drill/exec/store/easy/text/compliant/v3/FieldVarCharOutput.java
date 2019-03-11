@@ -34,7 +34,6 @@ class FieldVarCharOutput extends BaseFieldOutput {
    * @param fieldNames Incoming field names
    * @param columns  List of columns selected in the query
    * @param isStarQuery  boolean to indicate if all fields are selected or not
-   * @throws SchemaChangeException
    */
   public FieldVarCharOutput(RowSetLoader writer) {
     super(writer,

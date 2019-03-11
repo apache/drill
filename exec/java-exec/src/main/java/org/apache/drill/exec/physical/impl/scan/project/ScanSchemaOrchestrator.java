@@ -282,7 +282,9 @@ public class ScanSchemaOrchestrator {
 
     ScanProjectionParser parser = metadataManager.projectionParser();
     if (parser != null) {
-      parsers.add(parser);
+      // Insert in first position so that it is ensured to see
+      // any wildcard that exists
+      parsers.add(0, parser);
     }
 
     // Parse the projection list.

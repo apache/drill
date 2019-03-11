@@ -422,64 +422,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   }
 
   /**
-   * Test requesting a partition column for a non-partitioned file.
-   * V2 ignores partition columns in this case, leaving them as
-   * default nullable INT columns.
-   */
-  @Test
-  public void testPartitionColsWildcardV2() throws IOException {
-    try {
-      enableV3(false);
-      String sql = "SELECT *, dir0 FROM `dfs.data`.`%s`";
-      RowSet actual = client.queryBuilder().sql(sql, TEST_FILE_NAME).rowSet();
-
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("a", MinorType.VARCHAR)
-          .add("b", MinorType.VARCHAR)
-          .add("c", MinorType.VARCHAR)
-          .addNullable("dir0", MinorType.INT)
-          .buildSchema();
-
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow("10", "foo", "bar", null)
-          .build();
-      RowSetUtilities.verify(expected, actual);
-    } finally {
-      resetV3();
-    }
-  }
-
-  /**
-   * Test requesting a partition column for a non-partitioned file.
-   * V3 still recognizes dir0 as a partition column, but sets it to null,
-   * same as if this were a partitioned file, but no file was at the
-   * requested depth. Type is thus nullable VARCHAR.
-   */
-  @Test
-  public void testPartitionColsWildcardV3() throws IOException {
-    try {
-      enableV3(true);
-      String sql = "SELECT *, dir0 FROM `dfs.data`.`%s`";
-      RowSet actual = client.queryBuilder().sql(sql, TEST_FILE_NAME).rowSet();
-
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("a", MinorType.VARCHAR)
-          .add("b", MinorType.VARCHAR)
-          .add("c", MinorType.VARCHAR)
-          .addNullable("dir0", MinorType.VARCHAR)
-          .addNullable("dir00", MinorType.VARCHAR)
-          .buildSchema();
-
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow("10", "foo", "bar", null, null)
-          .build();
-      RowSetUtilities.verify(expected, actual);
-    } finally {
-      resetV3();
-    }
-  }
-
-  /**
    * V2 does not allow explicit use of dir0, dir1, etc. columns for a non-partitioned
    * file. Treated as undefined nullable int columns.
    */
@@ -508,7 +450,9 @@ public class TestCsvWithHeaders extends BaseCsvTest {
 
   /**
    * V3 allows the use of partition columns, even for a non-partitioned file.
-   * The columns are null of type Nullable VARCHAR.
+   * The columns are null of type Nullable VARCHAR. This is area of Drill
+   * is a bit murky: it seems reasonable to support partition columns consistently
+   * rather than conditionally based on the structure of the input.
    */
   @Test
   public void testPartitionColsExplicitV3() throws IOException {

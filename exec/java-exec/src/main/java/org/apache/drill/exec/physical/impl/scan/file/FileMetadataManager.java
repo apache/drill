@@ -202,8 +202,9 @@ public class FileMetadataManager implements MetadataManager, SchemaProjectionRes
    * <li>Picks out the file metadata and partition columns,</li>
    * <li>Inserts partition columns for a wildcard query, if the
    * option to do so is set.</li>
+   * </ul>
    *
-   * @see {{@link #useLegacyWildcardExpansion}
+   * @see {@link #useLegacyWildcardExpansion}
    */
 
   @Override

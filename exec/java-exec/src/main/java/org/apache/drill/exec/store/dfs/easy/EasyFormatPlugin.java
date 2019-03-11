@@ -342,7 +342,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * developer-defined runtime behavior
    * @param context the global server-wide drillbit context
    * @param storageConfig the configuration for the storage plugin that owns this
-   * foramt plugin
+   * format plugin
    * @param formatConfig the Jackson-serialized format configuration as created
    * by the user in the Drill web console. Holds user-defined options.
    */

@@ -48,10 +48,10 @@ abstract class TextOutput {
 
   /**
    * Add the provided data but drop any whitespace.
-   * @param data
+   * @param data character to append
    */
-  public void appendIgnoringWhitespace(byte data){
-    if (TextReader.isWhite(data)){
+  public void appendIgnoringWhitespace(byte data) {
+    if (TextReader.isWhite(data)) {
       // noop
     } else {
       append(data);
@@ -74,6 +74,15 @@ abstract class TextOutput {
    *  Return the total number of records (across batches) processed
    */
   public abstract long getRecordCount();
+
+  /**
+   * Indicates if the current batch is full and reading for this batch
+   * should stop.
+   *
+   * @return true if the batch is full and the reader must exit to allow
+   * the batch to be sent downstream, false if the reader may continue to
+   * add rows to the current batch
+   */
 
   public abstract boolean isFull();
 }
