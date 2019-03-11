@@ -104,15 +104,15 @@ public class TestParserErrorHandling {
 
   @Test
   public void testUnclosedAngleBracket() {
-    String schema = "col map<m array<int> not null";
+    String schema = "col struct<m array<int> not null";
     thrown.expect(SchemaParsingException.class);
     thrown.expectMessage("missing '>' at '<EOF>'");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testMissingColumnNameForMap() {
-    String schema = "col map<int> not null";
+  public void testMissingColumnNameForStruct() {
+    String schema = "col struct<int> not null";
     thrown.expect(SchemaParsingException.class);
     thrown.expectMessage("mismatched input 'int' expecting {ID, QUOTED_ID}");
     SchemaExprParser.parseSchema(schema);

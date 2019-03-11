@@ -330,7 +330,7 @@ public class UnionFunctions {
   }
 
   @SuppressWarnings("unused")
-  @FunctionTemplate(name = "IS_MAP", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"IS_MAP", "IS_STRUCT"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
   public static class UnionIsMap implements DrillSimpleFunc {
 
     @Param UnionHolder in;
