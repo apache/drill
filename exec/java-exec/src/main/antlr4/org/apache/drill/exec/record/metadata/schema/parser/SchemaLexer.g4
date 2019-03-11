@@ -55,6 +55,7 @@ MINUTE: 'MINUTE';
 SECOND: 'SECOND';
 
 MAP: 'MAP';
+STRUCT: 'STRUCT';
 ARRAY: 'ARRAY';
 
 // symbols

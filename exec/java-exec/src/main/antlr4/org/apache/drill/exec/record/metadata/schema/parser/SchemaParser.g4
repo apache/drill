@@ -31,13 +31,13 @@ columns: column_def  (COMMA column_def)*;
 
 column_def: column property_values?;
 
-column: (primitive_column | map_column | simple_array_column | complex_array_column);
+column: (primitive_column | struct_column | simple_array_column | complex_array_column);
 
 primitive_column: column_id simple_type nullability? format_value? default_value?;
 
 simple_array_column: column_id simple_array_type nullability?;
 
-map_column: column_id map_type nullability?;
+struct_column: column_id struct_type nullability?;
 
 complex_array_column: column_id complex_array_type nullability?;
 
@@ -65,11 +65,11 @@ simple_type
 
 complex_type: (simple_array_type | complex_array_type);
 
-simple_array_type: ARRAY LEFT_ANGLE_BRACKET (simple_type | map_type) RIGHT_ANGLE_BRACKET;
+simple_array_type: ARRAY LEFT_ANGLE_BRACKET (simple_type | struct_type) RIGHT_ANGLE_BRACKET;
 
 complex_array_type: ARRAY LEFT_ANGLE_BRACKET complex_type RIGHT_ANGLE_BRACKET;
 
-map_type: MAP LEFT_ANGLE_BRACKET columns RIGHT_ANGLE_BRACKET;
+struct_type: STRUCT LEFT_ANGLE_BRACKET columns RIGHT_ANGLE_BRACKET;
 
 nullability: NOT NULL;
 

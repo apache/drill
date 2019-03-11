@@ -110,10 +110,10 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     }
 
     @Override
-    public ColumnMetadata visitMap_column(SchemaParser.Map_columnContext ctx) {
+    public ColumnMetadata visitStruct_column(SchemaParser.Struct_columnContext ctx) {
       String name = ctx.column_id().accept(new IdVisitor());
-      // Drill does not distinguish between nullable and not null map, by default they are not null
-      return ctx.map_type().accept(new TypeVisitor(name, TypeProtos.DataMode.REQUIRED));
+      // Drill does not distinguish between nullable and not null structs, by default they are not null
+      return ctx.struct_type().accept(new TypeVisitor(name, TypeProtos.DataMode.REQUIRED));
     }
 
     @Override
@@ -277,7 +277,9 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     }
 
     @Override
-    public ColumnMetadata visitMap_type(SchemaParser.Map_typeContext ctx) {
+    public ColumnMetadata visitStruct_type(SchemaParser.Struct_typeContext ctx) {
+      // internally Drill refers to structs as maps and currently does not have true map notion
+      // Drill maps will be renamed to structs in future
       MapBuilder builder = new MapBuilder(null, name, mode);
       ColumnDefVisitor visitor = new ColumnDefVisitor();
       ctx.columns().column_def().forEach(
@@ -308,7 +310,7 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     @Override
     public ColumnMetadata visitSimple_array_type(SchemaParser.Simple_array_typeContext ctx) {
       TypeVisitor visitor = new TypeVisitor(name, TypeProtos.DataMode.REPEATED);
-      return ctx.map_type() == null ? ctx.simple_type().accept(visitor) : ctx.map_type().accept(visitor);
+      return ctx.struct_type() == null ? ctx.simple_type().accept(visitor) : ctx.struct_type().accept(visitor);
     }
 
     @Override

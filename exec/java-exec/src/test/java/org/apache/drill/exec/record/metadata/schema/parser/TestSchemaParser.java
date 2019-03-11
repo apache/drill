@@ -178,11 +178,11 @@ public class TestSchemaParser {
       .addRepeatedList("nested_array")
         .addArray(TypeProtos.MinorType.INT)
       .resumeSchema()
-      .addMapArray("map_array")
+      .addMapArray("struct_array")
         .addNullable("m1", TypeProtos.MinorType.INT)
         .addNullable("m2", TypeProtos.MinorType.VARCHAR)
       .resumeSchema()
-      .addRepeatedList("nested_array_map")
+      .addRepeatedList("nested_array_struct")
         .addMapArray()
           .addNullable("nm1", TypeProtos.MinorType.INT)
           .addNullable("nm2", TypeProtos.MinorType.VARCHAR)
@@ -192,26 +192,26 @@ public class TestSchemaParser {
 
     checkSchema("simple_array array<int>"
         + ", nested_array array<array<int>>"
-        + ", map_array array<map<m1 int, m2 varchar>>"
-        + ", nested_array_map array<array<map<nm1 int, nm2 varchar>>>",
+        + ", struct_array array<struct<m1 int, m2 varchar>>"
+        + ", nested_array_struct array<array<struct<nm1 int, nm2 varchar>>>",
       schema);
 
   }
 
   @Test
-  public void testMap() {
+  public void testStruct() {
     TupleMetadata schema = new SchemaBuilder()
-      .addMap("map_col")
+      .addMap("struct_col")
         .addNullable("int_col", TypeProtos.MinorType.INT)
         .addArray("array_col", TypeProtos.MinorType.INT)
-        .addMap("nested_map")
+        .addMap("nested_struct")
           .addNullable("m1", TypeProtos.MinorType.INT)
           .addNullable("m2", TypeProtos.MinorType.VARCHAR)
         .resumeMap()
       .resumeSchema()
       .buildSchema();
 
-    checkSchema("map_col map<int_col int, array_col array<int>, nested_map map<m1 int, m2 varchar>>", schema);
+    checkSchema("struct_col struct<int_col int, array_col array<int>, nested_struct struct<m1 int, m2 varchar>>", schema);
   }
 
   @Test
@@ -222,8 +222,8 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testModeForMapType() {
-    TupleMetadata schema  = SchemaExprParser.parseSchema("m map<m1 int not null, m2 varchar>");
+  public void testModeForStructType() {
+    TupleMetadata schema  = SchemaExprParser.parseSchema("m struct<m1 int not null, m2 varchar>");
     ColumnMetadata map = schema.metadata("m");
     assertTrue(map.isMap());
     assertEquals(TypeProtos.DataMode.REQUIRED, map.mode());
@@ -236,7 +236,7 @@ public class TestSchemaParser {
   @Test
   public void testModeForRepeatedType() {
     TupleMetadata schema = SchemaExprParser.parseSchema(
-      "a array<int>, aa array<array<int>>, ma array<map<m1 int not null, m2 varchar>>");
+      "a array<int>, aa array<array<int>>, ma array<struct<m1 int not null, m2 varchar>>");
 
     assertTrue(schema.metadata("a").isArray());
 
