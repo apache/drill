@@ -199,10 +199,19 @@ public class RecordBatchMemoryManager {
     return true;
   }
 
+  /**
+   * Should be used as maximum output row count that can be filled in output batch when a new output batch is
+   * allocated after calling update on BatchMemoryManager.
+   * @return outputRowCount max output row count
+   */
   public int getOutputRowCount() {
     return outputRowCount;
   }
 
+  /**
+   * Should be used as maximum output row count that can be filled in output batch which is already allocated.
+   * @return currentOutgoingMaxRowCount max output row count for current output batch
+   */
   public int getCurrentOutgoingMaxRowCount() { return currentOutgoingMaxRowCount; }
   /**
    * Given batchSize and rowWidth, this will set output rowCount taking into account
@@ -213,13 +222,18 @@ public class RecordBatchMemoryManager {
   }
 
   public void setOutputRowCount(int outputRowCount) {
+    Preconditions.checkArgument(outputRowCount <= MAX_NUM_ROWS);
     this.outputRowCount = outputRowCount;
-    if ( outputRowCount > MIN_NUM_ROWS &&  Integer.highestOneBit(outputRowCount) == outputRowCount ) {
-      this.outputRowCount--;
-    }
   }
 
-  public void setCurrentOutgoingMaxRowCount(int newTargetOutputCount) { this.currentOutgoingMaxRowCount = newTargetOutputCount; }
+  /**
+   * Set the max row count which the current output batch (already allocated) can contain. Since this setter doesn't
+   * adjust the input value we make sure it doesn't go above MAX_NUM_ROWS
+   * @param newTargetOutputCount
+   */
+  public void setCurrentOutgoingMaxRowCount(int newTargetOutputCount) {
+    this.currentOutgoingMaxRowCount = Math.min(MAX_NUM_ROWS, newTargetOutputCount);
+  }
 
   /**
    * This will adjust rowCount taking into account the min and max that is allowed.

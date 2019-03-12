@@ -587,7 +587,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
           // Allocate the memory for the vectors in the output container
           batchMemoryManager.allocateVectors(container);
 
-          hashJoinProbe.setTargetOutputCount(batchMemoryManager.getCurrentOutgoingMaxRowCount());
+          hashJoinProbe.setTargetOutputCount(batchMemoryManager.getOutputRowCount());
 
           outputRecords = hashJoinProbe.probeAndProject();
 
