@@ -91,7 +91,7 @@ final class BatchOverflowOptimizer {
       // do not account for null values as we are interested in the
       // actual data that is being stored within a batch.
       BatchSizingMemoryUtil.getMemoryUsage(stat.vector, stat.numValuesRead, vectorMemoryUsage);
-      final int batchColumnPrecision = Math.max(1, vectorMemoryUsage.dataBytesUsed / stat.numValuesRead);
+      final long batchColumnPrecision = Math.max(1, vectorMemoryUsage.dataBytesUsed / stat.numValuesRead);
 
       double currAvgPrecision = columnPrecisionStats.avgPrecision;
       double newAvgPrecision  = ((numBatches - 1) * currAvgPrecision + batchColumnPrecision) / numBatches;
@@ -138,7 +138,7 @@ final class BatchOverflowOptimizer {
     /** Materialized field */
     private final MaterializedField field;
     /** Average column precision */
-    private int avgPrecision;
+    private long avgPrecision;
 
     private ColumnPrecisionStats(MaterializedField field) {
       this.field = field;
