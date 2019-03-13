@@ -56,6 +56,13 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
   private static final DrillRelMdSelectivity INSTANCE = new DrillRelMdSelectivity();
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRelMdSelectivity.class);
   public static final RelMetadataProvider SOURCE = ReflectiveRelMetadataProvider.reflectiveSource(BuiltInMethod.SELECTIVITY.method, INSTANCE);
+  /*
+   * For now, we are treating all LIKE predicates to have the same selectivity irrespective of the number or position
+   * of wildcard characters (%). This is no different than the present Drill/Calcite behaviour w.r.t to LIKE predicates.
+   * The difference being Calcite keeps the selectivity 25% whereas we keep it at 5%
+   * TODO: Differentiate leading/trailing wildcard characters(%) or explore different estimation techniques e.g. LSH-based
+   */
+  private static final double LIKE_PREDICATE_SELECTIVITY = 0.05;
 
   @Override
   public Double getSelectivity(RelNode rel, RelMetadataQuery mq, RexNode predicate) {
@@ -137,40 +144,89 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     for (RexNode pred : RelOptUtil.conjunctions(predicate)) {
       double orSel = 0;
       for (RexNode orPred : RelOptUtil.disjunctions(pred)) {
-        //CALCITE guess
-        Double guess = RelMdUtil.guessSelectivity(pred);
         if (orPred.isA(SqlKind.EQUALS)) {
+          orSel += computeEqualsSelectivity(table, orPred, fieldNames);
+        } else if (orPred.isA(SqlKind.NOT_EQUALS)) {
+          orSel += 1.0 - computeEqualsSelectivity(table, orPred, fieldNames);
+        } else if (orPred.isA(SqlKind.LIKE)) {
+          // LIKE selectivity is 5% more than a similar equality predicate, capped at CALCITE guess
+          orSel +=  Math.min(computeEqualsSelectivity(table, orPred, fieldNames) + LIKE_PREDICATE_SELECTIVITY,
+              guessSelectivity(orPred));
+        } else if (orPred.isA(SqlKind.NOT)) {
           if (orPred instanceof RexCall) {
-            int colIdx = -1;
-            RexInputRef op = findRexInputRef(orPred);
-            if (op != null) {
-              colIdx = op.hashCode();
-            }
-            if (colIdx != -1 && colIdx < fieldNames.size()) {
-              String col = fieldNames.get(colIdx);
-              if (table.getStatsTable() != null
-                      && table.getStatsTable().getNdv(col) != null) {
-                orSel += 1.00 / table.getStatsTable().getNdv(col);
-              } else {
-                orSel += guess;
-              }
+            // LIKE selectivity is 5% more than a similar equality predicate, capped at CALCITE guess
+            RexNode childOp = ((RexCall) orPred).getOperands().get(0);
+            if (childOp.isA(SqlKind.LIKE)) {
+              orSel += 1.0 - Math.min(computeEqualsSelectivity(table, childOp, fieldNames) + LIKE_PREDICATE_SELECTIVITY,
+                      guessSelectivity(childOp));
             } else {
-              orSel += guess;
-              if (logger.isDebugEnabled()) {
-                logger.warn(String.format("No input reference $[%s] found for predicate [%s]",
-                    Integer.toString(colIdx), orPred.toString()));
-              }
+              orSel += 1.0 - guessSelectivity(orPred);
             }
           }
+        } else if (orPred.isA(SqlKind.IS_NULL)) {
+          orSel += 1.0 - computeIsNotNullSelectivity(table, orPred, fieldNames);
+        } else if (orPred.isA(SqlKind.IS_NOT_NULL)) {
+          orSel += computeIsNotNullSelectivity(table, orPred, fieldNames);
         } else {
           //Use the CALCITE guess. TODO: Use histograms for COMPARISON operator
-          orSel += guess;
+          orSel += guessSelectivity(orPred);
         }
       }
       sel *= orSel;
     }
     // Cap selectivity if it exceeds 1.0
     return (sel > 1.0) ? 1.0 : sel;
+  }
+
+  private double computeEqualsSelectivity(DrillTable table, RexNode orPred, List<String> fieldNames) {
+    String col = getColumn(orPred, fieldNames);
+    if (col != null) {
+      if (table.getStatsTable() != null
+              && table.getStatsTable().getNdv(col) != null) {
+        return 1.00 / table.getStatsTable().getNdv(col);
+      }
+    }
+    return guessSelectivity(orPred);
+  }
+
+  private double computeIsNotNullSelectivity(DrillTable table, RexNode orPred, List<String> fieldNames) {
+    String col = getColumn(orPred, fieldNames);
+    if (col != null) {
+      if (table.getStatsTable() != null
+          && table.getStatsTable().getNNRowCount(col) != null) {
+        // Cap selectivity below Calcite Guess
+        return Math.min((table.getStatsTable().getNNRowCount(col) / table.getStatsTable().getRowCount()),
+            RelMdUtil.guessSelectivity(orPred));
+      }
+    }
+    return guessSelectivity(orPred);
+  }
+
+  private String getColumn(RexNode orPred, List<String> fieldNames) {
+    if (orPred instanceof RexCall) {
+      int colIdx = -1;
+      RexInputRef op = findRexInputRef(orPred);
+      if (op != null) {
+        colIdx = op.hashCode();
+      }
+      if (colIdx != -1 && colIdx < fieldNames.size()) {
+        return fieldNames.get(colIdx);
+      } else {
+        if (logger.isDebugEnabled()) {
+          logger.warn(String.format("No input reference $[%s] found for predicate [%s]",
+                  Integer.toString(colIdx), orPred.toString()));
+        }
+      }
+    }
+    return null;
+  }
+
+  private double guessSelectivity(RexNode orPred) {
+    if (logger.isDebugEnabled()) {
+      logger.warn(String.format("Using guess for predicate [%s]", orPred.toString()));
+    }
+    //CALCITE guess
+    return RelMdUtil.guessSelectivity(orPred);
   }
 
   private Double getJoinSelectivity(DrillJoinRelBase rel, RelMetadataQuery mq, RexNode predicate) {

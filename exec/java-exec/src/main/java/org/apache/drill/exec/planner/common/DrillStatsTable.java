@@ -66,8 +66,9 @@ public class DrillStatsTable {
   private final Path tablePath;
   private final String schemaName;
   private final String tableName;
-  private final Map<String, Long> ndv = Maps.newHashMap();
   private double rowCount = -1;
+  private final Map<String, Long> ndv = Maps.newHashMap();
+  private final Map<String, Long> nnRowCount = Maps.newHashMap();
   private boolean materialized = false;
   private TableStatistics statistics = null;
 
@@ -135,6 +136,32 @@ public class DrillStatsTable {
   }
 
   /**
+   * Get non-null rowcount for the column If stats are not present for the given column, a null is returned.
+   *
+   * Note: returned data may not be accurate. Accuracy depends on whether the table data has changed
+   * after the stats are computed.
+   *
+   * @param col - column for which non-null rowcount is desired
+   * @return non-null rowcount of the column, if available. NULL otherwise.
+   */
+  public Double getNNRowCount(String col) {
+    // Stats might not have materialized because of errors.
+    if (!materialized) {
+      return null;
+    }
+    final String upperCol = col.toUpperCase();
+    Long nnRowCntCol = nnRowCount.get(upperCol);
+    if (nnRowCntCol == null) {
+      nnRowCntCol = nnRowCount.get(SchemaPath.getSimplePath(upperCol).toString());
+    }
+    // Cap it at row count (just in case)
+    if (nnRowCntCol != null) {
+      return Math.min(nnRowCntCol, rowCount);
+    }
+    return null;
+  }
+
+  /**
    * Read the stats from storage and keep them in memory.
    * @param table - Drill table for which we require stats
    * @param context - Query context
@@ -154,6 +181,7 @@ public class DrillStatsTable {
         for (DirectoryStatistics_v1 ds : ((Statistics_v1) statistics).getDirectoryStatistics()) {
           for (ColumnStatistics_v1 cs : ds.getColumnStatistics()) {
             ndv.put(cs.getName().toUpperCase(), cs.getNdv());
+            nnRowCount.put(cs.getName().toUpperCase(), (long)cs.getNonNullCount());
             rowCount = Math.max(rowCount, cs.getCount());
           }
         }
