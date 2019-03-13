@@ -27,7 +27,6 @@ import javax.inject.Named;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.expr.ClassGenerator;
-import org.apache.drill.exec.hash.Hashing;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -636,27 +635,6 @@ public abstract class HashTableTemplate implements HashTable {
       freeIndex--;
     }
     throw new RetryAfterSpillException();
-  }
-
-  /**
-   *   Return the Hash Value for the row in the Build incoming batch at index:
-   *   (Only apply to Hash Aggregate there's no "Build" side -- only one batch - this one)
-   *
-   * @param incomingRowIdx
-   * @return
-   * @throws SchemaChangeException
-   */
-  @Override
-  public int getBuildHashCodeTreatDataTypes(int incomingRowIdx) throws SchemaChangeException {
-    int size = buildVVIds.size();
-    int index = buildVVIds.get(0);
-    int seed = incomingBuild.getValueVector(index).getValueVector().hash32(incomingRowIdx);
-    for (int i = 1; i < size; i++) {
-      index = buildVVIds.get(i);
-      int hashCode = incomingBuild.getValueVector(index).getValueVector().hash32(incomingRowIdx);
-      seed = Hashing.hashCombine(seed, hashCode);
-    }
-    return seed;
   }
 
   /**

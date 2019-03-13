@@ -32,6 +32,8 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.VectorSerializer.Writer;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -41,6 +43,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
 
+import org.apache.drill.exec.hash.Hashing;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -168,6 +171,8 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   private OperatorStats stats = null;
   private HashTableStats htStats = new HashTableStats();
+  private List<Integer> groupExpsVVIds = new ArrayList<>();
+  private List<NamedExpression> groupByExps = new ArrayList<>();
 
   public enum Metric implements MetricDef {
 
@@ -377,6 +382,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     // Start calculating the row widths (with the extra columns; the rest would be done in updateEstMaxBatchSize() )
     estRowWidth = extraRowBytes;
     estValuesRowWidth = extraRowBytes;
+    groupByExps = htConfig.getKeyExprsBuild();
 
     doSetup(incoming);
   }
@@ -482,6 +488,13 @@ public abstract class HashAggTemplate implements HashAggregator {
       htables[0].updateBatches();
     } catch (SchemaChangeException sc) {
       throw new UnsupportedOperationException(sc);
+    }
+
+    for (NamedExpression namedExpression : groupByExps) {
+      SchemaPath schemaPath = (SchemaPath) namedExpression.getExpr();
+      TypedFieldId typedFieldId = incoming.getValueVectorId(schemaPath);
+      int fieldId = typedFieldId.getFieldIds()[0];
+      groupExpsVVIds.add(fieldId);
     }
   }
   /**
@@ -603,7 +616,8 @@ public abstract class HashAggTemplate implements HashAggregator {
         if (EXTRA_DEBUG_2) {
           logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
         }
-        checkGroupAndAggrValues(currentIndex);
+        int hashCode = calcGroupExpsHashCode(currentIndex);
+        checkGroupAndAggrValues(currentIndex, hashCode);
 
         if ( retrySameIndex ) { retrySameIndex = false; }  // need to retry this row (e.g. we had an OOM)
         else { incIndex(); } // next time continue with the next incoming row
@@ -726,6 +740,18 @@ public abstract class HashAggTemplate implements HashAggregator {
           return AggOutcome.CLEANUP_AND_RETURN;
       }
     }
+  }
+
+  private int calcGroupExpsHashCode(int incomingRowIdx) {
+    int size = groupExpsVVIds.size();
+    int index = groupExpsVVIds.get(0);
+    int seed = incoming.getContainer().getValueVector(index).getValueVector().hash32(incomingRowIdx);
+    for (int i = 1; i < size; i++) {
+      index = groupExpsVVIds.get(i);
+      int hashCode = incoming.getContainer().getValueVector(index).getValueVector().hash32(incomingRowIdx);
+      seed = Hashing.hashCombine(seed, hashCode);
+    }
+    return seed;
   }
 
   /**
@@ -1294,20 +1320,12 @@ public abstract class HashAggTemplate implements HashAggregator {
   // Check if a group is present in the hash table; if not, insert it in the hash table.
   // The htIdxHolder contains the index of the group in the hash table container; this same
   // index is also used for the aggregation values maintained by the hash aggregate.
-  private void checkGroupAndAggrValues(int incomingRowIdx) {
+  private void checkGroupAndAggrValues(int incomingRowIdx, int hashCode) {
     assert incomingRowIdx >= 0;
     assert ! earlyOutput;
 
     // The hash code is computed once, then its lower bits are used to determine the
     // partition to use, and the higher bits determine the location in the hash table.
-    int hashCode;
-    try {
-      // htables[0].updateBatches();
-      hashCode = htables[0].getBuildHashCodeTreatDataTypes(incomingRowIdx);
-    } catch (SchemaChangeException e) {
-      throw new UnsupportedOperationException("Unexpected schema change", e);
-    }
-
     // right shift hash code for secondary (or tertiary...) spilling
     for (int i = 0; i < spilledState.getCycle(); i++) {
       hashCode >>>= spilledState.getBitsInMask();
