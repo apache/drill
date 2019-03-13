@@ -577,6 +577,22 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   }
 
   /**
+   * Rounds up the provided value to the nearest power of two.
+   *
+   * @param val
+   *          An integer long value.
+   * @return The closest power of two of that value.
+   */
+  public static long longNextPowerOfTwo(long val) {
+    long highestBit = Long.highestOneBit(val);
+    if (highestBit == val) {
+      return val;
+    } else {
+      return highestBit << 1;
+    }
+  }
+
+  /**
    * Verifies the accounting state of the allocator. Only works for DEBUG.
    *
    * @throws IllegalStateException

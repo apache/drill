@@ -59,9 +59,9 @@ public final class BatchSizingMemoryUtil {
    *         limit; false otherwise
    */
   public static boolean canAddNewData(ColumnMemoryUsageInfo columnMemoryUsage,
-    int newBitsMemory,
-    int newOffsetsMemory,
-    int newDataMemory) {
+    long newBitsMemory,
+    long newOffsetsMemory,
+    long newDataMemory) {
 
     // First we need to update the vector memory usage
     final VectorMemoryUsageInfo vectorMemoryUsage = columnMemoryUsage.vectorMemoryUsage;
@@ -69,20 +69,20 @@ public final class BatchSizingMemoryUtil {
 
     // We need to compute the new ValueVector memory usage if we attempt to add the new payload
     // usedCapacity, int newPayload, int currentCapacity
-    int totalBitsMemory = computeNewVectorCapacity(vectorMemoryUsage.bitsBytesUsed,
+    long totalBitsMemory = computeNewVectorCapacity(vectorMemoryUsage.bitsBytesUsed,
       newBitsMemory,
       vectorMemoryUsage.bitsBytesCapacity);
 
-    int totalOffsetsMemory = computeNewVectorCapacity(vectorMemoryUsage.offsetsBytesUsed,
+    long totalOffsetsMemory = computeNewVectorCapacity(vectorMemoryUsage.offsetsBytesUsed,
       newOffsetsMemory,
       vectorMemoryUsage.offsetsByteCapacity);
 
-    int totalDataMemory = computeNewVectorCapacity(vectorMemoryUsage.dataBytesUsed,
+    long totalDataMemory = computeNewVectorCapacity(vectorMemoryUsage.dataBytesUsed,
       newDataMemory,
       vectorMemoryUsage.dataByteCapacity);
 
     // Alright now we can figure out whether the new payload will take us over the maximum memory threshold
-    int totalMemory = totalBitsMemory + totalOffsetsMemory + totalDataMemory;
+    long totalMemory = totalBitsMemory + totalOffsetsMemory + totalDataMemory;
     assert totalMemory >= 0;
 
     return totalMemory <= columnMemoryUsage.memoryQuota.getMaxMemoryUsage();
@@ -227,16 +227,16 @@ public final class BatchSizingMemoryUtil {
    * @param valueCount number of column values
    * @return memory size required to store "valueCount" within a value vector
    */
-  public static int computeFixedLengthVectorMemory(ParquetColumnMetadata column, int valueCount) {
+  public static long computeFixedLengthVectorMemory(ParquetColumnMetadata column, int valueCount) {
     assert column.isFixedLength();
 
     // Formula:  memory-usage = next-power-of-two(byte-size * valueCount)  // nullable storage (if any)
     //         + next-power-of-two(DT_LEN * valueCount)                    // data storage
 
-    int memoryUsage = BaseAllocator.nextPowerOfTwo(getFixedColumnTypePrecision(column) * valueCount);
+    long memoryUsage = BaseAllocator.longNextPowerOfTwo(getFixedColumnTypePrecision(column) * valueCount);
 
     if (column.getField().isNullable()) {
-      memoryUsage += BaseAllocator.nextPowerOfTwo(BYTE_VALUE_WIDTH * valueCount);
+      memoryUsage += BaseAllocator.longNextPowerOfTwo(BYTE_VALUE_WIDTH * valueCount);
     }
 
     return memoryUsage;
@@ -248,19 +248,19 @@ public final class BatchSizingMemoryUtil {
    * @param valueCount number of column values
    * @return memory size required to store "valueCount" within a value vector
    */
-  public static int computeVariableLengthVectorMemory(ParquetColumnMetadata column,
-    int averagePrecision, int valueCount) {
+  public static long computeVariableLengthVectorMemory(ParquetColumnMetadata column,
+    long averagePrecision, int valueCount) {
 
     assert !column.isFixedLength();
 
     // Formula:  memory-usage = next-power-of-two(byte-size * valueCount)  // nullable storage (if any)
     //         + next-power-of-two(int-size * valueCount)                  // offsets storage
     //         + next-power-of-two(DT_LEN * valueCount)                    // data storage
-    int memoryUsage = BaseAllocator.nextPowerOfTwo(averagePrecision * valueCount);
-    memoryUsage += BaseAllocator.nextPowerOfTwo(INT_VALUE_WIDTH * (valueCount + 1));
+    long memoryUsage = BaseAllocator.longNextPowerOfTwo(averagePrecision * valueCount);
+    memoryUsage += BaseAllocator.longNextPowerOfTwo(INT_VALUE_WIDTH * (valueCount + 1));
 
     if (column.getField().isNullable()) {
-      memoryUsage += BaseAllocator.nextPowerOfTwo(valueCount);
+      memoryUsage += BaseAllocator.longNextPowerOfTwo(valueCount);
     }
     return memoryUsage;
   }
@@ -269,8 +269,8 @@ public final class BatchSizingMemoryUtil {
 // Internal implementation
 // ----------------------------------------------------------------------------
 
-  private static int computeNewVectorCapacity(int usedCapacity, int newPayload, int currentCapacity) {
-    int newUsedCapacity = BaseAllocator.nextPowerOfTwo(usedCapacity + newPayload);
+  private static long computeNewVectorCapacity(long usedCapacity, long newPayload, long currentCapacity) {
+    long newUsedCapacity = BaseAllocator.longNextPowerOfTwo(usedCapacity + newPayload);
     assert newUsedCapacity >= 0;
 
     return Math.max(currentCapacity, newUsedCapacity);
@@ -299,17 +299,17 @@ public final class BatchSizingMemoryUtil {
    */
   public static final class VectorMemoryUsageInfo {
     /** Bits vector capacity */
-    public int bitsBytesCapacity;
+    public long bitsBytesCapacity;
     /** Offsets vector capacity */
-    public int offsetsByteCapacity;
+    public long offsetsByteCapacity;
     /** Data vector capacity */
-    public int dataByteCapacity;
+    public long dataByteCapacity;
     /** Bits vector used up capacity */
-    public int bitsBytesUsed;
+    public long bitsBytesUsed;
     /** Offsets vector used up capacity */
-    public int offsetsBytesUsed;
+    public long offsetsBytesUsed;
     /** Data vector used up capacity */
-    public int dataBytesUsed;
+    public long dataBytesUsed;
 
     public void reset() {
       bitsBytesCapacity = 0;
