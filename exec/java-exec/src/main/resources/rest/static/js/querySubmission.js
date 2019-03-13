@@ -59,6 +59,7 @@ function doSubmitQueryWithAutoLimit() {
         $("#query").focus();
         return;
     }
+    /** DISABLED : See DRILL-7061 (PR #1689)
     //Wrap if required
     let mustWrapWithLimit = $('input[name="forceLimit"]:checked').length > 0;
     //Clear field when submitting if not mustWrapWithLimit
@@ -76,6 +77,7 @@ function doSubmitQueryWithAutoLimit() {
         return;
       }
     }
+    */
     //Submit query
     submitQuery();
 }
