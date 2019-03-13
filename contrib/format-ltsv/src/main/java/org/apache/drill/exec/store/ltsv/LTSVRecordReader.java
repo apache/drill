@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.ltsv;
 
 import io.netty.buffer.DrillBuf;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -49,33 +50,28 @@ public class LTSVRecordReader extends AbstractRecordReader {
 
   private static final int MAX_RECORDS_PER_BATCH = 8096;
 
-  private String inputPath;
+  private final String inputPath;
 
-  private FSDataInputStream fsStream;
+  private final FSDataInputStream fsStream;
 
-  private BufferedReader reader;
+  private final BufferedReader reader;
 
   private DrillBuf buffer;
 
   private VectorContainerWriter writer;
 
-  private LTSVFormatPluginConfig config;
-
-  private int lineCount;
-
   public LTSVRecordReader(FragmentContext fragmentContext, Path path, DrillFileSystem fileSystem,
-                          List<SchemaPath> columns, LTSVFormatPluginConfig config) throws OutOfMemoryException {
+                          List<SchemaPath> columns) throws OutOfMemoryException {
+    this.inputPath = path.toString();
     try {
       this.fsStream = fileSystem.open(path);
-      this.inputPath = path.toString();
-      this.lineCount = 0;
       this.reader = new BufferedReader(new InputStreamReader(fsStream.getWrappedStream(), StandardCharsets.UTF_8));
-      this.config = config;
       this.buffer = fragmentContext.getManagedBuffer();
       setColumns(columns);
 
     } catch (IOException e) {
-      logger.debug("LTSV Plugin: " + e.getMessage());
+      String msg = "Failed to open open input file: " + inputPath;
+      throw UserException.dataReadError(e).message(msg).build(logger);
     }
   }
 
@@ -107,8 +103,6 @@ public class LTSVRecordReader extends AbstractRecordReader {
       String line = null;
 
       while (recordCount < MAX_RECORDS_PER_BATCH && (line = this.reader.readLine()) != null) {
-        lineCount++;
-
         // Skip empty lines
         if (line.trim().length() == 0) {
           continue;
@@ -118,7 +112,7 @@ public class LTSVRecordReader extends AbstractRecordReader {
         for (String field : line.split("\t")) {
           int index = field.indexOf(":");
           if (index <= 0) {
-            throw new ParseException("Invalid LTSV format: " + inputPath + "\n" + lineCount + ":" + line, 0);
+            throw new ParseException("Invalid LTSV format: " + inputPath + "\n" + (recordCount + 1) + ":" + line, 0);
           }
 
           String fieldName = field.substring(0, index);
@@ -150,7 +144,7 @@ public class LTSVRecordReader extends AbstractRecordReader {
       return recordCount;
 
     } catch (final Exception e) {
-      String msg = "Failure while reading messages from LTSV. Recordreader was at record: " + lineCount;
+      String msg = "Failure while reading messages from LTSV. Recordreader was at record: " + (recordCount + 1);
       throw UserException.dataReadError(e).message(msg).build(logger);
     }
   }
@@ -165,8 +159,7 @@ public class LTSVRecordReader extends AbstractRecordReader {
   }
 
   public void close() throws Exception {
-    this.reader.close();
-    this.fsStream.close();
+    AutoCloseables.close(this.reader, this.fsStream);
   }
 
 }

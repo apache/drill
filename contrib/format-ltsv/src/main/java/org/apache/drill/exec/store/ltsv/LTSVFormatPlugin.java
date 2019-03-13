@@ -45,20 +45,17 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LTSVFormatPlugin.class);
 
-  private LTSVFormatPluginConfig config;
-
   public LTSVFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
     this(name, context, fsConf, storageConfig, new LTSVFormatPluginConfig());
   }
 
   public LTSVFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, LTSVFormatPluginConfig formatPluginConfig) {
     super(name, context, fsConf, config, formatPluginConfig, true, false, false, IS_COMPRESSIBLE, formatPluginConfig.getExtensions(), DEFAULT_NAME);
-    this.config = formatPluginConfig;
   }
 
   @Override
   public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork, List<SchemaPath> columns, String userName) throws ExecutionSetupException {
-    return new LTSVRecordReader(context, fileWork.getPath(), dfs, columns, config);
+    return new LTSVRecordReader(context, fileWork.getPath(), dfs, columns);
   }
 
 
