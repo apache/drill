@@ -106,7 +106,7 @@ SqlNode SqlShowSchemas() :
 
 /**
  * Parses statement
- *   { DESCRIBE | DESC } tblname [col_name | wildcard ]
+ *   { DESCRIBE | DESC } [TABLE] tblname [col_name | wildcard ]
  */
 SqlNode SqlDescribeTable() :
 {
@@ -117,6 +117,7 @@ SqlNode SqlDescribeTable() :
 }
 {
     (<DESCRIBE> | <DESC>) { pos = getPos(); }
+    (<TABLE>)?
     table = CompoundIdentifier()
     (
         column = CompoundIdentifier()

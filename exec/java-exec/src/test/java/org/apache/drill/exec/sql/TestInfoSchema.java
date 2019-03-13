@@ -184,9 +184,35 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   @Test
+  public void describeTableWithTableKeyword() throws Exception {
+    testBuilder()
+        .sqlQuery("DESCRIBE TABLE CATALOGS")
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("USE INFORMATION_SCHEMA")
+        .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+        .baselineValues("CATALOG_NAME", "CHARACTER VARYING", "NO")
+        .baselineValues("CATALOG_DESCRIPTION", "CHARACTER VARYING", "NO")
+        .baselineValues("CATALOG_CONNECT", "CHARACTER VARYING", "NO")
+        .go();
+  }
+
+  @Test
   public void describeTableWithSchema() throws Exception{
     testBuilder()
         .sqlQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES`")
+        .unOrdered()
+        .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+        .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
+        .baselineValues("TABLE_SCHEMA", "CHARACTER VARYING", "NO")
+        .baselineValues("TABLE_NAME", "CHARACTER VARYING", "NO")
+        .baselineValues("TABLE_TYPE", "CHARACTER VARYING", "NO")
+        .go();
+  }
+
+  @Test
+  public void describeTableWithSchemaAndTableKeyword() throws Exception{
+    testBuilder()
+        .sqlQuery("DESCRIBE TABLE INFORMATION_SCHEMA.`TABLES`")
         .unOrdered()
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
         .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
@@ -225,6 +251,34 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   @Test
+  public void describeWhenSameTableNameExistsInMultipleSchemasWithTableKeyword() throws Exception{
+    try {
+      test("USE dfs.tmp");
+      test("CREATE OR REPLACE VIEW `TABLES` AS SELECT full_name FROM cp.`employee.json`");
+
+      testBuilder()
+          .sqlQuery("DESCRIBE TABLE `TABLES`")
+          .unOrdered()
+          .optionSettingQueriesForTestQuery("USE dfs.tmp")
+          .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+          .baselineValues("full_name", "ANY", "YES")
+          .go();
+
+      testBuilder()
+          .sqlQuery("DESCRIBE TABLE INFORMATION_SCHEMA.`TABLES`")
+          .unOrdered()
+          .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+          .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
+          .baselineValues("TABLE_SCHEMA", "CHARACTER VARYING", "NO")
+          .baselineValues("TABLE_NAME", "CHARACTER VARYING", "NO")
+          .baselineValues("TABLE_TYPE", "CHARACTER VARYING", "NO")
+          .go();
+    } finally {
+      test("DROP VIEW dfs.tmp.`TABLES`");
+    }
+  }
+
+  @Test
   public void describeTableWithColumnName() throws Exception{
     testBuilder()
         .sqlQuery("DESCRIBE `TABLES` TABLE_CATALOG")
@@ -236,9 +290,30 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   @Test
+  public void describeTableWithColumnNameAndTableKeyword() throws Exception{
+    testBuilder()
+        .sqlQuery("DESCRIBE TABLE `TABLES` TABLE_CATALOG")
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("USE INFORMATION_SCHEMA")
+        .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+        .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
+        .go();
+  }
+
+  @Test
   public void describeTableWithSchemaAndColumnName() throws Exception{
     testBuilder()
         .sqlQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES` TABLE_CATALOG")
+        .unOrdered()
+        .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+        .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
+        .go();
+  }
+
+  @Test
+  public void describeTableWithSchemaAndColumnNameAndTableKeyword() throws Exception{
+    testBuilder()
+        .sqlQuery("DESCRIBE TABLE INFORMATION_SCHEMA.`TABLES` TABLE_CATALOG")
         .unOrdered()
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
         .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
