@@ -255,7 +255,7 @@ public class BsonRecordReader {
     } else {
       t = writer.list.timeStamp();
     }
-    t.writeTimeStamp((int) (dateTime.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis()));
+    t.writeTimeStamp(dateTime.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
   }
 
   private void writeString(String readString, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
