@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.ltsv;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
@@ -25,6 +26,9 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -36,19 +40,12 @@ public class TestLTSVRecordReader extends ClusterTest {
   public static void setup() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    String conf = "{" +
-      "  \"type\": \"file\"," +
-      "  \"enabled\": true," +
-      "  \"connection\": \"classpath:///\"," +
-      "  \"formats\": {" +
-      "    \"ltsv\": {" +
-      "      \"type\": \"ltsv\"," +
-      "      \"extensions\": [ \"ltsv\" ]" +
-      "    }" +
-      "  }" +
-      "}";
     DrillbitContext context = cluster.drillbit().getContext();
-    FileSystemConfig pluginConfig = context.getLpPersistence().getMapper().readValue(conf, FileSystemConfig.class);
+    FileSystemConfig original = (FileSystemConfig) context.getStorage().getPlugin("cp").getConfig();
+    Map<String, FormatPluginConfig> newFormats = new HashMap<>(original.getFormats());
+    newFormats.put("ltsv", new LTSVFormatPluginConfig());
+    FileSystemConfig pluginConfig = new FileSystemConfig(original.getConnection(), original.getConfig(), original.getWorkspaces(), newFormats);
+    pluginConfig.setEnabled(true);
     context.getStorage().createOrUpdate("cp", pluginConfig, true);
   }
 
@@ -96,7 +93,7 @@ public class TestLTSVRecordReader extends ClusterTest {
       fail();
     } catch (UserException e) {
       assertEquals(UserBitShared.DrillPBError.ErrorType.DATA_READ, e.getErrorType());
-      assertTrue(e.getMessage().contains("Failure while reading messages from LTSV. Recordreader was at record: 1"));
+      assertTrue(e.getMessage().contains("Failure while reading messages from /invalid.ltsv. Recordreader was at record: 1"));
     }
   }
 
