@@ -93,7 +93,7 @@ public class TestLTSVRecordReader extends ClusterTest {
       fail();
     } catch (UserException e) {
       assertEquals(UserBitShared.DrillPBError.ErrorType.DATA_READ, e.getErrorType());
-      assertTrue(e.getMessage().contains("Failure while reading messages from /invalid.ltsv. Recordreader was at record: 1"));
+      assertTrue(e.getMessage().contains("Failure while reading messages from /invalid.ltsv. Record reader was at record: 1"));
     }
   }
 
