@@ -972,4 +972,8 @@ public final class ExecConstants {
   public static final String NDV_BLOOM_FILTER_FPOS_PROB = "exec.statistics.ndv_extrapolation_bf_fpprobability";
   public static final LongValidator NDV_BLOOM_FILTER_FPOS_PROB_VALIDATOR = new PositiveLongValidator(NDV_BLOOM_FILTER_FPOS_PROB,
           100, new OptionDescription("Controls trade-off between NDV statistic computation memory cost and sampling extrapolation accuracy"));
+
+  public static final String STORE_TABLE_USE_SCHEMA_FILE = "store.table.use_schema_file";
+  public static final BooleanValidator STORE_TABLE_USE_SCHEMA_FILE_VALIDATOR = new BooleanValidator(STORE_TABLE_USE_SCHEMA_FILE,
+    new OptionDescription("Controls if schema file stored in table root directory will be used during query execution. (Drill 1.16+)"));
 }

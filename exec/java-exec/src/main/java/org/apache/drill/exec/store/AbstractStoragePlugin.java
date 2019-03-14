@@ -29,6 +29,7 @@ import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
 
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
@@ -106,10 +107,14 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     }
   }
 
-
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, SessionOptionManager options) throws IOException {
     return getPhysicalScan(userName, selection);
+  }
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, SessionOptionManager options, TupleMetadata schema) throws IOException {
+    return getPhysicalScan(userName, selection, options);
   }
 
   @Override
@@ -120,6 +125,11 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options) throws IOException {
     return getPhysicalScan(userName, selection, columns);
+  }
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options, TupleMetadata schema) throws IOException {
+    return getPhysicalScan(userName, selection, columns, options);
   }
 
   @Override

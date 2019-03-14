@@ -63,6 +63,7 @@ import org.apache.drill.exec.planner.logical.DrillViewTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
+import org.apache.drill.exec.record.metadata.schema.FsMetastoreSchemaProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -109,7 +110,7 @@ public class WorkspaceSchemaFactory {
       WorkspaceConfig config,
       List<FormatMatcher> formatMatchers,
       LogicalPlanPersistence logicalPlanPersistence,
-      ScanResult scanResult) throws ExecutionSetupException, IOException {
+      ScanResult scanResult) throws ExecutionSetupException {
     this.logicalPlanPersistence = logicalPlanPersistence;
     this.fsConf = plugin.getFsConf();
     this.plugin = plugin;
@@ -572,7 +573,19 @@ public class WorkspaceSchemaFactory {
       }
       final DrillTable table = tables.get(tableKey);
       setMetadataTable(table, tableName);
+      setSchema(table, tableName);
       return table;
+    }
+
+    private void setSchema(DrillTable table, String tableName) {
+      if (schemaConfig.getOption(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE).bool_val) {
+        try {
+          FsMetastoreSchemaProvider schemaProvider = new FsMetastoreSchemaProvider(this, tableName);
+          table.setSchema(schemaProvider.read().getSchema());
+        } catch (IOException e) {
+          logger.debug("Unable to deserialize schema from schema file for table: " + tableName, e);
+        }
+      }
     }
 
     private void setMetadataTable(final DrillTable table, final String tableName) {
