@@ -143,7 +143,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
       if (! columnExplorer.isStarQuery()) {
         scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
-            columnExplorer.getTableColumns(), scan.getSelectionRoot(), scan.getPartitionDepth());
+            columnExplorer.getTableColumns(), scan.getSelectionRoot(), scan.getPartitionDepth(), scan.getSchema());
         scan.setOperatorId(scan.getOperatorId());
       }
 
@@ -296,8 +296,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     }
 
     @Override
-    protected FileScanFramework buildFramework(
-        EasySubScan scan) throws ExecutionSetupException {
+    protected FileScanFramework buildFramework(EasySubScan scan) {
 
       final FileScanFramework framework = new FileScanFramework(
               scan.getColumns(),
@@ -471,14 +470,14 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   @Override
-  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException {
+  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) {
     return new EasyWriter(child, location, partitionColumns, this);
   }
 
   @Override
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
       throws IOException {
-    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot);
+    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot, null);
   }
 
   @Override

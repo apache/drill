@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -42,6 +41,7 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.RecordReader;
@@ -189,8 +189,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     }
 
     @Override
-    protected ColumnsScanFramework buildFramework(
-        EasySubScan scan) throws ExecutionSetupException {
+    protected ColumnsScanFramework buildFramework(EasySubScan scan) {
       ColumnsScanFramework framework = new ColumnsScanFramework(
               scan.getColumns(),
               scan.getWorkUnits(),
@@ -244,19 +243,19 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, TupleMetadata schema)
       throws IOException {
-    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot);
+    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot, schema);
   }
 
   @Override
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
-      List<SchemaPath> columns, OptionManager options) throws IOException {
+      List<SchemaPath> columns, OptionManager options, TupleMetadata schema) throws IOException {
     return new EasyGroupScan(userName, selection, this, columns,
         selection.selectionRoot,
         // Some paths provide a null option manager. In that case, default to a
         // min width of 1; just like the base class.
-        options == null ? 1 : (int) options.getLong(ExecConstants.MIN_READER_WIDTH_KEY));
+        options == null ? 1 : (int) options.getLong(ExecConstants.MIN_READER_WIDTH_KEY), schema);
   }
 
   @Override
@@ -311,9 +310,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
-  public ManagedReader<ColumnsSchemaNegotiator> makeBatchReader(
-      DrillFileSystem dfs,
-      FileSplit split) throws ExecutionSetupException {
+  public ManagedReader<ColumnsSchemaNegotiator> makeBatchReader(DrillFileSystem dfs, FileSplit split) {
     TextParsingSettingsV3 settings = new TextParsingSettingsV3();
     settings.set(getConfig());
     return new CompliantTextBatchReader(split, dfs, settings);
@@ -324,12 +321,12 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) {
     throw new UnsupportedOperationException("unimplemented");
   }
 
   @Override
-  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) {
     throw new UnsupportedOperationException("unimplemented");
   }
 

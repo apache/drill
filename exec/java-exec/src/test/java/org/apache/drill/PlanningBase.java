@@ -61,6 +61,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.mockito.Matchers;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -134,6 +135,7 @@ public class PlanningBase extends ExecTest {
         eq(TypeProtos.MinorType.VARDECIMAL),
         Matchers.<Function<DrillBuf, ValueHolder>>any()))
       .thenReturn(ValueHolderHelper.getVarDecimalHolder(allocator.buffer(4), "0.01"));
+    when(context.getOption(anyString())).thenCallRealMethod();
 
 
     for (final String sql : sqlStrings) {

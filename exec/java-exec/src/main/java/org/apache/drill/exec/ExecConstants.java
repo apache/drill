@@ -450,6 +450,10 @@ public final class ExecConstants {
   public static final BooleanValidator JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR = new BooleanValidator(JSON_READER_ESCAPE_ANY_CHAR,
     new OptionDescription("Enables the JSON record reader in Drill to escape any character. Default is false. (Drill 1.16+)"));
 
+  public static final String STORE_TABLE_USE_SCHEMA_FILE = "store.table.use_schema_file";
+  public static final BooleanValidator STORE_TABLE_USE_SCHEMA_FILE_VALIDATOR = new BooleanValidator(STORE_TABLE_USE_SCHEMA_FILE,
+    new OptionDescription("Controls if schema file stored in table root directory will be used during query execution. (Drill 1.16+)"));
+
   /**
    * The column label (for directory levels) in results when querying files in a directory
    * E.g.  labels: dir0   dir1<pre>

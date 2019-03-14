@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
@@ -52,7 +53,7 @@ public interface FormatPlugin {
 
   FormatMatcher getMatcher();
 
-  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException;
+  AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException;
 
   Set<StoragePluginOptimizerRule> getOptimizerRules();
 
@@ -62,11 +63,19 @@ public interface FormatPlugin {
     return getGroupScan(userName, selection, columns);
   }
 
-  public boolean supportsStatistics();
+  default AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, TupleMetadata schema) throws IOException {
+    return getGroupScan(userName, selection, columns);
+  }
 
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException;
+  default AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, OptionManager options, TupleMetadata schema) throws IOException {
+    return getGroupScan(userName, selection, columns, options);
+  }
 
-  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException;
+  boolean supportsStatistics();
+
+  TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException;
+
+  void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException;
 
   FormatPluginConfig getConfig();
   StoragePluginConfig getStorageConfig();

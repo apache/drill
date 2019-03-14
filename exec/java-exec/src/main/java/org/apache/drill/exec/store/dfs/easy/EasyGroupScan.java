@@ -32,6 +32,8 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -69,6 +71,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   private List<CompleteFileWork> chunks;
   private List<EndpointAffinity> endpointAffinities;
   private Path selectionRoot;
+  private final TupleMetadata schema;
 
   @JsonCreator
   public EasyGroupScan(
@@ -78,18 +81,15 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       @JsonProperty("format") FormatPluginConfig formatConfig,
       @JacksonInject StoragePluginRegistry engineRegistry,
       @JsonProperty("columns") List<SchemaPath> columns,
-      @JsonProperty("selectionRoot") Path selectionRoot
+      @JsonProperty("selectionRoot") Path selectionRoot,
+      @JsonProperty("schema") TupleSchema schema
       ) throws IOException, ExecutionSetupException {
         this(ImpersonationUtil.resolveUserName(userName),
             FileSelection.create(null, files, selectionRoot),
             (EasyFormatPlugin<?>)engineRegistry.getFormatPlugin(storageConfig, formatConfig),
             columns,
-            selectionRoot);
-  }
-
-  public EasyGroupScan(String userName, FileSelection selection, EasyFormatPlugin<?> formatPlugin, Path selectionRoot)
-      throws IOException {
-    this(userName, selection, formatPlugin, ALL_COLUMNS, selectionRoot);
+            selectionRoot,
+            schema);
   }
 
   public EasyGroupScan(
@@ -97,13 +97,15 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       FileSelection selection,
       EasyFormatPlugin<?> formatPlugin,
       List<SchemaPath> columns,
-      Path selectionRoot
+      Path selectionRoot,
+      TupleMetadata schema
       ) throws IOException{
     super(userName);
     this.selection = Preconditions.checkNotNull(selection);
     this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
+    this.schema = schema;
     initFromSelection(selection, formatPlugin);
   }
 
@@ -113,9 +115,10 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       EasyFormatPlugin<?> formatPlugin,
       List<SchemaPath> columns,
       Path selectionRoot,
-      int minWidth
+      int minWidth,
+      TupleMetadata schema
       ) throws IOException{
-    this(userName, selection, formatPlugin, columns, selectionRoot);
+    this(userName, selection, formatPlugin, columns, selectionRoot, schema);
 
     // Set the minimum width of this reader. Primarily used for testing
     // to force parallelism even for small test files.
@@ -138,6 +141,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     minWidth = that.minWidth;
     mappings = that.mappings;
     partitionDepth = that.partitionDepth;
+    schema = that.schema;
   }
 
   @JsonIgnore
@@ -202,7 +206,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     assert children == null || children.isEmpty();
     return new EasyGroupScan(this);
   }
@@ -210,7 +214,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     if (endpointAffinities == null) {
-        logger.debug("chunks: {}", chunks.size());
+        logger.debug("Chunks size: {}", chunks.size());
         endpointAffinities = AffinityCreator.getAffinityMap(chunks);
     }
     return endpointAffinities;
@@ -244,7 +248,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
     EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin,
-        columns, selectionRoot, partitionDepth);
+        columns, selectionRoot, partitionDepth, schema);
     subScan.setOperatorId(this.getOperatorId());
     return subScan;
   }
@@ -269,8 +273,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
 
   @Override
   public String toString() {
-    final String pattern = "EasyGroupScan [selectionRoot=%s, numFiles=%s, columns=%s, files=%s]";
-    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles());
+    String pattern = "EasyGroupScan [selectionRoot=%s, numFiles=%s, columns=%s, files=%s, schema=%s]";
+    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles(), schema);
   }
 
   @Override
@@ -281,7 +285,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     if (!formatPlugin.supportsPushDown()) {
-      throw new IllegalStateException(String.format("%s doesn't support pushdown.", this.getClass().getSimpleName()));
+      throw new IllegalStateException(String.format("%s doesn't support push down.", this.getClass().getSimpleName()));
     }
     EasyGroupScan newScan = new EasyGroupScan(this);
     newScan.columns = columns;
@@ -301,5 +305,10 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return formatPlugin.supportsPushDown();
+  }
+
+  @JsonProperty
+  public TupleMetadata getSchema() {
+    return schema;
   }
 }

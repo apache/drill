@@ -24,6 +24,8 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.schedule.CompleteFileWork.FileWorkImpl;
 
@@ -36,26 +38,27 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.Path;
 
 @JsonTypeName("fs-sub-scan")
-public class EasySubScan extends AbstractSubScan{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasySubScan.class);
+public class EasySubScan extends AbstractSubScan {
 
   private final List<FileWorkImpl> files;
   private final EasyFormatPlugin<?> formatPlugin;
   private final List<SchemaPath> columns;
   private final Path selectionRoot;
   private final int partitionDepth;
+  private final TupleMetadata schema;
 
   @JsonCreator
   public EasySubScan(
-      @JsonProperty("userName") String userName,
-      @JsonProperty("files") List<FileWorkImpl> files,
-      @JsonProperty("storage") StoragePluginConfig storageConfig,
-      @JsonProperty("format") FormatPluginConfig formatConfig,
-      @JacksonInject StoragePluginRegistry engineRegistry,
-      @JsonProperty("columns") List<SchemaPath> columns,
-      @JsonProperty("selectionRoot") Path selectionRoot,
-      @JsonProperty("partitionDepth") int partitionDepth
-      ) throws ExecutionSetupException {
+    @JsonProperty("userName") String userName,
+    @JsonProperty("files") List<FileWorkImpl> files,
+    @JsonProperty("storage") StoragePluginConfig storageConfig,
+    @JsonProperty("format") FormatPluginConfig formatConfig,
+    @JacksonInject StoragePluginRegistry engineRegistry,
+    @JsonProperty("columns") List<SchemaPath> columns,
+    @JsonProperty("selectionRoot") Path selectionRoot,
+    @JsonProperty("partitionDepth") int partitionDepth,
+    @JsonProperty("schema") TupleSchema schema
+    ) throws ExecutionSetupException {
     super(userName);
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(this.formatPlugin);
@@ -63,16 +66,18 @@ public class EasySubScan extends AbstractSubScan{
     this.columns = columns;
     this.selectionRoot = selectionRoot;
     this.partitionDepth = partitionDepth;
+    this.schema = schema;
   }
 
   public EasySubScan(String userName, List<FileWorkImpl> files, EasyFormatPlugin<?> plugin,
-      List<SchemaPath> columns, Path selectionRoot, int partitionDepth) {
+      List<SchemaPath> columns, Path selectionRoot, int partitionDepth, TupleMetadata schema) {
     super(userName);
     this.formatPlugin = plugin;
     this.files = files;
     this.columns = columns;
     this.selectionRoot = selectionRoot;
     this.partitionDepth = partitionDepth;
+    this.schema = schema;
   }
 
   @JsonProperty
@@ -95,6 +100,9 @@ public class EasySubScan extends AbstractSubScan{
 
   @JsonProperty("columns")
   public List<SchemaPath> getColumns() { return columns; }
+
+  @JsonProperty("schema")
+  public TupleMetadata getSchema() { return schema; }
 
   @Override
   public int getOperatorType() { return formatPlugin.getReaderOperatorType(); }
