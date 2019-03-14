@@ -29,7 +29,7 @@ import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
-import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
+import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.Wrapper;
@@ -57,7 +57,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * allows not to pollute parent class with non-authentic functionality
  *
  */
-public class SplittingParallelizer extends DefaultQueryParallelizer {
+public class SplittingParallelizer extends DefaultParallelizer {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SplittingParallelizer.class);
 

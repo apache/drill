@@ -25,7 +25,7 @@ import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
  * Extends a {@link QueryResourceAllocator} to provide queueing support.
  */
 
-public interface QueryResourceManager extends QueryResourceAllocator {
+public interface QueryResourceManager {
 
   /**
    * Hint that this resource manager queues. Allows the Foreman
@@ -65,6 +65,7 @@ public interface QueryResourceManager extends QueryResourceAllocator {
 
   void admit() throws QueueTimeoutException, QueryQueueException;
 
+
   /**
    * Returns the name of the queue (if any) on which the query was
    * placed. Valid only after the query is admitted.
@@ -73,6 +74,11 @@ public interface QueryResourceManager extends QueryResourceAllocator {
    */
 
   String queueName();
+
+
+  long queryMemoryPerNode();
+
+  long minimumOperatorMemory();
 
   /**
    * Mark the query as completing, giving up its slot in the

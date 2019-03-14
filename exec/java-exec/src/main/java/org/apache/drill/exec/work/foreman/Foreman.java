@@ -412,7 +412,6 @@ public class Foreman implements Runnable {
   private void runPhysicalPlan(final PhysicalPlan plan, Pointer<String> textPlan) throws ExecutionSetupException {
     validatePlan(plan);
 
-    queryRM.visitAbstractPlan(plan);
     final QueryWorkUnit work = getQueryWorkUnit(plan, queryRM);
     if (enableRuntimeFilter) {
       runtimeFilterRouter = new RuntimeFilterRouter(work, drillbitContext);
@@ -421,7 +420,6 @@ public class Foreman implements Runnable {
     if (textPlan != null) {
       queryManager.setPlanText(textPlan.value);
     }
-    queryRM.visitPhysicalPlan(work);
     queryRM.setCost(plan.totalCost());
     queryManager.setTotalCost(plan.totalCost());
     work.applyPlan(drillbitContext.getPlanReader());

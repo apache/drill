@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.util;
+package org.apache.drill.exec.util.memory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,9 +31,9 @@ import org.apache.drill.exec.server.options.OptionSet;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
-public class MemoryAllocationUtilities {
+public class DefaultMemoryAllocationUtilities {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MemoryAllocationUtilities.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultMemoryAllocationUtilities.class);
 
 
   public static void setupBufferedMemoryAllocations(PhysicalPlan plan, final QueryContext queryContext) {

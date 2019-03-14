@@ -19,11 +19,8 @@ package org.apache.drill.exec.work.foreman.rm;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.fragment.QueryParallelizer;
-import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
-import org.apache.drill.exec.util.MemoryAllocationUtilities;
-import org.apache.drill.exec.work.QueryWorkUnit;
+import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
 import org.apache.drill.exec.work.foreman.Foreman;
 
 /**
@@ -35,39 +32,14 @@ import org.apache.drill.exec.work.foreman.Foreman;
 
 public class DefaultResourceManager implements ResourceManager {
 
-  public static class DefaultResourceAllocator implements QueryResourceAllocator {
+  public static class DefaultQueryResourceManager implements QueryResourceManager {
 
-    private QueryContext queryContext;
-
-    protected DefaultResourceAllocator(QueryContext queryContext) {
-      this.queryContext = queryContext;
-    }
-
-    @Override
-    public void visitAbstractPlan(PhysicalPlan plan) {
-      if (plan == null || plan.getProperties().hasResourcePlan) {
-        return;
-      }
-      MemoryAllocationUtilities.setupBufferedMemoryAllocations(plan, queryContext);
-    }
-
-    @Override
-    public void visitPhysicalPlan(QueryWorkUnit work) {
-    }
-
-    public QueryContext getQueryContext() {
-      return queryContext;
-    }
-  }
-
-  public static class DefaultQueryResourceManager extends DefaultResourceAllocator implements QueryResourceManager {
-
-    @SuppressWarnings("unused")
     private final DefaultResourceManager rm;
+    private final QueryContext queryContext;
 
     public DefaultQueryResourceManager(final DefaultResourceManager rm, final Foreman foreman) {
-      super(foreman.getQueryContext());
       this.rm = rm;
+      this.queryContext = foreman.getQueryContext();
     }
 
     @Override
@@ -77,7 +49,7 @@ public class DefaultResourceManager implements ResourceManager {
 
     @Override
     public QueryParallelizer getParallelizer(boolean memoryPlanning){
-      return new DefaultQueryParallelizer(memoryPlanning, this.getQueryContext());
+      return new DefaultParallelizer(memoryPlanning, queryContext);
     }
 
     @Override
@@ -95,6 +67,16 @@ public class DefaultResourceManager implements ResourceManager {
 
     @Override
     public String queueName() { return null; }
+
+    @Override
+    public long queryMemoryPerNode() {
+      return rm.memoryPerNode;
+    }
+
+    @Override
+    public long minimumOperatorMemory() {
+      return 0;
+    }
   }
 
   public final long memoryPerNode;
@@ -114,11 +96,6 @@ public class DefaultResourceManager implements ResourceManager {
 
   @Override
   public int cpusPerNode() { return cpusPerNode; }
-
-  @Override
-  public QueryResourceAllocator newResourceAllocator(QueryContext queryContext) {
-    return new DefaultResourceAllocator(queryContext);
-  }
 
   @Override
   public QueryResourceManager newQueryRM(final Foreman foreman) {

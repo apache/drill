@@ -47,7 +47,7 @@ import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootEx
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionerDecorator.GeneralExecuteIface;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.cost.PrelCostEstimates;
-import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
+import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
@@ -88,7 +88,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 @Category(OperatorTest.class)
 public class TestPartitionSender extends PlanTestBase {
 
-  private static final SimpleParallelizer PARALLELIZER = new DefaultQueryParallelizer(
+  private static final SimpleParallelizer PARALLELIZER = new DefaultParallelizer(
       true,
       1 /*parallelizationThreshold (slice_count)*/,
       6 /*maxWidthPerNode*/,

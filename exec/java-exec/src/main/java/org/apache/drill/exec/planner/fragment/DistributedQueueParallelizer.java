@@ -40,12 +40,12 @@ import java.util.stream.Collectors;
  * cluster state. However, the memory assignment for each operator, minor fragment and major
  * fragment is based on the cluster state and provided queue configuration.
  */
-public class QueueQueryParallelizer extends SimpleParallelizer {
+public class DistributedQueueParallelizer extends SimpleParallelizer {
   private final boolean planHasMemory;
   private final QueryContext queryContext;
   private final Map<DrillbitEndpoint, Map<PhysicalOperator, Long>> operators;
 
-  public QueueQueryParallelizer(boolean memoryPlanning, QueryContext queryContext) {
+  public DistributedQueueParallelizer(boolean memoryPlanning, QueryContext queryContext) {
     super(queryContext);
     this.planHasMemory = memoryPlanning;
     this.queryContext = queryContext;

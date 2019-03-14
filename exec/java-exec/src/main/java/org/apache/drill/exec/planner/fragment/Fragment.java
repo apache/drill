@@ -25,6 +25,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.util.memory.ZKQueueMemoryAllocationUtilities;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;

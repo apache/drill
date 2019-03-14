@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
+import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -82,7 +82,7 @@ public class TestLocalExchange extends PlanTestBase {
       .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
       .build();
 
-  private static final SimpleParallelizer PARALLELIZER = new DefaultQueryParallelizer(
+  private static final SimpleParallelizer PARALLELIZER = new DefaultParallelizer(
       true,
       1 /*parallelizationThreshold (slice_count)*/,
       6 /*maxWidthPerNode*/,

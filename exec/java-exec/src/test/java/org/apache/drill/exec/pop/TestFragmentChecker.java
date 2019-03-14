@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
-import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
+import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -53,7 +53,7 @@ public class TestFragmentChecker extends PopUnitTestBase{
   private void print(String fragmentFile, int bitCount, int expectedFragmentCount) throws Exception {
     PhysicalPlanReader ppr = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     Fragment fragmentRoot = getRootFragment(ppr, fragmentFile);
-    SimpleParallelizer par = new DefaultQueryParallelizer(true, 1000*1000, 5, 10, 1.2);
+    SimpleParallelizer par = new DefaultParallelizer(true, 1000*1000, 5, 10, 1.2);
     List<DrillbitEndpoint> endpoints = Lists.newArrayList();
     DrillbitEndpoint localBit = null;
     for(int i =0; i < bitCount; i++) {
