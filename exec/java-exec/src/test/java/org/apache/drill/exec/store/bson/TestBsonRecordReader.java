@@ -75,17 +75,19 @@ public class TestBsonRecordReader {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(10l, mapReader.reader("seqNo").readLong().longValue());
+    assertEquals(10L, mapReader.reader("seqNo").readLong().longValue());
   }
 
   @Test
   public void testTimeStampType() throws IOException {
     BsonDocument bsonDoc = new BsonDocument();
-    bsonDoc.append("ts", new BsonTimestamp(1000, 10));
+    bsonDoc.append("ts_small", new BsonTimestamp(1000, 10));
+    bsonDoc.append("ts_large", new BsonTimestamp(1000000000, 10));
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(1000000l, mapReader.reader("ts").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
+    assertEquals(1000000L, mapReader.reader("ts_small").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
+    assertEquals(1000000000000L, mapReader.reader("ts_large").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
   }
 
   @Test
