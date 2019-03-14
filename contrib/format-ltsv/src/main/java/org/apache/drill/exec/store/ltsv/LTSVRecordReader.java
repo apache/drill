@@ -144,7 +144,7 @@ public class LTSVRecordReader extends AbstractRecordReader {
       return recordCount;
 
     } catch (final Exception e) {
-      String msg = String.format("Failure while reading messages from %s. Recordreader was at record: %d", inputPath, recordCount + 1);
+      String msg = String.format("Failure while reading messages from %s. Record reader was at record: %d", inputPath, recordCount + 1);
       throw UserException.dataReadError(e).message(msg).build(logger);
     }
   }
