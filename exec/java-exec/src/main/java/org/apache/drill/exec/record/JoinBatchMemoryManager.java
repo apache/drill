@@ -56,6 +56,9 @@ public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
    *  After every call to update() while the outgoing batch is active, the current target should be updated with (3) by
    *  calling getCurrentOutgoingMaxRowCount() .
    *
+   *  Comment: The "power of 2" in the above (1) and (2) is actually "power of 2 minus 1" (e.g. 65535, or 8191) in order
+   *  to avoid memory waste in case offset vectors are used (see DRILL-5446)
+   *
    * @param inputIndex  Left (0) or Right (1)
    * @param outputPosition  Position (i.e. number of inserted rows) in the current output batch
    * @param useAggregate If true, compute using average row width (else based on allocated sizes)
