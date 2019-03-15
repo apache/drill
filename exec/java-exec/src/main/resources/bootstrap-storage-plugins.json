@@ -70,10 +70,6 @@
             "m4b", "m4r", "m4v", "3gp", "3g2", "eps", "epsf", "epsi", "ai", "arw",
             "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f"
           ]
-        },
-        "ltsv" : {
-          type: "ltsv",
-          extensions: [ "ltsv" ]
         }
       },
       enabled : true
@@ -131,10 +127,6 @@
           extensions: [ "csvh" ],
           delimiter: ",",
           extractHeader: true
-        },
-        "ltsv" : {
-          type: "ltsv",
-          extensions: [ "ltsv" ]
         }
       },
       enabled : false
