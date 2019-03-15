@@ -226,6 +226,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     int bitCount = builder.bitCount;
     for (int i = 0; i < bitCount; i++) {
       Drillbit bit = new Drillbit(config, builder.configBuilder.getDefinitions(), serviceSet);
+      configureStoragePlugins(bit);
       bit.run();
 
       // Bit name and registration.
@@ -253,7 +254,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       if (i == 0) {
         defaultDrillbit = bit;
       }
-      configureStoragePlugins(bit);
     }
   }
 
