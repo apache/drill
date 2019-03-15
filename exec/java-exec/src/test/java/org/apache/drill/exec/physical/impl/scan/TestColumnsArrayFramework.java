@@ -35,7 +35,7 @@ import org.apache.drill.exec.physical.impl.scan.TestFileScanFramework.BaseFileSc
 import org.apache.drill.exec.physical.impl.scan.TestFileScanFramework.DummyFileWork;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
-import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.ColumnsSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.columns.ColumnsSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.FileReaderCreator;
 import org.apache.drill.exec.physical.impl.scan.file.BaseFileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;

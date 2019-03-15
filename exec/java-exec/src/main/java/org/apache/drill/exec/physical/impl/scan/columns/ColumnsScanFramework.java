@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.file.BaseFileScanFramework;
-import org.apache.drill.exec.physical.impl.scan.file.BaseFileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiatorImpl;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ShimBatchReader;
@@ -44,22 +43,12 @@ import org.apache.hadoop.mapred.FileSplit;
  * identifier, the use of the columns identifier when it is not allowed, etc.
  */
 
-public class ColumnsScanFramework extends BaseFileScanFramework<ColumnsScanFramework.ColumnsSchemaNegotiator> {
+public class ColumnsScanFramework extends BaseFileScanFramework<ColumnsSchemaNegotiator> {
 
   public interface FileReaderCreator {
     ManagedReader<ColumnsSchemaNegotiator> makeBatchReader(
         DrillFileSystem dfs,
         FileSplit split) throws ExecutionSetupException;
-  }
-
-  /**
-   * Schema negotiator that supports the file scan options plus access
-   * to the specific selected columns indexes.
-   */
-
-  public interface ColumnsSchemaNegotiator extends FileSchemaNegotiator {
-    boolean columnsArrayProjected();
-    boolean[] projectedIndexes();
   }
 
   /**
