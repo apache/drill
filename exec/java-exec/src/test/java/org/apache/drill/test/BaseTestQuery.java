@@ -183,7 +183,6 @@ public class BaseTestQuery extends ExecTest {
     bits = new Drillbit[drillbitCount];
     for(int i = 0; i < drillbitCount; i++) {
       bits[i] = new Drillbit(config, serviceSet, classpathScan);
-      bits[i].run();
 
       @SuppressWarnings("resource")
       final StoragePluginRegistry pluginRegistry = bits[i].getContext().getStorage();
@@ -195,6 +194,8 @@ public class BaseTestQuery extends ExecTest {
         dirTestWatcher.getRootDir(), ROOT_SCHEMA);
       StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry,
         dirTestWatcher.getRootDir(), SchemaFactory.DEFAULT_WS_NAME);
+
+      bits[i].run();
     }
 
     if (!properties.containsKey(DrillProperties.DRILLBIT_CONNECTION)) {
