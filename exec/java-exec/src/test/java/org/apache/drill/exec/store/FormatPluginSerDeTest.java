@@ -93,9 +93,9 @@ public class FormatPluginSerDeTest extends PlanTestBase {
 
   @Test
   public void testHttpd() throws Exception {
-    String path = "store/httpd/dfs-bootstrap.httpd";
+    String path = "store/httpd/dfs-test-bootstrap-test.httpd";
     dirTestWatcher.copyResourceToRoot(Paths.get(path));
-    String logFormat = "%h %t \"%r\" %>s %b \"%{Referer}i\"";
+    String logFormat = "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"";
     String timeStampFormat = "dd/MMM/yyyy:HH:mm:ss ZZ";
     testPhysicalPlanSubmission(
         String.format("select * from dfs.`%s`", path),
