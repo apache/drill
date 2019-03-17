@@ -57,14 +57,13 @@
   <#-- Modal window-->
   <div class="modal fade" id="pluginsModal" tabindex="-1" role="dialog" aria-labelledby="exportPlugin" aria-hidden="true">
     <div class="modal-dialog modal-sm" role="document">
-      <!-- Modal content-->
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
           <h4 class="modal-title" id="exportPlugin">Export Plugin config</h4>
         </div>
         <div class="modal-body">
-          <div id="format" style="display: inline-block; position: center;">
+          <div id="format" style="display: inline-block; position: relative;">
             <label for="format">File type</label>
             <div class="radio">
               <label>

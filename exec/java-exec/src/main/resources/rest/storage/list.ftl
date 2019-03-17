@@ -49,14 +49,14 @@
 
   <div class="page-header" style="margin: 5px;"></div>
 
-  <div class="table-responsive col-xs-6 col-sm-4">
+  <div class="table-responsive col-sm-12 col-md-6 col-lg-5 col-xl-5">
     <h4>Enabled Storage Plugins</h4>
     <table class="table">
       <tbody>
         <#list model as plugin>
           <#if plugin.enabled() == true>
             <tr>
-              <td style="border:none; width:200px;">
+              <td style="border:none; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
                 ${plugin.getName()}
               </td>
               <td style="border:none;">
@@ -78,14 +78,14 @@
     </table>
   </div>
 
-  <div class="table-responsive col-xs-6">
+  <div class="table-responsive col-sm-12 col-md-6 col-lg-7 col-xl-7">
     <h4>Disabled Storage Plugins</h4>
     <table class="table">
       <tbody>
         <#list model as plugin>
           <#if plugin.enabled() == false>
             <tr>
-              <td style="border:none; width:200px;">
+              <td style="border:none; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
                 ${plugin.getName()}
               </td>
               <td style="border:none;">
