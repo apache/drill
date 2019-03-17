@@ -45,6 +45,8 @@ import org.apache.drill.exec.record.MaterializedField;
  */
 public interface TupleMetadata extends Propertied, Iterable<ColumnMetadata> {
 
+  public static final String IS_STRICT_SCHEMA_PROP = DRILL_PROP_PREFIX + "strict";
+
   /**
    * Add a new column to the schema.
    *

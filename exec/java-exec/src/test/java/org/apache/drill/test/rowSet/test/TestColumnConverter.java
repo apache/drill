@@ -23,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -81,6 +83,11 @@ public class TestColumnConverter extends SubOperatorTest {
     @Override
     public void setString(String value) {
       setInt(Integer.parseInt(value));
+    }
+
+    @Override
+    public void setValue(Object value) {
+      setString((String) value);
     }
   }
 
@@ -146,8 +153,6 @@ public class TestColumnConverter extends SubOperatorTest {
         .addRow(234, 23)
         .build();
 
-    // Compare
-
     RowSetUtilities.verify(expected, actual);
   }
 
@@ -182,8 +187,6 @@ public class TestColumnConverter extends SubOperatorTest {
         .addSingleCol(intArray(123, 124))
         .addSingleCol(intArray(234, 235))
         .build();
-
-    // Compare
 
     RowSetUtilities.verify(expected, actual);
   }
@@ -227,7 +230,7 @@ public class TestColumnConverter extends SubOperatorTest {
         .add("bi", MinorType.BIGINT)
         .add("fl", MinorType.FLOAT4)
         .add("db", MinorType.FLOAT8)
-       .buildSchema();
+         .buildSchema();
     TupleMetadata inputSchema = new SchemaBuilder()
         .add("ti", MinorType.VARCHAR)
         .add("si", MinorType.VARCHAR)
@@ -235,7 +238,7 @@ public class TestColumnConverter extends SubOperatorTest {
         .add("bi", MinorType.VARCHAR)
         .add("fl", MinorType.VARCHAR)
         .add("db", MinorType.VARCHAR)
-       .buildSchema();
+        .buildSchema();
 
     RowSet actual = new RowSetBuilder(fixture.allocator(), outputSchema,
         new ConversionTestFixture(inputSchema))
@@ -249,6 +252,52 @@ public class TestColumnConverter extends SubOperatorTest {
     final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
         .addRow(11, 12, 13, 14L, 15.5F, 16.25D)
         .addRow(127, 32757, Integer.MAX_VALUE, Long.MAX_VALUE, 10E6F, 10E200D)
+        .build();
+
+    // Compare
+
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * Test the standard string-to-type conversion using an ad-hoc conversion
+   * from the input type (the type used by the row set builder) to the output
+   * (vector) type.
+   */
+  @Test
+  public void testNumberToStringConversion() {
+
+    // Create the schema
+
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("ti", MinorType.VARCHAR)
+        .add("si", MinorType.VARCHAR)
+        .add("int", MinorType.VARCHAR)
+        .add("bi", MinorType.VARCHAR)
+        .add("fl", MinorType.VARCHAR)
+        .add("db", MinorType.VARCHAR)
+        .buildSchema();
+    TupleMetadata inputSchema = new SchemaBuilder()
+        .add("ti", MinorType.TINYINT)
+        .add("si", MinorType.SMALLINT)
+        .add("int", MinorType.INT)
+        .add("bi", MinorType.BIGINT)
+        .add("fl", MinorType.FLOAT4)
+        .add("db", MinorType.FLOAT8)
+        .buildSchema();
+
+    RowSet actual = new RowSetBuilder(fixture.allocator(), outputSchema,
+        new ConversionTestFixture(inputSchema))
+        .addRow(11, 12, 13, 14L, 15.5F, 16.25D)
+        .addRow(127, 32757, Integer.MAX_VALUE, Long.MAX_VALUE, 10E6F, 10E200D)
+        .build();
+
+    // Build the expected vector without a type converter.
+
+    final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
+        .addRow("11", "12", "13", "14", "15.5", "16.25")
+        .addRow("127", "32757", Integer.toString(Integer.MAX_VALUE),
+            Long.toString(Long.MAX_VALUE), "1.0E7", "1.0E201")
         .build();
 
     // Compare
@@ -278,6 +327,10 @@ public class TestColumnConverter extends SubOperatorTest {
     }
   }
 
+  public static BigDecimal dec(int value) {
+    return new BigDecimal(value);
+  }
+
   /**
    * Tests the implicit conversions provided by the column writer itself.
    * No conversion mechanism is needed in this case.
@@ -292,24 +345,27 @@ public class TestColumnConverter extends SubOperatorTest {
         .add("bi", MinorType.BIGINT)
         .add("fl", MinorType.FLOAT4)
         .add("db", MinorType.FLOAT8)
+        .add("dec", MinorType.VARDECIMAL, 10, 0)
         .buildSchema();
 
     // Test allowed implicit conversions.
 
     RowSet actual = new RowSetBuilder(fixture.allocator(), schema)
-        .addRow(11,  12,  13,  14,  15,  16)  // int
-        .addRow(21L, 22L, 23L, 24L, 25L, 26L) // long
-        .addRow(31F, 32F, 33F, 34F, 35F, 36F) // float
-        .addRow(41D, 42D, 43D, 44D, 45D, 46D) // double
+        .addRow(11,  12,  13,  14,  15,  16, 17)  // int
+        .addRow(21L, 22L, 23L, 24L, 25L, 26L, 27L) // long
+        .addRow(31F, 32F, 33F, 34F, 35F, 36F, 37F) // float
+        .addRow(41D, 42D, 43D, 44D, 45D, 46D, 47D) // double
+        .addRow(dec(51), dec(52), dec(53), dec(54), dec(55), dec(56), dec(57)) // decimal
         .build();
 
     // Build the expected vector without a type converter.
 
     final SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(11, 12, 13, 14L, 15F, 16D)
-        .addRow(21, 22, 23, 24L, 25F, 26D)
-        .addRow(31, 32, 33, 34L, 35F, 36D)
-        .addRow(41, 42, 43, 44L, 45F, 46D)
+        .addRow(11, 12, 13, 14L, 15F, 16D, dec(17))
+        .addRow(21, 22, 23, 24L, 25F, 26D, dec(27))
+        .addRow(31, 32, 33, 34L, 35F, 36D, dec(37))
+        .addRow(41, 42, 43, 44L, 45F, 46D, dec(47))
+        .addRow(51, 52, 53, 54L, 55L, 56D, dec(57))
         .build();
 
     // Compare
@@ -347,8 +403,6 @@ public class TestColumnConverter extends SubOperatorTest {
         .addRow(Byte.MIN_VALUE, Short.MIN_VALUE)
         .addRow(Byte.MIN_VALUE + 1, Short.MIN_VALUE + 1)
         .build();
-
-    // Compare
 
     RowSetUtilities.verify(expected, actual);
   }
@@ -454,6 +508,36 @@ public class TestColumnConverter extends SubOperatorTest {
     RowSetUtilities.verify(expected, actual);
   }
 
+  @Test
+  public void testIntervalToString() {
+
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("id", MinorType.VARCHAR)
+        .add("iy", MinorType.VARCHAR)
+        .add("int", MinorType.VARCHAR)
+        .buildSchema();
+
+    TupleMetadata inputSchema = new SchemaBuilder()
+        .add("id", MinorType.INTERVALDAY)
+        .add("iy", MinorType.INTERVALYEAR)
+        .add("int", MinorType.INTERVAL)
+        .buildSchema();
+
+    Period p1 = Period.days(2).plusHours(3).plusMinutes(4).plusSeconds(5);
+    Period p2 = Period.years(9).plusMonths(8);
+    Period p3 = p1.plus(p2);
+    RowSet actual = new RowSetBuilder(fixture.allocator(), outputSchema,
+        new ConversionTestFixture(inputSchema))
+        .addRow(p1, p2, p3)
+        .build();
+
+    final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
+        .addRow("P2DT3H4M5S", "P9Y8M", "P9Y8M2DT3H4M5S")
+        .build();
+
+    RowSetUtilities.verify(expected, actual);
+  }
+
   /**
    * Test VARCHAR to DATE, TIME and TIMESTAMP conversion
    * using default ISO formats.
@@ -475,8 +559,8 @@ public class TestColumnConverter extends SubOperatorTest {
 
     RowSet actual = new RowSetBuilder(fixture.allocator(), outputSchema,
         new ConversionTestFixture(inputSchema))
-        .addRow("2019-03-28", "12:34:56", "2019-03-28T12:34:56")
-        .addRow("2019-03-28", "12:34:56", "2019-03-28T12:34:56")
+        .addRow("2019-03-28", "12:34:56", "2019-03-28T12:34:56Z")
+        .addRow("2019-03-28", "12:34:56", "2019-03-28T12:34:56Z")
         .build();
 
     LocalTime lt = new LocalTime(12, 34, 56);
@@ -502,7 +586,7 @@ public class TestColumnConverter extends SubOperatorTest {
 
     outputSchema.metadata("date").setFormat("M/d/yyyy");
     outputSchema.metadata("time").setFormat("hh:mm:ss a");
-    outputSchema.metadata("ts").setFormat("M/d/yyyy hh:mm:ss a X");
+    outputSchema.metadata("ts").setFormat("M/d/yyyy hh:mm:ss a Z");
 
     TupleMetadata inputSchema = new SchemaBuilder()
         .add("date", MinorType.VARCHAR)
@@ -528,6 +612,66 @@ public class TestColumnConverter extends SubOperatorTest {
     RowSetUtilities.verify(expected, actual);
   }
 
+  @Test
+  public void testDateTimeToString() {
+
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("date", MinorType.VARCHAR)
+        .add("time", MinorType.VARCHAR)
+        .add("ts", MinorType.VARCHAR)
+        .buildSchema();
+
+    TupleMetadata inputSchema = new SchemaBuilder()
+        .add("date", MinorType.DATE)
+        .add("time", MinorType.TIME)
+        .add("ts", MinorType.TIMESTAMP)
+        .buildSchema();
+
+    LocalTime lt = new LocalTime(12, 34, 56);
+    LocalDate ld = new LocalDate(2019, 3, 28);
+    Instant ts = ld.toDateTime(lt, DateTimeZone.UTC).toInstant();
+    RowSet actual = new RowSetBuilder(fixture.allocator(), outputSchema,
+        new ConversionTestFixture(inputSchema))
+        .addRow(ld, lt, ts)
+        .build();
+
+    final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
+        .addRow("2019-03-28", "12:34:56.000", "2019-03-28T12:34:56.000Z")
+        .build();
+
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * Test conversion two-from Java-style booleans.
+   */
+  @Test
+  public void testBooleanToFromString() {
+
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("bool", MinorType.BIT)
+        .add("str", MinorType.VARCHAR)
+        .buildSchema();
+
+    TupleMetadata inputSchema = new SchemaBuilder()
+        .add("bool", MinorType.VARCHAR)
+        .add("str", MinorType.BIT)
+        .buildSchema();
+
+    RowSet actual = new RowSetBuilder(fixture.allocator(), outputSchema,
+        new ConversionTestFixture(inputSchema))
+        .addRow("true", false)
+        .addRow("false", true)
+        .build();
+
+    final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
+        .addRow(true, "false")
+        .addRow(false, "true")
+        .build();
+
+    RowSetUtilities.verify(expected, actual);
+  }
+
   private static void expect(ConversionType type, ConversionDefn defn) {
     assertEquals(type, defn.type);
   }
@@ -536,7 +680,7 @@ public class TestColumnConverter extends SubOperatorTest {
    * Test the conversion type for a subset of type pairs.
    */
   @Test
-  public void testImplicitConversionType() {
+  public void testBasicConversionType() {
     TupleMetadata schema = new SchemaBuilder()
         .add("ti", MinorType.TINYINT)
         .add("si", MinorType.SMALLINT)
@@ -544,7 +688,8 @@ public class TestColumnConverter extends SubOperatorTest {
         .add("bi", MinorType.BIGINT)
         .add("fl", MinorType.FLOAT4)
         .add("db", MinorType.FLOAT8)
-        .add("dec", MinorType.VARDECIMAL)
+        .add("dec", MinorType.VARDECIMAL, 10, 0)
+        .add("str", MinorType.VARCHAR)
         .buildSchema();
     ColumnMetadata tinyIntCol = schema.metadata("ti");
     ColumnMetadata smallIntCol = schema.metadata("si");
@@ -553,6 +698,7 @@ public class TestColumnConverter extends SubOperatorTest {
     ColumnMetadata float4Col = schema.metadata("fl");
     ColumnMetadata float8Col = schema.metadata("db");
     ColumnMetadata decimalCol = schema.metadata("dec");
+    ColumnMetadata stringCol = schema.metadata("str");
 
     // TinyInt --> x
     expect(ConversionType.NONE, StandardConversions.analyze(tinyIntCol, tinyIntCol));
@@ -562,6 +708,7 @@ public class TestColumnConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(tinyIntCol, float4Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(tinyIntCol, float8Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(tinyIntCol, decimalCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(tinyIntCol, stringCol));
 
     // SmallInt --> x
     expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(smallIntCol, tinyIntCol));
@@ -571,6 +718,7 @@ public class TestColumnConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(smallIntCol, float4Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(smallIntCol, float8Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(smallIntCol, decimalCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(smallIntCol, stringCol));
 
     // Int --> x
     expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(intCol, tinyIntCol));
@@ -580,6 +728,7 @@ public class TestColumnConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(intCol, float4Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(intCol, float8Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(intCol, decimalCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(intCol, stringCol));
 
     // BigInt --> x
     expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(bigIntCol, tinyIntCol));
@@ -589,6 +738,7 @@ public class TestColumnConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, float4Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, float8Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, decimalCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(bigIntCol, stringCol));
 
     // Float4 --> x
     expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float4Col, tinyIntCol));
@@ -598,6 +748,7 @@ public class TestColumnConverter extends SubOperatorTest {
     expect(ConversionType.NONE, StandardConversions.analyze(float4Col, float4Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(float4Col, float8Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(float4Col, decimalCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(float4Col, stringCol));
 
     // Float8 --> x
     expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float8Col, tinyIntCol));
@@ -607,6 +758,7 @@ public class TestColumnConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float8Col, float4Col));
     expect(ConversionType.NONE, StandardConversions.analyze(float8Col, float8Col));
     expect(ConversionType.IMPLICIT, StandardConversions.analyze(float8Col, decimalCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(float8Col, stringCol));
 
     // Decimal --> x
     expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, tinyIntCol));
@@ -616,5 +768,85 @@ public class TestColumnConverter extends SubOperatorTest {
     expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, float4Col));
     expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, float8Col));
     expect(ConversionType.NONE, StandardConversions.analyze(decimalCol, decimalCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, stringCol));
+
+    // VarChar --> x
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, tinyIntCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, smallIntCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, intCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, bigIntCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, float4Col));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, float8Col));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, decimalCol));
+    expect(ConversionType.NONE, StandardConversions.analyze(stringCol, stringCol));
+  }
+
+  /**
+   * Test the specialized types: conversation to/from string.
+   */
+  @Test
+  public void testSpecialConversionType() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("time", MinorType.TIME)
+        .add("date", MinorType.DATE)
+        .add("ts", MinorType.TIMESTAMP)
+        .add("interval", MinorType.INTERVAL)
+        .add("year", MinorType.INTERVALYEAR)
+        .add("day", MinorType.INTERVALDAY)
+        .add("int", MinorType.INT)
+        .add("bi", MinorType.BIGINT)
+        .add("str", MinorType.VARCHAR)
+        .buildSchema();
+    ColumnMetadata timeCol = schema.metadata("time");
+    ColumnMetadata dateCol = schema.metadata("date");
+    ColumnMetadata tsCol = schema.metadata("ts");
+    ColumnMetadata intervalCol = schema.metadata("interval");
+    ColumnMetadata yearCol = schema.metadata("year");
+    ColumnMetadata dayCol = schema.metadata("day");
+    ColumnMetadata intCol = schema.metadata("int");
+    ColumnMetadata bigIntCol = schema.metadata("bi");
+    ColumnMetadata stringCol = schema.metadata("str");
+
+    // TIME
+
+    expect(ConversionType.NONE, StandardConversions.analyze(timeCol, timeCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(timeCol, stringCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, timeCol));
+    expect(ConversionType.IMPLICIT, StandardConversions.analyze(intCol, timeCol));
+    expect(ConversionType.IMPLICIT, StandardConversions.analyze(timeCol, intCol));
+
+    // DATE
+
+    expect(ConversionType.NONE, StandardConversions.analyze(dateCol, dateCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(dateCol, stringCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, dateCol));
+    expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, dateCol));
+    expect(ConversionType.IMPLICIT, StandardConversions.analyze(dateCol, bigIntCol));
+
+    // TIMESTAMP
+
+    expect(ConversionType.NONE, StandardConversions.analyze(tsCol, tsCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(tsCol, stringCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, tsCol));
+    expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, tsCol));
+    expect(ConversionType.IMPLICIT, StandardConversions.analyze(tsCol, bigIntCol));
+
+    // INTERVAL
+
+    expect(ConversionType.NONE, StandardConversions.analyze(intervalCol, intervalCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(intervalCol, stringCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, intervalCol));
+
+    // INTERVALYEAR
+
+    expect(ConversionType.NONE, StandardConversions.analyze(yearCol, yearCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(yearCol, stringCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, yearCol));
+
+    // INTERVALDAY
+
+    expect(ConversionType.NONE, StandardConversions.analyze(dayCol, dayCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(dayCol, stringCol));
+    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, dayCol));
   }
 }

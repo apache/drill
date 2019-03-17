@@ -20,6 +20,7 @@ package org.apache.drill.test.rowSet.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -36,6 +37,7 @@ import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSetWriter;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the "fill empties" logic for all types for all modes.
@@ -47,6 +49,7 @@ import org.junit.Test;
  * null handling in the accessor classes.
  */
 
+@Category(RowSetTests.class)
 public class TestFillEmpties extends SubOperatorTest {
 
   public static final int ROW_COUNT = 1000;

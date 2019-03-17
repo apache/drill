@@ -300,7 +300,6 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       return this;
     }
 
-    @SuppressWarnings("resource")
     public PopBuilder buildAddAsInput() throws Exception {
       mockOpContext(popConfig, initReservation, maxAllocation);
       @SuppressWarnings("unchecked")

@@ -27,8 +27,10 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
+import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -55,6 +57,14 @@ public class TestColumnsArray extends SubOperatorTest {
     ResultSetLoader loader;
   }
 
+  private FileMetadataOptions standardOptions(Path filePath) {
+    FileMetadataOptions options = new FileMetadataOptions();
+    options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
+    options.setSelectionRoot(new Path("hdfs:///w"));
+    options.setFiles(Lists.newArrayList(filePath));
+    return options;
+  }
+
   private MockScanner buildScanner(List<SchemaPath> projList) {
 
     MockScanner mock = new MockScanner();
@@ -64,11 +74,7 @@ public class TestColumnsArray extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
     // ...and the columns array manager
 
@@ -76,14 +82,15 @@ public class TestColumnsArray extends SubOperatorTest {
 
     // Configure the schema orchestrator
 
-    mock.scanner = new ScanSchemaOrchestrator(fixture.allocator());
-    mock.scanner.withMetadata(metadataManager);
-    mock.scanner.addParser(colsManager.projectionParser());
-    mock.scanner.addResolver(colsManager.resolver());
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    builder.withMetadata(metadataManager);
+    builder.addParser(colsManager.projectionParser());
+    builder.addResolver(colsManager.resolver());
 
     // SELECT <proj list> ...
 
-    mock.scanner.build(projList);
+    builder.setProjection(projList);
+    mock.scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // FROM z.csv
 
@@ -252,12 +259,11 @@ public class TestColumnsArray extends SubOperatorTest {
 
     // Configure the schema orchestrator
 
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
-    scanner.addParser(colsManager.projectionParser());
-    scanner.addResolver(colsManager.resolver());
-
-    scanner.build(cols);
-    return scanner;
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    builder.addParser(colsManager.projectionParser());
+    builder.addResolver(colsManager.resolver());
+    builder.setProjection(cols);
+    return new ScanSchemaOrchestrator(fixture.allocator(), builder);
   }
 
   /**

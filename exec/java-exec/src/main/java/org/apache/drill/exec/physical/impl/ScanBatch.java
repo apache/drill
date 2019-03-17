@@ -367,6 +367,7 @@ public class ScanBatch implements CloseableRecordBatch {
     return container.getValueAccessorById(clazz, ids);
   }
 
+  @SuppressWarnings("unused")
   private void logRecordBatchStats() {
     final int MAX_FQN_LENGTH = 50;
 
@@ -552,7 +553,6 @@ public class ScanBatch implements CloseableRecordBatch {
     private void populateImplicitVectors(Map<String, String> implicitValues, int recordCount) {
       if (implicitValues != null) {
         for (Map.Entry<String, String> entry : implicitValues.entrySet()) {
-          @SuppressWarnings("resource")
           final NullableVarCharVector v = (NullableVarCharVector) implicitFieldVectorMap.get(entry.getKey());
           String val;
           if ((val = entry.getValue()) != null) {

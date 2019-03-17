@@ -24,8 +24,6 @@ import org.apache.drill.exec.record.MaterializedField;
 
 public class ResolvedColumnsArrayColumn extends ResolvedTableColumn {
 
-  public static final int ID = 21;
-
   private final RequestedColumn inCol;
 
   public ResolvedColumnsArrayColumn(UnresolvedColumnsArrayColumn unresolved,
@@ -34,9 +32,6 @@ public class ResolvedColumnsArrayColumn extends ResolvedTableColumn {
     super(unresolved.name(), schema, source, sourceIndex);
     inCol = unresolved.element();
   }
-
-  @Override
-  public int nodeType() { return ID; }
 
   public boolean[] selectedIndexes() { return inCol.indexes(); }
 }

@@ -89,7 +89,6 @@ public class TestShortArrays extends SubOperatorTest {
     SingleRowSet empty = fixture.rowSet(schema);
     vi.allocateBatch(empty.container(), 100);
     assertEquals(2, empty.container().getNumberOfColumns());
-    @SuppressWarnings("resource")
     ValueVector bVector = empty.container().getValueVector(1).getValueVector();
     assertTrue(bVector instanceof RepeatedIntVector);
     assertEquals(16, ((RepeatedIntVector) bVector).getDataVector().getValueCapacity());

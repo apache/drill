@@ -17,19 +17,17 @@
  */
 package org.apache.drill.exec.vector.accessor.convert;
 
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.joda.time.Instant;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * Convert a VARCHAR column to an TIMESTAMP column following the Java rules
  * for parsing a date time, optionally using the formatter provided in
  * the column schema.
  */
-public class ConvertStringToTimeStamp extends AbstractWriteConverter {
+public class ConvertStringToTimeStamp extends AbstractConvertFromString {
 
   private final DateTimeFormatter dateTimeFormatter;
 
@@ -39,15 +37,14 @@ public class ConvertStringToTimeStamp extends AbstractWriteConverter {
   }
 
   @Override
-  public void setString(String value) {
+  public void setString(final String value) {
     if (value == null) {
       baseWriter.setNull();
     } else {
       try {
-        final ZonedDateTime dt = ZonedDateTime.parse(value, dateTimeFormatter);
-        baseWriter.setLong(dt.toInstant().toEpochMilli());
+        baseWriter.setTimestamp(Instant.parse(value, dateTimeFormatter));
       }
-      catch (final DateTimeParseException e) {
+      catch (final IllegalStateException e) {
         throw InvalidConversionError.writeError(schema(), value, e);
       }
     }

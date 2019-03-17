@@ -17,15 +17,14 @@
  */
 package org.apache.drill.exec.physical.impl.scan.columns;
 
-import org.apache.drill.exec.physical.impl.scan.file.BaseFileScanFramework;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 
 /**
  * Schema negotiator that supports the file scan options plus access
  * to the specific selected columns indexes.
  */
-public interface ColumnsSchemaNegotiator extends BaseFileScanFramework.FileSchemaNegotiator {
+public interface ColumnsSchemaNegotiator extends FileSchemaNegotiator {
 
   boolean columnsArrayProjected();
   boolean[] projectedIndexes();
-
 }

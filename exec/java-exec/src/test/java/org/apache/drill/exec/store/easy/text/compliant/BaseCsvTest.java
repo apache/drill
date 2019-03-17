@@ -86,6 +86,19 @@ public class BaseCsvTest extends ClusterTest {
     client.resetSession(ExecConstants.ENABLE_V3_TEXT_READER_KEY);
   }
 
+  protected void enableMultiScan() {
+
+    // Special test-only feature to force even small scans
+    // to use more than one thread. Requires that the max
+    // parallelization option be set when starting the cluster.
+
+    client.alterSession(ExecConstants.MIN_READER_WIDTH_KEY, 2);
+  }
+
+  protected void resetMultiScan() {
+    client.resetSession(ExecConstants.MIN_READER_WIDTH_KEY);
+  }
+
   protected static void buildFile(String fileName, String[] data) throws IOException {
     buildFile(new File(testDir, fileName), data);
   }

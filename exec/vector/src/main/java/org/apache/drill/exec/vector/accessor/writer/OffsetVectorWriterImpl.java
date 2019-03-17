@@ -19,6 +19,7 @@ package org.apache.drill.exec.vector.accessor.writer;
 
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
@@ -243,6 +244,11 @@ public class OffsetVectorWriterImpl extends AbstractFixedWidthWriter implements 
     final int writeIndex = prepareWrite();
     drillBuf.setInt(writeIndex * VALUE_WIDTH, newOffset);
     nextOffset = newOffset;
+  }
+
+  @Override
+  public final void setValue(final Object value) {
+    throw new InvalidConversionError("setValue() not supported for the offset vector writer");
   }
 
   @Override

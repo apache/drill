@@ -99,7 +99,6 @@ public class StorageResources {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, list);
   }
 
-  @SuppressWarnings("resource")
   @GET
   @Path("/storage/{name}.json")
   @Produces(MediaType.APPLICATION_JSON)

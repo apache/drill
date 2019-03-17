@@ -17,22 +17,18 @@
  */
 package org.apache.drill.exec.vector.accessor.convert;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * Convert a VARCHAR column to an DATE column following the Java rules
  * for parsing a date time, optionally using the formatter provided in
  * the column schema.
  */
-public class ConvertStringToDate extends AbstractWriteConverter {
+public class ConvertStringToDate extends AbstractConvertFromString {
 
-  private static ZoneId UTC = ZoneId.of("Z");
   private final DateTimeFormatter dateTimeFormatter;
 
   public ConvertStringToDate(ScalarWriter baseWriter) {
@@ -41,15 +37,14 @@ public class ConvertStringToDate extends AbstractWriteConverter {
   }
 
   @Override
-  public void setString(String value) {
+  public void setString(final String value) {
     if (value == null) {
       baseWriter.setNull();
     } else {
       try {
-        final LocalDate dt = LocalDate.parse(value, dateTimeFormatter);
-        baseWriter.setLong(dt.atStartOfDay(UTC).toInstant().toEpochMilli());
+        baseWriter.setDate(LocalDate.parse(value, dateTimeFormatter));
       }
-      catch (final DateTimeParseException e) {
+      catch (final IllegalStateException e) {
         throw InvalidConversionError.writeError(schema(), value, e);
       }
     }

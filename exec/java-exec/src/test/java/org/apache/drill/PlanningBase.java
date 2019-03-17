@@ -88,7 +88,6 @@ public class PlanningBase extends ExecTest {
     final LogicalPlanPersistence logicalPlanPersistence = new LogicalPlanPersistence(config, scanResult);
     final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence, provider, config);
     systemOptions.init();
-    @SuppressWarnings("resource")
     final UserSession userSession = UserSession.Builder.newBuilder().withOptionManager(systemOptions).build();
     final SessionOptionManager sessionOptions = userSession.getOptions();
     final QueryOptionManager queryOptions = new QueryOptionManager(sessionOptions);

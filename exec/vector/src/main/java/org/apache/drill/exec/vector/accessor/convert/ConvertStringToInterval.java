@@ -27,14 +27,14 @@ import org.joda.time.Period;
  * Convert a VARCHAR column to an INTERVAL column following the Java rules
  * for parsing a period.
  */
-public class ConvertStringToInterval extends AbstractWriteConverter {
+public class ConvertStringToInterval extends AbstractConvertFromString {
 
   public ConvertStringToInterval(ScalarWriter baseWriter) {
     super(baseWriter);
   }
 
   @Override
-  public void setString(String value) {
+  public void setString(final String value) {
     if (value == null) {
       baseWriter.setNull();
     } else {

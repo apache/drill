@@ -27,13 +27,16 @@ import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.impl.AccessorUtilities;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents {
 
   public static class ScalarObjectReader extends AbstractObjectReader {
 
-    private AbstractScalarReader scalarReader;
+    private final AbstractScalarReader scalarReader;
 
     public ScalarObjectReader(AbstractScalarReader scalarReader) {
       this.scalarReader = scalarReader;
@@ -104,6 +107,9 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
   public ObjectType type() { return ObjectType.SCALAR; }
 
   @Override
+  public ValueType extendedType() { return valueType(); }
+
+  @Override
   public NullStateReader nullStateReader() { return nullStateReader; }
 
   @Override
@@ -154,6 +160,21 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
   }
 
   @Override
+  public LocalDate getDate() {
+    throw conversionError("Date");
+  }
+
+  @Override
+  public LocalTime getTime() {
+    throw conversionError("Time");
+  }
+
+  @Override
+  public Instant getTimestamp() {
+    throw conversionError("Timestamp");
+  }
+
+  @Override
   public Object getObject() {
     if (isNull()) {
       return null;
@@ -173,6 +194,12 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
       return getPeriod();
     case STRING:
       return getString();
+    case DATE:
+      return getDate();
+    case TIME:
+      return getTime();
+    case TIMESTAMP:
+      return getTimestamp();
     default:
       throw new IllegalStateException("Unexpected type: " + valueType());
     }
@@ -183,7 +210,7 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
     if (isNull()) {
       return "null";
     }
-    switch (valueType()) {
+    switch (extendedType()) {
     case BYTES:
       return AccessorUtilities.bytesToString(getBytes());
     case DOUBLE:
@@ -199,7 +226,7 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
     case PERIOD:
       return getPeriod().normalizedStandard().toString();
     default:
-      throw new IllegalArgumentException("Unsupported type " + valueType());
+      return getObject().toString();
     }
   }
 }

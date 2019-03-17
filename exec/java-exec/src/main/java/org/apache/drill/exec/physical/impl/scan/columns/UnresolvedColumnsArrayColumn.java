@@ -17,15 +17,13 @@
  */
 package org.apache.drill.exec.physical.impl.scan.columns;
 
-import org.apache.drill.exec.physical.impl.scan.project.UnresolvedColumn;
+import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
 
-public class UnresolvedColumnsArrayColumn extends UnresolvedColumn {
-
-  public static final int ID = 20;
+public class UnresolvedColumnsArrayColumn extends AbstractUnresolvedColumn {
 
   public UnresolvedColumnsArrayColumn(RequestedColumn inCol) {
-    super(inCol, ID);
+    super(inCol);
   }
 
   public boolean[] selectedIndexes() { return inCol.indexes(); }

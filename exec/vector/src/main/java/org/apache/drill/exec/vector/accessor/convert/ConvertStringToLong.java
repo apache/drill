@@ -24,14 +24,14 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
  * Convert a VARCHAR column to an BIGINT column following the Java rules
  * for parsing longs (i.e. no formatting.)
  */
-public class ConvertStringToLong extends AbstractWriteConverter {
+public class ConvertStringToLong extends AbstractConvertFromString {
 
   public ConvertStringToLong(ScalarWriter baseWriter) {
     super(baseWriter);
   }
 
   @Override
-  public void setString(String value) {
+  public void setString(final String value) {
     if (value == null) {
       baseWriter.setNull();
     } else {

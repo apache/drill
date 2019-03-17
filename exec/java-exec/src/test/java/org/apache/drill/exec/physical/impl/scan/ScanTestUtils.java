@@ -22,19 +22,25 @@ import java.util.List;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.base.AbstractSubScan;
+import org.apache.drill.exec.physical.base.Scan;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumnDefn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
 import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ScanFrameworkBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
-import org.apache.drill.exec.physical.impl.scan.project.SchemaLevelProjection.SchemaProjectionResolver;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.test.OperatorFixture;
 
 import avro.shaded.com.google.common.collect.Lists;
 
@@ -48,6 +54,70 @@ public class ScanTestUtils {
   public static final String SUFFIX_COL = "suffix";
   public static final String PARTITION_COL = "dir";
 
+
+  public static abstract class ScanFixtureBuilder {
+
+    public final OperatorFixture opFixture;
+
+    public ScanFixtureBuilder(OperatorFixture opFixture) {
+      this.opFixture = opFixture;
+    }
+
+    public abstract ScanFrameworkBuilder builder();
+
+    public void projectAll() {
+      builder().setProjection(RowSetTestUtils.projectAll());
+    }
+
+    public void projectAllWithMetadata(int dirs) {
+      builder().setProjection(ScanTestUtils.projectAllWithMetadata(dirs));
+    }
+
+    public void setProjection(String... projCols) {
+      builder().setProjection(RowSetTestUtils.projectList(projCols));
+    }
+
+    public void setProjection(List<SchemaPath> projection) {
+      builder().setProjection(projection);
+    }
+
+    protected abstract ManagedScanFramework newFramework();
+
+    public ScanFixture build() {
+      ManagedScanFramework framework = newFramework();
+      ScanOperatorExec scanOp = new ScanOperatorExec(framework);
+      Scan scanConfig = new AbstractSubScan("bob") {
+
+        @Override
+        public int getOperatorType() {
+          return 0;
+        }
+      };
+      OperatorContext opContext = opFixture.newOperatorContext(scanConfig);
+      scanOp.bind(opContext);
+      return new ScanFixture(opContext, scanOp);
+    }
+  }
+
+  public static class ScanFixture {
+
+    private OperatorContext opContext;
+    public ScanOperatorExec scanOp;
+
+    public ScanFixture(OperatorContext opContext, ScanOperatorExec scanOp) {
+      this.opContext = opContext;
+      this.scanOp = scanOp;
+    }
+
+    public void close() {
+      try {
+        scanOp.close();
+      } finally {
+        opContext.close();
+      }
+    }
+  }
+
   /**
    * Type-safe way to define a list of parsers.
    * @param parsers as a varArgs list convenient for testing
@@ -59,7 +129,7 @@ public class ScanTestUtils {
     return ImmutableList.copyOf(parsers);
   }
 
-  public static List<SchemaProjectionResolver> resolvers(SchemaProjectionResolver... resolvers) {
+  public static List<ReaderProjectionResolver> resolvers(ReaderProjectionResolver... resolvers) {
     return ImmutableList.copyOf(resolvers);
   }
 

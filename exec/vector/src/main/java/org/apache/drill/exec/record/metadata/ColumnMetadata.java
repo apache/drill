@@ -17,13 +17,12 @@
  */
 package org.apache.drill.exec.record.metadata;
 
-import java.time.format.DateTimeFormatter;
-
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * Metadata description of a column including names, types and structure

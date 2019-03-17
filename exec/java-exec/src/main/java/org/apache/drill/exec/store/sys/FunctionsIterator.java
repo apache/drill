@@ -45,7 +45,6 @@ public class FunctionsIterator implements Iterator<Object> {
     FunctionLookupContext functionLookupContext = context.getFunctionRegistry();
     //Check true instance type
     if (functionLookupContext instanceof FunctionImplementationRegistry) {
-      @SuppressWarnings("resource")
       FunctionImplementationRegistry functionImplRegistry = (FunctionImplementationRegistry) functionLookupContext;
       Map<String, List<FunctionHolder>> jarFunctionListMap = functionImplRegistry.getAllJarsWithFunctionsHolders();
 

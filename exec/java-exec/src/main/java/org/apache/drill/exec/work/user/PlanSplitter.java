@@ -61,7 +61,6 @@ public class PlanSplitter {
    * @param connection
    * @return
    */
-  @SuppressWarnings("resource")
   public QueryPlanFragments planFragments(DrillbitContext dContext, QueryId queryId,
       GetQueryPlanFragments req, UserClientConnection connection) {
     QueryPlanFragments.Builder responseBuilder = QueryPlanFragments.newBuilder();

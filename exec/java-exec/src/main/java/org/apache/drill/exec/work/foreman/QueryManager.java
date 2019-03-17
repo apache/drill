@@ -199,7 +199,6 @@ public class QueryManager implements AutoCloseable {
    * (3) Leaf fragment: running, send the cancel signal through a tunnel. The cancel is done directly.
    */
   void cancelExecutingFragments(final DrillbitContext drillbitContext) {
-    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     for(final FragmentData data : fragmentDataSet) {
       switch(data.getState()) {
@@ -228,7 +227,6 @@ public class QueryManager implements AutoCloseable {
    * sending any message. Resume all fragments through the control tunnel.
    */
   void unpauseExecutingFragments(final DrillbitContext drillbitContext) {
-    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     for(final FragmentData data : fragmentDataSet) {
       final DrillbitEndpoint endpoint = data.getEndpoint();

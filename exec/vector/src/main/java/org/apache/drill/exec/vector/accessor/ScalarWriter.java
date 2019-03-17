@@ -66,4 +66,19 @@ public interface ScalarWriter extends ColumnWriter {
   void setDate(LocalDate value);
   void setTime(LocalTime value);
   void setTimestamp(Instant value);
+
+  /**
+   * Write value to a vector as a Java object of the "native" type for
+   * the column. This form is available only on scalar writers. The
+   * object must be of the form for the primary write method above.
+   * <p>
+   * Primarily to be used when the code already knows the object type.
+   *
+   * @param value a value that matches the primary setter above, or null
+   * to set the column to null
+   *
+   * @See {@link ColumnWriter#setObject()} for the generic case
+   */
+
+  void setValue(Object value);
 }

@@ -664,7 +664,6 @@ public class QueryBuilder {
         throw new IllegalStateException("Looks like you did not provide an explain plan query, please add EXPLAIN PLAN FOR to the beginning of your query.");
       }
 
-      @SuppressWarnings("resource")
       final ValueVector vv = vw.getValueVector();
       for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
         final Object o = vv.getAccessor().getObject(i);

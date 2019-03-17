@@ -112,13 +112,11 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     }
     final int dataLength = recordCount * SelectionVector2.RECORD_SIZE;
     svMode = BatchSchema.SelectionVectorMode.TWO_BYTE;
-    @SuppressWarnings("resource")
     DrillBuf buf = allocator.read(dataLength, input);
     sv2 = new SelectionVector2(allocator, buf, recordCount);
     buf.release(); // SV2 now owns the buffer
   }
 
-  @SuppressWarnings("resource")
   private void readVectors(InputStream input, RecordBatchDef batchDef) throws IOException {
     final VectorContainer container = new VectorContainer();
     final List<ValueVector> vectorList = Lists.newArrayList();
@@ -139,7 +137,6 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
   }
 
   // Like above, only preserve the original container and list of value-vectors
-  @SuppressWarnings("resource")
   public void readFromStreamWithContainer(VectorContainer myContainer, InputStream input) throws IOException {
     final VectorContainer container = new VectorContainer();
     final UserBitShared.RecordBatchDef batchDef = UserBitShared.RecordBatchDef.parseDelimitedFrom(input);
@@ -203,7 +200,6 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
    * @param output the OutputStream to write to
    * @throws IOException
    */
-  @SuppressWarnings("resource")
   @Override
   public void writeToStream(OutputStream output) throws IOException {
     Preconditions.checkNotNull(output);

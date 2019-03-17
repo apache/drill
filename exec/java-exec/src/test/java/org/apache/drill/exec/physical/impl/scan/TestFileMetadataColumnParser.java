@@ -27,9 +27,11 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
 import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
-import org.apache.drill.exec.physical.impl.scan.project.UnresolvedColumn;
+import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
+import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedWildcardColumn;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.fs.Path;
@@ -40,16 +42,24 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 @Category(RowSetTests.class)
 public class TestFileMetadataColumnParser extends SubOperatorTest {
 
+  private FileMetadataOptions standardOptions(Path filePath) {
+    return standardOptions(Lists.newArrayList(filePath));
+  }
+
+  private FileMetadataOptions standardOptions(List<Path> files) {
+    FileMetadataOptions options = new FileMetadataOptions();
+    options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
+    options.setSelectionRoot(new Path("hdfs:///w"));
+    options.setFiles(files);
+    return options;
+  }
+
   @Test
   public void testBasics() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partiton columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
     // Simulate SELECT a, b, c ...
 
@@ -73,11 +83,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
     // Simulate SELECT a, fqn, filEPath, filename, suffix ...
 
@@ -102,11 +108,11 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
     // Verify column type
 
-    assertEquals(UnresolvedColumn.UNRESOLVED, scanProj.columns().get(0).nodeType());
-    assertEquals(FileMetadataColumn.ID, scanProj.columns().get(1).nodeType());
-    assertEquals(FileMetadataColumn.ID, scanProj.columns().get(2).nodeType());
-    assertEquals(FileMetadataColumn.ID, scanProj.columns().get(3).nodeType());
-    assertEquals(FileMetadataColumn.ID, scanProj.columns().get(4).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedColumn);
+    assertTrue(scanProj.columns().get(1) instanceof FileMetadataColumn);
+    assertTrue(scanProj.columns().get(2) instanceof FileMetadataColumn);
+    assertTrue(scanProj.columns().get(3) instanceof FileMetadataColumn);
+    assertTrue(scanProj.columns().get(4) instanceof FileMetadataColumn);
 
     assertTrue(metadataManager.hasImplicitCols());
   }
@@ -120,11 +126,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
     String dir0 = ScanTestUtils.partitionColName(0);
     // Sic: case insensitivity, but name in project list
@@ -143,7 +145,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
     // Verify column type
 
-    assertEquals(PartitionColumn.ID, scanProj.columns().get(0).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof PartitionColumn);
   }
 
   /**
@@ -155,11 +157,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectAll(),
@@ -167,7 +165,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
     List<ColumnProjection> cols = scanProj.columns();
     assertEquals(1, cols.size());
-    assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedWildcardColumn);
   }
 
   /**
@@ -178,13 +176,14 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
   @Test
   public void testLegacyWildcard() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
+    FileMetadataOptions options = standardOptions(filePath);
+    options.useLegacyWildcardExpansion(true);
+    options.useLegacyExpansionLocation(true);
+    // Max partition depth is 3, though this "scan" sees only 2
+    options.setPartitionDepth(3);
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        true, // Use legacy wildcard expansion
-        true, // Put partitions at end
-        new Path("hdfs:///w"),
-        3, // Max partition depth is 3, though this "scan" sees only 2
-        Lists.newArrayList(filePath));
+        options);
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectAll(),
@@ -192,30 +191,29 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
     List<ColumnProjection> cols = scanProj.columns();
     assertEquals(4, cols.size());
-    assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
-    assertEquals(PartitionColumn.ID, cols.get(1).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedWildcardColumn);
+    assertTrue(scanProj.columns().get(1) instanceof PartitionColumn);
     assertEquals(0, ((PartitionColumn) cols.get(1)).partition());
-    assertEquals(PartitionColumn.ID, cols.get(2).nodeType());
+    assertTrue(scanProj.columns().get(2) instanceof PartitionColumn);
     assertEquals(1, ((PartitionColumn) cols.get(2)).partition());
-    assertEquals(PartitionColumn.ID, cols.get(3).nodeType());
+    assertTrue(scanProj.columns().get(3) instanceof PartitionColumn);
     assertEquals(2, ((PartitionColumn) cols.get(3)).partition());
   }
 
   /**
-   * Combine wildcard and file metadata columms. The wildcard expands
+   * Combine wildcard and file metadata columns. The wildcard expands
    * table columns but not metadata columns.
    */
 
   @Test
   public void testLegacyWildcardAndFileMetadata() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
+    FileMetadataOptions options = standardOptions(filePath);
+    options.useLegacyWildcardExpansion(true);
+    options.useLegacyExpansionLocation(false);
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        true, // Use legacy wildcard expansion
-        false, // Put partitions at end
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        options);
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(
@@ -226,11 +224,11 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
     List<ColumnProjection> cols = scanProj.columns();
     assertEquals(5, cols.size());
-    assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
-    assertEquals(FileMetadataColumn.ID, cols.get(1).nodeType());
-    assertEquals(FileMetadataColumn.ID, cols.get(2).nodeType());
-    assertEquals(PartitionColumn.ID, cols.get(3).nodeType());
-    assertEquals(PartitionColumn.ID, cols.get(4).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedWildcardColumn);
+    assertTrue(scanProj.columns().get(1) instanceof FileMetadataColumn);
+    assertTrue(scanProj.columns().get(2) instanceof FileMetadataColumn);
+    assertTrue(scanProj.columns().get(3) instanceof PartitionColumn);
+    assertTrue(scanProj.columns().get(4) instanceof PartitionColumn);
   }
 
   /**
@@ -241,13 +239,12 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
   @Test
   public void testLegacyWildcardAndFileMetadataMixed() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
+    FileMetadataOptions options = standardOptions(filePath);
+    options.useLegacyWildcardExpansion(true);
+    options.useLegacyExpansionLocation(false);
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        true, // Use legacy wildcard expansion
-        false, // Put partitions at end
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        options);
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(
@@ -258,11 +255,11 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
     List<ColumnProjection> cols = scanProj.columns();
     assertEquals(5, cols.size());
-    assertEquals(FileMetadataColumn.ID, cols.get(0).nodeType());
-    assertEquals(UnresolvedColumn.WILDCARD, cols.get(1).nodeType());
-    assertEquals(FileMetadataColumn.ID, cols.get(2).nodeType());
-    assertEquals(PartitionColumn.ID, cols.get(3).nodeType());
-    assertEquals(PartitionColumn.ID, cols.get(4).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof FileMetadataColumn);
+    assertTrue(scanProj.columns().get(1) instanceof UnresolvedWildcardColumn);
+    assertTrue(scanProj.columns().get(2) instanceof FileMetadataColumn);
+    assertTrue(scanProj.columns().get(3) instanceof PartitionColumn);
+    assertTrue(scanProj.columns().get(4) instanceof PartitionColumn);
   }
 
   /**
@@ -279,11 +276,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
@@ -292,20 +285,19 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
       List<ColumnProjection> cols = scanProj.columns();
       assertEquals(2, cols.size());
-      assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
-      assertEquals(PartitionColumn.ID, cols.get(1).nodeType());
+      assertTrue(scanProj.columns().get(0) instanceof UnresolvedWildcardColumn);
+      assertTrue(scanProj.columns().get(1) instanceof PartitionColumn);
   }
 
   @Test
   public void testLegacyWildcardAndPartition() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
+    FileMetadataOptions options = standardOptions(filePath);
+    options.useLegacyWildcardExpansion(true);
+    options.useLegacyExpansionLocation(true);
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        true, // Use legacy wildcard expansion
-        true, // Put partitions at end
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        options);
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
@@ -314,25 +306,24 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
       List<ColumnProjection> cols = scanProj.columns();
       assertEquals(4, cols.size());
-      assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
-      assertEquals(PartitionColumn.ID, cols.get(1).nodeType());
+      assertTrue(scanProj.columns().get(0) instanceof UnresolvedWildcardColumn);
+      assertTrue(scanProj.columns().get(1) instanceof PartitionColumn);
       assertEquals(0, ((PartitionColumn) cols.get(1)).partition());
-      assertEquals(PartitionColumn.ID, cols.get(2).nodeType());
+      assertTrue(scanProj.columns().get(2) instanceof PartitionColumn);
       assertEquals(1, ((PartitionColumn) cols.get(2)).partition());
-      assertEquals(PartitionColumn.ID, cols.get(3).nodeType());
+      assertTrue(scanProj.columns().get(3) instanceof PartitionColumn);
       assertEquals(8, ((PartitionColumn) cols.get(3)).partition());
   }
 
   @Test
   public void testPreferredPartitionExpansion() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
+    FileMetadataOptions options = standardOptions(filePath);
+    options.useLegacyWildcardExpansion(true);
+    options.useLegacyExpansionLocation(false);
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        true, // Use legacy wildcard expansion
-        false, // Put partitions at end
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        options);
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
@@ -341,12 +332,12 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
       List<ColumnProjection> cols = scanProj.columns();
       assertEquals(4, cols.size());
-      assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
-      assertEquals(PartitionColumn.ID, cols.get(1).nodeType());
+      assertTrue(scanProj.columns().get(0) instanceof UnresolvedWildcardColumn);
+      assertTrue(scanProj.columns().get(1) instanceof PartitionColumn);
       assertEquals(8, ((PartitionColumn) cols.get(1)).partition());
-      assertEquals(PartitionColumn.ID, cols.get(2).nodeType());
+      assertTrue(scanProj.columns().get(2) instanceof PartitionColumn);
       assertEquals(0, ((PartitionColumn) cols.get(2)).partition());
-      assertEquals(PartitionColumn.ID, cols.get(3).nodeType());
+      assertTrue(scanProj.columns().get(3) instanceof PartitionColumn);
       assertEquals(1, ((PartitionColumn) cols.get(3)).partition());
   }
 
@@ -360,13 +351,12 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
   @Test
   public void testLegacyWildcardAndPartitionWithOverlap() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
+    FileMetadataOptions options = standardOptions(filePath);
+    options.useLegacyWildcardExpansion(true);
+    options.useLegacyExpansionLocation(true);
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        true, // Use legacy wildcard expansion
-        true, // Put partitions at end
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        options);
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
@@ -375,23 +365,22 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
       List<ColumnProjection> cols = scanProj.columns();
       assertEquals(3, cols.size());
-      assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
-      assertEquals(PartitionColumn.ID, cols.get(1).nodeType());
+      assertTrue(scanProj.columns().get(0) instanceof UnresolvedWildcardColumn);
+      assertTrue(scanProj.columns().get(1) instanceof PartitionColumn);
       assertEquals(0, ((PartitionColumn) cols.get(1)).partition());
-      assertEquals(PartitionColumn.ID, cols.get(2).nodeType());
+      assertTrue(scanProj.columns().get(2) instanceof PartitionColumn);
       assertEquals(1, ((PartitionColumn) cols.get(2)).partition());
   }
 
   @Test
   public void testPreferedWildcardExpansionWithOverlap() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
+    FileMetadataOptions options = standardOptions(filePath);
+    options.useLegacyWildcardExpansion(true);
+    options.useLegacyExpansionLocation(false);
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        true, // Use legacy wildcard expansion
-        false, // Put partitions at end
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        options);
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
@@ -400,10 +389,10 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
       List<ColumnProjection> cols = scanProj.columns();
       assertEquals(3, cols.size());
-      assertEquals(UnresolvedColumn.WILDCARD, cols.get(0).nodeType());
-      assertEquals(PartitionColumn.ID, cols.get(1).nodeType());
+      assertTrue(scanProj.columns().get(0) instanceof UnresolvedWildcardColumn);
+      assertTrue(scanProj.columns().get(1) instanceof PartitionColumn);
       assertEquals(1, ((PartitionColumn) cols.get(1)).partition());
-      assertEquals(PartitionColumn.ID, cols.get(2).nodeType());
+      assertTrue(scanProj.columns().get(2) instanceof PartitionColumn);
       assertEquals(0, ((PartitionColumn) cols.get(2)).partition());
   }
 
@@ -418,11 +407,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(
@@ -436,8 +421,8 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     List<ColumnProjection> cols = scanProj.columns();
     assertEquals(5, cols.size());
     for (int i = 0; i < 4; i++) {
-      assertEquals(UnresolvedColumn.UNRESOLVED, cols.get(1).nodeType());
+      assertTrue(scanProj.columns().get(i) instanceof UnresolvedColumn);
     }
-    assertEquals(FileMetadataColumn.ID, cols.get(4).nodeType());
+    assertTrue(scanProj.columns().get(4) instanceof FileMetadataColumn);
   }
 }

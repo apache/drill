@@ -59,7 +59,6 @@ public class ResourceManagerBuilder {
     this.context = context;
   }
 
-  @SuppressWarnings("resource")
   public ResourceManager build() {
     ClusterCoordinator coord = context.getClusterCoordinator();
     DrillConfig config = context.getConfig();

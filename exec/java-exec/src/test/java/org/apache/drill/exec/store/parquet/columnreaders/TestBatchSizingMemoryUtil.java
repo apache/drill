@@ -33,7 +33,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestBatchSizingMemoryUtil extends PhysicalOpUnitTestBase {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBatchSizingMemoryUtil.class);
 
   // Batch schema
   private static TupleMetadata schema;

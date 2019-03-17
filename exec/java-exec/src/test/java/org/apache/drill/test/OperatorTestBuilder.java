@@ -62,7 +62,7 @@ public class OperatorTestBuilder {
     this.physicalOpUnitTestBase = physicalOpUnitTestBase;
   }
 
-  @SuppressWarnings({"unchecked", "resource"})
+  @SuppressWarnings("unchecked")
   public void go() throws Exception {
     final List<RowSet> actualResults = new ArrayList<>();
     CloseableRecordBatch testOperator = null;

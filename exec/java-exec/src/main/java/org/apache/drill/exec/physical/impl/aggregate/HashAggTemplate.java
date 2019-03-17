@@ -214,7 +214,6 @@ public abstract class HashAggTemplate implements HashAggregator {
       return (maxOccupiedIdx + 1);
     }
 
-    @SuppressWarnings("resource")
     public BatchHolder(int batchRowCount) {
 
       aggrValuesContainer = new VectorContainer();
@@ -386,6 +385,7 @@ public abstract class HashAggTemplate implements HashAggregator {
    *  Delayed setup are the parts from setup() that can only be set after actual data arrives in incoming
    *  This data is used to compute the number of partitions.
    */
+  @SuppressWarnings("unchecked")
   private void delayedSetup() {
 
     final boolean fallbackEnabled = context.getOptions().getOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY).bool_val;
@@ -786,7 +786,6 @@ public abstract class HashAggTemplate implements HashAggregator {
     long allocatedBefore = allocator.getAllocatedMemory();
 
     while (outgoingIter.hasNext()) {
-      @SuppressWarnings("resource")
       ValueVector vv = outgoingIter.next().getValueVector();
 
       AllocationHelper.allocatePrecomputedChildCount(vv, records, maxColumnWidth, 0);
@@ -1060,6 +1059,7 @@ public abstract class HashAggTemplate implements HashAggregator {
    *
    * @return iteration outcome (e.g., OK, NONE ...)
    */
+  @SuppressWarnings("unused")
   @Override
   public AggIterOutcome outputCurrentBatch() {
 

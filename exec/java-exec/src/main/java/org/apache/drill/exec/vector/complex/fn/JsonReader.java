@@ -152,9 +152,6 @@ public class JsonReader extends BaseJsonProcessor {
     }
   }
 
-
-
-  @SuppressWarnings("resource")
   @Override
   public void ensureAtLeastOneField(ComplexWriter writer) {
     JsonReaderUtils.ensureAtLeastOneField(writer, columns, allTextMode, emptyArrayWriters);
@@ -182,7 +179,6 @@ public class JsonReader extends BaseJsonProcessor {
     setSource(data.getBytes(Charsets.UTF_8));
   }
 
-  @SuppressWarnings("resource")
   public void setSource(byte[] bytes) throws IOException {
     setSource(new SeekableBAIS(bytes));
   }

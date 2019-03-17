@@ -125,7 +125,6 @@ public class TestDrillbitResilience extends DrillTest {
     }
 
     try {
-      @SuppressWarnings("resource")
       final Drillbit drillbit = Drillbit.start(zkHelper.getConfig(), remoteServiceSet);
       drillbits.put(name, drillbit);
     } catch (final DrillbitStartupException e) {
@@ -174,7 +173,6 @@ public class TestDrillbitResilience extends DrillTest {
    * @param name name of the drillbit
    * @return endpoint of the drillbit
    */
-  @SuppressWarnings("resource")
   private static DrillbitEndpoint getEndpoint(final String name) {
     final Drillbit drillbit = drillbits.get(name);
     if (drillbit == null) {

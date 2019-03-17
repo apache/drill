@@ -40,7 +40,7 @@ import org.joda.time.Period;
  * for an int column in the case above.
  */
 
-public class AbstractWriteConverter extends AbstractScalarWriter {
+public abstract class AbstractWriteConverter extends AbstractScalarWriter {
 
   protected final ScalarWriter baseWriter;
 

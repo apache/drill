@@ -21,7 +21,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
-import org.apache.drill.exec.physical.impl.scan.project.SchemaLevelProjection.SchemaProjectionResolver;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
@@ -74,7 +74,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * items to the array column via the usual vector writer mechanism.
  */
 
-public class ColumnsArrayManager implements SchemaProjectionResolver {
+public class ColumnsArrayManager implements ReaderProjectionResolver {
 
   public static final String COLUMNS_COL = "columns";
 
@@ -88,7 +88,7 @@ public class ColumnsArrayManager implements SchemaProjectionResolver {
 
   public ScanProjectionParser projectionParser() { return parser; }
 
-  public SchemaProjectionResolver resolver() { return this; }
+  public ReaderProjectionResolver resolver() { return this; }
 
   @Override
   public void startResolution() {
@@ -97,7 +97,7 @@ public class ColumnsArrayManager implements SchemaProjectionResolver {
   @Override
   public boolean resolveColumn(ColumnProjection col, ResolvedTuple outputTuple,
       TupleMetadata tableSchema) {
-    if (col.nodeType() != UnresolvedColumnsArrayColumn.ID) {
+    if (! (col instanceof UnresolvedColumnsArrayColumn)) {
       return false;
     }
 

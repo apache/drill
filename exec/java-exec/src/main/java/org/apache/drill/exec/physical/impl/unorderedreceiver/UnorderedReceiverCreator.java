@@ -29,7 +29,6 @@ import org.apache.drill.exec.work.batch.RawBatchBuffer;
 
 public class UnorderedReceiverCreator implements BatchCreator<UnorderedReceiver> {
 
-  @SuppressWarnings("resource")
   @Override
   public UnorderedReceiverBatch getBatch(ExecutorFragmentContext context, UnorderedReceiver receiver, List<RecordBatch> children)
       throws ExecutionSetupException {

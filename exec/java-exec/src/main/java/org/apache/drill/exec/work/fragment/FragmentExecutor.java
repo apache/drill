@@ -238,7 +238,6 @@ public class FragmentExecutor implements Runnable {
     eventProcessor.receiverFinished(handle);
   }
 
-  @SuppressWarnings("resource")
   @Override
   public void run() {
     final Thread myThread = Thread.currentThread();
@@ -482,17 +481,21 @@ public class FragmentExecutor implements Runnable {
   }
 
   private class ExecutorStateImpl implements FragmentContext.ExecutorState {
+    @Override
     public boolean shouldContinue() {
       return FragmentExecutor.this.shouldContinue();
     }
 
+    @Override
     public void fail(final Throwable t) {
       FragmentExecutor.this.fail(t);
     }
 
+    @Override
     public boolean isFailed() {
       return fragmentState.get() == FragmentState.FAILED;
     }
+    @Override
     public Throwable getFailureCause(){
       return deferredException.getException();
     }

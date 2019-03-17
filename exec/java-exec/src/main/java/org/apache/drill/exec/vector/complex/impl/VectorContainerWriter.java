@@ -101,7 +101,6 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
       super("", null, callback);
     }
 
-    @SuppressWarnings("resource")
     @Override
     public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
       try {

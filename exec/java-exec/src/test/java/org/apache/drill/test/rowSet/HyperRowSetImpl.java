@@ -88,7 +88,6 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
       totalRowCount += container.getRecordCount();
     }
 
-    @SuppressWarnings("resource")
     @Override
     public HyperRowSet build() throws SchemaChangeException {
       SelectionVector4 sv4 = new SelectionVector4(allocator, totalRowCount);

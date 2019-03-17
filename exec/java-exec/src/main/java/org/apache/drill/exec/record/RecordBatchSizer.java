@@ -59,7 +59,7 @@ public class RecordBatchSizer {
 
   public static long multiplyByFactors(long size, double... factors)
   {
-    double doubleSize = (double) size;
+    double doubleSize = size;
 
     for (double factor: factors) {
       doubleSize *= factor;
@@ -70,7 +70,7 @@ public class RecordBatchSizer {
 
   public static long multiplyByFactor(long size, double factor)
   {
-    return (long) (((double) size) * factor);
+    return (long) ((size) * factor);
   }
 
   /**
@@ -447,7 +447,6 @@ public class RecordBatchSizer {
       }
     }
 
-    @SuppressWarnings("resource")
     private int getElementCount(ValueVector v) {
       // Repeated vectors are special: they have an associated offset vector
       // that changes the value count of the contained vectors.
@@ -829,7 +828,7 @@ public class RecordBatchSizer {
     if (denom == 0) {
       return 0;
     }
-    return (int) Math.ceil((double) num / denom);
+    return (int) Math.ceil(num / denom);
   }
 
   public int rowCount() { return rowCount; }

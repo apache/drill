@@ -42,5 +42,7 @@ public interface Propertied {
   Map<String, String> properties();
 
   String property(String key);
+  String property(String key, String defValue);
   void setProperty(String key, String value);
+  boolean getBooleanProperty(String key);
 }

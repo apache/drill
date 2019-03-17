@@ -17,11 +17,69 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+
 public enum ProjectionType {
   UNPROJECTED,
   WILDCARD,     // *
   UNSPECIFIED,  // x
+  SCALAR,       // x (from schema)
   TUPLE,        // x.y
   ARRAY,        // x[0]
-  TUPLE_ARRAY   // x[0].y
+  TUPLE_ARRAY;  // x[0].y
+
+  public boolean isTuple() {
+    return this == ProjectionType.TUPLE || this == ProjectionType.TUPLE_ARRAY;
+  }
+
+  public boolean isArray() {
+    return this == ProjectionType.ARRAY || this == ProjectionType.TUPLE_ARRAY;
+  }
+
+  public boolean isMaybeScalar() {
+    return this == UNSPECIFIED || this == SCALAR;
+  }
+
+  public static ProjectionType typeFor(MajorType majorType) {
+    if (majorType.getMinorType() == MinorType.MAP) {
+      if (majorType.getMode() == DataMode.REPEATED) {
+        return TUPLE_ARRAY;
+      } else {
+        return TUPLE;
+      }
+    }
+    if (majorType.getMode() == DataMode.REPEATED) {
+      return ARRAY;
+    }
+    return SCALAR;
+  }
+
+  public boolean isCompatible(ProjectionType other) {
+    switch (other) {
+    case UNPROJECTED:
+    case UNSPECIFIED:
+    case WILDCARD:
+      return true;
+    default:
+      break;
+    }
+
+    switch (this) {
+    case ARRAY:
+    case TUPLE_ARRAY:
+      return other == ARRAY || other == TUPLE_ARRAY;
+    case SCALAR:
+      return other == SCALAR;
+    case TUPLE:
+      return other == TUPLE;
+    case UNPROJECTED:
+    case UNSPECIFIED:
+    case WILDCARD:
+      return true;
+    default:
+      throw new IllegalStateException(toString());
+    }
+  }
 }

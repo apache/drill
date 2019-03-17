@@ -42,9 +42,9 @@ import org.apache.drill.exec.physical.impl.WriterRecordBatch;
 import org.apache.drill.exec.physical.impl.StatisticsWriterRecordBatch;
 import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
-import org.apache.drill.exec.physical.impl.scan.file.BaseFileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -244,11 +244,16 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       // Assemble the scan operator and its wrapper.
 
       try {
-        final BaseFileScanFramework<?> framework = buildFramework(scan);
+        final FileScanBuilder builder = frameworkBuilder(scan);
+        builder.setProjection(scan.getColumns());
+        builder.setFiles(scan.getWorkUnits());
+        builder.setConfig(plugin.easyConfig().fsConf);
         final Path selectionRoot = scan.getSelectionRoot();
         if (selectionRoot != null) {
-          framework.setSelectionRoot(selectionRoot, scan.getPartitionDepth());
+          builder.metadataOptions().setSelectionRoot(selectionRoot);
+          builder.metadataOptions().setPartitionDepth(scan.getPartitionDepth());
         }
+        FileScanFramework framework = builder.buildFileFramework();
         return new OperatorRecordBatch(
             context, scan,
             new ScanOperatorExec(
@@ -275,7 +280,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
      * potentially many files
      * @throws ExecutionSetupException for all setup failures
      */
-    protected abstract BaseFileScanFramework<?> buildFramework(
+    protected abstract FileScanBuilder frameworkBuilder(
         EasySubScan scan) throws ExecutionSetupException;
   }
 
@@ -296,14 +301,12 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     }
 
     @Override
-    protected FileScanFramework buildFramework(EasySubScan scan) {
+    protected FileScanBuilder frameworkBuilder(
+        EasySubScan scan) throws ExecutionSetupException {
 
-      final FileScanFramework framework = new FileScanFramework(
-              scan.getColumns(),
-              scan.getWorkUnits(),
-              plugin.easyConfig().fsConf,
-              readerCreator);
-      return framework;
+      FileScanBuilder builder = new FileScanBuilder();
+      builder.setReaderFactory(readerCreator);
+      return builder;
     }
   }
 

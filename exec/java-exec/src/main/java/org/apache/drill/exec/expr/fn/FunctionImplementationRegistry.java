@@ -347,7 +347,6 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * @param version remote function registry local function registry was based on
    * @return true if remote and local function registries were synchronized after given version
    */
-  @SuppressWarnings("resource")
   public boolean syncWithRemoteRegistry(int version) {
     // Do the version check only if a remote registry exists. It does
     // not exist for some JMockit-based unit tests.
@@ -561,7 +560,6 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * @return local path to jar that was copied
    * @throws IOException in case of problems during jar coping process
    */
-  @SuppressWarnings("resource")
   private Path copyJarToLocal(String jarName, RemoteFunctionRegistry remoteFunctionRegistry) throws IOException {
     Path registryArea = remoteFunctionRegistry.getRegistryArea();
     FileSystem fs = remoteFunctionRegistry.getFs();

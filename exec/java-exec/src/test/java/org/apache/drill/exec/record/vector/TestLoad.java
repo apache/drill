@@ -49,7 +49,6 @@ import io.netty.buffer.DrillBuf;
 public class TestLoad extends ExecTest {
   private final DrillConfig drillConfig = DrillConfig.create();
 
-  @SuppressWarnings("resource")
   @Test
   public void testLoadValueVector() throws Exception {
     final BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
@@ -103,7 +102,6 @@ public class TestLoad extends ExecTest {
   private static List<ValueVector> createVectors(BufferAllocator allocator, BatchSchema schema, int i) {
     final List<ValueVector> vectors = new ArrayList<>();
     for (MaterializedField field : schema) {
-      @SuppressWarnings("resource")
       ValueVector v = TypeHelper.getNewVector(field, allocator);
       AllocationHelper.allocate(v, 100, 50);
       v.getMutator().generateTestData(100);
@@ -139,7 +137,6 @@ public class TestLoad extends ExecTest {
    * @throws SchemaChangeException should not occur
    */
 
-  @SuppressWarnings("resource")
   private boolean loadBatch(BufferAllocator allocator,
       final RecordBatchLoader batchLoader,
       BatchSchema schema) throws SchemaChangeException {

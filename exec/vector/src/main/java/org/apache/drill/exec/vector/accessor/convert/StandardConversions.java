@@ -78,6 +78,13 @@ public class StandardConversions {
    * conversion class (if available.)
    */
   public static class ConversionDefn {
+    public static final ConversionDefn IMPLICIT =
+        new ConversionDefn(ConversionType.IMPLICIT);
+    public static final ConversionDefn IMPLICIT_UNSAFE =
+        new ConversionDefn(ConversionType.IMPLICIT_UNSAFE);
+    public static final ConversionDefn EXPLICIT =
+        new ConversionDefn(ConversionType.EXPLICIT);
+
     public final ConversionType type;
     public final Class<? extends AbstractWriteConverter> conversionClass;
 
@@ -142,6 +149,18 @@ public class StandardConversions {
     switch (inputSchema.type()) {
     case VARCHAR:
       return new ConversionDefn(convertFromVarchar(outputSchema));
+    case BIT:
+      switch (outputSchema.type()) {
+      case TINYINT:
+      case SMALLINT:
+      case INT:
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertBooleanToString.class);
+      default:
+        break;
+      }
+      break;
     case TINYINT:
       switch (outputSchema.type()) {
       case SMALLINT:
@@ -150,7 +169,9 @@ public class StandardConversions {
       case FLOAT4:
       case FLOAT8:
       case VARDECIMAL:
-        return new ConversionDefn(ConversionType.IMPLICIT);
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertIntToString.class);
       default:
         break;
       }
@@ -158,14 +179,16 @@ public class StandardConversions {
     case SMALLINT:
       switch (outputSchema.type()) {
       case TINYINT:
-        return new ConversionDefn(ConversionType.IMPLICIT_UNSAFE);
+        return ConversionDefn.IMPLICIT_UNSAFE;
       case INT:
       case BIGINT:
       case FLOAT4:
       case FLOAT8:
       case VARDECIMAL:
-        return new ConversionDefn(ConversionType.IMPLICIT);
-      default:
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertIntToString.class);
+     default:
         break;
       }
       break;
@@ -173,12 +196,15 @@ public class StandardConversions {
       switch (outputSchema.type()) {
       case TINYINT:
       case SMALLINT:
-        return new ConversionDefn(ConversionType.IMPLICIT_UNSAFE);
+        return ConversionDefn.IMPLICIT_UNSAFE;
       case BIGINT:
       case FLOAT4:
       case FLOAT8:
       case VARDECIMAL:
-        return new ConversionDefn(ConversionType.IMPLICIT);
+      case TIME:
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertIntToString.class);
       default:
         break;
       }
@@ -188,11 +214,15 @@ public class StandardConversions {
       case TINYINT:
       case SMALLINT:
       case INT:
-        return new ConversionDefn(ConversionType.IMPLICIT_UNSAFE);
+        return ConversionDefn.IMPLICIT_UNSAFE;
       case FLOAT4:
       case FLOAT8:
       case VARDECIMAL:
-        return new ConversionDefn(ConversionType.IMPLICIT);
+      case DATE:
+      case TIMESTAMP:
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertLongToString.class);
       default:
         break;
       }
@@ -203,10 +233,12 @@ public class StandardConversions {
       case SMALLINT:
       case INT:
       case BIGINT:
-        return new ConversionDefn(ConversionType.IMPLICIT_UNSAFE);
+        return ConversionDefn.IMPLICIT_UNSAFE;
       case FLOAT8:
       case VARDECIMAL:
-        return new ConversionDefn(ConversionType.IMPLICIT);
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertDoubleToString.class);
       default:
         break;
       }
@@ -218,9 +250,51 @@ public class StandardConversions {
       case INT:
       case BIGINT:
       case FLOAT4:
-        return new ConversionDefn(ConversionType.IMPLICIT_UNSAFE);
+        return ConversionDefn.IMPLICIT_UNSAFE;
       case VARDECIMAL:
-        return new ConversionDefn(ConversionType.IMPLICIT);
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertDoubleToString.class);
+      default:
+        break;
+      }
+      break;
+    case DATE:
+      switch (outputSchema.type()) {
+      case BIGINT:
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertDateToString.class);
+      default:
+        break;
+      }
+      break;
+    case TIME:
+      switch (outputSchema.type()) {
+      case INT:
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertTimeToString.class);
+      default:
+        break;
+      }
+      break;
+    case TIMESTAMP:
+      switch (outputSchema.type()) {
+      case BIGINT:
+        return ConversionDefn.IMPLICIT;
+      case VARCHAR:
+        return new ConversionDefn(ConvertTimeStampToString.class);
+      default:
+        break;
+      }
+      break;
+    case INTERVAL:
+    case INTERVALYEAR:
+    case INTERVALDAY:
+      switch (outputSchema.type()) {
+      case VARCHAR:
+        return new ConversionDefn(ConvertIntervalToString.class);
       default:
         break;
       }
@@ -228,12 +302,14 @@ public class StandardConversions {
     default:
       break;
     }
-    return new ConversionDefn(ConversionType.EXPLICIT);
+    return ConversionDefn.EXPLICIT;
   }
 
   public static Class<? extends AbstractWriteConverter> convertFromVarchar(
       ColumnMetadata outputDefn) {
     switch (outputDefn.type()) {
+    case BIT:
+      return ConvertStringToBoolean.class;
     case TINYINT:
     case SMALLINT:
     case INT:
@@ -255,6 +331,8 @@ public class StandardConversions {
     case INTERVALDAY:
     case INTERVAL:
       return ConvertStringToInterval.class;
+    case VARDECIMAL:
+      return ConvertStringToDecimal.class;
     default:
       return null;
     }

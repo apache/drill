@@ -50,8 +50,8 @@ public class MaterializedField {
   }
 
   public static MaterializedField create(SerializedField serField) {
-    LinkedHashSet<MaterializedField> children = new LinkedHashSet<>();
-    for (SerializedField sf : serField.getChildList()) {
+    final LinkedHashSet<MaterializedField> children = new LinkedHashSet<>();
+    for (final SerializedField sf : serField.getChildList()) {
       children.add(MaterializedField.create(sf));
     }
     return new MaterializedField(serField.getNamePart().getName(), serField.getMajorType(), children);
@@ -61,8 +61,8 @@ public class MaterializedField {
    * Create and return a serialized field based on the current state.
    */
   public SerializedField getSerializedField() {
-    SerializedField.Builder serializedFieldBuilder = getAsBuilder();
-    for(MaterializedField childMaterializedField : getChildren()) {
+    final SerializedField.Builder serializedFieldBuilder = getAsBuilder();
+    for(final MaterializedField childMaterializedField : getChildren()) {
       serializedFieldBuilder.addChild(childMaterializedField.getSerializedField());
     }
     return serializedFieldBuilder.build();
@@ -79,7 +79,7 @@ public class MaterializedField {
   }
 
   public MaterializedField newWithChild(MaterializedField child) {
-    MaterializedField newField = clone();
+    final MaterializedField newField = clone();
     newField.addChild(child);
     return newField;
   }
@@ -149,7 +149,7 @@ public class MaterializedField {
 
   // TODO: rewrite without as direct match rather than conversion then match.
   public boolean matches(SerializedField field) {
-    MaterializedField f = create(field);
+    final MaterializedField f = create(field);
     return f.equals(this);
   }
 
@@ -166,7 +166,7 @@ public class MaterializedField {
   public DataMode getDataMode() { return type.getMode(); }
 
   public MaterializedField getOtherNullableVersion() {
-    MajorType mt = type;
+    final MajorType mt = type;
     DataMode newDataMode;
     switch (mt.getMode()){
     case OPTIONAL:
@@ -210,7 +210,7 @@ public class MaterializedField {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    MaterializedField other = (MaterializedField) obj;
+    final MaterializedField other = (MaterializedField) obj;
     // DRILL-1872: Compute equals only on key. See also the comment
     // in MapVector$MapTransferPair
 
@@ -296,11 +296,11 @@ public class MaterializedField {
     // Maps are name-based, not position. But, for our
     // purposes, we insist on identical ordering.
 
-    Iterator<MaterializedField> thisIter = children.iterator();
-    Iterator<MaterializedField> otherIter = other.children.iterator();
+    final Iterator<MaterializedField> thisIter = children.iterator();
+    final Iterator<MaterializedField> otherIter = other.children.iterator();
     while (thisIter.hasNext()) {
-      MaterializedField thisChild = thisIter.next();
-      MaterializedField otherChild = otherIter.next();
+      final MaterializedField thisChild = thisIter.next();
+      final MaterializedField otherChild = otherIter.next();
       if (! thisChild.isEquivalent(otherChild)) {
         return false;
       }
@@ -366,11 +366,11 @@ public class MaterializedField {
     // Maps are name-based, not position. But, for our
     // purposes, we insist on identical ordering.
 
-    Iterator<MaterializedField> thisIter = children.iterator();
-    Iterator<MaterializedField> otherIter = other.children.iterator();
+    final Iterator<MaterializedField> thisIter = children.iterator();
+    final Iterator<MaterializedField> otherIter = other.children.iterator();
     while (thisIter.hasNext()) {
-      MaterializedField thisChild = thisIter.next();
-      MaterializedField otherChild = otherIter.next();
+      final MaterializedField thisChild = thisIter.next();
+      final MaterializedField otherChild = otherIter.next();
       if (! thisChild.isPromotableTo(otherChild, allowModeChange)) {
         return false;
       }
@@ -389,10 +389,9 @@ public class MaterializedField {
    * @return materialized field string representation
    */
 
-  @Override
-  public String toString() {
+  public String toString(boolean includeChildren) {
     final int maxLen = 10;
-    StringBuilder builder = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     builder
       .append("[`")
       .append(name)
@@ -414,23 +413,30 @@ public class MaterializedField {
       .append(type.getMode().name())
       .append(")");
 
-    if (type.getSubTypeCount() > 0) {
-      builder
-        .append(", subtypes=(")
-        .append(type.getSubTypeList().toString())
-        .append(")");
-    }
+    if (includeChildren) {
+      if (type.getSubTypeCount() > 0) {
+        builder
+          .append(", subtypes=(")
+          .append(type.getSubTypeList().toString())
+          .append(")");
+      }
 
-    if (children != null && ! children.isEmpty()) {
-      builder
-        .append(", children=(")
-        .append(toString(children, maxLen))
-        .append(")");
+      if (children != null && ! children.isEmpty()) {
+        builder
+          .append(", children=(")
+          .append(toString(children, maxLen))
+          .append(")");
+      }
     }
 
     return builder
         .append("]")
         .toString();
+  }
+
+  @Override
+  public String toString() {
+    return toString(true);
   }
 
   /**
@@ -444,9 +450,9 @@ public class MaterializedField {
   }
 
   private String toString(Collection<?> collection, int maxLen) {
-    StringBuilder builder = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     int i = 0;
-    for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
+    for (final Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
       if (i > 0){
         builder.append(", ");
       }

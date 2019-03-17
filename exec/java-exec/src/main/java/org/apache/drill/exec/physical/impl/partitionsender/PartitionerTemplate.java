@@ -389,7 +389,6 @@ public abstract class PartitionerTemplate implements Partitioner {
     public void initializeBatch() {
       for (VectorWrapper<?> v : incoming) {
         // create new vector
-        @SuppressWarnings("resource")
         ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), allocator);
         outgoingVector.setInitialCapacity(outgoingRecordBatchSize);
         vectorContainer.add(outgoingVector);

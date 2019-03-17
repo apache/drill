@@ -750,7 +750,6 @@ public class TestParquetWriter extends BaseTestQuery {
       Configuration hadoopConf = new Configuration();
       hadoopConf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
 
-      @SuppressWarnings("resource")
       Path output = new Path(dirTestWatcher.getDfsTestTmpDir().getAbsolutePath(), outputFile);
       FileSystem fs = output.getFileSystem(hadoopConf);
       for (FileStatus file : fs.listStatus(output)) {

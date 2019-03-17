@@ -87,7 +87,6 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
 
     // Create a temporary SV4 to hold the merged results.
 
-    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
     desiredRecordBatchCount = Math.min(outputBatchSize, desiredBatchSize);
     desiredRecordBatchCount = Math.min(desiredRecordBatchCount, totalCount);
@@ -184,7 +183,6 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
       if (outIndex < totalCount) {
         copyRun(outIndex, totalCount);
       }
-      @SuppressWarnings("resource")
       final SelectionVector4 tmp = aux.createNewWrapperCurrent(desiredRecordBatchCount);
       aux.clear();
       aux = vector4.createNewWrapperCurrent(desiredRecordBatchCount);

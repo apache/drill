@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.record.MaterializedField;
@@ -40,37 +41,37 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * unmatched projections.
  */
 
-public class ExplicitSchemaProjection extends SchemaLevelProjection {
+public class ExplicitSchemaProjection extends ReaderLevelProjection {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplicitSchemaProjection.class);
 
   public ExplicitSchemaProjection(ScanLevelProjection scanProj,
-      TupleMetadata tableSchema,
+      TupleMetadata readerSchema,
       ResolvedTuple rootTuple,
-      List<SchemaProjectionResolver> resolvers) {
+      List<ReaderProjectionResolver> resolvers) {
     super(resolvers);
-    resolveRootTuple(scanProj, rootTuple, tableSchema);
+    resolveRootTuple(scanProj, rootTuple, readerSchema);
   }
 
   private void resolveRootTuple(ScanLevelProjection scanProj,
       ResolvedTuple rootTuple,
-      TupleMetadata tableSchema) {
+      TupleMetadata readerSchema) {
     for (ColumnProjection col : scanProj.columns()) {
-      if (col.nodeType() == UnresolvedColumn.UNRESOLVED) {
-        resolveColumn(rootTuple, ((UnresolvedColumn) col).element(), tableSchema);
+      if (col instanceof UnresolvedColumn) {
+        resolveColumn(rootTuple, ((UnresolvedColumn) col).element(), readerSchema);
       } else {
-        resolveSpecial(rootTuple, col, tableSchema);
+        resolveSpecial(rootTuple, col, readerSchema);
       }
     }
   }
 
   private void resolveColumn(ResolvedTuple outputTuple,
-      RequestedColumn inputCol, TupleMetadata tableSchema) {
-    int tableColIndex = tableSchema.index(inputCol.name());
+      RequestedColumn inputCol, TupleMetadata readerSchema) {
+    int tableColIndex = readerSchema.index(inputCol.name());
     if (tableColIndex == -1) {
       resolveNullColumn(outputTuple, inputCol);
     } else {
       resolveTableColumn(outputTuple, inputCol,
-          tableSchema.metadata(tableColIndex),
+          readerSchema.metadata(tableColIndex),
           tableColIndex);
     }
   }

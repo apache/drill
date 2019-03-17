@@ -78,7 +78,6 @@ public class BufferedBatches {
 
   public int size() { return bufferedBatches.size(); }
 
-  @SuppressWarnings("resource")
   public void add(VectorAccessible incoming, long batchSize) {
     // Convert the incoming batch to the agreed-upon schema.
     // No converted batch means we got an empty input batch.
@@ -114,7 +113,6 @@ public class BufferedBatches {
    * @return the converted batch, or null if the incoming batch is empty
    */
 
-  @SuppressWarnings("resource")
   private VectorContainer convertBatch(VectorAccessible incoming) {
 
     // Must accept the batch even if no records. Then clear
@@ -164,7 +162,6 @@ public class BufferedBatches {
     return sv2;
   }
 
-  @SuppressWarnings("resource")
   private void bufferBatch(VectorContainer convertedBatch, SelectionVector2 sv2, long netSize) {
     BufferAllocator allocator = context.getAllocator();
     RecordBatchData rbd = new RecordBatchData(convertedBatch, allocator);

@@ -73,7 +73,6 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
         throw new UnsupportedOperationException(String.format("Missing batch. batch: %d newBatch: %d", batch, newBatch));
       }
     }
-    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
 
     try {
@@ -152,7 +151,6 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
       if (outIndex < vector4.getTotalCount()) {
         copyRun(outIndex, vector4.getTotalCount());
       }
-      @SuppressWarnings("resource")
       final SelectionVector4 tmp = aux.createNewWrapperCurrent(desiredRecordBatchCount);
       aux.clear();
       aux = vector4.createNewWrapperCurrent(desiredRecordBatchCount);

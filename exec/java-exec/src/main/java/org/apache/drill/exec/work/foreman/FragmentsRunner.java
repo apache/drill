@@ -210,7 +210,6 @@ public class FragmentsRunner {
    */
   private void sendRemoteFragments(final DrillbitEndpoint assignment, final Collection<PlanFragment> fragments,
                                    final CountDownLatch latch, final FragmentSubmitFailures fragmentSubmitFailures) {
-    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     final InitializeFragments.Builder fb = InitializeFragments.newBuilder();
     for(final PlanFragment planFragment : fragments) {

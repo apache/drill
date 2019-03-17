@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.rowSet.impl;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ProjectionType;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 
 /**
@@ -40,5 +41,6 @@ public interface SchemaTransformer {
     ColumnMetadata outputSchema();
   }
 
+  TupleMetadata outputSchema();
   ColumnTransform transform(ColumnMetadata inputSchema, ProjectionType projType);
 }

@@ -31,6 +31,7 @@ import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayParser;
 import org.apache.drill.exec.physical.impl.scan.columns.UnresolvedColumnsArrayColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.test.SubOperatorTest;
@@ -62,7 +63,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
 
     // Verify column type
 
-    assertEquals(UnresolvedColumnsArrayColumn.ID, scanProj.columns().get(0).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedColumnsArrayColumn);
   }
 
   @Test
@@ -79,7 +80,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
 
     // Verify column type
 
-    assertEquals(UnresolvedColumnsArrayColumn.ID, scanProj.columns().get(0).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedColumnsArrayColumn);
   }
 
   @Test
@@ -96,7 +97,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
 
     // Verify column type
 
-    assertEquals(UnresolvedColumnsArrayColumn.ID, scanProj.columns().get(0).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedColumnsArrayColumn);
   }
 
   @Test
@@ -116,7 +117,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
 
     // Verify column type
 
-    assertEquals(UnresolvedColumnsArrayColumn.ID, scanProj.columns().get(0).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedColumnsArrayColumn);
   }
 
   @Test
@@ -136,7 +137,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
 
     // Verify column type
 
-    assertEquals(UnresolvedColumnsArrayColumn.ID, scanProj.columns().get(0).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedColumnsArrayColumn);
     UnresolvedColumnsArrayColumn colsCol = (UnresolvedColumnsArrayColumn) scanProj.columns().get(0);
     boolean indexes[] = colsCol.selectedIndexes();
     assertNotNull(indexes);
@@ -222,6 +223,14 @@ public class TestColumnsArrayParser extends SubOperatorTest {
     }
   }
 
+  private FileMetadataOptions standardOptions(Path filePath) {
+    FileMetadataOptions options = new FileMetadataOptions();
+    options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
+    options.setSelectionRoot(new Path("hdfs:///w"));
+    options.setFiles(Lists.newArrayList(filePath));
+    return options;
+  }
+
   /**
    * The `columns` column is special: can't be used with other column names.
    * Make sure that the rule <i>does not</i> apply to implicit columns.
@@ -232,11 +241,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
     ScanLevelProjection scanProj = new ScanLevelProjection(
         RowSetTestUtils.projectList(ScanTestUtils.FILE_NAME_COL,
@@ -255,9 +260,9 @@ public class TestColumnsArrayParser extends SubOperatorTest {
 
     // Verify column type
 
-    assertEquals(FileMetadataColumn.ID, scanProj.columns().get(0).nodeType());
-    assertEquals(UnresolvedColumnsArrayColumn.ID, scanProj.columns().get(1).nodeType());
-    assertEquals(FileMetadataColumn.ID, scanProj.columns().get(2).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof FileMetadataColumn);
+    assertTrue(scanProj.columns().get(1) instanceof UnresolvedColumnsArrayColumn);
+    assertTrue(scanProj.columns().get(2) instanceof FileMetadataColumn);
   }
 
   /**
@@ -286,7 +291,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
 
     // Verify column type
 
-    assertEquals(UnresolvedColumnsArrayColumn.ID, scanProj.columns().get(0).nodeType());
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedColumnsArrayColumn);
   }
 
   @Test

@@ -18,41 +18,37 @@
 package org.apache.drill.exec.physical.impl.scan.framework;
 
 import java.util.Iterator;
-import java.util.List;
 
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.impl.scan.RowBatchReader;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ReaderFactory;
 
 /**
- * Basic scan framework for simple non-file readers. Includes only
+ * Basic reader builder for simple non-file readers. Includes only
  * schema negotiation, but no implicit columns. Readers are assumed
  * to be created ahead of time and passed into the framework
  * in the constructor.
+ * <p>
+ * This form is designed to simplify conversion of existing readers.
+ * While it provides a simple first step, readers should perform
+ * further conversion to create readers on the fly rather than
+ * up front.
  */
 
-public class BasicScanFramework extends AbstractScanFramework<SchemaNegotiator> {
+public class BasicScanFactory implements ReaderFactory {
 
-  private Iterator<ManagedReader<SchemaNegotiator>> iterator;
+  private final Iterator<ManagedReader<? extends SchemaNegotiator>> iterator;
 
-  public BasicScanFramework(List<SchemaPath> projection,
-      Iterator<ManagedReader<SchemaNegotiator>> iterator) {
-    super(projection);
+  public BasicScanFactory(Iterator<ManagedReader<? extends SchemaNegotiator>> iterator) {
     this.iterator = iterator;
   }
 
   @Override
-  public RowBatchReader nextReader() {
+  public void bind(ManagedScanFramework framework) { }
+
+  @Override
+  public ManagedReader<? extends SchemaNegotiator> next() {
     if (! iterator.hasNext()) {
       return null;
     }
-    ManagedReader<SchemaNegotiator> reader = iterator.next();
-    return new ShimBatchReader<SchemaNegotiator>(this, reader);
-  }
-
-  @Override
-  public boolean openReader(ShimBatchReader<SchemaNegotiator> shim,
-      ManagedReader<SchemaNegotiator> reader) {
-    SchemaNegotiatorImpl schemaNegotiator = new SchemaNegotiatorImpl(this, shim);
-    return reader.open(schemaNegotiator);
+    return iterator.next();
   }
 }

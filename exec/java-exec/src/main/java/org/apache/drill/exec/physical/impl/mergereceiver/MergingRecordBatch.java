@@ -142,7 +142,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     context.getBuffers().getCollector(config.getOppositeMajorFragmentId()).setAllocator(oContext.getAllocator());
   }
 
-  @SuppressWarnings("resource")
   private RawFragmentBatch getNext(final int providerIndex) throws IOException {
     stats.startWait();
     final RawFragmentBatchProvider provider = fragProviders[providerIndex];
@@ -568,7 +567,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         }
         tempBatchHolder[i] = batch;
         for (final SerializedField field : batch.getHeader().getDef().getFieldList()) {
-          @SuppressWarnings("resource")
           final ValueVector v = outgoingContainer.addOrGet(MaterializedField.create(field));
           v.allocateNew();
         }
@@ -692,7 +690,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
   private void allocateOutgoing() {
     for (final VectorWrapper<?> w : outgoingContainer) {
-      @SuppressWarnings("resource")
       final ValueVector v = w.getValueVector();
       if (v instanceof FixedWidthVector) {
         AllocationHelper.allocate(v, OUTGOING_BATCH_SIZE, 1);

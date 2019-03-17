@@ -44,7 +44,6 @@ public class DrillFSDataInputStream extends FSDataInputStream {
     this(in, operatorStats, null);
   }
 
-  @SuppressWarnings("resource")
   public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats,
       OpenFileTracker openFileTracker) throws IOException {
     super(new WrappedInputStream(in, operatorStats));

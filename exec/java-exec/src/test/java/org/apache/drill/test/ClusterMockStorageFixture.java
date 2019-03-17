@@ -39,7 +39,6 @@ public class ClusterMockStorageFixture extends ClusterFixture {
       // Bit name and registration.
       final StoragePluginRegistry pluginRegistry = bit.getContext().getStorage();
       MockStorageEngineConfig config = MockStorageEngineConfig.INSTANCE;
-      @SuppressWarnings("resource")
       MockBreakageStorage plugin = new MockBreakageStorage(
           MockStorageEngineConfig.INSTANCE, bit.getContext(), name);
       config.setEnabled(true);

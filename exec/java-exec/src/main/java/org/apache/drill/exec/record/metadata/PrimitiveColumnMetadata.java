@@ -22,15 +22,15 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 /**
  * Primitive (non-map) column. Describes non-nullable, nullable and array types
@@ -129,19 +129,19 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
       switch (type) {
         case TIME:
           return formatValue == null
-            ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+            ? ISODateTimeFormat.localTimeParser() : DateTimeFormat.forPattern(formatValue);
         case DATE:
           formatValue = format();
           return formatValue == null
-            ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+            ? ISODateTimeFormat.localDateParser() : DateTimeFormat.forPattern(formatValue);
         case TIMESTAMP:
           formatValue = format();
           return formatValue == null
-            ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
+            ? ISODateTimeFormat.dateTimeNoMillis() : DateTimeFormat.forPattern(formatValue);
         default:
           throw new IllegalArgumentException("Column is not a date/time type: " + type.toString());
       }
-    } catch (IllegalArgumentException | DateTimeParseException e) {
+    } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(String.format("The format \"%s\" is not valid for type %s",
           formatValue, type), e);
     }
@@ -256,7 +256,7 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
         case DATE:
           return LocalDate.parse(value, dateTimeFormatter());
         case TIMESTAMP:
-          return ZonedDateTime.parse(value, dateTimeFormatter());
+          return Instant.parse(value, dateTimeFormatter());
         case INTERVAL:
         case INTERVALDAY:
         case INTERVALYEAR:
@@ -264,7 +264,7 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
         default:
           throw new IllegalArgumentException("Unsupported conversion: " + type.toString());
       }
-    } catch (IllegalArgumentException | DateTimeParseException e) {
+    } catch (IllegalArgumentException e) {
       logger.warn("Error while parsing type {} default value {}", type, value, e);
       throw new IllegalArgumentException(String.format("The string \"%s\" is not valid for type %s",
           value, type), e);
@@ -284,20 +284,11 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
     }
     switch (type) {
       case TIME:
-        String formatValue = format();
-        DateTimeFormatter timeFormatter = formatValue == null
-          ? DateTimeFormatter.ISO_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-        return timeFormatter.format((LocalTime) value);
+        return dateTimeFormatter().print((LocalTime) value);
       case DATE:
-        formatValue = format();
-        DateTimeFormatter dateFormatter = formatValue == null
-          ? DateTimeFormatter.ISO_DATE.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-        return dateFormatter.format((LocalDate) value);
+        return dateTimeFormatter().print((LocalDate) value);
       case TIMESTAMP:
-        formatValue = format();
-        DateTimeFormatter dateTimeFormatter = formatValue == null
-          ? DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC) : DateTimeFormatter.ofPattern(formatValue);
-        return dateTimeFormatter.format((ZonedDateTime) value);
+        return dateTimeFormatter().print((Instant) value);
       default:
        return value.toString();
     }

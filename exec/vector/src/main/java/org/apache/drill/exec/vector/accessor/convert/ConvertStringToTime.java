@@ -17,20 +17,17 @@
  */
 package org.apache.drill.exec.vector.accessor.convert;
 
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-
-import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.joda.time.LocalTime;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * Convert a VARCHAR column to an TIME column following the Java rules
  * for parsing a date time, optionally using the formatter provided in
  * the column schema.
  */
-public class ConvertStringToTime extends AbstractWriteConverter {
+public class ConvertStringToTime extends AbstractConvertFromString {
 
   private final DateTimeFormatter dateTimeFormatter;
 
@@ -40,15 +37,14 @@ public class ConvertStringToTime extends AbstractWriteConverter {
   }
 
   @Override
-  public void setString(String value) {
+  public void setString(final String value) {
     if (value == null) {
       baseWriter.setNull();
     } else {
       try {
-        final LocalTime dt = LocalTime.parse(value, dateTimeFormatter);
-        baseWriter.setInt(DateUtilities.toTime(dt));
+        baseWriter.setTime(LocalTime.parse(value, dateTimeFormatter));
       }
-      catch (final DateTimeParseException e) {
+      catch (final IllegalStateException e) {
         throw InvalidConversionError.writeError(schema(), value, e);
       }
     }

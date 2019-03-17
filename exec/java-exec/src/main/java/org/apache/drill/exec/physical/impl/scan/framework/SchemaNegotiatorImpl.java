@@ -50,20 +50,27 @@ import org.apache.drill.exec.vector.ValueVector;
 
 public class SchemaNegotiatorImpl implements SchemaNegotiator {
 
-  protected final AbstractScanFramework<?> basicFramework;
-  private final ShimBatchReader<? extends SchemaNegotiator> shim;
+  public interface NegotiatorListener {
+    ResultSetLoader build(SchemaNegotiatorImpl schemaNegotiator);
+  }
+
+  protected final ManagedScanFramework framework;
+  private NegotiatorListener listener;
   protected TupleMetadata tableSchema;
   protected boolean isSchemaComplete;
   protected int batchSize = ValueVector.MAX_ROW_COUNT;
 
-  public SchemaNegotiatorImpl(AbstractScanFramework<?> framework, ShimBatchReader<? extends SchemaNegotiator> shim) {
-    basicFramework = framework;
-    this.shim = shim;
+  public SchemaNegotiatorImpl(ManagedScanFramework framework) {
+    this.framework = framework;
+  }
+
+  public void bind(NegotiatorListener listener) {
+    this.listener = listener;
   }
 
   @Override
   public OperatorContext context() {
-    return basicFramework.context();
+    return framework.context();
   }
 
   @Override
@@ -92,12 +99,12 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
 
     // Build and return the result set loader to be used by the reader.
 
-    return shim.build(this);
+    return listener.build(this);
   }
 
   @Override
   public boolean isProjectionEmpty() {
-    return basicFramework.scanOrchestrator().isProjectNone();
+    return framework.scanOrchestrator().isProjectNone();
   }
 
   public boolean isSchemaComplete() { return isSchemaComplete; }

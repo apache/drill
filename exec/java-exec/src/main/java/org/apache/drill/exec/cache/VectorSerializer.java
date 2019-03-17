@@ -72,7 +72,6 @@ public class VectorSerializer {
       return write(va, null);
     }
 
-    @SuppressWarnings("resource")
     public int write(VectorAccessible va, SelectionVector2 sv2) throws IOException {
       checkNotNull(va);
       WritableBatch batch = WritableBatch.getBatchNoHVWrap(

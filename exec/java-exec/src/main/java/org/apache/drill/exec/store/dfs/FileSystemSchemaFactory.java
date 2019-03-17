@@ -69,7 +69,6 @@ public class FileSystemSchemaFactory extends AbstractSchemaFactory {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    @SuppressWarnings("resource")
     FileSystemSchema schema = new FileSystemSchema(getName(), schemaConfig);
     SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
     schema.setPlus(plusOfThis);

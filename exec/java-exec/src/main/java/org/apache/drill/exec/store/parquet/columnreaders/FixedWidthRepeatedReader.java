@@ -142,7 +142,6 @@ public class FixedWidthRepeatedReader extends VarLengthColumn<RepeatedValueVecto
     }
   }
 
-  @SuppressWarnings("resource")
   @Override
   protected boolean readAndStoreValueSizeInformation() {
     int numLeftoverVals = 0;
