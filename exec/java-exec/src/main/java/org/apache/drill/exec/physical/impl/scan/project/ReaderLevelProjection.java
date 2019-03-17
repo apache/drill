@@ -59,41 +59,41 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * evolved
  */
 
-public class SchemaLevelProjection {
+public class ReaderLevelProjection {
 
   /**
-   * Schema-level projection is customizable. Implement this interface, and
+   * Reader-level projection is customizable. Implement this interface, and
    * add an instance to the scan orchestrator, to perform custom mappings
    * from unresolved columns (perhaps of an extension-specified type) to
    * final projected columns. The metadata manager, for example, implements
    * this interface to map metadata columns.
    */
 
-  public interface SchemaProjectionResolver {
+  public interface ReaderProjectionResolver {
     void startResolution();
     boolean resolveColumn(ColumnProjection col, ResolvedTuple tuple,
         TupleMetadata tableSchema);
   }
 
-  protected final List<SchemaProjectionResolver> resolvers;
+  protected final List<ReaderProjectionResolver> resolvers;
 
-  protected SchemaLevelProjection(
-        List<SchemaProjectionResolver> resolvers) {
+  protected ReaderLevelProjection(
+        List<ReaderProjectionResolver> resolvers) {
     this.resolvers = resolvers == null ? new ArrayList<>() : resolvers;
-    for (SchemaProjectionResolver resolver : resolvers) {
+    for (ReaderProjectionResolver resolver : resolvers) {
       resolver.startResolution();
     }
   }
 
   protected void resolveSpecial(ResolvedTuple rootOutputTuple, ColumnProjection col,
       TupleMetadata tableSchema) {
-    for (SchemaProjectionResolver resolver : resolvers) {
+    for (ReaderProjectionResolver resolver : resolvers) {
       if (resolver.resolveColumn(col, rootOutputTuple, tableSchema)) {
         return;
       }
     }
     throw new IllegalStateException(
-        String.format("No resolver for column `%s` of type %d",
-            col.name(), col.nodeType()));
+        String.format("No resolver for column `%s` of type %s",
+            col.name(), col.getClass().getSimpleName()));
   }
 }

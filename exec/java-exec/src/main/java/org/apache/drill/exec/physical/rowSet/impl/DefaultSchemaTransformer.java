@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.rowSet.impl;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ProjectionType;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.convert.AbstractWriteConverter;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
@@ -70,4 +71,7 @@ public class DefaultSchemaTransformer implements SchemaTransformer {
       ProjectionType projType) {
     return new DefaultColumnTransformer(inputSchema, projType);
   }
+
+  @Override
+  public TupleMetadata outputSchema() { return null; }
 }

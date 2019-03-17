@@ -62,6 +62,7 @@ public class NullColumnLoader extends StaticColumnLoader {
     String name();
     MajorType type();
     void setType(MajorType type);
+    Object defaultValue();
   }
 
   public static final MajorType DEFAULT_NULL_TYPE = MajorType.newBuilder()
@@ -71,11 +72,14 @@ public class NullColumnLoader extends StaticColumnLoader {
 
   private final MajorType nullType;
   private final boolean allowRequired;
-  private final boolean isArray[];
+  private final List<? extends NullColumnSpec> colDefns;
+  private final int colsWithDefaultValues[];
+  private final Object defaultValues[];
 
   public NullColumnLoader(ResultVectorCache vectorCache, List<? extends NullColumnSpec> defns,
       MajorType nullType, boolean allowRequired) {
     super(vectorCache);
+    this.colDefns = defns;
 
     // Normally, null columns must be optional or arrays. However
     // we allow required columns either if the client requests it,
@@ -98,12 +102,32 @@ public class NullColumnLoader extends StaticColumnLoader {
     // Populate the loader schema from that provided
 
     RowSetLoader schema = loader.writer();
-    isArray = new boolean[defns.size()];
+    int defaultCount = 0;
     for (int i = 0; i < defns.size(); i++) {
       NullColumnSpec defn = defns.get(i);
       MaterializedField colSchema = selectType(defn);
-      isArray[i] = colSchema.getDataMode() == DataMode.REPEATED;
       schema.addColumn(colSchema);
+      if (defn.defaultValue() != null) {
+        defaultCount++;
+      }
+    }
+
+    // Setup default values, if any
+
+    if (defaultCount == 0) {
+      colsWithDefaultValues = null;
+      defaultValues = null;
+      return;
+    }
+    colsWithDefaultValues = new int[defaultCount];
+    defaultValues = new Object[defaultCount];
+    int defIndex = 0;
+    for (int i = 0; i < defns.size(); i++) {
+      NullColumnSpec defn = defns.get(i);
+      if (defn.defaultValue() != null) {
+        colsWithDefaultValues[defIndex] = i;
+        defaultValues[defIndex++] = defn.defaultValue();
+      }
     }
   }
 
@@ -126,7 +150,7 @@ public class NullColumnLoader extends StaticColumnLoader {
     if (type == null) {
       type = defn.type();
     }
-    if (type != null && ! allowRequired && type.getMode() == DataMode.REQUIRED) {
+    if (type != null && ! allowRequired && type.getMode() == DataMode.REQUIRED && defn.defaultValue() == null) {
 
       // Type was found in the vector cache and the type is required.
       // The client determines whether to map required types to optional.
@@ -164,7 +188,20 @@ public class NullColumnLoader extends StaticColumnLoader {
   @Override
   public VectorContainer load(int rowCount) {
     loader.startBatch();
-    loader.skipRows(rowCount);
+    if (colsWithDefaultValues == null) {
+      loader.skipRows(rowCount);
+    } else {
+     // At least one column has a default value. Set values
+      // for all columns. Any null values are a no-op.
+      RowSetLoader writer = loader.writer();
+      for (int i = 0; i < rowCount; i++) {
+        writer.start();
+        for (int j = 0; j < colsWithDefaultValues.length; j++) {
+          writer.scalar(colsWithDefaultValues[j]).setValue(defaultValues[j]);
+        }
+        writer.save();
+      }
+    }
     return loader.harvest();
   }
 }

@@ -66,7 +66,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * any per-file variation of schema to match the up-front schema.
  */
 
-public class SmoothingProjection extends SchemaLevelProjection {
+public class SmoothingProjection extends ReaderLevelProjection {
 
   protected final List<MaterializedField> rewrittenFields = new ArrayList<>();
 
@@ -74,20 +74,18 @@ public class SmoothingProjection extends SchemaLevelProjection {
       TupleMetadata tableSchema,
       ResolvedTuple priorSchema,
       ResolvedTuple outputTuple,
-      List<SchemaProjectionResolver> resolvers) throws IncompatibleSchemaException {
+      List<ReaderProjectionResolver> resolvers) throws IncompatibleSchemaException {
 
     super(resolvers);
 
     for (ResolvedColumn priorCol : priorSchema.columns()) {
-      switch (priorCol.nodeType()) {
-        case ResolvedTableColumn.ID:
-        case ResolvedNullColumn.ID:
-          // This is a regular column known to this base framework.
-          resolveColumn(outputTuple, priorCol, tableSchema);
-          break;
-        default:
-          // The column is one known to an add-on mechanism.
-          resolveSpecial(outputTuple, priorCol, tableSchema);
+      if (priorCol instanceof ResolvedTableColumn ||
+        priorCol instanceof  ResolvedNullColumn) {
+        // This is a regular column known to this base framework.
+        resolveColumn(outputTuple, priorCol, tableSchema);
+      } else {
+        // The column is one known to an add-on mechanism.
+        resolveSpecial(outputTuple, priorCol, tableSchema);
       }
     }
 

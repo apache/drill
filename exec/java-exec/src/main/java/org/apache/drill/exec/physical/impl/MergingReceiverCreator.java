@@ -31,7 +31,6 @@ import org.apache.drill.exec.work.batch.RawBatchBuffer;
 public class MergingReceiverCreator implements BatchCreator<MergingReceiverPOP> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergingReceiverCreator.class);
 
-  @SuppressWarnings("resource")
   @Override
   public MergingRecordBatch getBatch(ExecutorFragmentContext context,
                               MergingReceiverPOP receiver,

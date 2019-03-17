@@ -29,11 +29,29 @@
   <#elseif drillType == "VarChar" || drillType == "Var16Char">
       return ValueType.STRING;
   <#elseif drillType == "VarDecimal">
-    return ValueType.DECIMAL;
+      return ValueType.DECIMAL;
   <#else>
       return ValueType.${label?upper_case};
   </#if>
     }
+</#macro>
+<#macro extendedType drillType>
+  <#if drillType == "Time" || drillType == "Date" || drillType == "TimeStamp">
+    @Override
+    public ValueType extendedType() {
+    <#if drillType == "Time">
+      return ValueType.TIME;
+    <#elseif drillType == "Date">
+      return ValueType.DATE;
+    <#elseif drillType == "TimeStamp">
+      return ValueType.TIMESTAMP;
+    <#else>
+      <#-- Should not be necessary. -->
+      return valueType();
+    </#if>
+    }
+
+  </#if>
 </#macro>
 <#macro build types vectorType accessorType>
   <#if vectorType == "Repeated">
@@ -162,6 +180,7 @@ public class ColumnAccessors {
     </#if>
     <@getType drillType label />
 
+    <@extendedType drillType />
     <#if ! varWidth>
     @Override public int width() { return VALUE_WIDTH; }
 
@@ -187,10 +206,17 @@ public class ColumnAccessors {
           buf.getLong(${getOffset}),
           type.getScale());
     <#elseif drillType == "IntervalYear">
+      <#-- For Java 8:
+      final int value = buf.getInt(${getOffset});
+      final int years  = (value / DateUtilities.yearsToMonths);
+      final int months = (value % DateUtilities.yearsToMonths);
+      return Period.of(years, months, 0); -->
       return DateUtilities.fromIntervalYear(
           buf.getInt(${getOffset}));
     <#elseif drillType == "IntervalDay">
       final int offset = ${getOffset};
+      <#-- Show stopper for Java 8 date/time: There is no class
+           that is equivalent to a Joda Period. -->
       return DateUtilities.fromIntervalDay(
           buf.getInt(offset),
           buf.getInt(offset + ${minor.millisecondsOffset}));
@@ -220,53 +246,85 @@ public class ColumnAccessors {
       return Float.intBitsToFloat(buf.getInt(${getOffset}));
     <#elseif drillType == "Float8">
       return Double.longBitsToDouble(buf.getLong(${getOffset}));
+    <#elseif drillType == "Bit">
+      return buf.getByte(${getOffset});
     <#else>
       return buf.get${putType?cap_first}(${getOffset});
     </#if>
     }
-  <#if drillType == "VarChar">
+    <#if drillType == "VarChar">
 
     @Override
     public String getString() {
       return new String(getBytes(${indexVar}), Charsets.UTF_8);
     }
-  <#elseif drillType == "Var16Char">
+    <#elseif drillType == "Var16Char">
 
     @Override
     public String getString() {
       return new String(getBytes(${indexVar}), Charsets.UTF_16);
     }
-  <#elseif drillType == "VarDecimal">
+    <#elseif drillType == "VarDecimal">
 
     @Override
     public BigDecimal getDecimal() {
-      byte[] bytes = getBytes();
+      final byte[] bytes = getBytes();
       BigInteger unscaledValue = bytes.length == 0 ? BigInteger.ZERO : new BigInteger(bytes);
       return new BigDecimal(unscaledValue, type.getScale());
     }
-  </#if>
+    <#elseif drillType == "Date">
+
+    @Override
+    public final LocalDate getDate() {
+      <#-- Java 8:
+        return LocalDate.ofEpochDay(getLong() / DateUtilities.daysToStandardMillis); -->
+      return new LocalDate(getLong(), DateTimeZone.UTC);
+    }
+    <#elseif drillType == "Time">
+
+    @Override
+    public final LocalTime getTime() {
+      <#-- Java 8:
+        return LocalTime.ofNanoOfDay(getInt() * 1_000_000L); -->
+      return new LocalTime(getInt(), DateTimeZone.UTC);
+    }
+    <#elseif drillType == "TimeStamp">
+
+    @Override
+    public final Instant getTimestamp() {
+      <#-- Java 8:
+        return Instant.ofEpochMilli(getLong()); -->
+      return new Instant(getLong());
+    }
+    </#if>
   }
 
-      <#if varWidth>
+    <#if varWidth>
   public static class ${drillType}ColumnWriter extends BaseVarWidthWriter {
-      <#else>
+    <#else>
   public static class ${drillType}ColumnWriter extends BaseFixedWidthWriter {
 
     private static final int VALUE_WIDTH = ${drillType}Vector.VALUE_WIDTH;
+    </#if>
 
-        <#if decimal>
-    private MajorType type;
-        </#if>
-      </#if>
     private final ${drillType}Vector vector;
+    <#if drillType == "VarDecimal">
+    private int scale;
+    <#elseif decimal>
+    private MajorType type;
+    </#if>
 
     public ${drillType}ColumnWriter(final ValueVector vector) {
       <#if varWidth>
       super(((${drillType}Vector) vector).getOffsetVector());
       <#else>
-        <#if decimal>
+      </#if>
+      <#if drillType == "VarDecimal">
+      // VarDecimal requires a scale. If not set, assume 0
+      MajorType type = vector.getField().getType();
+      scale = type.hasScale() ? type.getScale() : 0;
+      <#elseif decimal>
       type = vector.getField().getType();
-        </#if>
       </#if>
       this.vector = (${drillType}Vector) vector;
     }
@@ -328,6 +386,8 @@ public class ColumnAccessors {
       drillBuf.setInt(${putOffset}, Float.floatToRawIntBits((float) value));
       <#elseif drillType == "Float8">
       drillBuf.setLong(${putOffset}, Double.doubleToRawLongBits(value));
+      <#elseif drillType == "Bit">
+      drillBuf.setByte(writeOffset, (byte)(value & 0x01));
       <#else>
       drillBuf.set${putType?cap_first}(${putOffset}, <#if doCast>(${putType}) </#if>value);
       </#if>
@@ -336,30 +396,22 @@ public class ColumnAccessors {
     <#if drillType == "VarChar">
 
     @Override
-    public final void setString(String value) {
+    public final void setString(final String value) {
       final byte bytes[] = value.getBytes(Charsets.UTF_8);
       setBytes(bytes, bytes.length);
     }
     <#elseif drillType == "Var16Char">
 
     @Override
-    public final void setString(String value) {
+    public final void setString(final String value) {
       final byte bytes[] = value.getBytes(Charsets.UTF_16);
       setBytes(bytes, bytes.length);
     }
 
-    <#elseif drillType == "VarDecimal">
-
-    @Override
-    public final void setDecimal(final BigDecimal bd) {
-      byte[] barr = bd.unscaledValue().toByteArray();
-      int len = barr.length;
-      setBytes(barr, len);
-    }
     <#elseif drillType == "TinyInt" || drillType == "SmallInt" || drillType == "Int">
 
     @Override
-    public final void setLong(long value) {
+    public final void setLong(final long value) {
       try {
         // Catches int overflow. Does not catch overflow for smaller types.
         setInt(Math.toIntExact(value));
@@ -369,7 +421,7 @@ public class ColumnAccessors {
     }
 
     @Override
-    public final void setDouble(double value) {
+    public final void setDouble(final double value) {
       try {
         // Catches int overflow. Does not catch overflow from
         // double. See Math.round for details.
@@ -378,65 +430,124 @@ public class ColumnAccessors {
         throw InvalidConversionError.writeError(schema(), value, e);
       }
     }
+
+    @Override
+    public final void setDecimal(final BigDecimal value) {
+      try {
+        // Catches int overflow.
+        setInt(value.intValueExact());
+      } catch (ArithmeticException e) {
+        throw InvalidConversionError.writeError(schema(), value, e);
+      }
+    }
     <#elseif drillType == "BigInt">
 
     @Override
-    public final void setInt(int value) {
+    public final void setInt(final int value) {
       setLong(value);
     }
 
     @Override
-    public final void setDouble(double value) {
+    public final void setDouble(final double value) {
       // Does not catch overflow from
       // double. See Math.round for details.
       setLong(Math.round(value));
     }
+
+    @Override
+    public final void setDecimal(final BigDecimal value) {
+      try {
+        // Catches long overflow.
+        setLong(value.longValueExact());
+      } catch (ArithmeticException e) {
+        throw InvalidConversionError.writeError(schema(), value, e);
+      }
+    }
     <#elseif drillType == "Float4" || drillType == "Float8">
 
     @Override
-    public final void setInt(int value) {
+    public final void setInt(final int value) {
       setDouble(value);
     }
 
     @Override
-    public final void setLong(long value) {
+    public final void setLong(final long value) {
       setDouble(value);
+    }
+
+    @Override
+    public final void setDecimal(final BigDecimal value) {
+      setDouble(value.doubleValue());
     }
     <#elseif decimal>
 
     @Override
-    public final void setInt(int value) {
+    public final void setInt(final int value) {
       setDecimal(BigDecimal.valueOf(value));
     }
 
     @Override
-    public final void setLong(long value) {
+    public final void setLong(final long value) {
       setDecimal(BigDecimal.valueOf(value));
     }
 
     @Override
-    public final void setDouble(double value) {
+    public final void setDouble(final double value) {
       setDecimal(BigDecimal.valueOf(value));
     }
+      <#if drillType == "VarDecimal">
+
+    @Override
+    public final void setDecimal(final BigDecimal value) {
+      final byte[] barr = value.setScale(scale).unscaledValue().toByteArray();
+      setBytes(barr,  barr.length);
+    }
+      </#if>
     <#elseif drillType == "Date">
 
     @Override
-    public final void setDate(LocalDate value) {
+    public final void setDate(final LocalDate value) {
+      <#-- Java 8:
+        setLong(value.toEpochDay() * DateUtilities.daysToStandardMillis); -->
       setLong(value.toDateTimeAtStartOfDay(DateTimeZone.UTC).toInstant().getMillis());
     }
     <#elseif drillType == "Time">
 
     @Override
-    public final void setTime(LocalTime value) {
+    public final void setTime(final LocalTime value) {
+      <#-- Java 8:
+        setInt((int) ((value.toNanoOfDay() + 500_000) / 1_000_000L)); -->
       setInt(value.getMillisOfDay());
     }
     <#elseif drillType == "TimeStamp">
 
     @Override
-    public final void setTimestamp(Instant value) {
+    public final void setTimestamp(final Instant value) {
+      <#-- Java 8:
+        setLong(value.toEpochMilli()); -->
       setLong(value.getMillis());
     }
     </#if>
+
+    @Override
+    public final void setValue(final Object value) {
+      <#if drillType == "VarChar">
+      setString((String) value);
+      <#elseif drillType = "Date">
+      setDate((LocalDate) value);
+      <#elseif drillType = "Time">
+      setTime((LocalTime) value);
+      <#elseif drillType = "Timestamp">
+      setTimestamp((Instant) value);
+      <#elseif putArgs != "">
+      throw new InvalidConversionError("Generic object not supported for type ${drillType}, "
+          + "set${label}(${accessorType}${putArgs})");
+      <#else>
+      if (value != null) {
+        set${label}((${accessorType}${putArgs}) value);
+      }
+      </#if>
+    }
   }
 
     </#if>

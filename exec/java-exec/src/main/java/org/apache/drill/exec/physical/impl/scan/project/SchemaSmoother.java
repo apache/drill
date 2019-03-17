@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 
 import java.util.List;
 
-import org.apache.drill.exec.physical.impl.scan.project.SchemaLevelProjection.SchemaProjectionResolver;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
@@ -76,17 +76,17 @@ public class SchemaSmoother {
   public static class IncompatibleSchemaException extends Exception { }
 
   private final ScanLevelProjection scanProj;
-  private final List<SchemaProjectionResolver> resolvers;
+  private final List<ReaderProjectionResolver> resolvers;
   private ResolvedTuple priorSchema;
   private int schemaVersion = 0;
 
   public SchemaSmoother(ScanLevelProjection scanProj,
-      List<SchemaProjectionResolver> resolvers) {
+      List<ReaderProjectionResolver> resolvers) {
     this.scanProj = scanProj;
     this.resolvers = resolvers;
   }
 
-  public SchemaLevelProjection resolve(
+  public ReaderLevelProjection resolve(
       TupleMetadata tableSchema,
       ResolvedTuple outputTuple) {
 
@@ -111,7 +111,7 @@ public class SchemaSmoother {
     // will occur because either a type has changed or a new column has appeared.
     // (Or, this is the first schema.)
 
-    SchemaLevelProjection schemaProj = new WildcardSchemaProjection(scanProj,
+    ReaderLevelProjection schemaProj = new WildcardProjection(scanProj,
         tableSchema, outputTuple, resolvers);
     priorSchema = outputTuple;
     schemaVersion++;

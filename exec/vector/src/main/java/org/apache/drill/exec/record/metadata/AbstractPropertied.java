@@ -55,8 +55,13 @@ public class AbstractPropertied implements Propertied {
 
   @Override
   public String property(String key) {
+    return property(key, null);
+  }
+
+  @Override
+  public String property(String key, String defValue) {
     if (properties == null) {
-      return null;
+      return defValue;
     }
     return properties.get(key);
   }
@@ -68,5 +73,10 @@ public class AbstractPropertied implements Propertied {
     } else if (properties != null) {
       properties.remove(key);
     }
+  }
+
+  @Override
+  public boolean getBooleanProperty(String key) {
+    return Boolean.parseBoolean(property(key, Boolean.FALSE.toString()));
   }
 }

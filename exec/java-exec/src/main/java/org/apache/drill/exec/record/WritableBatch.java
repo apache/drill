@@ -80,7 +80,6 @@ public class WritableBatch implements AutoCloseable {
         len += b.capacity();
       }
 
-      @SuppressWarnings("resource")
       DrillBuf newBuf = allocator.buffer(len);
       try {
         /* Copy data from each buffer into the compound buffer */
@@ -102,11 +101,8 @@ public class WritableBatch implements AutoCloseable {
 
         for (VectorWrapper<?> vv : container) {
           SerializedField fmd = fields.get(vectorIndex);
-          @SuppressWarnings("resource")
           ValueVector v = vv.getValueVector();
-          @SuppressWarnings("resource")
           DrillBuf bb = newBuf.slice(bufferOffset, fmd.getBufferLength());
-//        v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
           v.load(fmd, bb);
           vectorIndex++;
           bufferOffset += fmd.getBufferLength();

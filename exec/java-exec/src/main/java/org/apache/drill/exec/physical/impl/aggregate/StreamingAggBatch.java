@@ -391,7 +391,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
    * as we want the output to be NULL. For the required vectors (only for count()) we set the value to be zero since
    * we don't zero out our buffers initially while allocating them.
    */
-  @SuppressWarnings("resource")
   private void constructSpecialBatch() {
     int exprIndex = 0;
     for (final VectorWrapper<?> vw: container) {
@@ -469,7 +468,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       keyExprs[i] = expr;
       final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
                                                                       expr.getMajorType());
-      @SuppressWarnings("resource")
       final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       keyOutputIds[i] = container.add(vector);
     }
@@ -502,7 +500,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       } else {
         final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
             expr.getMajorType());
-        @SuppressWarnings("resource")
         ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
         TypedFieldId id = container.add(vector);
         valueExprs[i] = new ValueVectorWriteExpression(id, expr, true);

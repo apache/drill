@@ -28,7 +28,6 @@ public class GenericSV4Copier extends AbstractSV4Copier {
   public GenericSV4Copier(RecordBatch incomingBatch, VectorContainer outputContainer,
                           SchemaChangeCallBack callBack) {
     for(VectorWrapper<?> vv : incomingBatch){
-      @SuppressWarnings("resource")
       ValueVector v = vv.getValueVectors()[0];
       v.makeTransferPair(outputContainer.addOrGet(v.getField(), callBack));
     }

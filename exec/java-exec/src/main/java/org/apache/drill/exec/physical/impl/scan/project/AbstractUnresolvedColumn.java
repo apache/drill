@@ -18,16 +18,40 @@
 package org.apache.drill.exec.physical.impl.scan.project;
 
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 
 /**
  * Represents a projected column that has not yet been bound to a
  * table column, special column or a null column. Once bound, this
  * column projection is replaced with the detailed binding.
  */
-public class UnresolvedColumn implements ColumnProjection {
+public abstract class AbstractUnresolvedColumn implements ColumnProjection {
 
-  public static final int WILDCARD = 1;
-  public static final int UNRESOLVED = 2;
+  public static class UnresolvedColumn extends AbstractUnresolvedColumn {
+
+    public UnresolvedColumn(RequestedColumn inCol) {
+      super(inCol);
+    }
+  }
+
+  public static class UnresolvedWildcardColumn extends AbstractUnresolvedColumn {
+
+    public UnresolvedWildcardColumn(RequestedColumn inCol) {
+      super(inCol);
+    }
+  }
+
+  public static class UnresolvedSchemaColumn extends AbstractUnresolvedColumn {
+
+    private final ColumnMetadata colDefn;
+
+    public UnresolvedSchemaColumn(RequestedColumn inCol, ColumnMetadata colDefn) {
+      super(inCol);
+      this.colDefn = colDefn;
+    }
+
+    public ColumnMetadata metadata() { return colDefn; }
+  }
 
   /**
    * The original physical plan column to which this output column
@@ -36,15 +60,10 @@ public class UnresolvedColumn implements ColumnProjection {
    */
 
   protected final RequestedColumn inCol;
-  private final int id;
 
-  public UnresolvedColumn(RequestedColumn inCol, int id) {
+  public AbstractUnresolvedColumn(RequestedColumn inCol) {
     this.inCol = inCol;
-    this.id = id;
   }
-
-  @Override
-  public int nodeType() { return id; }
 
   @Override
   public String name() { return inCol.name(); }
@@ -58,7 +77,7 @@ public class UnresolvedColumn implements ColumnProjection {
       .append("[")
       .append(getClass().getSimpleName())
       .append(" type=")
-      .append(id == WILDCARD ? "wildcard" : "column");
+      .append(getClass().getSimpleName());
     if (inCol != null) {
       buf
         .append(", incol=")

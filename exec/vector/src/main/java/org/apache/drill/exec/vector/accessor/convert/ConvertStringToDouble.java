@@ -24,14 +24,14 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
  * Convert a VARCHAR column to a DOUBLE column following the Java rules
  * for parsing doubles (i.e. no formatting.)
  */
-public class ConvertStringToDouble extends AbstractWriteConverter {
+public class ConvertStringToDouble extends AbstractConvertFromString {
 
   public ConvertStringToDouble(ScalarWriter baseWriter) {
     super(baseWriter);
   }
 
   @Override
-  public void setString(String value) {
+  public void setString(final String value) {
     if (value == null) {
       baseWriter.setNull();
     } else {

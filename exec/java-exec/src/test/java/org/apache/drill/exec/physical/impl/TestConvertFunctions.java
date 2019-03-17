@@ -553,7 +553,6 @@ public class TestConvertFunctions extends BaseTestQuery {
   public void testHadooopVInt() throws Exception {
     final int _0 = 0;
     final int _9 = 9;
-    @SuppressWarnings("resource")
     final DrillBuf buffer = getAllocator().buffer(_9);
 
     long longVal = 0;
@@ -641,7 +640,6 @@ public class TestConvertFunctions extends BaseTestQuery {
     for(QueryDataBatch result : resultList) {
       if (result.getData() != null) {
         loader.load(result.getHeader().getDef(), result.getData());
-        @SuppressWarnings("resource")
         ValueVector v = loader.iterator().next().getValueVector();
         for (int j = 0; j < v.getAccessor().getValueCount(); j++) {
           if  (v instanceof VarCharVector) {

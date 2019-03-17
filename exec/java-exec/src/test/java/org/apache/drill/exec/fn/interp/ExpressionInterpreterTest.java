@@ -156,7 +156,6 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
   }
 
   protected void doTest(String expressionStr, String[] colNames, TypeProtos.MajorType[] colTypes, String[] expectFirstTwoValues, BitControl.PlanFragment planFragment) throws Exception {
-    @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
 
@@ -178,7 +177,6 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
 
     batch.next();
 
-    @SuppressWarnings("resource")
     final ValueVector vv = evalExprWithInterpreter(expressionStr, batch, bit1);
 
     // Verify the first 2 values in the output of evaluation.
@@ -194,7 +192,6 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     bit1.close();
   }
 
-  @SuppressWarnings("resource")
   private ScanBatch createMockScanBatch(Drillbit bit, MockSubScanPOP scanPOP, BitControl.PlanFragment planFragment) {
     final List<RecordBatch> children = Lists.newArrayList();
     final MockScanBatchCreator creator = new MockScanBatchCreator();

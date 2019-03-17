@@ -65,6 +65,8 @@ public abstract class AbstractScalarWriter implements ScalarWriter {
       setInt((Byte) value);
     } else if (value instanceof Short) {
       setInt((Short) value);
+    } else if (value instanceof Boolean) {
+      setInt(((boolean) value) ? 1 : 0);
     } else {
       throw conversionError(value.getClass().getSimpleName());
     }

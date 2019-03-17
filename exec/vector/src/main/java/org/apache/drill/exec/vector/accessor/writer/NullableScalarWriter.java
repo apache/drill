@@ -206,6 +206,17 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   }
 
   @Override
+  public void setValue(Object value) {
+    if (value == null) {
+      setNull();
+    } else {
+      baseWriter.setValue(value);
+      isSetWriter.setInt(1);
+      writerIndex.nextElement();
+    }
+  }
+
+  @Override
   public void preRollover() {
     isSetWriter.preRollover();
     baseWriter.preRollover();

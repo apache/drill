@@ -185,7 +185,6 @@ public class BaseTestQuery extends ExecTest {
       bits[i] = new Drillbit(config, serviceSet, classpathScan);
       bits[i].run();
 
-      @SuppressWarnings("resource")
       final StoragePluginRegistry pluginRegistry = bits[i].getContext().getStorage();
       StoragePluginTestUtils.configureFormatPlugins(pluginRegistry);
 

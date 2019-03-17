@@ -23,10 +23,14 @@ import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
 import org.apache.drill.exec.physical.impl.scan.project.ConstantColumnLoader.ConstantColumnSpec;
 import org.apache.drill.exec.record.MaterializedField;
 
+/**
+ * Resolved value for a metadata column (implicit file or partition column.) Resolution
+ * here means identifying a value for the column.
+ */
 public abstract class MetadataColumn extends ResolvedColumn implements ConstantColumnSpec {
 
-  public final MaterializedField schema;
-  public final String value;
+  private final MaterializedField schema;
+  private final String value;
 
   public MetadataColumn(String name, MajorType type, String value, VectorSource source, int sourceIndex) {
     super(source, sourceIndex);

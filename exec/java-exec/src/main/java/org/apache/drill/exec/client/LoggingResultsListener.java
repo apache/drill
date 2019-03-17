@@ -69,7 +69,6 @@ public class LoggingResultsListener implements UserResultsListener {
   }
 
   @Override
-  @SuppressWarnings("resource")
   public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
     final QueryData header = result.getHeader();
     final DrillBuf data = result.getData();

@@ -27,8 +27,8 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
+import org.joda.time.format.DateTimeFormatter;
 
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -266,7 +266,7 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
         .append("[")
         .append(getClass().getSimpleName())
         .append(" ")
-        .append(schema().toString());
+        .append(schema().toString(false));
     if (variantSchema() != null) {
       buf.append(", variant: ")
          .append(variantSchema().toString());

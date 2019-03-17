@@ -145,7 +145,6 @@ public class Drillbit implements AutoCloseable {
     this(config, SystemOptionManager.createDefaultOptionDefinitions(), serviceSet, classpathScan);
   }
 
-  @SuppressWarnings("resource")
   @VisibleForTesting
   public Drillbit(
     final DrillConfig config,
@@ -211,7 +210,6 @@ public class Drillbit implements AutoCloseable {
     }
     DrillbitEndpoint md = engine.start();
     manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider, profileStoreProvider);
-    @SuppressWarnings("resource")
     final DrillbitContext drillbitContext = manager.getContext();
     storageRegistry = drillbitContext.getStorage();
     storageRegistry.init();
@@ -335,7 +333,6 @@ public class Drillbit implements AutoCloseable {
       return;
     }
 
-    @SuppressWarnings("resource")
     final SystemOptionManager optionManager = getContext().getOptionManager();
 
     // parse out the properties, validate, and then set them

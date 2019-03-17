@@ -106,7 +106,6 @@ public class BuildFromSchema {
   }
 
   private void buildColumn(ParentShim parent, ColumnMetadata colSchema) {
-
     if (colSchema.isMultiList()) {
       buildRepeatedList(parent, colSchema);
     } else if (colSchema.isMap()) {

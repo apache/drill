@@ -125,10 +125,10 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
   }
 
   private void buildWildcard() {
-    if (!metadataManager.useLegacyWildcardExpansion) {
+    if (!metadataManager.options().useLegacyWildcardExpansion) {
       return;
     }
-    if (metadataManager.useLegacyExpansionLocation) {
+    if (metadataManager.options().useLegacyExpansionLocation) {
 
       // Star column: this is a SELECT * query.
 

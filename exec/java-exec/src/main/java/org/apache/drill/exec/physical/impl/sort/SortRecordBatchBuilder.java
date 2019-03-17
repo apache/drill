@@ -98,7 +98,6 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     return true;
   }
 
-  @SuppressWarnings("resource")
   public void add(RecordBatchData rbd) {
     long batchBytes = getSize(rbd.getContainer());
     if (batchBytes == 0 && batches.size() > 0) {
@@ -135,7 +134,6 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     return batches.isEmpty();
   }
 
-  @SuppressWarnings("resource")
   public void build(VectorContainer outputContainer) throws SchemaChangeException {
     outputContainer.clear();
     if (batches.keySet().size() > 1) {

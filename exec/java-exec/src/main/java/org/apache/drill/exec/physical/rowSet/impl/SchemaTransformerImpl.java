@@ -185,7 +185,7 @@ public class SchemaTransformerImpl implements SchemaTransformer {
    * by this operator
    * @param defn a description of the required conversion. This method is
    * required to do nothing of conversion type is
-   * {@link ProjectionType.EXPLICIT} and the conversion class is null, meaning
+   * {@link ScanProjectionType.EXPLICIT} and the conversion class is null, meaning
    * that no standard conversion is available
    * @return a column transformer factory to implement a custom conversion,
    * or null to use the standard conversion
@@ -194,4 +194,7 @@ public class SchemaTransformerImpl implements SchemaTransformer {
       ColumnMetadata outputDefn, ConversionDefn defn) {
     return null;
   }
+
+  @Override
+  public TupleMetadata outputSchema() { return outputSchema; }
 }

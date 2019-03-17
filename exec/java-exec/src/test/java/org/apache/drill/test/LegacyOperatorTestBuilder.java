@@ -58,7 +58,7 @@ public class LegacyOperatorTestBuilder {
     this.physicalOpUnitTestBase = physicalOpUnitTestBase;
   }
 
-  @SuppressWarnings({"unchecked", "resource"})
+  @SuppressWarnings("unchecked")
   public void go() {
     BatchCreator<PhysicalOperator> opCreator;
     RecordBatch testOperator;

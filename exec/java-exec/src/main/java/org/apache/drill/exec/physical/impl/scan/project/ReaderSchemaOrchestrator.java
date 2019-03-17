@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan.project;
 
+import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.OptionBuilder;
@@ -34,7 +35,7 @@ import org.apache.drill.exec.vector.ValueVector;
 public class ReaderSchemaOrchestrator implements VectorSource {
 
   private final ScanSchemaOrchestrator scanOrchestrator;
-  private int readerBatchSize;
+  private int readerBatchSize = ScanSchemaOrchestrator.MAX_BATCH_ROW_COUNT;
   private ResultSetLoaderImpl tableLoader;
   private int prevTableSchemaVersion = -1;
 
@@ -50,20 +51,21 @@ public class ReaderSchemaOrchestrator implements VectorSource {
 
   public ReaderSchemaOrchestrator(ScanSchemaOrchestrator scanSchemaOrchestrator) {
     scanOrchestrator = scanSchemaOrchestrator;
-    readerBatchSize = scanOrchestrator.scanBatchRecordLimit;
+    readerBatchSize = scanOrchestrator.options.scanBatchRecordLimit;
   }
 
   public void setBatchSize(int size) {
     if (size > 0) {
-      readerBatchSize = Math.min(size, scanOrchestrator.scanBatchRecordLimit);
+      readerBatchSize = size;
     }
   }
 
-  public ResultSetLoader makeTableLoader(TupleMetadata tableSchema) {
+  public ResultSetLoader makeTableLoader(TupleMetadata readerSchema) {
     OptionBuilder options = new OptionBuilder();
-    options.setRowCountLimit(readerBatchSize);
+    options.setRowCountLimit(Math.min(readerBatchSize, scanOrchestrator.options.scanBatchRecordLimit));
     options.setVectorCache(scanOrchestrator.vectorCache);
-    options.setBatchSizeLimit(scanOrchestrator.scanBatchByteLimit);
+    options.setBatchSizeLimit(scanOrchestrator.options.scanBatchByteLimit);
+    options.setSchemaTransform(scanOrchestrator.options.schemaTransformer);
 
     // Set up a selection list if available and is a subset of
     // table columns. (Only needed for non-wildcard queries.)
@@ -75,7 +77,7 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     if (! scanOrchestrator.scanProj.projectAll()) {
       options.setProjectionSet(scanOrchestrator.scanProj.readerProjection());
     }
-    options.setSchema(tableSchema);
+    options.setSchema(readerSchema);
 
     // Create the table loader
 
@@ -143,13 +145,25 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     // Do the table-schema level projection; the final matching
     // of projected columns to available columns.
 
-    TupleMetadata tableSchema = tableLoader.harvestSchema();
+    TupleMetadata readerSchema = tableLoader.harvestSchema();
     if (scanOrchestrator.schemaSmoother != null) {
-      doSmoothedProjection(tableSchema);
-    } else if (scanOrchestrator.scanProj.hasWildcard()) {
-      doWildcardProjection(tableSchema);
+      doSmoothedProjection(readerSchema);
     } else {
-      doExplicitProjection(tableSchema);
+      switch(scanOrchestrator.scanProj.projectionType()) {
+      case EMPTY:
+      case EXPLICIT:
+        doExplicitProjection(readerSchema);
+        break;
+      case SCHEMA_WILDCARD:
+      case STRICT_SCHEMA_WILDCARD:
+        doStrictWildcardProjection(readerSchema);
+        break;
+      case WILDCARD:
+        doWildcardProjection(readerSchema);
+        break;
+      default:
+        throw new IllegalStateException(scanOrchestrator.scanProj.projectionType().toString());
+      }
     }
 
     // Combine metadata, nulls and batch data to form the final
@@ -164,8 +178,7 @@ public class ReaderSchemaOrchestrator implements VectorSource {
   }
 
   private void doSmoothedProjection(TupleMetadata tableSchema) {
-    rootTuple = new ResolvedRow(
-        new NullColumnBuilder(scanOrchestrator.nullType, scanOrchestrator.allowRequiredNullColumns));
+    rootTuple = newRootTuple();
     scanOrchestrator.schemaSmoother.resolve(tableSchema, rootTuple);
   }
 
@@ -175,9 +188,25 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    */
 
   private void doWildcardProjection(TupleMetadata tableSchema) {
-    rootTuple = new ResolvedRow(null);
+    rootTuple = newRootTuple();
+    new WildcardProjection(scanOrchestrator.scanProj,
+        tableSchema, rootTuple, scanOrchestrator.options.schemaResolvers);
+  }
+
+  private void doStrictWildcardProjection(TupleMetadata tableSchema) {
+    rootTuple = newRootTuple();
     new WildcardSchemaProjection(scanOrchestrator.scanProj,
-        tableSchema, rootTuple, scanOrchestrator.schemaResolvers);
+        tableSchema, rootTuple, scanOrchestrator.options.schemaResolvers);
+  }
+
+  private ResolvedRow newRootTuple() {
+    NullBuilderBuilder nullBuilder = new NullBuilderBuilder()
+        .setNullType(scanOrchestrator.options.nullType)
+        .allowRequiredNullColumns(scanOrchestrator.options.allowRequiredNullColumns);
+    if (scanOrchestrator.options.schemaTransformer != null) {
+      nullBuilder.setOutputSchema(scanOrchestrator.options.schemaTransformer.outputSchema());
+    }
+    return new ResolvedRow(nullBuilder.build());
   }
 
   /**
@@ -190,11 +219,10 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    */
 
   private void doExplicitProjection(TupleMetadata tableSchema) {
-    rootTuple = new ResolvedRow(
-        new NullColumnBuilder(scanOrchestrator.nullType, scanOrchestrator.allowRequiredNullColumns));
+    rootTuple = newRootTuple();
     new ExplicitSchemaProjection(scanOrchestrator.scanProj,
             tableSchema, rootTuple,
-            scanOrchestrator.schemaResolvers);
+            scanOrchestrator.options.schemaResolvers);
   }
 
   @Override

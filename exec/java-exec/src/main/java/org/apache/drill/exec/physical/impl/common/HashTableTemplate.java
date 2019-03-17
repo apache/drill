@@ -187,6 +187,7 @@ public abstract class HashTableTemplate implements HashTable {
       }
     }
 
+    @SuppressWarnings("unused")
     private void init(IntVector links, IntVector hashValues, int size) {
       for (int i = 0; i < size; i++) {
         links.getMutator().set(i, EMPTY_SLOT);
@@ -363,9 +364,7 @@ public abstract class HashTableTemplate implements HashTable {
       Iterator<VectorWrapper<?>> outgoingIter = outContainer.iterator();
 
       for (VectorWrapper<?> sourceWrapper : htContainer) {
-        @SuppressWarnings("resource")
         ValueVector sourceVV = sourceWrapper.getValueVector();
-        @SuppressWarnings("resource")
         ValueVector targetVV = outgoingIter.next().getValueVector();
         TransferPair tp = sourceVV.makeTransferPair(targetVV);
         // The normal case: The whole column key(s) are transfered as is
@@ -376,7 +375,6 @@ public abstract class HashTableTemplate implements HashTable {
 
     private void setValueCount() {
       for (VectorWrapper<?> vw : htContainer) {
-        @SuppressWarnings("resource")
         ValueVector vv = vw.getValueVector();
         vv.getMutator().setValueCount(maxOccupiedIdx + 1);
       }
@@ -404,6 +402,7 @@ public abstract class HashTableTemplate implements HashTable {
 
     // Only used for internal debugging. Get the value vector at a particular index from the htContainer.
     // By default this assumes the VV is a BigIntVector.
+    @SuppressWarnings("unused")
     private ValueVector getValueVector(int index) {
       Object tmp = (htContainer).getValueAccessorById(BigIntVector.class, index).getValueVector();
       if (tmp != null) {
@@ -881,6 +880,7 @@ public abstract class HashTableTemplate implements HashTable {
    * Reinit the hash table to its original size, and clear up all its prior batch holder
    *
    */
+  @Override
   public void reset() {
     this.clear(false); // Clear all current batch holders and hash table (i.e. free their memory)
 
@@ -893,6 +893,7 @@ public abstract class HashTableTemplate implements HashTable {
     startIndices = allocMetadataVector(originalTableSize, EMPTY_SLOT);
   }
 
+  @Override
   public void updateIncoming(VectorContainer newIncoming, RecordBatch newIncomingProbe) {
     incomingBuild = newIncoming;
     incomingProbe = newIncomingProbe;
@@ -920,6 +921,7 @@ public abstract class HashTableTemplate implements HashTable {
     return vector;
   }
 
+  @Override
   public Pair<VectorContainer, Integer> nextBatch() {
     if (batchHolders == null || batchHolders.size() == 0) {
       return null;

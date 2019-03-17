@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -34,9 +35,10 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
-import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
-import org.apache.drill.exec.physical.impl.scan.columns.ColumnsSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.FileReaderCreator;
+import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.ColumnsScanBuilder;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -72,8 +74,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
-public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextFormatConfig>
-      implements FileReaderCreator {
+public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextFormatConfig> {
   private final static String PLUGIN_NAME = "text";
 
   @JsonTypeName(PLUGIN_NAME)
@@ -176,30 +177,48 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     }
   }
 
-  public static class TextScanBatchCreator extends ScanFrameworkCreator {
+  /**
+   * Builds the readers for the V3 text scan operator.
+   */
+  private static class ColumnsReaderFactory extends FileReaderFactory {
 
-    private final FileReaderCreator readerCreator;
+    private final TextFormatPlugin plugin;
+
+    public ColumnsReaderFactory(TextFormatPlugin plugin) {
+      this.plugin = plugin;
+    }
+
+    @Override
+    public ManagedReader<? extends FileSchemaNegotiator> newReader(
+        FileSplit split) {
+      TextParsingSettingsV3 settings = new TextParsingSettingsV3();
+      settings.set(plugin.getConfig());
+      return new CompliantTextBatchReader(split, fileSystem(), settings);
+    }
+  }
+
+  /**
+   * Builds the V3 text scan operator.
+   */
+  private static class TextScanBatchCreator extends ScanFrameworkCreator {
+
     private final TextFormatPlugin textPlugin;
 
-    public TextScanBatchCreator(TextFormatPlugin plugin,
-        FileReaderCreator readerCreator) {
+    public TextScanBatchCreator(TextFormatPlugin plugin) {
       super(plugin);
-      this.readerCreator = readerCreator;
       textPlugin = plugin;
     }
 
     @Override
-    protected ColumnsScanFramework buildFramework(EasySubScan scan) {
-      ColumnsScanFramework framework = new ColumnsScanFramework(
-              scan.getColumns(),
-              scan.getWorkUnits(),
-              plugin.easyConfig().fsConf,
-              readerCreator);
+    protected FileScanBuilder frameworkBuilder(
+        EasySubScan scan) throws ExecutionSetupException {
+      ColumnsScanBuilder builder = new ColumnsScanBuilder();
+      builder.setReaderFactory(new ColumnsReaderFactory(textPlugin));
 
       // If this format has no headers, or wants to skip them,
       // then we must use the columns column to hold the data.
 
-      framework.requireColumnsArray(
+      builder.requireColumnsArray(
           ! textPlugin.getConfig().isHeaderExtractionEnabled());
 
       // Text files handle nulls in an unusual way. Missing columns
@@ -208,13 +227,17 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       // columns from empty columns, but that is how CSV and other text
       // files have been defined within Drill.
 
-      framework.setNullType(
+      builder.setNullType(
           MajorType.newBuilder()
             .setMinorType(MinorType.VARCHAR)
             .setMode(DataMode.REQUIRED)
             .build());
 
-      return framework;
+      // Pass along the output schema, if any
+
+      builder.setOutputSchema(scan.getSchema());
+
+      return builder;
     }
   }
 
@@ -265,7 +288,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     // readers provide identical functionality for the user; only the
     // internals differ.
     if (options.getBoolean(ExecConstants.ENABLE_V3_TEXT_READER_KEY)) {
-      return new TextScanBatchCreator(this, this);
+      return new TextScanBatchCreator(this);
     } else {
       return new ClassicScanBatchCreator(this);
     }
@@ -309,12 +332,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     return recordWriter;
   }
 
-  @Override
-  public ManagedReader<ColumnsSchemaNegotiator> makeBatchReader(DrillFileSystem dfs, FileSplit split) {
-    TextParsingSettingsV3 settings = new TextParsingSettingsV3();
-    settings.set(getConfig());
-    return new CompliantTextBatchReader(split, dfs, settings);
-  }
   @Override
   public boolean supportsStatistics() {
     return false;

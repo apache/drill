@@ -132,7 +132,6 @@ public class PriorityQueueCopierWrapper extends BaseSortWrapper {
     // Initialize the value vectors for the output container
 
     for (VectorWrapper<?> i : batch) {
-      @SuppressWarnings("resource")
       ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
       outputContainer.add(v);
     }

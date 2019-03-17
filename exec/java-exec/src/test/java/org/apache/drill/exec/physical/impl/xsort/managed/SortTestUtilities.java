@@ -46,22 +46,21 @@ public class SortTestUtilities {
 
   private SortTestUtilities() { }
 
-  public static BatchSchema makeSchema(MinorType type, boolean nullable) {
+  public static TupleMetadata makeSchema(MinorType type, boolean nullable) {
     return new SchemaBuilder()
         .add("key", type, nullable ? DataMode.OPTIONAL : DataMode.REQUIRED)
         .add("value", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
   }
 
-  public static BatchSchema nonNullSchema() {
+  public static TupleMetadata nonNullSchema() {
     return makeSchema(MinorType.INT, false);
   }
 
-  public static BatchSchema nullableSchema() {
+  public static TupleMetadata nullableSchema() {
     return makeSchema(MinorType.INT, true);
   }
 
-  @SuppressWarnings("resource")
   public static Sort makeCopierConfig(String sortOrder, String nullOrder) {
     FieldReference expr = FieldReference.getWithQuotedRef("key");
     Ordering ordering = new Ordering(sortOrder, expr, nullOrder);

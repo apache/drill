@@ -137,5 +137,4 @@ public class MapColumnMetadata extends AbstractColumnMetadata {
     }
     return builder.toString();
   }
-
 }

@@ -52,6 +52,12 @@ public class RequestedColumnImpl implements RequestedColumn {
     setType();
   }
 
+  public RequestedColumnImpl(RequestedTuple parent, String name, ProjectionType type) {
+    this.parent = parent;
+    this.name = name;
+    this.type = type;
+  }
+
   @Override
   public String name() { return name; }
   @Override
@@ -62,14 +68,10 @@ public class RequestedColumnImpl implements RequestedColumn {
   public boolean isSimple() { return type == ProjectionType.UNSPECIFIED; }
 
   @Override
-  public boolean isArray() {
-    return type == ProjectionType.ARRAY || type == ProjectionType.TUPLE_ARRAY;
-  }
+  public boolean isArray() { return type.isArray(); }
 
   @Override
-  public boolean isTuple() {
-    return type == ProjectionType.TUPLE || type == ProjectionType.TUPLE_ARRAY;
-  }
+  public boolean isTuple() { return type.isTuple(); }
 
   public RequestedTuple asTuple() {
     if (members == null) {

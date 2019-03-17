@@ -176,6 +176,10 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
     return new BatchSchema(svMode, toFieldList());
   }
 
+  public static BatchSchema toBatchSchema(TupleMetadata schema) {
+    return ((TupleSchema) schema).toBatchSchema(SelectionVectorMode.NONE);
+  }
+
   @Override
   public String fullName(int index) {
     return fullName(metadata(index));

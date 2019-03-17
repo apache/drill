@@ -106,4 +106,7 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
 
   @Override
   public void setTimestamp(Instant value) { }
+
+  @Override
+  public void setValue(Object value) { }
 }

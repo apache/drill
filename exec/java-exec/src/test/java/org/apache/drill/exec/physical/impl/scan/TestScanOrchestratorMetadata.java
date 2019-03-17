@@ -20,6 +20,8 @@ package org.apache.drill.exec.physical.impl.scan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.List;
+
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -27,8 +29,10 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
+import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.BatchSchema;
@@ -50,6 +54,18 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 @Category(RowSetTests.class)
 public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
+  private FileMetadataOptions standardOptions(Path filePath) {
+    return standardOptions(Lists.newArrayList(filePath));
+  }
+
+  private FileMetadataOptions standardOptions(List<Path> files) {
+    FileMetadataOptions options = new FileMetadataOptions();
+    options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
+    options.setSelectionRoot(new Path("hdfs:///w"));
+    options.setFiles(files);
+    return options;
+  }
+
   /**
    * Resolve a selection list using SELECT *.
    */
@@ -59,18 +75,14 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
-    scanner.withMetadata(metadataManager);
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    builder.withMetadata(metadataManager);
 
     // SELECT *, filename, suffix ...
 
-    scanner.build(RowSetTestUtils.projectList(
+    builder.setProjection(RowSetTestUtils.projectList(
         SchemaPath.DYNAMIC_STAR,
         ScanTestUtils.FULLY_QUALIFIED_NAME_COL,
         ScanTestUtils.FILE_PATH_COL,
@@ -78,6 +90,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
         ScanTestUtils.SUFFIX_COL,
         ScanTestUtils.partitionColName(0),
         ScanTestUtils.partitionColName(1)));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM file
 
@@ -123,20 +136,17 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   @Test
   public void testSelectNone() {
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
-    scanner.withMetadata(metadataManager);
+        standardOptions(filePath));
+    builder.withMetadata(metadataManager);
 
     // SELECT c ...
 
-    scanner.build(RowSetTestUtils.projectList("c"));
+    builder.setProjection(RowSetTestUtils.projectList("c"));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM file
 
@@ -194,21 +204,18 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
         .setMode(DataMode.OPTIONAL)
         .build();
 
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
-    scanner.setNullType(nullType);
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    builder.setNullType(nullType);
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
-    scanner.withMetadata(metadataManager);
+        standardOptions(filePath));
+    builder.withMetadata(metadataManager);
 
     // SELECT a, b, dir0, suffix ...
 
-    scanner.build(RowSetTestUtils.projectList("a", "b", "dir0", "suffix"));
+    builder.setProjection(RowSetTestUtils.projectList("a", "b", "dir0", "suffix"));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM file
 
@@ -274,20 +281,17 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   @Test
   public void testMixture() {
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePath));
-    scanner.withMetadata(metadataManager);
+        standardOptions(filePath));
+    builder.withMetadata(metadataManager);
 
     // SELECT dir0, b, suffix, c ...
 
-    scanner.build(RowSetTestUtils.projectList("dir0", "b", "suffix", "c"));
+    builder.setProjection(RowSetTestUtils.projectList("dir0", "b", "suffix", "c"));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM file
 
@@ -341,25 +345,22 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   @Test
   public void testMetadataMulti() {
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePathA, filePathB));
-    scanner.withMetadata(metadataManager);
+        standardOptions(Lists.newArrayList(filePathA, filePathB)));
+    builder.withMetadata(metadataManager);
 
     // SELECT dir0, dir1, filename, b ...
 
-    scanner.build(RowSetTestUtils.projectList(
+    builder.setProjection(RowSetTestUtils.projectList(
         ScanTestUtils.partitionColName(0),
         ScanTestUtils.partitionColName(1),
         ScanTestUtils.FILE_NAME_COL,
         "b"));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // file schema (a, b)
 

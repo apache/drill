@@ -25,14 +25,14 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
  * for parsing integers (i.e. no formatting.) This conversion works
  * for any int-based column type including SMALLINT and TINYINT.
  */
-public class ConvertStringToInt extends AbstractWriteConverter {
+public class ConvertStringToInt extends AbstractConvertFromString {
 
   public ConvertStringToInt(ScalarWriter baseWriter) {
     super(baseWriter);
   }
 
   @Override
-  public void setString(String value) {
+  public void setString(final String value) {
     if (value == null) {
       baseWriter.setNull();
     } else {

@@ -135,7 +135,6 @@ public class TestBitBitKerberos extends BaseTestQuery {
   private static WritableBatch getRandomBatch(BufferAllocator allocator, int records) {
     List<ValueVector> vectors = Lists.newArrayList();
     for (int i = 0; i < 5; i++) {
-      @SuppressWarnings("resource")
       Float8Vector v = (Float8Vector) TypeHelper.getNewVector(
         MaterializedField.create("a", Types.required(MinorType.FLOAT8)),
         allocator);

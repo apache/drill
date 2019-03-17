@@ -30,7 +30,10 @@ import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
+import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
+import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.SchemaSmoother.IncompatibleSchemaException;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
@@ -87,6 +90,14 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 @Category(RowSetTests.class)
 public class TestSchemaSmoothing extends SubOperatorTest {
 
+  private FileMetadataOptions standardOptions(List<Path> files) {
+    FileMetadataOptions options = new FileMetadataOptions();
+    options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
+    options.setSelectionRoot(new Path("hdfs:///w"));
+    options.setFiles(files);
+    return options;
+  }
+
   /**
    * Sanity test for the simple, discrete case. The purpose of
    * discrete is just to run the basic lifecycle in a way that
@@ -102,11 +113,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePathA, filePathB));
+        standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
     // Set up the scan level projection
 
@@ -125,7 +132,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
           .add("a", MinorType.INT)
           .addNullable("b", MinorType.VARCHAR, 10)
           .buildSchema();
-      NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      final NullColumnBuilder builder = new NullBuilderBuilder().build();
       ResolvedRow rootTuple = new ResolvedRow(builder);
       new ExplicitSchemaProjection(
           scanProj, twoColSchema, rootTuple,
@@ -146,8 +153,8 @@ public class TestSchemaSmoothing extends SubOperatorTest {
       assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
       assertEquals(ScanTestUtils.FILE_NAME_COL, columns.get(0).name());
       assertEquals("a.csv", ((FileMetadataColumn) columns.get(0)).value());
-      assertEquals(ResolvedTableColumn.ID, columns.get(1).nodeType());
-    }
+      assertTrue(columns.get(1) instanceof ResolvedTableColumn);
+   }
     {
       // Define a file b.csv
 
@@ -158,7 +165,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
       TupleMetadata oneColSchema = new SchemaBuilder()
           .add("a", MinorType.INT)
           .buildSchema();
-      NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      final NullColumnBuilder builder = new NullBuilderBuilder().build();
       ResolvedRow rootTuple = new ResolvedRow(builder);
       new ExplicitSchemaProjection(
           scanProj, oneColSchema, rootTuple,
@@ -184,8 +191,8 @@ public class TestSchemaSmoothing extends SubOperatorTest {
       assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
       assertEquals(ScanTestUtils.FILE_NAME_COL, columns.get(0).name());
       assertEquals("b.csv", ((FileMetadataColumn) columns.get(0)).value());
-      assertEquals(ResolvedTableColumn.ID, columns.get(1).nodeType());
-      assertEquals(ResolvedNullColumn.ID, columns.get(2).nodeType());
+      assertTrue(columns.get(1) instanceof ResolvedTableColumn);
+      assertTrue(columns.get(2) instanceof ResolvedNullColumn);
     }
   }
 
@@ -209,9 +216,9 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         .buildSchema();
     ResolvedRow priorSchema;
     {
-      final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      final NullColumnBuilder builder = new NullBuilderBuilder().build();
       final ResolvedRow rootTuple = new ResolvedRow(builder);
-      new WildcardSchemaProjection(
+      new WildcardProjection(
           scanProj, schema1, rootTuple,
           ScanTestUtils.resolvers());
       priorSchema = rootTuple;
@@ -224,7 +231,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         .add("c", MinorType.FLOAT8)
         .buildSchema();
     try {
-      final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      final NullColumnBuilder builder = new NullBuilderBuilder().build();
       final ResolvedRow rootTuple = new ResolvedRow(builder);
       new SmoothingProjection(
           scanProj, schema2, priorSchema, rootTuple,
@@ -244,7 +251,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         .add("d", MinorType.INT)
         .buildSchema();
     try {
-      final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      final NullColumnBuilder builder = new NullBuilderBuilder().build();
       final ResolvedRow rootTuple = new ResolvedRow(builder);
       new SmoothingProjection(
           scanProj, schema3, priorSchema, rootTuple,
@@ -262,7 +269,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         .add("c", MinorType.FLOAT8)
         .buildSchema();
     try {
-      final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      final NullColumnBuilder builder = new NullBuilderBuilder().build();
       final ResolvedRow rootTuple = new ResolvedRow(builder);
       new SmoothingProjection(
           scanProj, schema4, priorSchema, rootTuple,
@@ -279,7 +286,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         .addNullable("b", MinorType.VARCHAR)
         .buildSchema();
     try {
-      final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      final NullColumnBuilder builder = new NullBuilderBuilder().build();
       final ResolvedRow rootTuple = new ResolvedRow(builder);
       new SmoothingProjection(
           scanProj, schema6, priorSchema, rootTuple,
@@ -314,14 +321,14 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         .buildSchema();
 
     {
-      final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      final NullColumnBuilder builder = new NullBuilderBuilder().build();
       final ResolvedRow rootTuple = new ResolvedRow(builder);
       smoother.resolve(priorSchema, rootTuple);
       assertEquals(1, smoother.schemaVersion());
       assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(priorSchema));
     }
     {
-      final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+      final NullColumnBuilder builder = new NullBuilderBuilder().build();
       final ResolvedRow rootTuple = new ResolvedRow(builder);
       smoother.resolve(tableSchema, rootTuple);
       assertEquals(2, smoother.schemaVersion());
@@ -361,7 +368,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
   }
 
   private ResolvedRow doResolve(SchemaSmoother smoother, TupleMetadata schema) {
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     smoother.resolve(schema, rootTuple);
     return rootTuple;
@@ -583,11 +590,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePathA, filePathB));
+        standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
     // Set up the scan level projection
 
@@ -634,11 +637,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     Path filePathB = new Path("hdfs:///w/x/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePathA, filePathB));
+        standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
     // Set up the scan level projection
 
@@ -685,11 +684,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        false, // Don't expand partition columns for wildcard
-        false, // N/A
-        new Path("hdfs:///w"),
-        FileMetadataManager.AUTO_PARTITION_DEPTH,
-        Lists.newArrayList(filePathA, filePathB));
+        standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
     // Set up the scan level projection
 
@@ -821,9 +816,10 @@ public class TestSchemaSmoothing extends SubOperatorTest {
 
   @Test
   public void testWildcardSmoothing() {
-    final ScanSchemaOrchestrator projector = new ScanSchemaOrchestrator(fixture.allocator());
-    projector.enableSchemaSmoothing(true);
-    projector.build(RowSetTestUtils.projectAll());
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    builder.enableSchemaSmoothing(true);
+    builder.setProjection(RowSetTestUtils.projectAll());
+    final ScanSchemaOrchestrator projector = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     final TupleMetadata firstSchema = new SchemaBuilder()
         .add("a", MinorType.INT)

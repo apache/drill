@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -29,6 +30,8 @@ import java.util.List;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
+import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
@@ -47,7 +50,7 @@ import org.junit.experimental.categories.Category;
  */
 
 @Category(RowSetTests.class)
-public class TestSchemaLevelProjection extends SubOperatorTest {
+public class TestReaderLevelProjection extends SubOperatorTest {
 
   /**
    * Test wildcard projection: take all columns on offer from
@@ -67,9 +70,9 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         .addArray("d", MinorType.FLOAT8)
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
-    new WildcardSchemaProjection(
+    new WildcardProjection(
         scanProj, tableSchema, rootTuple,
         ScanTestUtils.resolvers());
 
@@ -110,7 +113,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         .add("C", MinorType.VARCHAR)
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,
@@ -154,7 +157,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         .add("C", MinorType.VARCHAR)
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,
@@ -205,7 +208,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         .add("C", MinorType.VARCHAR)
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,
@@ -244,7 +247,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         .add("A", MinorType.VARCHAR)
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,
@@ -275,7 +278,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         ScanTestUtils.parsers());
     assertEquals(2, scanProj.columns().size());
     {
-      assertEquals(UnresolvedColumn.UNRESOLVED, scanProj.columns().get(1).nodeType());
+      assertTrue(scanProj.columns().get(1) instanceof UnresolvedColumn);
       final UnresolvedColumn bCol = (UnresolvedColumn) (scanProj.columns().get(1));
       assertTrue(bCol.element().isTuple());
     }
@@ -286,7 +289,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         .add("a", MinorType.VARCHAR)
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,
@@ -301,13 +304,13 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
 
     final ResolvedColumn aCol = columns.get(0);
     assertEquals("a", aCol.name());
-    assertEquals(ResolvedTableColumn.ID, aCol.nodeType());
+    assertTrue(aCol instanceof ResolvedTableColumn);
 
     // B is not projected, is implicitly a map
 
     final ResolvedColumn bCol = columns.get(1);
     assertEquals("b", bCol.name());
-    assertEquals(ResolvedMapColumn.ID, bCol.nodeType());
+    assertTrue(bCol instanceof ResolvedMapColumn);
 
     final ResolvedMapColumn bMap = (ResolvedMapColumn) bCol;
     final ResolvedTuple bMembers = bMap.members();
@@ -317,7 +320,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
     // C is a map within b
 
     final ResolvedColumn cCol = bMembers.columns().get(0);
-    assertEquals(ResolvedMapColumn.ID, cCol.nodeType());
+    assertTrue(cCol instanceof ResolvedMapColumn);
 
     final ResolvedMapColumn cMap = (ResolvedMapColumn) cCol;
     final ResolvedTuple cMembers = cMap.members();
@@ -327,7 +330,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
     // D is an unknown column type (not a map)
 
     final ResolvedColumn dCol = cMembers.columns().get(0);
-    assertEquals(ResolvedNullColumn.ID, dCol.nodeType());
+    assertTrue(dCol instanceof ResolvedNullColumn);
   }
 
   /**
@@ -356,7 +359,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
           .resumeSchema()
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,
@@ -373,7 +376,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
 
     final ResolvedColumn xCol = columns.get(0);
     assertEquals("x", xCol.name());
-    assertEquals(ResolvedTableColumn.ID, xCol.nodeType());
+    assertTrue(xCol instanceof ResolvedTableColumn);
     assertSame(rootTuple, xCol.source());
     assertEquals(0, xCol.sourceIndex());
 
@@ -381,7 +384,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
 
     final ResolvedColumn yCol = columns.get(2);
     assertEquals("y", yCol.name());
-    assertEquals(ResolvedTableColumn.ID, yCol.nodeType());
+    assertTrue(yCol instanceof ResolvedTableColumn);
     assertSame(rootTuple, yCol.source());
     assertEquals(1, yCol.sourceIndex());
 
@@ -389,7 +392,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
 
     final ResolvedColumn aCol = columns.get(1);
     assertEquals("a", aCol.name());
-    assertEquals(ResolvedMapColumn.ID, aCol.nodeType());
+    assertTrue(aCol instanceof ResolvedMapColumn);
 
     final ResolvedMapColumn aMap = (ResolvedMapColumn) aCol;
     final ResolvedTuple aMembers = aMap.members();
@@ -401,20 +404,20 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
 
     final ResolvedColumn acCol = aMembers.columns().get(0);
     assertEquals("c", acCol.name());
-    assertEquals(ResolvedTableColumn.ID, acCol.nodeType());
+    assertTrue(acCol instanceof ResolvedTableColumn);
     assertEquals(1, acCol.sourceIndex());
 
     // a.d is not in the table, is null
 
     final ResolvedColumn adCol = aMembers.columns().get(1);
     assertEquals("d", adCol.name());
-    assertEquals(ResolvedNullColumn.ID, adCol.nodeType());
+    assertTrue(adCol instanceof ResolvedNullColumn);
 
     // a.e is not in the table, is implicitly a map
 
     final ResolvedColumn aeCol = aMembers.columns().get(2);
     assertEquals("e", aeCol.name());
-    assertEquals(ResolvedMapColumn.ID, aeCol.nodeType());
+    assertTrue(aeCol instanceof ResolvedMapColumn);
 
     final ResolvedMapColumn aeMap = (ResolvedMapColumn) aeCol;
     final ResolvedTuple aeMembers = aeMap.members();
@@ -426,7 +429,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
 
     final ResolvedColumn aefCol = aeMembers.columns().get(0);
     assertEquals("f", aefCol.name());
-    assertEquals(ResolvedNullColumn.ID, aefCol.nodeType());
+    assertTrue(aefCol instanceof ResolvedNullColumn);
   }
 
   /**
@@ -455,7 +458,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
           .resumeSchema()
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,
@@ -472,7 +475,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
 
     final ResolvedColumn aCol = columns.get(0);
     assertEquals("a", aCol.name());
-    assertEquals(ResolvedTableColumn.ID, aCol.nodeType());
+    assertTrue(aCol instanceof ResolvedTableColumn);
     assertSame(rootTuple, aCol.source());
     assertEquals(0, aCol.sourceIndex());
   }
@@ -497,7 +500,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         .add("a", MinorType.VARCHAR)
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     try {
       new ExplicitSchemaProjection(
@@ -530,7 +533,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         .addArray("a", MinorType.VARCHAR)
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
           scanProj, tableSchema, rootTuple,
@@ -541,7 +544,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
 
     final ResolvedColumn aCol = columns.get(0);
     assertEquals("a", aCol.name());
-    assertEquals(ResolvedTableColumn.ID, aCol.nodeType());
+    assertTrue(aCol instanceof ResolvedTableColumn);
     assertSame(rootTuple, aCol.source());
     assertEquals(0, aCol.sourceIndex());
   }
@@ -566,7 +569,7 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
         .add("a", MinorType.VARCHAR)
         .buildSchema();
 
-    final NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     try {
       new ExplicitSchemaProjection(
@@ -576,5 +579,114 @@ public class TestSchemaLevelProjection extends SubOperatorTest {
     } catch (final UserException e) {
       // Expected
     }
+  }
+
+  /**
+   * Non-strict metadata schema. Projects all schema columns
+   * followed by any "extra" reader columns.
+   */
+  @Test
+  public void testWildcardWithSchema() {
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .buildSchema();
+
+    // Simulate SELECT * ...
+
+    final ScanLevelProjection scanProj = new ScanLevelProjection(
+        RowSetTestUtils.projectAll(),
+        ScanTestUtils.parsers(),
+        outputSchema);
+    assertEquals(2, scanProj.columns().size());
+
+    // Simulate a data source, with early schema, of (b, c)
+
+    final TupleMetadata tableSchema = new SchemaBuilder()
+        .add("B", MinorType.VARCHAR)
+        .add("C", MinorType.VARCHAR)
+        .buildSchema();
+
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
+    final ResolvedRow rootTuple = new ResolvedRow(builder);
+    new WildcardSchemaProjection(scanProj,
+        tableSchema, rootTuple, ScanTestUtils.resolvers());
+
+    final List<ResolvedColumn> columns = rootTuple.columns();
+    assertEquals(3, columns.size());
+
+    // Columns from schema preferentially use schema-defined names
+
+    ResolvedColumn aCol = columns.get(0);
+    assertEquals("a", aCol.name());
+    assertTrue(aCol instanceof ResolvedNullColumn);
+    assertNotNull(aCol.metadata());
+    assertSame(outputSchema.metadata("a"), aCol.metadata());
+
+    ResolvedColumn bCol = columns.get(1);
+    assertEquals("b", bCol.name());
+    assertTrue(bCol instanceof ResolvedTableColumn);
+    assertNotNull(bCol.metadata());
+    assertSame(outputSchema.metadata("b"), bCol.metadata());
+
+    // Non-schema columns use reader names
+
+    ResolvedColumn cCol = columns.get(2);
+    assertEquals("C", cCol.name());
+    assertTrue(cCol instanceof ResolvedTableColumn);
+    assertNull(cCol.metadata());
+
+    final VectorSource nullBuilder = rootTuple.nullBuilder();
+    assertSame(nullBuilder, columns.get(0).source());
+  }
+
+  /**
+   * Strict metadata schema. Projects output the output schema
+   * columns; ignores other reader columns.
+   */
+  @Test
+  public void testWildcardWithStrictSchema() {
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .buildSchema();
+    outputSchema.setProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, Boolean.TRUE.toString());
+
+    // Simulate SELECT * ...
+
+    final ScanLevelProjection scanProj = new ScanLevelProjection(
+        RowSetTestUtils.projectAll(),
+        ScanTestUtils.parsers(),
+        outputSchema);
+    assertEquals(2, scanProj.columns().size());
+
+    // Simulate a data source, with early schema, of (b, c)
+
+    final TupleMetadata tableSchema = new SchemaBuilder()
+        .add("B", MinorType.VARCHAR)
+        .add("C", MinorType.VARCHAR)
+        .buildSchema();
+
+    final NullColumnBuilder builder = new NullBuilderBuilder().build();
+    final ResolvedRow rootTuple = new ResolvedRow(builder);
+    new WildcardSchemaProjection(scanProj,
+        tableSchema, rootTuple, ScanTestUtils.resolvers());
+
+    final List<ResolvedColumn> columns = rootTuple.columns();
+    assertEquals(2, columns.size());
+    ResolvedColumn aCol = columns.get(0);
+    assertEquals("a", aCol.name());
+    assertTrue(aCol instanceof ResolvedNullColumn);
+    assertNotNull(aCol.metadata());
+    assertSame(outputSchema.metadata("a"), aCol.metadata());
+
+    ResolvedColumn bCol = columns.get(1);
+    assertEquals("b", bCol.name());
+    assertTrue(bCol instanceof ResolvedTableColumn);
+    assertNotNull(bCol.metadata());
+    assertSame(outputSchema.metadata("b"), bCol.metadata());
+
+    final VectorSource nullBuilder = rootTuple.nullBuilder();
+    assertSame(nullBuilder, columns.get(0).source());
   }
 }

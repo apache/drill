@@ -204,12 +204,7 @@ public class TestPartitionRace extends BaseCsvTest {
 
     try {
       enableV3(false);
-
-      // Special test-only feature to force even small scans
-      // to use more than one thread. Requires that the max
-      // parallelization option be set when starting the cluster.
-
-      client.alterSession(ExecConstants.MIN_READER_WIDTH_KEY, 2);
+      enableMultiScan();
 
       // Loop to run the query 10 times, or until we see the race
 
@@ -280,7 +275,7 @@ public class TestPartitionRace extends BaseCsvTest {
       System.out.println(String.format("Nested first: %s", sawNestedFirst));
     } finally {
       resetV3();
-      client.resetSession(ExecConstants.MIN_READER_WIDTH_KEY);
+      resetMultiScan();
     }
   }
 
@@ -303,7 +298,7 @@ public class TestPartitionRace extends BaseCsvTest {
 
     try {
       enableV3(true);
-      client.alterSession(ExecConstants.MIN_READER_WIDTH_KEY, 2);
+      enableMultiScan();
 
       // Loop to run the query 10 times or until we see both files
       // in the first position.
@@ -369,7 +364,7 @@ public class TestPartitionRace extends BaseCsvTest {
       System.out.println(String.format("Nested first: %s", sawNestedFirst));
     } finally {
       resetV3();
-      client.resetSession(ExecConstants.MIN_READER_WIDTH_KEY);
+      resetMultiScan();
     }
   }
 }

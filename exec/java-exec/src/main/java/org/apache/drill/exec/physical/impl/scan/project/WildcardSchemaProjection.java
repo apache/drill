@@ -19,46 +19,75 @@ package org.apache.drill.exec.physical.impl.scan.project;
 
 import java.util.List;
 
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedSchemaColumn;
+import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionType;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
- * Perform a wildcard projection. In this case, the query wants all
- * columns in the source table, so the table drives the final projection.
- * Since we include only those columns in the table, there is no need
- * to create null columns. Example: SELECT *
+ * Perform a wildcard projection with an associated output schema.
+ * Matches the reader schema against the output schema. If a column
+ * appears, it is projected into the output schema. If not found,
+ * then a null column (as defined by the output schema) is projected.
+ * <p>
+ * If the schema is strict, then we stop here. If not strict, then
+ * any unmatched reader schema columns are appended to the output
+ * tuple.
  */
 
-public class WildcardSchemaProjection extends SchemaLevelProjection {
+public class WildcardSchemaProjection extends ReaderLevelProjection {
 
   public WildcardSchemaProjection(ScanLevelProjection scanProj,
-      TupleMetadata tableSchema,
+      TupleMetadata readerSchema,
       ResolvedTuple rootTuple,
-      List<SchemaProjectionResolver> resolvers) {
+      List<ReaderProjectionResolver> resolvers) {
     super(resolvers);
+
+    // Match each column expanded from the output schema against the
+    // columns provided by the reader.
+
+    boolean readerProjectionMap[] = new boolean[readerSchema.size()];
     for (ColumnProjection col : scanProj.columns()) {
-      if (col.nodeType() == UnresolvedColumn.WILDCARD) {
-        projectAllColumns(rootTuple, tableSchema);
+      if (col instanceof UnresolvedSchemaColumn) {
+
+        // Look for a match in the reader schema
+
+        ColumnMetadata readerCol = readerSchema.metadata(col.name());
+        UnresolvedSchemaColumn schemaCol = (UnresolvedSchemaColumn) col;
+        if (readerCol == null) {
+
+          // No match, project a null column
+
+          rootTuple.add(rootTuple.nullBuilder.add(schemaCol.metadata()));
+        } else {
+
+          // Is a match, project this reader column
+
+          int index = readerSchema.index(col.name());
+          readerProjectionMap[index] = true;
+          rootTuple.add(
+              new ResolvedTableColumn(schemaCol.metadata(), rootTuple, index));
+        }
       } else {
-        resolveSpecial(rootTuple, col, tableSchema);
+
+        // Not a schema column, handle specially
+
+        resolveSpecial(rootTuple, col, readerSchema);
       }
     }
-  }
 
-  /**
-   * Project all columns from table schema to the output, in table
-   * schema order. Since we accept any map columns as-is, no need
-   * to do recursive projection.
-   *
-   * @param tableSchema
-   */
+    // If lenient wildcard projection, add unmatched reader columns.
 
-  private void projectAllColumns(ResolvedTuple rootTuple, TupleMetadata tableSchema) {
-    for (int i = 0; i < tableSchema.size(); i++) {
-      MaterializedField colSchema = tableSchema.column(i);
-      rootTuple.add(
-          new ResolvedTableColumn(colSchema.getName(),
-              colSchema, rootTuple, i));
+    if (scanProj.projectionType() == ScanProjectionType.SCHEMA_WILDCARD) {
+      for (int i = 0; i < readerProjectionMap.length; i++) {
+        if (readerProjectionMap[i]) {
+          continue;
+        }
+        ColumnMetadata readerCol = readerSchema.metadata(i);
+        rootTuple.add(
+            new ResolvedTableColumn(readerCol.name(),
+                readerCol.schema(), rootTuple, i));
+      }
     }
   }
 }

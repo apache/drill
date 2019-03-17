@@ -88,7 +88,6 @@ public class StatusResources {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, getStatusJSON());
   }
 
-  @SuppressWarnings("resource")
   private List<OptionWrapper> getSystemOptionsJSONHelper(boolean internal)
   {
     List<OptionWrapper> options = new LinkedList<>();
@@ -155,7 +154,6 @@ public class StatusResources {
     return getSystemOptionsHelper(true, uriInfo);
   }
 
-  @SuppressWarnings("resource")
   @POST
   @Path("option/{optionName}")
   @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)
