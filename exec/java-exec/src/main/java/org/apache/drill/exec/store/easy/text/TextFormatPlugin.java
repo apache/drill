@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -190,8 +189,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     }
 
     @Override
-    protected ColumnsScanFramework buildFramework(
-        EasySubScan scan) throws ExecutionSetupException {
+    protected ColumnsScanFramework buildFramework(EasySubScan scan) {
       ColumnsScanFramework framework = new ColumnsScanFramework(
               scan.getColumns(),
               scan.getWorkUnits(),
@@ -220,8 +218,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     }
   }
 
-  private TupleMetadata schema;
-
   public TextFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
      this(name, context, fsConf, storageConfig, new TextFormatConfig());
   }
@@ -247,14 +243,14 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, TupleMetadata schema)
       throws IOException {
     return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot, schema);
   }
 
   @Override
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
-      List<SchemaPath> columns, OptionManager options) throws IOException {
+      List<SchemaPath> columns, OptionManager options, TupleMetadata schema) throws IOException {
     return new EasyGroupScan(userName, selection, this, columns,
         selection.selectionRoot,
         // Some paths provide a null option manager. In that case, default to a
@@ -343,15 +339,5 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     final double estimatedRowSize = settings.getOptions().getOption(ExecConstants.TEXT_ESTIMATED_ROW_SIZE);
     final double estRowCount = data / estimatedRowSize;
     return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, (long) estRowCount, 1, data);
-  }
-
-  @Override
-  public void setSchema(TupleMetadata schema) {
-    this.schema = schema;
-  }
-
-  @Override
-  public TupleMetadata getSchema() {
-    return schema;
   }
 }

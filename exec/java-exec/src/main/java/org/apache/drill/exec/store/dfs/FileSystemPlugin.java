@@ -181,8 +181,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options, TupleMetadata schema) throws IOException {
     FormatSelection formatSelection = selection.getWith(lpPersistance, FormatSelection.class);
     FormatPlugin plugin = getFormatPlugin(formatSelection.getFormat());
-    plugin.setSchema(schema);
-    return plugin.getGroupScan(userName, formatSelection.getSelection(), columns, options);
+    return plugin.getGroupScan(userName, formatSelection.getSelection(), columns, options, schema);
   }
 
   @Override

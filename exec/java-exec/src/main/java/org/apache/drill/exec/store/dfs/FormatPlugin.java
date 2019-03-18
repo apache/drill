@@ -63,6 +63,14 @@ public interface FormatPlugin {
     return getGroupScan(userName, selection, columns);
   }
 
+  default AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, TupleMetadata schema) throws IOException {
+    return getGroupScan(userName, selection, columns);
+  }
+
+  default AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, OptionManager options, TupleMetadata schema) throws IOException {
+    return getGroupScan(userName, selection, columns, options);
+  }
+
   boolean supportsStatistics();
 
   TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException;
@@ -74,18 +82,4 @@ public interface FormatPlugin {
   Configuration getFsConf();
   DrillbitContext getContext();
   String getName();
-
-  /**
-   * Sets table schema that will be used during data read.
-   *
-   * @param schema table schema
-   */
-  default void setSchema(TupleMetadata schema) { }
-
-  /**
-   * Returns table schema to be used during data read.
-   *
-   * @return table schema
-   */
-  default TupleMetadata getSchema() { return null; }
 }

@@ -45,6 +45,7 @@ public class EasySubScan extends AbstractSubScan {
   private final List<SchemaPath> columns;
   private final Path selectionRoot;
   private final int partitionDepth;
+  private final TupleMetadata schema;
 
   @JsonCreator
   public EasySubScan(
@@ -61,21 +62,22 @@ public class EasySubScan extends AbstractSubScan {
     super(userName);
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(this.formatPlugin);
-    this.formatPlugin.setSchema(schema);
     this.files = files;
     this.columns = columns;
     this.selectionRoot = selectionRoot;
     this.partitionDepth = partitionDepth;
+    this.schema = schema;
   }
 
   public EasySubScan(String userName, List<FileWorkImpl> files, EasyFormatPlugin<?> plugin,
-      List<SchemaPath> columns, Path selectionRoot, int partitionDepth) {
+      List<SchemaPath> columns, Path selectionRoot, int partitionDepth, TupleMetadata schema) {
     super(userName);
     this.formatPlugin = plugin;
     this.files = files;
     this.columns = columns;
     this.selectionRoot = selectionRoot;
     this.partitionDepth = partitionDepth;
+    this.schema = schema;
   }
 
   @JsonProperty
@@ -100,7 +102,7 @@ public class EasySubScan extends AbstractSubScan {
   public List<SchemaPath> getColumns() { return columns; }
 
   @JsonProperty("schema")
-  public TupleMetadata getSchema() { return formatPlugin.getSchema(); }
+  public TupleMetadata getSchema() { return schema; }
 
   @Override
   public int getOperatorType() { return formatPlugin.getReaderOperatorType(); }

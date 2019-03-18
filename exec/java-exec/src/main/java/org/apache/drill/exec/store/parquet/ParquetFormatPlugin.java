@@ -181,7 +181,7 @@ public class ParquetFormatPlugin implements FormatPlugin {
 
   @Override
   public AbstractFileGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) throws IOException {
-    return getGroupScan(userName, selection, columns, null);
+    return getGroupScan(userName, selection, columns, (OptionManager) null);
   }
 
   @Override
