@@ -109,7 +109,7 @@ public class WorkspaceSchemaFactory {
       WorkspaceConfig config,
       List<FormatMatcher> formatMatchers,
       LogicalPlanPersistence logicalPlanPersistence,
-      ScanResult scanResult) throws ExecutionSetupException, IOException {
+      ScanResult scanResult) throws ExecutionSetupException {
     this.logicalPlanPersistence = logicalPlanPersistence;
     this.fsConf = plugin.getFsConf();
     this.plugin = plugin;
@@ -139,7 +139,7 @@ public class WorkspaceSchemaFactory {
         throw new ExecutionSetupException(message);
       }
       final FormatMatcher fallbackMatcher = new BasicFormatMatcher(formatPlugin,
-          ImmutableList.of(Pattern.compile(".*")), ImmutableList.<MagicString>of());
+          ImmutableList.of(Pattern.compile(".*")), ImmutableList.of());
       fileMatchers.add(fallbackMatcher);
       dropFileMatchers = fileMatchers.subList(0, fileMatchers.size() - 1);
     } else {
@@ -162,11 +162,10 @@ public class WorkspaceSchemaFactory {
    * Checks whether a FileSystem object has the permission to list/read workspace directory
    * @param fs a DrillFileSystem object that was created with certain user privilege
    * @return True if the user has access. False otherwise.
-   * @throws IOException
    */
   public boolean accessible(DrillFileSystem fs) throws IOException {
     try {
-      /**
+      /*
        * For Windows local file system, fs.access ends up using DeprecatedRawLocalFileStatus which has
        * TrustedInstaller as owner, and a member of Administrators group could not satisfy the permission.
        * In this case, we will still use method listStatus.
@@ -426,11 +425,10 @@ public class WorkspaceSchemaFactory {
     // Drill Process User file-system
     private DrillFileSystem dpsFs;
 
-    public WorkspaceSchema(List<String> parentSchemaPath, String wsName, SchemaConfig schemaConfig, DrillFileSystem fs) throws IOException {
+    public WorkspaceSchema(List<String> parentSchemaPath, String wsName, SchemaConfig schemaConfig, DrillFileSystem fs) {
       super(parentSchemaPath, wsName);
       this.schemaConfig = schemaConfig;
       this.fs = fs;
-      //this.fs = ImpersonationUtil.createFileSystem(schemaConfig.getUserName(), fsConf);
       this.dpsFs = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(), fsConf);
     }
 
@@ -709,10 +707,6 @@ public class WorkspaceSchemaFactory {
       return FileSystemConfig.NAME;
     }
 
-    private DrillTable isReadable(FormatMatcher m, FileSelection fileSelection) throws IOException {
-      return m.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig);
-    }
-
     @Override
     public DrillTable create(TableInstance key) {
       try {
@@ -721,13 +715,20 @@ public class WorkspaceSchemaFactory {
           return null;
         }
 
-        final boolean hasDirectories = fileSelection.containsDirectories(getFS());
+        boolean hasDirectories = fileSelection.containsDirectories(getFS());
+
         if (key.sig.params.size() > 0) {
-          FormatPluginConfig fconfig = optionExtractor.createConfigForTable(key);
-          return new DynamicDrillTable(
-              plugin, storageEngineName, schemaConfig.getUserName(),
-              new FormatSelection(fconfig, fileSelection));
+          FileSelection newSelection = detectEmptySelection(fileSelection, hasDirectories);
+
+          if (newSelection.isEmptyDirectory()) {
+            return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), fileSelection);
+          }
+
+          FormatPluginConfig formatConfig = optionExtractor.createConfigForTable(key);
+          FormatSelection selection = new FormatSelection(formatConfig, newSelection);
+          return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
         }
+
         if (hasDirectories) {
           for (final FormatMatcher matcher : dirMatchers) {
             try {
@@ -741,10 +742,8 @@ public class WorkspaceSchemaFactory {
           }
         }
 
-        final FileSelection newSelection = hasDirectories ? fileSelection.minusDirectories(getFS()) : fileSelection;
-        if (newSelection == null) {
-          // empty directory / selection means that this is the empty and schemaless table
-          fileSelection.setEmptyDirectoryStatus();
+        FileSelection newSelection = detectEmptySelection(fileSelection, hasDirectories);
+        if (newSelection.isEmptyDirectory()) {
           return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), fileSelection);
         }
 
@@ -770,8 +769,25 @@ public class WorkspaceSchemaFactory {
       return null;
     }
 
+    /**
+     * Expands given file selection if it has directories.
+     * If expanded file selection is null (i.e. directory is empty), sets empty directory status to true.
+     *
+     * @param fileSelection file selection
+     * @param hasDirectories flag that indicates if given file selection has directories
+     * @return revisited file selection
+     */
+    private FileSelection detectEmptySelection(FileSelection fileSelection, boolean hasDirectories) throws IOException {
+      FileSelection newSelection = hasDirectories ? fileSelection.minusDirectories(getFS()) : fileSelection;
+      if (newSelection == null) {
+        // empty directory / selection means that this is the empty and schemaless table
+        fileSelection.setEmptyDirectoryStatus();
+        return fileSelection;
+      }
+      return newSelection;
+    }
+
     private FormatMatcher findMatcher(FileStatus file) {
-      FormatMatcher matcher = null;
       try {
         for (FormatMatcher m : dropFileMatchers) {
           if (m.isFileReadable(getFS(), file)) {
@@ -781,7 +797,7 @@ public class WorkspaceSchemaFactory {
       } catch (IOException e) {
         logger.debug("Failed to find format matcher for file: %s", file, e);
       }
-      return matcher;
+      return null;
     }
 
     @Override
@@ -807,8 +823,7 @@ public class WorkspaceSchemaFactory {
       }
 
       FormatMatcher matcher = null;
-      Queue<FileStatus> listOfFiles = new LinkedList<>();
-      listOfFiles.addAll(fileSelection.getStatuses(getFS()));
+      Queue<FileStatus> listOfFiles = new LinkedList<>(fileSelection.getStatuses(getFS()));
 
       while (!listOfFiles.isEmpty()) {
         FileStatus currentFile = listOfFiles.poll();
@@ -852,13 +867,13 @@ public class WorkspaceSchemaFactory {
         StringBuilder tableRenameBuilder = new StringBuilder();
         int lastSlashIndex = table.lastIndexOf(Path.SEPARATOR);
         if (lastSlashIndex != -1) {
-          tableRenameBuilder.append(table.substring(0, lastSlashIndex + 1));
+          tableRenameBuilder.append(table, 0, lastSlashIndex + 1);
         }
         // Generate unique identifier which will be added as a suffix to the table name
         ThreadLocalRandom r = ThreadLocalRandom.current();
         long time =  (System.currentTimeMillis()/1000);
-        Long p1 = ((Integer.MAX_VALUE - time) << 32) + r.nextInt();
-        Long p2 = r.nextLong();
+        long p1 = ((Integer.MAX_VALUE - time) << 32) + r.nextInt();
+        long p2 = r.nextLong();
         final String fileNameDelimiter = DrillFileSystem.UNDERSCORE_PREFIX;
         String[] pathSplit = table.split(Path.SEPARATOR);
         /*
@@ -871,9 +886,9 @@ public class WorkspaceSchemaFactory {
             .append(DrillFileSystem.UNDERSCORE_PREFIX)
             .append(pathSplit[pathSplit.length - 1])
             .append(fileNameDelimiter)
-            .append(p1.toString())
+            .append(p1)
             .append(fileNameDelimiter)
-            .append(p2.toString());
+            .append(p2);
 
         String tableRename = tableRenameBuilder.toString();
         fs.rename(new Path(defaultLocation, table), new Path(defaultLocation, tableRename));
