@@ -25,10 +25,11 @@ import static org.junit.Assert.assertThat;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.junit.Test;
@@ -36,13 +37,12 @@ import org.junit.experimental.categories.Category;
 
 @Category(SqlTest.class)
 public class TestSelectWithOption extends BaseTestQuery {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
   private File genCSVFile(String name, String... rows) throws IOException {
     File file = new File(format("%s/%s.csv", dirTestWatcher.getRootDir(), name));
     try (FileWriter fw = new FileWriter(file)) {
-      for (int i = 0; i < rows.length; i++) {
-        fw.append(rows[i] + "\n");
+      for (String row : rows) {
+        fw.append(row).append("\n");
       }
     }
     return file;
@@ -291,4 +291,35 @@ public class TestSelectWithOption extends BaseTestQuery {
       throw e;
     }
   }
+
+  @Test
+  public void testTableFunctionWithDirectoryExpansion() throws Exception {
+    String tableName = "dirTable";
+    String query = "select 'A' as col from (values(1))";
+    test("use dfs.tmp");
+    try {
+      alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "csv");
+      test("create table %s as %s", tableName, query);
+
+      testBuilder()
+        .sqlQuery("select * from table(%s(type=>'text', fieldDelimiter => ',', extractHeader => true))", tableName)
+        .unOrdered()
+        .sqlBaselineQuery(query)
+        .go();
+    } finally {
+      resetSessionOption(ExecConstants.OUTPUT_FORMAT_OPTION);
+      test("drop table if exists %s", tableName);
+    }
+  }
+
+  @Test
+  public void testTableFunctionWithEmptyDirectory() throws Exception {
+    String tableName = "emptyTable";
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(tableName));
+    testBuilder()
+      .sqlQuery("select * from table(dfs.tmp.`%s`(type=>'text', fieldDelimiter => ',', extractHeader => true))", tableName)
+      .expectsEmptyResultSet()
+      .go();
+  }
+
 }
