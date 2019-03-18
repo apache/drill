@@ -114,7 +114,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title" id="exportPlugin">Export Plugin config</h4>
+          <h4 class="modal-title" id="exportPlugin">Plugin config</h4>
         </div>
         <div class="modal-body">
           <div id="format" style="display: inline-block; position: relative;">
@@ -137,19 +137,19 @@
             <label for="format">Plugin group</label>
             <div class="radio">
               <label>
-                <input type="radio" name="number" id="all" value="all" checked="checked">
+                <input type="radio" name="group" id="all" value="all" checked="checked">
                 ALL
               </label>
             </div>
             <div class="radio">
               <label>
-                <input type="radio" name="number" id="enabled" value="enabled">
+                <input type="radio" name="group" id="enabled" value="enabled">
                 ENABLED
               </label>
             </div>
             <div class="radio">
               <label>
-                <input type="radio" name="number" id="disabled" value="disabled">
+                <input type="radio" name="group" id="disabled" value="disabled">
                 DISABLED
               </label>
             </div>
@@ -175,7 +175,7 @@
         </div>
         <div class="modal-body">
 
-          <form id="createForm" role="form" action="/storage/create_new" method="POST">
+          <form id="createForm" role="form" action="/storage/create" method="POST">
             <input type="text" class="form-control" name="name" placeholder="Storage Name">
             <h3>Configuration</h3>
             <div class="form-group">
@@ -260,10 +260,10 @@
       const optionalBlock = modal.find('#plugin-set');
       if (exportInstance === "all") {
         optionalBlock.removeClass('hide');
-        modal.find('.modal-title').text('Export all Plugin configs');
+        modal.find('.modal-title').text('Export all Plugins configs');
       } else {
         modal.find('#plugin-set').addClass('hide');
-        modal.find('.modal-title').text('Export '+ exportInstance.toUpperCase() +' Plugin config');
+        modal.find('.modal-title').text(exportInstance.toUpperCase() + ' Plugin config');
       }
 
       modal.find('#export').click(function() {
@@ -276,15 +276,15 @@
         }
         let url;
         if (exportInstance === "all") {
-          let pluginsNumber = "";
+          let pluginGroup = "";
           if (modal.find('#all').is(":checked")) {
-            pluginsNumber = 'all';
+            pluginGroup = 'all';
           } else if (modal.find('#enabled').is(":checked")) {
-            pluginsNumber = 'enabled';
+            pluginGroup = 'enabled';
           } else if (modal.find('#disabled').is(":checked")) {
-            pluginsNumber = 'disabled';
+            pluginGroup = 'disabled';
           }
-          url = '/storage/' + pluginsNumber + '/plugins/export/' + format;
+          url = '/storage/' + pluginGroup + '/plugins/export/' + format;
         } else {
           url = '/storage/' + exportInstance + '/export/' + format;
         }

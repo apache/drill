@@ -60,11 +60,11 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title" id="exportPlugin">Export Plugin config</h4>
+          <h4 class="modal-title" id="exportPlugin">Plugin config</h4>
         </div>
         <div class="modal-body">
           <div id="format" style="display: inline-block; position: relative;">
-            <label for="format">File type</label>
+            <label for="format">Format</label>
             <div class="radio">
               <label>
                 <input type="radio" name="format" id="json" value="json" checked="checked">
@@ -150,10 +150,10 @@
 
     // Modal window management
     $('#pluginsModal').on('show.bs.modal', function (event) {
-      const button = $(event.relatedTarget) // Button that triggered the modal
+      const button = $(event.relatedTarget); // Button that triggered the modal
       let exportInstance = button.attr("name");
       const modal = $(this);
-      modal.find('.modal-title').text('Export '+ exportInstance.toUpperCase() +' Plugin configs');
+      modal.find('.modal-title').text(exportInstance.toUpperCase() +' Plugin configs');
       modal.find('.btn-primary').click(function(){
         let format = "";
         if (modal.find('#json').is(":checked")) {
