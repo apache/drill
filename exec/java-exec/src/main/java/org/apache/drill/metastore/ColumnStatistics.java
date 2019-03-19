@@ -43,6 +43,15 @@ public interface ColumnStatistics<T> {
   boolean containsStatistic(StatisticsKind statisticsKind);
 
   /**
+   * Checks whether specified statistics kind is set in this column statistics
+   * and it corresponds to the exact statistics value.
+   *
+   * @param statisticsKind statistics kind to check
+   * @return true if value which corresponds to the specified statistics kind is exact
+   */
+  boolean containsExactStatistics(StatisticsKind statisticsKind);
+
+  /**
    * Returns {@link Comparator} for comparing values with the same type as column values.
    *
    * @return {@link Comparator}

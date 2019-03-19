@@ -29,11 +29,17 @@ import java.util.Map;
  */
 public class ColumnStatisticsImpl<T> implements ColumnStatistics<T> {
 
-  private Map<String, Object> statistics;
-  private Comparator<T> valueComparator;
+  private final Map<String, Object> statistics;
+  private final Map<String, StatisticsKind> statisticsKinds;
+  private final Comparator<T> valueComparator;
 
-  public ColumnStatisticsImpl(Map<String, Object> statistics, Comparator<T> valueComparator) {
-    this.statistics = statistics;
+  public ColumnStatisticsImpl(Map<StatisticsKind, Object> statistics, Comparator<T> valueComparator) {
+    this.statistics = new HashMap<>();
+    this.statisticsKinds = new HashMap<>();
+    statistics.forEach((statisticsKind, value) -> {
+      this.statistics.put(statisticsKind.getName(), value);
+      this.statisticsKinds.put(statisticsKind.getName(), statisticsKind);
+    });
     this.valueComparator = valueComparator;
   }
 
@@ -48,19 +54,29 @@ public class ColumnStatisticsImpl<T> implements ColumnStatistics<T> {
   }
 
   @Override
+  public boolean containsExactStatistics(StatisticsKind statisticsKind) {
+    return statisticsKinds.get(statisticsKind.getName()).isExact();
+  }
+
+  @Override
   public Comparator<T> getValueComparator() {
     return valueComparator;
   }
 
   @Override
   public ColumnStatistics<T> cloneWithStats(ColumnStatistics statistics) {
-    Map<String, Object> newStats = new HashMap<>(this.statistics);
-    for (String statisticsKey : this.statistics.keySet()) {
-      Object statisticsValue = statistics.getStatistic(() -> statisticsKey);
-      if (statisticsValue != null) {
-        newStats.put(statisticsKey, statisticsValue);
+    Map<StatisticsKind, Object> newStats = new HashMap<>();
+    this.statistics.forEach((statisticsName, value) -> {
+      StatisticsKind statisticsKind = statisticsKinds.get(statisticsName);
+      Object statisticsValue = statistics.getStatistic(statisticsKind);
+      if (statisticsValue != null &&
+          (statistics.containsExactStatistics(statisticsKind) || !statisticsKind.isExact())) {
+        // overrides statistics value for the case when new statistics is exact or existing was estimated one
+        newStats.put(statisticsKind, statisticsValue);
+      } else {
+        newStats.put(statisticsKind, value);
       }
-    }
+    });
 
     return new ColumnStatisticsImpl<>(newStats, valueComparator);
   }

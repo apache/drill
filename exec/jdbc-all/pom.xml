@@ -347,6 +347,7 @@
             <!-- Relocate Drill classes to minimize classloader hell. -->
             <relocation><pattern>org.apache.drill.exec.</pattern><shadedPattern>oadd.org.apache.drill.exec.</shadedPattern></relocation>
             <relocation><pattern>org.apache.drill.common.</pattern><shadedPattern>oadd.org.apache.drill.common.</shadedPattern></relocation>
+            <relocation><pattern>org.apache.drill.metastore.</pattern><shadedPattern>oadd.org.apache.drill.metastore.</shadedPattern></relocation>
 
             <!-- Move dependencies out of path -->
             <relocation><pattern>antlr.</pattern><shadedPattern>oadd.antlr.</shadedPattern></relocation>
@@ -663,6 +664,7 @@
                   <!-- Relocate Drill classes to minimize classloader hell. -->
                   <relocation><pattern>org.apache.drill.exec.</pattern><shadedPattern>oadd.org.apache.drill.exec.</shadedPattern></relocation>
                   <relocation><pattern>org.apache.drill.common.</pattern><shadedPattern>oadd.org.apache.drill.common.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.drill.metastore.</pattern><shadedPattern>oadd.org.apache.drill.metastore.</shadedPattern></relocation>
 
                   <!-- Move dependencies out of path -->
                   <relocation><pattern>antlr.</pattern><shadedPattern>oadd.antlr.</shadedPattern></relocation>

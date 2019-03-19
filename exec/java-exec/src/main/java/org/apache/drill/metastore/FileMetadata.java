@@ -20,9 +20,10 @@ package org.apache.drill.metastore;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaPathUtils;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.hadoop.fs.Path;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,17 +32,23 @@ import java.util.Map;
 public class FileMetadata implements BaseMetadata, LocationProvider {
 
   private final Path location;
-  private final TupleSchema schema;
+  private final TupleMetadata schema;
   private final Map<SchemaPath, ColumnStatistics> columnsStatistics;
   private final Map<String, Object> fileStatistics;
+  private final Map<String, StatisticsKind> statisticsKinds;
   private final String tableName;
   private final long lastModifiedTime;
 
-  public FileMetadata(Path location, TupleSchema schema, Map<SchemaPath, ColumnStatistics> columnsStatistics,
-                      Map<String, Object> fileStatistics, String tableName, long lastModifiedTime) {
+  public FileMetadata(Path location, TupleMetadata schema, Map<SchemaPath, ColumnStatistics> columnsStatistics,
+                      Map<StatisticsKind, Object> fileStatistics, String tableName, long lastModifiedTime) {
     this.schema = schema;
     this.columnsStatistics = columnsStatistics;
-    this.fileStatistics = fileStatistics;
+    this.fileStatistics = new HashMap<>();
+    this.statisticsKinds = new HashMap<>();
+    fileStatistics.forEach((statisticsKind, value) -> {
+      this.fileStatistics.put(statisticsKind.getName(), value);
+      this.statisticsKinds.put(statisticsKind.getName(), statisticsKind);
+    });
     this.location = location;
     this.tableName = tableName;
     this.lastModifiedTime = lastModifiedTime;
@@ -55,6 +62,11 @@ public class FileMetadata implements BaseMetadata, LocationProvider {
   @Override
   public Object getStatistic(StatisticsKind statisticsKind) {
     return fileStatistics.get(statisticsKind.getName());
+  }
+
+  @Override
+  public boolean containsExactStatistics(StatisticsKind statisticsKind) {
+    return statisticsKinds.get(statisticsKind.getName()).isExact();
   }
 
   @Override
@@ -73,7 +85,7 @@ public class FileMetadata implements BaseMetadata, LocationProvider {
   }
 
   @Override
-  public TupleSchema getSchema() {
+  public TupleMetadata getSchema() {
     return schema;
   }
 

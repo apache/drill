@@ -22,7 +22,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.drill.exec.physical.base.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.ParquetTableMetadataProvider;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.metastore.LocationProvider;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -43,6 +46,7 @@ import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -68,7 +72,8 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
                           @JsonProperty("selectionRoot") Path selectionRoot,
                           @JsonProperty("cacheFileRoot") Path cacheFileRoot,
                           @JsonProperty("readerConfig") ParquetReaderConfig readerConfig,
-                          @JsonProperty("filter") LogicalExpression filter) throws IOException, ExecutionSetupException {
+                          @JsonProperty("filter") LogicalExpression filter,
+                          @JsonProperty("schema") TupleSchema schema) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName), columns, entries, readerConfig, filter);
     Preconditions.checkNotNull(storageConfig);
     Preconditions.checkNotNull(formatConfig);
@@ -80,8 +85,18 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     DrillFileSystem fs =
         ImpersonationUtil.createFileSystem(ImpersonationUtil.resolveUserName(userName), formatPlugin.getFsConf());
 
-    this.metadataProvider = new ParquetTableMetadataProviderImpl(this.entries, selectionRoot, cacheFileRoot,
-        readerConfig, fs, this.formatConfig.areCorruptDatesAutoCorrected());
+    // used metadata provider manager which takes metadata from file system to reduce calls into metastore when plan is submitted
+    ParquetFileTableMetadataProviderBuilder builder =
+        (ParquetFileTableMetadataProviderBuilder) new FileSystemMetadataProviderManager().builder(MetadataProviderManager.MetadataProviderKind.PARQUET_TABLE);
+
+    this.metadataProvider = builder.withEntries(this.entries)
+        .withSelectionRoot(selectionRoot)
+        .withCacheFileRoot(cacheFileRoot)
+        .withReaderConfig(readerConfig)
+        .withFileSystem(fs)
+        .withCorrectCorruptedDates(this.formatConfig.areCorruptDatesAutoCorrected())
+        .withSchema(schema)
+        .build();
 
     ParquetTableMetadataProvider metadataProvider = (ParquetTableMetadataProvider) this.metadataProvider;
     this.selectionRoot = metadataProvider.getSelectionRoot();
@@ -95,8 +110,9 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
                           FileSelection selection,
                           ParquetFormatPlugin formatPlugin,
                           List<SchemaPath> columns,
-                          ParquetReaderConfig readerConfig) throws IOException {
-    this(userName, selection, formatPlugin, columns, readerConfig, ValueExpressions.BooleanExpression.TRUE);
+                          ParquetReaderConfig readerConfig,
+                          MetadataProviderManager metadataProviderManager) throws IOException {
+    this(userName, selection, formatPlugin, columns, readerConfig, ValueExpressions.BooleanExpression.TRUE, metadataProviderManager);
   }
 
   public ParquetGroupScan(String userName,
@@ -104,7 +120,8 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
                           ParquetFormatPlugin formatPlugin,
                           List<SchemaPath> columns,
                           ParquetReaderConfig readerConfig,
-                          LogicalExpression filter) throws IOException {
+                          LogicalExpression filter,
+                          MetadataProviderManager metadataProviderManager) throws IOException {
     super(userName, columns, new ArrayList<>(), readerConfig, filter);
 
     this.formatPlugin = formatPlugin;
@@ -112,14 +129,26 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     this.cacheFileRoot = selection.getCacheFileRoot();
 
     DrillFileSystem fs = ImpersonationUtil.createFileSystem(ImpersonationUtil.resolveUserName(userName), formatPlugin.getFsConf());
-    metadataProvider = new ParquetTableMetadataProviderImpl(selection, readerConfig, fs,
-        formatConfig.areCorruptDatesAutoCorrected());
+    if (metadataProviderManager == null) {
+      // use file system metadata provider without specified schema and statistics
+      metadataProviderManager = new FileSystemMetadataProviderManager();
+    }
 
-    ParquetTableMetadataProvider metadataProvider = (ParquetTableMetadataProvider) this.metadataProvider;
-    this.usedMetadataCache = metadataProvider.isUsedMetadataCache();
-    this.selectionRoot = metadataProvider.getSelectionRoot();
-    this.entries = metadataProvider.getEntries();
-    this.fileSet = metadataProvider.getFileSet();
+    ParquetFileTableMetadataProviderBuilder builder =
+        (ParquetFileTableMetadataProviderBuilder) metadataProviderManager.builder(MetadataProviderManager.MetadataProviderKind.PARQUET_TABLE);
+
+    this.metadataProvider = builder
+        .withSelection(selection)
+        .withReaderConfig(readerConfig)
+        .withFileSystem(fs)
+        .withCorrectCorruptedDates(formatConfig.areCorruptDatesAutoCorrected())
+        .build();
+
+    ParquetTableMetadataProvider parquetTableMetadataProvider = (ParquetTableMetadataProvider) this.metadataProvider;
+    this.usedMetadataCache = parquetTableMetadataProvider.isUsedMetadataCache();
+    this.selectionRoot = parquetTableMetadataProvider.getSelectionRoot();
+    this.entries = parquetTableMetadataProvider.getEntries();
+    this.fileSet = parquetTableMetadataProvider.getFileSet();
 
     init();
   }
@@ -165,6 +194,13 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
   @JsonProperty
   public Path getCacheFileRoot() {
     return cacheFileRoot;
+  }
+
+  @JsonProperty
+  @JsonIgnore(value = false)
+  @Override
+  public TupleSchema getSchema() {
+    return super.getSchema();
   }
   // getters for serialization / deserialization end
 
@@ -256,6 +292,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
   protected List<String> getPartitionValues(LocationProvider locationProvider) {
     return ColumnExplorer.listPartitionValues(locationProvider.getLocation(), selectionRoot, false);
   }
+
   // overridden protected methods block end
 
   /**

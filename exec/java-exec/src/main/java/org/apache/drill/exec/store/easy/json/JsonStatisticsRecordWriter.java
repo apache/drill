@@ -23,6 +23,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.physical.impl.statistics.Statistic;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
@@ -270,7 +272,7 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter {
         throw new IOException("Statistics writer encountered unexpected field");
       }
       if (nextField.equals(Statistic.COLNAME)) {
-        ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setName(reader.readText().toString());
+        ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setName(SchemaPath.parseFromString(reader.readText().toString()));
       } else if (nextField.equals(Statistic.COLTYPE)) {
         MajorType fieldType = DrillStatsTable.getMapper().readValue(reader.readText().toString(), MajorType.class);
         ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setType(fieldType);
@@ -278,7 +280,7 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter {
     }
 
     @Override
-    public void endField() throws IOException {
+    public void endField() {
       nextField = null;
     }
   }

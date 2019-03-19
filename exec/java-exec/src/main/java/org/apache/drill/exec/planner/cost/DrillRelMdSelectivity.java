@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.planner.cost;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
@@ -54,10 +57,17 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.metastore.ColumnStatistics;
+import org.apache.drill.metastore.ColumnStatisticsKind;
+import org.apache.drill.metastore.TableMetadata;
+import org.apache.drill.metastore.TableStatisticsKind;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DrillRelMdSelectivity extends RelMdSelectivity {
+  private static final Logger logger = LoggerFactory.getLogger(DrillRelMdSelectivity.class);
+
   private static final DrillRelMdSelectivity INSTANCE = new DrillRelMdSelectivity();
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRelMdSelectivity.class);
   public static final RelMetadataProvider SOURCE = ReflectiveRelMetadataProvider.reflectiveSource(BuiltInMethod.SELECTIVITY.method, INSTANCE);
   /*
    * For now, we are treating all LIKE predicates to have the same selectivity irrespective of the number or position
@@ -126,22 +136,28 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
         return super.getSelectivity(rel, mq, predicate);
       }
       DrillTable table = Utilities.getDrillTable(rel.getTable());
-      if (table != null && table.getStatsTable() != null && table.getStatsTable().isMaterialized()) {
-        if (rel instanceof DrillScanRelBase) {
-          List<String> fieldNames = new ArrayList<>();
-          for (SchemaPath fieldPath : ((DrillScanRelBase)rel).getGroupScan().getColumns()) {
-            fieldNames.add(fieldPath.toString());
+      try {
+        TableMetadata tableMetadata;
+        if (table != null && (tableMetadata = table.getGroupScan().getTableMetadata()) != null
+            && (boolean) TableStatisticsKind.HAS_STATISTICS.getValue(tableMetadata)) {
+          List<SchemaPath> fieldNames;
+          if (rel instanceof DrillScanRelBase) {
+            fieldNames = ((DrillScanRelBase) rel).getGroupScan().getColumns();
+          } else {
+            fieldNames = rel.getRowType().getFieldNames().stream()
+                .map(SchemaPath::getSimplePath)
+                .collect(Collectors.toList());
           }
-          return getScanSelectivityInternal(table, predicate, fieldNames);
-        } else {
-          return getScanSelectivityInternal(table, predicate, rel.getRowType().getFieldNames());
+          return getScanSelectivityInternal(tableMetadata, predicate, fieldNames);
         }
+      } catch (IOException e) {
+        super.getSelectivity(rel, mq, predicate);
       }
     }
     return super.getSelectivity(rel, mq, predicate);
   }
 
-  private double getScanSelectivityInternal(DrillTable table, RexNode predicate, List<String> fieldNames) {
+  private double getScanSelectivityInternal(TableMetadata tableMetadata, RexNode predicate, List<SchemaPath> fieldNames) {
     double sel = 1.0;
     if ((predicate == null) || predicate.isAlwaysTrue()) {
       return sel;
@@ -152,30 +168,30 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
         if (isMultiColumnPredicate(orPred)) {
           orSel += RelMdUtil.guessSelectivity(orPred);  //CALCITE guess
         } else if (orPred.isA(SqlKind.EQUALS)) {
-          orSel += computeEqualsSelectivity(table, orPred, fieldNames);
+          orSel += computeEqualsSelectivity(tableMetadata, orPred, fieldNames);
         } else if (orPred.isA(RANGE_PREDICATE)) {
-          orSel += computeRangeSelectivity(table, orPred, fieldNames);
+          orSel += computeRangeSelectivity(tableMetadata, orPred, fieldNames);
         } else if (orPred.isA(SqlKind.NOT_EQUALS)) {
-          orSel += 1.0 - computeEqualsSelectivity(table, orPred, fieldNames);
+          orSel += 1.0 - computeEqualsSelectivity(tableMetadata, orPred, fieldNames);
         } else if (orPred.isA(SqlKind.LIKE)) {
           // LIKE selectivity is 5% more than a similar equality predicate, capped at CALCITE guess
-          orSel +=  Math.min(computeEqualsSelectivity(table, orPred, fieldNames) + LIKE_PREDICATE_SELECTIVITY,
+          orSel +=  Math.min(computeEqualsSelectivity(tableMetadata, orPred, fieldNames) + LIKE_PREDICATE_SELECTIVITY,
               guessSelectivity(orPred));
         } else if (orPred.isA(SqlKind.NOT)) {
           if (orPred instanceof RexCall) {
             // LIKE selectivity is 5% more than a similar equality predicate, capped at CALCITE guess
             RexNode childOp = ((RexCall) orPred).getOperands().get(0);
             if (childOp.isA(SqlKind.LIKE)) {
-              orSel += 1.0 - Math.min(computeEqualsSelectivity(table, childOp, fieldNames) + LIKE_PREDICATE_SELECTIVITY,
+              orSel += 1.0 - Math.min(computeEqualsSelectivity(tableMetadata, childOp, fieldNames) + LIKE_PREDICATE_SELECTIVITY,
                       guessSelectivity(childOp));
             } else {
               orSel += 1.0 - guessSelectivity(orPred);
             }
           }
         } else if (orPred.isA(SqlKind.IS_NULL)) {
-          orSel += 1.0 - computeIsNotNullSelectivity(table, orPred, fieldNames);
+          orSel += 1.0 - computeIsNotNullSelectivity(tableMetadata, orPred, fieldNames);
         } else if (orPred.isA(SqlKind.IS_NOT_NULL)) {
-          orSel += computeIsNotNullSelectivity(table, orPred, fieldNames);
+          orSel += computeIsNotNullSelectivity(tableMetadata, orPred, fieldNames);
         } else {
           // Use the CALCITE guess.
           orSel += guessSelectivity(orPred);
@@ -187,25 +203,26 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     return (sel > 1.0) ? 1.0 : sel;
   }
 
-  private double computeEqualsSelectivity(DrillTable table, RexNode orPred, List<String> fieldNames) {
-    String col = getColumn(orPred, fieldNames);
+  private double computeEqualsSelectivity(TableMetadata tableMetadata, RexNode orPred, List<SchemaPath> fieldNames) {
+    SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
-      if (table.getStatsTable() != null
-              && table.getStatsTable().getNdv(col) != null) {
-        return 1.00 / table.getStatsTable().getNdv(col);
+      ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
+      Double ndv = columnStatistics != null ? (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NVD) : null;
+      if (ndv != null) {
+        return 1.00 / ndv;
       }
     }
     return guessSelectivity(orPred);
   }
 
   // Use histogram if available for the range predicate selectivity
-  private double computeRangeSelectivity(DrillTable table, RexNode orPred, List<String> fieldNames) {
-    String col = getColumn(orPred, fieldNames);
+  private double computeRangeSelectivity(TableMetadata tableMetadata, RexNode orPred, List<SchemaPath> fieldNames) {
+    SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
-      if (table.getStatsTable() != null
-        && table.getStatsTable().getHistogram(col) != null) {
-        Histogram histogram = table.getStatsTable().getHistogram(col);
-        Double sel = ((Histogram) histogram).estimatedSelectivity(orPred);
+      ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
+      Histogram histogram = columnStatistics != null ? (Histogram) columnStatistics.getStatistic(ColumnStatisticsKind.HISTOGRAM) : null;
+      if (histogram != null) {
+        Double sel = histogram.estimatedSelectivity(orPred);
         if (sel != null) {
           return sel;
         }
@@ -214,25 +231,26 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     return guessSelectivity(orPred);
   }
 
-  private double computeIsNotNullSelectivity(DrillTable table, RexNode orPred, List<String> fieldNames) {
-    String col = getColumn(orPred, fieldNames);
+  private double computeIsNotNullSelectivity(TableMetadata tableMetadata, RexNode orPred, List<SchemaPath> fieldNames) {
+    SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
-      if (table.getStatsTable() != null
-          && table.getStatsTable().getNNRowCount(col) != null) {
+      ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
+      Double nonNullCount = columnStatistics != null ? (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NON_NULL_COUNT) : null;
+      if (nonNullCount != null) {
         // Cap selectivity below Calcite Guess
-        return Math.min((table.getStatsTable().getNNRowCount(col) / table.getStatsTable().getRowCount()),
+        return Math.min(nonNullCount / (Double) TableStatisticsKind.EST_ROW_COUNT.getValue(tableMetadata),
             RelMdUtil.guessSelectivity(orPred));
       }
     }
     return guessSelectivity(orPred);
   }
 
-  private String getColumn(RexNode orPred, List<String> fieldNames) {
+  private SchemaPath getColumn(RexNode orPred, List<SchemaPath> fieldNames) {
     if (orPred instanceof RexCall) {
       int colIdx = -1;
       RexInputRef op = findRexInputRef(orPred);
       if (op != null) {
-        colIdx = op.hashCode();
+        colIdx = op.getIndex();
       }
       if (colIdx != -1 && colIdx < fieldNames.size()) {
         return fieldNames.get(colIdx);

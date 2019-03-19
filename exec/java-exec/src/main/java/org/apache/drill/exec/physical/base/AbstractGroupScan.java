@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.metastore.TableMetadata;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import org.apache.drill.common.expression.LogicalExpression;
@@ -188,6 +189,16 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   public GroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities, FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
+    return null;
+  }
+
+  @Override
+  public TableMetadataProvider getMetadataProvider() {
+    return null;
+  }
+
+  @Override
+  public TableMetadata getTableMetadata() {
     return null;
   }
 }

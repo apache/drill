@@ -49,17 +49,17 @@ public class HiveParquetTableMetadataProvider extends BaseParquetMetadataProvide
                                          HivePartitionHolder hivePartitionHolder,
                                          HiveStoragePlugin hiveStoragePlugin,
                                          ParquetReaderConfig readerConfig) throws IOException {
-    super(entries, readerConfig, null, null);
+    super(entries, readerConfig);
     this.hiveStoragePlugin = hiveStoragePlugin;
     this.hivePartitionHolder = hivePartitionHolder;
 
-    init();
+    init(null);
   }
 
   public HiveParquetTableMetadataProvider(HiveStoragePlugin hiveStoragePlugin,
                                           List<HiveMetadataProvider.LogicalInputSplit> logicalInputSplits,
                                           ParquetReaderConfig readerConfig) throws IOException {
-    super(readerConfig, null, null, null);
+    super(null, readerConfig);
     this.hiveStoragePlugin = hiveStoragePlugin;
     this.hivePartitionHolder = new HivePartitionHolder();
 
@@ -81,7 +81,7 @@ public class HiveParquetTableMetadataProvider extends BaseParquetMetadataProvide
         hivePartitionHolder.add(pathString, partition.getValues());
       }
     }
-    init();
+    init(null);
   }
 
   public HivePartitionHolder getHivePartitionHolder() {

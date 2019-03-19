@@ -244,9 +244,8 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
       FormatSelection newFormatSelection = new FormatSelection(formatSelection.getFormat(), newFileSelection);
 
       DynamicDrillTable dynamicDrillTable = new DynamicDrillTable(table.getPlugin(), table.getStorageEngineName(),
-          table.getUserName(), newFormatSelection);
+          table.getUserName(), newFormatSelection, table.getMetadataProviderManager());
       /* Copy statistics from the original relOptTable */
-      dynamicDrillTable.setStatsTable(table.getStatsTable());
       DrillTranslatableTable newTable = new DrillTranslatableTable(dynamicDrillTable);
 
       RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(relOptTable.getRelOptSchema(), relOptTable.getRowType(),

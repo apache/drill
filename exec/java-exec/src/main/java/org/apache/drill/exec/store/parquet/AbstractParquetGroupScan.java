@@ -24,7 +24,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
 import org.apache.drill.exec.physical.base.ParquetMetadataProvider;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.metastore.BaseMetadata;
 import org.apache.drill.metastore.LocationProvider;
 import org.apache.drill.metastore.PartitionMetadata;
@@ -296,25 +295,16 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
     return builder.build();
   }
 
-  @Override
-  protected TupleMetadata getColumnMetadata() {
-    TupleMetadata columnMetadata = super.getColumnMetadata();
-    if (columnMetadata == null && !getRowGroupsMetadata().isEmpty()) {
-      return getRowGroupsMetadata().values().iterator().next().getSchema();
-    }
-    return columnMetadata;
-  }
-
   // narrows the return type
   protected abstract RowGroupScanFilterer getFilterer();
 
   protected Multimap<Path, RowGroupMetadata> pruneRowGroupsForFiles(Map<Path, FileMetadata> filteredFileMetadata) {
     Multimap<Path, RowGroupMetadata> prunedRowGroups = LinkedListMultimap.create();
-    for (Map.Entry<Path, FileMetadata> filteredPartition : filteredFileMetadata.entrySet()) {
+    for (Path filteredPartition : filteredFileMetadata.keySet()) {
       Multimap<Path, RowGroupMetadata> rowGroupsMetadata = getRowGroupsMetadata();
-      Collection<RowGroupMetadata> filesRowGroupMetadata = rowGroupsMetadata.get(filteredPartition.getKey());
+      Collection<RowGroupMetadata> filesRowGroupMetadata = rowGroupsMetadata.get(filteredPartition);
       if (CollectionUtils.isNotEmpty(filesRowGroupMetadata)) {
-        prunedRowGroups.putAll(filteredPartition.getKey(), filesRowGroupMetadata);
+        prunedRowGroups.putAll(filteredPartition, filesRowGroupMetadata);
       }
     }
 
@@ -381,11 +371,9 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
 
     Multimap<Path, RowGroupMetadata> newRowGroups = LinkedListMultimap.create();
     if (!getRowGroupsMetadata().isEmpty()) {
-      for (Map.Entry<Path, RowGroupMetadata> entry : getRowGroupsMetadata().entries()) {
-        if (fileSet.contains(entry.getKey())) {
-          newRowGroups.put(entry.getKey(), entry.getValue());
-        }
-      }
+      getRowGroupsMetadata().entries().stream()
+          .filter(entry -> fileSet.contains(entry.getKey()))
+          .forEachOrdered(entry -> newRowGroups.put(entry.getKey(), entry.getValue()));
     }
     this.rowGroups = newRowGroups;
 

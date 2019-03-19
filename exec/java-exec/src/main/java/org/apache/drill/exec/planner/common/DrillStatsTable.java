@@ -26,14 +26,16 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelVisitor;
-import org.apache.calcite.rel.core.TableScan;
+import java.util.Set;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos;
@@ -48,8 +50,9 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.drill.exec.util.Utilities;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.metastore.ColumnStatisticsKind;
+import org.apache.drill.metastore.StatisticsKind;
+import org.apache.drill.metastore.TableStatisticsKind;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -60,7 +63,7 @@ import org.apache.hadoop.fs.Path;
 public class DrillStatsTable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillStatsTable.class);
   // All the statistics versions till date
-  public enum STATS_VERSION {V0, V1};
+  public enum STATS_VERSION {V0, V1}
   // The current version
   public static final STATS_VERSION CURRENT_VERSION = STATS_VERSION.V1;
   // 10 histogram buckets (TODO: can make this configurable later)
@@ -70,18 +73,20 @@ public class DrillStatsTable {
   private final Path tablePath;
   private final String schemaName;
   private final String tableName;
-  private final Map<String, Long> ndv = Maps.newHashMap();
-  private final Map<String, Histogram> histogram = Maps.newHashMap();
+  private final Map<SchemaPath, Long> ndv = new HashMap<>();
+  private final Map<SchemaPath, Histogram> histogram = new HashMap<>();
   private double rowCount = -1;
-  private final Map<String, Long> nnRowCount = Maps.newHashMap();
+  private final Map<SchemaPath, Long> nnRowCount = new HashMap<>();
   private boolean materialized = false;
+  private DrillTable table;
   private TableStatistics statistics = null;
 
-  public DrillStatsTable(String schemaName, String tableName, Path tablePath, FileSystem fs) {
+  public DrillStatsTable(DrillTable table, String schemaName, String tableName, Path tablePath, FileSystem fs) {
     this.schemaName = schemaName;
     this.tableName = tableName;
     this.tablePath = tablePath;
     this.fs = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(), fs.getConf());
+    this.table = table;
   }
 
   public String getSchemaName() {
@@ -107,21 +112,21 @@ public class DrillStatsTable {
    * @param col - column for which approximate count distinct is desired
    * @return approximate count distinct of the column, if available. NULL otherwise.
    */
-  public Double getNdv(String col) {
+  public Double getNdv(SchemaPath col) {
     // Stats might not have materialized because of errors.
     if (!materialized) {
       return null;
     }
-    final String upperCol = col.toUpperCase();
-    Long ndvCol = ndv.get(upperCol);
-    if (ndvCol == null) {
-      ndvCol = ndv.get(SchemaPath.getSimplePath(upperCol).toString());
-    }
+    Long ndvCol = ndv.get(col);
     // Ndv estimation techniques like HLL may over-estimate, hence cap it at rowCount
     if (ndvCol != null) {
       return Math.min(ndvCol, rowCount);
     }
     return null;
+  }
+
+  public Set<SchemaPath> getColumns() {
+    return ndv.keySet();
   }
 
   /**
@@ -149,16 +154,12 @@ public class DrillStatsTable {
    * @param col - column for which non-null rowcount is desired
    * @return non-null rowcount of the column, if available. NULL otherwise.
    */
-  public Double getNNRowCount(String col) {
+  public Double getNNRowCount(SchemaPath col) {
     // Stats might not have materialized because of errors.
     if (!materialized) {
       return null;
     }
-    final String upperCol = col.toUpperCase();
-    Long nnRowCntCol = nnRowCount.get(upperCol);
-    if (nnRowCntCol == null) {
-      nnRowCntCol = nnRowCount.get(SchemaPath.getSimplePath(upperCol).toString());
-    }
+    Long nnRowCntCol = nnRowCount.get(col);
     // Cap it at row count (just in case)
     if (nnRowCntCol != null) {
       return Math.min(nnRowCntCol, rowCount);
@@ -169,39 +170,32 @@ public class DrillStatsTable {
   /**
    * Get the histogram of a given column. If stats are not present for the given column,
    * a null is returned.
-   *
+   * <p>
    * Note: returned data may not be accurate. Accuracy depends on whether the table data has changed after the
    * stats are computed.
    *
-   * @param col
+   * @param column path to the column whose histogram should be obtained
    * @return Histogram for this column
    */
-  public Histogram getHistogram(String col) {
+  public Histogram getHistogram(SchemaPath column) {
     // Stats might not have materialized because of errors.
     if (!materialized) {
       return null;
     }
-    final String upperCol = col.toUpperCase();
-    Histogram histogramCol = histogram.get(upperCol);
-    if (histogramCol == null) {
-      histogramCol = histogram.get(SchemaPath.getSimplePath(upperCol).toString());
-    }
-    return histogramCol;
+    return histogram.get(column);
   }
 
 
   /**
    * Read the stats from storage and keep them in memory.
-   * @param table - Drill table for which we require stats
-   * @param context - Query context
-   * @throws Exception
    */
-  public void materialize(final DrillTable table, final QueryContext context) {
-    if (materialized) {
-      return;
-    }
-    // Deserialize statistics from JSON
+  public void materialize() {
     try {
+      // for the case when tablePath is not set, or it does not exists, statistics cannot be read
+      if (materialized || tablePath == null || !fs.exists(tablePath)) {
+        return;
+      }
+      // Deserialize statistics from JSON
       this.statistics = readStatistics(table, tablePath);
       // Handle based on the statistics version read from the file
       if (statistics instanceof Statistics_v0) {
@@ -209,60 +203,23 @@ public class DrillStatsTable {
       } else if (statistics instanceof Statistics_v1) {
         for (DirectoryStatistics_v1 ds : ((Statistics_v1) statistics).getDirectoryStatistics()) {
           for (ColumnStatistics_v1 cs : ds.getColumnStatistics()) {
-            ndv.put(cs.getName().toUpperCase(), cs.getNdv());
-            nnRowCount.put(cs.getName().toUpperCase(), (long)cs.getNonNullCount());
+            ndv.put(cs.getName(), cs.getNdv());
+            nnRowCount.put(cs.getName(), (long) cs.getNonNullCount());
             rowCount = Math.max(rowCount, cs.getCount());
 
             // get the histogram for this column
             Histogram hist = cs.getHistogram();
-            histogram.put(cs.getName().toUpperCase(), hist);
+            histogram.put(cs.getName(), hist);
           }
         }
       }
       if (statistics != null) { // See stats are available before setting materialized
         materialized = true;
       }
+    } catch (FileNotFoundException ex) {
+      logger.debug(String.format("Did not find statistics file %s", tablePath.toString()), ex);
     } catch (IOException ex) {
-      if (ex instanceof FileNotFoundException) {
-        logger.debug(String.format("Did not find statistics file %s", tablePath.toString()), ex);
-      } else {
-        logger.debug(String.format("Error trying to read statistics table %s", tablePath.toString()), ex);
-      }
-    }
-  }
-
-  /**
-   * Materialize on nodes that have an attached stats table
-   */
-  public static class StatsMaterializationVisitor extends RelVisitor {
-    private QueryContext context;
-
-    public static void materialize(final RelNode relNode, final QueryContext context) {
-      new StatsMaterializationVisitor(context).go(relNode);
-    }
-
-    private StatsMaterializationVisitor(QueryContext context) {
-      this.context = context;
-    }
-
-    @Override
-    public void visit(RelNode node, int ordinal, RelNode parent) {
-      if (node instanceof TableScan) {
-        try {
-          final DrillTable drillTable = Utilities.getDrillTable(node.getTable());
-          final DrillStatsTable statsTable = drillTable != null ? drillTable.getStatsTable() : null;
-          if (drillTable != null && statsTable != null) {
-            statsTable.materialize(drillTable, context);
-          } else if (drillTable != null) {
-            logger.debug(String.format("Unable to find statistics table info for table [%s] in schema [%s]",
-                node.getTable().getQualifiedName(), node.getTable().getRelOptSchema()));
-          }
-        } catch (Exception e) {
-          // Something unexpected happened! Log a warning and proceed. We don't want to fail the query.
-          logger.warn("Failed to materialize the stats. Continuing without stats.", e);
-        }
-      }
-      super.visit(node, ordinal, parent);
+      logger.debug(String.format("Error trying to read statistics table %s", tablePath.toString()), ex);
     }
   }
 
@@ -357,7 +314,7 @@ public class DrillStatsTable {
   }
 
   public static class ColumnStatistics_v1 extends ColumnStatistics {
-    @JsonProperty ("column") private String name = null;
+    @JsonProperty ("column") private SchemaPath name = null;
     @JsonProperty ("majortype")   private TypeProtos.MajorType type = null;
     @JsonProperty ("schema") private long schema = 0;
     @JsonProperty ("rowcount") private long count = 0;
@@ -368,9 +325,9 @@ public class DrillStatsTable {
 
     public ColumnStatistics_v1() {}
     @JsonGetter ("column")
-    public String getName() { return this.name; }
+    public SchemaPath getName() { return this.name; }
     @JsonSetter ("column")
-    public void setName(String name) {
+    public void setName(SchemaPath name) {
       this.name = name;
     }
     @JsonGetter ("majortype")
@@ -453,9 +410,9 @@ public class DrillStatsTable {
     // TODO: Split up columnStatisticsList() based on directory names. We assume only
     // one directory right now but this WILL change in the future
     // HashMap<String, Boolean> dirNames = new HashMap<String, Boolean>();
-    TableStatistics statistics = new Statistics_v1();
-    List<DirectoryStatistics_v1> dirStats = new ArrayList<DirectoryStatistics_v1>();
-    List<ColumnStatistics_v1> columnStatisticsV1s = new ArrayList<DrillStatsTable.ColumnStatistics_v1>();
+    Statistics_v1 statistics = new Statistics_v1();
+    List<DirectoryStatistics_v1> dirStats = new ArrayList<>();
+    List<ColumnStatistics_v1> columnStatisticsV1s = new ArrayList<>();
     // Create dirStats
     DirectoryStatistics_v1 dirStat = new DirectoryStatistics_v1();
     // Add columnStats corresponding to this dirStats
@@ -467,7 +424,7 @@ public class DrillStatsTable {
     // Add this dirStats to the list of dirStats
     dirStats.add(dirStat);
     // Add list of dirStats to tableStats
-    ((Statistics_v1) statistics).setDirectoryStatistics(dirStats);
+    statistics.setDirectoryStatistics(dirStats);
     return statistics;
   }
 
@@ -493,8 +450,52 @@ public class DrillStatsTable {
     ObjectMapper mapper = new ObjectMapper();
     SimpleModule deModule = new SimpleModule("StatisticsSerDeModule")
         .addSerializer(TypeProtos.MajorType.class, new MajorTypeSerDe.Se())
-        .addDeserializer(TypeProtos.MajorType.class, new MajorTypeSerDe.De());
+        .addDeserializer(TypeProtos.MajorType.class, new MajorTypeSerDe.De())
+        .addDeserializer(SchemaPath.class, new SchemaPath.De());
     mapper.registerModule(deModule);
     return mapper;
+  }
+
+  /**
+   * Returns map of {@link StatisticsKind} and statistics values obtained from specified {@link DrillStatsTable}.
+   *
+   * @param statsProvider the source of statistics
+   * @return map of {@link StatisticsKind} and statistics values
+   */
+  public static Map<StatisticsKind, Object> getEstimatedTableStats(DrillStatsTable statsProvider) {
+    if (statsProvider != null && statsProvider.isMaterialized()) {
+      Map<StatisticsKind, Object> tableStatistics = new HashMap<>();
+      tableStatistics.put(TableStatisticsKind.EST_ROW_COUNT, statsProvider.getRowCount());
+      tableStatistics.put(TableStatisticsKind.HAS_STATISTICS, Boolean.TRUE);
+      return tableStatistics;
+    }
+    return Collections.emptyMap();
+  }
+
+  /**
+   * Returns map of {@link StatisticsKind} and statistics values obtained from specified {@link DrillStatsTable} for specified column.
+   *
+   * @param statsProvider the source of statistics
+   * @param fieldName     name of the columns whose statistics should be obtained
+   * @return map of {@link StatisticsKind} and statistics values
+   */
+  public static Map<StatisticsKind, Object> getEstimatedColumnStats(DrillStatsTable statsProvider, SchemaPath fieldName) {
+    if (statsProvider != null && statsProvider.isMaterialized()) {
+      Map<StatisticsKind, Object> statisticsValues = new HashMap<>();
+      Double ndv = statsProvider.getNdv(fieldName);
+      if (ndv != null) {
+        statisticsValues.put(ColumnStatisticsKind.NVD, ndv);
+      }
+      Double nonNullCount = statsProvider.getNNRowCount(fieldName);
+      if (nonNullCount != null) {
+        statisticsValues.put(ColumnStatisticsKind.NON_NULL_COUNT, nonNullCount);
+      }
+      Histogram histogram = statsProvider.getHistogram(fieldName);
+      if (histogram != null) {
+        statisticsValues.put(ColumnStatisticsKind.HISTOGRAM, histogram);
+      }
+      return statisticsValues;
+    }
+    return Collections.emptyMap();
   }
 }

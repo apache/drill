@@ -20,9 +20,10 @@ package org.apache.drill.metastore;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaPathUtils;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.hadoop.fs.Path;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -30,22 +31,28 @@ import java.util.Map;
  */
 public class RowGroupMetadata implements BaseMetadata, LocationProvider {
 
-  private final TupleSchema schema;
+  private final TupleMetadata schema;
   private final Map<SchemaPath, ColumnStatistics> columnsStatistics;
   private final Map<String, Object> rowGroupStatistics;
+  private final Map<String, StatisticsKind> statisticsKinds;
   private Map<String, Float> hostAffinity;
   private int rowGroupIndex;
   private Path location;
 
-  public RowGroupMetadata(TupleSchema schema,
+  public RowGroupMetadata(TupleMetadata schema,
                           Map<SchemaPath, ColumnStatistics> columnsStatistics,
-                          Map<String, Object> rowGroupStatistics,
+                          Map<StatisticsKind, Object> rowGroupStatistics,
                           Map<String, Float> hostAffinity,
                           int rowGroupIndex,
                           Path location) {
     this.schema = schema;
     this.columnsStatistics = columnsStatistics;
-    this.rowGroupStatistics = rowGroupStatistics;
+    this.rowGroupStatistics = new HashMap<>();
+    this.statisticsKinds = new HashMap<>();
+    rowGroupStatistics.forEach((statisticsKind, value) -> {
+      this.rowGroupStatistics.put(statisticsKind.getName(), value);
+      this.statisticsKinds.put(statisticsKind.getName(), statisticsKind);
+    });
     this.hostAffinity = hostAffinity;
     this.rowGroupIndex = rowGroupIndex;
     this.location = location;
@@ -62,7 +69,7 @@ public class RowGroupMetadata implements BaseMetadata, LocationProvider {
   }
 
   @Override
-  public TupleSchema getSchema() {
+  public TupleMetadata getSchema() {
     return schema;
   }
 
@@ -74,6 +81,11 @@ public class RowGroupMetadata implements BaseMetadata, LocationProvider {
   @Override
   public Object getStatistic(StatisticsKind statisticsKind) {
     return rowGroupStatistics.get(statisticsKind.getName());
+  }
+
+  @Override
+  public boolean containsExactStatistics(StatisticsKind statisticsKind) {
+    return statisticsKinds.get(statisticsKind.getName()).isExact();
   }
 
   @Override

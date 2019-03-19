@@ -20,9 +20,10 @@ package org.apache.drill.metastore;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaPathUtils;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.hadoop.fs.Path;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,24 +32,30 @@ import java.util.Set;
  */
 public class PartitionMetadata implements BaseMetadata {
   private final SchemaPath column;
-  private final TupleSchema schema;
+  private final TupleMetadata schema;
   private final Map<SchemaPath, ColumnStatistics> columnsStatistics;
   private final Map<String, Object> partitionStatistics;
+  private final Map<String, StatisticsKind> statisticsKinds;
   private final Set<Path> location;
   private final String tableName;
   private final long lastModifiedTime;
 
   public PartitionMetadata(SchemaPath column,
-                           TupleSchema schema,
+                           TupleMetadata schema,
                            Map<SchemaPath, ColumnStatistics> columnsStatistics,
-                           Map<String, Object> partitionStatistics,
+                           Map<StatisticsKind, Object> partitionStatistics,
                            Set<Path> location,
                            String tableName,
                            long lastModifiedTime) {
     this.column = column;
     this.schema = schema;
     this.columnsStatistics = columnsStatistics;
-    this.partitionStatistics = partitionStatistics;
+    this.partitionStatistics = new HashMap<>();
+    this.statisticsKinds = new HashMap<>();
+    partitionStatistics.forEach((statisticsKind, value) -> {
+      this.partitionStatistics.put(statisticsKind.getName(), value);
+      this.statisticsKinds.put(statisticsKind.getName(), statisticsKind);
+    });
     this.location = location;
     this.tableName = tableName;
     this.lastModifiedTime = lastModifiedTime;
@@ -60,7 +67,7 @@ public class PartitionMetadata implements BaseMetadata {
   }
 
   @Override
-  public TupleSchema getSchema() {
+  public TupleMetadata getSchema() {
     return schema;
   }
 
@@ -77,6 +84,11 @@ public class PartitionMetadata implements BaseMetadata {
   @Override
   public Object getStatistic(StatisticsKind statisticsKind) {
     return partitionStatistics.get(statisticsKind.getName());
+  }
+
+  @Override
+  public boolean containsExactStatistics(StatisticsKind statisticsKind) {
+    return statisticsKinds.get(statisticsKind.getName()).isExact();
   }
 
   @Override

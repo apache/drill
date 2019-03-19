@@ -15,21 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.metastore;
+package org.apache.drill.exec.physical.base;
 
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.hadoop.fs.Path;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 
-import java.util.Map;
+import java.io.IOException;
 
 /**
- * Metadata which corresponds to the table level.
+ * Base interface for builders of {@link TableMetadataProvider}.
  */
-public interface TableMetadata extends BaseMetadata {
+public interface TableMetadataProviderBuilder {
 
-  String getTableName();
-  Path getLocation();
-  String getOwner();
-  long getLastModifiedTime();
-  TableMetadata cloneWithStats(Map<SchemaPath, ColumnStatistics> columnStatistics, Map<StatisticsKind, Object> tableStatistics);
+  TableMetadataProviderBuilder withSchema(TupleMetadata schema);
+
+  TableMetadataProvider build() throws IOException;
 }
