@@ -23,9 +23,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.calcite.linq4j.tree.DefaultExpression;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
@@ -38,9 +39,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
 public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
@@ -276,54 +276,29 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   /**
-   * Get the collection of {@link Table} tables specified in the tableNames with bulk-load (if the underlying storage
-   * plugin supports).
-   * It is not guaranteed that the retrieved tables would have RowType and Statistic being fully populated.
-   *
-   * Specifically, calling {@link Table#getRowType(org.apache.calcite.rel.type.RelDataTypeFactory)} or {@link Table#getStatistic()} might incur
-   * {@link UnsupportedOperationException} being thrown.
-   *
-   * @param  tableNames the requested tables, specified by the table names
-   * @return the collection of requested tables
-   */
-  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames, int bulkSize) {
-    return getTablesByNames(tableNames);
-  }
-
-  /**
    * Get the collection of {@link Table} tables specified in the tableNames.
    *
    * @param  tableNames the requested tables, specified by the table names
    * @return the collection of requested tables
    */
-  public List<Pair<String, ? extends Table>> getTablesByNames(final List<String> tableNames) {
-    final List<Pair<String, ? extends Table>> tables = Lists.newArrayList();
-    for (String tableName : tableNames) {
-      final Table table = getTable(tableName);
-      if (table == null) {
-        // Schema may return NULL for table if the query user doesn't have permissions to load the table. Ignore such
-        // tables as INFO SCHEMA is about showing tables which the use has access to query.
-        continue;
-      }
-      tables.add(Pair.of(tableName, table));
-    }
-    return tables;
+  public List<Pair<String, ? extends Table>> getTablesByNames(final Set<String> tableNames) {
+    return tableNames.stream()
+        .map(tableName -> Pair.of(tableName, getTable(tableName)))
+        .filter(pair -> Objects.nonNull(pair.getValue())) // Schema may return NULL for table if user doesn't have permissions to load the table.
+        .collect(Collectors.toList());
   }
 
-  public List<Pair<String, Schema.TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
-    final List<String> tableNames = Lists.newArrayList(getTableNames());
-    final List<Pair<String, Schema.TableType>> tableNamesAndTypes = Lists.newArrayList();
-    final List<Pair<String, ? extends Table>> tables;
-    if (bulkLoad) {
-      tables = getTablesByNamesByBulkLoad(tableNames, bulkSize);
-    } else {
-      tables = getTablesByNames(tableNames);
-    }
-    for (Pair<String, ? extends Table> table : tables) {
-      tableNamesAndTypes.add(Pair.of(table.getKey(), table.getValue().getJdbcTableType()));
-    }
-
-    return tableNamesAndTypes;
+  /**
+   * Used by {@link org.apache.drill.exec.store.ischema.InfoSchemaRecordGenerator.Tables}
+   * for getting all table objects along with type for every requested schema. It's desired
+   * for this method to work fast because it impacts SHOW TABLES query.
+   *
+   * @return collection of table names and types
+   */
+  public Collection<Map.Entry<String, TableType>> getTableNamesAndTypes() {
+    return getTablesByNames(getTableNames()).stream()
+        .map(nameAndTable -> Pair.of(nameAndTable.getKey(), nameAndTable.getValue().getJdbcTableType()))
+        .collect(Collectors.toList());
   }
 
   /**

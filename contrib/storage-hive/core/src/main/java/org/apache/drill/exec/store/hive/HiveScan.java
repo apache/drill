@@ -51,7 +51,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-import static org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient.createPartitionWithSpecColumns;
+import static org.apache.drill.exec.store.hive.HiveUtilities.createPartitionWithSpecColumns;
 
 @JsonTypeName("hive-scan")
 public class HiveScan extends AbstractGroupScan {

@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -920,46 +921,11 @@ public class WorkspaceSchemaFactory {
     }
 
     @Override
-    public List<Pair<String, TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
-      final List<Pair<String, TableType>> tableNamesAndTypes = Lists.newArrayList();
-
-      // Look for raw tables first
-      if (!tables.isEmpty()) {
-        for (Map.Entry<TableInstance, DrillTable> tableEntry : tables.entrySet()) {
-          tableNamesAndTypes
-              .add(Pair.of(tableEntry.getKey().sig.name, tableEntry.getValue().getJdbcTableType()));
-        }
-      }
-      // Then look for files that start with this name and end in .drill.
-      List<DotDrillFile> files = Collections.emptyList();
-      try {
-        files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()), DotDrillType.VIEW);
-      } catch (AccessControlException e) {
-        if (!schemaConfig.getIgnoreAuthErrors()) {
-          logger.debug(e.getMessage());
-          throw UserException.permissionError(e)
-              .message("Not authorized to list or query tables in schema [%s]", getFullSchemaName())
-              .build(logger);
-        }
-      } catch (IOException e) {
-        logger.warn("Failure while trying to list view tables in workspace [{}]", getFullSchemaName(), e);
-      } catch (UnsupportedOperationException e) {
-        // the file system (e.g. the classpath filesystem) may not support listing
-        // of files. But see getViews(), it ignores the exception and continues
-        logger.debug("Failure while trying to list view tables in workspace [{}]", getFullSchemaName(), e);
-      }
-
-      try {
-        for (DotDrillFile f : files) {
-          if (f.getType() == DotDrillType.VIEW) {
-            tableNamesAndTypes.add(Pair.of(f.getBaseName(), TableType.VIEW));
-          }
-        }
-      } catch (UnsupportedOperationException e) {
-        logger.debug("The filesystem for this workspace does not support this operation.", e);
-      }
-
-      return tableNamesAndTypes;
+    public List<Map.Entry<String, TableType>> getTableNamesAndTypes() {
+      return Stream.concat(
+          tables.entrySet().stream().map(kv -> Pair.of(kv.getKey().sig.name, kv.getValue().getJdbcTableType())),
+          getViews().stream().map(viewName -> Pair.of(viewName, TableType.VIEW))
+      ).collect(Collectors.toList());
     }
 
   }

@@ -744,16 +744,38 @@ public final class ExecConstants {
   public static final BooleanValidator CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR = new BooleanValidator(CTAS_PARTITIONING_HASH_DISTRIBUTE,
       new OptionDescription("Uses a hash algorithm to distribute data on partition keys in a CTAS partitioning operation. An alpha option--for experimental use at this stage. Do not use in production systems."));
 
-  public static final String ENABLE_BULK_LOAD_TABLE_LIST_KEY = "exec.enable_bulk_load_table_list";
-  public static final BooleanValidator ENABLE_BULK_LOAD_TABLE_LIST = new BooleanValidator(ENABLE_BULK_LOAD_TABLE_LIST_KEY, null);
 
   /**
-   * When getting Hive Table information with exec.enable_bulk_load_table_list set to true,
-   * use the exec.bulk_load_table_list.bulk_size to determine how many tables to fetch from HiveMetaStore
-   * at a time. (The number of tables can get to be quite large.)
+   * @deprecated option. It will not take any effect.
+   * The option added as part of DRILL-4577, was used to mark that hive tables should be loaded
+   * for all table names at once. Then as part of DRILL-4826 was added option to regulate bulk size,
+   * because big amount of views was causing performance degradation. After last improvements for
+   * DRILL-7115 both options ({@link ExecConstants#ENABLE_BULK_LOAD_TABLE_LIST_KEY}
+   * and {@link ExecConstants#BULK_LOAD_TABLE_LIST_BULK_SIZE_KEY}) became obsolete and may be removed
+   * in future releases.
    */
+  @Deprecated
+  public static final String ENABLE_BULK_LOAD_TABLE_LIST_KEY = "exec.enable_bulk_load_table_list";
+
+  /**
+   * @see ExecConstants#ENABLE_BULK_LOAD_TABLE_LIST_KEY
+   */
+  @Deprecated
+  public static final BooleanValidator ENABLE_BULK_LOAD_TABLE_LIST = new BooleanValidator(ENABLE_BULK_LOAD_TABLE_LIST_KEY,
+      new OptionDescription("Deprecated after DRILL-7115 improvement."));
+
+  /**
+   * @see ExecConstants#ENABLE_BULK_LOAD_TABLE_LIST_KEY
+   */
+  @Deprecated
   public static final String BULK_LOAD_TABLE_LIST_BULK_SIZE_KEY = "exec.bulk_load_table_list.bulk_size";
-  public static final PositiveLongValidator BULK_LOAD_TABLE_LIST_BULK_SIZE = new PositiveLongValidator(BULK_LOAD_TABLE_LIST_BULK_SIZE_KEY, Integer.MAX_VALUE, null);
+
+  /**
+   * @see ExecConstants#ENABLE_BULK_LOAD_TABLE_LIST_KEY
+   */
+  @Deprecated
+  public static final PositiveLongValidator BULK_LOAD_TABLE_LIST_BULK_SIZE = new PositiveLongValidator(BULK_LOAD_TABLE_LIST_BULK_SIZE_KEY, Integer.MAX_VALUE,
+      new OptionDescription("Deprecated after DRILL-7115 improvement."));
 
   /**
    * Option whose value is a comma separated list of admin usernames. Admin users are users who have special privileges
