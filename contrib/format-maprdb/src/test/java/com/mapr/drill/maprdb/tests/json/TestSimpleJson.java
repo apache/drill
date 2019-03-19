@@ -329,7 +329,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + " business.attributes.Ambience.casual IS NULL");
     runSQLAndVerifyCount(sql, 7);
 
-    final String[] expectedPlan = {"condition=\\(attributes.Ambience.casual = null\\)"};
+    final String[] expectedPlan = {"condition=\\(\\(attributes.Ambience.casual = null\\) or \\(TYPE_OF\\(attributes.Ambience.casual\\) = NULL\\)\\)"};
     final String[] excludedPlan ={};
 
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
@@ -347,7 +347,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + " b.attributes.Ambience.casual IS NOT NULL");
     runSQLAndVerifyCount(sql, 3);
 
-    final String[] expectedPlan = {"condition=\\(attributes.Ambience.casual != null\\)"};
+    final String[] expectedPlan = {"condition=\\(\\(attributes.Ambience.casual != null\\) and \\(TYPE_OF\\(attributes.Ambience.casual\\) != NULL\\)\\)"};
     final String[] excludedPlan ={};
 
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
@@ -364,7 +364,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + " b.attributes.`Accepts Credit Cards` IS NULL");
     runSQLAndVerifyCount(sql, 3);
 
-    final String[] expectedPlan = {"condition=\\(attributes.Accepts Credit Cards = null\\)"};
+    final String[] expectedPlan = {"condition=\\(\\(attributes.Accepts Credit Cards = null\\) or \\(TYPE_OF\\(attributes.Accepts Credit Cards\\) = NULL\\)\\)"};
     final String[] excludedPlan ={};
 
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
