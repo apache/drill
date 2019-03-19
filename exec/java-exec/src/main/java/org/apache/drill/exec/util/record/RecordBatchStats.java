@@ -271,6 +271,22 @@ public final class RecordBatchStats {
     return msg.toString();
   }
 
+  /**
+   * Prints the configured batch size
+   *
+   * @param batchStatsContext batch stats context object
+   * @param batchSize contains the configured batch size
+   */
+  public static void printConfiguredBatchSize(RecordBatchStatsContext batchStatsContext,
+    int batchSize) {
+
+    if (!batchStatsContext.isEnableBatchSzLogging()) {
+      return; // NOOP
+    }
+    final String message = String.format("The batch memory has been set to [%d] byte(s)", batchSize);
+    logRecordBatchStats(message, batchStatsContext);
+  }
+
 // ----------------------------------------------------------------------------
 // Local Implementation
 // ----------------------------------------------------------------------------

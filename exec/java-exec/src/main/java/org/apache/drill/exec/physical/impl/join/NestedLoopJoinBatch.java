@@ -135,8 +135,8 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
     batchMemoryManager = new JoinBatchMemoryManager(configuredBatchSize, left, right, new HashSet<>());
 
-      RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-        "configured output batch size: %d", configuredBatchSize);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(),
+      configuredBatchSize);
   }
 
   /**

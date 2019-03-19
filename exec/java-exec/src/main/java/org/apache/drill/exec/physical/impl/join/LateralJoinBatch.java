@@ -115,6 +115,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
     Preconditions.checkNotNull(left);
     Preconditions.checkNotNull(right);
     final int configOutputBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(), configOutputBatchSize);
     implicitColumn = popConfig.getImplicitRIDColumn();
 
     populateExcludedField(popConfig);
