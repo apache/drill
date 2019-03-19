@@ -15,10 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.hive;
+package org.apache.drill.exec.store.hive.client;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
@@ -29,29 +32,35 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControl
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizer;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizerFactory;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext.CLIENT_TYPE;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveMetastoreClientFactory;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
-import java.util.Collections;
-import java.util.List;
-
 /**
  * Helper class for initializing and checking privileges according to authorization configuration set in Hive storage
  * plugin config.
  */
-public class HiveAuthorizationHelper {
+class HiveAuthorizationHelper {
+
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveAuthorizationHelper.class);
 
+  /**
+   * Currently marks that SQLStdBasedAuthorization is enabled.
+   * Then some operations on {@link DrillHiveMetaStoreClientWithAuthorization} will use
+   * {@link HiveAuthorizationHelper#authorizerV2} to authorize action before
+   * making request to MetaStore client.
+   */
   final boolean authzEnabled;
+
+  /**
+   * Authorizer used when SQLStdBasedAuthorization is enabled.
+   */
   final HiveAuthorizer authorizerV2;
 
-  public HiveAuthorizationHelper(final IMetaStoreClient mClient, final HiveConf hiveConf, final String user) {
+  HiveAuthorizationHelper(final IMetaStoreClient mClient, final HiveConf hiveConf, final String user) {
     authzEnabled = hiveConf.getBoolVar(ConfVars.HIVE_AUTHORIZATION_ENABLED);
     if (!authzEnabled) {
       authorizerV2 = null;
@@ -76,12 +85,7 @@ public class HiveAuthorizationHelper {
       authzContextBuilder.setClientType(CLIENT_TYPE.HIVESERVER2); // Drill is emulating HS2 here
 
       authorizerV2 = authorizerFactory.createHiveAuthorizer(
-          new HiveMetastoreClientFactory() {
-            @Override
-            public IMetaStoreClient getHiveMetastoreClient() throws HiveAuthzPluginException {
-              return mClient;
-            }
-          },
+          () -> mClient,
           hiveConf, authenticator, authzContextBuilder.build());
 
       authorizerV2.applyAuthorizationConfigPolicy(hiveConfCopy);
@@ -96,7 +100,7 @@ public class HiveAuthorizationHelper {
    * Check authorization for "SHOW DATABASES" command. A {@link HiveAccessControlException} is thrown
    * for illegal access.
    */
-  public void authorizeShowDatabases() throws HiveAccessControlException {
+  void authorizeShowDatabases() throws HiveAccessControlException {
     if (!authzEnabled) {
       return;
     }
@@ -109,7 +113,7 @@ public class HiveAuthorizationHelper {
    * for illegal access.
    * @param dbName
    */
-  public void authorizeShowTables(final String dbName) throws HiveAccessControlException {
+  void authorizeShowTables(final String dbName) throws HiveAccessControlException {
     if (!authzEnabled) {
       return;
     }
@@ -125,7 +129,7 @@ public class HiveAuthorizationHelper {
    * @param dbName
    * @param tableName
    */
-  public void authorizeReadTable(final String dbName, final String tableName) throws HiveAccessControlException {
+  void authorizeReadTable(final String dbName, final String tableName) throws HiveAccessControlException {
     if (!authzEnabled) {
       return;
     }
@@ -136,7 +140,7 @@ public class HiveAuthorizationHelper {
 
   /* Helper method to check privileges */
   private void authorize(final HiveOperationType hiveOpType, final List<HivePrivilegeObject> toRead,
-      final List<HivePrivilegeObject> toWrite, final String cmd) throws HiveAccessControlException {
+                         final List<HivePrivilegeObject> toWrite, final String cmd) throws HiveAccessControlException {
     try {
       HiveAuthzContext.Builder authzContextBuilder = new HiveAuthzContext.Builder();
       authzContextBuilder.setUserIpAddress("Not available");
@@ -149,4 +153,5 @@ public class HiveAuthorizationHelper {
       throw new DrillRuntimeException("Failed to use the Hive authorization components: " + e.getMessage(), e);
     }
   }
+
 }

@@ -56,6 +56,7 @@ import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.exec.Utilities;
@@ -741,6 +742,21 @@ public class HiveUtilities {
     changedProperties.stringPropertyNames()
         .forEach(name -> newHiveConf.set(name, changedProperties.getProperty(name)));
     return newHiveConf;
+  }
+
+  /**
+   * Helper method which stores partition columns in table columnListCache. If table columnListCache has exactly the
+   * same columns as partition, in partition stores columns index that corresponds to identical column list.
+   * If table columnListCache hasn't such column list, the column list adds to table columnListCache and in partition
+   * stores columns index that corresponds to column list.
+   *
+   * @param table     hive table instance
+   * @param partition partition instance
+   * @return hive partition wrapper
+   */
+  public static HiveTableWrapper.HivePartitionWrapper createPartitionWithSpecColumns(HiveTableWithColumnCache table, Partition partition) {
+    int listIndex = table.getColumnListsCache().addOrGet(partition.getSd().getCols());
+    return new HiveTableWrapper.HivePartitionWrapper(new HivePartition(partition, listIndex));
   }
 
 }

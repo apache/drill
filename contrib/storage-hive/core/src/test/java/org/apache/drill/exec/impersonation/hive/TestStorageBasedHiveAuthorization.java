@@ -19,6 +19,7 @@ package org.apache.drill.exec.impersonation.hive;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.schema.Schema.TableType;
@@ -38,7 +39,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static java.util.Collections.emptyList;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
 import static org.apache.drill.shaded.guava.com.google.common.collect.Lists.newArrayList;
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
@@ -70,6 +70,29 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   private static final String g_voter_all_755 = "voter_all_755";
   private static final String g_partitioned_student_u0_700 = "partitioned_student_u0_700";
 
+  private static final List<String> all_tables_in_db_general = ImmutableList.of(
+      g_student_u0_700,
+      g_vw_g_student_u0_700,
+      g_student_u0g0_750,
+      g_student_all_755,
+      g_voter_u1_700,
+      g_voter_u2g1_750,
+      g_voter_all_755,
+      g_partitioned_student_u0_700
+  );
+
+  private static final List<TableType> all_tables_type_in_db_general = ImmutableList.of(
+      TableType.TABLE,
+      TableType.VIEW,
+      TableType.TABLE,
+      TableType.TABLE,
+      TableType.TABLE,
+      TableType.TABLE,
+      TableType.TABLE,
+      TableType.TABLE
+  );
+
+
   // DB whose warehouse directory has permissions 700 and owned by user0
   private static final String db_u0_only = "db_u0_only";
 
@@ -77,6 +100,18 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   private static final String u0_student_all_755 = "student_all_755";
   private static final String u0_voter_all_755 = "voter_all_755";
   private static final String u0_vw_voter_all_755 = "vw_voter_all_755";
+
+  private static final List<String> all_tables_in_db_u0_only = ImmutableList.of(
+      u0_student_all_755,
+      u0_voter_all_755,
+      u0_vw_voter_all_755
+  );
+
+  private static final List<TableType> all_tables_type_in_db_u0_only = ImmutableList.of(
+      TableType.TABLE,
+      TableType.TABLE,
+      TableType.VIEW
+  );
 
   // DB whose warehouse directory has permissions 750 and owned by user1 and group1
   private static final String db_u1g1_only = "db_u1g1_only";
@@ -86,6 +121,21 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   private static final String u1g1_student_u1_700 = "student_u1_700";
   private static final String u1g1_voter_all_755 = "voter_all_755";
   private static final String u1g1_voter_u1_700 = "voter_u1_700";
+
+  private static final List<String> all_tables_in_db_u1g1_only = ImmutableList.of(
+      u1g1_student_all_755,
+      u1g1_student_u1_700,
+      u1g1_voter_all_755,
+      u1g1_voter_u1_700
+  );
+
+  private static final List<TableType> all_tables_type_db_u1g1_only = ImmutableList.of(
+      TableType.TABLE,
+      TableType.TABLE,
+      TableType.TABLE,
+      TableType.TABLE
+  );
+
 
   // Create a view on "student_u0_700". View is owned by user0:group0 and has permissions 750
   private static final String v_student_u0g0_750 = "v_student_u0g0_750";
@@ -330,24 +380,13 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   @Test
   public void user0_db_general_showTables() throws Exception {
     updateClient(org1Users[0]);
-    showTablesHelper(db_general, ImmutableList.of(
-        g_student_u0_700,
-        g_student_u0g0_750,
-        g_student_all_755,
-        g_voter_all_755,
-        g_partitioned_student_u0_700,
-        g_vw_g_student_u0_700
-    ));
+    showTablesHelper(db_general, all_tables_in_db_general);
   }
 
   @Test
   public void user0_db_u0_only_showTables() throws Exception {
     updateClient(org1Users[0]);
-    showTablesHelper(db_u0_only, ImmutableList.of(
-        u0_student_all_755,
-        u0_voter_all_755,
-        u0_vw_voter_all_755
-    ));
+    showTablesHelper(db_u0_only, all_tables_in_db_u0_only);
   }
 
   /**
@@ -357,51 +396,29 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   @Test
   public void user0_db_u1g1_only_showTables() throws Exception {
     updateClient(org1Users[0]);
-    showTablesHelper(db_u1g1_only, emptyList());
+    showTablesHelper(db_u1g1_only, all_tables_in_db_u1g1_only);
   }
 
   @Test
   public void user0_db_general_infoSchema() throws Exception {
     updateClient(org1Users[0]);
     fromInfoSchemaHelper(db_general,
-        ImmutableList.of(
-            g_student_u0_700,
-            g_student_u0g0_750,
-            g_student_all_755,
-            g_voter_all_755,
-            g_partitioned_student_u0_700,
-            g_vw_g_student_u0_700
-        ),
-        ImmutableList.of(
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.VIEW
-        ));
+        all_tables_in_db_general,
+        all_tables_type_in_db_general);
   }
 
   @Test
   public void user0_db_u0_only_infoSchema() throws Exception {
     updateClient(org1Users[0]);
     fromInfoSchemaHelper(db_u0_only,
-        ImmutableList.of(
-            u0_student_all_755,
-            u0_voter_all_755,
-            u0_vw_voter_all_755
-        ),
-        ImmutableList.of(
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.VIEW
-        ));
+        all_tables_in_db_u0_only,
+        all_tables_type_in_db_u0_only);
   }
 
   @Test
   public void user0_db_u1g1_only_infoSchema() throws Exception {
     updateClient(org1Users[0]);
-    fromInfoSchemaHelper(db_u1g1_only, emptyList(), emptyList());
+    fromInfoSchemaHelper(db_u1g1_only, all_tables_in_db_u1g1_only, all_tables_type_db_u1g1_only);
   }
 
   /**
@@ -565,53 +582,27 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   @Test
   public void user1_db_general_showTables() throws Exception {
     updateClient(org1Users[1]);
-    showTablesHelper(db_general, ImmutableList.of(
-        g_student_u0g0_750,
-        g_student_all_755,
-        g_voter_u1_700,
-        g_voter_u2g1_750,
-        g_voter_all_755,
-        g_vw_g_student_u0_700
-    ));
+    showTablesHelper(db_general, all_tables_in_db_general);
   }
 
   @Test
   public void user1_db_u1g1_only_showTables() throws Exception {
     updateClient(org1Users[1]);
-    showTablesHelper(db_u1g1_only, ImmutableList.of(
-        u1g1_student_all_755,
-        u1g1_student_u1_700,
-        u1g1_voter_all_755,
-        u1g1_voter_u1_700
-    ));
+    showTablesHelper(db_u1g1_only, all_tables_in_db_u1g1_only);
   }
 
   @Test
   public void user1_db_u0_only_showTables() throws Exception {
     updateClient(org1Users[1]);
-    showTablesHelper(db_u0_only, newArrayList(u0_vw_voter_all_755));
+    showTablesHelper(db_u0_only, all_tables_in_db_u0_only);
   }
 
   @Test
   public void user1_db_general_infoSchema() throws Exception {
     updateClient(org1Users[1]);
     fromInfoSchemaHelper(db_general,
-        ImmutableList.of(
-            g_student_u0g0_750,
-            g_student_all_755,
-            g_voter_u1_700,
-            g_voter_u2g1_750,
-            g_voter_all_755,
-            g_vw_g_student_u0_700
-        ),
-        ImmutableList.of(
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.VIEW
-        ));
+        all_tables_in_db_general,
+        all_tables_type_in_db_general);
   }
 
   @Test
@@ -636,7 +627,8 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   public void user1_db_u0_only_infoSchema() throws Exception {
     updateClient(org1Users[1]);
     fromInfoSchemaHelper(db_u0_only,
-        newArrayList(u0_vw_voter_all_755), newArrayList(TableType.VIEW));
+        newArrayList(u0_vw_voter_all_755, u0_student_all_755, u0_voter_all_755),
+        newArrayList(TableType.VIEW, TableType.TABLE, TableType.TABLE));
   }
 
   /**
@@ -738,66 +730,43 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   @Test
   public void user2_db_general_showTables() throws Exception {
     updateClient(org1Users[2]);
-    showTablesHelper(db_general, ImmutableList.of(
-        g_student_all_755,
-        g_voter_u2g1_750,
-        g_voter_all_755,
-        g_vw_g_student_u0_700
-    ));
+    showTablesHelper(db_general, all_tables_in_db_general);
   }
 
   @Test
   public void user2_db_u1g1_only_showTables() throws Exception {
     updateClient(org1Users[2]);
-    showTablesHelper(db_u1g1_only, ImmutableList.of(
-        u1g1_student_all_755,
-        u1g1_voter_all_755
-    ));
+    showTablesHelper(db_u1g1_only, all_tables_in_db_u1g1_only);
   }
 
   @Test
   public void user2_db_u0_only_showTables() throws Exception {
     updateClient(org1Users[2]);
-    showTablesHelper(db_u0_only, newArrayList(u0_vw_voter_all_755));
+    showTablesHelper(db_u0_only, all_tables_in_db_u0_only);
   }
 
   @Test
   public void user2_db_general_infoSchema() throws Exception {
     updateClient(org1Users[2]);
     fromInfoSchemaHelper(db_general,
-        ImmutableList.of(
-            g_student_all_755,
-            g_voter_u2g1_750,
-            g_voter_all_755,
-            g_vw_g_student_u0_700
-        ),
-        ImmutableList.of(
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.TABLE,
-            TableType.VIEW
-        ));
+        all_tables_in_db_general,
+        all_tables_type_in_db_general);
   }
 
   @Test
   public void user2_db_u1g1_only_infoSchema() throws Exception {
     updateClient(org1Users[2]);
     fromInfoSchemaHelper(db_u1g1_only,
-        ImmutableList.of(
-            u1g1_student_all_755,
-            u1g1_voter_all_755
-        ),
-        ImmutableList.of(
-            TableType.TABLE,
-            TableType.TABLE
-        ));
+        all_tables_in_db_u1g1_only,
+        all_tables_type_db_u1g1_only);
   }
 
   @Test
   public void user2_db_u0_only_infoSchema() throws Exception {
     updateClient(org1Users[2]);
-    fromInfoSchemaHelper(db_u0_only, newArrayList(u0_vw_voter_all_755),
-        newArrayList(TableType.VIEW));
+    fromInfoSchemaHelper(db_u0_only,
+        newArrayList(all_tables_in_db_u0_only),
+        newArrayList(all_tables_type_in_db_u0_only));
   }
 
   /**
