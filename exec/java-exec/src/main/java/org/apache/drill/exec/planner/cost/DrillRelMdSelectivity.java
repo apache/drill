@@ -19,12 +19,12 @@ package org.apache.drill.exec.planner.cost;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.HashSet;
 
 import java.util.stream.Collectors;
 
@@ -180,7 +180,26 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
       double orSel = 0;
       for (RexNode orPred : RelOptUtil.disjunctions(pred)) {
         if (isMultiColumnPredicate(orPred) && !combinedRangePredicates.contains(orPred)) {
-          orSel += RelMdUtil.guessSelectivity(orPred);  //CALCITE guess
+          Set uniqueRefs = new HashSet<>();
+          uniqueRefs.add(DrillRelOptUtil.findAllRexInputRefs(orPred));
+          // If equality predicate involving single column - selectivity is 1.0
+          if (uniqueRefs.size() == 1) {
+            try {
+              RexVisitor<Void> visitor =
+                      new RexVisitorImpl<Void>(true) {
+                        public Void visitCall(RexCall call) {
+                          if (call.getKind() != SqlKind.EQUALS) {
+                            throw new Util.FoundOne(call);
+                          }
+                          return super.visitCall(call);
+                        }
+                      };
+              pred.accept(visitor);
+              orSel += 1.0;
+            } catch (Util.FoundOne e) {
+              orSel += RelMdUtil.guessSelectivity(orPred);  //CALCITE guess
+            }
+          }
         } else if (orPred.isA(SqlKind.EQUALS)) {
           orSel += computeEqualsSelectivity(tableMetadata, orPred, fieldNames);
         } else if (orPred.isA(RANGE_PREDICATE) || combinedRangePredicates.contains(orPred)) {
@@ -276,7 +295,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
       ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
-      Double ndv = columnStatistics != null ? (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NVD) : null;
+      Double ndv = columnStatistics != null ? (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NDV) : null;
       if (ndv != null) {
         return 1.00 / ndv;
       }
@@ -423,19 +442,6 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
   }
 
   private boolean isMultiColumnPredicate(final RexNode node) {
-    return findAllRexInputRefs(node).size() > 1;
-  }
-
-  private static List<RexInputRef> findAllRexInputRefs(final RexNode node) {
-    List<RexInputRef> rexRefs = new ArrayList<>();
-      RexVisitor<Void> visitor =
-          new RexVisitorImpl<Void>(true) {
-            public Void visitInputRef(RexInputRef inputRef) {
-              rexRefs.add(inputRef);
-              return super.visitInputRef(inputRef);
-            }
-          };
-      node.accept(visitor);
-      return rexRefs;
+    return DrillRelOptUtil.findAllRexInputRefs(node).size() > 1;
   }
 }

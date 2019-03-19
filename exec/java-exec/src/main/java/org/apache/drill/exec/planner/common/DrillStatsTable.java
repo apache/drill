@@ -483,7 +483,7 @@ public class DrillStatsTable {
       Map<StatisticsKind, Object> statisticsValues = new HashMap<>();
       Double ndv = statsProvider.getNdv(fieldName);
       if (ndv != null) {
-        statisticsValues.put(ColumnStatisticsKind.NVD, ndv);
+        statisticsValues.put(ColumnStatisticsKind.NDV, ndv);
       }
       Double nonNullCount = statsProvider.getNNRowCount(fieldName);
       if (nonNullCount != null) {

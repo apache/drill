@@ -145,7 +145,7 @@ public enum ColumnStatisticsKind implements CollectableColumnStatisticsKind {
   /**
    * Column statistics kind which represents number of distinct values for the specific column.
    */
-  NVD(Statistic.NDV) {
+  NDV(Statistic.NDV) {
     @Override
     public Object mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
       throw new UnsupportedOperationException("Cannot merge statistics for NDV");

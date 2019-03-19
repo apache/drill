@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.cost;
 
 import java.io.IOException;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
@@ -35,7 +34,9 @@ import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.util.Utilities;
@@ -53,7 +54,21 @@ public class DrillRelMdRowCount extends RelMdRowCount{
 
     if (groupKey.isEmpty()) {
       return 1.0;
-    } else {
+    } else if (!DrillRelOptUtil.guessRows(rel) &&
+          rel instanceof AggPrelBase &&
+          ((AggPrelBase) rel).getOperatorPhase() == AggPrelBase.OperatorPhase.PHASE_1of2) {
+      // Phase 1 Aggregate would return rows in the range [NDV, input_rows]. Hence, use the
+      // existing estimate of 1/10 * input_rows
+        Double rowCount = mq.getRowCount(rel.getInput()) / 10;
+        Double ndv = mq.getDistinctRowCount(rel.getInput(), groupKey, null);
+        // Use max of NDV and input_rows/10
+        if (ndv != null) {
+          rowCount = Math.max(ndv, rowCount);
+        }
+        // Grouping sets multiply
+        rowCount *= rel.getGroupSets().size();
+        return rowCount;
+      } else {
       return super.getRowCount(rel, mq);
     }
   }
@@ -88,20 +103,13 @@ public class DrillRelMdRowCount extends RelMdRowCount{
   }
 
   @Override
-  public Double getRowCount(RelNode rel, RelMetadataQuery mq) {
-    if (rel instanceof TableScan) {
-      return getRowCountInternal((TableScan)rel, mq);
-    }
-    return super.getRowCount(rel, mq);
-  }
-
-  @Override
   public Double getRowCount(Filter rel, RelMetadataQuery mq) {
     // Need capped selectivity estimates. See the Filter getRows() method
     return rel.getRows();
   }
 
-  private Double getRowCountInternal(TableScan rel, RelMetadataQuery mq) {
+  @Override
+  public Double getRowCount(TableScan rel, RelMetadataQuery mq) {
     DrillTable table = Utilities.getDrillTable(rel.getTable());
     PlannerSettings settings = PrelUtil.getSettings(rel.getCluster());
     // If guessing, return selectivity from RelMDRowCount
@@ -112,14 +120,19 @@ public class DrillRelMdRowCount extends RelMdRowCount{
     try {
       if (table != null
           && table.getGroupScan().getTableMetadata() != null
-          && (boolean) TableStatisticsKind.HAS_STATISTICS.getValue(table.getGroupScan().getTableMetadata())
+          && (boolean) TableStatisticsKind.HAS_STATISTICS.getValue(table.getGroupScan().getTableMetadata())) {
           /* For GroupScan rely on accurate count from the scan, if available, instead of
            * statistics since partition pruning/filter pushdown might have occurred.
            * e.g. ParquetGroupScan returns accurate rowcount. The other way would be to
            * iterate over the rowgroups present in the GroupScan to compute the rowcount.
            */
-          && !(table.getGroupScan().getScanStats(settings).getGroupScanProperty().hasExactRowCount())) {
-        return (Double) TableStatisticsKind.EST_ROW_COUNT.getValue(table.getGroupScan().getTableMetadata());
+        if (!table.getGroupScan().getScanStats(settings).getGroupScanProperty().hasExactRowCount()) {
+          return (Double) TableStatisticsKind.EST_ROW_COUNT.getValue(table.getGroupScan().getTableMetadata());
+        } else {
+          if (!(rel instanceof DrillScanRelBase)) {
+            return table.getGroupScan().getScanStats(settings).getRecordCount();
+          }
+        }
       }
     } catch (IOException ex) {
       return super.getRowCount(rel, mq);

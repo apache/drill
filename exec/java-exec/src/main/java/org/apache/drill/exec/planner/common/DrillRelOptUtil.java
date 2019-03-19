@@ -667,4 +667,66 @@ public abstract class DrillRelOptUtil {
     }
     return drillTable;
   }
+
+  public static List<Pair<Integer, Integer>> analyzeSimpleEquiJoin(Join join) {
+    List<Pair<Integer, Integer>> joinConditions = new ArrayList<>();
+    try {
+      RexVisitor<Void> visitor =
+          new RexVisitorImpl<Void>(true) {
+            public Void visitCall(RexCall call) {
+              if (call.getKind() == SqlKind.AND || call.getKind() == SqlKind.OR) {
+                super.visitCall(call);
+              } else {
+                if (call.getKind() == SqlKind.EQUALS) {
+                  int leftFieldCount = join.getLeft().getRowType().getFieldCount();
+                  int rightFieldCount = join.getRight().getRowType().getFieldCount();
+                  RexNode leftComparand = call.operands.get(0);
+                  RexNode rightComparand = call.operands.get(1);
+                  RexInputRef leftFieldAccess = (RexInputRef) leftComparand;
+                  RexInputRef rightFieldAccess = (RexInputRef) rightComparand;
+                  if (leftFieldAccess.getIndex() >= leftFieldCount + rightFieldCount ||
+                      rightFieldAccess.getIndex() >= leftFieldCount + rightFieldCount) {
+                    joinConditions.clear();
+                    throw new Util.FoundOne(call);
+                  }
+                  /* Both columns reference same table */
+                  if ((leftFieldAccess.getIndex() >= leftFieldCount &&
+                      rightFieldAccess.getIndex() >= leftFieldCount) ||
+                          (leftFieldAccess.getIndex() < leftFieldCount &&
+                              rightFieldAccess.getIndex() < leftFieldCount)) {
+                    joinConditions.clear();
+                    throw new Util.FoundOne(call);
+                  } else {
+                    if (leftFieldAccess.getIndex() < leftFieldCount) {
+                      joinConditions.add(Pair.of(leftFieldAccess.getIndex(),
+                          rightFieldAccess.getIndex() - leftFieldCount));
+                    } else {
+                      joinConditions.add(Pair.of(rightFieldAccess.getIndex(),
+                          leftFieldAccess.getIndex() - leftFieldCount));
+                    }
+                  }
+                }
+              }
+              return null;
+            }
+          };
+      join.getCondition().accept(visitor);
+    } catch (Util.FoundOne ex) {
+      Util.swallow(ex, null);
+    }
+    return joinConditions;
+  }
+
+  public static List<RexInputRef> findAllRexInputRefs(final RexNode node) {
+    List<RexInputRef> rexRefs = new ArrayList<>();
+    RexVisitor<Void> visitor =
+            new RexVisitorImpl<Void>(true) {
+              public Void visitInputRef(RexInputRef inputRef) {
+                rexRefs.add(inputRef);
+                return super.visitInputRef(inputRef);
+              }
+            };
+    node.accept(visitor);
+    return rexRefs;
+  }
 }
