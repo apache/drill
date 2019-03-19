@@ -41,7 +41,12 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
 
   @Override
   public TupleMetadata visitSchema(SchemaParser.SchemaContext ctx) {
-    return visitColumns(ctx.columns());
+    TupleMetadata schema = ctx.columns() == null ? new TupleSchema() : visitColumns(ctx.columns());
+    if (ctx.property_values() != null) {
+      PropertiesVisitor propertiesVisitor = new PropertiesVisitor();
+      schema.setProperties(ctx.property_values().accept(propertiesVisitor));
+    }
+    return schema;
   }
 
   @Override
@@ -64,18 +69,8 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
       ColumnVisitor columnVisitor = new ColumnVisitor();
       ColumnMetadata columnMetadata = ctx.column().accept(columnVisitor);
       if (ctx.property_values() != null) {
-        StringValueVisitor stringValueVisitor = new StringValueVisitor();
-        Map<String, String> columnProperties = new LinkedHashMap<>();
-        ctx.property_values().property_pair().forEach(
-          pair -> {
-            List<String> pairValues = pair.string_value().stream()
-              .map(stringValueVisitor::visit)
-              .collect(Collectors.toList());
-            Preconditions.checkState(pairValues.size() == 2);
-            columnProperties.put(pairValues.get(0), pairValues.get(1));
-          }
-        );
-        columnMetadata.setProperties(columnProperties);
+        PropertiesVisitor propertiesVisitor = new PropertiesVisitor();
+        columnMetadata.setProperties(ctx.property_values().accept(propertiesVisitor));
       }
       return columnMetadata;
     }
@@ -322,4 +317,28 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     }
   }
 
+  /**
+   * Visits schema or column properties.
+   * Properties must be identified as key values pairs separated by equals sign.
+   * Properties pairs must be separated by comma.
+   * Property name and value must be enclosed into backticks, single quotes or double quotes.
+   */
+  public static class PropertiesVisitor extends SchemaParserBaseVisitor<Map<String, String>> {
+
+    @Override
+    public Map<String, String> visitProperty_values(SchemaParser.Property_valuesContext ctx) {
+      StringValueVisitor stringValueVisitor = new StringValueVisitor();
+      Map<String, String> properties = new LinkedHashMap<>();
+      ctx.property_pair().forEach(
+        pair -> {
+          List<String> pairValues = pair.string_value().stream()
+            .map(stringValueVisitor::visit)
+            .collect(Collectors.toList());
+          Preconditions.checkState(pairValues.size() == 2);
+          properties.put(pairValues.get(0), pairValues.get(1));
+        }
+      );
+      return properties;
+    }
+  }
 }

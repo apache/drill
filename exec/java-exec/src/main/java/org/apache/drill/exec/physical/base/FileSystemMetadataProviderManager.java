@@ -32,13 +32,18 @@ public class FileSystemMetadataProviderManager implements MetadataProviderManage
 
   private TableMetadataProvider tableMetadataProvider;
 
-  public static MetadataProviderManager getMetadataProviderManager() {
+  public static MetadataProviderManager init() {
     return new FileSystemMetadataProviderManager();
   }
 
   @Override
   public void setSchemaProvider(SchemaProvider schemaProvider) {
     this.schemaProvider = schemaProvider;
+  }
+
+  @Override
+  public SchemaProvider getSchemaProvider() {
+    return schemaProvider;
   }
 
   @Override
@@ -49,11 +54,6 @@ public class FileSystemMetadataProviderManager implements MetadataProviderManage
   @Override
   public DrillStatsTable getStatsProvider() {
     return statsProvider;
-  }
-
-  @Override
-  public SchemaProvider getSchemaProvider() {
-    return schemaProvider;
   }
 
   @Override

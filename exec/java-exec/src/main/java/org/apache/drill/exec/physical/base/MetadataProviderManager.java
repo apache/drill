@@ -28,17 +28,17 @@ import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
  */
 public interface MetadataProviderManager {
 
-  DrillStatsTable getStatsProvider();
-
-  void setStatsProvider(DrillStatsTable statsProvider);
+  void setSchemaProvider(SchemaProvider schemaProvider);
 
   SchemaProvider getSchemaProvider();
 
-  void setSchemaProvider(SchemaProvider schemaProvider);
+  void setStatsProvider(DrillStatsTable statsProvider);
 
-  TableMetadataProvider getTableMetadataProvider();
+  DrillStatsTable getStatsProvider();
 
   void setTableMetadataProvider(TableMetadataProvider tableMetadataProvider);
+
+  TableMetadataProvider getTableMetadataProvider();
 
   /**
    * Returns builder responsible for constructing required {@link TableMetadataProvider} instances

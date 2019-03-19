@@ -344,7 +344,7 @@ public class TestSchemaCommands extends ClusterTest {
   @Test
   public void testCreateWithVariousColumnProperties() throws Exception {
     File tmpDir = dirTestWatcher.getTmpDir();
-    File schemaFile = new File(tmpDir, "schema_for_create_with__various_column_properties.schema");
+    File schemaFile = new File(tmpDir, "schema_for_create_with_various_column_properties.schema");
     assertFalse(schemaFile.exists());
     try {
       testBuilder()
@@ -388,6 +388,40 @@ public class TestSchemaCommands extends ClusterTest {
       assertEquals(properties, c.properties());
 
       assertEquals(0, schema.properties().size());
+    } finally {
+      if (schemaFile.exists()) {
+        assertTrue(schemaFile.delete());
+      }
+    }
+  }
+
+  @Test
+  public void testCreateWithoutColumns() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "schema_for_create_without_columns.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      testBuilder()
+        .sqlQuery("create schema () " +
+            "path '%s' " +
+            "properties ('prop' = 'val')",
+          schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Created schema for [%s]", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      assertTrue(schemaProvider.exists());
+
+      SchemaContainer schemaContainer = schemaProvider.read();
+
+      assertNull(schemaContainer.getTable());
+      TupleMetadata schema = schemaContainer.getSchema();
+      assertNotNull(schema);
+
+      assertTrue(schema.isEmpty());
+      assertEquals("val", schema.property("prop"));
     } finally {
       if (schemaFile.exists()) {
         assertTrue(schemaFile.delete());
@@ -665,4 +699,32 @@ public class TestSchemaCommands extends ClusterTest {
     }
   }
 
+  @Test
+  public void testDescribeWithoutColumns() throws Exception {
+    String tableName = "table_describe_statement_without_columns";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      String statement = "CREATE OR REPLACE SCHEMA \n"
+        + "() \n"
+        + "FOR TABLE dfs.tmp.`table_describe_statement_without_columns` \n"
+        + "PROPERTIES (\n"
+        + "'drill.strict' = 'false', \n"
+        + "'some_schema_prop' = 'some_schema_val'\n"
+        + ")";
+
+      run(statement);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s as statement", table)
+        .unOrdered()
+        .baselineColumns("schema")
+        .baselineValues(statement)
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
 }

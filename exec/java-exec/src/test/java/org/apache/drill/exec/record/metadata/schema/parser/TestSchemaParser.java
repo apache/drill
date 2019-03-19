@@ -24,6 +24,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.joda.time.LocalDate;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -37,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class TestSchemaParser {
 
   @Test
-  public void checkQuotedIdWithEscapes() {
+  public void checkQuotedIdWithEscapes() throws Exception {
     String schemaWithEscapes = "`a\\\\b\\`c` INT";
     assertEquals(schemaWithEscapes, SchemaExprParser.parseSchema(schemaWithEscapes).metadata(0).columnString());
 
@@ -46,7 +47,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testSchemaWithParen() {
+  public void testSchemaWithParen() throws Exception {
     String schemaWithParen = "(`a` INT NOT NULL, `b` VARCHAR(10))";
     TupleMetadata schema = SchemaExprParser.parseSchema(schemaWithParen);
     assertEquals(2, schema.size());
@@ -55,7 +56,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testSkip() {
+  public void testSkip() throws Exception {
     String schemaString = "id\n/*comment*/int\r,//comment\r\nname\nvarchar\t\t\t";
     TupleMetadata schema = SchemaExprParser.parseSchema(schemaString);
     assertEquals(2, schema.size());
@@ -64,19 +65,19 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testCaseInsensitivity() {
+  public void testCaseInsensitivity() throws Exception {
     String schema = "`Id` InTeGeR NoT NuLl";
     assertEquals("`Id` INT NOT NULL", SchemaExprParser.parseSchema(schema).metadata(0).columnString());
   }
 
   @Test
-  public void testParseColumn() {
+  public void testParseColumn() throws Exception {
     ColumnMetadata column = SchemaExprParser.parseColumn("col int not null");
     assertEquals("`col` INT NOT NULL", column.columnString());
   }
 
   @Test
-  public void testNumericTypes() {
+  public void testNumericTypes() throws Exception {
     TupleMetadata schema = new SchemaBuilder()
       .addNullable("int_col", TypeProtos.MinorType.INT)
       .add("integer_col", TypeProtos.MinorType.INT)
@@ -104,12 +105,18 @@ public class TestSchemaParser {
     );
 
     schemas.forEach(
-      s -> checkSchema(s, schema)
+      s -> {
+        try {
+          checkSchema(s, schema);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
     );
   }
 
   @Test
-  public void testBooleanType() {
+  public void testBooleanType() throws Exception {
     TupleMetadata schema = new SchemaBuilder()
       .addNullable("col", TypeProtos.MinorType.BIT)
       .buildSchema();
@@ -136,12 +143,16 @@ public class TestSchemaParser {
         .add("col_p", value, 50)
         .buildSchema();
 
-      checkSchema(String.format(schemaPattern, key), schema);
+      try {
+        checkSchema(String.format(schemaPattern, key), schema);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     });
   }
 
   @Test
-  public void testTimeTypes() {
+  public void testTimeTypes() throws Exception {
     TupleMetadata schema = new SchemaBuilder()
       .addNullable("time_col", TypeProtos.MinorType.TIME)
       .addNullable("time_prec_col", TypeProtos.MinorType.TIME, 3)
@@ -155,7 +166,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testInterval() {
+  public void testInterval() throws Exception {
     TupleMetadata schema = new SchemaBuilder()
       .addNullable("interval_year_col", TypeProtos.MinorType.INTERVALYEAR)
       .addNullable("interval_month_col", TypeProtos.MinorType.INTERVALYEAR)
@@ -172,7 +183,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testArray() {
+  public void testArray() throws Exception {
     TupleMetadata schema = new SchemaBuilder()
       .addArray("simple_array", TypeProtos.MinorType.INT)
       .addRepeatedList("nested_array")
@@ -199,7 +210,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testStruct() {
+  public void testStruct() throws Exception {
     TupleMetadata schema = new SchemaBuilder()
       .addMap("struct_col")
         .addNullable("int_col", TypeProtos.MinorType.INT)
@@ -215,14 +226,14 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testModeForSimpleType() {
+  public void testModeForSimpleType() throws Exception {
     TupleMetadata schema = SchemaExprParser.parseSchema("id int not null, name varchar");
     assertFalse(schema.metadata("id").isNullable());
     assertTrue(schema.metadata("name").isNullable());
   }
 
   @Test
-  public void testModeForStructType() {
+  public void testModeForStructType() throws Exception {
     TupleMetadata schema  = SchemaExprParser.parseSchema("m struct<m1 int not null, m2 varchar>");
     ColumnMetadata map = schema.metadata("m");
     assertTrue(map.isMap());
@@ -234,7 +245,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testModeForRepeatedType() {
+  public void testModeForRepeatedType() throws Exception {
     TupleMetadata schema = SchemaExprParser.parseSchema(
       "a array<int>, aa array<array<int>>, ma array<struct<m1 int not null, m2 varchar>>");
 
@@ -253,7 +264,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testFormat() {
+  public void testFormat() throws Exception {
     String value = "`a` DATE NOT NULL FORMAT 'yyyy-MM-dd'";
     TupleMetadata schema = SchemaExprParser.parseSchema(value);
     ColumnMetadata columnMetadata = schema.metadata("a");
@@ -262,7 +273,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testDefault() {
+  public void testDefault() throws Exception {
     String value = "`a` INT NOT NULL DEFAULT '12'";
     TupleMetadata schema = SchemaExprParser.parseSchema(value);
     ColumnMetadata columnMetadata = schema.metadata("a");
@@ -273,7 +284,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testFormatAndDefault() {
+  public void testFormatAndDefault() throws Exception {
     String value = "`a` DATE NOT NULL FORMAT 'yyyy-MM-dd' DEFAULT '2018-12-31'";
     TupleMetadata schema = SchemaExprParser.parseSchema(value);
     ColumnMetadata columnMetadata = schema.metadata("a");
@@ -284,7 +295,7 @@ public class TestSchemaParser {
   }
 
   @Test
-  public void testColumnProperties() {
+  public void testColumnProperties() throws Exception {
     String value = "`a` INT NOT NULL PROPERTIES { 'k1' = 'v1', 'k2' = 'v2' }";
     TupleMetadata schema = SchemaExprParser.parseSchema(value);
 
@@ -298,7 +309,36 @@ public class TestSchemaParser {
     assertEquals(value, columnMetadata.columnString());
   }
 
-  private void checkSchema(String schemaString, TupleMetadata expectedSchema) {
+  @Test
+  public void testEmptySchema() throws Exception {
+    String value = "()";
+    TupleMetadata schema = SchemaExprParser.parseSchema(value);
+    assertEquals(0, schema.size());
+  }
+
+  @Test
+  public void testEmptySchemaWithProperties() throws Exception {
+    String value = "() properties { `drill.strict` = `false` }";
+    TupleMetadata schema = SchemaExprParser.parseSchema(value);
+    assertTrue(schema.isEmpty());
+    assertEquals("false", schema.property("drill.strict"));
+  }
+
+  @Test
+  public void testSchemaWithProperties() throws Exception {
+    String value = "(col int properties { `drill.blank-as` = `0` } ) " +
+      "properties { `drill.strict` = `false`, `drill.my-prop` = `abc` }";
+    TupleMetadata schema = SchemaExprParser.parseSchema(value);
+    assertEquals(1, schema.size());
+
+    ColumnMetadata column = schema.metadata("col");
+    assertEquals("0", column.property("drill.blank-as"));
+
+    assertEquals("false", schema.property("drill.strict"));
+    assertEquals("abc", schema.property("drill.my-prop"));
+  }
+
+  private void checkSchema(String schemaString, TupleMetadata expectedSchema) throws IOException {
     TupleMetadata actualSchema = SchemaExprParser.parseSchema(schemaString);
 
     assertEquals(expectedSchema.size(), actualSchema.size());
@@ -310,7 +350,6 @@ public class TestSchemaParser {
         assertEquals(expectedMetadata.columnString(), actualMetadata.columnString());
       }
     );
-
   }
 
 }

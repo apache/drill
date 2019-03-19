@@ -25,9 +25,9 @@ options {
  */
 }
 
-schema: (columns | LEFT_PAREN columns RIGHT_PAREN) EOF;
+schema: (columns | LEFT_PAREN columns? RIGHT_PAREN) property_values? EOF;
 
-columns: column_def  (COMMA column_def)*;
+columns: column_def (COMMA column_def)*;
 
 column_def: column property_values?;
 

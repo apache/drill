@@ -56,7 +56,9 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
   @JsonCreator
   public TupleSchema(@JsonProperty("columns") List<AbstractColumnMetadata> columns,
                      @JsonProperty("properties") Map<String, String> properties) {
-    columns.forEach(this::addColumn);
+    if (columns != null) {
+      columns.forEach(this::addColumn);
+    }
     setProperties(properties);
   }
 

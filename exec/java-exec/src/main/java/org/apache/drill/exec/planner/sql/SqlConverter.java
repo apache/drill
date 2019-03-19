@@ -731,7 +731,7 @@ public class SqlConverter {
       if (table != null && (drillTable = table.unwrap(DrillTable.class)) != null) {
         drillTable.setOptions(session.getOptions());
 
-        drillTable.setTableMetadataProviderBuilder(tableCache.getUnchecked(
+        drillTable.setTableMetadataProviderManager(tableCache.getUnchecked(
             new DrillTableKey(SchemaPath.getCompoundPath(names.toArray(new String[0])), drillTable)));
       }
       return table;

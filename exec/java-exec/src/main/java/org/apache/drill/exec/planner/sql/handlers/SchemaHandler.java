@@ -31,11 +31,10 @@ import org.apache.drill.exec.planner.sql.parser.SqlCreateType;
 import org.apache.drill.exec.planner.sql.parser.SqlSchema;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.schema.FsMetastoreSchemaProvider;
 import org.apache.drill.exec.record.metadata.schema.PathSchemaProvider;
 import org.apache.drill.exec.record.metadata.schema.SchemaContainer;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
-import org.apache.drill.exec.record.metadata.schema.parser.SchemaParsingException;
+import org.apache.drill.exec.record.metadata.schema.SchemaProviderFactory;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
@@ -63,7 +62,7 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
     super(config);
   }
 
-  WorkspaceSchemaFactory.WorkspaceSchema getWorkspaceSchema(List<String> tableSchema, String tableName) {
+  public WorkspaceSchemaFactory.WorkspaceSchema getWorkspaceSchema(List<String> tableSchema, String tableName) {
     SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
     AbstractSchema temporarySchema = SchemaUtilites.resolveToTemporarySchema(tableSchema, defaultSchema, context.getConfig());
 
@@ -112,15 +111,7 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
       String schemaSource = sqlCall.hasTable() ? sqlCall.getTable().toString() : sqlCall.getPath();
       try {
 
-        SchemaProvider schemaProvider;
-        if (sqlCall.hasTable()) {
-          String tableName = sqlCall.getTableName();
-          WorkspaceSchemaFactory.WorkspaceSchema wsSchema = getWorkspaceSchema(sqlCall.getSchemaPath(), tableName);
-          schemaProvider = new FsMetastoreSchemaProvider(wsSchema, tableName);
-        } else {
-          schemaProvider = new PathSchemaProvider(new Path(sqlCall.getPath()));
-        }
-
+        SchemaProvider schemaProvider = SchemaProviderFactory.create(sqlCall, this);
         if (schemaProvider.exists()) {
           if (SqlCreateType.OR_REPLACE == sqlCall.getSqlCreateType()) {
             schemaProvider.delete();
@@ -134,11 +125,6 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
           ExecConstants.PERSISTENT_TABLE_UMASK).string_val, false);
         schemaProvider.store(schemaString, sqlCall.getProperties(), storageStrategy);
         return DirectPlan.createDirectPlan(context, true, String.format("Created schema for [%s]", schemaSource));
-      } catch (SchemaParsingException e) {
-        throw UserException.parseError(e)
-          .message(e.getMessage())
-          .addContext("Schema: " + schemaString)
-          .build(logger);
       } catch (IOException e) {
         throw UserException.resourceError(e)
           .message(e.getMessage())
@@ -200,12 +186,8 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
     public PhysicalPlan getPlan(SqlNode sqlNode) {
       SqlSchema.Drop sqlCall = ((SqlSchema.Drop) sqlNode);
 
-      String tableName = sqlCall.getTableName();
-      WorkspaceSchemaFactory.WorkspaceSchema wsSchema = getWorkspaceSchema(sqlCall.getSchemaPath(), tableName);
-
       try {
-
-        SchemaProvider schemaProvider = new FsMetastoreSchemaProvider(wsSchema, tableName);
+        SchemaProvider schemaProvider = SchemaProviderFactory.create(sqlCall, this);
 
         if (!schemaProvider.exists()) {
           return produceErrorResult(String.format("Schema [%s] does not exist in table [%s] root directory",
@@ -239,15 +221,10 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
     public PhysicalPlan getPlan(SqlNode sqlNode) {
       SqlSchema.Describe sqlCall = ((SqlSchema.Describe) sqlNode);
 
-      String tableName = sqlCall.getTableName();
-      WorkspaceSchemaFactory.WorkspaceSchema wsSchema = getWorkspaceSchema(sqlCall.getSchemaPath(), tableName);
-
       try {
-
-        SchemaProvider schemaProvider = new FsMetastoreSchemaProvider(wsSchema, tableName);
+        SchemaProvider schemaProvider = SchemaProviderFactory.create(sqlCall, this);
 
         if (schemaProvider.exists()) {
-
           SchemaContainer schemaContainer = schemaProvider.read();
 
           String schema;
@@ -258,13 +235,19 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
             case STATEMENT:
               TupleMetadata metadata = schemaContainer.getSchema();
               StringBuilder builder = new StringBuilder("CREATE OR REPLACE SCHEMA \n");
-              builder.append("(\n");
 
-              builder.append(metadata.toMetadataList().stream()
-              .map(ColumnMetadata::columnString)
-              .collect(Collectors.joining(", \n")));
+              List<ColumnMetadata> columnsMetadata = metadata.toMetadataList();
+              if (columnsMetadata.isEmpty()) {
+                builder.append("() \n");
+              } else {
+                builder.append("(\n");
 
-              builder.append("\n) \n");
+                builder.append(columnsMetadata.stream()
+                  .map(ColumnMetadata::columnString)
+                  .collect(Collectors.joining(", \n")));
+
+                builder.append("\n) \n");
+              }
 
               builder.append("FOR TABLE ").append(schemaContainer.getTable()).append(" \n");
 

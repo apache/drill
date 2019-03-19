@@ -32,13 +32,14 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.FormatPluginConfigBase;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableInstance;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableSignature;
+import org.apache.drill.exec.store.table.function.TableParamDef;
+import org.apache.drill.exec.store.table.function.TableSignature;
 import org.slf4j.Logger;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
- * manages format plugins options to define table macros
+ * Manages format plugins options to define table macros.
  */
 final class FormatPluginOptionExtractor {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(FormatPluginOptionExtractor.class);
@@ -46,8 +47,9 @@ final class FormatPluginOptionExtractor {
   private final Map<String, FormatPluginOptionsDescriptor> optionsByTypeName;
 
   /**
-   * extracts the format plugin options based on the scanned implementations of {@link FormatPluginConfig}
-   * @param scanResult
+   * Extracts the format plugin options based on the scanned implementations of {@link FormatPluginConfig}.
+   *
+   * @param scanResult scan result of the classpath
    */
   FormatPluginOptionExtractor(ScanResult scanResult) {
     Map<String, FormatPluginOptionsDescriptor> result = new HashMap<>();
@@ -68,37 +70,40 @@ final class FormatPluginOptionExtractor {
   }
 
   /**
-   * give a table name, returns function signatures to configure the FormatPlugin
+   * Give a table name, returns function signatures to configure the FormatPlugin.
+   *
    * @param tableName the name of the table (or table function in this context)
+   * @param tableParameters common table parameters to be included
    * @return the available signatures
    */
-  List<TableSignature> getTableSignatures(String tableName) {
+  List<TableSignature> getTableSignatures(String tableName, List<TableParamDef> tableParameters) {
     List<TableSignature> result = new ArrayList<>();
     for (FormatPluginOptionsDescriptor optionsDescriptor : optionsByTypeName.values()) {
-      TableSignature sig = optionsDescriptor.getTableSignature(tableName);
+      TableSignature sig = optionsDescriptor.getTableSignature(tableName, tableParameters);
       result.add(sig);
     }
     return unmodifiableList(result);
   }
 
   /**
-   * given a table function signature and the corresponding parameters
-   * return the corresponding formatPlugin configuration
-   * @param t the signature and parameters (it should be one of the signatures returned by {@link FormatPluginOptionExtractor#getTableSignatures(String)})
+   * Given a table function signature and the corresponding parameters
+   * return the corresponding formatPlugin configuration.
+   *
+   * @param t the signature and parameters (it should be one of the signatures returned by {@link FormatPluginOptionExtractor#getTableSignatures(String, List)})
    * @return the config
    */
   FormatPluginConfig createConfigForTable(TableInstance t) {
-    if (!t.sig.params.get(0).name.equals("type")) {
+    if (!t.sig.getSpecificParams().get(0).getName().equals("type")) {
       throw UserException.parseError()
         .message("unknown first param for %s", t.sig)
-        .addContext("table", t.sig.name)
+        .addContext("table", t.sig.getName())
         .build(logger);
     }
-    String type = (String)t.params.get(0);
+    String type = (String) t.params.get(0);
     if (type == null) {
       throw UserException.parseError()
           .message("type param must be present but was missing")
-          .addContext("table", t.sig.name)
+          .addContext("table", t.sig.getName())
           .build(logger);
     }
     FormatPluginOptionsDescriptor optionsDescriptor = optionsByTypeName.get(type.toLowerCase());
@@ -107,7 +112,7 @@ final class FormatPluginOptionExtractor {
           .message(
               "unknown type %s, expected one of %s",
               type, optionsByTypeName.keySet())
-          .addContext("table", t.sig.name)
+          .addContext("table", t.sig.getName())
           .build(logger);
     }
     return optionsDescriptor.createConfigForTable(t);

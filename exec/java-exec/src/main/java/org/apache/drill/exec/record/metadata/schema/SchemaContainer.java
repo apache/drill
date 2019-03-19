@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
-
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -46,11 +46,11 @@ public class SchemaContainer {
     this.version = new Version(version);
   }
 
-  public SchemaContainer(String table, String schema, Map<String, String> properties) {
+  public SchemaContainer(String table, String schema, Map<String, String> properties) throws IOException {
     this(table, schema, properties, Version.VERSION_1); //current default version
   }
 
-  public SchemaContainer(String table, String schema, Map<String, String> properties, Integer version) {
+  public SchemaContainer(String table, String schema, Map<String, String> properties, Integer version) throws IOException {
     this.table = table;
     this.schema = schema == null ? null : convert(schema, properties);
     this.version = new Version(version);
@@ -76,7 +76,7 @@ public class SchemaContainer {
     return version;
   }
 
-  private TupleMetadata convert(String schemaString, Map<String, String> properties) {
+  private TupleMetadata convert(String schemaString, Map<String, String> properties) throws IOException {
     TupleMetadata schema = SchemaExprParser.parseSchema(schemaString);
     if (properties != null) {
       schema.setProperties(properties);

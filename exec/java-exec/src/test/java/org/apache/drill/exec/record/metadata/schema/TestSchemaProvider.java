@@ -52,13 +52,13 @@ public class TestSchemaProvider {
 
   @Test
   public void testInlineProviderExists() throws Exception {
-    SchemaProvider provider = new InlineSchemaProvider("(i int)", null);
+    SchemaProvider provider = new InlineSchemaProvider("(i int)");
     assertTrue(provider.exists());
   }
 
   @Test
   public void testInlineProviderDelete() throws Exception {
-    SchemaProvider provider = new InlineSchemaProvider("(i int)", null);
+    SchemaProvider provider = new InlineSchemaProvider("(i int)");
     thrown.expect(UnsupportedOperationException.class);
     thrown.expectMessage("Schema deletion is not supported");
     provider.delete();
@@ -66,7 +66,7 @@ public class TestSchemaProvider {
 
   @Test
   public void testInlineProviderStore() throws Exception {
-    SchemaProvider provider = new InlineSchemaProvider("(i int)", null);
+    SchemaProvider provider = new InlineSchemaProvider("(i int)");
     thrown.expect(UnsupportedOperationException.class);
     thrown.expectMessage("Schema storage is not supported");
     provider.store("i int", null, StorageStrategy.DEFAULT);
@@ -74,9 +74,7 @@ public class TestSchemaProvider {
 
   @Test
   public void testInlineProviderRead() throws Exception {
-    Map<String, String> properties = new LinkedHashMap<>();
-    properties.put("k1", "v1");
-    SchemaProvider provider = new InlineSchemaProvider("(i int)", properties);
+    SchemaProvider provider = new InlineSchemaProvider("(i int) properties { 'k1' = 'v1' }");
 
     SchemaContainer schemaContainer = provider.read();
     assertNotNull(schemaContainer);
@@ -87,11 +85,23 @@ public class TestSchemaProvider {
     assertEquals(1, metadata.size());
     assertEquals(TypeProtos.MinorType.INT, metadata.metadata("i").type());
 
+    Map<String, String> properties = new LinkedHashMap<>();
+    properties.put("k1", "v1");
     assertEquals(properties, metadata.properties());
 
     SchemaContainer.Version version = schemaContainer.getVersion();
     assertFalse(version.isUndefined());
     assertEquals(SchemaContainer.Version.CURRENT_DEFAULT_VERSION, version.getValue());
+  }
+
+  @Test
+  public void testInlineProviderWithoutColumns() throws Exception {
+    SchemaProvider provider = new InlineSchemaProvider("() properties { 'k1' = 'v1' }");
+    SchemaContainer schemaContainer = provider.read();
+    assertNotNull(schemaContainer);
+    TupleMetadata metadata = schemaContainer.getSchema();
+    assertTrue(metadata.isEmpty());
+    assertEquals("v1", metadata.property("k1"));
   }
 
   @Test
@@ -288,4 +298,25 @@ public class TestSchemaProvider {
     assertTrue(provider.exists());
     assertNotNull(provider.read());
   }
+
+  @Test
+  public void testPathProviderWithoutColumns() throws Exception {
+    Path schemaPath = folder.newFile("schema").toPath();
+    String schema = "{\n"
+      + "  \"table\" : \"tbl\",\n"
+      + "  \"schema\" : {\n"
+      + "    \"properties\" : {\n"
+      + "      \"prop\" : \"val\"\n"
+      + "    }\n"
+      + "  }\n"
+      + "}";
+    Files.write(schemaPath, Collections.singletonList(schema));
+    SchemaProvider provider = new PathSchemaProvider(new org.apache.hadoop.fs.Path(schemaPath.toUri().getPath()));
+    SchemaContainer schemaContainer = provider.read();
+    assertNotNull(schemaContainer);
+    TupleMetadata tableMetadata = schemaContainer.getSchema();
+    assertTrue(tableMetadata.isEmpty());
+    assertEquals("val", tableMetadata.property("prop"));
+  }
+
 }

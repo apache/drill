@@ -30,8 +30,8 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableInstance;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableParamDef;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableSignature;
+import org.apache.drill.exec.store.table.function.TableParamDef;
+import org.apache.drill.exec.store.table.function.TableSignature;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -61,7 +61,7 @@ final class FormatPluginOptionsDescriptor {
     JsonTypeName annotation = pluginConfigClass.getAnnotation(JsonTypeName.class);
     this.typeName = annotation != null ? annotation.value() : null;
     if (this.typeName != null) {
-      paramsByName.put("type", new TableParamDef("type", String.class));
+      paramsByName.put("type", TableParamDef.required("type", String.class, null));
     }
     for (Field field : fields) {
       if (Modifier.isStatic(field.getModifiers())
@@ -74,18 +74,20 @@ final class FormatPluginOptionsDescriptor {
         // calcite does not like char type. Just use String and enforce later that length == 1
         fieldType = String.class;
       }
-      paramsByName.put(field.getName(), new TableParamDef(field.getName(), fieldType).optional());
+      paramsByName.put(field.getName(), TableParamDef.optional(field.getName(), fieldType, null));
     }
     this.functionParamsByName = unmodifiableMap(paramsByName);
   }
 
   /**
-   * returns the table function signature for this format plugin config class
+   * Returns the table function signature for this format plugin config class.
+   *
    * @param tableName the table for which we want a table function signature
+   * @param tableParameters common table parameters to be included
    * @return the signature
    */
-  TableSignature getTableSignature(String tableName) {
-    return new TableSignature(tableName, params());
+  TableSignature getTableSignature(String tableName, List<TableParamDef> tableParameters) {
+    return TableSignature.of(tableName, tableParameters, params());
   }
 
   /**
@@ -106,23 +108,28 @@ final class FormatPluginOptionsDescriptor {
       if (i != 0) {
         sb.append(", ");
       }
-      sb.append(paramDef.name).append(": ").append(paramDef.type.getSimpleName());
+      sb.append(paramDef.getName()).append(": ").append(paramDef.getType().getSimpleName());
     }
     sb.append(")");
     return sb.toString();
   }
 
   /**
-   * creates an instance of the FormatPluginConfig based on the passed parameters
+   * Creates an instance of the FormatPluginConfig based on the passed parameters.
+   *
    * @param t the signature and the parameters passed to the table function
    * @return the corresponding config
    */
   FormatPluginConfig createConfigForTable(TableInstance t) {
+    List<TableParamDef> formatParams = t.sig.getSpecificParams();
+    // Exclude common params values, leave only format related params
+    List<Object> formatParamsValues = t.params.subList(0, t.params.size() - t.sig.getCommonParams().size());
+
     // Per the constructor, the first param is always "type"
-    TableParamDef typeParamDef = t.sig.params.get(0);
-    Object typeParam = t.params.get(0);
-    if (!typeParamDef.name.equals("type")
-        || typeParamDef.type != String.class
+    TableParamDef typeParamDef = formatParams.get(0);
+    Object typeParam = formatParamsValues.get(0);
+    if (!typeParamDef.getName().equals("type")
+        || typeParamDef.getType() != String.class
         || !(typeParam instanceof String)
         || !typeName.equalsIgnoreCase((String)typeParam)) {
       // if we reach here, there's a bug as all signatures generated start with a type parameter
@@ -131,7 +138,7 @@ final class FormatPluginOptionsDescriptor {
               "This function signature is not supported: %s\n"
               + "expecting %s",
               t.presentParams(), this.presentParams())
-          .addContext("table", t.sig.name)
+          .addContext("table", t.sig.getName())
           .build(logger);
     }
     FormatPluginConfig config;
@@ -142,11 +149,11 @@ final class FormatPluginOptionsDescriptor {
           .message(
               "configuration for format of type %s can not be created (class: %s)",
               this.typeName, pluginConfigClass.getName())
-          .addContext("table", t.sig.name)
+          .addContext("table", t.sig.getName())
           .build(logger);
     }
-    for (int i = 1; i < t.params.size(); i++) {
-      Object param = t.params.get(i);
+    for (int i = 1; i < formatParamsValues.size(); i++) {
+      Object param = formatParamsValues.get(i);
       if (param == null) {
         // when null is passed, we leave the default defined in the config class
         continue;
@@ -155,27 +162,27 @@ final class FormatPluginOptionsDescriptor {
         // normalize Java literals, ex: \t, \n, \r
         param = StringEscapeUtils.unescapeJava((String) param);
       }
-      TableParamDef paramDef = t.sig.params.get(i);
-      TableParamDef expectedParamDef = this.functionParamsByName.get(paramDef.name);
-      if (expectedParamDef == null || expectedParamDef.type != paramDef.type) {
+      TableParamDef paramDef = formatParams.get(i);
+      TableParamDef expectedParamDef = this.functionParamsByName.get(paramDef.getName());
+      if (expectedParamDef == null || expectedParamDef.getType() != paramDef.getType()) {
         throw UserException.parseError()
         .message(
             "The parameters provided are not applicable to the type specified:\n"
                 + "provided: %s\nexpected: %s",
             t.presentParams(), this.presentParams())
-        .addContext("table", t.sig.name)
+        .addContext("table", t.sig.getName())
         .build(logger);
       }
       try {
-        Field field = pluginConfigClass.getField(paramDef.name);
+        Field field = pluginConfigClass.getField(paramDef.getName());
         field.setAccessible(true);
         if (field.getType() == char.class && param instanceof String) {
           String stringParam = (String) param;
           if (stringParam.length() != 1) {
             throw UserException.parseError()
               .message("Expected single character but was String: %s", stringParam)
-              .addContext("table", t.sig.name)
-              .addContext("parameter", paramDef.name)
+              .addContext("table", t.sig.getName())
+              .addContext("parameter", paramDef.getName())
               .build(logger);
           }
           param = stringParam.charAt(0);
@@ -183,9 +190,9 @@ final class FormatPluginOptionsDescriptor {
         field.set(config, param);
       } catch (IllegalAccessException | NoSuchFieldException | SecurityException e) {
         throw UserException.parseError(e)
-            .message("can not set value %s to parameter %s: %s", param, paramDef.name, paramDef.type)
-            .addContext("table", t.sig.name)
-            .addContext("parameter", paramDef.name)
+            .message("Can not set value %s to parameter %s: %s", param, paramDef.getName(), paramDef.getType())
+            .addContext("table", t.sig.getName())
+            .addContext("parameter", paramDef.getName())
             .build(logger);
       }
     }

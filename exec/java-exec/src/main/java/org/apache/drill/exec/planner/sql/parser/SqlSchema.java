@@ -42,15 +42,17 @@ import java.util.Map;
 
 /**
  * Parent class for CREATE, DROP, DESCRIBE SCHEMA commands.
- * Holds logic common command property: table.
+ * Holds logic common command property: table, path.
  */
 public abstract class SqlSchema extends DrillSqlCall {
 
   protected final SqlIdentifier table;
+  protected final SqlNode path;
 
-  protected SqlSchema(SqlParserPos pos, SqlIdentifier table) {
+  protected SqlSchema(SqlParserPos pos, SqlIdentifier table, SqlNode path) {
     super(pos);
     this.table = table;
+    this.path = path;
   }
 
   @Override
@@ -84,6 +86,10 @@ public abstract class SqlSchema extends DrillSqlCall {
     return null;
   }
 
+  public String getPath() {
+    return path == null ? null : path.accept(LiteralVisitor.INSTANCE);
+  }
+
   /**
    * Visits literal and returns bare value (i.e. single quotes).
    */
@@ -105,7 +111,6 @@ public abstract class SqlSchema extends DrillSqlCall {
 
     private final SqlCharStringLiteral schema;
     private final SqlNode load;
-    private final SqlNode path;
     private final SqlNodeList properties;
     private final SqlLiteral createType;
 
@@ -124,10 +129,9 @@ public abstract class SqlSchema extends DrillSqlCall {
                   SqlNode path,
                   SqlNodeList properties,
                   SqlLiteral createType) {
-      super(pos, table);
+      super(pos, table, path);
       this.schema = schema;
       this.load = load;
-      this.path = path;
       this.properties = properties;
       this.createType = createType;
     }
@@ -200,10 +204,6 @@ public abstract class SqlSchema extends DrillSqlCall {
       return load == null ? null : load.accept(LiteralVisitor.INSTANCE);
     }
 
-    public String getPath() {
-      return path == null ? null : path.accept(LiteralVisitor.INSTANCE);
-    }
-
     public Map<String, String> getProperties() {
       if (properties == null) {
         return null;
@@ -239,7 +239,7 @@ public abstract class SqlSchema extends DrillSqlCall {
     };
 
     public Drop(SqlParserPos pos, SqlIdentifier table, SqlLiteral existenceCheck) {
-      super(pos, table);
+      super(pos, table, null);
       this.existenceCheck = existenceCheck;
     }
 
@@ -292,7 +292,7 @@ public abstract class SqlSchema extends DrillSqlCall {
     };
 
     public Describe(SqlParserPos pos, SqlIdentifier table, SqlLiteral format) {
-      super(pos, table);
+      super(pos, table, null);
       this.format = format;
     }
 

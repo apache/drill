@@ -19,6 +19,7 @@ package org.apache.drill.exec.record.metadata.schema;
 
 import org.apache.drill.exec.store.StorageStrategy;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -27,11 +28,9 @@ import java.util.Map;
 public class InlineSchemaProvider implements SchemaProvider {
 
   private final String schema;
-  private final Map<String, String> properties;
 
-  public InlineSchemaProvider(String schema, Map<String, String> properties) {
+  public InlineSchemaProvider(String schema) {
     this.schema = schema;
-    this.properties = properties;
   }
 
   @Override
@@ -45,8 +44,8 @@ public class InlineSchemaProvider implements SchemaProvider {
   }
 
   @Override
-  public SchemaContainer read() {
-    return new SchemaContainer(null, schema, properties);
+  public SchemaContainer read() throws IOException {
+    return new SchemaContainer(null, schema, null);
   }
 
   @Override

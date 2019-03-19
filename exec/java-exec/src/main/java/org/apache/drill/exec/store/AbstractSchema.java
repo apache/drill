@@ -26,7 +26,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
+import org.apache.drill.exec.record.metadata.schema.SchemaProviderFactory;
+import org.apache.drill.exec.store.table.function.TableParamDef;
+import org.apache.drill.exec.store.table.function.TableSignature;
+import org.apache.drill.exec.store.table.function.WithOptionsTableMacro;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.calcite.linq4j.tree.DefaultExpression;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
@@ -40,14 +49,41 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
 public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
 
+  private static final Expression EXPRESSION = new DefaultExpression(Object.class);
+
+  private static final String SCHEMA_PARAMETER_NAME = "schema";
+
+  /**
+   * Schema parameter for table function which creates schema provider based on given parameter value.
+   */
+  private static final TableParamDef SCHEMA_PARAMETER = TableParamDef.optional(
+    SCHEMA_PARAMETER_NAME, String.class, (drillTable, value) -> {
+      if (value == null) {
+        return;
+      }
+
+      SchemaProvider schemaProvider;
+      try {
+        schemaProvider = SchemaProviderFactory.create(String.valueOf(value));
+        // since we path schema here as table parameter
+        // read schema to ensure that schema is valid before query execution
+        schemaProvider.read();
+      } catch (IOException | IllegalArgumentException e) {
+        throw UserException.validationError(e)
+          .message(e.getMessage())
+          .addContext("Schema parameter value [%s]", value)
+          .build(logger);
+      }
+
+      drillTable.getMetadataProviderManager().setSchemaProvider(schemaProvider);
+    });
+
   protected final List<String> schemaPath;
   protected final String name;
-  private static final Expression EXPRESSION = new DefaultExpression(Object.class);
 
   public AbstractSchema(List<String> parentSchemaPath, String name) {
     name = name == null ? null : name.toLowerCase();
@@ -150,8 +186,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
 
   /**
    * Create stats table entry for given <i>tableName</i>.
-   * @param tableName
-   * @return
+   * @param tableName table name
+   * @return instance of create table entry
    */
   public CreateTableEntry createStatsTable(String tableName) {
     throw UserException.unsupportedError()
@@ -162,8 +198,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   /**
    * Create an append statistics table entry for given <i>tableName</i>. If there is not existing
    * statistics table, a new one is created.
-   * @param tableName
-   * @return
+   * @param tableName table name
+   * @return instance of create table entry
    */
   public CreateTableEntry appendToStatsTable(String tableName) {
     throw UserException.unsupportedError()
@@ -173,8 +209,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
 
   /**
    * Get the statistics table for given <i>tableName</i>
-   * @param tableName
-   * @return
+   * @param tableName table name
+   * @return instance of statistics table
    */
   public Table getStatsTable(String tableName) {
     throw UserException.unsupportedError()
@@ -195,9 +231,51 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
     return true;
   }
 
+  /**
+   * For the given table names returns list of acceptable table functions
+   * which are common for all Drill schemas. When overriding this method,
+   * parent functions must be included first to be evaluated first.
+   * If not included, parent functions won't be taken into account when creating table instance.
+   *
+   * @param name table name
+   * @return list of table functions
+   */
   @Override
   public Collection<Function> getFunctions(String name) {
-    return Collections.emptyList();
+    List<TableParamDef> parameters = getFunctionParameters();
+    TableSignature signature = TableSignature.of(name, parameters);
+    WithOptionsTableMacro function = new WithOptionsTableMacro(signature, arguments -> {
+      Table table = getTable(name);
+      if (table instanceof DrillTable) {
+        return applyFunctionParameters((DrillTable) table, parameters, arguments);
+      }
+      throw new DrillRuntimeException(String.format("Table [%s] is not of Drill table instance. " +
+        "Given instance is of [%s].", name, table.getClass().getName()));
+    });
+    return Collections.singletonList(function);
+  }
+
+  /**
+   * Returns of common table function parameters that can be used all Drill schema implementations.
+   *
+   * @return list of table function parameters
+   */
+  public List<TableParamDef> getFunctionParameters() {
+    return Collections.singletonList(SCHEMA_PARAMETER);
+  }
+
+  /**
+   * For the given list of parameters definitions executes action for the corresponding value.
+   *
+   * @param drillTable Drill table instance
+   * @param paramDefs parameter definitions
+   * @param values parameter values
+   * @return updated Drill table instance
+   */
+  public DrillTable applyFunctionParameters(DrillTable drillTable, List<TableParamDef> paramDefs, List<Object> values) {
+    IntStream.range(0, paramDefs.size())
+      .forEach(i -> paramDefs.get(i).apply(drillTable, values.get(i)));
+    return drillTable;
   }
 
   /**

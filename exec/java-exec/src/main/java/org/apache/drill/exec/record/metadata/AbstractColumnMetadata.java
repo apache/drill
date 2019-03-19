@@ -30,6 +30,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -69,7 +70,7 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   public static AbstractColumnMetadata createColumnMetadata(@JsonProperty("name") String name,
                                                             @JsonProperty("type") String type,
                                                             @JsonProperty("mode") DataMode mode,
-                                                            @JsonProperty("properties") Map<String, String> properties) {
+                                                            @JsonProperty("properties") Map<String, String> properties) throws IOException {
     ColumnMetadata columnMetadata = SchemaExprParser.parseColumn(name, type, mode);
     columnMetadata.setProperties(properties);
     return (AbstractColumnMetadata) columnMetadata;
@@ -314,8 +315,7 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
         builder.append(" DEFAULT '").append(defaultValue()).append("'");
       }
 
-      Map<String,String> copy = new HashMap<>();
-      copy.putAll(properties());
+      Map<String, String> copy = new HashMap<>(properties());
       copy.remove(FORMAT_PROP);
       copy.remove(DEFAULT_VALUE_PROP);
       if (! copy.isEmpty()) {

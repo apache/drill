@@ -27,6 +27,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
+import java.io.IOException;
+
 public class SchemaExprParser {
 
   /**
@@ -35,10 +37,15 @@ public class SchemaExprParser {
    *
    * @param schema schema definition
    * @return metadata description of the schema
+   * @throws IOException when unable to parse the schema
    */
-  public static TupleMetadata parseSchema(String schema) {
+  public static TupleMetadata parseSchema(String schema) throws IOException {
     SchemaVisitor visitor = new SchemaVisitor();
-    return visitor.visit(initParser(schema).schema());
+    try {
+      return visitor.visit(initParser(schema).schema());
+    } catch (SchemaParsingException e) {
+      throw new IOException(String.format("Unable to parse schema [%s]: %s", schema, e.getMessage()), e);
+    }
   }
 
   /**
@@ -48,8 +55,9 @@ public class SchemaExprParser {
    * @param type column type
    * @param mode column mode
    * @return column metadata
+   * @throws IOException when unable to parse the column
    */
-  public static ColumnMetadata parseColumn(String name, String type, TypeProtos.DataMode mode) {
+  public static ColumnMetadata parseColumn(String name, String type, TypeProtos.DataMode mode) throws IOException {
     return parseColumn(String.format("`%s` %s %s",
       name.replaceAll("(\\\\)|(`)", "\\\\$0"),
       type,
@@ -62,10 +70,15 @@ public class SchemaExprParser {
    *
    * @param column column definition
    * @return metadata description of the column
+   * @throws IOException when unable to parse the column
    */
-  public static ColumnMetadata parseColumn(String column) {
+  public static ColumnMetadata parseColumn(String column) throws IOException {
     SchemaVisitor.ColumnVisitor visitor = new SchemaVisitor.ColumnVisitor();
-    return visitor.visit(initParser(column).column());
+    try {
+      return visitor.visit(initParser(column).column());
+    } catch (SchemaParsingException e) {
+      throw new IOException(String.format("Unable to parse column [%s]: %s", column, e.getMessage()), e);
+    }
   }
 
   private static SchemaParser initParser(String value) {
