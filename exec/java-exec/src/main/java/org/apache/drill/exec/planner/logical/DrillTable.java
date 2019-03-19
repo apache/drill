@@ -105,8 +105,8 @@ public abstract class DrillTable implements Table {
     this.scan = scan;
   }
 
-  public void setTableMetadataProviderBuilder(MetadataProviderManager metadataProviderBuilder) {
-    this.metadataProviderManager = metadataProviderBuilder;
+  public void setTableMetadataProviderManager(MetadataProviderManager metadataProviderManager) {
+    this.metadataProviderManager = metadataProviderManager;
   }
 
   public GroupScan getGroupScan() throws IOException {
@@ -121,7 +121,7 @@ public abstract class DrillTable implements Table {
   }
 
   /**
-   * Returns builder for {@link TableMetadataProvider} which may provide null for the case when scan wasn't created.
+   * Returns manager for {@link TableMetadataProvider} which may provide null for the case when scan wasn't created.
    * This method should be used only for the case when it is possible to obtain {@link TableMetadataProvider} when supplier returns null
    * or {@link TableMetadataProvider} usage may be omitted.
    *
@@ -130,7 +130,7 @@ public abstract class DrillTable implements Table {
   public MetadataProviderManager getMetadataProviderManager() {
     if (metadataProviderManager == null) {
       // for the case when scan wasn't initialized, return null to avoid reading data which may be pruned in future
-      metadataProviderManager = FileSystemMetadataProviderManager.getMetadataProviderManager();
+      metadataProviderManager = FileSystemMetadataProviderManager.init();
       if (scan != null) {
         metadataProviderManager.setTableMetadataProvider(scan.getMetadataProvider());
       }

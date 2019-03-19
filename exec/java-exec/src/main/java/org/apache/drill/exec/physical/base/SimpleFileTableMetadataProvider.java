@@ -124,7 +124,7 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
 
     @Override
     @SuppressWarnings("unchecked")
-    public TableMetadataProvider build() throws IOException {
+    public TableMetadataProvider build() {
       SchemaProvider schemaProvider = metadataProviderManager.getSchemaProvider();
       TableMetadataProvider source = metadataProviderManager.getTableMetadataProvider();
       if (source == null) {
@@ -152,8 +152,9 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
           } else {
             schema = schemaProvider != null ? schemaProvider.read().getSchema() : null;
           }
-        } catch (IOException e) {
-          logger.debug("Unable to deserialize schema from schema file for table: " + (tableName != null ? tableName : location), e);
+        } catch (IOException | IllegalArgumentException e) {
+          logger.debug("Unable to read schema from schema provider [{}]: {}", (tableName != null ? tableName : location), e.getMessage());
+          logger.trace("Error when reading the schema", e);
         }
         TableMetadata tableMetadata = new FileTableMetadata(tableName,
             location, schema,

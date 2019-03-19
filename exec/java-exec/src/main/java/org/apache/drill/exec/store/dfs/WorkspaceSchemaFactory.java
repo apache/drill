@@ -36,13 +36,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Function;
-import org.apache.calcite.schema.FunctionParameter;
 import org.apache.calcite.schema.Table;
-import org.apache.calcite.schema.TableMacro;
-import org.apache.calcite.schema.TranslatableTable;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.config.LogicalPlanPersistence;
@@ -61,7 +56,6 @@ import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
@@ -70,6 +64,9 @@ import org.apache.drill.exec.record.metadata.schema.FsMetastoreSchemaProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.table.function.TableParamDef;
+import org.apache.drill.exec.store.table.function.TableSignature;
+import org.apache.drill.exec.store.table.function.WithOptionsTableMacro;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.easy.json.JSONFormatPlugin;
@@ -220,81 +217,21 @@ public class WorkspaceSchemaFactory {
     }
   }
 
-  /**
-   * Implementation of a table macro that generates a table based on parameters
-   */
-  static final class WithOptionsTableMacro implements TableMacro {
-
-    private final TableSignature sig;
-    private final WorkspaceSchema schema;
-
-    WithOptionsTableMacro(TableSignature sig, WorkspaceSchema schema) {
-      super();
-      this.sig = sig;
-      this.schema = schema;
-    }
-
-    @Override
-    public List<FunctionParameter> getParameters() {
-      List<FunctionParameter> result = new ArrayList<>();
-      for (int i = 0; i < sig.params.size(); i++) {
-        final TableParamDef p = sig.params.get(i);
-        final int ordinal = i;
-        result.add(new FunctionParameter() {
-          @Override
-          public int getOrdinal() {
-            return ordinal;
-          }
-
-          @Override
-          public String getName() {
-            return p.name;
-          }
-
-          @Override
-          public RelDataType getType(RelDataTypeFactory typeFactory) {
-            return typeFactory.createJavaType(p.type);
-          }
-
-          @Override
-          public boolean isOptional() {
-            return p.optional;
-          }
-        });
-      }
-      return result;
-    }
-
-    @Override
-    public TranslatableTable apply(List<Object> arguments) {
-      DrillTable drillTable = schema.getDrillTable(new TableInstance(sig, arguments));
-      if (drillTable == null) {
-        throw UserException
-            .validationError()
-            .message("Unable to find table [%s] in schema [%s]", sig.name, schema.getFullSchemaName())
-            .build(logger);
-    }
-      return new DrillTranslatableTable(drillTable);
-    }
-
-  }
-
   private static Object[] array(Object... objects) {
     return objects;
   }
 
-  static final class TableInstance {
+  public static final class TableInstance {
     final TableSignature sig;
     final List<Object> params;
 
-    TableInstance(TableSignature sig, List<Object> params) {
-      super();
-      if (params.size() != sig.params.size()) {
+    public TableInstance(TableSignature sig, List<Object> params) {
+      if (params.size() != sig.getParams().size()) {
         throw UserException.parseError()
             .message(
                 "should have as many params (%d) as signature (%d)",
-                params.size(), sig.params.size())
-            .addContext("table", sig.name)
+                params.size(), sig.getParams().size())
+            .addContext("table", sig.getName())
             .build(logger);
       }
       this.sig = sig;
@@ -312,8 +249,8 @@ public class WorkspaceSchemaFactory {
           } else {
             sb.append(", ");
           }
-          TableParamDef paramDef = sig.params.get(i);
-          sb.append(paramDef.name).append(": ").append(paramDef.type.getSimpleName()).append(" => ").append(param);
+          TableParamDef paramDef = sig.getParams().get(i);
+          sb.append(paramDef.getName()).append(": ").append(paramDef.getType().getSimpleName()).append(" => ").append(param);
         }
       }
       sb.append(")");
@@ -339,86 +276,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public String toString() {
-      return sig.name + (params.size() == 0 ? "" : presentParams());
-    }
-  }
-
-  static final class TableParamDef {
-    final String name;
-    final Class<?> type;
-    final boolean optional;
-
-    TableParamDef(String name, Class<?> type) {
-      this(name, type, false);
-    }
-
-    TableParamDef(String name, Class<?> type, boolean optional) {
-      this.name = name;
-      this.type = type;
-      this.optional = optional;
-    }
-
-    TableParamDef optional() {
-      return new TableParamDef(name, type, true);
-    }
-
-    private Object[] toArray() {
-      return array(name, type, optional);
-    }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(toArray());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj instanceof TableParamDef) {
-        return Arrays.equals(this.toArray(), ((TableParamDef)obj).toArray());
-      }
-      return false;
-    }
-
-    @Override
-    public String toString() {
-      String p = name + ": " + type;
-      return optional ? "[" + p + "]" : p;
-    }
-  }
-
-  static final class TableSignature {
-    final String name;
-    final List<TableParamDef> params;
-
-    TableSignature(String name, TableParamDef... params) {
-      this(name, Arrays.asList(params));
-    }
-
-    TableSignature(String name, List<TableParamDef> params) {
-      this.name = name;
-      this.params = unmodifiableList(params);
-    }
-
-    private Object[] toArray() {
-      return array(name, params);
-    }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(toArray());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj instanceof TableSignature) {
-        return Arrays.equals(this.toArray(), ((TableSignature)obj).toArray());
-      }
-      return false;
-    }
-
-    @Override
-    public String toString() {
-      return name + params;
+      return sig.getName() + (params.size() == 0 ? "" : presentParams());
     }
   }
 
@@ -500,7 +358,7 @@ public class WorkspaceSchemaFactory {
 
     private Set<String> rawTableNames() {
       return tables.keySet().stream()
-          .map(input -> input.sig.name)
+          .map(input -> input.sig.getName())
           .collect(Collectors.toSet());
     }
 
@@ -516,10 +374,16 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public List<Function> getFunctions(String name) {
-      List<TableSignature> sigs = optionExtractor.getTableSignatures(name);
-      return sigs.stream()
-          .map(input -> new WithOptionsTableMacro(input, WorkspaceSchema.this))
-          .collect(Collectors.toList());
+      // add parent functions first
+      List<Function> functions = new ArrayList<>(super.getFunctions(name));
+
+      List<TableParamDef> tableParameters = getFunctionParameters();
+      List<TableSignature> signatures = optionExtractor.getTableSignatures(name, tableParameters);
+      signatures.stream()
+        .map(signature -> new WithOptionsTableMacro(signature, params -> getDrillTable(new TableInstance(signature, params))))
+        .forEach(functions::add);
+
+      return functions;
     }
 
     private View getView(DotDrillFile f) throws IOException {
@@ -529,7 +393,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public Table getTable(String tableName) {
-      TableInstance tableKey = new TableInstance(new TableSignature(tableName), ImmutableList.of());
+      TableInstance tableKey = new TableInstance(TableSignature.of(tableName), ImmutableList.of());
       // first check existing tables.
       if (tables.alreadyContainsKey(tableKey)) {
         return tables.get(tableKey);
@@ -549,7 +413,7 @@ public class WorkspaceSchemaFactory {
               .build(logger);
           }
         } catch (IOException e) {
-          logger.warn("Failure while trying to list view tables in workspace [{}]", tableName, getFullSchemaName(), e);
+          logger.warn("Failure while trying to list view tables in workspace [{}]", getFullSchemaName(), e);
         }
 
         for (DotDrillFile f : files) {
@@ -574,11 +438,11 @@ public class WorkspaceSchemaFactory {
       }
       final DrillTable table = tables.get(tableKey);
       if (table != null) {
-        MetadataProviderManager providerManager = FileSystemMetadataProviderManager.getMetadataProviderManager();
+        MetadataProviderManager providerManager = FileSystemMetadataProviderManager.init();
 
         setMetadataTable(providerManager, table, tableName);
         setSchema(providerManager, tableName);
-        table.setTableMetadataProviderBuilder(providerManager);
+        table.setTableMetadataProviderManager(providerManager);
       }
       return table;
     }
@@ -589,7 +453,7 @@ public class WorkspaceSchemaFactory {
           FsMetastoreSchemaProvider schemaProvider = new FsMetastoreSchemaProvider(this, tableName);
           providerManager.setSchemaProvider(schemaProvider);
         } catch (IOException e) {
-          logger.debug("Unable to deserialize schema from schema file for table: " + tableName, e);
+          logger.debug("Unable to init schema provider for table [{}]", tableName, e);
         }
       }
     }
@@ -684,7 +548,7 @@ public class WorkspaceSchemaFactory {
       ensureNotStatsTable(tableName);
       final String statsTableName = getStatsTableName(tableName);
       FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.DEFAULT_NAME);
-      return createOrAppendToTable(statsTableName, formatPlugin, ImmutableList.<String>of(),
+      return createOrAppendToTable(statsTableName, formatPlugin, Collections.emptyList(),
           StorageStrategy.DEFAULT);
     }
 
@@ -693,7 +557,7 @@ public class WorkspaceSchemaFactory {
       ensureNotStatsTable(tableName);
       final String statsTableName = getStatsTableName(tableName);
       FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.DEFAULT_NAME);
-      return createOrAppendToTable(statsTableName, formatPlugin, ImmutableList.<String>of(),
+      return createOrAppendToTable(statsTableName, formatPlugin, Collections.emptyList(),
           StorageStrategy.DEFAULT);
     }
 
@@ -726,14 +590,14 @@ public class WorkspaceSchemaFactory {
     @Override
     public DrillTable create(TableInstance key) {
       try {
-        final FileSelection fileSelection = FileSelection.create(getFS(), config.getLocation(), key.sig.name, config.allowAccessOutsideWorkspace());
+        final FileSelection fileSelection = FileSelection.create(getFS(), config.getLocation(), key.sig.getName(), config.allowAccessOutsideWorkspace());
         if (fileSelection == null) {
           return null;
         }
 
         boolean hasDirectories = fileSelection.containsDirectories(getFS());
 
-        if (key.sig.params.size() > 0) {
+        if (key.sig.getParams().size() > 0) {
           FileSelection newSelection = detectEmptySelection(fileSelection, hasDirectories);
 
           if (newSelection.isEmptyDirectory()) {
@@ -742,7 +606,15 @@ public class WorkspaceSchemaFactory {
 
           FormatPluginConfig formatConfig = optionExtractor.createConfigForTable(key);
           FormatSelection selection = new FormatSelection(formatConfig, newSelection);
-          return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
+          DrillTable drillTable = new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
+
+          List<TableParamDef> commonParams = key.sig.getCommonParams();
+          if (commonParams.isEmpty()) {
+            return drillTable;
+          }
+          // extract only common parameters related values
+          List<Object> paramValues = key.params.subList(key.params.size() - commonParams.size(), key.params.size());
+          return applyFunctionParameters(drillTable, commonParams, paramValues);
         }
 
         if (hasDirectories) {
@@ -811,7 +683,7 @@ public class WorkspaceSchemaFactory {
           }
         }
       } catch (IOException e) {
-        logger.debug("Failed to find format matcher for file: %s", file, e);
+        logger.debug("Failed to find format matcher for file: {}", file, e);
       }
       return null;
     }
@@ -925,7 +797,7 @@ public class WorkspaceSchemaFactory {
     @Override
     public List<Map.Entry<String, TableType>> getTableNamesAndTypes() {
       return Stream.concat(
-          tables.entrySet().stream().map(kv -> Pair.of(kv.getKey().sig.name, kv.getValue().getJdbcTableType())),
+          tables.entrySet().stream().map(kv -> Pair.of(kv.getKey().sig.getName(), kv.getValue().getJdbcTableType())),
           getViews().stream().map(viewName -> Pair.of(viewName, TableType.VIEW))
       ).collect(Collectors.toList());
     }

@@ -45,7 +45,7 @@ public class FsMetastoreSchemaProvider extends PathSchemaProvider {
   }
 
   @Override
-  protected SchemaContainer createTableSchema(String schema, Map<String, String> properties) {
+  protected SchemaContainer createTableSchema(String schema, Map<String, String> properties) throws IOException {
     return new SchemaContainer(tableName, schema, properties);
   }
 }

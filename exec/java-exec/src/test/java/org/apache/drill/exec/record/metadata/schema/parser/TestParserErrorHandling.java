@@ -21,131 +21,133 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
+
 public class TestParserErrorHandling {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void testUnsupportedType() {
+  public void testUnsupportedType() throws Exception {
     String schema = "col unk_type";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testVarcharWithScale() {
+  public void testVarcharWithScale() throws Exception {
     String schema = "col varchar(1, 2)";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     thrown.expectMessage("missing ')' at ','");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testUnquotedKeyword() {
+  public void testUnquotedKeyword() throws Exception {
     String schema = "int varchar";
-    thrown.expect(SchemaParsingException.class);
-    thrown.expectMessage("mismatched input 'int' expecting {'(', ID, QUOTED_ID}");
+    thrown.expect(IOException.class);
+    thrown.expectMessage("mismatched input 'int'");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testUnquotedId() {
+  public void testUnquotedId() throws Exception {
     String schema = "id with space varchar";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testUnescapedBackTick() {
+  public void testUnescapedBackTick() throws Exception {
     String schema = "`c`o`l` varchar";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testUnescapedBackSlash() {
+  public void testUnescapedBackSlash() throws Exception {
     String schema = "`c\\o\\l` varchar";
-    thrown.expect(SchemaParsingException.class);
-    thrown.expectMessage("extraneous input '`' expecting {'(', ID, QUOTED_ID}");
+    thrown.expect(IOException.class);
+    thrown.expectMessage("extraneous input '`'");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testMissingType() {
+  public void testMissingType() throws Exception {
     String schema = "col not null";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testIncorrectEOF() {
+  public void testIncorrectEOF() throws Exception {
     String schema = "col int not null footer";
-    thrown.expect(SchemaParsingException.class);
-    thrown.expectMessage("extraneous input 'footer' expecting <EOF>");
+    thrown.expect(IOException.class);
+    thrown.expectMessage("extraneous input 'footer'");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testSchemaWithOneParen() {
+  public void testSchemaWithOneParen() throws Exception {
     String schema = "(col int not null";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     thrown.expectMessage("missing ')' at '<EOF>'");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testMissingAngleBracket() {
+  public void testMissingAngleBracket() throws Exception {
     String schema = "col array<int not null";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     thrown.expectMessage("missing '>' at 'not'");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testUnclosedAngleBracket() {
+  public void testUnclosedAngleBracket() throws Exception {
     String schema = "col struct<m array<int> not null";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     thrown.expectMessage("missing '>' at '<EOF>'");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testMissingColumnNameForStruct() {
+  public void testMissingColumnNameForStruct() throws Exception {
     String schema = "col struct<int> not null";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     thrown.expectMessage("mismatched input 'int' expecting {ID, QUOTED_ID}");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testMissingNotBeforeNull() {
+  public void testMissingNotBeforeNull() throws Exception {
     String schema = "col int null";
-    thrown.expect(SchemaParsingException.class);
-    thrown.expectMessage("extraneous input 'null' expecting <EOF>");
+    thrown.expect(IOException.class);
+    thrown.expectMessage("extraneous input 'null'");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testExtraComma() {
+  public void testExtraComma() throws Exception {
     String schema = "id int,, name varchar";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     thrown.expectMessage("extraneous input ',' expecting {ID, QUOTED_ID}");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void testExtraCommaEOF() {
+  public void testExtraCommaEOF() throws Exception {
     String schema = "id int, name varchar,";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     thrown.expectMessage("mismatched input '<EOF>' expecting {ID, QUOTED_ID}");
     SchemaExprParser.parseSchema(schema);
   }
 
   @Test
-  public void incorrectNumber() {
+  public void incorrectNumber() throws Exception {
     String schema = "id decimal(5, 02)";
-    thrown.expect(SchemaParsingException.class);
+    thrown.expect(IOException.class);
     thrown.expectMessage("extraneous input '2' expecting ')'");
     SchemaExprParser.parseSchema(schema);
   }

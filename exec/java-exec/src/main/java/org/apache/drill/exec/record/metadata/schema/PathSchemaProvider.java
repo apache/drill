@@ -124,7 +124,7 @@ public class PathSchemaProvider implements SchemaProvider {
     return fs.exists(path);
   }
 
-  protected SchemaContainer createTableSchema(String schema, Map<String, String> properties) {
+  protected SchemaContainer createTableSchema(String schema, Map<String, String> properties) throws IOException {
     return new SchemaContainer(null, schema, properties);
   }
 

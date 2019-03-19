@@ -376,9 +376,9 @@ void addProperty(SqlNodeList properties) :
   | < NUM: <DIGIT> (" " | "\t" | "\n" | "\r")* >
     // once schema is found, switch back to initial lexical state
     // must be enclosed in the parentheses
-    // inside may have left parenthesis only if number precededs (covers cases with varchar(10)),
+    // inside may have left parenthesis only if number precedes (covers cases with varchar(10)),
     // if left parenthesis is present in column name, it must be escaped with backslash
-  | < PAREN_STRING: <LPAREN> ((~[")"]) | (<NUM> ")") | ("\\)"))+ <RPAREN> > { popState(); }
+  | < PAREN_STRING: <LPAREN> ((~[")"]) | (<NUM> ")") | ("\\)"))* <RPAREN> > { popState(); }
 }
 
 /**

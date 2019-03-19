@@ -71,18 +71,17 @@ public class TestSelectWithOption extends BaseTestQuery {
         "\"b\"|\"1\"",
         "\"b\"|\"2\"");
 
-    String queryTemplate =
-        "select columns from table(%s (type => 'TeXT', fieldDelimiter => '%s'))";
+    String queryTemplate = "select columns from table(%s (type => 'TeXT', fieldDelimiter => '%s'))";
+
     testWithResult(format(queryTemplate, tableName, ","),
         listOf("b\"|\"0"),
         listOf("b\"|\"1"),
-        listOf("b\"|\"2")
-      );
+        listOf("b\"|\"2"));
+
     testWithResult(format(queryTemplate, tableName, "|"),
         listOf("b", "0"),
         listOf("b", "1"),
-        listOf("b", "2")
-      );
+        listOf("b", "2"));
   }
 
   @Test
@@ -163,8 +162,7 @@ public class TestSelectWithOption extends BaseTestQuery {
     testWithResult(format("select columns from table(%s(type => 'TeXT', fieldDelimiter => '|', quote => '@'))", tableName),
         listOf("\"b\"", "\"0\""),
         listOf("\"b\"", "\"1\""),
-        listOf("\"b\"", "\"2\"")
-        );
+        listOf("\"b\"", "\"2\""));
 
     String quoteTableName = genCSVTable("testTextQuote2",
         "@b@|@0@",
@@ -172,8 +170,7 @@ public class TestSelectWithOption extends BaseTestQuery {
     // It seems that a parameter can not be called "escape"
     testWithResult(format("select columns from table(%s(`escape` => '$', type => 'TeXT', fieldDelimiter => '|', quote => '@'))", quoteTableName),
         listOf("b", "0"),
-        listOf("b$@c", "1") // shouldn't $ be removed here?
-        );
+        listOf("b$@c", "1")); // shouldn't $ be removed here?
   }
 
   @Test
@@ -184,8 +181,7 @@ public class TestSelectWithOption extends BaseTestQuery {
           "b|1");
       testWithResult(format("select columns from table(%s(type => 'TeXT', fieldDelimiter => '|', comment => '@'))", commentTableName),
           listOf("b", "0"),
-          listOf("b", "1")
-          );
+          listOf("b", "1"));
   }
 
   @Test
@@ -196,8 +192,7 @@ public class TestSelectWithOption extends BaseTestQuery {
         "b|1");
     testWithResult(format("select columns from table(%s(type => 'TeXT', fieldDelimiter => '|', skipFirstLine => true))", headerTableName),
         listOf("b", "0"),
-        listOf("b", "1")
-        );
+        listOf("b", "1"));
 
     testBuilder()
         .sqlQuery(format("select a, b from table(%s(type => 'TeXT', fieldDelimiter => '|', extractHeader => true))", headerTableName))
@@ -205,7 +200,7 @@ public class TestSelectWithOption extends BaseTestQuery {
         .baselineColumns("b", "a")
         .baselineValues("b", "0")
         .baselineValues("b", "1")
-        .build().run();
+        .go();
   }
 
   @Test
@@ -214,18 +209,9 @@ public class TestSelectWithOption extends BaseTestQuery {
         "a,b",
         "c|d");
     // Using the defaults in TextFormatConfig (the field delimiter is neither "," not "|")
-    String[] csvQueries = {
-//        format("select columns from %s ('TeXT')", csvTableName),
-//        format("select columns from %s('TeXT')", csvTableName),
-        format("select columns from table(%s ('TeXT'))", csvTableName),
-        format("select columns from table(%s (type => 'TeXT'))", csvTableName),
-//        format("select columns from %s (type => 'TeXT')", csvTableName)
-    };
-    for (String csvQuery : csvQueries) {
-      testWithResult(csvQuery,
-          listOf("a,b"),
-          listOf("c|d"));
-    }
+    testWithResult(format("select columns from table(%s (type => 'TeXT'))", csvTableName),
+      listOf("a,b"),
+      listOf("c|d"));
     // the drill config file binds .csv to "," delimited
     testWithResult(format("select columns from %s", csvTableName),
           listOf("a", "b"),
@@ -248,7 +234,6 @@ public class TestSelectWithOption extends BaseTestQuery {
         listOf("{\"columns\": [\"f\"", "g\"]}\n")
         );
     String[] jsonQueries = {
-        format("select columns from table(%s ('JSON'))", jsonTableName),
         format("select columns from table(%s(type => 'JSON'))", jsonTableName),
         // we can use named format plugin configurations too!
         format("select columns from table(%s(type => 'Named', name => 'json'))", jsonTableName),
@@ -266,15 +251,8 @@ public class TestSelectWithOption extends BaseTestQuery {
     // the extension is actually csv
     test("use dfs");
     try {
-      String[] jsonQueries = {
-          format("select columns from table(%s ('JSON'))", jsonTableName),
-          format("select columns from table(%s(type => 'JSON'))", jsonTableName),
-      };
-      for (String jsonQuery : jsonQueries) {
-        testWithResult(jsonQuery, listOf("f","g"));
-      }
-
-      testWithResult(format("select length(columns[0]) as columns from table(%s ('JSON'))", jsonTableName), 1L);
+      testWithResult(format("select columns from table(%s(type => 'JSON'))", jsonTableName), listOf("f","g"));
+      testWithResult(format("select length(columns[0]) as columns from table(%s (type => 'JSON'))", jsonTableName), 1L);
     } finally {
       test("use sys");
     }
@@ -287,7 +265,7 @@ public class TestSelectWithOption extends BaseTestQuery {
     try {
       test("select * from table(`%s`.`%s`(type=>'parquet'))", schema, tableName);
     } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format("Unable to find table [%s] in schema [%s]", tableName, schema)));
+      assertThat(e.getMessage(), containsString(String.format("Unable to find table [%s]", tableName)));
       throw e;
     }
   }
