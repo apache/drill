@@ -19,6 +19,7 @@ package org.apache.drill.metastore;
 
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.expr.ExactStatisticsConstants;
+import org.apache.drill.exec.physical.impl.statistics.Statistic;
 
 import java.util.Collection;
 
@@ -28,7 +29,7 @@ import java.util.Collection;
  */
 public enum TableStatisticsKind implements CollectableTableStatisticsKind {
   /**
-   * Table statistics kind which represents row count for the specific column.
+   * Table statistics kind which represents row count for the specific table.
    */
   ROW_COUNT(ExactStatisticsConstants.ROW_COUNT) {
     @Override
@@ -55,6 +56,49 @@ public enum TableStatisticsKind implements CollectableTableStatisticsKind {
     @Override
     public boolean isExact() {
       return true;
+    }
+  },
+
+  /**
+   * Table statistics kind which represents estimated row count for the specific table.
+   */
+  EST_ROW_COUNT(Statistic.ROWCOUNT) {
+    @Override
+    public Double mergeStatistics(Collection<? extends BaseMetadata> statisticsList) {
+      double rowCount = 0;
+      for (BaseMetadata statistics : statisticsList) {
+        Double statRowCount = (Double) statistics.getStatistic(this);
+        if (statRowCount != null) {
+          rowCount += statRowCount;
+        }
+      }
+      return rowCount;
+    }
+
+    @Override
+    public Double getValue(BaseMetadata metadata) {
+      return (Double) metadata.getStatistic(this);
+    }
+  },
+
+  /**
+   * Table statistics kind which represents estimated row count for the specific table.
+   */
+  HAS_STATISTICS("has_statistics") {
+    @Override
+    public Boolean mergeStatistics(Collection<? extends BaseMetadata> statisticsList) {
+      for (BaseMetadata statistics : statisticsList) {
+        Boolean hasStatistics = (Boolean) statistics.getStatistic(this);
+        if (hasStatistics == null || !hasStatistics) {
+          return false;
+        }
+      }
+      return Boolean.TRUE;
+    }
+
+    @Override
+    public Boolean getValue(BaseMetadata metadata) {
+      return Boolean.TRUE.equals(metadata.getStatistic(this));
     }
   };
 

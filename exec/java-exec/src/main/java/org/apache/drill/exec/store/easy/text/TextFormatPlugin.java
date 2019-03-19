@@ -32,6 +32,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
@@ -43,7 +44,6 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.RecordReader;
@@ -273,19 +273,19 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, TupleMetadata schema)
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, MetadataProviderManager metadataProviderManager)
       throws IOException {
-    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot, schema);
+    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot, metadataProviderManager);
   }
 
   @Override
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
-      List<SchemaPath> columns, OptionManager options, TupleMetadata schema) throws IOException {
+      List<SchemaPath> columns, OptionManager options, MetadataProviderManager metadataProviderManager) throws IOException {
     return new EasyGroupScan(userName, selection, this, columns,
         selection.selectionRoot,
         // Some paths provide a null option manager. In that case, default to a
         // min width of 1; just like the base class.
-        options == null ? 1 : (int) options.getLong(ExecConstants.MIN_READER_WIDTH_KEY), schema);
+        options == null ? 1 : (int) options.getLong(ExecConstants.MIN_READER_WIDTH_KEY), metadataProviderManager);
   }
 
   @Override

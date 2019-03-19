@@ -22,10 +22,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
+import org.apache.drill.exec.physical.base.TableMetadataProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
@@ -591,6 +598,38 @@ public class SqlConverter {
   }
 
   /**
+   * Key for storing / obtaining {@link TableMetadataProvider} instance from {@link LoadingCache}.
+   */
+  private static class DrillTableKey {
+    private final SchemaPath key;
+    private final DrillTable drillTable;
+
+    public DrillTableKey(SchemaPath key, DrillTable drillTable) {
+      this.key = key;
+      this.drillTable = drillTable;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+
+      DrillTableKey that = (DrillTableKey) obj;
+
+      return Objects.equals(key, that.key);
+    }
+
+    @Override
+    public int hashCode() {
+      return key != null ? key.hashCode() : 0;
+    }
+  }
+
+  /**
    * Extension of {@link CalciteCatalogReader} to add ability to check for temporary tables first
    * if schema is not indicated near table name during query parsing
    * or indicated workspace is default temporary workspace.
@@ -602,6 +641,7 @@ public class SqlConverter {
     private boolean allowTemporaryTables;
     private final SchemaPlus rootSchema;
 
+    private final LoadingCache<DrillTableKey, MetadataProviderManager> tableCache;
 
     DrillCalciteCatalogReader(SchemaPlus rootSchema,
                               boolean caseSensitive,
@@ -615,6 +655,14 @@ public class SqlConverter {
       this.session = session;
       this.allowTemporaryTables = true;
       this.rootSchema = rootSchema;
+      this.tableCache =
+          CacheBuilder.newBuilder()
+            .build(new CacheLoader<DrillTableKey, MetadataProviderManager>() {
+              @Override
+              public MetadataProviderManager load(DrillTableKey key) {
+                return key.drillTable.getMetadataProviderManager();
+              }
+            });
     }
 
     /**
@@ -648,7 +696,7 @@ public class SqlConverter {
      * @throws UserException if temporary tables usage is disallowed
      */
     @Override
-    public Prepare.PreparingTable getTable(final List<String> names) {
+    public Prepare.PreparingTable getTable(List<String> names) {
       String originalTableName = session.getOriginalTableNameFromTemporaryTable(names.get(names.size() - 1));
       if (originalTableName != null) {
         if (!allowTemporaryTables) {
@@ -660,10 +708,13 @@ public class SqlConverter {
       }
 
       Prepare.PreparingTable table = super.getTable(names);
-      DrillTable unwrap;
+      DrillTable drillTable;
       // add session options if found table is Drill table
-      if (table != null && (unwrap = table.unwrap(DrillTable.class)) != null) {
-        unwrap.setOptions(session.getOptions());
+      if (table != null && (drillTable = table.unwrap(DrillTable.class)) != null) {
+        drillTable.setOptions(session.getOptions());
+
+        drillTable.setTableMetadataProviderBuilder(tableCache.getUnchecked(
+            new DrillTableKey(SchemaPath.getCompoundPath(names.toArray(new String[0])), drillTable)));
       }
       return table;
     }

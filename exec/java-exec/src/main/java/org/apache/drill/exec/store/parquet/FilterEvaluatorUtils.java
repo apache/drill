@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaPathUtils;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
 import org.apache.drill.metastore.RowGroupMetadata;
 import org.apache.drill.metastore.TableStatisticsKind;
@@ -71,7 +71,7 @@ public class FilterEvaluatorUtils {
   }
 
   public static RowsMatch matches(LogicalExpression expr, Map<SchemaPath, ColumnStatistics> columnsStatistics,
-      TupleSchema schema, long rowCount, UdfUtilities udfUtilities, FunctionLookupContext functionImplementationRegistry) {
+      TupleMetadata schema, long rowCount, UdfUtilities udfUtilities, FunctionLookupContext functionImplementationRegistry) {
     ErrorCollector errorCollector = new ErrorCollectorImpl();
 
     LogicalExpression materializedFilter = ExpressionTreeMaterializer.materializeFilterExpr(
@@ -94,7 +94,7 @@ public class FilterEvaluatorUtils {
 
   public static RowsMatch matches(FilterPredicate parquetPredicate,
                                   Map<SchemaPath, ColumnStatistics> columnsStatistics,
-                                  long rowCount, TupleSchema fileMetadata, Set<SchemaPath> schemaPathsInExpr) {
+                                  long rowCount, TupleMetadata fileMetadata, Set<SchemaPath> schemaPathsInExpr) {
     RowsMatch temp = matches(parquetPredicate, columnsStatistics, rowCount);
     return temp == RowsMatch.ALL && isRepeated(schemaPathsInExpr, fileMetadata) ? RowsMatch.SOME : temp;
   }
@@ -108,7 +108,7 @@ public class FilterEvaluatorUtils {
     return RowsMatch.SOME;
   }
 
-  private static boolean isRepeated(Set<SchemaPath> fields, TupleSchema fileMetadata) {
+  private static boolean isRepeated(Set<SchemaPath> fields, TupleMetadata fileMetadata) {
     for (SchemaPath field : fields) {
       ColumnMetadata columnMetadata = SchemaPathUtils.getColumnMetadata(field, fileMetadata);
       TypeProtos.MajorType fieldType = columnMetadata != null ? columnMetadata.majorType() : null;

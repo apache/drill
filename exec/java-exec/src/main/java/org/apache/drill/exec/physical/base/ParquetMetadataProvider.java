@@ -47,6 +47,13 @@ public interface ParquetMetadataProvider extends TableMetadataProvider {
   List<RowGroupMetadata> getRowGroupsMeta();
 
   /**
+   * Returns list of file paths which belong to current table.
+   *
+   * @return list of file paths
+   */
+  List<Path> getLocations();
+
+  /**
    * Returns multimap of {@link RowGroupMetadata} instances which provides metadata for specific row group and its columns mapped to their locations.
    *
    * @return multimap of {@link RowGroupMetadata} instances

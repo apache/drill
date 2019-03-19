@@ -39,6 +39,7 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.metastore.TableStatisticsKind;
 
 
 public class DrillRelMdRowCount extends RelMdRowCount{
@@ -109,15 +110,15 @@ public class DrillRelMdRowCount extends RelMdRowCount{
     // Return rowcount from statistics, if available. Otherwise, delegate to parent.
     try {
       if (table != null
-          && table.getStatsTable() != null
-          && table.getStatsTable().isMaterialized()
+          && table.getGroupScan().getTableMetadata() != null
+          && (boolean) TableStatisticsKind.HAS_STATISTICS.getValue(table.getGroupScan().getTableMetadata())
           /* For GroupScan rely on accurate count from the scan, if available, instead of
            * statistics since partition pruning/filter pushdown might have occurred.
            * e.g. ParquetGroupScan returns accurate rowcount. The other way would be to
            * iterate over the rowgroups present in the GroupScan to compute the rowcount.
            */
           && !(table.getGroupScan().getScanStats(settings).getGroupScanProperty().hasExactRowCount())) {
-        return table.getStatsTable().getRowCount();
+        return (Double) TableStatisticsKind.EST_ROW_COUNT.getValue(table.getGroupScan().getTableMetadata());
       }
     } catch (IOException ex) {
       return super.getRowCount(rel, mq);

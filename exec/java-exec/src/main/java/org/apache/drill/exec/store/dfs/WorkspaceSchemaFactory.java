@@ -56,6 +56,8 @@ import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.dotdrill.DotDrillUtil;
 import org.apache.drill.exec.dotdrill.View;
+import org.apache.drill.exec.physical.base.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -571,26 +573,28 @@ public class WorkspaceSchemaFactory {
         logger.debug("The filesystem for this workspace does not support this operation.", e);
       }
       final DrillTable table = tables.get(tableKey);
-      setMetadataTable(table, tableName);
-      setSchema(table, tableName);
+      if (table != null) {
+        MetadataProviderManager providerManager = FileSystemMetadataProviderManager.getMetadataProviderManager();
+
+        setMetadataTable(providerManager, table, tableName);
+        setSchema(providerManager, tableName);
+        table.setTableMetadataProviderBuilder(providerManager);
+      }
       return table;
     }
 
-    private void setSchema(DrillTable table, String tableName) {
+    private void setSchema(MetadataProviderManager providerManager, String tableName) {
       if (schemaConfig.getOption(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE).bool_val) {
         try {
           FsMetastoreSchemaProvider schemaProvider = new FsMetastoreSchemaProvider(this, tableName);
-          table.setSchema(schemaProvider.read().getSchema());
+          providerManager.setSchemaProvider(schemaProvider);
         } catch (IOException e) {
           logger.debug("Unable to deserialize schema from schema file for table: " + tableName, e);
         }
       }
     }
 
-    private void setMetadataTable(final DrillTable table, final String tableName) {
-      if (table == null) {
-        return;
-      }
+    private void setMetadataTable(MetadataProviderManager metadataProviderManager, DrillTable table, final String tableName) {
 
       // If this itself is the stats table, then skip it.
       if (tableName.toLowerCase().endsWith(STATS.getEnding())) {
@@ -598,13 +602,11 @@ public class WorkspaceSchemaFactory {
       }
 
       try {
-        if (table.getStatsTable() == null) {
-          String statsTableName = getStatsTableName(tableName);
-          Path statsTableFilePath = getStatsTableFilePath(tableName);
-          table.setStatsTable(new DrillStatsTable(getFullSchemaName(), statsTableName,
-              statsTableFilePath, fs));
-        }
-      } catch (final Exception e) {
+        String statsTableName = getStatsTableName(tableName);
+        Path statsTableFilePath = getStatsTableFilePath(tableName);
+        metadataProviderManager.setStatsProvider(new DrillStatsTable(table, getFullSchemaName(), statsTableName,
+            statsTableFilePath, fs));
+      } catch (Exception e) {
         logger.warn("Failed to find the stats table for table [{}] in schema [{}]",
             tableName, getFullSchemaName());
       }

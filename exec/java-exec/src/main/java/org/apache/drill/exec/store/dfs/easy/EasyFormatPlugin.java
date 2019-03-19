@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Functions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -212,8 +213,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   /**
-   * Revised scanner based on the revised
-   * {@link ResultSetLoader} and {@link RowBatchReader} classes.
+   * Revised scanner based on the revised {@link org.apache.drill.exec.physical.rowSet.ResultSetLoader}
+   * and {@link org.apache.drill.exec.physical.impl.scan.RowBatchReader} classes.
    * Handles most projection tasks automatically. Able to limit
    * vector and batch sizes. Use this for new format plugins.
    */
@@ -485,6 +486,12 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
       throws IOException {
     return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot, null);
+  }
+
+  @Override
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
+      List<SchemaPath> columns, MetadataProviderManager metadataProviderManager) throws IOException {
+    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot, metadataProviderManager);
   }
 
   @Override

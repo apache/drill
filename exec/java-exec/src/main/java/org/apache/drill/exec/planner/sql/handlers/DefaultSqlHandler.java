@@ -73,7 +73,6 @@ import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.PlannerType;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
-import org.apache.drill.exec.planner.common.DrillStatsTable.StatsMaterializationVisitor;
 import org.apache.drill.exec.planner.cost.DrillDefaultRelMetadataProvider;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -231,9 +230,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
 
     try {
-      // Materialize the statistics, if available.
-      StatsMaterializationVisitor.materialize(relNode, context);
-
       // HEP for rules, which are failed at the LOGICAL_PLANNING stage for Volcano planner
       final RelNode setOpTransposeNode = transform(PlannerType.HEP, PlannerPhase.PRE_LOGICAL_PLANNING, relNode);
 

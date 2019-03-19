@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.schema.Schema;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -30,6 +32,10 @@ public class DynamicDrillTable extends DrillTable{
 
   public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, String userName, Object selection) {
     super(storageEngineName, plugin, userName, selection);
+  }
+
+  public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, String userName, Object selection, MetadataProviderManager metadataProviderManager) {
+    super(storageEngineName, plugin, Schema.TableType.TABLE, userName, selection, metadataProviderManager);
   }
 
   /**

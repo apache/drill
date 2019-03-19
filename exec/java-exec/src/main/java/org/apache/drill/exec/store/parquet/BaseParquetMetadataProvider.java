@@ -19,16 +19,17 @@ package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ParquetMetadataProvider;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.metastore.BaseMetadata;
 import org.apache.drill.metastore.ColumnStatisticsImpl;
+import org.apache.drill.metastore.StatisticsKind;
 import org.apache.drill.metastore.TableMetadata;
 import org.apache.drill.metastore.TableStatisticsKind;
 import org.apache.drill.shaded.guava.com.google.common.collect.HashBasedTable;
 import org.apache.drill.shaded.guava.com.google.common.collect.HashMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.LinkedListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.SetMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Table;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -47,7 +48,6 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,6 +78,8 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
   private ParquetGroupScanStatistics<? extends BaseMetadata> parquetGroupScanStatistics;
   protected MetadataBase.ParquetTableMetadataBase parquetTableMetadata;
   protected Set<Path> fileSet;
+  protected TupleMetadata schema;
+  protected DrillStatsTable statsTable;
 
   private List<SchemaPath> partitionColumns;
 
@@ -92,21 +94,36 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
   public BaseParquetMetadataProvider(List<ReadEntryWithPath> entries,
                                      ParquetReaderConfig readerConfig,
                                      String tableName,
-                                     Path tableLocation) {
-    this(readerConfig, entries, tableName, tableLocation);
+                                     Path tableLocation,
+                                     TupleMetadata schema,
+                                     DrillStatsTable statsTable) {
+    this(readerConfig, entries, tableName, tableLocation, schema, statsTable);
   }
 
   public BaseParquetMetadataProvider(ParquetReaderConfig readerConfig,
                                      List<ReadEntryWithPath> entries,
                                      String tableName,
-                                     Path tableLocation) {
+                                     Path tableLocation,
+                                     TupleMetadata schema,
+                                     DrillStatsTable statsTable) {
     this.entries = entries == null ? new ArrayList<>() : entries;
     this.readerConfig = readerConfig == null ? ParquetReaderConfig.getDefaultInstance() : readerConfig;
     this.tableName = tableName;
     this.tableLocation = tableLocation;
+    this.schema = schema;
+    this.statsTable = statsTable;
   }
 
-  protected void init() throws IOException {
+  public BaseParquetMetadataProvider(List<ReadEntryWithPath> entries, ParquetReaderConfig readerConfig) {
+    this.entries = entries == null ? new ArrayList<>() : entries;
+    this.readerConfig = readerConfig == null ? ParquetReaderConfig.getDefaultInstance() : readerConfig;
+    this.tableName = null;
+    this.tableLocation = null;
+  }
+
+  protected void init(BaseParquetMetadataProvider metadataProvider) throws IOException {
+    // Once deserialization for metadata is provided, initInternal() call should be removed
+    // and only files list is deserialized based on specified locations
     initInternal();
 
     assert parquetTableMetadata != null;
@@ -118,7 +135,33 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
           .collect(Collectors.toSet()));
     }
 
-    initializeMetadata();
+    List<Path> fileLocations = getLocations();
+
+    // if metadata provider wasn't specified, or required metadata is absent,
+    // obtains metadata from cache files or table footers
+    if (metadataProvider == null
+        || (metadataProvider.rowGroups != null && !metadataProvider.rowGroups.keySet().containsAll(fileLocations))
+        || (metadataProvider.files != null && !metadataProvider.files.keySet().containsAll(fileLocations))) {
+      initializeMetadata();
+    } else {
+      // reuse metadata from existing TableMetadataProvider
+      if (metadataProvider.files != null && metadataProvider.files.size() != files.size()) {
+        files = metadataProvider.files.entrySet().stream()
+            .filter(entry -> fileLocations.contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+      }
+      if (metadataProvider.rowGroups != null) {
+        rowGroups = LinkedListMultimap.create();
+        metadataProvider.rowGroups.entries().stream()
+            .filter(entry -> fileLocations.contains(entry.getKey()))
+            .forEach(entry -> rowGroups.put(entry.getKey(), entry.getValue()));
+      }
+      TableMetadata tableMetadata = getTableMetadata();
+      getPartitionsMetadata();
+      getRowGroupsMeta();
+      this.tableMetadata = ParquetTableMetadataUtils.updateRowCount(tableMetadata, getRowGroupsMeta());
+      parquetTableMetadata = null;
+    }
   }
 
   /**
@@ -126,7 +169,10 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
    * Once deserialization and serialization from/into metastore classes is done, this method should be removed
    * to allow lazy initialization.
    */
-  public void initializeMetadata() {
+  public void initializeMetadata() throws IOException {
+    if (statsTable != null && !statsTable.isMaterialized()) {
+      statsTable.materialize();
+    }
     getTableMetadata();
     getFilesMetadata();
     getPartitionsMetadata();
@@ -138,13 +184,20 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
   @SuppressWarnings("unchecked")
   public TableMetadata getTableMetadata() {
     if (tableMetadata == null) {
-      Map<String, Object> tableStatistics = new HashMap<>();
+      Map<StatisticsKind, Object> tableStatistics = new HashMap<>(DrillStatsTable.getEstimatedTableStats(statsTable));
       Set<String> partitionKeys = new HashSet<>();
       Map<SchemaPath, TypeProtos.MajorType> fields = ParquetTableMetadataUtils.resolveFields(parquetTableMetadata);
 
-      TupleSchema schema = new TupleSchema();
-      for (Map.Entry<SchemaPath, TypeProtos.MajorType> pathTypePair : fields.entrySet()) {
-        SchemaPathUtils.addColumnMetadata(schema, pathTypePair.getKey(), pathTypePair.getValue());
+      if (this.schema == null) {
+        schema = new TupleSchema();
+        fields.forEach((schemaPath, majorType) -> SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType));
+      } else {
+        // merges specified schema with schema from table
+        fields.forEach((schemaPath, majorType) -> {
+          if (SchemaPathUtils.getColumnMetadata(schemaPath, schema) == null) {
+            SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType);
+          }
+        });
       }
 
       Map<SchemaPath, ColumnStatistics> columnsStatistics;
@@ -153,23 +206,38 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
         if (metadata == null || metadata.isEmpty()) {
           metadata = getRowGroupsMeta();
         }
-        tableStatistics.put(TableStatisticsKind.ROW_COUNT.getName(), TableStatisticsKind.ROW_COUNT.mergeStatistics(metadata));
+        tableStatistics.put(TableStatisticsKind.ROW_COUNT, TableStatisticsKind.ROW_COUNT.mergeStatistics(metadata));
         columnsStatistics = ParquetTableMetadataUtils.mergeColumnsStatistics(metadata, fields.keySet(), ParquetTableMetadataUtils.PARQUET_STATISTICS, parquetTableMetadata);
       } else {
         columnsStatistics = new HashMap<>();
-        tableStatistics.put(TableStatisticsKind.ROW_COUNT.getName(), getParquetGroupScanStatistics().getRowCount());
+        tableStatistics.put(TableStatisticsKind.ROW_COUNT, getParquetGroupScanStatistics().getRowCount());
+
+        Set<SchemaPath> unhandledColumns = new HashSet<>();
+        if (statsTable != null && statsTable.isMaterialized()) {
+          unhandledColumns.addAll(statsTable.getColumns());
+        }
 
         for (SchemaPath partitionColumn : fields.keySet()) {
           long columnValueCount = getParquetGroupScanStatistics().getColumnValueCount(partitionColumn);
-          ImmutableMap<String, Long> stats = ImmutableMap.of(
-              TableStatisticsKind.ROW_COUNT.getName(), columnValueCount,
-              ColumnStatisticsKind.NULLS_COUNT.getName(), getParquetGroupScanStatistics().getRowCount() - columnValueCount);
+          // Adds statistics values itself if statistics is available
+          Map<StatisticsKind, Object> stats = new HashMap<>(DrillStatsTable.getEstimatedColumnStats(statsTable, partitionColumn));
+          unhandledColumns.remove(partitionColumn);
+
+          // adds statistics for partition columns
+          stats.put(TableStatisticsKind.ROW_COUNT, columnValueCount);
+          stats.put(ColumnStatisticsKind.NULLS_COUNT, getParquetGroupScanStatistics().getRowCount() - columnValueCount);
           columnsStatistics.put(partitionColumn, new ColumnStatisticsImpl(stats, ParquetTableMetadataUtils.getNaturalNullsFirstComparator()));
+        }
+
+        for (SchemaPath column : unhandledColumns) {
+          columnsStatistics.put(column,
+              new ColumnStatisticsImpl(DrillStatsTable.getEstimatedColumnStats(statsTable, column),
+                  ParquetTableMetadataUtils.getNaturalNullsFirstComparator()));
         }
         columnsStatistics.putAll(ParquetTableMetadataUtils.populateNonInterestingColumnsStats(columnsStatistics.keySet(), parquetTableMetadata));
       }
       tableMetadata = new FileTableMetadata(tableName, tableLocation, schema, columnsStatistics, tableStatistics,
-          -1, "root", partitionKeys);
+          -1L, "", partitionKeys);
     }
 
     return tableMetadata;
@@ -226,29 +294,26 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
       } else {
         for (SchemaPath partitionColumn : getParquetGroupScanStatistics().getPartitionColumns()) {
           Map<Path, Object> partitionPaths = getParquetGroupScanStatistics().getPartitionPaths(partitionColumn);
-          SetMultimap<Object, Path> partitionsForValue = HashMultimap.create();
+          Multimap<Object, Path> partitionsForValue = HashMultimap.create();
 
-          for (Map.Entry<Path, Object> stringObjectEntry : partitionPaths.entrySet()) {
-            partitionsForValue.put(stringObjectEntry.getValue(), stringObjectEntry.getKey());
-          }
+          partitionPaths.forEach((path, value) -> partitionsForValue.put(value, path));
 
-          for (Map.Entry<Object, Collection<Path>> valueLocationsEntry : partitionsForValue.asMap().entrySet()) {
+          partitionsForValue.asMap().forEach((partitionKey, value) -> {
             Map<SchemaPath, ColumnStatistics> columnsStatistics = new HashMap<>();
 
-            Map<String, Object> statistics = new HashMap<>();
-            Object partitionKey = valueLocationsEntry.getKey();
-            partitionKey = valueLocationsEntry.getKey() == NULL_VALUE ? null : partitionKey;
-            statistics.put(ColumnStatisticsKind.MIN_VALUE.getName(), partitionKey);
-            statistics.put(ColumnStatisticsKind.MAX_VALUE.getName(), partitionKey);
+            Map<StatisticsKind, Object> statistics = new HashMap<>();
+            partitionKey = partitionKey == NULL_VALUE ? null : partitionKey;
+            statistics.put(ColumnStatisticsKind.MIN_VALUE, partitionKey);
+            statistics.put(ColumnStatisticsKind.MAX_VALUE, partitionKey);
 
-            statistics.put(ColumnStatisticsKind.NULLS_COUNT.getName(), GroupScan.NO_COLUMN_STATS);
-            statistics.put(TableStatisticsKind.ROW_COUNT.getName(), GroupScan.NO_COLUMN_STATS);
+            statistics.put(ColumnStatisticsKind.NULLS_COUNT, GroupScan.NO_COLUMN_STATS);
+            statistics.put(TableStatisticsKind.ROW_COUNT, GroupScan.NO_COLUMN_STATS);
             columnsStatistics.put(partitionColumn,
                 new ColumnStatisticsImpl<>(statistics,
                         ParquetTableMetadataUtils.getComparator(getParquetGroupScanStatistics().getTypeForColumn(partitionColumn).getMinorType())));
             partitions.add(new PartitionMetadata(partitionColumn, getTableMetadata().getSchema(),
-                columnsStatistics, statistics, (Set<Path>) valueLocationsEntry.getValue(), tableName, -1));
-          }
+                columnsStatistics, statistics, (Set<Path>) value, tableName, -1));
+          });
         }
       }
     }
@@ -274,14 +339,9 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
 
   @Override
   public List<FileMetadata> getFilesForPartition(PartitionMetadata partition) {
-    List<FileMetadata> prunedFiles = new ArrayList<>();
-    for (FileMetadata file : getFilesMetadata()) {
-      if (partition.getLocations().contains(file.getLocation())) {
-        prunedFiles.add(file);
-      }
-    }
-
-    return prunedFiles;
+    return getFilesMetadata().stream()
+        .filter(file -> partition.getLocations().contains(file.getLocation()))
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -333,6 +393,13 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
   @Override
   public List<RowGroupMetadata> getRowGroupsMeta() {
     return new ArrayList<>(getRowGroupsMetadataMap().values());
+  }
+
+  @Override
+  public List<Path> getLocations() {
+    return parquetTableMetadata.getFiles().stream()
+        .map(MetadataBase.ParquetFileMetadata::getPath)
+        .collect(Collectors.toList());
   }
 
   @Override

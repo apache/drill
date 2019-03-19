@@ -15,21 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.metastore;
+package org.apache.drill.exec.store.dfs.easy;
 
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.TableMetadataProviderBuilder;
 import org.apache.hadoop.fs.Path;
 
-import java.util.Map;
-
 /**
- * Metadata which corresponds to the table level.
+ * Builder for {@link org.apache.drill.exec.physical.base.SimpleFileTableMetadataProvider}.
  */
-public interface TableMetadata extends BaseMetadata {
+public interface SimpleFileTableMetadataProviderBuilder extends TableMetadataProviderBuilder {
 
-  String getTableName();
-  Path getLocation();
-  String getOwner();
-  long getLastModifiedTime();
-  TableMetadata cloneWithStats(Map<SchemaPath, ColumnStatistics> columnStatistics, Map<StatisticsKind, Object> tableStatistics);
+  SimpleFileTableMetadataProviderBuilder withTableName(String tableName);
+
+  SimpleFileTableMetadataProviderBuilder withLocation(Path location);
+
+  SimpleFileTableMetadataProviderBuilder withLastModifiedTime(long lastModifiedTime);
 }

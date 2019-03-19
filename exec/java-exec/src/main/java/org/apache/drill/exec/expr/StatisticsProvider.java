@@ -246,10 +246,10 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
   }
 
   public static class MinMaxStatistics<V> implements ColumnStatistics<V> {
-    private V minVal;
-    private V maxVal;
+    private final V minVal;
+    private final V maxVal;
+    private final Comparator<V> valueComparator;
     private long nullsCount;
-    private Comparator<V> valueComparator;
 
     public MinMaxStatistics(V minVal, V maxVal, Comparator<V> valueComparator) {
       this.minVal = minVal;
@@ -281,6 +281,11 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
         default:
           return false;
       }
+    }
+
+    @Override
+    public boolean containsExactStatistics(StatisticsKind statisticsKind) {
+      return true;
     }
 
     @Override

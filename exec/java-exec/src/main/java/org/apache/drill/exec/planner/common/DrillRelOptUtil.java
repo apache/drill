@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +26,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.drill.metastore.TableMetadata;
+import org.apache.drill.metastore.TableStatisticsKind;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.plan.volcano.RelSubset;
@@ -504,7 +509,7 @@ public abstract class DrillRelOptUtil {
     }
 
     void addField(PathSegment segment) {
-      if (segment != null && segment instanceof PathSegment.NameSegment) {
+      if (segment instanceof PathSegment.NameSegment) {
         newFields.add(new SchemaPath((PathSegment.NameSegment) segment));
       }
     }
@@ -583,11 +588,13 @@ public abstract class DrillRelOptUtil {
       }
     } else if (rel instanceof TableScan) {
       DrillTable table = Utilities.getDrillTable(rel.getTable());
-      if (table != null
-          && table.getStatsTable() != null
-          && table.getStatsTable().isMaterialized()) {
-        return false;
-      } else {
+      try {
+        TableMetadata tableMetadata;
+        return table == null
+            || (tableMetadata = table.getGroupScan().getTableMetadata()) == null
+            || !((Boolean) TableStatisticsKind.HAS_STATISTICS.getValue(tableMetadata));
+      } catch (IOException e) {
+        RelOptPlanner.LOGGER.debug("Unable to obtain table metadata due to exception:", e);
         return true;
       }
     } else {
@@ -609,27 +616,27 @@ public abstract class DrillRelOptUtil {
    * */
   public static boolean analyzeSimpleEquiJoin(Join join, int[] joinFieldOrdinals) {
     RexNode joinExp = join.getCondition();
-    if(joinExp.getKind() != SqlKind.EQUALS) {
+    if (joinExp.getKind() != SqlKind.EQUALS) {
       return false;
     } else {
-      RexCall binaryExpression = (RexCall)joinExp;
-      RexNode leftComparand = (RexNode)binaryExpression.operands.get(0);
-      RexNode rightComparand = (RexNode)binaryExpression.operands.get(1);
-      if(!(leftComparand instanceof RexInputRef)) {
+      RexCall binaryExpression = (RexCall) joinExp;
+      RexNode leftComparand = binaryExpression.operands.get(0);
+      RexNode rightComparand = binaryExpression.operands.get(1);
+      if (!(leftComparand instanceof RexInputRef)) {
         return false;
-      } else if(!(rightComparand instanceof RexInputRef)) {
+      } else if (!(rightComparand instanceof RexInputRef)) {
         return false;
       } else {
         int leftFieldCount = join.getLeft().getRowType().getFieldCount();
         int rightFieldCount = join.getRight().getRowType().getFieldCount();
-        RexInputRef leftFieldAccess = (RexInputRef)leftComparand;
-        RexInputRef rightFieldAccess = (RexInputRef)rightComparand;
-        if(leftFieldAccess.getIndex() >= leftFieldCount+rightFieldCount ||
-           rightFieldAccess.getIndex() >= leftFieldCount+rightFieldCount) {
+        RexInputRef leftFieldAccess = (RexInputRef) leftComparand;
+        RexInputRef rightFieldAccess = (RexInputRef) rightComparand;
+        if (leftFieldAccess.getIndex() >= leftFieldCount + rightFieldCount ||
+            rightFieldAccess.getIndex() >= leftFieldCount + rightFieldCount) {
           return false;
         }
         /* Both columns reference same table */
-        if((leftFieldAccess.getIndex() >= leftFieldCount &&
+        if ((leftFieldAccess.getIndex() >= leftFieldCount &&
             rightFieldAccess.getIndex() >= leftFieldCount) ||
            (leftFieldAccess.getIndex() < leftFieldCount &&
             rightFieldAccess.getIndex() < leftFieldCount)) {

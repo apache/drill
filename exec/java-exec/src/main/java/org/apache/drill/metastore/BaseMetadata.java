@@ -19,7 +19,7 @@ package org.apache.drill.metastore;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 import java.util.Map;
 
@@ -46,11 +46,11 @@ public interface BaseMetadata {
 
   /**
    * Returns schema stored in current metadata represented as
-   * {@link TupleSchema}.
+   * {@link TupleMetadata}.
    *
    * @return schema stored in current metadata
    */
-  TupleSchema getSchema();
+  TupleMetadata getSchema();
 
   /**
    * Returns value of non-column statistics which corresponds to specified {@link StatisticsKind}.
@@ -59,6 +59,15 @@ public interface BaseMetadata {
    * @return value of non-column statistics
    */
   Object getStatistic(StatisticsKind statisticsKind);
+
+  /**
+   * Checks whether specified statistics kind is set in this non-column statistics
+   * and it corresponds to the exact statistics value.
+   *
+   * @param statisticsKind statistics kind to check
+   * @return true if value which corresponds to the specified statistics kind is exact
+   */
+  boolean containsExactStatistics(StatisticsKind statisticsKind);
 
   /**
    * Returns value of column statistics which corresponds to specified {@link StatisticsKind}

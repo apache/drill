@@ -35,6 +35,7 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractFileGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.SchemalessScan;
 import org.apache.drill.exec.physical.impl.WriterRecordBatch;
@@ -186,11 +187,17 @@ public class ParquetFormatPlugin implements FormatPlugin {
 
   @Override
   public AbstractFileGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, OptionManager options) throws IOException {
+    return getGroupScan(userName, selection, columns, options, null);
+  }
+
+  @Override
+  public AbstractFileGroupScan getGroupScan(String userName, FileSelection selection,
+      List<SchemaPath> columns, OptionManager options, MetadataProviderManager metadataProviderManager) throws IOException {
     ParquetReaderConfig readerConfig = ParquetReaderConfig.builder()
-      .withFormatConfig(getConfig())
-      .withOptions(options)
-      .build();
-    ParquetGroupScan parquetGroupScan = new ParquetGroupScan(userName, selection, this, columns, readerConfig);
+        .withFormatConfig(getConfig())
+        .withOptions(options)
+        .build();
+    ParquetGroupScan parquetGroupScan = new ParquetGroupScan(userName, selection, this, columns, readerConfig, metadataProviderManager);
     if (parquetGroupScan.getEntries().isEmpty()) {
       // If ParquetGroupScan does not contain any entries, it means selection directories are empty and
       // metadata cache files are invalid, return schemaless scan

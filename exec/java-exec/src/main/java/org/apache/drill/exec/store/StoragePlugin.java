@@ -28,7 +28,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 
@@ -75,13 +75,13 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
    *
-   * @param userName User whom to impersonate when when reading the contents as part of Scan.
-   * @param selection The configured storage engine specific selection.
-   * @param options (optional) session options
-   * @param schema (optional) table schema
+   * @param userName        User whom to impersonate when when reading the contents as part of Scan.
+   * @param selection       The configured storage engine specific selection.
+   * @param options         (optional) session options
+   * @param providerManager manager for handling metadata providers
    * @return The physical scan operator for the particular GroupScan (read) node.
    */
-  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, SessionOptionManager options, TupleMetadata schema) throws IOException;
+  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, SessionOptionManager options, MetadataProviderManager providerManager) throws IOException;
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
@@ -107,14 +107,14 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
    *
-   * @param userName User whom to impersonate when when reading the contents as part of Scan.
-   * @param selection The configured storage engine specific selection.
-   * @param columns (optional) The list of column names to scan from the data source.
-   * @param options (optional) session options
-   * @param schema (optional) table schema
+   * @param userName        User whom to impersonate when when reading the contents as part of Scan.
+   * @param selection       The configured storage engine specific selection.
+   * @param columns         (optional) The list of column names to scan from the data source.
+   * @param options         (optional) session options
+   * @param providerManager manager for handling metadata providers
    * @return The physical scan operator for the particular GroupScan (read) node.
    */
-  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options, TupleMetadata schema) throws IOException;
+  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options, MetadataProviderManager providerManager) throws IOException;
 
   /**
    * Method returns a Jackson serializable object that extends a StoragePluginConfig.

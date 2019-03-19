@@ -38,6 +38,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaPathUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -181,6 +182,11 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     return filter;
   }
 
+  @Override
+  public TableMetadataProvider getMetadataProvider() {
+    return metadataProvider;
+  }
+
   public void setFilter(LogicalExpression filter) {
     this.filter = filter;
   }
@@ -280,7 +286,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
                                             FunctionImplementationRegistry functionImplementationRegistry,
                                             OptionManager optionManager,
                                             boolean omitUnsupportedExprs) {
-    TupleMetadata types = getColumnMetadata();
+    TupleMetadata types = getSchema();
     if (types == null) {
       throw new UnsupportedOperationException("At least one schema source should be available.");
     }
@@ -311,8 +317,14 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     return FilterBuilder.buildFilterPredicate(materializedFilter, constantBoundaries, udfUtilities, omitUnsupportedExprs);
   }
 
-  protected TupleMetadata getColumnMetadata() {
-    return getTableMetadata().getSchema().copy();
+  @JsonIgnore
+  public TupleSchema getSchema() {
+    // creates a copy of TupleMetadata from tableMetadata
+    TupleSchema tuple = new TupleSchema();
+    for (ColumnMetadata md : getTableMetadata().getSchema()) {
+      tuple.addColumn(md.copy());
+    }
+    return tuple;
   }
 
   // limit push down methods start
@@ -365,14 +377,14 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
   protected static <T extends BaseMetadata & LocationProvider> Map<Path, T> pruneForPartitions(Map<Path, T> metadataToPrune, List<PartitionMetadata> filteredPartitionMetadata) {
     Map<Path, T> prunedFiles = new LinkedHashMap<>();
     if (metadataToPrune != null) {
-      for (Map.Entry<Path, T> entry : metadataToPrune.entrySet()) {
+      metadataToPrune.forEach((path, metadata) -> {
         for (PartitionMetadata filteredPartition : filteredPartitionMetadata) {
-          if (filteredPartition.getLocations().contains(entry.getKey())) {
-            prunedFiles.put(entry.getKey(), entry.getValue());
+          if (filteredPartition.getLocations().contains(path)) {
+            prunedFiles.put(path, metadata);
             break;
           }
         }
-      }
+      });
     }
 
     return prunedFiles;
@@ -468,7 +480,8 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     return files;
   }
 
-  protected TableMetadata getTableMetadata() {
+  @Override
+  public TableMetadata getTableMetadata() {
     if (tableMetadata == null) {
       tableMetadata = metadataProvider.getTableMetadata();
     }

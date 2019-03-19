@@ -30,10 +30,11 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.planner.common.DrillStatsTable;
+import org.apache.drill.exec.physical.base.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
+import org.apache.drill.exec.physical.base.TableMetadataProvider;
 import org.apache.drill.exec.physical.base.SchemalessScan;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -49,9 +50,7 @@ public abstract class DrillTable implements Table {
   private final String userName;
   private GroupScan scan;
   private SessionOptionManager options;
-  // Stores the statistics(rowcount, NDV etc.) associated with the table
-  private DrillStatsTable statsTable;
-  private TupleMetadata schema;
+  private MetadataProviderManager metadataProviderManager;
 
   /**
    * Creates a DrillTable instance for a @{code TableType#Table} table.
@@ -73,6 +72,11 @@ public abstract class DrillTable implements Table {
    * @param selection Table contents (type and contents depend on type of StoragePlugin).
    */
   public DrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, String userName, Object selection) {
+    this(storageEngineName, plugin, tableType, userName, selection, null);
+  }
+
+  public DrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType,
+                    String userName, Object selection, MetadataProviderManager metadataProviderManager) {
     this.selection = selection;
     this.plugin = plugin;
 
@@ -81,6 +85,7 @@ public abstract class DrillTable implements Table {
     this.storageEngineConfig = plugin.getConfig();
     this.storageEngineName = storageEngineName;
     this.userName = userName;
+    this.metadataProviderManager = metadataProviderManager;
   }
 
   /**
@@ -96,23 +101,45 @@ public abstract class DrillTable implements Table {
     this.options = options;
   }
 
-  public void setSchema(TupleMetadata schema) {
-    this.schema = schema;
-  }
-
   public void setGroupScan(GroupScan scan) {
     this.scan = scan;
   }
 
-  public GroupScan getGroupScan() throws IOException{
+  public void setTableMetadataProviderBuilder(MetadataProviderManager metadataProviderBuilder) {
+    this.metadataProviderManager = metadataProviderBuilder;
+  }
+
+  public GroupScan getGroupScan() throws IOException {
     if (scan == null) {
       if (selection instanceof FileSelection && ((FileSelection) selection).isEmptyDirectory()) {
         this.scan = new SchemalessScan(userName, ((FileSelection) selection).getSelectionRoot());
       } else {
-        this.scan = plugin.getPhysicalScan(userName, new JSONOptions(selection), options, schema);
+        this.scan = plugin.getPhysicalScan(userName, new JSONOptions(selection), options, metadataProviderManager);
       }
     }
     return scan;
+  }
+
+  /**
+   * Returns builder for {@link TableMetadataProvider} which may provide null for the case when scan wasn't created.
+   * This method should be used only for the case when it is possible to obtain {@link TableMetadataProvider} when supplier returns null
+   * or {@link TableMetadataProvider} usage may be omitted.
+   *
+   * @return supplier for {@link TableMetadataProvider}
+   */
+  public MetadataProviderManager getMetadataProviderManager() {
+    if (metadataProviderManager == null) {
+      // for the case when scan wasn't initialized, return null to avoid reading data which may be pruned in future
+      metadataProviderManager = FileSystemMetadataProviderManager.getMetadataProviderManager();
+      if (scan != null) {
+        metadataProviderManager.setTableMetadataProvider(scan.getMetadataProvider());
+      }
+    }
+    return metadataProviderManager;
+  }
+
+  public TableMetadataProvider getMetadataProvider() throws IOException {
+    return getGroupScan().getMetadataProvider();
   }
 
   public StoragePluginConfig getStorageEngineConfig() {
@@ -138,14 +165,6 @@ public abstract class DrillTable implements Table {
   @Override
   public Statistic getStatistic() {
     return Statistics.UNKNOWN;
-  }
-
-  public DrillStatsTable getStatsTable() {
-    return statsTable;
-  }
-
-  public void setStatsTable(DrillStatsTable statsTable) {
-    this.statsTable = statsTable;
   }
 
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {

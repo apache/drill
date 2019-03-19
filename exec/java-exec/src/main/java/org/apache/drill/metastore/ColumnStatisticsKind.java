@@ -19,6 +19,7 @@ package org.apache.drill.metastore;
 
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.expr.ExactStatisticsConstants;
+import org.apache.drill.exec.physical.impl.statistics.Statistic;
 
 import java.util.List;
 
@@ -105,6 +106,53 @@ public enum ColumnStatisticsKind implements CollectableColumnStatisticsKind {
     @Override
     public boolean isExact() {
       return true;
+    }
+  },
+
+  /**
+   * Column statistics kind which represents number of non-null values for the specific column.
+   */
+  NON_NULL_COUNT(Statistic.NNROWCOUNT) {
+    @Override
+    public Double mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+      double nonNullRowCount = 0;
+      for (ColumnStatistics statistics : statisticsList) {
+        Double nnRowCount = (Double) statistics.getStatistic(this);
+        if (nnRowCount != null) {
+          nonNullRowCount += nnRowCount;
+        }
+      }
+      return nonNullRowCount;
+    }
+  },
+
+  /**
+   * Column statistics kind which represents number of distinct values for the specific column.
+   */
+  NVD(Statistic.NDV) {
+    @Override
+    public Object mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+      throw new UnsupportedOperationException("Cannot merge statistics for NDV");
+    }
+  },
+
+  /**
+   * Column statistics kind which is the width of the specific column.
+   */
+  AVG_WIDTH(Statistic.AVG_WIDTH) {
+    @Override
+    public Object mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+      throw new UnsupportedOperationException("Cannot merge statistics for avg_width");
+    }
+  },
+
+  /**
+   * Column statistics kind which is the histogram of the specific column.
+   */
+  HISTOGRAM("histogram") {
+    @Override
+    public Object mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+      throw new UnsupportedOperationException("Cannot merge statistics for histogram");
     }
   };
 
