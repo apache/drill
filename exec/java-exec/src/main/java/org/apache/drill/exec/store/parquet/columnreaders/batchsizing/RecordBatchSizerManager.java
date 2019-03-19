@@ -336,8 +336,7 @@ public final class RecordBatchSizerManager {
     }
 
     if (batchStatsContext.isEnableBatchSzLogging()) {
-      final String message = String.format("The Parquet reader batch memory has been set to [%d] byte(s)", normalizedMemorySize);
-      RecordBatchStats.logRecordBatchStats(message, batchStatsContext);
+      RecordBatchStats.printConfiguredBatchSize(batchStatsContext, (int) normalizedMemorySize);
     }
 
     return normalizedMemorySize;

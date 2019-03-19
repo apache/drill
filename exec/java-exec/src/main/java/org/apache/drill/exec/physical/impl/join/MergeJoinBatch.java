@@ -138,8 +138,8 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     final int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
     batchMemoryManager = new MergeJoinMemoryManager(configuredBatchSize, left, right);
 
-    RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-      "configured output batch size: %d", configuredBatchSize);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(),
+      configuredBatchSize);
 
     if (popConfig.getConditions().size() == 0) {
       throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");

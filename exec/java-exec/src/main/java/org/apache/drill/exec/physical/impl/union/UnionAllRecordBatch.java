@@ -78,8 +78,8 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
     batchMemoryManager = new RecordBatchMemoryManager(numInputs, configuredBatchSize);
 
-    RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-      "configured output batch size: %d", configuredBatchSize);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(),
+      configuredBatchSize);
   }
 
   @Override

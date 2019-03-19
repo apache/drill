@@ -136,6 +136,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     pop.addUnnestBatch(this);
     // get the output batch size from config.
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(), configuredBatchSize);
     memoryManager = new UnnestMemoryManager(configuredBatchSize);
     rowIdColumnName = pop.getImplicitColumn();
   }

@@ -172,8 +172,8 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
     flattenMemoryManager = new FlattenMemoryManager(configuredBatchSize);
 
-      RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-        "configured output batch size: %d", configuredBatchSize);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(),
+      configuredBatchSize);
   }
 
   @Override

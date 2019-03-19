@@ -208,8 +208,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     hashAggMemoryManager = new HashAggMemoryManager(configuredBatchSize);
 
-      RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-        "configured output batch size: %d", configuredBatchSize);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(), configuredBatchSize);
 
     columnMapping = CaseInsensitiveMap.newHashMap();
   }
