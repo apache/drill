@@ -105,7 +105,7 @@ public class Utilities {
    */
   public static DrillTable getDrillTable(RelOptTable table) {
     DrillTable drillTable = table.unwrap(DrillTable.class);
-    if (drillTable == null) {
+    if (drillTable == null && table.unwrap(DrillTranslatableTable.class) != null) {
       drillTable = table.unwrap(DrillTranslatableTable.class).getDrillTable();
     }
     return drillTable;

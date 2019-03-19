@@ -258,14 +258,14 @@ public class TestAnalyze extends BaseTestQuery {
 
     query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
         + " on emp.department_id = dept.department_id";
-    String[] expectedPlan4 = {"HashJoin\\(condition.*\\).*rowcount = 1154.9999999999995,.*",
+    String[] expectedPlan4 = {"HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
             "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
             "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
     PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan4, new String[]{});
 
     query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
             + " on emp.department_id = dept.department_id where dept.department_id = 5";
-    String[] expectedPlan5 = {"HashJoin\\(condition.*\\).*rowcount = 96.24999999999997,.*",
+    String[] expectedPlan5 = {"HashJoin\\(condition.*\\).*rowcount = 96.25,.*",
             "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
             "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
     PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan5, new String[]{});
@@ -290,8 +290,8 @@ public class TestAnalyze extends BaseTestQuery {
     query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
             + " on emp.department_id = dept.department_id "
             + " group by emp.employee_id";
-    String[] expectedPlan8 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 730.0992454469839,.*",
-            "HashJoin\\(condition.*\\).*rowcount = 1154.9999999999995,.*",
+    String[] expectedPlan8 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 115.49475630811243,.*",
+            "HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
             "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
             "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
     PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan8, new String[]{});
@@ -301,8 +301,8 @@ public class TestAnalyze extends BaseTestQuery {
             + " on emp.department_id = dept.department_id "
             + " group by emp.employee_id, emp.store_id, dept.department_description "
             + " having dept.department_description = 'FINANCE'";
-    String[] expectedPlan9 = {"HashAgg\\(group=\\[\\{0, 1, 2\\}\\]\\).*rowcount = 92.3487011031316.*",
-            "HashJoin\\(condition.*\\).*rowcount = 96.24999999999997,.*",
+    String[] expectedPlan9 = {"HashAgg\\(group=\\[\\{0, 1, 2\\}\\]\\).*rowcount = 60.84160378724867.*",
+            "HashJoin\\(condition.*\\).*rowcount = 96.25,.*",
             "Scan.*columns=\\[`department_id`, `employee_id`, `store_id`\\].*rowcount = 1155.0.*",
             "Filter\\(condition=\\[=\\(\\$1, 'FINANCE'\\)\\]\\).*rowcount = 1.0,.*",
             "Scan.*columns=\\[`department_id`, `department_description`\\].*rowcount = 12.0.*"};
