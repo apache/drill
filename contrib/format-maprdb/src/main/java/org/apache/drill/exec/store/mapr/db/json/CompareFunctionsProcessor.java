@@ -107,13 +107,13 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     LogicalExpression nameArg = call.args.get(0);
     LogicalExpression valueArg = call.args.size() >= 2 ? call.args.get(1) : null;
 
-    if (valueArg != null) {
-      if (VALUE_EXPRESSION_CLASSES.contains(nameArg.getClass())) {
-        LogicalExpression swapArg = valueArg;
-        valueArg = nameArg;
-        nameArg = swapArg;
-        evaluator.functionName = COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(functionName);
-      }
+    if (VALUE_EXPRESSION_CLASSES.contains(nameArg.getClass())) {
+      LogicalExpression swapArg = valueArg;
+      valueArg = nameArg;
+      nameArg = swapArg;
+      evaluator.functionName = COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(functionName);
+    }
+    if (nameArg != null) {
       evaluator.success = nameArg.accept(evaluator, valueArg);
     }
 
