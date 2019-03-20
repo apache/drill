@@ -51,7 +51,7 @@
 
   <div class="table-responsive col-sm-12 col-md-6 col-lg-5 col-xl-5">
     <h4>Enabled Storage Plugins</h4>
-    <table class="table">
+    <table class="table table-hover">
       <tbody>
         <#list model as plugin>
           <#if plugin.enabled() == true>
@@ -63,10 +63,10 @@
                 <button type="button" class="btn btn-primary" onclick="location.href='/storage/${plugin.getName()}'">
                   Update
                 </button>
-                <button type="button" class="btn btn-primary" onclick="doEnable('${plugin.getName()}', false)">
+                <button type="button" class="btn btn-warning" onclick="doEnable('${plugin.getName()}', false)">
                   Disable
                 </button>
-                <button type="button" class="btn btn-primary" name="${plugin.getName()}" data-toggle="modal"
+                <button type="button" class="btn" name="${plugin.getName()}" data-toggle="modal"
                         data-target="#pluginsModal">
                   Export
                 </button>
@@ -80,7 +80,7 @@
 
   <div class="table-responsive col-sm-12 col-md-6 col-lg-7 col-xl-7">
     <h4>Disabled Storage Plugins</h4>
-    <table class="table">
+    <table class="table table-hover">
       <tbody>
         <#list model as plugin>
           <#if plugin.enabled() == false>
@@ -92,10 +92,10 @@
                 <button type="button" class="btn btn-primary" onclick="location.href='/storage/${plugin.getName()}'">
                   Update
                 </button>
-                <button type="button" class="btn btn-primary" onclick="doEnable('${plugin.getName()}', true)">
+                <button type="button" class="btn btn-success" onclick="doEnable('${plugin.getName()}', true)">
                   Enable
                 </button>
-                <button type="button" class="btn btn-primary" name="${plugin.getName()}" data-toggle="modal"
+                <button type="button" class="btn!" name="${plugin.getName()}" data-toggle="modal"
                         data-target="#pluginsModal">
                   Export
                 </button>
@@ -199,9 +199,11 @@
 
   <script>
     function doEnable(name, flag) {
-      $.get("/storage/" + name + "/enable/" + flag, function() {
-        location.reload();
-      });
+      if (flag || confirm(name + ' plugin will be disabled')) {
+        $.get("/storage/" + name + "/enable/" + flag, function() {
+          location.reload();
+        });
+      }
     }
 
     function doCreate() {
