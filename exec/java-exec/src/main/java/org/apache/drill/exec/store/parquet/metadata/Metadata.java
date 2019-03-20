@@ -24,23 +24,21 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-import org.apache.drill.exec.serialization.PathSerDe;
-import java.util.Set;
-import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.collections.Collectors;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillVersionInfo;
+import org.apache.drill.exec.serialization.PathSerDe;
 import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.store.dfs.MetadataContext;
+import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -69,6 +67,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -85,7 +84,9 @@ import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ParquetTa
 import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.RowGroupMetadata_v3;
 
 /**
- * This is an utility class, holder for Parquet Table Metadata and {@link ParquetReaderConfig}
+ * This is an utility class, holder for Parquet Table Metadata and {@link ParquetReaderConfig}. All the creation of
+ * parquet metadata cache using create api's are forced to happen using the process user since only that user will have
+ * write permission for the cache file
  */
 public class Metadata {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Metadata.class);
@@ -114,7 +115,7 @@ public class Metadata {
    */
   public static void createMeta(FileSystem fs, Path path, ParquetReaderConfig readerConfig, boolean allColumns, Set<String> columnSet) throws IOException {
     Metadata metadata = new Metadata(readerConfig);
-    metadata.createMetaFilesRecursively(path, fs, allColumns, columnSet);
+    metadata.createMetaFilesRecursivelyAsProcessUser(path, fs, allColumns, columnSet);
   }
 
   /**
@@ -204,6 +205,26 @@ public class Metadata {
   }
 
   /**
+   * Wrapper which makes sure that in all cases metadata file is created as a process user no matter what the caller
+   * is passing.
+   * @param path to the directory of the parquet table
+   * @param fs file system
+   * @param allColumns if set, store column metadata for all the columns
+   * @param columnSet Set of columns for which column metadata has to be stored
+   * @return Pair of parquet metadata. The left one is a parquet metadata for the table. The right one of the Pair is
+   *         a metadata for all subdirectories (if they are present and there are no any parquet files in the
+   *         {@code path} directory).
+   * @throws IOException if parquet metadata can't be serialized and written to the json file
+   */
+  private Pair<ParquetTableMetadata_v3, ParquetTableMetadataDirs>
+  createMetaFilesRecursivelyAsProcessUser(final Path path, FileSystem fs, boolean allColumns, Set<String> columnSet)
+    throws IOException {
+    final FileSystem processUserFileSystem = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(),
+      fs.getConf());
+    return createMetaFilesRecursively(path, processUserFileSystem, allColumns, columnSet);
+  }
+
+  /**
    * Create the parquet metadata files for the directory at the given path and for any subdirectories.
    * Metadata cache files written to the disk contain relative paths. Returned Pair of metadata contains absolute paths.
    *
@@ -216,21 +237,23 @@ public class Metadata {
    *         {@code path} directory).
    * @throws IOException if parquet metadata can't be serialized and written to the json file
    */
-  private Pair<ParquetTableMetadata_v3, ParquetTableMetadataDirs> createMetaFilesRecursively(final Path path, FileSystem fs, boolean allColumns, Set<String> columnSet) throws IOException {
+  private Pair<ParquetTableMetadata_v3, ParquetTableMetadataDirs>
+  createMetaFilesRecursively(final Path path, FileSystem fs, boolean allColumns, Set<String> columnSet)
+    throws IOException {
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     List<ParquetFileMetadata_v3> metaDataList = Lists.newArrayList();
     List<Path> directoryList = Lists.newArrayList();
     ConcurrentHashMap<ColumnTypeMetadata_v3.Key, ColumnTypeMetadata_v3> columnTypeInfoSet =
         new ConcurrentHashMap<>();
-    Path p = path;
-    FileStatus fileStatus = fs.getFileStatus(p);
+    FileStatus fileStatus = fs.getFileStatus(path);
     assert fileStatus.isDirectory() : "Expected directory";
 
     final Map<FileStatus, FileSystem> childFiles = new LinkedHashMap<>();
 
-    for (final FileStatus file : DrillFileSystemUtil.listAll(fs, p, false)) {
+    for (final FileStatus file : DrillFileSystemUtil.listAll(fs, path, false)) {
       if (file.isDirectory()) {
-        ParquetTableMetadata_v3 subTableMetadata = (createMetaFilesRecursively(file.getPath(), fs, allColumns, columnSet)).getLeft();
+        ParquetTableMetadata_v3 subTableMetadata = (createMetaFilesRecursively(file.getPath(), fs, allColumns,
+          columnSet)).getLeft();
         metaDataList.addAll(subTableMetadata.files);
         directoryList.addAll(subTableMetadata.directories);
         directoryList.add(file.getPath());
@@ -259,17 +282,17 @@ public class Metadata {
     parquetTableMetadata.columnTypeInfo.putAll(columnTypeInfoSet);
 
     for (String oldName : OLD_METADATA_FILENAMES) {
-      fs.delete(new Path(p, oldName), false);
+      fs.delete(new Path(path, oldName), false);
     }
     //  relative paths in the metadata are only necessary for meta cache files.
     ParquetTableMetadata_v3 metadataTableWithRelativePaths =
         MetadataPathUtils.createMetadataWithRelativePaths(parquetTableMetadata, path);
-    writeFile(metadataTableWithRelativePaths, new Path(p, METADATA_FILENAME), fs);
+    writeFile(metadataTableWithRelativePaths, new Path(path, METADATA_FILENAME), fs);
 
     if (directoryList.size() > 0 && childFiles.size() == 0) {
       ParquetTableMetadataDirs parquetTableMetadataDirsRelativePaths =
           new ParquetTableMetadataDirs(metadataTableWithRelativePaths.directories);
-      writeFile(parquetTableMetadataDirsRelativePaths, new Path(p, METADATA_DIRECTORIES_FILENAME), fs);
+      writeFile(parquetTableMetadataDirsRelativePaths, new Path(path, METADATA_DIRECTORIES_FILENAME), fs);
       if (timer != null) {
         logger.debug("Creating metadata files recursively took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
       }
@@ -621,7 +644,7 @@ public class Metadata {
         parquetTableMetadataDirs.updateRelativePaths(metadataParentDirPath);
         if (!alreadyCheckedModification && tableModified(parquetTableMetadataDirs.getDirectories(), path, metadataParentDir, metaContext, fs)) {
           parquetTableMetadataDirs =
-              (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(path.getParent()), fs, true, null)).getRight();
+              (createMetaFilesRecursivelyAsProcessUser(Path.getPathWithoutSchemeAndAuthority(path.getParent()), fs, true, null)).getRight();
           newMetadata = true;
         }
       } else {
@@ -636,7 +659,7 @@ public class Metadata {
           if (!alreadyCheckedModification && tableModified(parquetTableMetadata.getDirectories(), path, metadataParentDir, metaContext, fs)) {
           // TODO change with current columns in existing metadata (auto refresh feature)
           parquetTableMetadata =
-              (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(path.getParent()), fs, true, null)).getLeft();
+              (createMetaFilesRecursivelyAsProcessUser(Path.getPathWithoutSchemeAndAuthority(path.getParent()), fs, true, null)).getLeft();
           newMetadata = true;
         }
 
@@ -675,32 +698,29 @@ public class Metadata {
     FileStatus directoryStatus = fs.getFileStatus(parentDir);
     int numDirs = 1;
     if (directoryStatus.getModificationTime() > metaFileModifyTime) {
-      if (timer != null) {
-        logger.debug("Directory {} was modified. Took {} ms to check modification time of {} directories",
-            directoryStatus.getPath().toString(), timer.elapsed(TimeUnit.MILLISECONDS), numDirs);
-        timer.stop();
-      }
-      return true;
+      return logAndStopTimer(true, directoryStatus.getPath().toString(), timer, numDirs);
     }
+    boolean isModified = false;
     for (Path directory : directories) {
       numDirs++;
       metaContext.setStatus(directory);
       directoryStatus = fs.getFileStatus(directory);
       if (directoryStatus.getModificationTime() > metaFileModifyTime) {
-        if (timer != null) {
-          logger.debug("Directory {} was modified. Took {} ms to check modification time of {} directories",
-              directoryStatus.getPath().toString(), timer.elapsed(TimeUnit.MILLISECONDS), numDirs);
-          timer.stop();
-        }
-        return true;
+        isModified = true;
+        break;
       }
     }
+    return logAndStopTimer(isModified, directoryStatus.getPath().toString(), timer, numDirs);
+  }
+
+  private boolean logAndStopTimer(boolean isModified, String directoryName,
+                                  Stopwatch timer, int numDirectories) {
     if (timer != null) {
-      logger.debug("No directories were modified. Took {} ms to check modification time of {} directories",
-          timer.elapsed(TimeUnit.MILLISECONDS), numDirs);
+      logger.debug("{} directory was modified. Took {} ms to check modification time of {} directories",
+        isModified ? directoryName : "No", timer.elapsed(TimeUnit.MILLISECONDS), numDirectories);
       timer.stop();
     }
-    return false;
+    return isModified;
   }
 
 }
