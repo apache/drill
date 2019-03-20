@@ -31,14 +31,17 @@ import org.apache.drill.exec.store.ischema.Records;
 import org.apache.drill.exec.util.FileSystemUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
 
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 public class ShowFilesHandler extends DefaultSqlHandler {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
+  private static final Logger logger = getLogger(ShowFilesHandler.class);
 
   public ShowFilesHandler(SqlHandlerConfig config) {
     super(config);
