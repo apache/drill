@@ -17,18 +17,14 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import java.util.HashSet;
-import java.util.Set;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.common.expression.SchemaPath;
-import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
-
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.schema.Table;
-import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -37,14 +33,19 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlRefreshMetadata;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
+import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
-import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.hadoop.fs.Path;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
 
 public class RefreshMetadataHandler extends DefaultSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RefreshMetadataHandler.class);
@@ -107,18 +108,20 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
         return notSupported(tableName);
       }
 
-      FormatSelection formatSelection = (FormatSelection) selection;
+      final FormatSelection formatSelection = (FormatSelection) selection;
 
       FormatPluginConfig formatConfig = formatSelection.getFormat();
       if (!((formatConfig instanceof ParquetFormatConfig) ||
-          ((formatConfig instanceof NamedFormatPluginConfig) && ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
+          ((formatConfig instanceof NamedFormatPluginConfig) &&
+            ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
         return notSupported(tableName);
       }
 
-      FileSystemPlugin plugin = (FileSystemPlugin) drillTable.getPlugin();
-      DrillFileSystem fs = new DrillFileSystem(plugin.getFormatPlugin(formatSelection.getFormat()).getFsConf());
+      // Always create filesystem object using process user, since it owns the metadata file
+      final DrillFileSystem fs = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(),
+        drillTable.getPlugin().getFormatPlugin(formatConfig).getFsConf());
 
-      Path selectionRoot = formatSelection.getSelection().getSelectionRoot();
+      final Path selectionRoot = formatSelection.getSelection().getSelectionRoot();
       if (!fs.getFileStatus(selectionRoot).isDirectory()) {
         return notSupported(tableName);
       }
@@ -127,7 +130,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
         formatConfig = new ParquetFormatConfig();
       }
 
-      ParquetReaderConfig readerConfig = ParquetReaderConfig.builder()
+      final ParquetReaderConfig readerConfig = ParquetReaderConfig.builder()
         .withFormatConfig((ParquetFormatConfig) formatConfig)
         .withOptions(context.getOptions())
         .build();
