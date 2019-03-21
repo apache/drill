@@ -31,7 +31,7 @@
   <name>contrib/mapr-format-plugin</name>
 
   <properties>
-    <mapr-format-plugin.hbase.version>${hbase.version}</mapr-format-plugin.hbase.version>
+    <mapr-format-plugin.hbase.version>1.1.8-mapr-1808</mapr-format-plugin.hbase.version>
     <mapr.TestSuite>**/MaprDBTestsSuite.class</mapr.TestSuite>
     <mapr.skip.tests>true</mapr.skip.tests>
   </properties>
