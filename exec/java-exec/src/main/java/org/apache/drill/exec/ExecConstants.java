@@ -842,7 +842,10 @@ public final class ExecConstants {
    * for any query.
    */
   public static final String ENABLE_QUERY_PROFILE_OPTION = "exec.query_profile.save";
-  public static final BooleanValidator ENABLE_QUERY_PROFILE_VALIDATOR = new BooleanValidator(ENABLE_QUERY_PROFILE_OPTION, null);
+  public static final BooleanValidator ENABLE_QUERY_PROFILE_VALIDATOR = new BooleanValidator(ENABLE_QUERY_PROFILE_OPTION, new OptionDescription("Save completed profiles to the persistent store"));
+  //Allow to skip writing Alter Session profiles
+  public static final String SKIP_ALTER_SESSION_QUERY_PROFILE = "exec.query_profile.alter_session.skip";
+  public static final BooleanValidator SKIP_SESSION_QUERY_PROFILE_VALIDATOR = new BooleanValidator(SKIP_ALTER_SESSION_QUERY_PROFILE, new OptionDescription("Skip saving ALTER SESSION profiles"));
 
   /**
    * Profiles are normally written after the last client message to reduce latency.

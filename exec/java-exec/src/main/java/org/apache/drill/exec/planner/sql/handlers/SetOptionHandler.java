@@ -63,6 +63,7 @@ public class SetOptionHandler extends AbstractSqlHandler {
           .build(logger);
     }
 
+    final QueryOptionManager options = context.getOptions();
     final String scope = option.getScope();
     final OptionValue.OptionScope optionScope;
     if (scope == null) { // No scope mentioned assumed SESSION
@@ -71,6 +72,11 @@ public class SetOptionHandler extends AbstractSqlHandler {
       switch (scope.toLowerCase()) {
       case "session":
         optionScope = OptionScope.SESSION;
+        // Skip writing profiles for "ALTER SESSION SET" queries
+        if (options.getBoolean(ExecConstants.SKIP_ALTER_SESSION_QUERY_PROFILE)) {
+          logger.debug("Will not write profile for ALTER SESSION SET ... ");
+          context.skipWritingProfile(true);
+        }
         break;
       case "system":
         optionScope = OptionScope.SYSTEM;
@@ -82,7 +88,6 @@ public class SetOptionHandler extends AbstractSqlHandler {
       }
     }
 
-    final QueryOptionManager options = context.getOptions();
     if (optionScope == OptionScope.SYSTEM) {
       // If the user authentication is enabled, make sure the user who is trying to change the system option has
       // administrative privileges.

@@ -77,6 +77,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   private final QueryContextInformation queryContextInfo;
   private final ViewExpansionContext viewExpansionContext;
   private final SchemaTreeProvider schemaTreeProvider;
+  private boolean skipProfileWrite;
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
   private SqlStatementType stmtType;
@@ -92,6 +93,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     this.drillbitContext = drillbitContext;
     this.session = session;
     this.queryId = queryId;
+    this.skipProfileWrite = false;
     queryOptions = new QueryOptionManager(session.getOptions());
     executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());
     plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry());
@@ -354,5 +356,20 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    */
   public SqlStatementType getSQLStatementType() {
     return stmtType;
+  }
+
+  /**
+   * Skip writing profile
+   * @param skipWriting
+   */
+  public void skipWritingProfile(boolean skipWriting) {
+    this.skipProfileWrite = skipWriting;
+  }
+
+  /**
+   * @return Check if to skip writing
+   */
+  public boolean isSkipProfileWrite() {
+    return skipProfileWrite;
   }
 }
