@@ -25,6 +25,7 @@
   <!-- Ace Libraries for Syntax Formatting -->
   <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/serverMessage.js"></script>
 </#macro>
 
 <#macro page_body>
@@ -95,7 +96,7 @@
                 <button type="button" class="btn btn-success" onclick="doEnable('${plugin.getName()}', true)">
                   Enable
                 </button>
-                <button type="button" class="btn!" name="${plugin.getName()}" data-toggle="modal"
+                <button type="button" class="btn" name="${plugin.getName()}" data-toggle="modal"
                         data-target="#pluginsModal">
                   Export
                 </button>
@@ -175,7 +176,7 @@
         </div>
         <div class="modal-body">
 
-          <form id="createForm" role="form" action="/storage/create" method="POST">
+          <form id="createForm" role="form" action="/storage/create_update" method="POST">
             <input type="text" class="form-control" name="name" placeholder="Storage Name">
             <h3>Configuration</h3>
             <div class="form-group">
@@ -207,27 +208,9 @@
     }
 
     function doCreate() {
-      $("#createForm").ajaxForm(function(data) {
-        // alert("ajax works");
-        const messageEl = $("#message");
-        if (data.result === "success") {
-          messageEl.removeClass("hidden")
-                   .removeClass("alert-danger")
-                   .addClass("alert-info")
-                   .text(data.result).alert();
-          setTimeout(function() { location.reload(); }, 800);
-      } else {
-        messageEl.addClass("hidden");
-        // Wait a fraction of a second before showing the message again. This
-        // makes it clear if a second attempt gives the same error as
-        // the first that a "new" message came back from the server
-        setTimeout(function() {
-            messageEl.removeClass("hidden")
-                     .removeClass("alert-info")
-                     .addClass("alert-danger")
-                     .text("Please retry: " + data.result).alert();
-        }, 200);
-        }
+      $("#createForm").ajaxForm({
+        dataType: 'json',
+        success: serverMessage
       });
     }
 

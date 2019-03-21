@@ -24,13 +24,14 @@
   <!-- Ace Libraries for Syntax Formatting -->
   <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/serverMessage.js"></script>
 </#macro>
 
 <#macro page_body>
   <div class="page-header">
   </div>
   <h3>Configuration</h3>
-  <form id="updateForm" role="form" action="/storage/${model.getName()}" method="POST">
+  <form id="updateForm" role="form" action="/storage/create_update" method="POST">
     <input type="hidden" name="name" value="${model.getName()}" />
     <div class="form-group">
       <div id="editor" class="form-control"></div>
@@ -118,33 +119,15 @@
       });
     });
     function doUpdate() {
-      $("#updateForm").ajaxForm(function(data) {
-        const messageEl = $("#message");
-        if (data.result === "success") {
-          messageEl.removeClass("hidden")
-                   .removeClass("alert-danger")
-                   .addClass("alert-info")
-                   .text(data.result).alert();
-          setTimeout(function() { location.reload(); }, 800);
-        } else {
-          messageEl.addClass("hidden");
-          // Wait a fraction of a second before showing the message again. This
-          // makes it clear if a second attempt gives the same error as
-          // the first that a "new" message came back from the server
-          setTimeout(function() {
-            messageEl.removeClass("hidden")
-                     .removeClass("alert-info")
-                     .addClass("alert-danger")
-                     .text("Please retry: " + data.result).alert();
-          }, 200);
-        }
+      $("#updateForm").ajaxForm({
+        dataType: 'json',
+        success: serverMessage
       });
     }
+
     function deleteFunction() {
       if (confirm("Are you sure?")) {
-        $.get("/storage/${model.getName()}/delete", function() {
-          window.location.href = "/storage";
-        });
+        $.get("/storage/${model.getName()}/delete", serverMessage);
       }
     }
 

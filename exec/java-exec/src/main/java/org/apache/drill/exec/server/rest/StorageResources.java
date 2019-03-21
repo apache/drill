@@ -31,7 +31,6 @@ import java.util.stream.StreamSupport;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -132,11 +131,11 @@ public class StorageResources {
     PluginConfigWrapper plugin = getPluginConfig(name);
     try {
       return plugin.setEnabledInStorage(storage, enable)
-          ? message("success")
-          : message("error (plugin does not exist)");
+          ? message("Success")
+          : message("Error (plugin does not exist)");
     } catch (ExecutionSetupException e) {
       logger.debug("Error in enabling storage name: {} flag: {}",  name, enable);
-      return message("error (unable to enable / disable storage)");
+      return message("Error (unable to enable / disable storage)");
     }
   }
 
@@ -153,20 +152,13 @@ public class StorageResources {
             .build();
   }
 
-  @DELETE
-  @Path("/storage/{name}.{format}")
-  @Produces(MediaType.APPLICATION_JSON)
-  public JsonResult deletePlugin(@PathParam("name") String name, @PathParam("format") String format) {
-    return isSupported(format) && getPluginConfig(name).deleteFromStorage(storage)
-        ? message("Success")
-        : message("Error (unable to delete %s.%s storage plugin)", name, format);
-  }
-
   @GET
   @Path("/storage/{name}/delete")
   @Produces(MediaType.APPLICATION_JSON)
   public JsonResult deletePlugin(@PathParam("name") String name) {
-    return deletePlugin(name, JSON_FORMAT);
+    return getPluginConfig(name).deleteFromStorage(storage)
+        ? message("Success")
+        : message("Error (unable to delete %s storage plugin)", name);
   }
 
   @POST
@@ -176,7 +168,7 @@ public class StorageResources {
   public JsonResult createOrUpdatePluginJSON(PluginConfigWrapper plugin) {
     try {
       plugin.createOrUpdateInStorage(storage);
-      return message("success");
+      return message("Success");
     } catch (ExecutionSetupException e) {
       logger.error("Unable to create/ update plugin: " + plugin.getName(), e);
       return message("Error while creating / updating storage : %s", e.getCause() == null ? e.getMessage() :
@@ -185,7 +177,7 @@ public class StorageResources {
   }
 
   @POST
-  @Path("/storage/create")
+  @Path("/storage/create_update")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.APPLICATION_JSON)
   public JsonResult createOrUpdatePlugin(@FormParam("name") String name, @FormParam("config") String storagePluginConfig) {
@@ -223,15 +215,14 @@ public class StorageResources {
   }
 
   private Predicate<Map.Entry<String, StoragePluginConfig>> byPluginGroup(String pluginGroup) {
-    switch (pluginGroup == null ? "" : pluginGroup.toLowerCase()) {
-      case ALL_PLUGINS:
-        return entry -> true;
-      case ENABLED_PLUGINS:
-        return entry -> entry.getValue().isEnabled();
-      case DISABLED_PLUGINS:
-        return entry -> !entry.getValue().isEnabled();
-      default:
-        return entry -> false;
+    if (ALL_PLUGINS.equalsIgnoreCase(pluginGroup)) {
+      return entry -> true;
+    } else if (ENABLED_PLUGINS.equalsIgnoreCase(pluginGroup)) {
+      return entry -> entry.getValue().isEnabled();
+    } else if (DISABLED_PLUGINS.equalsIgnoreCase(pluginGroup)) {
+      return entry -> !entry.getValue().isEnabled();
+    } else {
+      return entry -> false;
     }
   }
 
