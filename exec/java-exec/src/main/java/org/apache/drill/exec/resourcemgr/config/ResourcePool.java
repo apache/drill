@@ -18,6 +18,7 @@
 package org.apache.drill.exec.resourcemgr.config;
 
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.config.selectors.ResourcePoolSelector;
 
 import java.util.List;
@@ -67,4 +68,6 @@ public interface ResourcePool {
   List<ResourcePool> getChildPools();
 
   ResourcePoolSelector getSelector();
+
+  NodeResources getPoolResourceShare();
 }

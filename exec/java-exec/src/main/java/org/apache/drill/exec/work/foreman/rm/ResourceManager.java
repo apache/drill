@@ -51,7 +51,5 @@ public interface ResourceManager {
 
   QueryResourceManager newQueryRM(final Foreman foreman);
 
-  void addToWaitingQueue(final QueryResourceManager queryRM);
-
   void close();
 }

@@ -23,18 +23,19 @@ import org.apache.drill.common.util.function.CheckedConsumer;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.common.DrillNode;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.config.QueryQueueConfig;
 import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collection;
-import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,7 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
   private final boolean planHasMemory;
   private final QueryContext queryContext;
   private final QueryResourceManager rm;
-  private final Map<DrillbitEndpoint, Map<PhysicalOperator, Long>> operators;
+  private final Map<DrillNode, Map<PhysicalOperator, Long>> operators;
 
   public DistributedQueueParallelizer(boolean memoryPlanning, QueryContext queryContext, QueryResourceManager queryRM) {
     super(queryContext);
@@ -62,7 +63,12 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
   public BiFunction<DrillbitEndpoint, PhysicalOperator, Long> getMemory() {
     return (endpoint, operator) -> {
       if (!planHasMemory) {
-        return operators.get(endpoint).get(operator);
+        final DrillNode drillEndpointNode = DrillNode.create(endpoint);
+        if (operator.isBufferedOperator(queryContext)) {
+          return operators.get(drillEndpointNode).get(operator);
+        } else {
+          return operator.getMaxAllocation();
+        }
       }
       else {
         return operator.getMaxAllocation();
@@ -90,14 +96,18 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
     if (planHasMemory) {
       return;
     }
+
+    final Map<DrillNode, String> onlineDrillNodeUUIDs = onlineEndpointUUIDs.entrySet().stream()
+      .collect(Collectors.toMap(x -> DrillNode.create(x.getKey()), x -> x.getValue()));
+
     // total node resources for the query plan maintained per drillbit.
-    final Map<DrillbitEndpoint, NodeResources> totalNodeResources =
-            onlineEndpointUUIDs.keySet().stream().collect(Collectors.toMap(x ->x,
+    final Map<DrillNode, NodeResources> totalNodeResources =
+      onlineDrillNodeUUIDs.keySet().stream().collect(Collectors.toMap(x -> x,
                                                               x -> NodeResources.create()));
 
     // list of the physical operators and their memory requirements per drillbit.
-    final Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>> operators =
-            onlineEndpointUUIDs.keySet().stream().collect(Collectors.toMap(x -> x,
+    final Map<DrillNode, List<Pair<PhysicalOperator, Long>>> operators =
+      onlineDrillNodeUUIDs.keySet().stream().collect(Collectors.toMap(x -> x,
                                                               x -> new ArrayList<>()));
 
     for (Wrapper wrapper : roots) {
@@ -112,14 +122,14 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
       }));
     }
 
-    QueryQueueConfig queueConfig = null;
+    final QueryQueueConfig queueConfig;
     try {
       queueConfig = this.rm.selectQueue(max(totalNodeResources.values()));
     } catch (QueueSelectionException exception) {
       throw new ExecutionSetupException(exception.getMessage());
     }
 
-    Map<DrillbitEndpoint,
+    Map<DrillNode,
         List<Pair<PhysicalOperator, Long>>> memoryAdjustedOperators = ensureOperatorMemoryWithinLimits(operators, totalNodeResources,
                                                                                                        queueConfig.getMaxQueryMemoryInMBPerNode());
     memoryAdjustedOperators.entrySet().stream().forEach((x) -> {
@@ -130,14 +140,14 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
       this.operators.put(x.getKey(), memoryPerOperator);
     });
 
-    this.rm.setCost(convertToUUID(totalNodeResources, onlineEndpointUUIDs));
+    this.rm.setCost(convertToUUID(totalNodeResources, onlineDrillNodeUUIDs));
   }
 
-  private Map<String, NodeResources> convertToUUID(Map<DrillbitEndpoint, NodeResources> nodeResourcesMap,
-                                                   Map<DrillbitEndpoint, String> onlineEndpointUUIDs) {
+  private Map<String, NodeResources> convertToUUID(Map<DrillNode, NodeResources> nodeResourcesMap,
+                                                   Map<DrillNode, String> onlineDrillNodeUUIDs) {
     Map<String, NodeResources> nodeResourcesPerUUID = new HashMap<>();
-    for (Map.Entry<DrillbitEndpoint, NodeResources> nodeResource : nodeResourcesMap.entrySet()) {
-      nodeResourcesPerUUID.put(onlineEndpointUUIDs.get(nodeResource.getKey()), nodeResource.getValue());
+    for (Map.Entry<DrillNode, NodeResources> nodeResource : nodeResourcesMap.entrySet()) {
+      nodeResourcesPerUUID.put(onlineDrillNodeUUIDs.get(nodeResource.getKey()), nodeResource.getValue());
     }
     return nodeResourcesPerUUID;
   }
@@ -160,11 +170,11 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
    * @param nodeLimit permissible node limit.
    * @return list of operators which contain adjusted memory limits.
    */
-  private Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>>
-          ensureOperatorMemoryWithinLimits(Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>> memoryPerOperator,
-                                           Map<DrillbitEndpoint, NodeResources> nodeResourceMap, long nodeLimit) {
+  private Map<DrillNode, List<Pair<PhysicalOperator, Long>>>
+          ensureOperatorMemoryWithinLimits(Map<DrillNode, List<Pair<PhysicalOperator, Long>>> memoryPerOperator,
+                                           Map<DrillNode, NodeResources> nodeResourceMap, long nodeLimit) {
     // Get the physical operators which are above the node memory limit.
-    Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>> onlyMemoryAboveLimitOperators = new HashMap<>();
+    Map<DrillNode, List<Pair<PhysicalOperator, Long>>> onlyMemoryAboveLimitOperators = new HashMap<>();
     memoryPerOperator.entrySet().stream().forEach((entry) -> {
       onlyMemoryAboveLimitOperators.putIfAbsent(entry.getKey(), new ArrayList<>());
       if (nodeResourceMap.get(entry.getKey()).getMemoryInBytes() > nodeLimit) {
@@ -175,7 +185,7 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
 
     // Compute the total memory required by the physical operators on the drillbits which are above node limit.
     // Then use the total memory to adjust the memory requirement based on the permissible node limit.
-    Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>> memoryAdjustedDrillbits = new HashMap<>();
+    Map<DrillNode, List<Pair<PhysicalOperator, Long>>> memoryAdjustedDrillbits = new HashMap<>();
     onlyMemoryAboveLimitOperators.entrySet().stream().forEach(
       entry -> {
         Long totalMemory = entry.getValue().stream().mapToLong(Pair::getValue).sum();
@@ -191,7 +201,7 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
 
     // Get all the operations on drillbits which were adjusted for memory and merge them with operators which are not
     // adjusted for memory.
-    Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>> allDrillbits = new HashMap<>();
+    Map<DrillNode, List<Pair<PhysicalOperator, Long>>> allDrillbits = new HashMap<>();
     memoryPerOperator.entrySet().stream().filter((entry) -> !memoryAdjustedDrillbits.containsKey(entry.getKey())).forEach(
       operatorMemory -> {
         allDrillbits.put(operatorMemory.getKey(), operatorMemory.getValue());

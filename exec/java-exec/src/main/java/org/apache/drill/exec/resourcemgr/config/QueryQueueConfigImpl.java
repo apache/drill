@@ -164,7 +164,7 @@ public class QueryQueueConfigImpl implements QueryQueueConfig {
   @Override
   public String toString() {
     return "{ QueueName: " + queueName + ", QueueId: " + queueUUID + ", QueuePerNodeResource(MB): " +
-      queryPerNodeResourceShare.toString() + ", MaxQueryMemPerNode(MB): " + queryPerNodeResourceShare.toString() +
+      queueResourceShare.toString() + ", MaxQueryMemPerNode(MB): " + queryPerNodeResourceShare.toString() +
       ", MaxAdmissible: " + maxAdmissibleQuery + ", MaxWaiting: " + maxWaitingQuery + ", MaxWaitTimeout: " +
       maxWaitingTimeout + ", WaitForPreferredNodes: " + waitForPreferredNodes + "}";
   }

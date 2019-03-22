@@ -19,9 +19,8 @@ package org.apache.drill.exec.work.foreman.rm;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.planner.fragment.QueryParallelizer;
 import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
-import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.planner.fragment.QueryParallelizer;
 import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.config.QueryQueueConfig;
 import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
@@ -38,76 +37,8 @@ import java.util.Map;
 
 public class DefaultResourceManager implements ResourceManager {
 
-  public static class DefaultQueryResourceManager implements QueryResourceManager {
-    private final DefaultResourceManager rm;
-    private final QueryContext queryContext;
-
-    public DefaultQueryResourceManager(final DefaultResourceManager rm, final Foreman foreman) {
-      this.rm = rm;
-      this.queryContext = foreman.getQueryContext();
-    }
-
-    @Override
-    public void setCost(double cost) {
-      // Nothing to do by default.
-    }
-
-    @Override
-    public void setCost(Map<String, NodeResources> costOnAssignedEndpoints) {
-      // Nothing to do by default
-    }
-
-    @Override
-    public QueryParallelizer getParallelizer(boolean memoryPlanning){
-      return new DefaultParallelizer(memoryPlanning, queryContext);
-    }
-
-    public QueryAdmitResponse admit() {
-      // No queueing by default
-      return QueryAdmitResponse.ADMITTED;
-    }
-
-    public boolean reserveResources(QueryQueueConfig selectedQueue, UserBitShared.QueryId queryId) throws Exception {
-      return true;
-    }
-
-    @Override
-    public QueryQueueConfig selectQueue(NodeResources maxNodeResource)  throws QueueSelectionException {
-      throw new UnsupportedOperationException("Queue is not supported in default resource manager");
-    }
-
-    @Override
-    public String getLeaderId() {
-      throw new UnsupportedOperationException("Leader is not supported in the DefaultResourceManager");
-    }
-
-    public void updateState(QueryRMState newState) {
-      // no op since Default QueryRM doesn't have any state machine
-    }
-
-    @Override
-    public void exit() {
-      // No queueing by default
-    }
-
-    @Override
-    public boolean hasQueue() { return false; }
-
-    @Override
-    public String queueName() { return null; }
-
-    @Override
-    public long queryMemoryPerNode() {
-      return rm.memoryPerNode;
-    }
-
-    @Override
-    public long minimumOperatorMemory() {
-      return 0;
-    }
-  }
-
   public final long memoryPerNode;
+
   public final int cpusPerNode;
 
   public DefaultResourceManager() {
@@ -137,4 +68,75 @@ public class DefaultResourceManager implements ResourceManager {
 
   @Override
   public void close() { }
+
+  public static class DefaultQueryResourceManager implements QueryResourceManager {
+    private final DefaultResourceManager rm;
+    private final QueryContext queryContext;
+
+    public DefaultQueryResourceManager(final DefaultResourceManager rm, final Foreman foreman) {
+      this.rm = rm;
+      this.queryContext = foreman.getQueryContext();
+    }
+
+    @Override
+    public void setCost(double cost) {
+      // no-op
+    }
+
+    @Override
+    public void setCost(Map<String, NodeResources> costOnAssignedEndpoints) {
+      throw new UnsupportedOperationException("DefaultResourceManager doesn't support setting up cost");
+    }
+
+    @Override
+    public QueryParallelizer getParallelizer(boolean memoryPlanning){
+      return new DefaultParallelizer(memoryPlanning, queryContext);
+    }
+
+    public QueryAdmitResponse admit() {
+      // No queueing by default
+      return QueryAdmitResponse.ADMITTED;
+    }
+
+    public boolean reserveResources() throws Exception {
+      // Resource reservation is not done in this case only estimation is assigned to operator during planning time
+      return true;
+    }
+
+    @Override
+    public QueryQueueConfig selectQueue(NodeResources maxNodeResource)  throws QueueSelectionException {
+      throw new UnsupportedOperationException("DefaultResourceManager doesn't support any queues");
+    }
+
+    @Override
+    public String getLeaderId() {
+      throw new UnsupportedOperationException("DefaultResourceManager doesn't support leaders");
+    }
+
+    @Override
+    public void updateState(QueryRMState newState) {
+      // no op since Default QueryRM doesn't have any state machine
+    }
+
+    @Override
+    public void exit() {
+      // No queueing by default
+    }
+
+    @Override
+    public boolean hasQueue() { return false; }
+
+    @Override
+    public String queueName() { return null; }
+
+    @Override
+    public long queryMemoryPerNode() {
+      return rm.memoryPerNode;
+    }
+
+    @Override
+    public long minimumOperatorMemory() {
+      return 0;
+    }
+  }
 }

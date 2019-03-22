@@ -31,6 +31,7 @@ import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.details.ServiceCacheListener;
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.DrillNode;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -46,11 +47,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -66,15 +64,13 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
   private CuratorFramework curator;
   private ServiceDiscovery<DrillbitEndpoint> discovery;
-  private volatile Collection<DrillbitEndpoint> endpoints = Collections.emptyList();
   private final String serviceName;
   private final CountDownLatch initialConnection = new CountDownLatch(1);
   private final TransientStoreFactory factory;
   private ServiceCache<DrillbitEndpoint> serviceCache;
-  private DrillbitEndpoint endpoint;
 
   // endpointsMap maps String UUID to Drillbit endpoints
-  private ConcurrentHashMap<String, DrillbitEndpoint> endpointsMap = new ConcurrentHashMap<>();
+  private  Map<String, DrillbitEndpoint> endpointsMap = new ConcurrentHashMap<>();
   private static final Pattern ZK_COMPLEX_STRING = Pattern.compile("(^.*?)/(.*)/([^/]*)$");
 
   public ZKClusterCoordinator(DrillConfig config, String connect) {
@@ -220,7 +216,8 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
    */
   public RegistrationHandle update(RegistrationHandle handle, State state) {
     ZKRegistrationHandle h = (ZKRegistrationHandle) handle;
-      try {
+    final DrillbitEndpoint endpoint;
+    try {
         endpoint = h.endpoint.toBuilder().setState(state).build();
         ServiceInstance<DrillbitEndpoint> serviceInstance = ServiceInstance.<DrillbitEndpoint>builder()
                 .name(serviceName)
@@ -231,6 +228,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
         Throwables.throwIfUnchecked(e);
         throw new RuntimeException(e);
       }
+      handle.setEndPoint(endpoint);
       return handle;
   }
 
@@ -282,46 +280,49 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   private synchronized void updateEndpoints() {
     try {
       // All active bits in the Zookeeper
-      final Map<String, DrillbitEndpoint> activeEndpointsUUID = discovery.queryForInstances(serviceName).stream()
+      final Map<String, DrillbitEndpoint> UUIDtoEndpoints = discovery.queryForInstances(serviceName).stream()
         .collect(Collectors.toMap(ServiceInstance::getId, ServiceInstance::getPayload));
 
-      final Map<DrillbitEndpoint, String> UUIDtoEndpoints = activeEndpointsUUID.entrySet().stream()
-        .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+      final Map<DrillNode, String> activeEndpointsUUID = UUIDtoEndpoints.entrySet().stream()
+        .collect(Collectors.toMap(x -> DrillNode.create(x.getValue()), Map.Entry::getKey));
 
       // set of newly dead bits : original bits - new set of active bits.
-      Set<DrillbitEndpoint> unregisteredBits = new HashSet<>();
+      final Map<DrillbitEndpoint, String> unregisteredBits = new HashMap<>();
       // Set of newly live bits : new set of active bits - original bits.
-      Set<DrillbitEndpoint> registeredBits = new HashSet<>();
+      final Map<DrillbitEndpoint, String> registeredBits = new HashMap<>();
 
 
       // Updates the endpoints map if there is a change in state of the endpoint or with the addition
       // of new drillbit endpoints. Registered endpoints is set to newly live drillbit endpoints.
-      for (Map.Entry<String, DrillbitEndpoint> endpointToUUID : activeEndpointsUUID.entrySet()) {
-        endpointsMap.put(endpointToUUID.getKey(), endpointToUUID.getValue());
+      for (Map.Entry<String, DrillbitEndpoint> endpoint : UUIDtoEndpoints.entrySet()) {
+        // check if this bit is newly added bit
+        if (!endpointsMap.containsKey(endpoint.getKey())) {
+          registeredBits.put(endpoint.getValue(), endpoint.getKey());
+        }
+        endpointsMap.put(endpoint.getKey(), endpoint.getValue());
       }
 
       // Remove all the endpoints that are newly dead
       for ( String bitUUID: endpointsMap.keySet()) {
-        if (!activeEndpointsUUID.containsKey(bitUUID)) {
+        if (!UUIDtoEndpoints.containsKey(bitUUID)) {
           final DrillbitEndpoint unregisteredBit = endpointsMap.get(bitUUID);
-          unregisteredBits.add(unregisteredBit);
-
-          if (UUIDtoEndpoints.containsKey(unregisteredBit)) {
+          unregisteredBits.put(unregisteredBit, bitUUID);
+          final DrillNode unregisteredNode = DrillNode.create(unregisteredBit);
+          if (activeEndpointsUUID.containsKey(unregisteredNode)) {
             logger.info("Drillbit registered again with different UUID. [Details: Address: {}, UserPort: {}," +
               " PreviousUUID: {}, CurrentUUID: {}", unregisteredBit.getAddress(), unregisteredBit.getUserPort(),
-              bitUUID, UUIDtoEndpoints.get(unregisteredBit));
+              bitUUID, activeEndpointsUUID.get(unregisteredNode));
           }
           endpointsMap.remove(bitUUID);
         }
       }
-      endpoints = endpointsMap.values();
       if (logger.isDebugEnabled()) {
         StringBuilder builder = new StringBuilder();
         builder.append("Active drillbit set changed.  Now includes ");
-        builder.append(activeEndpointsUUID.size());
+        builder.append(UUIDtoEndpoints.size());
         builder.append(" total bits. New active drillbits:\n");
         builder.append("Address | User Port | Control Port | Data Port | Version | State\n");
-        for (DrillbitEndpoint bit: activeEndpointsUUID.values()) {
+        for (DrillbitEndpoint bit: UUIDtoEndpoints.values()) {
           builder.append(bit.getAddress()).append(" | ");
           builder.append(bit.getUserPort()).append(" | ");
           builder.append(bit.getControlPort()).append(" | ");

@@ -246,13 +246,18 @@ public class ResourcePoolImpl implements ResourcePool {
   }
 
   @Override
+  public NodeResources getPoolResourceShare() {
+    return poolResourcePerNode;
+  }
+
+  @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("{PoolName: ").append(poolName);
     sb.append(", PoolResourceShare: ").append(poolResourceShare);
-    sb.append(", Selector: ").append(assignedSelector.getSelectorType());
+    sb.append(", Selector: ").append(assignedSelector.toString());
     if (isLeafPool()) {
-      sb.append(", Queue: [").append(assignedQueue.toString()).append("]");
+      sb.append(", Queue: ").append(assignedQueue.toString());
     } else {
       sb.append(", ChildPools: [");
 

@@ -18,9 +18,9 @@
 package org.apache.drill.exec.work.foreman;
 
 
-import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Interface to define the listener to take actions when the set of active drillbits is changed.
@@ -29,14 +29,14 @@ public interface DrillbitStatusListener {
 
   /**
    * The action to taken when a set of drillbits are unregistered from the cluster.
-   * @param  unregisteredDrillbits the set of newly unregistered drillbits.
+   * @param unregisteredDrillbitsUUID
    */
-  void drillbitUnregistered(Set<CoordinationProtos.DrillbitEndpoint> unregisteredDrillbits);
+  void drillbitUnregistered(Map<DrillbitEndpoint, String> unregisteredDrillbitsUUID);
 
   /**
    * The action to taken when a set of new drillbits are registered to the cluster.
-   * @param  registeredDrillbits the set of newly registered drillbits. Note: the complete set of currently registered bits could be different.
+   * @param registeredDrillbitsUUID
    */
-  void drillbitRegistered(Set<CoordinationProtos.DrillbitEndpoint> registeredDrillbits);
+  void drillbitRegistered(Map<DrillbitEndpoint, String> registeredDrillbitsUUID);
 
 }

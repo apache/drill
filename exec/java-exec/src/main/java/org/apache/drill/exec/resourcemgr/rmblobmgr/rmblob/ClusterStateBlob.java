@@ -28,6 +28,7 @@ import java.util.Map;
 public class ClusterStateBlob extends AbstractRMStateBlob {
   public static final String NAME = "cluster_usage";
 
+  // Stores the resources available out of total resources on each node of the cluster
   @JsonDeserialize(contentUsing = NodeResources.NodeResourcesDe.class)
   private Map<String, NodeResources> clusterState;
 

@@ -17,14 +17,10 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import com.carrotsearch.hppc.IntObjectHashMap;
+import com.carrotsearch.hppc.predicates.IntObjectPredicate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.buffer.ByteBuf;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -52,12 +48,13 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
-
-import com.carrotsearch.hppc.IntObjectHashMap;
-import com.carrotsearch.hppc.predicates.IntObjectPredicate;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Each Foreman holds its own QueryManager.  This manages the events associated with execution of a particular query across all fragments.
@@ -564,15 +561,15 @@ public class QueryManager implements AutoCloseable {
   private final DrillbitStatusListener drillbitStatusListener = new DrillbitStatusListener() {
 
     @Override
-    public void drillbitRegistered(final Set<DrillbitEndpoint> registeredDrillbits) {
+    public void drillbitRegistered(Map<DrillbitEndpoint, String> registeredDrillbitsUUID) {
     }
 
     @Override
-    public void drillbitUnregistered(final Set<DrillbitEndpoint> unregisteredDrillbits) {
+    public void drillbitUnregistered(Map<DrillbitEndpoint, String> unregisteredDrillbitsUUID) {
       final StringBuilder failedNodeList = new StringBuilder();
       boolean atLeastOneFailure = false;
 
-      for (final DrillbitEndpoint ep : unregisteredDrillbits) {
+      for (final DrillbitEndpoint ep : unregisteredDrillbitsUUID.keySet()) {
         final NodeTracker tracker = nodeMap.get(ep);
         if (tracker == null) {
           continue; // fragments were not assigned to this Drillbit

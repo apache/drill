@@ -56,6 +56,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
@@ -87,6 +88,9 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    */
   private boolean closed = false;
   private DrillOperatorTable table;
+  private Map<DrillbitEndpoint, String> onlineEndpointsUUID;
+  private Map<DrillNode, String> onlineEndpointNodesUUID;
+  private DrillNode localEndpointNode;
 
   public QueryContext(final UserSession session, final DrillbitContext drillbitContext, QueryId queryId) {
     this.drillbitContext = drillbitContext;
@@ -225,6 +229,13 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     return drillbitContext.getEndpoint();
   }
 
+  public DrillNode getCurrentEndpointNode() {
+    if (localEndpointNode == null) {
+      localEndpointNode = DrillNode.create(getCurrentEndpoint());
+    }
+    return localEndpointNode;
+  }
+
   public StoragePluginRegistry getStorage() {
     return drillbitContext.getStorage();
   }
@@ -242,11 +253,24 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   /**
-   * TODO: Change it to use {@link DrillNode} instead of DrillbitEndpoint
    * @return map of endpoint to UUIDs
    */
   public Map<DrillbitEndpoint, String> getOnlineEndpointUUIDs() {
-    return drillbitContext.getOnlineEndpointUUIDs();
+    if (onlineEndpointsUUID == null) {
+      onlineEndpointsUUID = drillbitContext.getOnlineEndpointUUIDs();
+    }
+    return onlineEndpointsUUID;
+  }
+
+  /**
+   * @return map of DrillNode to UUIDs
+   */
+  public Map<DrillNode, String> getOnlineEndpointNodeUUIDs() {
+    if (onlineEndpointNodesUUID == null) {
+      onlineEndpointNodesUUID = getOnlineEndpointUUIDs().entrySet().stream()
+        .collect(Collectors.toMap(x -> DrillNode.create(x.getKey()), Map.Entry::getValue));
+    }
+    return onlineEndpointNodesUUID;
   }
 
   public DrillConfig getConfig() {

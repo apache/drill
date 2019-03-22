@@ -18,6 +18,7 @@
 package org.apache.drill.exec.resourcemgr.config.selectionpolicy;
 
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.config.QueryQueueConfig;
 import org.apache.drill.exec.resourcemgr.config.ResourcePool;
@@ -70,9 +71,10 @@ public class BestFitQueueSelection extends AbstractQueueSelectionPolicy {
   @Override
   public ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext,
                                   NodeResources maxResourcePerNode) throws QueueSelectionException {
+    final String queryIdString = QueryIdHelper.getQueryId(queryContext.getQueryId());
     if (allPools.isEmpty()) {
       throw new QueueSelectionException(String.format("There are no pools to apply %s selection policy pool for the " +
-          "query: %s", getSelectionPolicy().toString(), queryContext.getQueryId()));
+          "query: %s", getSelectionPolicy().toString(), queryIdString));
     }
 
     allPools.sort(new BestFitComparator());
@@ -85,9 +87,8 @@ public class BestFitQueueSelection extends AbstractQueueSelectionPolicy {
         break;
       }
     }
-    logger.debug("Selected pool {} based on {} policy for query {}", selectedPool.getPoolName(),
-      getSelectionPolicy().toString(),
-      queryContext.getQueryId());
+    logger.info("Selected pool {} based on {} policy for query {}", selectedPool.getPoolName(),
+      getSelectionPolicy().toString(), queryIdString);
     return selectedPool;
   }
 }

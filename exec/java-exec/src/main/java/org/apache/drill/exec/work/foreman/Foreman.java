@@ -61,6 +61,7 @@ import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.filter.RuntimeFilterRouter;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
+import org.apache.drill.exec.work.foreman.rm.QueryResourceManager.QueryAdmitResponse;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -432,7 +433,6 @@ public class Foreman implements Runnable {
     if (textPlan != null) {
       queryManager.setPlanText(textPlan.value);
     }
-    queryRM.setCost(plan.totalCost());
     queryManager.setTotalCost(plan.totalCost());
     work.applyPlan(drillbitContext.getPlanReader());
     logWorkUnit(work);
@@ -508,12 +508,10 @@ public class Foreman implements Runnable {
   private void reserveAndRunFragments() {
     // Now try to reserve the resources required by this query
     try {
-      // TODO: pass parameters for reserveResources
-      if (!queryRM.reserveResources(null, queryId)) {
+      if (!queryRM.reserveResources()) {
         // query is added to RM waiting queue
-        // TODO: Add the queue name
         logger.info("Query {} is added to the RM waiting queue of rm pool {} since it was not able to reserve " +
-            "required resources", queryId);
+            "required resources", queryIdString, queryRM.queueName());
         return;
       }
       runFragments();
@@ -530,10 +528,7 @@ public class Foreman implements Runnable {
   private boolean enqueue() {
     queryStateProcessor.moveToState(QueryState.ENQUEUED, null);
     try {
-      if (queryRM.admit() == QueryResourceManager.QueryAdmitResponse.WAIT_FOR_RESPONSE) {
-        return false;
-      }
-      return true;
+      return queryRM.admit() != QueryAdmitResponse.WAIT_FOR_RESPONSE;
     } catch (QueueTimeoutException | QueryQueueException e) {
       queryStateProcessor.moveToState(QueryState.FAILED, e);
       return false;
@@ -593,7 +588,7 @@ public class Foreman implements Runnable {
     }
 
     queryText = serverState.getSqlQuery();
-    logger.info("Prepared statement query for QueryId {} : {}", queryId, queryText);
+    logger.info("Prepared statement query for QueryId {} : {}", queryIdString, queryText);
     runSQL(queryText);
 
   }
@@ -625,8 +620,7 @@ public class Foreman implements Runnable {
     if (! logger.isTraceEnabled()) {
       return;
     }
-    logger.trace(String.format("PlanFragments for query %s \n%s",
-        queryId, queryWorkUnit.stringifyFragments()));
+    logger.trace(String.format("PlanFragments for query %s \n%s", queryIdString, queryWorkUnit.stringifyFragments()));
   }
 
   private void runSQL(final String sql) throws ExecutionSetupException {

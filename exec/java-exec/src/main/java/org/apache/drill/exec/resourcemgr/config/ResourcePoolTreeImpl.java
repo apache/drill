@@ -19,6 +19,7 @@ package org.apache.drill.exec.resourcemgr.config;
 
 import com.typesafe.config.Config;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
 import org.apache.drill.exec.resourcemgr.config.exception.RMConfigException;
@@ -94,6 +95,14 @@ public class ResourcePoolTreeImpl implements ResourcePoolTree {
   }
 
   /**
+   * @return NodeResources which represents total node resource
+   */
+  @Override
+  public NodeResources getRootPoolResources() {
+    return rootPool.getPoolResourceShare();
+  }
+
+  /**
    * @return Map containing all the configured leaf queues
    */
   @Override
@@ -136,7 +145,7 @@ public class ResourcePoolTreeImpl implements ResourcePoolTree {
     final List<ResourcePool> selectedPools = assignmentResult.getSelectedLeafPools();
     if (selectedPools.size() == 0) {
       throw new QueueSelectionException(String.format("No resource pools to choose from for the query: %s",
-        queryContext.getQueryId()));
+        QueryIdHelper.getQueryId(queryContext.getQueryId())));
     } else if (selectedPools.size() == 1) {
       return selectedPools.get(0).getQueryQueue();
     }

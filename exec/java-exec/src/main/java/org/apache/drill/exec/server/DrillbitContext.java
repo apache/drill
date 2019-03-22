@@ -24,6 +24,7 @@ import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -50,11 +51,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
 
 public class DrillbitContext implements AutoCloseable {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
 
   private final BootStrapContext context;
   private final PhysicalPlanReader reader;
@@ -75,6 +79,10 @@ public class DrillbitContext implements AutoCloseable {
   private final DrillOperatorTable table;
   private final QueryProfileStoreContext profileStoreContext;
   private ResourceManager resourceManager;
+  private RegistrationHandle handle;
+  private final Lock isHandleSetLock = new ReentrantLock();
+  private final Condition isHandleSetCondition = isHandleSetLock.newCondition();
+
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -137,6 +145,30 @@ public class DrillbitContext implements AutoCloseable {
 
   public void startRM() {
     resourceManager = new ResourceManagerBuilder(this).build();
+  }
+
+  public void setRegistrationHandle(RegistrationHandle handle) {
+    try {
+      isHandleSetLock.lock();
+      this.handle = handle;
+    } finally {
+      isHandleSetCondition.signal();
+      isHandleSetLock.unlock();
+    }
+  }
+
+  public RegistrationHandle getRegistrationHandle() {
+    isHandleSetLock.lock();
+    while (handle == null) {
+      try {
+        isHandleSetCondition.await();
+      } catch (InterruptedException ex) {
+        logger.debug("Interrupted while waiting to get registration handle");
+        // continue
+      }
+    }
+    isHandleSetLock.unlock();
+    return handle;
   }
 
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {
@@ -301,6 +333,7 @@ public class DrillbitContext implements AutoCloseable {
     getFunctionImplementationRegistry().close();
     getRemoteFunctionRegistry().close();
     getCompiler().close();
+    getResourceManager().close();
   }
 
   public ResourceManager getResourceManager() {

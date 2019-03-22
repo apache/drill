@@ -228,9 +228,12 @@ public class Drillbit implements AutoCloseable {
       int httpPort = getWebServerPort();
       md = md.toBuilder().setHttpPort(httpPort).build();
     }
-    registrationHandle = coord.register(md);
+
     // Must start the RM after the above since it needs to read system options.
     drillbitContext.startRM();
+    registrationHandle = coord.register(md);
+    // Set the registration handle for local bit
+    drillbitContext.setRegistrationHandle(registrationHandle);
 
     shutdownHook = new ShutdownThread(this, new StackTrace());
     Runtime.getRuntime().addShutdownHook(shutdownHook);

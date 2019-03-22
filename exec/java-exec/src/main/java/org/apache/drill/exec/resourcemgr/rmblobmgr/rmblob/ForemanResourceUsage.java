@@ -33,6 +33,7 @@ public class ForemanResourceUsage {
 
   private int version;
 
+  // Stores the resources used across all queries of a Foreman on all the other Drillbit nodes
   private Map<String, NodeResources> foremanUsage;
 
   private int runningCount;

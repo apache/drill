@@ -20,7 +20,6 @@ package org.apache.drill.exec.work.foreman.rm;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.fragment.QueryParallelizer;
 import org.apache.drill.exec.planner.fragment.ZKQueueParallelizer;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.config.QueryQueueConfig;
 import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
@@ -52,6 +51,35 @@ import java.util.Map;
 public class ThrottledResourceManager extends AbstractResourceManager {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ThrottledResourceManager.class);
+
+  private final QueryQueue queue;
+
+  public ThrottledResourceManager(final DrillbitContext drillbitContext,
+                                  final QueryQueue queue) {
+    super(drillbitContext);
+    this.queue = queue;
+    queue.setMemoryPerNode(memoryPerNode());
+  }
+
+  public long minimumOperatorMemory() {
+    return queue.minimumOperatorMemory();
+  }
+
+  public long defaultQueryMemoryPerNode(double cost) {
+    return queue.defaultQueryMemoryPerNode(cost);
+  }
+
+  public QueryQueue queue() { return queue; }
+
+  @Override
+  public QueryResourceManager newQueryRM(Foreman foreman) {
+    return new QueuedQueryResourceManager(this, foreman);
+  }
+
+  @Override
+  public void close() {
+    queue.close();
+  }
 
   /**
    * Per-query resource manager. Handles resources and optional queue lease for
@@ -115,21 +143,24 @@ public class ThrottledResourceManager extends AbstractResourceManager {
     }
 
     @Override
-    public boolean reserveResources(QueryQueueConfig selectedQueue, UserBitShared.QueryId queryId) throws Exception {
-      // no op
+    public boolean reserveResources() throws Exception {
+      // Resource reservation is not done in this case only estimation is assigned to operator during planning time
       return true;
     }
 
     @Override
     public QueryQueueConfig selectQueue(NodeResources maxNodeResource) throws QueueSelectionException {
-      throw new UnsupportedOperationException("Select queue is not supported in QueuedQueryResourceManager");
+      throw new UnsupportedOperationException("QueuedQueryResourceManager supports ZKQueue not Drills distributed " +
+        "queue");
     }
 
     @Override
     public String getLeaderId() {
-      throw new UnsupportedOperationException("Leader is not supported in QueuedQueryResourceManager");
+      throw new UnsupportedOperationException("QueuedQueryResourceManager has Zookeeper as the central leader for all" +
+        " queues.");
     }
 
+    @Override
     public void updateState(QueryRMState state) {
       // no-op Doesn't support any state machine
     }
@@ -149,40 +180,5 @@ public class ThrottledResourceManager extends AbstractResourceManager {
     public String queueName() {
       return lease == null ? null : lease.queueName();
     }
-  }
-
-  private final QueryQueue queue;
-
-  public ThrottledResourceManager(final DrillbitContext drillbitContext,
-      final QueryQueue queue) {
-    super(drillbitContext);
-    this.queue = queue;
-    queue.setMemoryPerNode(memoryPerNode());
-  }
-
-  public long minimumOperatorMemory() {
-    return queue.minimumOperatorMemory();
-  }
-
-  public long defaultQueryMemoryPerNode(double cost) {
-    return queue.defaultQueryMemoryPerNode(cost);
-  }
-
-  public QueryQueue queue() { return queue; }
-
-  @Override
-  public QueryResourceManager newQueryRM(Foreman foreman) {
-    return new QueuedQueryResourceManager(this, foreman);
-  }
-
-  @Override
-  public void addToWaitingQueue(QueryResourceManager queryRM) {
-    // no-op
-    return;
-  }
-
-  @Override
-  public void close() {
-    queue.close();
   }
 }

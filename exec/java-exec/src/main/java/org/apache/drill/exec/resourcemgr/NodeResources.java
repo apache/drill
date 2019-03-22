@@ -25,7 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.common.DrillNode;
 
 import java.io.IOException;
 import java.util.Map;
@@ -103,8 +103,8 @@ public class NodeResources {
     this.memoryInBytes += other.getMemoryInBytes();
   }
 
-  public static Map<DrillbitEndpoint, NodeResources> merge(Map<DrillbitEndpoint, NodeResources> to,
-                                                           Map<DrillbitEndpoint, NodeResources> from) {
+  public static Map<DrillNode, NodeResources> merge(Map<DrillNode, NodeResources> to,
+                                                           Map<DrillNode, NodeResources> from) {
     to.entrySet().stream().forEach((toEntry) -> toEntry.getValue().add(from.get(toEntry.getKey())));
     return to;
   }

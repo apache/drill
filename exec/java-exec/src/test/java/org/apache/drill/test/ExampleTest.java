@@ -17,14 +17,7 @@
  */
 package org.apache.drill.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-
+import ch.qos.logback.classic.Level;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
@@ -42,7 +35,13 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import ch.qos.logback.classic.Level;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Example test case using the Drill cluster fixture. Your test case

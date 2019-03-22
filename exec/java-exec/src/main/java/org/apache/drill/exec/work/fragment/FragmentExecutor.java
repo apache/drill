@@ -17,14 +17,6 @@
  */
 package org.apache.drill.exec.work.fragment;
 
-import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.drill.common.DeferredException;
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.exceptions.UserException;
@@ -37,7 +29,6 @@ import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
@@ -48,6 +39,15 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 import org.apache.hadoop.security.UserGroupInformation;
+
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.drill.exec.server.FailureUtils.EXIT_CODE_HEAP_OOM;
 
@@ -503,13 +503,14 @@ public class FragmentExecutor implements Runnable {
 
   private class FragmentDrillbitStatusListener implements DrillbitStatusListener {
     @Override
-    public void drillbitRegistered(final Set<CoordinationProtos.DrillbitEndpoint> registeredDrillbits) {
+    public void drillbitRegistered(Map<DrillbitEndpoint, String> registeredDrillbitsUUID) {
     }
 
     @Override
-    public void drillbitUnregistered(final Set<CoordinationProtos.DrillbitEndpoint> unregisteredDrillbits) {
+    public void drillbitUnregistered(Map<DrillbitEndpoint, String> unregisteredDrillbitsUUID) {
       // if the defunct Drillbit was running our Foreman, then cancel the query
       final DrillbitEndpoint foremanEndpoint = FragmentExecutor.this.fragmentContext.getForemanEndpoint();
+      final Set<DrillbitEndpoint> unregisteredDrillbits = unregisteredDrillbitsUUID.keySet();
       if (unregisteredDrillbits.contains(foremanEndpoint)) {
         logger.warn("Foreman {} no longer active.  Cancelling fragment {}.",
                     foremanEndpoint.getAddress(),

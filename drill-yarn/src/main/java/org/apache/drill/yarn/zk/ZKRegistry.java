@@ -17,23 +17,23 @@
  */
 package org.apache.drill.yarn.zk;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.yarn.appMaster.AMWrapperException;
 import org.apache.drill.yarn.appMaster.EventContext;
 import org.apache.drill.yarn.appMaster.Pollable;
 import org.apache.drill.yarn.appMaster.RegistryHandler;
 import org.apache.drill.yarn.appMaster.Task;
 import org.apache.drill.yarn.appMaster.TaskLifecycleListener;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * AM-specific implementation of a Drillbit registry backed by ZooKeeper.
@@ -297,11 +297,12 @@ public class ZKRegistry
    * Callback from ZK to indicate that one or more drillbits have become
    * registered. We handle registrations in a critical section, then alert the
    * cluster controller outside the critical section.
+   * @param registeredDrillbitsUUID
    */
 
   @Override
-  public void drillbitRegistered(Set<DrillbitEndpoint> registeredDrillbits) {
-    List<AckEvent> updates = registerDrillbits(registeredDrillbits);
+  public void drillbitRegistered(Map<DrillbitEndpoint, String> registeredDrillbitsUUID) {
+    List<AckEvent> updates = registerDrillbits(registeredDrillbitsUUID.keySet());
     for (AckEvent event : updates) {
       if (event.task == null) {
         registryHandler.reserveHost(event.endpoint.getAddress());
@@ -363,12 +364,12 @@ public class ZKRegistry
    * Callback from ZK to indicate that one or more drillbits have become
    * deregistered from ZK. We handle the deregistrations in a critical section,
    * but updates to the cluster controller outside of a critical section.
+   * @param unregisteredDrillbitsUUID
    */
 
   @Override
-  public void drillbitUnregistered(
-      Set<DrillbitEndpoint> unregisteredDrillbits) {
-    List<AckEvent> updates = unregisterDrillbits(unregisteredDrillbits);
+  public void drillbitUnregistered(Map<DrillbitEndpoint, String> unregisteredDrillbitsUUID) {
+    List<AckEvent> updates = unregisterDrillbits(unregisteredDrillbitsUUID.keySet());
     for (AckEvent event : updates) {
       registryHandler.completionAck(event.task, ENDPOINT_PROPERTY);
     }

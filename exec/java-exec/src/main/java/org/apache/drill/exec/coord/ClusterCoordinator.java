@@ -25,7 +25,6 @@ import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -107,17 +106,17 @@ public abstract class ClusterCoordinator implements AutoCloseable {
 
   /**
    * Actions to take when there are a set of new de-active drillbits.
-   * @param unregisteredBits
+   * @param unregisteredBitsUUID
    */
-  protected void drillbitUnregistered(Set<DrillbitEndpoint> unregisteredBits) {
+  protected void drillbitUnregistered(Map<DrillbitEndpoint, String> unregisteredBitsUUID) {
     for (DrillbitStatusListener listener : listeners.keySet()) {
-      listener.drillbitUnregistered(unregisteredBits);
+      listener.drillbitUnregistered(unregisteredBitsUUID);
     }
   }
 
-  protected void drillbitRegistered(Set<DrillbitEndpoint> registeredBits) {
+  protected void drillbitRegistered(Map<DrillbitEndpoint, String> registeredBitsUUID) {
     for (DrillbitStatusListener listener : listeners.keySet()) {
-      listener.drillbitRegistered(registeredBits);
+      listener.drillbitRegistered(registeredBitsUUID);
     }
   }
 
