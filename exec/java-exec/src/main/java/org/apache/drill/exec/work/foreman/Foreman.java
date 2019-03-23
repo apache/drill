@@ -785,8 +785,8 @@ public class Foreman implements Runnable {
 
       // Debug option: write query profile before sending final results so that
       // the client can be certain the profile exists.
-
-      if (profileOption == ProfileOption.SYNC) {
+      final boolean skipProfileWrite = queryContext.isSkipProfileWrite();
+      if (profileOption == ProfileOption.SYNC && !skipProfileWrite) {
         queryManager.writeFinalProfile(uex);
       }
 
@@ -816,7 +816,7 @@ public class Foreman implements Runnable {
       // storage write; query completion occurs in parallel with profile
       // persistence.
 
-      if (profileOption == ProfileOption.ASYNC) {
+      if (profileOption == ProfileOption.ASYNC && !skipProfileWrite) {
         queryManager.writeFinalProfile(uex);
       }
 
@@ -857,7 +857,7 @@ public class Foreman implements Runnable {
     @Override
     public void failed(final RpcException ex) {
       logger.info("Failure while trying communicate query result to initiating client. " +
-              "This would happen if a client is disconnected before response notice can be sent.", ex);
+          "This would happen if a client is disconnected before response notice can be sent.", ex);
     }
 
     @Override
