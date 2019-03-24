@@ -85,8 +85,8 @@
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.8.2</avro.version>
     <metrics.version>4.0.2</metrics.version>
-    <jetty.version>9.4.15.v20190215</jetty.version>
-    <jersey.version>2.28</jersey.version>
+    <jetty.version>9.3.25.v20180904</jetty.version>
+    <jersey.version>2.25.1</jersey.version>
     <asm.version>7.0</asm.version>
     <excludedGroups />
     <memoryMb>4096</memoryMb>
@@ -2527,14 +2527,9 @@
             <artifactId>jersey-container-servlet</artifactId>
             <version>${jersey.version}</version>
           </dependency>
-          <dependency>
-            <groupId>org.glassfish.jersey.inject</groupId>
-            <artifactId>jersey-hk2</artifactId>
-            <version>${jersey.version}</version>
-          </dependency>
           <!--/GlassFish Jersey dependecies-->
 
-          <!--Javax Servlet dependecies-->
+          <!--Javax dependecies-->
           <dependency>
             <groupId>javax.servlet.jsp</groupId>
             <artifactId>javax.servlet.jsp-api</artifactId>
@@ -2553,7 +2548,13 @@
             <version>4.0.1</version>
             <scope>provided</scope>
           </dependency>
-          <!--/Javax Servlet dependecies-->
+
+          <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>2.1.1</version>
+          </dependency>
+          <!--/Javax dependecies-->
 
           <!-- Test Dependencies -->
           <dependency>

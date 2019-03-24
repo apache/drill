@@ -62,9 +62,11 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -307,17 +309,18 @@ public class WebServer implements AutoCloseable {
   }
 
   /**
-   * It creates {@link SessionHandler} instead of jetty-9.3 SessionManager
-   * @see <a href="https://www.eclipse.org/jetty/documentation/9.4.x/upgrading-jetty.html">Session Management</a>
+   * It creates A {@link SessionHandler} which contains a {@link HashSessionManager}
    *
    * @param config Drill configs
    * @param securityHandler Set of initparameters that are used by the Authentication
    * @return session handler
    */
-  private SessionHandler createSessionHandler(Config config, final SecurityHandler securityHandler) {
-    SessionHandler sessionHandler = new SessionHandler();
-    sessionHandler.setMaxInactiveInterval(config.getInt(DrillOnYarnConfig.HTTP_SESSION_MAX_IDLE_SECS));
-    sessionHandler.addEventListener(new HttpSessionListener() {
+  private SessionHandler createSessionHandler(Config config,
+      final SecurityHandler securityHandler) {
+    SessionManager sessionManager = new HashSessionManager();
+    sessionManager.setMaxInactiveInterval(
+        config.getInt(DrillOnYarnConfig.HTTP_SESSION_MAX_IDLE_SECS));
+    sessionManager.addEventListener(new HttpSessionListener() {
       @Override
       public void sessionCreated(HttpSessionEvent se) {
         // No-op
@@ -340,7 +343,7 @@ public class WebServer implements AutoCloseable {
       }
     });
 
-    return sessionHandler;
+    return new SessionHandler(sessionManager);
   }
 
   /**
