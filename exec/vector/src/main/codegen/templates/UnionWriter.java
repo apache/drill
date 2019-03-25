@@ -156,6 +156,13 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   }
 
   @Override
+  public DictWriter dict() {
+    data.getMutator().setType(idx(), MinorType.LIST);
+    getListWriter().setPosition(idx());
+    return getListWriter().dict();
+  }
+
+  @Override
   public ListWriter list() {
     data.getMutator().setType(idx(), MinorType.LIST);
     getListWriter().setPosition(idx());

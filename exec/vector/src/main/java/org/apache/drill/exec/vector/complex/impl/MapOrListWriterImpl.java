@@ -88,6 +88,17 @@ public class MapOrListWriterImpl implements MapOrListWriter {
     return new MapOrListWriterImpl(list.map());
   }
 
+  @Override
+  public MapOrListWriter dict(String name) {
+    return new MapOrListWriterImpl(map != null ? map.dict(name) : list.dict());
+  }
+
+  @Override
+  public MapOrListWriter listOfDict() {
+    assert list != null;
+    return new MapOrListWriterImpl(list.dict());
+  }
+
   public MapOrListWriter list(final String name) {
     assert map != null;
     return new MapOrListWriterImpl(map.list(name));

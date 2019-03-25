@@ -335,6 +335,10 @@ public final class TypeProtos {
      * <code>VARDECIMAL = 43;</code>
      */
     VARDECIMAL(43),
+    /**
+     * <code>DICT = 44;</code>
+     */
+    DICT(44),
     ;
 
     /**
@@ -636,6 +640,10 @@ public final class TypeProtos {
      * <code>VARDECIMAL = 43;</code>
      */
     public static final int VARDECIMAL_VALUE = 43;
+    /**
+     * <code>DICT = 44;</code>
+     */
+    public static final int DICT_VALUE = 44;
 
 
     public final int getNumber() {
@@ -691,6 +699,7 @@ public final class TypeProtos {
         case 41: return GENERIC_OBJECT;
         case 42: return UNION;
         case 43: return VARDECIMAL;
+        case 44: return DICT;
         default: return null;
       }
     }
@@ -2188,7 +2197,7 @@ public final class TypeProtos {
       "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001(" +
       "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t" +
       "imeZone\030\006 \001(\005\022#\n\010sub_type\030\007 \003(\0162\021.common" +
-      ".MinorType*\245\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n\003MA" +
+      ".MinorType*\257\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n\003MA" +
       "P\020\001\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT\020\005\022" +
       "\n\n\006BIGINT\020\006\022\014\n\010DECIMAL9\020\007\022\r\n\tDECIMAL18\020\010" +
       "\022\023\n\017DECIMAL28SPARSE\020\t\022\023\n\017DECIMAL38SPARSE" +
@@ -2202,9 +2211,9 @@ public final class TypeProtos {
       "\022\022\n\016DECIMAL38DENSE\020\"\022\010\n\004NULL\020%\022\020\n\014INTERV" +
       "ALYEAR\020&\022\017\n\013INTERVALDAY\020\'\022\010\n\004LIST\020(\022\022\n\016G" +
       "ENERIC_OBJECT\020)\022\t\n\005UNION\020*\022\016\n\nVARDECIMAL" +
-      "\020+*4\n\010DataMode\022\014\n\010OPTIONAL\020\000\022\014\n\010REQUIRED" +
-      "\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apache.drill.com" +
-      "mon.typesB\nTypeProtosH\001"
+      "\020+\022\010\n\004DICT\020,*4\n\010DataMode\022\014\n\010OPTIONAL\020\000\022\014" +
+      "\n\010REQUIRED\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apache" +
+      ".drill.common.typesB\nTypeProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {

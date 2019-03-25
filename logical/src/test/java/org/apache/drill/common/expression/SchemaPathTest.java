@@ -50,5 +50,10 @@ public class SchemaPathTest {
     assertEquals("Schema path should match", SchemaPath.parseFromString("`a`.`b`.`c`.`d`"), schemaPath.getUnIndexed());
   }
 
+  @Test
+  public void testCompoundPathN() {
+    SchemaPath schemaPath = SchemaPath.getCompoundPath(3, "a", "b", "c", "d", "e");
+    assertEquals("Schema path should match", SchemaPath.getCompoundPath("a", "b", "c"), schemaPath);
+  }
 }
 

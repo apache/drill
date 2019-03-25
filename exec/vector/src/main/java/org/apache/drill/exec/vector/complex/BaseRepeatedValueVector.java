@@ -31,6 +31,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.AddOrGetResult;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.UInt4Vector;
@@ -177,7 +178,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
   /**
    * Returns 1 if inner vector is explicitly set via #addOrGetVector else 0
    *
-   * @see {@link org.apache.drill.exec.vector.complex.ContainerVectorLike#size()}
+   * @see org.apache.drill.exec.vector.complex.ContainerVectorLike#size()
    */
   @Override
   public int size() {
@@ -248,6 +249,54 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     final BaseRepeatedValueVector target = (BaseRepeatedValueVector) other;
     vector.exchange(target.vector);
     offsets.exchange(target.offsets);
+  }
+
+  protected abstract class BaseRepeatedValueVectorTransferPair<T extends BaseRepeatedValueVector> implements TransferPair {
+
+    protected final T target;
+    protected final TransferPair[] children;
+
+    protected BaseRepeatedValueVectorTransferPair(T target) {
+      this.target = Preconditions.checkNotNull(target);
+      if (target.getDataVector() == DEFAULT_DATA_VECTOR) {
+        target.addOrGetVector(VectorDescriptor.create(getDataVector().getField()));
+        target.getDataVector().allocateNew();
+      }
+      this.children = new TransferPair[] {
+          getOffsetVector().makeTransferPair(target.getOffsetVector()),
+          getDataVector().makeTransferPair(target.getDataVector())
+      };
+    }
+
+    @Override
+    public void transfer() {
+      for (TransferPair child : children) {
+        child.transfer();
+      }
+    }
+
+    @Override
+    public ValueVector getTo() {
+      return target;
+    }
+
+    @Override
+    public void splitAndTransfer(int startIndex, int length) {
+      target.allocateNew();
+      for (int i = 0; i < length; i++) {
+        copyValueSafe(startIndex + i, i);
+      }
+    }
+
+    protected void copyValueSafe(int destIndex, int start, int end) {
+      TransferPair vectorTransfer = children[1];
+      int newIndex = target.getOffsetVector().getAccessor().get(destIndex);
+      // TODO: make this a bulk copy.
+      for (int i = start; i < end; i++, newIndex++) {
+        vectorTransfer.copyValueSafe(i, newIndex);
+      }
+      target.getOffsetVector().getMutator().setSafe(destIndex + 1, newIndex);
+    }
   }
 
   public abstract class BaseRepeatedAccessor extends BaseValueVector.BaseAccessor implements RepeatedAccessor {

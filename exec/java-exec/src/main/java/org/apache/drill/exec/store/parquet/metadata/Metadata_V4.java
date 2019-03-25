@@ -27,6 +27,7 @@ import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -292,6 +293,8 @@ public class Metadata_V4 {
     @JsonProperty
     public OriginalType originalType;
     @JsonProperty
+    public List<OriginalType> parentTypes;
+    @JsonProperty
     public int precision;
     @JsonProperty
     public int scale;
@@ -311,17 +314,18 @@ public class Metadata_V4 {
     public ColumnTypeMetadata_v4() {
     }
 
-    public ColumnTypeMetadata_v4(String[] name, PrimitiveType.PrimitiveTypeName primitiveType, OriginalType originalType, int precision, int scale, int repetitionLevel, int definitionLevel, long totalNullCount, boolean isInteresting) {
-      this.name = name;
-      this.primitiveType = primitiveType;
-      this.originalType = originalType;
-      this.precision = precision;
-      this.scale = scale;
-      this.repetitionLevel = repetitionLevel;
-      this.definitionLevel = definitionLevel;
+    private ColumnTypeMetadata_v4(Builder builder) {
+      this.name = builder.name;
+      this.primitiveType = builder.primitiveType;
+      this.originalType = builder.originalType;
+      this.precision = builder.precision;
+      this.scale = builder.scale;
+      this.repetitionLevel = builder.repetitionLevel;
+      this.definitionLevel = builder.definitionLevel;
       this.key = new Key(name);
-      this.totalNullCount = totalNullCount;
-      this.isInteresting = isInteresting;
+      this.totalNullCount = builder.totalNullCount;
+      this.isInteresting = builder.isInteresting;
+      this.parentTypes = Collections.unmodifiableList(builder.parentTypes);
     }
 
     @JsonIgnore
@@ -392,6 +396,74 @@ public class Metadata_V4 {
     @Override
     public String[] getName() {
       return name;
+    }
+
+    public static class Builder {
+
+      private String[] name;
+      private PrimitiveType.PrimitiveTypeName primitiveType;
+      private OriginalType originalType;
+      private List<OriginalType> parentTypes;
+      private int precision;
+      private int scale;
+      private int repetitionLevel;
+      private int definitionLevel;
+      private long totalNullCount;
+      private boolean isInteresting;
+
+      public Builder name(String[] name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder primitiveType(PrimitiveType.PrimitiveTypeName primitiveType) {
+        this.primitiveType = primitiveType;
+        return this;
+      }
+
+      public Builder originalType(OriginalType originalType) {
+        this.originalType = originalType;
+        return this;
+      }
+
+      public Builder parentTypes(List<OriginalType> parentTypes) {
+        this.parentTypes = parentTypes;
+        return this;
+      }
+
+      public Builder precision(int precision) {
+        this.precision = precision;
+        return this;
+      }
+
+      public Builder scale(int scale) {
+        this.scale = scale;
+        return this;
+      }
+
+      public Builder repetitionLevel(int repetitionLevel) {
+        this.repetitionLevel = repetitionLevel;
+        return this;
+      }
+
+      public Builder definitionLevel(int definitionLevel) {
+        this.definitionLevel = definitionLevel;
+        return this;
+      }
+
+      public Builder totalNullCount(long totalNullCount) {
+        this.totalNullCount = totalNullCount;
+        return this;
+      }
+
+      public Builder interesting(boolean isInteresting) {
+        this.isInteresting = isInteresting;
+        return this;
+      }
+
+      public ColumnTypeMetadata_v4 build() {
+        return new ColumnTypeMetadata_v4(this);
+      }
     }
   }
 

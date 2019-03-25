@@ -1109,4 +1109,8 @@ public final class ExecConstants {
       new OptionDescription("Specifies the number of attempts for retrying query planning after detecting that query metadata is changed. " +
           "If the number of retries was exceeded, query will be planned without metadata information from the Metastore. " +
           "This option is not active for now. Default is 5. (Drill 1.17+)"));
+
+  public static final String PARQUET_READER_ENABLE_MAP_SUPPORT = "store.parquet.reader.enable_map_support";
+  public static final BooleanValidator PARQUET_READER_ENABLE_MAP_SUPPORT_VALIDATOR = new BooleanValidator(
+      PARQUET_READER_ENABLE_MAP_SUPPORT, new OptionDescription("Enables Drill Parquet reader to read Parquet MAP type correctly. (Drill 1.17+)"));
 }

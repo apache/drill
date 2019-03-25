@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.index;
 
+import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.calcite.rel.RelNode;
@@ -166,17 +167,6 @@ public class SimpleRexRemap {
         getFullPath(nameSeg.getChild()));
   }
 
-  private static PathSegment convertLiteral(RexLiteral literal) {
-    switch (literal.getType().getSqlTypeName()) {
-      case CHAR:
-        return new PathSegment.NameSegment(RexLiteral.stringValue(literal));
-      case INTEGER:
-        return new PathSegment.ArraySegment(RexLiteral.intValue(literal));
-      default:
-        return null;
-    }
-  }
-
   /**
    * This class go through the RexNode, collect all the fieldNames, mark starting positions(RexNode) of fields
    * so this information can be used later e,.g. replaced with a substitute node
@@ -230,7 +220,7 @@ public class SimpleRexRemap {
         if (mapOrArray != null) {
           if (call.operands.get(1) instanceof RexLiteral) {
             PathSegment newFieldPath = newPath(
-                mapOrArray.cloneWithNewChild(convertLiteral((RexLiteral) call.operands.get(1))),
+                mapOrArray.cloneWithNewChild(Utilities.convertLiteral((RexLiteral) call.operands.get(1))),
                 call);
             return newFieldPath;
           }

@@ -64,12 +64,30 @@ package org.apache.drill.exec.vector.complex.writer;
     ListWriter list(String name);
     void start();
     void end();
+    DictWriter dict(String name);
+  }
+
+  public interface DictWriter extends MapWriter {
+    /**
+     * Prepares key and value writers to write new values.
+     * Must be invoked before writing data to these fields.
+     */
+    void startKeyValuePair();
+
+    /**
+     * Finalizes writing values to key and value writers.
+     * Must be invoked after the values for the fields are written.
+     */
+    void endKeyValuePair();
+    FieldWriter getKeyWriter();
+    FieldWriter getValueWriter();
   }
 
   public interface ListWriter extends BaseWriter {
     void startList();
     void endList();
     MapWriter map();
+    DictWriter dict();
     ListWriter list();
     void copyReader(FieldReader reader);
 
@@ -105,6 +123,8 @@ package org.apache.drill.exec.vector.complex.writer;
     void end();
     MapOrListWriter map(String name);
     MapOrListWriter listoftmap(String name);
+    MapOrListWriter dict(String name);
+    MapOrListWriter listOfDict();
     MapOrListWriter list(String name);
     boolean isMapWriter();
     boolean isListWriter();

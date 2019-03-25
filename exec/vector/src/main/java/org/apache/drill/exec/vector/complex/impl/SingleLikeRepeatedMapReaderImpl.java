@@ -81,7 +81,7 @@ public class SingleLikeRepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public boolean isSet() {
-    return ! delegate.isNull();
+    return !delegate.isEmpty();
   }
 
 

@@ -105,6 +105,11 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
   }
 
   @Override
+  public DictWriter dict() {
+    return getWriter(MinorType.LIST).dict();
+  }
+
+  @Override
   public ListWriter list() {
     return getWriter(MinorType.LIST).list();
   }

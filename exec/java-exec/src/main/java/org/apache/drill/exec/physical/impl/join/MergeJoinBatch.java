@@ -383,10 +383,14 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
           outputType = inputType;
         }
         // TODO (DRILL-4011): Factor out CopyUtil and use it here.
-        JVar vvIn = cg.declareVectorValueSetupAndMember("incomingLeft",
-          new TypedFieldId(inputType, vectorId));
-        JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
-          new TypedFieldId(outputType,vectorId));
+        TypedFieldId inTypedFieldId = new TypedFieldId.Builder().finalType(inputType)
+            .addId(vectorId)
+            .build();
+        JVar vvIn = cg.declareVectorValueSetupAndMember("incomingLeft", inTypedFieldId);
+        TypedFieldId outTypedFieldId = new TypedFieldId.Builder().finalType(outputType)
+            .addId(vectorId)
+            .build();
+        JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing", outTypedFieldId);
         // todo: check result of copyFromSafe and grow allocation
         cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
           .arg(copyLeftMapping.getValueReadIndex())
@@ -412,10 +416,14 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
           outputType = inputType;
         }
         // TODO (DRILL-4011): Factor out CopyUtil and use it here.
-        JVar vvIn = cg.declareVectorValueSetupAndMember("incomingRight",
-          new TypedFieldId(inputType, vectorId - rightVectorBase));
-        JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
-          new TypedFieldId(outputType,vectorId));
+        TypedFieldId inTypedFieldId = new TypedFieldId.Builder().finalType(inputType)
+            .addId(vectorId - rightVectorBase)
+            .build();
+        JVar vvIn = cg.declareVectorValueSetupAndMember("incomingRight", inTypedFieldId);
+        TypedFieldId outTypedFieldId = new TypedFieldId.Builder().finalType(outputType)
+            .addId(vectorId)
+            .build();
+        JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing", outTypedFieldId);
         // todo: check result of copyFromSafe and grow allocation
         cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
           .arg(copyRightMappping.getValueReadIndex())

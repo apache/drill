@@ -66,6 +66,7 @@ enum MinorType {
     GENERIC_OBJECT = 41;
     UNION = 42;
     VARDECIMAL = 43;  // variable width decimal (arbitrary precision)
+    DICT = 44;
 }
 
 message MajorType {

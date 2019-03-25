@@ -92,7 +92,7 @@ public class FileMetadataCollector {
 
     this.colTypeInfoMap = new HashMap<>();
     for (String[] path : schema.getPaths()) {
-      colTypeInfoMap.put(SchemaPath.getCompoundPath(path), ColTypeInfo.of(schema, schema, path, 0));
+      colTypeInfoMap.put(SchemaPath.getCompoundPath(path), ColTypeInfo.of(schema, schema, path, 0, new ArrayList<>()));
     }
 
     init();
@@ -173,10 +173,18 @@ public class FileMetadataCollector {
 
     ColTypeInfo colTypeInfo = colTypeInfoMap.get(columnSchemaName);
     long totalNullCount = stats.getNumNulls();
-    Metadata_V4.ColumnTypeMetadata_v4 columnTypeMetadata = new Metadata_V4.ColumnTypeMetadata_v4(
-      columnName, primitiveTypeName,
-      colTypeInfo.originalType, colTypeInfo.precision, colTypeInfo.scale,
-      colTypeInfo.repetitionLevel, colTypeInfo.definitionLevel, 0, false);
+    Metadata_V4.ColumnTypeMetadata_v4 columnTypeMetadata = new Metadata_V4.ColumnTypeMetadata_v4.Builder()
+        .name(columnName)
+        .primitiveType(primitiveTypeName)
+        .originalType(colTypeInfo.originalType)
+        .precision(colTypeInfo.precision)
+        .scale(colTypeInfo.scale)
+        .repetitionLevel(colTypeInfo.repetitionLevel)
+        .definitionLevel(colTypeInfo.definitionLevel)
+        .totalNullCount(0)
+        .interesting(false)
+        .parentTypes(colTypeInfo.parentTypes)
+        .build();
     Metadata_V4.ColumnTypeMetadata_v4.Key columnTypeMetadataKey = new Metadata_V4.ColumnTypeMetadata_v4.Key(columnTypeMetadata.name);
 
     totalNullCountMap.putIfAbsent(columnTypeMetadataKey, Metadata.DEFAULT_NULL_COUNT);
@@ -201,7 +209,7 @@ public class FileMetadataCollector {
       }
       long numNulls = stats.getNumNulls();
       Metadata_V4.ColumnMetadata_v4 columnMetadata = new Metadata_V4.ColumnMetadata_v4(columnTypeMetadata.name,
-        primitiveTypeName, minValue, maxValue, numNulls);
+          primitiveTypeName, minValue, maxValue, numNulls);
       columnMetadataList.add(columnMetadata);
       columnTypeMetadata.isInteresting = true;
     }
@@ -240,20 +248,23 @@ public class FileMetadataCollector {
   private static class ColTypeInfo {
 
     OriginalType originalType;
+    List<OriginalType> parentTypes;
     int precision;
     int scale;
     int repetitionLevel;
     int definitionLevel;
 
-    ColTypeInfo(OriginalType originalType, int precision, int scale, int repetitionLevel, int definitionLevel) {
+    ColTypeInfo(OriginalType originalType, List<OriginalType> parentTypes,
+                int precision, int scale, int repetitionLevel, int definitionLevel) {
       this.originalType = originalType;
+      this.parentTypes = parentTypes;
       this.precision = precision;
       this.scale = scale;
       this.repetitionLevel = repetitionLevel;
       this.definitionLevel = definitionLevel;
     }
 
-    static ColTypeInfo of(MessageType schema, Type type, String[] path, int depth) {
+    static ColTypeInfo of(MessageType schema, Type type, String[] path, int depth, List<OriginalType> parentTypes) {
       if (type.isPrimitive()) {
         PrimitiveType primitiveType = (PrimitiveType) type;
         int precision = 0;
@@ -266,10 +277,17 @@ public class FileMetadataCollector {
         int repetitionLevel = schema.getMaxRepetitionLevel(path);
         int definitionLevel = schema.getMaxDefinitionLevel(path);
 
-        return new ColTypeInfo(type.getOriginalType(), precision, scale, repetitionLevel, definitionLevel);
+        return new ColTypeInfo(type.getOriginalType(), parentTypes, precision, scale, repetitionLevel, definitionLevel);
       }
       Type t = ((GroupType) type).getType(path[depth]);
-      return of(schema, t, path, depth + 1);
+      if (!t.isPrimitive()) {
+        OriginalType originalType = t.getOriginalType();
+        if (originalType == OriginalType.MAP && !ParquetReaderUtility.isLogicalMapType(t.asGroupType())) {
+          originalType = null;
+        }
+        parentTypes.add(originalType);
+      }
+      return of(schema, t, path, depth + 1, parentTypes);
     }
   }
 }

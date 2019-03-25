@@ -113,7 +113,7 @@ public class TestLoad extends ExecTest {
     return vectors;
   }
 
-  private static DrillBuf serializeBatch(BufferAllocator allocator, WritableBatch writableBatch) {
+  static DrillBuf serializeBatch(BufferAllocator allocator, WritableBatch writableBatch) {
     final ByteBuf[] byteBufs = writableBatch.getBuffers();
     int bytes = 0;
     for (ByteBuf buf : byteBufs) {

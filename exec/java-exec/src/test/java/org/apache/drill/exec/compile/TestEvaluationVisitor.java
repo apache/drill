@@ -43,7 +43,7 @@ public class TestEvaluationVisitor {
       .remainder(path.getRootSegment())
       .intermediateType(Types.optional(MinorType.MAP))
       .finalType(Types.repeated(MinorType.MAP))
-      .hyper()
+      .hyper(true)
       .withIndex()
       .build();
 

@@ -20,8 +20,9 @@ package org.apache.drill.exec.vector.complex.writer;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ScalarWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.DictWriter;
 
-public interface FieldWriter extends MapWriter, ListWriter, ScalarWriter {
+public interface FieldWriter extends MapWriter, ListWriter, ScalarWriter, DictWriter {
   void allocate();
   void clear();
 }

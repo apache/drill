@@ -742,4 +742,57 @@ public class AvroTestUtil {
 
     return file;
   }
+
+  public static AvroTestRecordWriter generateMapSchema() throws Exception {
+    final File file = File.createTempFile("avro-map-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
+    final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
+        .namespace("org.apache.drill.exec.store.avro")
+        .fields()
+        .name("map_field").type().optional().map().values(Schema.create(Type.LONG))
+        .name("map_array").type().optional().array().items(Schema.createMap(Schema.create(Type.INT)))
+        .name("map_array_value").type().optional().map().values(Schema.createArray(Schema.create(Type.DOUBLE)))
+        .endRecord();
+
+    final Schema mapArraySchema = schema.getField("map_array").schema();
+    final Schema arrayItemSchema = mapArraySchema.getTypes().get(1);
+
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
+    try {
+      for (int i = 0; i < RECORD_COUNT; i++) {
+        record.startRecord();
+
+        // Create map with long values
+        Map<String, Long> map = new HashMap<>();
+        map.put("key1", (long) i);
+        map.put("key2", (long) i + 1);
+        record.put("map_field", map);
+
+        // Create list of map with int values
+        GenericArray<Map<String, Integer>> array = new GenericData.Array<>(ARRAY_SIZE, arrayItemSchema);
+        for (int j = 0; j < ARRAY_SIZE; j++) {
+          Map<String, Integer> mapInt = new HashMap<>();
+          mapInt.put("key1", (i + 1) * (j + 50));
+          mapInt.put("key2", (i + 1) * (j + 100));
+          array.add(mapInt);
+        }
+        record.put("map_array", array);
+
+        // create map with array value
+        Map<String, GenericArray<Double>> mapArrayValue = new HashMap<>();
+        GenericArray<Double> doubleArray = new GenericData.Array<>(ARRAY_SIZE, arrayItemSchema);
+        for (int j = 0; j < ARRAY_SIZE; j++) {
+          doubleArray.add((double) (i + 1) * j);
+        }
+        mapArrayValue.put("key1", doubleArray);
+        mapArrayValue.put("key2", doubleArray);
+        record.put("map_array_value", mapArrayValue);
+
+        record.endRecord();
+      }
+    } finally {
+      record.close();
+    }
+
+    return record;
+  }
 }

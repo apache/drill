@@ -75,8 +75,11 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
   @Test
   public void testMaterializingLateboundField() throws SchemaChangeException {
     final RecordBatch batch = mock(RecordBatch.class);
+    TypedFieldId fieldId = new TypedFieldId.Builder().finalType(Types.required(MinorType.BIGINT))
+        .addId(-5)
+        .build();
     when(batch.getValueVectorId(new SchemaPath("test", ExpressionPosition.UNKNOWN)))
-      .thenReturn(new TypedFieldId(Types.required(MinorType.BIGINT), -5));
+      .thenReturn(fieldId);
 
     final SchemaBuilder builder = BatchSchema.newBuilder();
     builder.addField(getField("test", bigIntType));
@@ -93,8 +96,14 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
   public void testMaterializingLateboundTree() throws SchemaChangeException {
     final RecordBatch batch = mock(RecordBatch.class);
 
-    when(batch.getValueVectorId(SchemaPath.getSimplePath("test"))).thenReturn(new TypedFieldId(Types.required(MinorType.BIT), -4));
-    when(batch.getValueVectorId(SchemaPath.getSimplePath("test1"))).thenReturn(new TypedFieldId(Types.required(MinorType.BIGINT), -5));
+    TypedFieldId fieldId = new TypedFieldId.Builder().finalType(Types.required(MinorType.BIT))
+        .addId(-4)
+        .build();
+    TypedFieldId fieldId2 = new TypedFieldId.Builder().finalType(Types.required(MinorType.BIGINT))
+        .addId(-5)
+        .build();
+    when(batch.getValueVectorId(SchemaPath.getSimplePath("test"))).thenReturn(fieldId);
+    when(batch.getValueVectorId(SchemaPath.getSimplePath("test1"))).thenReturn(fieldId2);
 
     ErrorCollector ec = new ErrorCollectorImpl();
 
@@ -121,8 +130,11 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
   public void testMaterializingLateboundTreeValidated() throws SchemaChangeException {
     final RecordBatch batch = mock(RecordBatch.class);
 
+    TypedFieldId fieldId = new TypedFieldId.Builder().finalType(Types.required(MinorType.BIGINT))
+        .addId(-5)
+        .build();
     when(batch.getValueVectorId(new SchemaPath("test", ExpressionPosition.UNKNOWN)))
-      .thenReturn(new TypedFieldId(Types.required(MinorType.BIGINT), -5));
+      .thenReturn(fieldId);
 
     ErrorCollector ec = new ErrorCollector() {
       int errorCount = 0;

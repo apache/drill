@@ -49,6 +49,8 @@ public class MetadataUtils {
     MajorType majorType = field.getType();
     MinorType type = majorType.getMinorType();
     switch (type) {
+    case DICT:
+      return MetadataUtils.newDict(field);
     case MAP:
       return MetadataUtils.newMap(field);
     case UNION:
@@ -130,6 +132,14 @@ public class MetadataUtils {
 
   public static MapColumnMetadata newMap(String name, TupleMetadata schema) {
     return new MapColumnMetadata(name, DataMode.REQUIRED, (TupleSchema) schema);
+  }
+
+  public static DictColumnMetadata newDict(MaterializedField field) {
+    return new DictColumnMetadata(field, fromFields(field.getChildren()));
+  }
+
+  public static DictColumnMetadata newDict(String name, TupleMetadata schema) {
+    return new DictColumnMetadata(name, DataMode.OPTIONAL, (TupleSchema) schema);
   }
 
   public static VariantColumnMetadata newVariant(MaterializedField field, VariantSchema schema) {

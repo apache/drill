@@ -209,15 +209,16 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
     if (tableMetadata == null) {
       List<StatisticsHolder> tableStatistics = new ArrayList<>(DrillStatsTable.getEstimatedTableStats(statsTable));
       Map<SchemaPath, TypeProtos.MajorType> fields = ParquetTableMetadataUtils.resolveFields(parquetTableMetadata);
+      Map<SchemaPath, TypeProtos.MajorType> intermediateFields = ParquetTableMetadataUtils.resolveIntermediateFields(parquetTableMetadata);
 
       if (this.schema == null) {
         schema = new TupleSchema();
-        fields.forEach((schemaPath, majorType) -> SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType));
+        fields.forEach((schemaPath, majorType) -> SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType, intermediateFields));
       } else {
         // merges specified schema with schema from table
         fields.forEach((schemaPath, majorType) -> {
           if (SchemaPathUtils.getColumnMetadata(schemaPath, schema) == null) {
-            SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType);
+            SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType, intermediateFields);
           }
         });
       }

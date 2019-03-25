@@ -214,6 +214,14 @@ public class UnionVector implements ValueVector {
     return mapVector;
   }
 
+  public DictVector getDict() {
+    DictVector dictVector = subtype(MinorType.DICT);
+    if (dictVector == null) {
+      dictVector = classicAddType(MinorType.DICT, DictVector.class);
+    }
+    return dictVector;
+  }
+
   public ListVector getList() {
     ListVector listVector = subtype(MinorType.LIST);
     if (listVector == null) {

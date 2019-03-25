@@ -37,7 +37,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
- * Base class for MapVectors. Currently used by RepeatedMapVector and MapVector
+ * Base class for MapVectors. Currently used by AbstractRepeatedMapVector and MapVector
  */
 public abstract class AbstractMapVector extends AbstractContainerVector {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);

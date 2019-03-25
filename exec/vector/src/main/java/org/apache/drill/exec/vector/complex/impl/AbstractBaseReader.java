@@ -100,4 +100,9 @@ abstract class AbstractBaseReader implements FieldReader{
   public void copyAsValue(ListWriter writer) {
     ComplexCopier.copy(this, (FieldWriter)writer);
   }
+
+  @Override
+  public String getTypeString() {
+    return getType().getMinorType().name();
+  }
 }
