@@ -47,10 +47,10 @@ import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ScanPrel;
+import org.apache.drill.exec.util.Utilities;
 
 public class DrillRelMdSelectivity extends RelMdSelectivity {
   private static final DrillRelMdSelectivity INSTANCE = new DrillRelMdSelectivity();
@@ -117,10 +117,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
       if (DrillRelOptUtil.guessRows(rel)) {
         return super.getSelectivity(rel, mq, predicate);
       }
-      DrillTable table = rel.getTable().unwrap(DrillTable.class);
-      if (table == null) {
-        table = rel.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
-      }
+      DrillTable table = Utilities.getDrillTable(rel.getTable());
       if (table != null && table.getStatsTable() != null && table.getStatsTable().isMaterialized()) {
         if (rel instanceof DrillScanRelBase) {
           List<String> fieldNames = new ArrayList<>();
