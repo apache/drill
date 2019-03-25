@@ -25,7 +25,6 @@ import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -229,24 +228,16 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   }
 
   private boolean isColMinorTypeValid(MaterializedField mf) throws UnsupportedOperationException {
-    String mTypeStr = null;
-    if (mf.getType().getMinorType() == TypeProtos.MinorType.GENERIC_OBJECT) {
-      mTypeStr = "GENERIC OBJECT";
-    } else if (mf.getType().getMinorType() == TypeProtos.MinorType.LATE) {
-      mTypeStr = "LATE";
-    }else if (mf.getType().getMinorType() == TypeProtos.MinorType.LIST) {
-      mTypeStr = "LIST";
-    } else if (mf.getType().getMinorType() == TypeProtos.MinorType.MAP) {
-      mTypeStr = "MAP";
-    } else if (mf.getType().getMinorType() == TypeProtos.MinorType.UNION) {
-      mTypeStr = "UNION";
-    }
-    if (mTypeStr != null) {
-      return false;
-      //throw new UnsupportedOperationException(String.format("Column %s has data-type %s which is not supported",
-      //    mf.getName(), mTypeStr));
-    } else {
-      return true;
+    switch (mf.getType().getMinorType()) {
+      case GENERIC_OBJECT:
+      case LATE:
+      case LIST:
+      case MAP:
+      case DICT:
+      case UNION:
+        return false;
+      default:
+        return true;
     }
   }
 }

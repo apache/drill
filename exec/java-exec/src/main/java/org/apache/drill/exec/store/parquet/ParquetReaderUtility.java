@@ -42,6 +42,7 @@ import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.ColumnPath;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
@@ -52,6 +53,7 @@ import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
 import org.joda.time.DateTimeZone;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -710,6 +712,98 @@ public class ParquetReaderUtility {
           }
         }
       }
+    }
+    return false;
+  }
+
+  /**
+   * Converts list of {@link OriginalType}s to list of {@link org.apache.drill.common.types.TypeProtos.MajorType}s.
+   * <b>NOTE</b>: current implementation cares about {@link OriginalType#MAP} only
+   * converting it to {@link org.apache.drill.common.types.TypeProtos.MinorType#DICT}.
+   * Other original types are converted to {@code null}, because there is no certain correspondence
+   * (and, actually, a need because these types are used to differentiate between Drill's MAP and DICT types
+   * when constructing {@link org.apache.drill.exec.record.metadata.TupleSchema}) between these two.
+   *
+   * @param originalTypes list of Parquet's types
+   * @return list containing either {@code null} or type with minor
+   *         type {@link org.apache.drill.common.types.TypeProtos.MinorType#DICT} values
+   */
+  public static List<TypeProtos.MajorType> getComplexTypes(List<OriginalType> originalTypes) {
+    List<TypeProtos.MajorType> result = new ArrayList<>();
+    if (originalTypes == null) {
+      return result;
+    }
+    for (OriginalType type : originalTypes) {
+      if (type == OriginalType.MAP) {
+        TypeProtos.MajorType drillType = TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.DICT)
+            .setMode(TypeProtos.DataMode.OPTIONAL)
+            .build();
+        result.add(drillType);
+      } else {
+        result.add(null);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Checks whether group field approximately matches pattern for Logical Lists:
+   * <pre>
+   * &lt;list-repetition&gt; group &lt;name&gt; (LIST) {
+   *   repeated group list {
+   *     &lt;element-repetition&gt; &lt;element-type&gt; element;
+   *   }
+   * }
+   * </pre>
+   * (See for more details: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists)
+   *
+   * Note, that standard field names 'list' and 'element' aren't checked intentionally,
+   * because Hive lists have 'bag' and 'array_element' names instead.
+   *
+   * @param groupType type which may have LIST original type
+   * @return whether the type is LIST and nested field is repeated group
+   * @see <a href="https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists">Parquet List logical type</a>
+   */
+  public static boolean isLogicalListType(GroupType groupType) {
+    if (groupType.getOriginalType() == OriginalType.LIST && groupType.getFieldCount() == 1) {
+      Type nestedField = groupType.getFields().get(0);
+      return nestedField.isRepetition(Type.Repetition.REPEATED)
+          && !nestedField.isPrimitive()
+          && nestedField.getOriginalType() == null
+          && nestedField.asGroupType().getFieldCount() == 1;
+    }
+    return false;
+  }
+
+  /**
+   * Checks whether group field matches pattern for Logical Map type:
+   *
+   * <pre>
+   * &lt;map-repetition&gt; group &lt;name&gt; (MAP) {
+   *   repeated group key_value {
+   *     required &lt;key-type&gt; key;
+   *     &lt;value-repetition&gt; &lt;value-type&gt; value;
+   *   }
+   * }
+   * </pre>
+   *
+   * Note, that actual group names are not checked specifically.
+   *
+   * @param groupType parquet type which may be of MAP type
+   * @return whether the type is MAP
+   * @see <a href="https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#maps">Parquet Map logical type</a>
+   */
+  public static boolean isLogicalMapType(GroupType groupType) {
+    OriginalType type = groupType.getOriginalType();
+    // MAP_KEY_VALUE is here for backward-compatibility reasons
+    if ((type == OriginalType.MAP || type == OriginalType.MAP_KEY_VALUE)
+        && groupType.getFieldCount() == 1) {
+      Type nestedField = groupType.getFields().get(0);
+      return nestedField.isRepetition(Type.Repetition.REPEATED)
+          && !nestedField.isPrimitive()
+          && nestedField.asGroupType().getFieldCount() == 2;
     }
     return false;
   }

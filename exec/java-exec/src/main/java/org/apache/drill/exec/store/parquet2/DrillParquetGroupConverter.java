@@ -46,10 +46,12 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetColumnMetadata;
-import org.apache.drill.exec.vector.complex.impl.RepeatedMapWriter;
+import org.apache.drill.exec.vector.complex.impl.AbstractRepeatedMapWriter;
 import org.apache.drill.exec.vector.complex.impl.SingleMapWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.DictWriter;
 import org.apache.drill.exec.vector.complex.writer.BigIntWriter;
 import org.apache.drill.exec.vector.complex.writer.BitWriter;
 import org.apache.drill.exec.vector.complex.writer.DateWriter;
@@ -69,7 +71,6 @@ import org.apache.parquet.io.api.Converter;
 import org.apache.parquet.io.api.GroupConverter;
 import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
-import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Type.Repetition;
@@ -80,7 +81,8 @@ import static org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeU
 
 public class DrillParquetGroupConverter extends GroupConverter {
 
-  private final List<Converter> converters;
+  protected final List<Converter> converters;
+
   private final BaseWriter baseWriter;
   private final OutputMutator mutator;
   private final OptionManager options;
@@ -91,7 +93,24 @@ public class DrillParquetGroupConverter extends GroupConverter {
    * Debugging information in form of "parent">fieldName[WriterClassName-hashCode()],
    * where "parent" is parent converterName.
    */
-  private final String converterName;
+  private String converterName;
+
+  /**
+   * Constructor is responsible for creation of converter without creation of child converters.
+   *
+   * @param mutator                output mutator, used to share managed buffer with primitive converters
+   * @param baseWriter             map or list writer associated with the group converter
+   * @param options                option manager used to check enabled option when necessary
+   * @param containsCorruptedDates allows to select strategy for dates handling
+   */
+  protected DrillParquetGroupConverter(OutputMutator mutator, BaseWriter baseWriter, OptionManager options,
+                                       ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
+    this.mutator = mutator;
+    this.baseWriter = baseWriter;
+    this.options = options;
+    this.containsCorruptedDates = containsCorruptedDates;
+    converters = new ArrayList<>();
+  }
 
   /**
    * The constructor is responsible for creation of converters tree and may invoke itself for
@@ -112,12 +131,8 @@ public class DrillParquetGroupConverter extends GroupConverter {
                                     Collection<SchemaPath> columns, OptionManager options,
                                     ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates,
                                     boolean skipRepeated, String parentName) {
+    this(mutator, baseWriter, options, containsCorruptedDates);
     this.converterName = String.format("%s>%s[%s-%d]", parentName, schema.getName(), baseWriter.getClass().getSimpleName(), baseWriter.hashCode());
-    this.baseWriter = baseWriter;
-    this.mutator = mutator;
-    this.containsCorruptedDates = containsCorruptedDates;
-    this.converters = new ArrayList<>();
-    this.options = options;
 
     Iterator<SchemaPath> colIterator = columns.iterator();
 
@@ -129,9 +144,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
       while (colIterator.hasNext()) {
         PathSegment colPath = colIterator.next().getRootSegment();
         String colPathName;
-        if (colPath.isNamed() &&
-            !DYNAMIC_STAR.equals(colPathName = colPath.getNameSegment().getPath()) &&
-            colPathName.equalsIgnoreCase(name)) {
+        if (colPath.isNamed() && !DYNAMIC_STAR.equals(colPathName = colPath.getNameSegment().getPath()) && colPathName.equalsIgnoreCase(name)) {
           name = colPathName;
           colNextChild = colPath.getChild();
           break;
@@ -158,10 +171,15 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
       BaseWriter writer;
       GroupType fieldGroupType = fieldType.asGroupType();
-      if (isLogicalListType(fieldGroupType)) {
-        writer = getWriter(name, (m, s) -> m.list(s), l -> l.list());
+      if (ParquetReaderUtility.isLogicalListType(fieldGroupType)) {
+        writer = getWriter(name, MapWriter::list, ListWriter::list);
         converter = new DrillParquetGroupConverter(mutator, writer, fieldGroupType, columns, options,
             containsCorruptedDates, true, converterName);
+      } else if (options.getOption(ExecConstants.PARQUET_READER_ENABLE_MAP_SUPPORT_VALIDATOR)
+          && ParquetReaderUtility.isLogicalMapType(fieldGroupType)) {
+        writer = getWriter(name, MapWriter::dict, ListWriter::dict);
+        converter = new DrillParquetMapGroupConverter(
+          mutator, (DictWriter) writer, fieldGroupType, options, containsCorruptedDates);
       } else if (fieldType.isRepetition(Repetition.REPEATED)) {
         if (skipRepeated) {
           converter = new DrillIntermediateParquetGroupConverter(mutator, baseWriter, fieldGroupType, columns, options,
@@ -172,7 +190,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
               containsCorruptedDates, false, converterName);
         }
       } else {
-        writer = getWriter(name, (m, s) -> m.map(s), l -> l.map());
+        writer = getWriter(name, MapWriter::map, ListWriter::map);
         converter = new DrillParquetGroupConverter(mutator, writer, fieldGroupType, columns, options,
             containsCorruptedDates, false, converterName);
       }
@@ -181,33 +199,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
     return converter;
   }
 
-  /**
-   * Checks whether group field approximately matches pattern for Logical Lists:
-   * <list-repetition> group <name> (LIST) {
-   *   repeated group list {
-   *     <element-repetition> <element-type> element;
-   *   }
-   * }
-   * (See for more details: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists)
-   *
-   * Note, that standard field names 'list' and 'element' aren't checked intentionally,
-   * because Hive lists have 'bag' and 'array_element' names instead.
-   *
-   * @param groupType type which may have LIST original type
-   * @return whether the type is LIST and nested field is repeated group
-   */
-  private boolean isLogicalListType(GroupType groupType) {
-    if (groupType.getOriginalType() == OriginalType.LIST && groupType.getFieldCount() == 1) {
-      Type nestedField = groupType.getFields().get(0);
-      return nestedField.isRepetition(Repetition.REPEATED)
-          && !nestedField.isPrimitive()
-          && nestedField.getOriginalType() == null
-          && nestedField.asGroupType().getFieldCount() == 1;
-    }
-    return false;
-  }
-
-  private PrimitiveConverter getConverterForType(String name, PrimitiveType type) {
+  protected PrimitiveConverter getConverterForType(String name, PrimitiveType type) {
     switch(type.getPrimitiveTypeName()) {
       case INT32: {
         if (type.getOriginalType() == null) {
@@ -321,9 +313,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
           return new DrillVarBinaryConverter(writer, mutator.getManagedBuffer());
         }
         switch(type.getOriginalType()) {
-          case UTF8: {
-            return getVarCharConverter(name, type);
-          }
+          case UTF8:
           case ENUM: {
             return getVarCharConverter(name, type);
           }
@@ -404,19 +394,24 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
   @Override
   public void start() {
-    if (baseWriter instanceof SingleMapWriter || baseWriter instanceof RepeatedMapWriter) {
+    if (isMapWriter()) {
       ((MapWriter) baseWriter).start();
     } else {
-      ((BaseWriter.ListWriter) baseWriter).startList();
+      ((ListWriter) baseWriter).startList();
     }
+  }
+
+  boolean isMapWriter() {
+    return baseWriter instanceof SingleMapWriter
+        || baseWriter instanceof AbstractRepeatedMapWriter;
   }
 
   @Override
   public void end() {
-    if (baseWriter instanceof SingleMapWriter || baseWriter instanceof RepeatedMapWriter) {
+    if (isMapWriter()) {
       ((MapWriter) baseWriter).end();
     } else {
-      ((BaseWriter.ListWriter) baseWriter).endList();
+      ((ListWriter) baseWriter).endList();
     }
   }
 
@@ -426,10 +421,10 @@ public class DrillParquetGroupConverter extends GroupConverter {
   }
 
   private <T> T getWriter(String name, BiFunction<MapWriter, String, T> fromMap, Function<BaseWriter.ListWriter, T> fromList) {
-    if (baseWriter instanceof SingleMapWriter || baseWriter instanceof RepeatedMapWriter) {
+    if (isMapWriter()) {
       return fromMap.apply((MapWriter) baseWriter, name);
-    } else if (baseWriter instanceof BaseWriter.ListWriter) {
-      return fromList.apply((BaseWriter.ListWriter) baseWriter);
+    } else if (baseWriter instanceof ListWriter) {
+      return fromList.apply((ListWriter) baseWriter);
     } else {
       throw new IllegalStateException(String.format("Parent writer with type [%s] is unsupported", baseWriter.getClass()));
     }
@@ -744,7 +739,10 @@ public class DrillParquetGroupConverter extends GroupConverter {
       super(mutator, baseWriter, schema, columns, options, containsCorruptedDates, skipRepeated, parentName);
     }
 
+    @Override
     public void start() {}
+
+    @Override
     public void end() {}
   }
 

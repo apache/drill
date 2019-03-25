@@ -103,7 +103,7 @@ void AddDescriptorsImpl() {
       "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001("
       "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t"
       "imeZone\030\006 \001(\005\022#\n\010sub_type\030\007 \003(\0162\021.common"
-      ".MinorType*\253\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n\003MA"
+      ".MinorType*\265\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n\003MA"
       "P\020\001\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT\020\005\022"
       "\n\n\006BIGINT\020\006\022\014\n\010DECIMAL9\020\007\022\r\n\tDECIMAL18\020\010"
       "\022\023\n\017DECIMAL28SPARSE\020\t\022\023\n\017DECIMAL38SPARSE"
@@ -117,12 +117,13 @@ void AddDescriptorsImpl() {
       "\022\022\n\016DECIMAL38DENSE\020\"\022\016\n\nDM_UNKNOWN\020%\022\020\n\014"
       "INTERVALYEAR\020&\022\017\n\013INTERVALDAY\020\'\022\010\n\004LIST\020"
       "(\022\022\n\016GENERIC_OBJECT\020)\022\t\n\005UNION\020*\022\016\n\nVARD"
-      "ECIMAL\020+*=\n\010DataMode\022\017\n\013DM_OPTIONAL\020\000\022\017\n"
-      "\013DM_REQUIRED\020\001\022\017\n\013DM_REPEATED\020\002B-\n\035org.a"
-      "pache.drill.common.typesB\nTypeProtosH\001"
+      "ECIMAL\020+\022\010\n\004DICT\020,*=\n\010DataMode\022\017\n\013DM_OPT"
+      "IONAL\020\000\022\017\n\013DM_REQUIRED\020\001\022\017\n\013DM_REPEATED\020"
+      "\002B-\n\035org.apache.drill.common.typesB\nType"
+      "ProtosH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 878);
+      descriptor, 888);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "Types.proto", &protobuf_RegisterTypes);
 }
@@ -184,6 +185,7 @@ bool MinorType_IsValid(int value) {
     case 41:
     case 42:
     case 43:
+    case 44:
       return true;
     default:
       return false;

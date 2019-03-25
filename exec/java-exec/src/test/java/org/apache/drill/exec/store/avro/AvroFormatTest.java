@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.store.avro;
 
+import static org.apache.drill.exec.store.avro.AvroTestUtil.ARRAY_SIZE;
+import static org.apache.drill.exec.store.avro.AvroTestUtil.RECORD_COUNT;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateDoubleNestedSchema_NoNullValues;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateLinkedList;
+import static org.apache.drill.exec.store.avro.AvroTestUtil.generateMapSchema;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateMapSchemaComplex_withNullValues;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateMapSchema_withNullValues;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateNestedArraySchema;
@@ -33,6 +36,7 @@ import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionSchema_
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionSchema_WithNullValues;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.write;
 import static org.apache.drill.test.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -55,6 +59,7 @@ import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -63,6 +68,14 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * Unit tests for Avro record reader.
  */
 public class AvroFormatTest extends BaseTestQuery {
+
+  private static String mapTableName;
+
+  @BeforeClass
+  public static void init() throws Exception {
+    // Create temporary table containing map and map array
+    mapTableName = generateMapSchema().getFileName();
+  }
 
   // XXX
   //      1. Need to test nested field names with same name as top-level names for conflict.
@@ -488,9 +501,9 @@ public class AvroFormatTest extends BaseTestQuery {
       .unOrdered()
       .baselineColumns("a_string", "array_item");
 
-    for (int i = 0; i < AvroTestUtil.RECORD_COUNT; i++) {
+    for (int i = 0; i < RECORD_COUNT; i++) {
 
-      for (int j = 0; j < AvroTestUtil.ARRAY_SIZE; j++) {
+      for (int j = 0; j < ARRAY_SIZE; j++) {
         testBuilder.baselineValues("a_" + i, "c_string_array_" + i + "_" + j);
       }
     }
@@ -516,8 +529,8 @@ public class AvroFormatTest extends BaseTestQuery {
     final String file = generateNestedArraySchema().getFileName();
 
     TestBuilder testBuilder = nestedArrayQueryTestBuilder(file);
-    for (int i = 0; i < AvroTestUtil.RECORD_COUNT; i++) {
-      for (int j = 0; j < AvroTestUtil.ARRAY_SIZE; j++) {
+    for (int i = 0; i < RECORD_COUNT; i++) {
+      for (int j = 0; j < ARRAY_SIZE; j++) {
         testBuilder.baselineValues(i, j);
       }
     }
@@ -528,7 +541,7 @@ public class AvroFormatTest extends BaseTestQuery {
   //DRILL-4574
   @Test
   public void testFlattenEmptyComplexArrayMustYieldNoResults() throws Exception {
-    final String file = generateNestedArraySchema(AvroTestUtil.RECORD_COUNT, 0).getFilePath();
+    final String file = generateNestedArraySchema(RECORD_COUNT, 0).getFilePath();
     TestBuilder testBuilder = nestedArrayQueryTestBuilder(file);
     testBuilder.expectsEmptyResultSet();
   }
@@ -558,11 +571,11 @@ public class AvroFormatTest extends BaseTestQuery {
         .baselineColumns("nested_key1", "nested_key2");
 
     final List<Object> expectedList = Lists.newArrayList();
-    for (int i = 0; i < AvroTestUtil.ARRAY_SIZE; i++) {
+    for (int i = 0; i < ARRAY_SIZE; i++) {
       expectedList.add((double)i);
     }
     final List<Object> emptyList = listOf();
-    for (int i = 0; i < AvroTestUtil.RECORD_COUNT; i += 2) {
+    for (int i = 0; i < RECORD_COUNT; i += 2) {
       testBuilder.baselineValues(expectedList, expectedList);
       testBuilder.baselineValues(emptyList, emptyList);
     }
@@ -589,7 +602,184 @@ public class AvroFormatTest extends BaseTestQuery {
         .sqlQuery(sql, file)
         .ordered()
         .baselineColumns("row_count")
-        .baselineValues((long)AvroTestUtil.RECORD_COUNT)
+        .baselineValues((long) RECORD_COUNT)
         .go();
+  }
+
+  @Test
+  public void testMapSchema() throws Exception {
+    String sql = "select map_field from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, mapTableName)
+        .unOrdered()
+        .baselineColumns("map_field");
+
+    for (long i = 0; i < RECORD_COUNT; i++) {
+      testBuilder.baselineValues(mapOfObject("key1", i, "key2", i + 1));
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testMapSchemaGetByKey() throws Exception {
+     String sql = "select map_field['key1'] val1, map_field['key2'] val2 from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, mapTableName)
+        .unOrdered()
+        .baselineColumns("val1", "val2");
+
+    for (long i = 0; i < RECORD_COUNT; i++) {
+      testBuilder.baselineValues(i, i + 1);
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testMapSchemaGetByKeyUsingDotNotation() throws Exception {
+    String sql = "select t.map_field.key1 val1, t.map_field.key2 val2 from dfs.`%s` t";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, mapTableName)
+        .unOrdered()
+        .baselineColumns("val1", "val2");
+
+    for (long i = 0; i < RECORD_COUNT; i++) {
+      testBuilder.baselineValues(i, i + 1);
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testMapArraySchema() throws Exception {
+    String sql = "select map_array from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, mapTableName)
+        .unOrdered()
+        .baselineColumns("map_array");
+
+
+    for (int i = 0; i < RECORD_COUNT; i++) {
+      List<Object> array = listOf();
+      for (int j = 0; j < ARRAY_SIZE; j++) {
+        array.add(mapOfObject(
+            "key1", (i + 1) * (j + 50),
+            "key2", (i + 1) * (j + 100)
+        ));
+      }
+      testBuilder.baselineValues(array);
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testArrayMapSchemaGetElementByIndex() throws Exception {
+    int elementIndex = 1;
+    String sql = "select map_array[%d] element from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, elementIndex, mapTableName)
+        .unOrdered()
+        .baselineColumns("element");
+
+    for (int i = 0; i < RECORD_COUNT; i++) {
+      testBuilder.baselineValues(mapOfObject(
+          "key1", (i + 1) * (elementIndex + 50),
+          "key2", (i + 1) * (elementIndex + 100)
+      ));
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testArrayMapSchemaElementGetByKey() throws Exception {
+    int elementIndex = 1;
+    String sql = "select map_array[%d]['key2'] val from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, elementIndex, mapTableName)
+        .unOrdered()
+        .baselineColumns("val");
+
+    for (int i = 0; i < RECORD_COUNT; i++) {
+      testBuilder.baselineValues((i + 1) * (elementIndex + 100));
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testMapSchemaArrayValue() throws Exception {
+    String sql = "select map_array_value from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, mapTableName)
+        .unOrdered()
+        .baselineColumns("map_array_value");
+
+    for (int i = 0; i < RECORD_COUNT; i++) {
+      List<Object> doubleArray = listOf();
+      for (double j = 0; j < ARRAY_SIZE; j++) {
+        doubleArray.add((double) (i + 1) * j);
+      }
+      testBuilder.baselineValues(mapOfObject("key1", doubleArray, "key2", doubleArray));
+    }
+
+    testBuilder.go();
+  }
+
+  @Test
+  public void testMapSchemaArrayValueGetByKey() throws Exception {
+    String sql = "select map_array_value['key1'] element from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, generateMapSchema().getFileName())
+        .unOrdered()
+        .baselineColumns("element");
+
+    for (int i = 0; i < RECORD_COUNT; i++) {
+      List<Object> doubleArray = listOf();
+      for (double j = 0; j < ARRAY_SIZE; j++) {
+        doubleArray.add((double) (i + 1) * j);
+      }
+      testBuilder.baselineValues(doubleArray);
+    }
+
+    testBuilder.go();
+  }
+
+  @Test
+  public void testMapSchemaValueInFilter() throws Exception {
+    String sql = "select map_field['key1'] val from dfs.`%s` where map_field['key1'] < %d";
+
+    long filterValue = RECORD_COUNT / 10;
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, mapTableName, filterValue)
+        .unOrdered()
+        .baselineColumns("val");
+
+    for (long i = 0; i < filterValue; i++) {
+      testBuilder.baselineValues(i);
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testMapSchemaValueInFilter2() throws Exception {
+    String sql = "select map_array[%d]['key2'] val from dfs.`%s` where map_array[%d]['key2'] > %d";
+
+    int elementIndex = 1;
+    int startRecord = 5001;
+    int filterValue = 5002 * (elementIndex + 100);
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, elementIndex, mapTableName, elementIndex, filterValue)
+        .unOrdered()
+        .baselineColumns("val");
+
+    for (int i = startRecord + 1; i < RECORD_COUNT; i++) {
+      testBuilder.baselineValues((i + 1) * (elementIndex + 100));
+    }
+    testBuilder.go();
   }
 }

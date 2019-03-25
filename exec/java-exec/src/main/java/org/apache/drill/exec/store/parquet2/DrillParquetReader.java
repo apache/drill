@@ -48,6 +48,7 @@ import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
+import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Types;
@@ -123,13 +124,25 @@ public class DrillParquetReader extends CommonParquetRecordReader {
     Set<SchemaPath> selectedSchemaPaths = new LinkedHashSet<>();
 
     // get a list of modified columns which have the array elements removed from the schema path since parquet schema doesn't include array elements
+    // or if field is (Parquet's) MAP then array/name segments are removed from the schema as well as obtaining elements by key is handled in EvaluationVisitor.
     List<SchemaPath> modifiedColumns = new LinkedList<>();
     for (SchemaPath path : columns) {
 
       List<String> segments = new ArrayList<>();
+      Type segmentType = schema;
       for (PathSegment seg = path.getRootSegment(); seg != null; seg = seg.getChild()) {
+
         if (seg.isNamed()) {
           segments.add(seg.getNameSegment().getPath());
+        }
+
+        segmentType = getSegmentType(segmentType, seg);
+        boolean isMap = segmentType != null
+            && (!segmentType.isPrimitive() && ParquetReaderUtility.isLogicalMapType(segmentType.asGroupType()));
+        if (isMap) {
+          // stop the loop at a found MAP column to ensure the selection is not discarded
+          // later as values obtained from dict by key differ from the actual column's path
+          break;
         }
       }
 
@@ -144,7 +157,6 @@ public class DrillParquetReader extends CommonParquetRecordReader {
       SchemaPath schemaPath = SchemaPath.getCompoundPath(schemaColDesc);
       schemaPaths.add(schemaPath);
     }
-
     // loop through projection columns and add any columns that are missing from parquet schema to columnsNotFound list
     for (SchemaPath columnPath : modifiedColumns) {
       boolean notFound = true;
@@ -168,7 +180,7 @@ public class DrillParquetReader extends CommonParquetRecordReader {
       } while ((seg = seg.getChild()) != null);
       String[] pathSegments = new String[segments.size()];
       segments.toArray(pathSegments);
-      Type t = getType(pathSegments, 0, schema);
+      Type t = getSegmentType(pathSegments, 0, schema);
 
       if (projection == null) {
         projection = new MessageType(messageName, t);
@@ -177,6 +189,31 @@ public class DrillParquetReader extends CommonParquetRecordReader {
       }
     }
     return projection;
+  }
+
+  /**
+   * Get type from the supplied {@code type} corresponding to given {@code segment}.
+   *
+   * @param parentSegmentType type to extract field corresponding to segment
+   * @param segment segment which type will be returned
+   * @return type corresponding to the {@code segment} or {@code null} if there is no field found in {@code type}.
+   */
+  private static Type getSegmentType(Type parentSegmentType, PathSegment segment) {
+    Type segmentType = null;
+    if (parentSegmentType != null && !parentSegmentType.isPrimitive()) {
+      GroupType groupType = parentSegmentType.asGroupType();
+      if (segment.isNamed()) {
+        String fieldName = segment.getNameSegment().getPath();
+        segmentType = groupType.getFields().stream()
+            .filter(f -> f.getName().equalsIgnoreCase(fieldName))
+            .findAny().map(field -> groupType.getType(field.getName()))
+            .orElse(null);
+      } else if (ParquetReaderUtility.isLogicalListType(parentSegmentType.asGroupType())) { // the segment is array index
+        // get element type of the list
+        segmentType = groupType.getType(0).asGroupType().getType(0);
+      }
+    }
+    return segmentType;
   }
 
   @Override
@@ -263,7 +300,7 @@ public class DrillParquetReader extends CommonParquetRecordReader {
     }
   }
 
-  private static Type getType(String[] pathSegments, int depth, MessageType schema) {
+  private static Type getSegmentType(String[] pathSegments, int depth, MessageType schema) {
     int nextDepth = depth + 1;
     Type type = schema.getType(Arrays.copyOfRange(pathSegments, 0, nextDepth));
     if (nextDepth == pathSegments.length) {
@@ -272,7 +309,7 @@ public class DrillParquetReader extends CommonParquetRecordReader {
       Preconditions.checkState(!type.isPrimitive());
       return Types.buildGroup(type.getRepetition())
           .as(type.getOriginalType())
-          .addField(getType(pathSegments, nextDepth, schema))
+          .addField(getSegmentType(pathSegments, nextDepth, schema))
           .named(type.getName());
     }
   }

@@ -34,14 +34,14 @@ package org.apache.drill.exec.vector.complex.impl;
 @SuppressWarnings("unused")
 public class UnionReader extends AbstractFieldReader {
 
-  private BaseReader[] readers = new BaseReader[44];
+  private BaseReader[] readers = new BaseReader[45];
   public UnionVector data;
   
   public UnionReader(UnionVector data) {
     this.data = data;
   }
 
-  private static MajorType[] TYPES = new MajorType[44];
+  private static MajorType[] TYPES = new MajorType[45];
 
   static {
     for (MinorType minorType : MinorType.values()) {
@@ -77,6 +77,8 @@ public class UnionReader extends AbstractFieldReader {
       return NullReader.INSTANCE;
     case MinorType.MAP_VALUE:
       return (FieldReader) getMap();
+    case MinorType.DICT_VALUE:
+      return (FieldReader) getDict();
     case MinorType.LIST_VALUE:
       return (FieldReader) getList();
     <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
@@ -100,6 +102,17 @@ public class UnionReader extends AbstractFieldReader {
       readers[MinorType.MAP_VALUE] = mapReader;
     }
     return mapReader;
+  }
+
+  private SingleDictReaderImpl dictReader;
+
+  private DictReader getDict() {
+    if (dictReader == null) {
+      dictReader = (SingleDictReaderImpl) data.getDict().getReader();
+      dictReader.setPosition(idx());
+      readers[MinorType.DICT_VALUE] = dictReader;
+    }
+    return dictReader;
   }
 
   private UnionListReader listReader;

@@ -71,6 +71,21 @@ public class ComplexCopier {
         }
         writer.end();
         break;
+        case DICT:
+          DictWriter wr = (DictWriter) writer;
+          wr.start();
+          if (reader.isSet()) {
+            while (reader.next()) {
+              wr.startKeyValuePair();
+              FieldReader keyReader = reader.reader(DictVector.FIELD_KEY_NAME);
+              FieldReader valueReader = reader.reader(DictVector.FIELD_VALUE_NAME);
+              writeValue(keyReader, getMapWriterForReader(keyReader, writer, DictVector.FIELD_KEY_NAME));
+              writeValue(valueReader, getMapWriterForReader(valueReader, writer, DictVector.FIELD_VALUE_NAME));
+              wr.endKeyValuePair();
+            }
+          }
+          wr.end();
+          break;
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   <#assign fields = minor.fields!type.fields />
   <#assign uncappedName = name?uncap_first/>
@@ -108,6 +123,8 @@ public class ComplexCopier {
     </#list></#list>
     case MAP:
       return (FieldWriter) writer.map(name);
+    case DICT:
+      return (FieldWriter) writer.dict(name);
     case LIST:
       return (FieldWriter) writer.list(name);
     default:

@@ -50,6 +50,10 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
   public MajorType getType() {
     return type;
   }
+
+  public void read(ValueHolder holder) {
+    throw new UnsupportedOperationException("NullReader cannot write into non-nullable holder");
+  }
   
   public void copyAsValue(MapWriter writer) {}
 
@@ -136,7 +140,27 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
     return null;
   }
   </#list>
-  
+
+  @Override
+  public void copyAsValue(DictWriter writer) {}
+
+  @Override
+  public int find(String key) {
+    return -1;
+  }
+
+  @Override
+  public int find(int key) {
+    return -1;
+  }
+
+  @Override
+  public void read(String key, ValueHolder holder) {
+  }
+
+  @Override
+  public void read(int key, ValueHolder holder) {
+  }
 }
 
 

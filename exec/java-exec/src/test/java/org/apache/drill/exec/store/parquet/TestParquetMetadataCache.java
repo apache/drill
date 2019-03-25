@@ -27,6 +27,7 @@ import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
+import org.apache.drill.test.TestBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -1410,5 +1411,34 @@ public class TestParquetMetadataCache extends PlanTestBase {
             .baselineValues(true, "Successfully updated metadata for table orders_nation_ctas.")
             .go();
     checkForMetadataFile(tableName);
+  }
+
+  @Test
+  public void testRefreshWithDictColumn() throws Exception {
+    test("use dfs");
+
+    String tableName = "parquet_map_ctas";
+    test("create table `%s` as select * from cp.`store/parquet/complex/map/parquet/000000_0.parquet`", tableName);
+
+    String metadataQuery = String.format("refresh table metadata %s", tableName);
+    testBuilder()
+        .sqlQuery(metadataQuery)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Successfully updated metadata for table %s.", tableName))
+        .go();
+
+    String query = String.format("select id, mapcol from %s where mapcol['b'] is not null", tableName);
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("id", "mapcol")
+        .baselineValues(5, TestBuilder.mapOfObject("b", 6, "c", 7, "a", 8, "abc4", 9, "bde", 10))
+        .baselineValues(4, TestBuilder.mapOfObject("a", 3, "b", 4, "c", 5))
+        .baselineValues(2, TestBuilder.mapOfObject("a", 1, "b", 2, "c", 3))
+        .baselineValues(1, TestBuilder.mapOfObject("b", 6, "c", 7))
+        .go();
+
+    PlanTestBase.testPlanMatchingPatterns(query, "numFiles=1", "usedMetadataFile=true");
   }
 }

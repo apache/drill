@@ -316,7 +316,7 @@ public class Text {
 
   @Override
   public int hashCode() {
-    return super.hashCode();
+    return Arrays.hashCode(getBytes());
   }
 
   // / STATIC UTILITIES FROM HERE DOWN

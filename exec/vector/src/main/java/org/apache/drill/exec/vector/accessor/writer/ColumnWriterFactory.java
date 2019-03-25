@@ -72,6 +72,7 @@ public class ColumnWriterFactory {
     case NULL:
     case LIST:
     case MAP:
+    case DICT:
     case UNION:
       throw new UnsupportedOperationException(schema.type().toString());
     default:
@@ -127,6 +128,7 @@ public class ColumnWriterFactory {
     case LATE:
     case LIST:
     case MAP:
+    case DICT:
     case UNION:
       throw new UnsupportedOperationException(schema.type().toString());
     default:

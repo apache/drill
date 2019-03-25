@@ -95,6 +95,12 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
   }
 
   @Override
+  public DictWriter dict() {
+    fail("Dict");
+    return null;
+  }
+
+  @Override
   public ListWriter list() {
     fail("List");
     return null;
@@ -104,6 +110,34 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
   public MapWriter map(String name) {
     fail("Map");
     return null;
+  }
+
+  @Override
+  public DictWriter dict(String name) {
+    fail("Dict");
+    return null;
+  }
+
+  @Override
+  public FieldWriter getKeyWriter() {
+    fail("KeyWriter");
+    return null;
+  }
+
+  @Override
+  public FieldWriter getValueWriter() {
+    fail("ValueWriter");
+    return null;
+  }
+
+  @Override
+  public void startKeyValuePair() {
+    fail("startKeyValuePair()");
+  }
+
+  @Override
+  public void endKeyValuePair() {
+    fail("endKeyValuePair()");
   }
 
   @Override

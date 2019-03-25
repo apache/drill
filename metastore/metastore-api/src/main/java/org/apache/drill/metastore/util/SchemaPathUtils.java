@@ -27,6 +27,10 @@ import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.PrimitiveColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public class SchemaPathUtils {
 
   private SchemaPathUtils() {
@@ -44,6 +48,11 @@ public class SchemaPathUtils {
     PathSegment.NameSegment colPath = schemaPath.getUnIndexed().getRootSegment();
     ColumnMetadata colMetadata = schema.metadata(colPath.getPath());
     while (!colPath.isLastPath() && colMetadata != null) {
+      if (colMetadata.isDict()) {
+        // get dict's value field metadata
+        colMetadata = colMetadata.mapSchema().metadata(0).mapSchema().metadata(1);
+        break;
+      }
       if (!colMetadata.isMap()) {
         colMetadata = null;
         break;
@@ -54,7 +63,6 @@ public class SchemaPathUtils {
     return colMetadata;
   }
 
-
   /**
    * Adds column with specified schema path and type into specified {@code TupleMetadata schema}.
    * For the case when specified {@link SchemaPath} has children, corresponding maps will be created
@@ -63,19 +71,27 @@ public class SchemaPathUtils {
    * @param schema     tuple schema where column should be added
    * @param schemaPath schema path of the column which should be added
    * @param type       type of the column which should be added
+   * @param types      list of column's parent types
    */
-  public static void addColumnMetadata(TupleMetadata schema, SchemaPath schemaPath, TypeProtos.MajorType type) {
+  public static void addColumnMetadata(TupleMetadata schema, SchemaPath schemaPath, TypeProtos.MajorType type, Map<SchemaPath, TypeProtos.MajorType> types) {
     PathSegment.NameSegment colPath = schemaPath.getUnIndexed().getRootSegment();
+    List<String> names = new ArrayList<>(types.size());
     ColumnMetadata colMetadata;
-
     while (!colPath.isLastPath()) {
+      names.add(colPath.getPath());
       colMetadata = schema.metadata(colPath.getPath());
+      TypeProtos.MajorType pathType = types.get(SchemaPath.getCompoundPath(names.toArray(new String[0])));
       if (colMetadata == null) {
-        colMetadata = MetadataUtils.newMap(colPath.getPath(), null);
+        if (pathType != null && pathType.getMinorType() == TypeProtos.MinorType.DICT) {
+          colMetadata = MetadataUtils.newDict(colPath.getPath(), null);
+        } else {
+          colMetadata = MetadataUtils.newMap(colPath.getPath(), null);
+        }
         schema.addColumn(colMetadata);
       }
-      if (!colMetadata.isMap()) {
-        throw new DrillRuntimeException(String.format("Expected map, but was %s", colMetadata.majorType()));
+
+      if (!colMetadata.isMap() && !colMetadata.isDict()) {
+        throw new DrillRuntimeException(String.format("Expected map or dict, but was %s", colMetadata.majorType()));
       }
 
       schema = colMetadata.mapSchema();

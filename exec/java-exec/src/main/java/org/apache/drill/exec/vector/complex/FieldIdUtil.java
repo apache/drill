@@ -24,11 +24,13 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.vector.ValueVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class FieldIdUtil {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldIdUtil.class);
+  private static final Logger logger = LoggerFactory.getLogger(FieldIdUtil.class);
 
   public static TypedFieldId getFieldIdIfMatchesUnion(UnionVector unionVector, TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
     if (seg != null) {
@@ -57,9 +59,26 @@ public class FieldIdUtil {
     return null;
   }
 
+  /**
+   * Utility method to obtain {@link TypedFieldId}, providing metadata
+   * for specified field given by value vector used in code generation.
+   *
+   * @param vector a value vector the metadata is obtained for
+   * @param builder a builder instance gathering metadata
+   * @param addToBreadCrumb flag to indicate whether to include intermediate type
+   * @param seg path segment corresponding to the vector
+   * @return type metadata for given vector
+   */
+  public static TypedFieldId getFieldIdIfMatches(ValueVector vector, TypedFieldId.Builder builder,
+                                                 boolean addToBreadCrumb, PathSegment seg) {
+    return getFieldIdIfMatches(vector, builder, addToBreadCrumb, seg, 0);
+  }
 
-  public static TypedFieldId getFieldIdIfMatches(ValueVector vector, TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (vector instanceof RepeatedMapVector && seg != null && seg.isArray() && !seg.isLastPath()) {
+  private static TypedFieldId getFieldIdIfMatches(ValueVector vector, TypedFieldId.Builder builder,
+                                                  boolean addToBreadCrumb, PathSegment seg, int depth) {
+    if (vector instanceof DictVector) {
+      builder.setDict(depth);
+    } else if (vector instanceof RepeatedMapVector && seg != null && seg.isArray() && !seg.isLastPath()) {
       if (addToBreadCrumb) {
         addToBreadCrumb = false;
         builder.remainder(seg);
@@ -88,7 +107,7 @@ public class FieldIdUtil {
           type = ((AbstractContainerVector) vector).getLastPathType();
         } else if (vector instanceof ListVector) {
           type = ((ListVector) vector).getDataVector().getField().getType();
-          builder.listVector();
+          builder.listVector(true);
         } else {
           throw new UnsupportedOperationException("FieldIdUtil does not support vector of type " + vector.getField().getType());
         }
@@ -116,8 +135,23 @@ public class FieldIdUtil {
     }
 
     ValueVector v;
-    if (vector instanceof AbstractContainerVector) {
-      VectorWithOrdinal vord = ((AbstractContainerVector) vector).getChildVectorWithOrdinal(seg.isArray() ? null : seg.getNameSegment().getPath());
+    if (vector instanceof DictVector) {
+      v = ((DictVector) vector).getValues();
+      if (addToBreadCrumb) {
+        builder.remainder(seg);
+        builder.intermediateType(vector.getField().getType());
+        addToBreadCrumb = false;
+        // reset bit set and depth as this Dict vector will be the first one in the schema
+        builder.resetDictBitSet();
+        depth = 0;
+        builder.setDict(depth);
+      }
+    } else if (vector instanceof AbstractContainerVector) {
+      String fieldName = null;
+      if (seg.isNamed()) {
+        fieldName = seg.getNameSegment().getPath();
+      }
+      VectorWithOrdinal vord = ((AbstractContainerVector) vector).getChildVectorWithOrdinal(fieldName);
       if (vord == null) {
         return null;
       }
@@ -126,20 +160,15 @@ public class FieldIdUtil {
         builder.intermediateType(v.getField().getType());
         builder.addId(vord.ordinal);
       }
-    } else if (vector instanceof ListVector) {
-      v = ((ListVector) vector).getDataVector();
+    } else if (vector instanceof ListVector || vector instanceof RepeatedDictVector) {
+      v = ((RepeatedValueVector) vector).getDataVector();
     } else {
       throw new UnsupportedOperationException("FieldIdUtil does not support vector of type " + vector.getField().getType());
     }
 
-    if (v instanceof AbstractContainerVector) {
-      // we're looking for a multi path.
-      AbstractContainerVector c = (AbstractContainerVector) v;
-      return getFieldIdIfMatches(c, builder, addToBreadCrumb, seg.getChild());
-    } else if(v instanceof ListVector) {
-      ListVector list = (ListVector) v;
-      return getFieldIdIfMatches(list, builder, addToBreadCrumb, seg.getChild());
-    } else if (v instanceof  UnionVector) {
+    if (v instanceof AbstractContainerVector || v instanceof ListVector) {
+      return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg.getChild(), depth + 1);
+    } else if (v instanceof UnionVector) {
       return getFieldIdIfMatchesUnion((UnionVector) v, builder, addToBreadCrumb, seg.getChild());
     } else {
       if (seg.isNamed()) {
@@ -176,10 +205,7 @@ public class FieldIdUtil {
     }
     PathSegment seg = expectedPath.getRootSegment();
 
-    TypedFieldId.Builder builder = TypedFieldId.newBuilder();
-    if (hyper) {
-      builder.hyper();
-    }
+    TypedFieldId.Builder builder = TypedFieldId.newBuilder().hyper(hyper);
     if (vector instanceof UnionVector) {
       builder.addId(id).remainder(expectedPath.getRootSegment().getChild());
       List<MinorType> minorTypes = ((UnionVector) vector).getSubTypes();
@@ -196,18 +222,47 @@ public class FieldIdUtil {
         return getFieldIdIfMatchesUnion((UnionVector) vector, builder, false, seg.getChild());
       }
     } else if (vector instanceof ListVector) {
-      ListVector list = (ListVector) vector;
       builder.intermediateType(vector.getField().getType());
       builder.addId(id);
-      return getFieldIdIfMatches(list, builder, true, expectedPath.getRootSegment().getChild());
-    } else
-    if (vector instanceof AbstractContainerVector) {
+      return getFieldIdIfMatches(vector, builder, true, expectedPath.getRootSegment().getChild(), 0);
+    } else if (vector instanceof DictVector) {
+      MajorType vectorType = vector.getField().getType();
+      builder.intermediateType(vectorType);
+      builder.addId(id);
+      if (seg.isLastPath()) {
+        builder.finalType(vectorType);
+        return builder.build();
+      } else {
+        PathSegment child = seg.getChild();
+        builder.remainder(child);
+        return getFieldIdIfMatches(vector, builder, false, expectedPath.getRootSegment().getChild(), 0);
+      }
+    } else if (vector instanceof AbstractContainerVector) {
       // we're looking for a multi path.
-      AbstractContainerVector c = (AbstractContainerVector) vector;
       builder.intermediateType(vector.getField().getType());
       builder.addId(id);
-      return getFieldIdIfMatches(c, builder, true, expectedPath.getRootSegment().getChild());
-
+      return getFieldIdIfMatches(vector, builder, true, expectedPath.getRootSegment().getChild(), 0);
+    } else if (vector instanceof RepeatedDictVector) {
+      MajorType vectorType = vector.getField().getType();
+      builder.intermediateType(vectorType);
+      builder.addId(id);
+      if (seg.isLastPath()) {
+        builder.finalType(vectorType);
+        return builder.build();
+      } else {
+        PathSegment child = seg.getChild();
+        if (!child.isArray()) {
+          return null;
+        } else {
+          builder.remainder(child);
+          builder.withIndex();
+          if (child.isLastPath()) {
+            return builder.finalType(DictVector.TYPE).build();
+          } else {
+            return getFieldIdIfMatches(vector, builder, true, expectedPath.getRootSegment().getChild(), 0);
+          }
+        }
+      }
     } else {
       builder.intermediateType(vector.getField().getType());
       builder.addId(id);
@@ -224,7 +279,6 @@ public class FieldIdUtil {
         } else {
           return null;
         }
-
       }
     }
   }

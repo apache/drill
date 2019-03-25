@@ -146,6 +146,15 @@ public class EventBasedRecordWriter {
             return recordWriter.getNewRepeatedMapConverter(fieldId, fieldName, reader);
         }
 
+      case DICT:
+        switch (reader.getType().getMode()) {
+          case REQUIRED:
+          case OPTIONAL:
+            return recordWriter.getNewDictConverter(fieldId, fieldName, reader);
+          case REPEATED:
+            return recordWriter.getNewRepeatedDictConverter(fieldId, fieldName, reader);
+        }
+
       case LIST:
         return recordWriter.getNewRepeatedListConverter(fieldId, fieldName, reader);
 

@@ -18,20 +18,14 @@
 package org.apache.drill.exec.record.metadata;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
-
-import java.util.stream.Collectors;
 
 /**
  * Describes a map and repeated map. Both are tuples that have a tuple
  * schema as part of the column definition.
  */
-public class MapColumnMetadata extends AbstractColumnMetadata {
-
-  private TupleMetadata parentTuple;
-  private final TupleSchema mapSchema;
+public class MapColumnMetadata extends AbstractMapColumnMetadata {
 
   /**
    * Build a new map column from the field provided
@@ -47,30 +41,18 @@ public class MapColumnMetadata extends AbstractColumnMetadata {
    * the children) of the materialized field provided.
    *
    * @param schema the schema to use
-   * @param mapSchema parent schema
+   * @param tupleSchema parent schema
    */
-  MapColumnMetadata(MaterializedField schema, TupleSchema mapSchema) {
-    super(schema);
-    if (mapSchema == null) {
-      this.mapSchema = new TupleSchema();
-    } else {
-      this.mapSchema = mapSchema;
-    }
-    this.mapSchema.bind(this);
+  MapColumnMetadata(MaterializedField schema, TupleSchema tupleSchema) {
+    super(schema, tupleSchema);
   }
 
   public MapColumnMetadata(MapColumnMetadata from) {
     super(from);
-    mapSchema = (TupleSchema) from.mapSchema.copy();
   }
 
-  public MapColumnMetadata(String name, DataMode mode, TupleSchema mapSchema) {
-    super(name, MinorType.MAP, mode);
-    if (mapSchema == null) {
-      this.mapSchema = new TupleSchema();
-    } else {
-      this.mapSchema = mapSchema;
-    }
+  public MapColumnMetadata(String name, DataMode mode, TupleSchema tupleSchema) {
+    super(name, MinorType.MAP, mode, tupleSchema);
   }
 
   @Override
@@ -79,61 +61,17 @@ public class MapColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
-  public void bind(TupleMetadata parentTuple) {
-    this.parentTuple = parentTuple;
-  }
-
-  @Override
-  public ColumnMetadata.StructureType structureType() { return ColumnMetadata.StructureType.TUPLE; }
-
-  @Override
-  public TupleMetadata mapSchema() { return mapSchema; }
-
-  @Override
-  public int expectedWidth() { return 0; }
-
-  @Override
-  public boolean isMap() { return true; }
-
-  public TupleMetadata parentTuple() { return parentTuple; }
-
-  @Override
   public ColumnMetadata cloneEmpty() {
     return new MapColumnMetadata(name, mode, new TupleSchema());
   }
 
   @Override
-  public MaterializedField schema() {
-    MaterializedField field = emptySchema();
-    for (MaterializedField member : mapSchema.toFieldList()) {
-      field.addChild(member);
-    }
-    return field;
+  public boolean isMap() {
+    return true;
   }
 
   @Override
-  public MaterializedField emptySchema() {
-   return MaterializedField.create(name,
-        MajorType.newBuilder()
-          .setMinorType(type)
-          .setMode(mode)
-          .build());
-  }
-
-  @Override
-  public String typeString() {
-    StringBuilder builder = new StringBuilder();
-    if (isArray()) {
-      builder.append("ARRAY<");
-    }
-    builder.append("STRUCT<");
-    builder.append(mapSchema().toMetadataList().stream()
-      .map(ColumnMetadata::columnString)
-      .collect(Collectors.joining(", ")));
-    builder.append(">");
-    if (isArray()) {
-      builder.append(">");
-    }
-    return builder.toString();
+  protected String getStringType() {
+    return "STRUCT";
   }
 }

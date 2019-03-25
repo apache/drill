@@ -71,7 +71,16 @@ import java.util.Map;
  */
 public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter implements RecordWriter {
 
+  /**
+   * Name of nested group for Parquet's {@code LIST} type.
+   * @see <a href="https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists">LIST logical type</a>
+   */
   protected static final String LIST = "list";
+
+  /**
+   * Name of Parquet's {@code LIST} element type.
+   * @see #LIST
+   */
   protected static final String ELEMENT = "element";
   protected static final int ZERO_IDX = 0;
 

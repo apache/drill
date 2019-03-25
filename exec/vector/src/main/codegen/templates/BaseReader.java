@@ -38,6 +38,7 @@ public interface BaseReader extends Positionable{
   void read(int index, UnionHolder holder);
   void copyAsValue(UnionWriter writer);
   boolean isSet();
+  void read(ValueHolder holder);
 
   public interface MapReader extends BaseReader, Iterable<String>{
     FieldReader reader(String name);
@@ -47,6 +48,74 @@ public interface BaseReader extends Positionable{
     boolean next();
     int size();
     void copyAsValue(MapWriter writer);
+  }
+
+  public interface DictReader extends RepeatedMapReader {
+    void copyAsValue(DictWriter writer);
+
+    /**
+     * Obtain the index for given key in current row used to find a corresponding value with.
+     * Used in generated code when retrieving value from Dict with
+     * {@link org.apache.drill.common.expression.PathSegment.NameSegment}
+     * in cases when {@link org.apache.drill.exec.vector.complex.DictVector#getValueType()} is complex.
+     *
+     * <p>Despite {@code key} is passed as {@code String} the value is converted to
+     * actual type based on {@link org.apache.drill.exec.vector.complex.DictVector#getKeyType()}.
+     *
+     * @param key literal representing key value
+     * @return index for the given key
+     * @see org.apache.drill.exec.vector.complex.DictVector
+     */
+    int find(String key);
+
+    /**
+     * Obtain the index for given key in current row used to find a corresponding value with.
+     * Used in generated code when retrieving value from Dict with
+     * {@link org.apache.drill.common.expression.PathSegment.ArraySegment}
+     * in cases when {@link org.apache.drill.exec.vector.complex.DictVector#getValueType()} is complex.
+     *
+     * <p>Despite {@code key} is passed as {@code int} the value is converted to
+     * actual type based on {@link org.apache.drill.exec.vector.complex.DictVector#getKeyType()}.
+     *
+     * @param key literal representing key value
+     * @return index for the given key
+     * @see org.apache.drill.exec.vector.complex.DictVector
+     */
+    int find(int key);
+
+    /**
+     * Reads a value corresponding to a {@code key} into the {@code holder}.
+     * If there is no entry in the row with the given {@code key}, value is set to null.
+     *
+     * <p>Used in generated code when retrieving value from Dict with
+     * {@link org.apache.drill.common.expression.PathSegment.NameSegment}
+     * in cases when {@link org.apache.drill.exec.vector.complex.DictVector#getValueType()} is primitive.
+     *
+     * <p>Despite {@code key} is passed as {@code String} the value is converted to
+     * actual type based on {@link org.apache.drill.exec.vector.complex.DictVector#getKeyType()}.
+     *
+     * @param key literal representing key value
+     * @param holder a holder to write value's value into
+     * @see org.apache.drill.exec.vector.complex.DictVector
+     */
+    void read(String key, ValueHolder holder);
+
+    /**
+     * Reads a value corresponding to a {@code key} into the {@code holder}.
+     * If there is no entry in the row with the given {@code key}, value is set to null.
+     *
+     * <p>Used in generated code when retrieving value from Dict with
+     * {@link org.apache.drill.common.expression.PathSegment.ArraySegment}
+     * in cases when {@link org.apache.drill.exec.vector.complex.DictVector#getValueType()} is primitive.
+     *
+     * <p>Despite {@code key} is passed as {@code int} the value is converted to
+     * actual type based on {@link org.apache.drill.exec.vector.complex.DictVector#getKeyType()}.
+     *
+     * @param key literal representing key value
+     * @param holder a holder to write value's value into
+     * @see org.apache.drill.exec.vector.complex.DictVector
+     */
+    void read(int key, ValueHolder holder);
   }
   
   public interface ListReader extends BaseReader{
@@ -59,7 +128,7 @@ public interface BaseReader extends Positionable{
     void copyAsValue(ListWriter writer);
   }
   
-  public interface ScalarReader extends  
+  public interface ScalarReader extends
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first /> ${name}Reader, </#list></#list> 
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first /> Repeated${name}Reader, </#list></#list>
   BaseReader {}

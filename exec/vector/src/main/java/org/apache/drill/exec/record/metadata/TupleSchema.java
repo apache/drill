@@ -48,7 +48,7 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
 
   public static final String TYPE = "tuple_schema";
 
-  private MapColumnMetadata parentMap;
+  private AbstractMapColumnMetadata parentMap;
   private final TupleNameSpace<ColumnMetadata> nameSpace = new TupleNameSpace<>();
 
   public TupleSchema() { }
@@ -62,7 +62,7 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
     setProperties(properties);
   }
 
-  public void bind(MapColumnMetadata parentMap) {
+  public void bind(AbstractMapColumnMetadata parentMap) {
     this.parentMap = parentMap;
   }
 
@@ -132,7 +132,7 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
   }
 
   @Override
-  public MapColumnMetadata parent() { return parentMap; }
+  public AbstractMapColumnMetadata parent() { return parentMap; }
 
   @Override
   public int size() { return nameSpace.count(); }

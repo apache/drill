@@ -42,6 +42,10 @@ public abstract class AbstractFieldReader extends AbstractBaseReader implements 
     return true;
   }
 
+  public void read(ValueHolder holder) {
+    fail("read(ValueHolder holder)");
+  }
+
   <#list ["Object", "BigDecimal", "Integer", "Long", "Boolean",
           "Character", "LocalDate", "LocalTime", "LocalDateTime", "Period", "Double", "Float",
           "Text", "String", "Byte", "Short", "byte[]"] as friendlyType>
@@ -61,8 +65,9 @@ public abstract class AbstractFieldReader extends AbstractBaseReader implements 
   </#list>
 
   public void copyAsValue(MapWriter writer) {
-    fail("CopyAsValue MapWriter");
+    fail("copyAsValue(MapWriter writer)");
   }
+
   public void copyAsField(String name, MapWriter writer) {
     fail("CopyAsField MapWriter");
   }
@@ -103,8 +108,12 @@ public abstract class AbstractFieldReader extends AbstractBaseReader implements 
   }
   </#list></#list>
 
+  public void copyAsValue(DictWriter writer) {
+    fail("CopyAsValue(DictWriter writer)");
+  }
+
   public void read(int arrayIndex, UntypedNullHolder holder) {
-      fail("UntypedNullHolder");
+    fail("UntypedNullHolder");
   }
 
   public FieldReader reader(String name) {
@@ -120,6 +129,24 @@ public abstract class AbstractFieldReader extends AbstractBaseReader implements 
   public int size() {
     fail("size()");
     return -1;
+  }
+
+  public int find(String key) {
+    fail("find(String key)");
+    return -1;
+  }
+
+  public int find(int key) {
+    fail("find(int key)");
+    return -1;
+  }
+
+  public void read(String key, ValueHolder holder) {
+    fail("read(String key, ValueHolder holder)");
+  }
+
+  public void read(int key, ValueHolder holder) {
+    fail("read(int key, ValueHolder holder)");
   }
 
   private void fail(String name) {

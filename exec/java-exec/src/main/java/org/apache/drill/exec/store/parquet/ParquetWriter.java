@@ -50,7 +50,7 @@ public class ParquetWriter extends AbstractWriter {
  * Newer readers must be able to read old files. The Writer version tells the Parquet reader how to interpret fields
  * or metadata when that data changes format from one writer version to another.
  */
-  public static final int WRITER_VERSION = 2;
+  public static final int WRITER_VERSION = 3;
 
   private final String location;
   private final List<String> partitionColumns;

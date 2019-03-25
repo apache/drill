@@ -97,11 +97,12 @@ enum MinorType {
   LIST = 40,
   GENERIC_OBJECT = 41,
   UNION = 42,
-  VARDECIMAL = 43
+  VARDECIMAL = 43,
+  DICT = 44
 };
 bool MinorType_IsValid(int value);
 const MinorType MinorType_MIN = LATE;
-const MinorType MinorType_MAX = VARDECIMAL;
+const MinorType MinorType_MAX = DICT;
 const int MinorType_ARRAYSIZE = MinorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* MinorType_descriptor();

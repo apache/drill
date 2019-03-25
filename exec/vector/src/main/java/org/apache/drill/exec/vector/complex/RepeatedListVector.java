@@ -116,40 +116,10 @@ public class RepeatedListVector extends AbstractContainerVector
       }
     }
 
-    public class DelegateTransferPair implements TransferPair {
-      private final DelegateRepeatedVector target;
-      private final TransferPair[] children;
+    public class DelegateTransferPair extends BaseRepeatedValueVectorTransferPair<DelegateRepeatedVector> {
 
       public DelegateTransferPair(DelegateRepeatedVector target) {
-        this.target = Preconditions.checkNotNull(target);
-        if (target.getDataVector() == DEFAULT_DATA_VECTOR) {
-          target.addOrGetVector(VectorDescriptor.create(getDataVector().getField()));
-          target.getDataVector().allocateNew();
-        }
-        this.children = new TransferPair[] {
-            getOffsetVector().makeTransferPair(target.getOffsetVector()),
-            getDataVector().makeTransferPair(target.getDataVector())
-        };
-      }
-
-      @Override
-      public void transfer() {
-        for (TransferPair child:children) {
-          child.transfer();
-        }
-      }
-
-      @Override
-      public ValueVector getTo() {
-        return target;
-      }
-
-      @Override
-      public void splitAndTransfer(int startIndex, int length) {
-        target.allocateNew();
-        for (int i = 0; i < length; i++) {
-          copyValueSafe(startIndex + i, i);
-        }
+        super(target);
       }
 
       @Override
@@ -157,13 +127,7 @@ public class RepeatedListVector extends AbstractContainerVector
         final RepeatedListHolder holder = new RepeatedListHolder();
         getAccessor().get(srcIndex, holder);
         target.emptyPopulator.populate(destIndex+1);
-        final TransferPair vectorTransfer = children[1];
-        int newIndex = target.getOffsetVector().getAccessor().get(destIndex);
-        //todo: make this a bulk copy.
-        for (int i = holder.start; i < holder.end; i++, newIndex++) {
-          vectorTransfer.copyValueSafe(i, newIndex);
-        }
-        target.getOffsetVector().getMutator().setSafe(destIndex + 1, newIndex);
+        copyValueSafe(destIndex, holder.start, holder.end);
       }
     }
 

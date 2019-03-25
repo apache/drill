@@ -23,8 +23,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.PrivilegedExceptionAction;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
@@ -50,9 +50,11 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -207,8 +209,11 @@ public class AvroRecordReader extends AbstractRecordReader {
         final GenericArray<?> array = (GenericArray<?>) value;
         Schema elementSchema = array.getSchema().getElementType();
         Type elementType = elementSchema.getType();
-        if (elementType == Schema.Type.RECORD || elementType == Schema.Type.MAP){
+        if (elementType == Schema.Type.RECORD) {
           writer = (MapOrListWriterImpl) writer.list(fieldName).listoftmap(fieldName);
+        } else if (elementType == Schema.Type.MAP) {
+          writer = (MapOrListWriterImpl) writer.list(fieldName);
+          writer.listOfDict();
         } else {
           writer = (MapOrListWriterImpl) writer.list(fieldName);
         }
@@ -227,14 +232,22 @@ public class AvroRecordReader extends AbstractRecordReader {
         break;
       case MAP:
         @SuppressWarnings("unchecked")
-        final HashMap<Object, Object> map = (HashMap<Object, Object>) value;
+        Map<Object, Object> map = (Map<Object, Object>) value;
+        // key type in Avro MAP is assumed to be string
+        Schema keySchema = Schema.create(Type.STRING);
         Schema valueSchema = schema.getValueType();
-        writer = (MapOrListWriterImpl) writer.map(fieldName);
-        writer.start();
+
+        writer = (MapOrListWriterImpl) writer.dict(fieldName);
+        BaseWriter.DictWriter dictWriter = (BaseWriter.DictWriter) writer.map;
+
+        dictWriter.start();
         for (Entry<Object, Object> entry : map.entrySet()) {
-          process(entry.getValue(), valueSchema, entry.getKey().toString(), writer, fieldSelection.getChild(entry.getKey().toString()));
+          dictWriter.startKeyValuePair();
+          processPrimitive(entry.getKey(), keySchema, DictVector.FIELD_KEY_NAME, writer);
+          process(entry.getValue(), valueSchema, DictVector.FIELD_VALUE_NAME, writer, fieldSelection.getChild(entry.getKey().toString()));
+          dictWriter.endKeyValuePair();
         }
-        writer.end();
+        dictWriter.end();
         break;
       case FIXED:
       case ENUM:  // Enum symbols are strings

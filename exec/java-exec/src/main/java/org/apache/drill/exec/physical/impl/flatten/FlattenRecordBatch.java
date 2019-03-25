@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.flatten;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
@@ -55,12 +56,12 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.AbstractRepeatedMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.carrotsearch.hppc.IntHashSet;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.sun.codemodel.JExpr;
 
 // TODO - handle the case where a user tries to flatten a scalar, should just act as a project all of the columns exactly
@@ -364,8 +365,8 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     final ValueVector flattenField = incoming.getValueAccessorById(vectorClass, fieldId.getFieldIds()).getValueVector();
 
     TransferPair tp = null;
-    if (flattenField instanceof RepeatedMapVector) {
-      tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap(reference.getAsNamePart().getName(), oContext.getAllocator());
+    if (flattenField instanceof AbstractRepeatedMapVector) {
+      tp = ((AbstractRepeatedMapVector) flattenField).getTransferPairToSingleMap(reference.getAsNamePart().getName(), oContext.getAllocator());
     } else if ( !(flattenField instanceof RepeatedValueVector) ) {
       if(incoming.getRecordCount() != 0) {
         throw UserException.unsupportedError().message("Flatten does not support inputs of non-list values.").build(logger);
@@ -386,11 +387,11 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
 
   @Override
   protected boolean setupNewSchema() throws SchemaChangeException {
-    this.allocationVectors = Lists.newArrayList();
+    this.allocationVectors = new ArrayList<>();
     container.clear();
     final List<NamedExpression> exprs = getExpressionList();
     final ErrorCollector collector = new ErrorCollectorImpl();
-    final List<TransferPair> transfers = Lists.newArrayList();
+    final List<TransferPair> transfers = new ArrayList<>();
 
     final ClassGenerator<Flattener> cg = CodeGenerator.getRoot(Flattener.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
@@ -443,7 +444,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         // Need to process ComplexWriter function evaluation.
         // Lazy initialization of the list of complex writers, if not done yet.
         if (complexWriters == null) {
-          complexWriters = Lists.newArrayList();
+          complexWriters = new ArrayList<>();
         }
 
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
@@ -491,7 +492,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
 
   private List<NamedExpression> getExpressionList() {
 
-    List<NamedExpression> exprs = Lists.newArrayList();
+    List<NamedExpression> exprs = new ArrayList<>();
     for (MaterializedField field : incoming.getSchema()) {
       String fieldName = field.getName();
       if (fieldName.equals(popConfig.getColumn().getRootSegmentPath())) {

@@ -147,6 +147,11 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   public boolean isMultiList() { return false; }
 
   @Override
+  public boolean isDict() {
+    return false;
+  }
+
+  @Override
   public TupleMetadata mapSchema() { return null; }
 
   @Override

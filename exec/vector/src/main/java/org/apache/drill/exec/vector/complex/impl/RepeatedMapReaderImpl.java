@@ -17,89 +17,26 @@
  */
 package org.apache.drill.exec.vector.complex.impl;
 
-import java.util.Map;
-
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
-import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-
 @SuppressWarnings("unused")
-public class RepeatedMapReaderImpl extends AbstractFieldReader{
-  private static final int NO_VALUES = Integer.MAX_VALUE - 1;
-
-  private final RepeatedMapVector vector;
-  private final Map<String, FieldReader> fields = Maps.newHashMap();
-  private int currentOffset;
-  private int maxOffset;
+public class RepeatedMapReaderImpl extends AbstractRepeatedMapReaderImpl<RepeatedMapVector> {
 
   public RepeatedMapReaderImpl(RepeatedMapVector vector) {
-    this.vector = vector;
-  }
-
-  @Override
-  public FieldReader reader(String name) {
-    FieldReader reader = fields.get(name);
-    if (reader == null) {
-      ValueVector child = vector.getChild(name);
-      if (child == null) {
-        reader = NullReader.INSTANCE;
-      } else {
-        reader = child.getReader();
-      }
-      fields.put(name, reader);
-      reader.setPosition(currentOffset);
-    }
-    return reader;
+    super(vector);
   }
 
   @Override
   public FieldReader reader() {
-    if (isNull()) {
+    if (isEmpty()) {
       return NullReader.INSTANCE;
     }
 
     setChildrenPosition(currentOffset);
     return new SingleLikeRepeatedMapReaderImpl(vector, this);
-  }
-
-  @Override
-  public void reset() {
-    super.reset();
-    currentOffset = 0;
-    maxOffset = 0;
-    for (FieldReader reader:fields.values()) {
-      reader.reset();
-    }
-    fields.clear();
-  }
-
-  @Override
-  public int size() {
-    return isNull() ? 0 : maxOffset - currentOffset;
-  }
-
-  @Override
-  public void setPosition(int index) {
-    if (index < 0 || index == NO_VALUES) {
-      currentOffset = NO_VALUES;
-      return;
-    }
-
-    super.setPosition(index);
-    RepeatedMapHolder h = new RepeatedMapHolder();
-    vector.getAccessor().get(index, h);
-    if (h.start == h.end) {
-      currentOffset = NO_VALUES;
-    } else {
-      currentOffset = h.start - 1;
-      maxOffset = h.end - 1;
-      setChildrenPosition(currentOffset);
-    }
   }
 
   public void setSinglePosition(int index, int childIndex) {
@@ -118,43 +55,8 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public boolean next() {
-    if (currentOffset < maxOffset) {
-      setChildrenPosition(++currentOffset);
-      return true;
-    } else {
-      currentOffset = NO_VALUES;
-      return false;
-    }
-  }
-
-  public boolean isNull() {
-    return currentOffset == NO_VALUES;
-  }
-
-  @Override
-  public Object readObject() {
-    return vector.getAccessor().getObject(idx());
-  }
-
-  @Override
-  public MajorType getType() {
-    return vector.getField().getType();
-  }
-
-  @Override
-  public java.util.Iterator<String> iterator() {
-    return vector.fieldNameIterator();
-  }
-
-  @Override
-  public boolean isSet() {
-    return true;
-  }
-
-  @Override
   public void copyAsValue(MapWriter writer) {
-    if (isNull()) {
+    if (isEmpty()) {
       return;
     }
     RepeatedMapWriter impl = (RepeatedMapWriter) writer;
@@ -162,7 +64,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   }
 
   public void copyAsValueSingle(MapWriter writer) {
-    if (isNull()) {
+    if (isEmpty()) {
       return;
     }
     SingleMapWriter impl = (SingleMapWriter) writer;
@@ -171,16 +73,10 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public void copyAsField(String name, MapWriter writer) {
-    if (isNull()) {
+    if (isEmpty()) {
       return;
     }
     RepeatedMapWriter impl = (RepeatedMapWriter) writer.map(name);
     impl.container.copyFromSafe(idx(), impl.idx(), vector);
-  }
-
-  private void setChildrenPosition(int index) {
-    for (FieldReader r : fields.values()) {
-      r.setPosition(index);
-    }
   }
 }

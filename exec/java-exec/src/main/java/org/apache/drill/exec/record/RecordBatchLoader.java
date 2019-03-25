@@ -114,12 +114,12 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
           schemaChanged = true;
           vector = TypeHelper.getNewVector(fieldDef, allocator);
 
-        // If the field is a map, check if the map schema changed.
+        // If the field is a map or a dict, check if the schema changed.
 
-        } else if (vector.getField().getType().getMinorType() == MinorType.MAP  &&
+        } else if ((vector.getField().getType().getMinorType() == MinorType.MAP || vector.getField().getType().getMinorType() == MinorType.DICT) &&
                    ! isSameSchema(vector.getField().getChildren(), field.getChildList())) {
 
-          // The map schema changed. Discard the old map and create a new one.
+          // The schema changed. Discard the old one and create a new one.
 
           schemaChanged = true;
           vector.clear();

@@ -134,6 +134,18 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   public void read(${minor.class?cap_first}Holder h) {
     vector.getAccessor().get(idx(), h);
   }
+
+  public void read(ValueHolder h) {
+    if (h instanceof ${minor.class?cap_first}Holder) {
+      read((${minor.class?cap_first}Holder) h);
+    } else {
+      read((Nullable${minor.class?cap_first}Holder) h);
+    }
+  }
+  <#else>
+  public void read(ValueHolder h) {
+    read((Nullable${minor.class?cap_first}Holder) h);
+  }
   </#if>
 
   public void read(Nullable${minor.class?cap_first}Holder h) {

@@ -692,6 +692,41 @@ public class TestBuilder {
   }
 
   /**
+   * Convenience method to create an instance of {@link JsonStringHashMap}{@code <Object, Object>} with the given key-value sequence.
+   *
+   * By default, any {@link String} instance will be wrapped by {@link Text} instance. To disable wrapping pass
+   * {@code false} as the first object to key-value sequence.
+   *
+   * @param keyValueSequence sequence of key-value pairs with optional boolean
+   *                         flag which disables wrapping String instances by {@link Text}.
+   * @return map consisting of entries given in the key-value sequence.
+   */
+  public static JsonStringHashMap<Object, Object> mapOfObject(Object... keyValueSequence) {
+    boolean convertStringToText = true;
+    final int startIndex;
+    if (keyValueSequence.length % 2 == 1) {
+      convertStringToText = (boolean) keyValueSequence[0];
+      startIndex = 1;
+    } else {
+      startIndex = 0;
+    }
+
+    final JsonStringHashMap<Object, Object> map = new JsonStringHashMap<>();
+    for (int i = startIndex; i < keyValueSequence.length; i += 2) {
+      Object key = keyValueSequence[i];
+      if (convertStringToText && key instanceof CharSequence) {
+        key = new Text(key.toString());
+      }
+      Object value = keyValueSequence[i + 1];
+      if (value instanceof CharSequence) {
+        value = new Text(value.toString());
+      }
+      map.put(key, value);
+    }
+    return map;
+  }
+
+  /**
    * Helper method for the timestamp values that depend on the local timezone
    * @param value expected timestamp value in UTC
    * @return timestamp value for the local timezone

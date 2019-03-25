@@ -147,7 +147,7 @@ public class UnionFunctions {
 
       String typeName;
       if (input.isSet()) {
-        typeName = input.getType().getMinorType().name();
+        typeName = input.getTypeString();
       } else {
         typeName = org.apache.drill.common.types.TypeProtos.MinorType.NULL.name();
       }
@@ -206,7 +206,7 @@ public class UnionFunctions {
     @Override
     public void eval() {
 
-      String typeName = input.getType().getMinorType().name();
+      String typeName = input.getTypeString();
       byte[] type = typeName.getBytes();
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);

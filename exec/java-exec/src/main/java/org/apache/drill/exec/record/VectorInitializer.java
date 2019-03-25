@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.AbstractRepeatedMapVector;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
@@ -135,8 +135,8 @@ public class VectorInitializer {
   }
 
   private void allocateMap(AbstractMapVector map, String prefix, int recordCount, AllocationHint hint) {
-    if (map instanceof RepeatedMapVector) {
-      ((RepeatedMapVector) map).allocateOffsetsNew(recordCount);
+    if (map instanceof AbstractRepeatedMapVector) {
+      ((AbstractRepeatedMapVector) map).allocateOffsetsNew(recordCount);
       if (hint == null) {
         recordCount *= 10;
       } else {

@@ -22,6 +22,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +79,6 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Type.Repetition;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.parquet.schema.Types.ListBuilder;
 
 public class ParquetRecordWriter extends ParquetOutputRecordWriter {
@@ -88,6 +88,12 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private static final int MINIMUM_RECORD_COUNT_FOR_CHECK = 100;
   private static final int MAXIMUM_RECORD_COUNT_FOR_CHECK = 10000;
   private static final int BLOCKSIZE_MULTIPLE = 64 * 1024;
+
+  /**
+   * Name of nested group for Parquet's {@code MAP} type.
+   * @see <a href="https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#maps">MAP logical type</a>
+   */
+  private static final String GROUP_KEY_VALUE_NAME = "key_value";
 
   public static final String DRILL_VERSION_PROPERTY = "drill.version";
   public static final String WRITER_VERSION_PROPERTY = "drill-writer.version";
@@ -138,7 +144,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     this.extraMetaData.put(DRILL_VERSION_PROPERTY, DrillVersionInfo.getVersion());
     this.extraMetaData.put(WRITER_VERSION_PROPERTY, String.valueOf(ParquetWriter.WRITER_VERSION));
     this.storageStrategy = writer.getStorageStrategy() == null ? StorageStrategy.DEFAULT : writer.getStorageStrategy();
-    this.cleanUpLocations = Lists.newArrayList();
+    this.cleanUpLocations = new ArrayList<>();
     this.conf = new Configuration(writer.getFormatPlugin().getFsConf());
   }
 
@@ -200,6 +206,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
       MinorType type = field.getType().getMinorType();
       switch (type) {
       case MAP:
+      case DICT:
       case LIST:
         return true;
       default:
@@ -225,7 +232,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   private void newSchema() throws IOException {
-    List<Type> types = Lists.newArrayList();
+    List<Type> types = new ArrayList<>();
     for (MaterializedField field : batchSchema) {
       if (field.getName().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
         continue;
@@ -295,6 +302,31 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
       case MAP:
         List<Type> types = getChildrenTypes(field);
         return new GroupType(dataMode == DataMode.REPEATED ? Repetition.REPEATED : Repetition.OPTIONAL, field.getName(), types);
+      case DICT:
+        // RepeatedDictVector has DictVector as data vector hence the need to get the first child
+        // for REPEATED case to be able to access map's key and value fields
+        MaterializedField dictField = dataMode != DataMode.REPEATED
+            ? field : ((List<MaterializedField>) field.getChildren()).get(0);
+        List<Type> keyValueTypes = getChildrenTypes(dictField);
+
+        GroupType keyValueGroup = new GroupType(Repetition.REPEATED, GROUP_KEY_VALUE_NAME, keyValueTypes);
+        if (dataMode == DataMode.REPEATED) {
+          // Parquet's MAP repetition must be either optional or required, so nest it inside Parquet's LIST type
+          GroupType elementType = org.apache.parquet.schema.Types.buildGroup(Repetition.OPTIONAL)
+              .as(OriginalType.MAP)
+              .addField(keyValueGroup)
+              .named(LIST);
+          GroupType listGroup = new GroupType(Repetition.REPEATED, LIST, elementType);
+          return org.apache.parquet.schema.Types.buildGroup(Repetition.OPTIONAL)
+              .as(OriginalType.LIST)
+              .addField(listGroup)
+              .named(field.getName());
+        } else {
+          return org.apache.parquet.schema.Types.buildGroup(Repetition.OPTIONAL)
+              .as(OriginalType.MAP)
+              .addField(keyValueGroup)
+              .named(field.getName());
+        }
       case LIST:
         MaterializedField elementField = getDataField(field);
         ListBuilder<GroupType> listBuilder = org.apache.parquet.schema.Types
@@ -442,7 +474,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   public class MapParquetConverter extends FieldConverter {
-    List<FieldConverter> converters = Lists.newArrayList();
+    List<FieldConverter> converters = new ArrayList<>();
 
     public MapParquetConverter(int fieldId, String fieldName, FieldReader reader) {
       super(fieldId, fieldName, reader);
@@ -471,7 +503,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   public class RepeatedMapParquetConverter extends FieldConverter {
-    List<FieldConverter> converters = Lists.newArrayList();
+    List<FieldConverter> converters = new ArrayList<>();
 
     public RepeatedMapParquetConverter(int fieldId, String fieldName, FieldReader reader) {
       super(fieldId, fieldName, reader);
@@ -551,6 +583,79 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   @Override
+  public FieldConverter getNewDictConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new DictParquetConverter(fieldId, fieldName, reader);
+  }
+
+  public class DictParquetConverter extends FieldConverter {
+    List<FieldConverter> converters = new ArrayList<>();
+
+    public DictParquetConverter(int fieldId, String fieldName, FieldReader reader) {
+      super(fieldId, fieldName, reader);
+      int i = 0;
+      for (String name : reader) {
+        FieldConverter converter = EventBasedRecordWriter.getConverter(
+            ParquetRecordWriter.this, i++, name, reader.reader(name));
+        converters.add(converter);
+      }
+    }
+
+    @Override
+    public void writeField() throws IOException {
+      if (reader.size() == 0) {
+        return;
+      }
+
+      consumer.startField(fieldName, fieldId);
+      consumer.startGroup();
+      consumer.startField(GROUP_KEY_VALUE_NAME, 0);
+      while (reader.next()) {
+        consumer.startGroup();
+        for (FieldConverter converter : converters) {
+          converter.writeField();
+        }
+        consumer.endGroup();
+      }
+      consumer.endField(GROUP_KEY_VALUE_NAME, 0);
+      consumer.endGroup();
+      consumer.endField(fieldName, fieldId);
+    }
+  }
+
+  @Override
+  public FieldConverter getNewRepeatedDictConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new RepeatedDictParquetConverter(fieldId, fieldName, reader);
+  }
+
+  public class RepeatedDictParquetConverter extends FieldConverter {
+    private final FieldConverter dictConverter;
+
+    public RepeatedDictParquetConverter(int fieldId, String fieldName, FieldReader reader) {
+      super(fieldId, fieldName, reader);
+      dictConverter = new DictParquetConverter(0, ELEMENT, reader.reader());
+    }
+
+    @Override
+    public void writeField() throws IOException {
+      if (reader.size() == 0) {
+        return;
+      }
+
+      consumer.startField(fieldName, fieldId);
+      consumer.startGroup();
+      consumer.startField(LIST, 0);
+      while (reader.next()) {
+        consumer.startGroup();
+        dictConverter.writeField();
+        consumer.endGroup();
+      }
+      consumer.endField(LIST, 0);
+      consumer.endGroup();
+      consumer.endField(fieldName, fieldId);
+    }
+  }
+
+  @Override
   public void startRecord() throws IOException {
     consumer.startMessage();
   }
@@ -571,7 +676,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   @Override
   public void abort() throws IOException {
-    List<String> errors = Lists.newArrayList();
+    List<String> errors = new ArrayList<>();
     for (Path location : cleanUpLocations) {
       try {
         if (fs.exists(location)) {

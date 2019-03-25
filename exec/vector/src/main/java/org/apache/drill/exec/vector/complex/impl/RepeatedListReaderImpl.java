@@ -22,6 +22,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.RepeatedListHolder;
+import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -79,7 +80,8 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
 
   @Override
   public int size() {
-    return isEmpty() ? 0 : maxOffset - currentOffset;
+    UInt4Vector.Accessor offsetsAccessor = container.getOffsetVector().getAccessor();
+    return isEmpty() ? 0 : offsetsAccessor.get(idx() + 1) - offsetsAccessor.get(idx());
   }
 
   @Override
