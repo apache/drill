@@ -48,6 +48,7 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -213,7 +214,7 @@ public class DrillStatsTable {
     public void visit(RelNode node, int ordinal, RelNode parent) {
       if (node instanceof TableScan) {
         try {
-          final DrillTable drillTable = node.getTable().unwrap(DrillTable.class);
+          final DrillTable drillTable = Utilities.getDrillTable(node.getTable());
           final DrillStatsTable statsTable = drillTable.getStatsTable();
           if (statsTable != null) {
             statsTable.materialize(drillTable, context);

@@ -25,18 +25,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
-import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -59,12 +54,15 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
-import org.apache.drill.exec.planner.logical.FieldsReWriterUtil;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
+import org.apache.drill.exec.planner.logical.FieldsReWriterUtil;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 /**
  * Utility class that is a subset of the RelOptUtil class and is a placeholder for Drill specific
@@ -584,10 +582,7 @@ public abstract class DrillRelOptUtil {
         return guessRows(((HepRelVertex) rel).getCurrentRel());
       }
     } else if (rel instanceof TableScan) {
-      DrillTable table = rel.getTable().unwrap(DrillTable.class);
-      if (table == null) {
-        table = rel.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
-      }
+      DrillTable table = Utilities.getDrillTable(rel.getTable());
       if (table != null
           && table.getStatsTable() != null
           && table.getStatsTable().isMaterialized()) {

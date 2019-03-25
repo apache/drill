@@ -18,16 +18,15 @@
 package org.apache.drill.exec.planner.cost;
 
 import java.io.IOException;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.Sort;
-import org.apache.calcite.rel.core.Union;
-import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
@@ -37,9 +36,9 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
+import org.apache.drill.exec.util.Utilities;
 
 
 public class DrillRelMdRowCount extends RelMdRowCount{
@@ -101,15 +100,11 @@ public class DrillRelMdRowCount extends RelMdRowCount{
   }
 
   private Double getRowCountInternal(TableScan rel, RelMetadataQuery mq) {
-    DrillTable table;
+    DrillTable table = Utilities.getDrillTable(rel.getTable());
     PlannerSettings settings = PrelUtil.getSettings(rel.getCluster());
     // If guessing, return selectivity from RelMDRowCount
     if (DrillRelOptUtil.guessRows(rel)) {
       return super.getRowCount(rel, mq);
-    }
-    table = rel.getTable().unwrap(DrillTable.class);
-    if (table == null) {
-      table = rel.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
     }
     // Return rowcount from statistics, if available. Otherwise, delegate to parent.
     try {
