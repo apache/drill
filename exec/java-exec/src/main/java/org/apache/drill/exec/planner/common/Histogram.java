@@ -37,5 +37,5 @@ public interface Histogram {
    * @param filter
    * @return estimated selectivity or NULL if it could not be estimated for any reason
    */
-  Double estimatedSelectivity(RexNode filter);
+  Double estimatedSelectivity(final RexNode filter);
 }

@@ -19,6 +19,8 @@ package org.apache.drill.exec.planner.cost;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.EnumSet;
+import java.util.Set;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
@@ -45,6 +47,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
+import org.apache.drill.exec.planner.common.Histogram;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -63,6 +66,11 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
    * TODO: Differentiate leading/trailing wildcard characters(%) or explore different estimation techniques e.g. LSH-based
    */
   private static final double LIKE_PREDICATE_SELECTIVITY = 0.05;
+
+  public static final Set<SqlKind> RANGE_PREDICATE =
+    EnumSet.of(
+      SqlKind.LESS_THAN, SqlKind.GREATER_THAN,
+      SqlKind.LESS_THAN_OR_EQUAL, SqlKind.GREATER_THAN_OR_EQUAL);
 
   @Override
   public Double getSelectivity(RelNode rel, RelMetadataQuery mq, RexNode predicate) {
@@ -145,6 +153,8 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
           orSel += RelMdUtil.guessSelectivity(orPred);  //CALCITE guess
         } else if (orPred.isA(SqlKind.EQUALS)) {
           orSel += computeEqualsSelectivity(table, orPred, fieldNames);
+        } else if (orPred.isA(RANGE_PREDICATE)) {
+          orSel += computeRangeSelectivity(table, orPred, fieldNames);
         } else if (orPred.isA(SqlKind.NOT_EQUALS)) {
           orSel += 1.0 - computeEqualsSelectivity(table, orPred, fieldNames);
         } else if (orPred.isA(SqlKind.LIKE)) {
@@ -167,7 +177,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
         } else if (orPred.isA(SqlKind.IS_NOT_NULL)) {
           orSel += computeIsNotNullSelectivity(table, orPred, fieldNames);
         } else {
-          //Use the CALCITE guess. TODO: Use histograms for COMPARISON operator
+          // Use the CALCITE guess.
           orSel += guessSelectivity(orPred);
         }
       }
@@ -183,6 +193,22 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
       if (table.getStatsTable() != null
               && table.getStatsTable().getNdv(col) != null) {
         return 1.00 / table.getStatsTable().getNdv(col);
+      }
+    }
+    return guessSelectivity(orPred);
+  }
+
+  // Use histogram if available for the range predicate selectivity
+  private double computeRangeSelectivity(DrillTable table, RexNode orPred, List<String> fieldNames) {
+    String col = getColumn(orPred, fieldNames);
+    if (col != null) {
+      if (table.getStatsTable() != null
+        && table.getStatsTable().getHistogram(col) != null) {
+        Histogram histogram = table.getStatsTable().getHistogram(col);
+        Double sel = ((Histogram) histogram).estimatedSelectivity(orPred);
+        if (sel != null) {
+          return sel;
+        }
       }
     }
     return guessSelectivity(orPred);

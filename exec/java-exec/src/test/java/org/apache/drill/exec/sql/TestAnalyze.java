@@ -400,6 +400,21 @@ public class TestAnalyze extends BaseTestQuery {
               .baselineValues("`hire_date_and_time`", 7)
               .baselineValues("`salary`", 11)
               .go();
+
+      // test the use of the just created histogram
+      test("alter session set `planner.statistics.use` = true");
+
+      // check boundary conditions: last bucket
+      String query = "select 1 from dfs.tmp.employee1 where store_id > 21";
+      String[] expectedPlan1 = {"Filter\\(condition.*\\).*rowcount = 112.*,.*",
+              "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
+
+      query = "select 1 from dfs.tmp.employee1 where store_id < 15";
+      String[] expectedPlan2 = {"Filter\\(condition.*\\).*rowcount = 676.*,.*",
+              "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
+
     } finally {
       test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
     }

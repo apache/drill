@@ -215,7 +215,7 @@ public class DrillStatsTable {
 
             // get the histogram for this column
             Histogram hist = cs.getHistogram();
-            histogram.put(cs.getName(), hist);
+            histogram.put(cs.getName().toUpperCase(), hist);
           }
         }
       }
