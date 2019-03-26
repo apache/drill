@@ -44,6 +44,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.FieldIdUtil;
@@ -90,8 +91,9 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   /*
    * Returns whether the given column is an implicit column
    */
-  private boolean isImplicitFileColumn(MaterializedField mf) {
-    return implicitFileColumnsMap.get(SchemaPath.getSimplePath(mf.getName()).toString()) != null;
+  private boolean isImplicitFileOrPartitionColumn(MaterializedField mf, OptionManager optionManager) {
+    return implicitFileColumnsMap.get(SchemaPath.getSimplePath(mf.getName()).toString()) != null ||
+       ColumnExplorer.isPartitionColumn(optionManager, SchemaPath.getSimplePath(mf.getName()));
   }
 
   /*
@@ -191,7 +193,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
           expr = ValueExpressions.getChar(DrillStatsTable.getMapper().writeValueAsString(mf.getType()), 0);
         }
         // Ignore implicit columns
-        if (!isImplicitFileColumn(mf)) {
+        if (!isImplicitFileOrPartitionColumn(mf, incoming.getContext().getOptions())) {
           createNestedKeyColumn(
               parent,
               SchemaPath.getSimplePath(mf.getName()).toString(),
@@ -213,7 +215,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
       for (MaterializedField mf : incoming.getSchema()) {
         // Check stats collection is only being done for supported data-types. Complex types
         // such as MAP, LIST are not supported!
-        if (isColMinorTypeValid(mf) && !isImplicitFileColumn(mf)) {
+        if (isColMinorTypeValid(mf) && !isImplicitFileOrPartitionColumn(mf, incoming.getContext().getOptions())) {
           List<LogicalExpression> args = Lists.newArrayList();
           args.add(SchemaPath.getSimplePath(mf.getName()));
           LogicalExpression call = FunctionCallFactory.createExpression(func, args);

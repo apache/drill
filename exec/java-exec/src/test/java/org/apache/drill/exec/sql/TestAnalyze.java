@@ -170,6 +170,7 @@ public class TestAnalyze extends BaseTestQuery {
     }
   }
 
+  @Ignore("For 1.16.0, we do not plan to support statistics on dir columns")
   @Test
   public void testAnalyzePartitionedTables() throws Exception {
     //Computing statistics on columns, dir0, dir1
@@ -330,7 +331,6 @@ public class TestAnalyze extends BaseTestQuery {
     PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan11, new String[]{});
   }
 
-  @Ignore("Fails intermittently. Enable after fixing the issue.")
   @Test
   public void testWithMetadataCaching() throws Exception {
     test("ALTER SESSION SET `planner.slice_target` = 1");
