@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,6 @@ import java.util.Map;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.TableScan;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos;
@@ -196,7 +196,7 @@ public class DrillStatsTable {
    * @param context - Query context
    * @throws Exception
    */
-  public void materialize(final DrillTable table, final QueryContext context) throws IOException {
+  public void materialize(final DrillTable table, final QueryContext context) {
     if (materialized) {
       return;
     }
@@ -223,8 +223,11 @@ public class DrillStatsTable {
         materialized = true;
       }
     } catch (IOException ex) {
-      logger.warn("Failed to read the stats file.", ex);
-      throw ex;
+      if (ex instanceof FileNotFoundException) {
+        logger.debug(String.format("Did not find statistics file %s", tablePath.toString()), ex);
+      } else {
+        logger.debug(String.format("Error trying to read statistics table %s", tablePath.toString()), ex);
+      }
     }
   }
 
@@ -247,16 +250,15 @@ public class DrillStatsTable {
       if (node instanceof TableScan) {
         try {
           final DrillTable drillTable = Utilities.getDrillTable(node.getTable());
-          final DrillStatsTable statsTable = drillTable.getStatsTable();
-          if (statsTable != null) {
+          final DrillStatsTable statsTable = drillTable != null ? drillTable.getStatsTable() : null;
+          if (drillTable != null && statsTable != null) {
             statsTable.materialize(drillTable, context);
-          } else {
-            throw new DrillRuntimeException(
-                String.format("Failed to find the stats for table [%s] in schema [%s]",
-                    node.getTable().getQualifiedName(), node.getTable().getRelOptSchema()));
+          } else if (drillTable != null) {
+            logger.debug(String.format("Unable to find statistics table info for table [%s] in schema [%s]",
+                node.getTable().getQualifiedName(), node.getTable().getRelOptSchema()));
           }
         } catch (Exception e) {
-          // Log a warning and proceed. We don't want to fail a query.
+          // Something unexpected happened! Log a warning and proceed. We don't want to fail the query.
           logger.warn("Failed to materialize the stats. Continuing without stats.", e);
         }
       }
