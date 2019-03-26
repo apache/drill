@@ -56,6 +56,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.FieldsReWriterUtil;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.exec.util.Utilities;
@@ -646,5 +647,17 @@ public abstract class DrillRelOptUtil {
         }
       }
     }
+  }
+
+  public static DrillTable getDrillTable(final TableScan scan) {
+    DrillTable drillTable = null;
+    drillTable = scan.getTable().unwrap(DrillTable.class);
+    if (drillTable == null) {
+      DrillTranslatableTable transTable = scan.getTable().unwrap(DrillTranslatableTable.class);
+      if (transTable != null) {
+        drillTable = transTable.getDrillTable();
+      }
+    }
+    return drillTable;
   }
 }

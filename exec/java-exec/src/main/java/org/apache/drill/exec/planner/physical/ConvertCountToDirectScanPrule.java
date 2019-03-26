@@ -17,27 +17,19 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
-import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
-import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
@@ -45,10 +37,12 @@ import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.drill.exec.store.ColumnExplorer;
+import org.apache.drill.exec.planner.common.CountToDirectScanUtils;
 
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.direct.MetadataDirectGroupScan;
 import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
 /**
  * <p>
@@ -74,23 +68,30 @@ import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
  * obtained from parquet row group info. This will save the cost to
  * scan the whole parquet files.
  * </p>
+ *
+ * <p>
+ *     NOTE: This rule is a physical planning counterpart to a similar ConvertCountToDirectScanRule
+ *     logical rule. However, while the logical rule relies on the Parquet metadata cache's Summary
+ *     aggregates, this rule is applicable if the exact row count is available from the GroupScan
+ *     regardless of where that stat came from. Hence, it is more general, with the trade-off that the
+ *     GroupScan relies on the fully expanded list of row groups to compute the aggregate row count.
+ * </p>
  */
-public class ConvertCountToDirectScan extends Prule {
+public class ConvertCountToDirectScanPrule extends Prule {
 
-  public static final RelOptRule AGG_ON_PROJ_ON_SCAN = new ConvertCountToDirectScan(
+  public static final RelOptRule AGG_ON_PROJ_ON_SCAN = new ConvertCountToDirectScanPrule(
       RelOptHelper.some(DrillAggregateRel.class,
                         RelOptHelper.some(DrillProjectRel.class,
                             RelOptHelper.any(DrillScanRel.class))), "Agg_on_proj_on_scan");
 
-  public static final RelOptRule AGG_ON_SCAN = new ConvertCountToDirectScan(
+  public static final RelOptRule AGG_ON_SCAN = new ConvertCountToDirectScanPrule(
       RelOptHelper.some(DrillAggregateRel.class,
                             RelOptHelper.any(DrillScanRel.class)), "Agg_on_scan");
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConvertCountToDirectScan.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConvertCountToDirectScanPrule.class);
 
-  /** Creates a SplunkPushDownRule. */
-  protected ConvertCountToDirectScan(RelOptRuleOperand rule, String id) {
-    super(rule, "ConvertCountToDirectScan:" + id);
+  protected ConvertCountToDirectScanPrule(RelOptRuleOperand rule, String id) {
+    super(rule, "ConvertCountToDirectScanPrule:" + id);
   }
 
   @Override
@@ -119,20 +120,20 @@ public class ConvertCountToDirectScan extends Prule {
       return;
     }
 
-    final RelDataType scanRowType = constructDataType(agg, result.keySet());
+    final RelDataType scanRowType = CountToDirectScanUtils.constructDataType(agg, result.keySet());
 
     final DynamicPojoRecordReader<Long> reader = new DynamicPojoRecordReader<>(
-        buildSchema(scanRowType.getFieldNames()),
+        CountToDirectScanUtils.buildSchema(scanRowType.getFieldNames()),
         Collections.singletonList((List<Long>) new ArrayList<>(result.values())));
 
     final ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, 1, 1, scanRowType.getFieldCount());
-    final GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getFiles(), scanStats);
+    final GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getFiles(), scanStats, false);
 
     final DirectScanPrel newScan = DirectScanPrel.create(scan, scan.getTraitSet().plus(Prel.DRILL_PHYSICAL)
         .plus(DrillDistributionTrait.SINGLETON), directScan, scanRowType);
 
     final ProjectPrel newProject = new ProjectPrel(agg.getCluster(), agg.getTraitSet().plus(Prel.DRILL_PHYSICAL)
-        .plus(DrillDistributionTrait.SINGLETON), newScan, prepareFieldExpressions(scanRowType), agg.getRowType());
+        .plus(DrillDistributionTrait.SINGLETON), newScan, CountToDirectScanUtils.prepareFieldExpressions(scanRowType), agg.getRowType());
 
     call.transformTo(newProject);
   }
@@ -165,7 +166,7 @@ public class ConvertCountToDirectScan extends Prule {
         return ImmutableMap.of();
       }
 
-      if (containsStarOrNotNullInput(aggCall, agg)) {
+      if (CountToDirectScanUtils.containsStarOrNotNullInput(aggCall, agg)) {
         cnt = totalRecordCount;
 
       } else if (aggCall.getArgList().size() == 1) {
@@ -215,74 +216,6 @@ public class ConvertCountToDirectScan extends Prule {
     }
 
     return ImmutableMap.copyOf(result);
-  }
-
-  /**
-   * Checks if aggregate call contains star or non-null expression:
-   * <pre>
-   * count(*)  == >  empty arg  ==>  rowCount
-   * count(Not-null-input) ==> rowCount
-   * </pre>
-   *
-   * @param aggregateCall aggregate call
-   * @param aggregate aggregate relation expression
-   * @return true of aggregate call contains star or non-null expression
-   */
-  private boolean containsStarOrNotNullInput(AggregateCall aggregateCall, DrillAggregateRel aggregate) {
-    return aggregateCall.getArgList().isEmpty() ||
-        (aggregateCall.getArgList().size() == 1 &&
-            !aggregate.getInput().getRowType().getFieldList().get(aggregateCall.getArgList().get(0)).getType().isNullable());
-  }
-
-  /**
-   * For each aggregate call creates field based on its name with bigint type.
-   * Constructs record type for created fields.
-   *
-   * @param aggregateRel aggregate relation expression
-   * @param fieldNames field names
-   * @return record type
-   */
-  private RelDataType constructDataType(DrillAggregateRel aggregateRel, Collection<String> fieldNames) {
-    List<RelDataTypeField> fields = new ArrayList<>();
-    Iterator<String> filedNamesIterator = fieldNames.iterator();
-    int fieldIndex = 0;
-    while (filedNamesIterator.hasNext()) {
-      RelDataTypeField field = new RelDataTypeFieldImpl(
-          filedNamesIterator.next(),
-          fieldIndex++,
-          aggregateRel.getCluster().getTypeFactory().createSqlType(SqlTypeName.BIGINT));
-      fields.add(field);
-    }
-    return new RelRecordType(fields);
-  }
-
-  /**
-   * Builds schema based on given field names.
-   * Type for each schema is set to long.class.
-   *
-   * @param fieldNames field names
-   * @return schema
-   */
-  private LinkedHashMap<String, Class<?>> buildSchema(List<String> fieldNames) {
-    LinkedHashMap<String, Class<?>> schema = new LinkedHashMap<>();
-    for (String fieldName: fieldNames) {
-      schema.put(fieldName, long.class);
-    }
-    return schema;
-  }
-
-  /**
-   * For each field creates row expression.
-   *
-   * @param rowType row type
-   * @return list of row expressions
-   */
-  private List<RexNode> prepareFieldExpressions(RelDataType rowType) {
-    List<RexNode> expressions = new ArrayList<>();
-    for (int i = 0; i < rowType.getFieldCount(); i++) {
-      expressions.add(RexInputRef.of(i, rowType));
-    }
-    return expressions;
   }
 
 }
