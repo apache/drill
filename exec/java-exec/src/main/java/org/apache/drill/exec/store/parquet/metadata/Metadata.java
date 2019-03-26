@@ -796,12 +796,12 @@ public class Metadata {
     return metadataSummary.isAllColumnsInteresting();
   }
 
-  private static Path getSummaryFileName(Path metadataParentDir) {
+  public static Path getSummaryFileName(Path metadataParentDir) {
     Path summaryFile = new Path(metadataParentDir, METADATA_SUMMARY_FILENAME);
     return summaryFile;
   }
 
-  private static Path getDirFileName(Path metadataParentDir) {
+  public static Path getDirFileName(Path metadataParentDir) {
     Path metadataDirFile = new Path(metadataParentDir, METADATA_DIRECTORIES_FILENAME);
     return metadataDirFile;
   }

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
@@ -65,8 +66,6 @@ import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
-import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.logical.DrillValuesRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -172,7 +171,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     PartitionDescriptor descriptor = getPartitionDescriptor(settings, scanRel);
     final BufferAllocator allocator = optimizerContext.getAllocator();
 
-    final Object selection = getDrillTable(scanRel).getSelection();
+    final Object selection = DrillRelOptUtil.getDrillTable(scanRel).getSelection();
     MetadataContext metaContext = null;
     if (selection instanceof FormatSelection) {
          metaContext = ((FormatSelection)selection).getSelection().getMetaContext();
@@ -541,18 +540,9 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
   public abstract PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel);
 
-  private static DrillTable getDrillTable(final TableScan scan) {
-    DrillTable drillTable;
-    drillTable = scan.getTable().unwrap(DrillTable.class);
-    if (drillTable == null) {
-      drillTable = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
-    }
-    return drillTable;
-  }
-
   private static boolean isQualifiedDirPruning(final TableScan scan) {
     if (scan instanceof EnumerableTableScan) {
-      final Object selection = getDrillTable(scan).getSelection();
+      final Object selection = DrillRelOptUtil.getDrillTable(scan).getSelection();
       if (selection instanceof FormatSelection
           && ((FormatSelection)selection).supportDirPruning()) {
         return true;  // Do directory-based pruning in Calcite logical
@@ -657,7 +647,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       logger.debug("Beginning file partition pruning, pruning class: {}", pruningClassName);
       Stopwatch totalPruningTime = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
 
-      Object selection = getDrillTable(scan).getSelection();
+      Object selection = DrillRelOptUtil.getDrillTable(scan).getSelection();
       MetadataContext metaContext = null;
       FileSelection fileSelection = null;
       if (selection instanceof FormatSelection) {
@@ -779,7 +769,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
     private static boolean isQualifiedFilePruning(final TableScan scan) {
       if (scan instanceof EnumerableTableScan) {
-        Object selection = getDrillTable(scan).getSelection();
+        Object selection = DrillRelOptUtil.getDrillTable(scan).getSelection();
         return selection instanceof FormatSelection;
       } else if (scan instanceof DrillScanRel) {
         GroupScan groupScan = ((DrillScanRel) scan).getGroupScan();
