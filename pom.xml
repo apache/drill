@@ -2529,33 +2529,6 @@
           </dependency>
           <!--/GlassFish Jersey dependecies-->
 
-          <!--Javax dependecies-->
-          <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>javax.servlet.jsp-api</artifactId>
-            <version>2.3.3</version>
-            <scope>provided</scope>
-          </dependency>
-          <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>jsp-api</artifactId>
-            <version>2.2</version>
-            <scope>provided</scope>
-          </dependency>
-          <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <scope>provided</scope>
-          </dependency>
-
-          <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-            <version>2.1.1</version>
-          </dependency>
-          <!--/Javax dependecies-->
-
           <!-- Test Dependencies -->
           <dependency>
             <groupId>org.apache.hadoop</groupId>
