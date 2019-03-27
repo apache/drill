@@ -27,7 +27,9 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -40,17 +42,23 @@ public abstract class AbstractParquetRowGroupScan extends AbstractBase implement
   protected final List<SchemaPath> columns;
   protected final ParquetReaderConfig readerConfig;
   protected final LogicalExpression filter;
+  protected final Path selectionRoot;
+  protected final TupleSchema tupleSchema;
 
   protected AbstractParquetRowGroupScan(String userName,
                                      List<RowGroupReadEntry> rowGroupReadEntries,
                                      List<SchemaPath> columns,
                                      ParquetReaderConfig readerConfig,
-                                     LogicalExpression filter) {
+                                     LogicalExpression filter,
+                                     Path selectionRoot,
+                                     TupleSchema tupleSchema) {
     super(userName);
     this.rowGroupReadEntries = rowGroupReadEntries;
     this.columns = columns == null ? GroupScan.ALL_COLUMNS : columns;
     this.readerConfig = readerConfig == null ? ParquetReaderConfig.getDefaultInstance() : readerConfig;
     this.filter = filter;
+    this.selectionRoot = selectionRoot;
+    this.tupleSchema = tupleSchema;
   }
 
   @JsonProperty
@@ -94,6 +102,14 @@ public abstract class AbstractParquetRowGroupScan extends AbstractBase implement
   public Iterator<PhysicalOperator> iterator() {
     return Collections.emptyIterator();
   }
+
+  @JsonProperty
+  public Path getSelectionRoot() {
+    return selectionRoot;
+  }
+
+  @JsonProperty
+  public TupleSchema getTupleSchema() { return tupleSchema; }
 
   public abstract AbstractParquetRowGroupScan copy(List<SchemaPath> columns);
   @JsonIgnore

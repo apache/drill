@@ -72,7 +72,7 @@ public class ScanBatch implements CloseableRecordBatch {
   private int recordCount;
   private final FragmentContext context;
   private final OperatorContext oContext;
-  private Iterator<RecordReader> readers;
+  private Iterator<? extends RecordReader> readers;
   private RecordReader currentReader;
   private BatchSchema schema;
   private final Mutator mutator;
@@ -100,7 +100,7 @@ public class ScanBatch implements CloseableRecordBatch {
    *                        columns, or there is a one-to-one mapping between reader and implicitColumns.
    */
   public ScanBatch(FragmentContext context,
-                   OperatorContext oContext, List<RecordReader> readerList,
+                   OperatorContext oContext, List<? extends RecordReader> readerList,
                    List<Map<String, String>> implicitColumnList) {
     this.context = context;
     this.readers = readerList.iterator();

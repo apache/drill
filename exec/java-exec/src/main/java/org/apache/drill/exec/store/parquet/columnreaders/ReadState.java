@@ -80,6 +80,13 @@ public class ReadState {
       nullFilledVectors = new ArrayList<>();
     }
 
+    // In the case where runtime pruning prunes out all the rowgroups, then just a single rowgroup
+    // with zero rows is read (in order to get the schema, no need for the rows)
+    if ( numRecordsToRead == 0 ) {
+      this.totalNumRecordsToRead = 0;
+      return;
+    }
+
     // Because of JIRA DRILL-6528, the Parquet reader is sometimes getting the wrong
     // number of rows to read. For now, returning all a file data (till
     // downstream operator stop consuming).

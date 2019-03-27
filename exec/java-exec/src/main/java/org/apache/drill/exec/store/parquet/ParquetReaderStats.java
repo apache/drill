@@ -20,10 +20,13 @@ package org.apache.drill.exec.store.parquet;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.exec.ops.OperatorStats;
-import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader.Metric;
+import org.apache.drill.exec.store.CommonParquetRecordReader.Metric;
 import org.apache.hadoop.fs.Path;
 
 public class ParquetReaderStats {
+
+  public AtomicLong numRowgroups = new AtomicLong();
+  public AtomicLong rowgroupsPruned = new AtomicLong();
 
   public AtomicLong numDictPageLoads = new AtomicLong();
   public AtomicLong numDataPageLoads = new AtomicLong();
@@ -54,8 +57,10 @@ public class ParquetReaderStats {
 
   public void logStats(org.slf4j.Logger logger, Path hadoopPath) {
     logger.trace(
-        "ParquetTrace,Summary,{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+        "ParquetTrace,Summary,{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
         hadoopPath,
+        numRowgroups,
+        rowgroupsPruned,
         numDictPageLoads,
         numDataPageLoads,
         numDataPagesDecoded,
@@ -79,6 +84,10 @@ public class ParquetReaderStats {
   }
 
   public void update(OperatorStats stats){
+    stats.setLongStat(Metric.NUM_ROWGROUPS,
+        numRowgroups.longValue());
+    stats.setLongStat(Metric.ROWGROUPS_PRUNED,
+        rowgroupsPruned.longValue());
     stats.addLongStat(Metric.NUM_DICT_PAGE_LOADS,
         numDictPageLoads.longValue());
     stats.addLongStat(Metric.NUM_DATA_PAGE_lOADS, numDataPageLoads.longValue());

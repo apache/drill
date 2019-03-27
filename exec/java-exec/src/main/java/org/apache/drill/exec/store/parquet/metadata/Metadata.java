@@ -470,7 +470,7 @@ public class Metadata {
 
     @Override
     protected ParquetFileAndRowCountMetadata runInner() throws Exception {
-      return getParquetFileMetadata_v4(parquetTableMetadata, fileStatus, fs, allColumnsInteresting, columnSet);
+      return getParquetFileMetadata_v4(parquetTableMetadata, fileStatus, fs, allColumnsInteresting, columnSet, readerConfig);
     }
 
     public String toString() {
@@ -478,7 +478,7 @@ public class Metadata {
     }
   }
 
-  private ColTypeInfo getColTypeInfo(MessageType schema, Type type, String[] path, int depth) {
+  private static ColTypeInfo getColTypeInfo(MessageType schema, Type type, String[] path, int depth) {
     if (type.isPrimitive()) {
       PrimitiveType primitiveType = (PrimitiveType) type;
       int precision = 0;
@@ -497,7 +497,7 @@ public class Metadata {
     return getColTypeInfo(schema, t, path, depth + 1);
   }
 
-  private class ColTypeInfo {
+  private static class ColTypeInfo {
     public OriginalType originalType;
     public int precision;
     public int scale;
@@ -513,28 +513,52 @@ public class Metadata {
     }
   }
 
-  /**
-   * Get the metadata for a single file
-   */
+  // A private version of the following static method, with no footer given
   private ParquetFileAndRowCountMetadata getParquetFileMetadata_v4(ParquetTableMetadata_v4 parquetTableMetadata,
-                                                                   final FileStatus file, final FileSystem fs, boolean allColumnsInteresting, Set<String> columnSet) throws IOException, InterruptedException {
-    final ParquetMetadata metadata;
-    final UserGroupInformation processUserUgi = ImpersonationUtil.getProcessUserUGI();
-    final Configuration conf = new Configuration(fs.getConf());
+                                                           final FileStatus file, final FileSystem fs,
+                                                           boolean allColumnsInteresting, Set<String> columnSet,
+                                                           ParquetReaderConfig readerConfig)
+    throws IOException, InterruptedException {
+    return getParquetFileMetadata_v4(parquetTableMetadata, null /* no footer */, file, fs, allColumnsInteresting, false, columnSet, readerConfig);
+  }
+  /**
+   * Get the file metadata for a single file
+   *
+   * @param parquetTableMetadata The table metadata to be updated with all the columns' info
+   * @param footer If non null, use this footer instead of reading it from the file
+   * @param file The file
+   * @param allColumnsInteresting If true, read the min/max metadata for all the columns
+   * @param skipNonInteresting If true, collect info only for the interesting columns
+   * @param columnSet Specifies specific columns for which min/max metadata is collected
+   * @param readerConfig for the options
+   * @return the file metadata
+   */
+  public static ParquetFileAndRowCountMetadata getParquetFileMetadata_v4(ParquetTableMetadata_v4 parquetTableMetadata,
+                                                                         ParquetMetadata footer,
+                                                                         final FileStatus file,
+                                                                         final FileSystem fs,
+                                                                         boolean allColumnsInteresting,
+                                                                         boolean skipNonInteresting,
+                                                                         Set<String> columnSet,
+                                                                         ParquetReaderConfig readerConfig)
+    throws IOException, InterruptedException {
     Map<ColumnTypeMetadata_v4.Key, Long> totalNullCountMap = new HashMap<>();
     long totalRowCount = 0;
-    try {
-      metadata = processUserUgi.doAs((PrivilegedExceptionAction<ParquetMetadata>)() -> {
-        try (ParquetFileReader parquetFileReader = ParquetFileReader.open(HadoopInputFile.fromStatus(file, conf), readerConfig.toReadOptions())) {
-          return parquetFileReader.getFooter();
-        }
-      });
-    } catch(Exception e) {
-      logger.error("Exception while reading footer of parquet file [Details - path: {}, owner: {}] as process user {}",
-        file.getPath(), file.getOwner(), processUserUgi.getShortUserName(), e);
-      throw e;
+    ParquetMetadata metadata = footer; // if a non-null footer is given, no need to read it again from the file
+    if (metadata == null) {
+      final UserGroupInformation processUserUgi = ImpersonationUtil.getProcessUserUGI();
+      final Configuration conf = new Configuration(fs.getConf());
+      try {
+        metadata = processUserUgi.doAs((PrivilegedExceptionAction<ParquetMetadata>) () -> {
+          try (ParquetFileReader parquetFileReader = ParquetFileReader.open(HadoopInputFile.fromStatus(file, conf), readerConfig.toReadOptions())) {
+            return parquetFileReader.getFooter();
+          }
+        });
+      } catch (Exception e) {
+        logger.error("Exception while reading footer of parquet file [Details - path: {}, owner: {}] as process user {}", file.getPath(), file.getOwner(), processUserUgi.getShortUserName(), e);
+        throw e;
+      }
     }
-
     MessageType schema = metadata.getFileMetaData().getSchema();
 
     Map<SchemaPath, ColTypeInfo> colTypeInfoMap = new HashMap<>();
@@ -560,6 +584,8 @@ public class Metadata {
       for (ColumnChunkMetaData col : rowGroup.getColumns()) {
         String[] columnName = col.getPath().toArray();
         SchemaPath columnSchemaName = SchemaPath.getCompoundPath(columnName);
+        boolean thisColumnIsInteresting = allColumnsInteresting || columnSet == null || columnSet.contains(columnSchemaName.getRootSegmentPath());
+        if ( skipNonInteresting && ! thisColumnIsInteresting ) { continue; }
         ColTypeInfo colTypeInfo = colTypeInfoMap.get(columnSchemaName);
         Statistics<?> stats = col.getStatistics();
         long totalNullCount = stats.getNumNulls();
@@ -578,7 +604,7 @@ public class Metadata {
           long nullCount = totalNullCountMap.get(columnTypeMetadataKey) + totalNullCount;
           totalNullCountMap.put(columnTypeMetadataKey, nullCount);
         }
-        if (allColumnsInteresting || columnSet == null || !allColumnsInteresting && columnSet != null && columnSet.size() > 0 && columnSet.contains(columnSchemaName.getRootSegmentPath())) {
+        if ( thisColumnIsInteresting ) {
           // Save the column schema info. We'll merge it into one list
           Object minValue = null;
           Object maxValue = null;
@@ -629,7 +655,7 @@ public class Metadata {
    * @param length     the length of the row group
    * @return host affinity for the row group
    */
-  private Map<String, Float> getHostAffinity(FileStatus fileStatus, FileSystem fs, long start, long length)
+  private static Map<String, Float> getHostAffinity(FileStatus fileStatus, FileSystem fs, long start, long length)
       throws IOException {
     BlockLocation[] blockLocations = fs.getFileBlockLocations(fileStatus, start, length);
     Map<String, Float> hostAffinityMap = Maps.newHashMap();

@@ -32,6 +32,7 @@ import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.stat.RowsMatch;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.MaterializedField;
@@ -67,6 +68,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+// import static org.apache.drill.exec.ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS;
+import static org.apache.drill.exec.ExecConstants.SKIP_RUNTIME_ROWGROUP_PRUNING_KEY;
 
 /**
  * Represents table group scan with metadata usage.
@@ -191,12 +195,25 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     this.filter = filter;
   }
 
+  /**
+   *  Set the filter - thus enabling runtime rowgroup pruning
+   *  The runtime pruning can be disabled with an option.
+   * @param filterExpr The filter to be used at runtime to match with rowgroups' footers
+   * @param optimizerContext The context for the options
+   */
+  public void setFilterForRuntime(LogicalExpression filterExpr, OptimizerRulesContext optimizerContext) {
+    OptionManager options = optimizerContext.getPlannerSettings().getOptions();
+    boolean skipRuntimePruning = options.getBoolean(SKIP_RUNTIME_ROWGROUP_PRUNING_KEY); // if option is set to disable runtime pruning
+    if ( ! skipRuntimePruning ) { setFilter(filterExpr); }
+  }
+
   @Override
   public AbstractGroupScanWithMetadata applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
       FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
 
     // Builds filter for pruning. If filter cannot be built, null should be returned.
-    FilterPredicate filterPredicate = getFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager, true);
+    FilterPredicate filterPredicate =
+            getFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager, true);
     if (filterPredicate == null) {
       logger.debug("FilterPredicate cannot be built.");
       return null;
@@ -271,6 +288,14 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
    */
   protected abstract GroupScanWithMetadataFilterer getFilterer();
 
+  public FilterPredicate getFilterPredicate(LogicalExpression filterExpr,
+                                                   UdfUtilities udfUtilities,
+                                                   FunctionImplementationRegistry functionImplementationRegistry,
+                                                   OptionManager optionManager,
+                                                   boolean omitUnsupportedExprs) {
+    return getFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager,
+            omitUnsupportedExprs, supportsFileImplicitColumns(), (TupleSchema) getTableMetadata().getSchema());
+  }
   /**
    * Returns parquet filter predicate built from specified {@code filterExpr}.
    *
@@ -281,20 +306,19 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
    *                                       may be omitted from the resulting expression
    * @return parquet filter predicate
    */
-  public FilterPredicate getFilterPredicate(LogicalExpression filterExpr,
+  public static FilterPredicate getFilterPredicate(LogicalExpression filterExpr,
                                             UdfUtilities udfUtilities,
                                             FunctionImplementationRegistry functionImplementationRegistry,
                                             OptionManager optionManager,
-                                            boolean omitUnsupportedExprs) {
-    TupleMetadata types = getSchema();
-    if (types == null) {
-      throw new UnsupportedOperationException("At least one schema source should be available.");
-    }
+                                            boolean omitUnsupportedExprs,
+                                            boolean supportsFileImplicitColumns,
+                                            TupleSchema tupleSchema) {
+    TupleMetadata types = tupleSchema.copy();
 
     Set<SchemaPath> schemaPathsInExpr = filterExpr.accept(new FilterEvaluatorUtils.FieldReferenceFinder(), null);
 
     // adds implicit or partition columns if they weren't added before.
-    if (supportsFileImplicitColumns()) {
+    if (supportsFileImplicitColumns) {
       for (SchemaPath schemaPath : schemaPathsInExpr) {
         if (isImplicitOrPartCol(schemaPath, optionManager) && SchemaPathUtils.getColumnMetadata(schemaPath, types) == null) {
           types.add(MaterializedField.create(schemaPath.getRootSegmentPath(), Types.required(TypeProtos.MinorType.VARCHAR)));
@@ -467,7 +491,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
   protected abstract boolean supportsFileImplicitColumns();
   protected abstract List<String> getPartitionValues(LocationProvider locationProvider);
 
-  protected boolean isImplicitOrPartCol(SchemaPath schemaPath, OptionManager optionManager) {
+  public static boolean isImplicitOrPartCol(SchemaPath schemaPath, OptionManager optionManager) {
     Set<String> implicitColNames = ColumnExplorer.initImplicitFileColumns(optionManager).keySet();
     return ColumnExplorer.isPartitionColumn(optionManager, schemaPath) || implicitColNames.contains(schemaPath.getRootSegmentPath());
   }
@@ -628,7 +652,6 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
             matchAllMetadata = true;
             partitions = filterAndGetMetadata(schemaPathsInExpr, source.getPartitionsMetadata(), filterPredicate, optionManager);
           } else {
-            matchAllMetadata = false;
             overflowLevel = MetadataLevel.PARTITION;
           }
         }

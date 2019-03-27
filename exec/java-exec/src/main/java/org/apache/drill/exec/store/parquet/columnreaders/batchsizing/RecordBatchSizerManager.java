@@ -371,7 +371,8 @@ public final class RecordBatchSizerManager {
 
   private void assignColumnsBatchMemory() {
 
-    if (getNumColumns() == 0) {
+    if (getNumColumns() == 0 ||
+        maxRecordsPerBatch == 0) { // Happens when all row-groups are pruned, and only one is returned empty (TODO: currently not empty)
       return;
     }
 
