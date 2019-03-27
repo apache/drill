@@ -267,6 +267,17 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
         // no need to create new group scan with the same row group.
         return null;
       }
+
+      // Stop files pruning for the case:
+      //    -  # of row groups is beyond PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD.
+      if (getRowGroupsMetadata().size() >= optionManager.getOption(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD)) {
+        this.rowGroups = getRowGroupsMetadata();
+        matchAllMetadata = false;
+        logger.trace("Stopping plan time pruning. Metadata has {} rowgroups, but the threshold option is set to {} rowgroups", this.rowGroups.size(),
+          optionManager.getOption(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD));
+        return null;
+      }
+
       logger.debug("All row groups have been filtered out. Add back one to get schema from scanner");
 
       Map<Path, FileMetadata> filesMap = getNextOrEmpty(getFilesMetadata().values()).stream()

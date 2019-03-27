@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -48,6 +49,7 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
   private final HiveStoragePluginConfig hiveStoragePluginConfig;
   private final HivePartitionHolder hivePartitionHolder;
   private final Map<String, String> confProperties;
+  private final TupleSchema tupleSchema;
 
   @JsonCreator
   public HiveDrillNativeParquetRowGroupScan(@JacksonInject StoragePluginRegistry registry,
@@ -58,7 +60,8 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
                                             @JsonProperty("hivePartitionHolder") HivePartitionHolder hivePartitionHolder,
                                             @JsonProperty("confProperties") Map<String, String> confProperties,
                                             @JsonProperty("readerConfig") ParquetReaderConfig readerConfig,
-                                            @JsonProperty("filter") LogicalExpression filter) throws ExecutionSetupException {
+                                            @JsonProperty("filter") LogicalExpression filter,
+                                            @JsonProperty("tupleScema") TupleSchema tupleSchema) throws ExecutionSetupException {
     this(userName,
         (HiveStoragePlugin) registry.getPlugin(hiveStoragePluginConfig),
         rowGroupReadEntries,
@@ -66,7 +69,8 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
         hivePartitionHolder,
         confProperties,
         readerConfig,
-        filter);
+        filter,
+        tupleSchema);
   }
 
   public HiveDrillNativeParquetRowGroupScan(String userName,
@@ -76,12 +80,14 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
                                             HivePartitionHolder hivePartitionHolder,
                                             Map<String, String> confProperties,
                                             ParquetReaderConfig readerConfig,
-                                            LogicalExpression filter) {
-    super(userName, rowGroupReadEntries, columns, readerConfig, filter);
+                                            LogicalExpression filter,
+                                            TupleSchema tupleSchema) {
+    super(userName, rowGroupReadEntries, columns, readerConfig, filter,null, tupleSchema);
     this.hiveStoragePlugin = Preconditions.checkNotNull(hiveStoragePlugin, "Could not find format config for the given configuration");
     this.hiveStoragePluginConfig = hiveStoragePlugin.getConfig();
     this.hivePartitionHolder = hivePartitionHolder;
     this.confProperties = confProperties;
+    this.tupleSchema = tupleSchema;
   }
 
   @JsonProperty
@@ -108,7 +114,7 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
     return new HiveDrillNativeParquetRowGroupScan(getUserName(), hiveStoragePlugin, rowGroupReadEntries, columns, hivePartitionHolder,
-      confProperties, readerConfig, filter);
+      confProperties, readerConfig, filter, tupleSchema);
   }
 
   @Override
@@ -119,7 +125,7 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
   @Override
   public AbstractParquetRowGroupScan copy(List<SchemaPath> columns) {
     return new HiveDrillNativeParquetRowGroupScan(getUserName(), hiveStoragePlugin, rowGroupReadEntries, columns, hivePartitionHolder,
-      confProperties, readerConfig, filter);
+      confProperties, readerConfig, filter, tupleSchema);
   }
 
   @Override

@@ -44,6 +44,8 @@ public class Metadata_V4 {
     MetadataSummary metadataSummary = new MetadataSummary();
     FileMetadata fileMetadata = new FileMetadata();
 
+    public ParquetTableMetadata_v4() {}
+
     public ParquetTableMetadata_v4(MetadataSummary metadataSummary) {
       this.metadataSummary = metadataSummary;
     }

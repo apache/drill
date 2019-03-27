@@ -244,6 +244,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.SCALAR_REPLACEMENT_VALIDATOR),
       new OptionDefinition(ExecConstants.ENABLE_NEW_TEXT_READER),
       new OptionDefinition(ExecConstants.ENABLE_V3_TEXT_READER),
+      new OptionDefinition(ExecConstants.SKIP_RUNTIME_ROWGROUP_PRUNING),
       new OptionDefinition(ExecConstants.MIN_READER_WIDTH),
       new OptionDefinition(ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST),
       new OptionDefinition(ExecConstants.BULK_LOAD_TABLE_LIST_BULK_SIZE),

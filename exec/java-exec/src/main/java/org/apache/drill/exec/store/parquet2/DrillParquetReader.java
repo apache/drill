@@ -39,11 +39,11 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
+import org.apache.drill.exec.store.CommonParquetRecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -66,23 +66,20 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
-public class DrillParquetReader extends AbstractRecordReader {
+public class DrillParquetReader extends CommonParquetRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParquetReader.class);
 
   // same as the DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH in ParquetRecordReader
 
   private static final char DEFAULT_RECORDS_TO_READ = 32*1024;
 
-  private ParquetMetadata footer;
   private MessageType schema;
-  private DrillFileSystem fileSystem;
+  private DrillFileSystem drillFileSystem;
   private RowGroupReadEntry entry;
   private ColumnChunkIncReadStore pageReadStore;
   private RecordReader<Void> recordReader;
   private DrillParquetRecordMaterializer recordMaterializer;
   private int recordCount;
-  private OperatorContext operatorContext;
-  private FragmentContext fragmentContext;
   /** Configured Parquet records per batch */
   private final int recordsPerBatch;
 
@@ -100,14 +97,12 @@ public class DrillParquetReader extends AbstractRecordReader {
   // See DRILL-4203
   private final ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates;
 
-  public DrillParquetReader(FragmentContext fragmentContext, ParquetMetadata footer, RowGroupReadEntry entry,
-      List<SchemaPath> columns, DrillFileSystem fileSystem, ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
+  public DrillParquetReader(FragmentContext fragmentContext, ParquetMetadata footer, RowGroupReadEntry entry, List<SchemaPath> columns, DrillFileSystem fileSystem, ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
+    super(footer, fragmentContext);
     this.containsCorruptedDates = containsCorruptedDates;
-    this.footer = footer;
-    this.fileSystem = fileSystem;
+    this.drillFileSystem = fileSystem;
     this.entry = entry;
     setColumns(columns);
-    this.fragmentContext = fragmentContext;
     this.recordsPerBatch = (int) fragmentContext.getOptions().getLong(ExecConstants.PARQUET_COMPLEX_BATCH_NUM_RECORDS);
   }
 
@@ -242,9 +237,8 @@ public class DrillParquetReader extends AbstractRecordReader {
       recordCount = (int) blockMetaData.getRowCount();
 
       pageReadStore = new ColumnChunkIncReadStore(recordCount,
-          CodecFactory.createDirectCodecFactory(fileSystem.getConf(),
-              new ParquetDirectByteBufferAllocator(operatorContext.getAllocator()), 0), operatorContext.getAllocator(),
-          fileSystem, filePath);
+          CodecFactory.createDirectCodecFactory(drillFileSystem.getConf(),
+              new ParquetDirectByteBufferAllocator(operatorContext.getAllocator()), 0), operatorContext.getAllocator(), drillFileSystem, filePath);
 
       for (String[] path : schema.getPaths()) {
         Type type = schema.getType(path);
@@ -322,8 +316,9 @@ public class DrillParquetReader extends AbstractRecordReader {
 
   @Override
   public void close() {
+    closeStats(logger, entry.getPath());
     footer = null;
-    fileSystem = null;
+    drillFileSystem = null;
     entry = null;
     recordReader = null;
     recordMaterializer = null;

@@ -182,8 +182,10 @@ public class PlannerSettings implements Context{
   public static final BooleanValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING = new BooleanValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY,
       new OptionDescription("Enables filter pushdown optimization for Parquet files. Drill reads the file metadata, stored in the footer, to eliminate row groups based on the filter condition. Default is true. (Drill 1.9+)"));
   public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY = "planner.store.parquet.rowgroup.filter.pushdown.threshold";
-  public static final PositiveLongValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD = new PositiveLongValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY, Long.MAX_VALUE,
-      new OptionDescription("Sets the number of row groups that a table can have. You can increase the threshold if the filter can prune many row groups. However, if this setting is too high, the filter evaluation overhead increases. Base this setting on the data set. Reduce this setting if the planning time is significant or you do not see any benefit at runtime. (Drill 1.9+)"));
+  public static final LongValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD = new LongValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY,
+      new OptionDescription("Maximal number of row groups a table can have to enable pruning by the planner. Base this setting on the data set - increasing if needed " +
+        "would add planning overhead, but may reduce execution overhead if the filter is relevant (e.g., on a sorted column, or many nulls). " +
+        "Reduce this setting if the planning time is significant or you do not see any benefit at runtime. A non-positive value disables plan time pruning."));
 
   public static final String QUOTING_IDENTIFIERS_KEY = "planner.parser.quoting_identifiers";
   public static final EnumeratedStringValidator QUOTING_IDENTIFIERS = new EnumeratedStringValidator(
