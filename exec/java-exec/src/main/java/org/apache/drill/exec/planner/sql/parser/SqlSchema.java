@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Parent class for CREATE and DROP SCHEMA commands.
+ * Parent class for CREATE, DROP, DESCRIBE SCHEMA commands.
  * Holds logic common command property: table.
  */
 public abstract class SqlSchema extends DrillSqlCall {
@@ -275,6 +275,68 @@ public abstract class SqlSchema extends DrillSqlCall {
       return existenceCheck.booleanValue();
     }
 
+  }
+
+  /**
+   * DESCRIBE SCHEMA FOR TABLE sql call.
+   */
+  public static class Describe extends SqlSchema {
+
+    private final SqlLiteral format;
+
+    public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator(SqlKind.DESCRIBE_SCHEMA.name(), SqlKind.DESCRIBE_SCHEMA) {
+      @Override
+      public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+        return new Describe(pos, (SqlIdentifier) operands[0], (SqlLiteral) operands[1]);
+      }
+    };
+
+    public Describe(SqlParserPos pos, SqlIdentifier table, SqlLiteral format) {
+      super(pos, table);
+      this.format = format;
+    }
+
+    @Override
+    public SqlOperator getOperator() {
+      return OPERATOR;
+    }
+
+    @Override
+    public List<SqlNode> getOperandList() {
+      return Arrays.asList(table, format);
+    }
+
+    @Override
+    public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
+      writer.keyword("DESCRIBE");
+      writer.keyword("SCHEMA");
+
+      super.unparse(writer, leftPrec, rightPrec);
+
+      writer.keyword("AS");
+      writer.keyword(getFormat().name());
+    }
+
+    public Describe.Format getFormat() {
+      return Format.valueOf(format.toValue());
+    }
+
+    /**
+     * Enum which specifies format of DESCRIBE SCHEMA FOR table output.
+     */
+    public enum Format {
+
+      /**
+       * Schema will be output in JSON format used to store schema
+       * in {@link org.apache.drill.exec.record.metadata.schema.SchemaProvider#DEFAULT_SCHEMA_NAME} file.
+       */
+      JSON,
+
+      /**
+       * Schema will be output in CREATE SCHEMA command syntax.
+       */
+      STATEMENT
+    }
   }
 
 }

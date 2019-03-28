@@ -553,4 +553,116 @@ public class TestSchemaCommands extends ClusterTest {
     }
   }
 
+  @Test
+  public void testDescribeForMissingTable() throws Exception {
+    thrown.expect(UserException.class);
+    thrown.expectMessage("VALIDATION ERROR: Table [t] was not found");
+
+    run("describe schema for table dfs.t");
+  }
+
+  @Test
+  public void testDescribeForMissingSchema() throws Exception {
+    String table = "dfs.tmp.table_describe_with_missing_schema";
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s", table)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("Schema for table [%s] is absent", table))
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testDescribeDefault() throws Exception {
+    String tableName = "table_describe_default";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+      run("create schema (col int) for table %s", table);
+
+      File schemaFile = Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(),
+        tableName, SchemaProvider.DEFAULT_SCHEMA_NAME).toFile();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      SchemaContainer schemaContainer = schemaProvider.read();
+      String schema = PathSchemaProvider.WRITER.writeValueAsString(schemaContainer);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s", table)
+        .unOrdered()
+        .baselineColumns("schema")
+        .baselineValues(schema)
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testDescribeJson() throws Exception {
+    String tableName = "table_describe_json";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+      run("create schema (col int) for table %s", table);
+
+      File schemaFile = Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(),
+        tableName, SchemaProvider.DEFAULT_SCHEMA_NAME).toFile();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      SchemaContainer schemaContainer = schemaProvider.read();
+      String schema = PathSchemaProvider.WRITER.writeValueAsString(schemaContainer);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s as json", table)
+        .unOrdered()
+        .baselineColumns("schema")
+        .baselineValues(schema)
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testDescribeStatement() throws Exception {
+    String tableName = "table_describe_statement";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      String statement = "CREATE OR REPLACE SCHEMA \n"
+        + "(\n"
+        + "`col1` DATE FORMAT 'yyyy-MM-dd' DEFAULT '-1', \n"
+        + "`col2` INT NOT NULL FORMAT 'yyyy-MM-dd' PROPERTIES { 'drill.strict' = 'true', 'some_column_prop' = 'some_column_val' }\n"
+        + ") \n"
+        + "FOR TABLE dfs.tmp.`table_describe_statement` \n"
+        + "PROPERTIES (\n"
+        + "'drill.strict' = 'false', \n"
+        + "'some_schema_prop' = 'some_schema_val'\n"
+        + ")";
+
+      run(statement);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s as statement", table)
+        .unOrdered()
+        .baselineColumns("schema")
+        .baselineValues(statement)
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
 }
