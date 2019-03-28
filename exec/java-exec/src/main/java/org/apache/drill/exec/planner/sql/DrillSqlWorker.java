@@ -36,11 +36,13 @@ import org.apache.drill.exec.planner.sql.handlers.DescribeSchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
 import org.apache.drill.exec.planner.sql.handlers.RefreshMetadataHandler;
+import org.apache.drill.exec.planner.sql.handlers.SchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
+import org.apache.drill.exec.planner.sql.parser.SqlSchema;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
@@ -161,6 +163,11 @@ public class DrillSqlWorker {
       case DESCRIBE_SCHEMA:
         if (sqlNode instanceof SqlDescribeSchema) {
           handler = new DescribeSchemaHandler(config);
+          context.setSQLStatementType(SqlStatementType.DESCRIBE_SCHEMA);
+          break;
+        }
+        if (sqlNode instanceof SqlSchema.Describe) {
+          handler = new SchemaHandler.Describe(config);
           context.setSQLStatementType(SqlStatementType.DESCRIBE_SCHEMA);
           break;
         }

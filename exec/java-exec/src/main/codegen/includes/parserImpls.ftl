@@ -179,7 +179,7 @@ SqlNodeList ParseRequiredFieldList(String relType) :
 }
 
 /**
-* Rarses CREATE [OR REPLACE] command for VIEW, TABLE or SCHEMA.
+* Parses CREATE [OR REPLACE] command for VIEW, TABLE or SCHEMA.
 */
 SqlNode SqlCreateOrReplace() :
 {
@@ -374,7 +374,7 @@ void addProperty(SqlNodeList properties) :
 <SCH> TOKEN : {
     < LOAD: "LOAD" > { popState(); }
   | < NUM: <DIGIT> (" " | "\t" | "\n" | "\r")* >
-    // once schema is found, swich back to initial lexical state
+    // once schema is found, switch back to initial lexical state
     // must be enclosed in the parentheses
     // inside may have left parenthesis only if number precededs (covers cases with varchar(10)),
     // if left parenthesis is present in column name, it must be escaped with backslash
@@ -494,18 +494,43 @@ SqlNode SqlRefreshMetadata() :
 /**
 * Parses statement
 *   DESCRIBE { SCHEMA | DATABASE } name
+*   DESCRIBE SCHEMA FOR TABLE dfs.my_table [AS (JSON | STATEMENT)]
 */
 SqlNode SqlDescribeSchema() :
 {
    SqlParserPos pos;
-   SqlIdentifier schema;
+   SqlIdentifier table;
+   String format = "JSON";
 }
 {
    <DESCRIBE> { pos = getPos(); }
-   (<SCHEMA> | <DATABASE>) { schema = CompoundIdentifier(); }
-   {
-        return new SqlDescribeSchema(pos, schema);
-   }
+   (
+       <SCHEMA>
+         (
+              <FOR> <TABLE> { table = CompoundIdentifier(); }
+              [
+                  <AS>
+                  (
+                       <JSON> { format = "JSON"; }
+                  |
+                       <STATEMENT> { format = "STATEMENT"; }
+                  )
+              ]
+              {
+                   return new SqlSchema.Describe(pos, table, SqlLiteral.createCharString(format, getPos()));
+              }
+
+         |
+             {
+                  return new SqlDescribeSchema(pos, CompoundIdentifier());
+             }
+         )
+   |
+       <DATABASE>
+            {
+                 return new SqlDescribeSchema(pos, CompoundIdentifier());
+            }
+   )
 }
 
 /**
