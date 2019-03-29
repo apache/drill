@@ -190,7 +190,7 @@ public class DrillSqlLineApplication extends Application {
           if (currentSchema != null) {
             builder.append(" (").append(currentSchema).append(")");
           }
-          return builder.style(resolveStyle("default")).append(">").toAttributedString();
+          return builder.style(resolveStyle("default")).append("> ").toAttributedString();
         }
       };
     }
