@@ -40,11 +40,11 @@ import static org.apache.drill.exec.resourcemgr.config.RMCommonDefaults.ROOT_POO
 public class ResourcePoolTreeImpl implements ResourcePoolTree {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResourcePoolTreeImpl.class);
 
-  private static final String ROOT_POOL_MEMORY_SHARE_KEY = "memory";
-
-  private static final String ROOT_POOL_QUEUE_SELECTION_POLICY_KEY = "queue_selection_policy";
+  public static final String ROOT_POOL_QUEUE_SELECTION_POLICY_KEY = "queue_selection_policy";
 
   public static final String ROOT_POOL_CONFIG_KEY = "drill.exec.rm";
+
+  private static final String ROOT_POOL_MEMORY_SHARE_KEY = "memory";
 
   private final ResourcePool rootPool;
 
@@ -66,14 +66,15 @@ public class ResourcePoolTreeImpl implements ResourcePoolTree {
   private ResourcePoolTreeImpl(Config rmConfig, NodeResources totalNodeResources) throws RMConfigException {
     try {
       this.rmConfig = rmConfig;
+      final Config rootConfig = this.rmConfig.getConfig(ROOT_POOL_CONFIG_KEY);
       this.totalNodeResources = totalNodeResources;
-      this.resourceShare = this.rmConfig.hasPath(ROOT_POOL_MEMORY_SHARE_KEY) ?
-        this.rmConfig.getDouble(ROOT_POOL_MEMORY_SHARE_KEY) : ROOT_POOL_DEFAULT_MEMORY_PERCENT;
+      this.resourceShare = rootConfig.hasPath(ROOT_POOL_MEMORY_SHARE_KEY) ?
+        rootConfig.getDouble(ROOT_POOL_MEMORY_SHARE_KEY) : ROOT_POOL_DEFAULT_MEMORY_PERCENT;
       this.selectionPolicy = QueueSelectionPolicyFactory.createSelectionPolicy(
-        this.rmConfig.hasPath(ROOT_POOL_QUEUE_SELECTION_POLICY_KEY) ?
-          SelectionPolicy.valueOf(rmConfig.getString(ROOT_POOL_QUEUE_SELECTION_POLICY_KEY)) :
+        rootConfig.hasPath(ROOT_POOL_QUEUE_SELECTION_POLICY_KEY) ?
+          SelectionPolicy.valueOf(rootConfig.getString(ROOT_POOL_QUEUE_SELECTION_POLICY_KEY).trim().toUpperCase()) :
           ROOT_POOL_DEFAULT_QUEUE_SELECTION_POLICY);
-      rootPool = new ResourcePoolImpl(this.rmConfig.getConfig(ROOT_POOL_CONFIG_KEY), resourceShare, 1.0,
+      rootPool = new ResourcePoolImpl(rootConfig, resourceShare, 1.0,
         totalNodeResources, null, leafQueues);
       logger.debug("Dumping RM configuration {}", toString());
     } catch (RMConfigException ex) {

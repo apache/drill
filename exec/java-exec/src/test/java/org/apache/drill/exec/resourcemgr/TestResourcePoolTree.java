@@ -201,6 +201,27 @@ public final class TestResourcePoolTree {
   }
 
   @Test
+  public void testSelectionPolicyLowerCase() throws Exception {
+    // leaf pool with queue
+    poolTreeConfig.put(ResourcePoolImpl.POOL_NAME_KEY, "drill");
+    poolTreeConfig.put(ResourcePoolImpl.POOL_QUEUE_KEY, queue1);
+    poolTreeConfig.put(ResourcePoolImpl.POOL_SELECTOR_KEY, tagSelectorConfig1);
+    poolTreeConfig.put(ResourcePoolTreeImpl.ROOT_POOL_QUEUE_SELECTION_POLICY_KEY, "bestfit");
+
+    Config rmConfig = ConfigFactory.empty()
+      .withValue("drill.exec.rm", ConfigValueFactory.fromMap(poolTreeConfig));
+    ResourcePoolTree poolTree = new ResourcePoolTreeImpl(rmConfig, 10000, 10, 2);
+
+    assertTrue("Root pool is not a leaf pool", poolTree.getRootPool().isLeafPool());
+    assertEquals("Root pool name is not drill", "drill", poolTree.getRootPool().getPoolName());
+    assertTrue("Root pool is not the only leaf pool", poolTree.getAllLeafQueues().size() == 1);
+    assertTrue("Root pool name is not same as leaf pool name", poolTree.getAllLeafQueues().containsKey("drill"));
+    assertFalse("Root pool should not be a default pool", poolTree.getRootPool().isDefaultPool());
+    assertTrue("Selection policy is not bestfit",
+      poolTree.getSelectionPolicyInUse().getSelectionPolicy().toString().equals("bestfit"));
+  }
+
+  @Test
   public void testTreeWithLeafAndIntermediatePool() throws Exception {
     // left leaf pool1 with tag selector
     pool1.put(ResourcePoolImpl.POOL_QUEUE_KEY, queue1);
