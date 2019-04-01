@@ -139,6 +139,11 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
           .message(e.getMessage())
           .addContext("Error while preparing / creating schema for [%s]", schemaSource)
           .build(logger);
+      } catch (IllegalArgumentException e) {
+        throw UserException.validationError(e)
+          .message(e.getMessage())
+          .addContext("Error while preparing / creating schema for [%s]", schemaSource)
+          .build(logger);
       }
     }
 

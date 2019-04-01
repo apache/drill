@@ -34,7 +34,7 @@ import org.apache.drill.exec.vector.accessor.writer.MapWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
 
-public class DummyWriterTest extends SubOperatorTest {
+public class TestDummyWriter extends SubOperatorTest {
 
   /**
    * Test only, bare-bones tuple writer used to gather the dummy

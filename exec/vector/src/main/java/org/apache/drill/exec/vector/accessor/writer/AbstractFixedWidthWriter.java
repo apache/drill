@@ -17,14 +17,29 @@
  */
 package org.apache.drill.exec.vector.accessor.writer;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
  * Base class for writers for fixed-width vectors. Handles common
  * tasks, leaving the generated code to handle only type-specific
  * operations.
+ * <p>
+ * Fixed-width writers provide default values for empty (unused) slots.
+ * Suppose a client writes to slot 0, skips a few rows, then writes to slot
+ * 5. We could leave the intermediate values unwritten. But, since Drill
+ * reuses buffers, the slots may contain garbage. Instead, we implement
+ * "fill empties" logic. When we write to slot 5, we notice that the last
+ * slot written was 0, and we fill in slots 1, 2, 3 and 4 with values.
+ * <p>
+ * The fill value defaults to 0, and is defined as a block of zero-bytes
+ * (at least) the same length as each data value. Derived classes also
+ * allow setting a default value. In this case, the default value is encoded
+ * into a byte array, and that array is copied to each slot as the fill value.
  */
 
 public abstract class AbstractFixedWidthWriter extends BaseScalarWriter {
@@ -37,6 +52,10 @@ public abstract class AbstractFixedWidthWriter extends BaseScalarWriter {
      */
 
     private static final byte ZERO_BUF[] = new byte[256];
+
+    public BaseFixedWidthWriter() {
+      emptyValue = ZERO_BUF;
+    }
 
     /**
      * Determine the write index, growing, overflowing and back-filling
@@ -93,13 +112,63 @@ public abstract class AbstractFixedWidthWriter extends BaseScalarWriter {
     @Override
     protected final void fillEmpties(final int writeIndex) {
       final int width = width();
-      final int stride = ZERO_BUF.length / width;
+      final int stride = emptyValue.length / width;
       int dest = lastWriteIndex + 1;
       while (dest < writeIndex) {
         int length = writeIndex - dest;
         length = Math.min(length, stride);
-        drillBuf.setBytes(dest * width, ZERO_BUF, 0, length * width);
+        drillBuf.setBytes(dest * width, emptyValue, 0, length * width);
         dest += length;
+      }
+    }
+  }
+
+  /**
+   * Base class for writers that use the Java int type as their native
+   * type. Handles common implicit conversions from other types to int.
+   */
+  public static abstract class BaseIntWriter extends BaseFixedWidthWriter {
+
+    @Override
+    public final void setBoolean(final boolean value) {
+      setInt(value ? 1 : 0);
+    }
+
+    @Override
+    public final void setLong(final long value) {
+      try {
+        // Catches int overflow. Does not catch overflow for smaller types.
+        setInt(Math.toIntExact(value));
+      } catch (final ArithmeticException e) {
+        throw InvalidConversionError.writeError(schema(), value, e);
+      }
+    }
+
+    @Override
+    public final void setDouble(final double value) {
+      try {
+        // Catches int overflow. Does not catch overflow from
+        // double. See Math.round for details.
+        setInt(Math.toIntExact(Math.round(value)));
+      } catch (final ArithmeticException e) {
+        throw InvalidConversionError.writeError(schema(), value, e);
+      }
+    }
+
+    @Override
+    public final void setDecimal(final BigDecimal value) {
+      try {
+        // Catches int overflow.
+        setInt(value.intValueExact());
+      } catch (final ArithmeticException e) {
+        throw InvalidConversionError.writeError(schema(), value, e);
+      }
+    }
+
+    @Override
+    public final void setValue(final Object value) {
+      if (value != null) {
+        setInt((int) value);
       }
     }
   }
@@ -225,7 +294,7 @@ public abstract class AbstractFixedWidthWriter extends BaseScalarWriter {
 
   @Override
   public void postRollover() {
-    int newIndex = Math.max(lastWriteIndex - vectorIndex.rowStartIndex(), -1);
+    final int newIndex = Math.max(lastWriteIndex - vectorIndex.rowStartIndex(), -1);
     startWrite();
     lastWriteIndex = newIndex;
   }

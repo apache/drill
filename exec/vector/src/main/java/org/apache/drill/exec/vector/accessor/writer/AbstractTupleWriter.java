@@ -248,7 +248,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   public void startWrite() {
     assert state == State.IDLE;
     state = State.IN_WRITE;
-    for (int i = 0; i < writers.size();  i++) {
+    for (int i = 0; i < writers.size(); i++) {
       writers.get(i).events().startWrite();
     }
   }
@@ -260,7 +260,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
     assert state == State.IN_WRITE;
     state = State.IN_ROW;
-    for (int i = 0; i < writers.size();  i++) {
+    for (int i = 0; i < writers.size(); i++) {
       writers.get(i).events().startRow();
     }
   }
@@ -268,7 +268,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   @Override
   public void endArrayValue() {
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size();  i++) {
+    for (int i = 0; i < writers.size(); i++) {
       writers.get(i).events().endArrayValue();
     }
   }
@@ -285,7 +285,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     // the current row.
 
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size();  i++) {
+    for (int i = 0; i < writers.size(); i++) {
       writers.get(i).events().restartRow();
     }
   }
@@ -293,7 +293,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   @Override
   public void saveRow() {
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size();  i++) {
+    for (int i = 0; i < writers.size(); i++) {
       writers.get(i).events().saveRow();
     }
     state = State.IN_WRITE;
@@ -305,7 +305,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     // Rollover can only happen while a row is in progress.
 
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size();  i++) {
+    for (int i = 0; i < writers.size(); i++) {
       writers.get(i).events().preRollover();
     }
   }
@@ -316,7 +316,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     // Rollover can only happen while a row is in progress.
 
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size();  i++) {
+    for (int i = 0; i < writers.size(); i++) {
       writers.get(i).events().postRollover();
     }
   }
@@ -324,7 +324,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   @Override
   public void endWrite() {
     assert state != State.IDLE;
-    for (int i = 0; i < writers.size();  i++) {
+    for (int i = 0; i < writers.size(); i++) {
       writers.get(i).events().endWrite();
     }
     state = State.IDLE;

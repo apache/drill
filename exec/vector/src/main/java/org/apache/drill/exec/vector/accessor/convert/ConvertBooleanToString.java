@@ -26,8 +26,8 @@ public class ConvertBooleanToString extends AbstractWriteConverter {
   }
 
   @Override
-  public void setInt(int value) {
-    baseWriter.setString(Boolean.toString(value != 0));
+  public void setBoolean(boolean value) {
+    baseWriter.setString(Boolean.toString(value));
   }
 
   @Override
@@ -35,7 +35,7 @@ public class ConvertBooleanToString extends AbstractWriteConverter {
     if (value == null) {
       setNull();
     } else {
-      setInt((int) value);
+      setBoolean((boolean) value);
     }
   }
 }

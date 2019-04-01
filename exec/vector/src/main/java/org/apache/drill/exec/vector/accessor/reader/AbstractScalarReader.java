@@ -125,6 +125,11 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
   }
 
   @Override
+  public boolean getBoolean() {
+    throw conversionError("boolean");
+  }
+
+  @Override
   public int getInt() {
     throw conversionError("int");
   }
@@ -180,6 +185,8 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
       return null;
     }
     switch (valueType()) {
+    case BOOLEAN:
+      return getBoolean();
     case BYTES:
       return getBytes();
     case DECIMAL:
@@ -202,6 +209,23 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
       return getTimestamp();
     default:
       throw new IllegalStateException("Unexpected type: " + valueType());
+    }
+  }
+
+  @Override
+  public Object getValue() {
+    if (isNull()) {
+      return null;
+    }
+    switch (extendedType()) {
+    case DATE:
+      return getDate();
+    case TIME:
+      return getTime();
+    case TIMESTAMP:
+      return getTimestamp();
+    default:
+      return getObject();
     }
   }
 

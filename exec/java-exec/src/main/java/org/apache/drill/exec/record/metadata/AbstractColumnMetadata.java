@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
 import org.joda.time.format.DateTimeFormatter;
@@ -75,8 +76,11 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   }
 
   public AbstractColumnMetadata(MaterializedField schema) {
-    name = schema.getName();
-    final MajorType majorType = schema.getType();
+    this(schema.getName(), schema.getType());
+  }
+
+  public AbstractColumnMetadata(String name, MajorType majorType) {
+    this.name = name;
     type = majorType.getMinorType();
     mode = majorType.getMode();
     precision = majorType.getPrecision();
@@ -151,8 +155,7 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
 
   @Override
   public boolean isVariableWidth() {
-    final MinorType type = type();
-    return type == MinorType.VARCHAR || type == MinorType.VAR16CHAR || type == MinorType.VARBINARY;
+    return Types.isVarWidthType(type());
   }
 
   @Override

@@ -122,7 +122,7 @@ public class ScalarArrayWriter extends BaseArrayWriter {
     if (! objClass.startsWith("[")) {
       throw new IllegalArgumentException(
           String.format("Argument must be an array. Column `%s`, value = %s",
-              schema.name(), array.toString()));
+              schema().name(), array.toString()));
     }
 
     // Figure out type
@@ -140,7 +140,7 @@ public class ScalarArrayWriter extends BaseArrayWriter {
       default:
         throw new IllegalArgumentException(
             String.format("Unknown Java array type: %s, for column `%s`",
-                objClass, schema.name()));
+                objClass, schema().name()));
       }
       break;
     case  'B':

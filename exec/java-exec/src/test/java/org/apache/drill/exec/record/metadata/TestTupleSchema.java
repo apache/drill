@@ -326,6 +326,7 @@ public class TestTupleSchema extends SubOperatorTest {
     MaterializedField field = SchemaBuilder.columnSchema("u", MinorType.UNION, DataMode.OPTIONAL);
     ColumnMetadata col = MetadataUtils.fromField(field);
     assertFalse(col.isArray());
+    assertTrue(col.isVariableWidth());
     doVariantTest(col);
   }
 
@@ -339,6 +340,7 @@ public class TestTupleSchema extends SubOperatorTest {
     // List modeled as a repeated element. Implementation is a bit
     // more complex, but does not affect this abstract description.
 
+    assertFalse(col.isVariableWidth());
     doVariantTest(col);
   }
 
@@ -347,7 +349,6 @@ public class TestTupleSchema extends SubOperatorTest {
     assertTrue(col instanceof VariantColumnMetadata);
 
     assertTrue(col.isNullable());
-    assertFalse(col.isVariableWidth());
     assertFalse(col.isMap());
     assertTrue(col.isVariant());
 

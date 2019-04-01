@@ -21,19 +21,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.apache.drill.test.rowSet.RowSetUtilities.dec;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.DateUtilities;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetReader;
@@ -43,6 +48,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -1639,27 +1645,128 @@ public class TestScalarAccessors extends SubOperatorTest {
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(true)
         .addSingleCol(false)
+        .addSingleCol(0)
         .addSingleCol(1)
         .addSingleCol(2)
         .addSingleCol(3)
         .build();
-    assertEquals(5, rs.rowCount());
+    assertEquals(6, rs.rowCount());
 
     RowSetReader reader = rs.reader();
     ScalarReader colReader = reader.scalar(0);
 
     assertTrue(reader.next());
+    assertEquals(true, colReader.getBoolean());
     assertEquals(1, colReader.getInt());
     assertTrue(reader.next());
+    assertEquals(false, colReader.getBoolean());
     assertEquals(0, colReader.getInt());
     assertTrue(reader.next());
+    assertEquals(false, colReader.getBoolean());
+    assertEquals(0, colReader.getInt());
+    assertTrue(reader.next());
+    assertEquals(true, colReader.getBoolean());
     assertEquals(1, colReader.getInt());
     assertTrue(reader.next());
-    assertEquals(0, colReader.getInt());
+    assertEquals(true, colReader.getBoolean());
+    assertEquals(1, colReader.getInt());
     assertTrue(reader.next());
+    assertEquals(true, colReader.getBoolean());
     assertEquals(1, colReader.getInt());
 
     assertFalse(reader.next());
     rs.clear();
+  }
+
+  /**
+   * The bit reader/writer are special and use the BitVector directly.
+   * Ensure that resize works in this special case.
+   */
+
+  @Test
+  public void testBitResize() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.BIT)
+        .buildSchema();
+
+    RowSetBuilder rsb = new RowSetBuilder(fixture.allocator(), schema, 100);
+    ScalarWriter bitWriter = rsb.writer().scalar(0);
+    for (int i = 0; i < ValueVector.MAX_ROW_COUNT; i++) {
+      bitWriter.setBoolean((i % 5) == 0);
+      rsb.writer().save();
+    }
+
+    SingleRowSet rs = rsb.build();
+    RowSetReader reader = rs.reader();
+    ScalarReader bitReader = reader.scalar(0);
+    for (int i = 0; i < ValueVector.MAX_ROW_COUNT; i++) {
+      reader.next();
+      assertEquals((i % 5) == 0, bitReader.getBoolean());
+    }
+    rs.clear();
+  }
+
+  private static String repeat(String str, int n) {
+    StringBuilder buf = new StringBuilder();
+    for (int i = 0; i < n; i++) {
+      buf.append(str);
+    }
+    return str.toString();
+  }
+
+  @Test
+  public void testVarDecimalRange() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.VARDECIMAL, 38, 4)
+        .buildSchema();
+
+    String big = repeat("9", 34) + ".9999";
+    SingleRowSet rs = new RowSetBuilder(fixture.allocator(), schema)
+        .addSingleCol(dec("0"))
+        .addSingleCol(dec("-0.0000"))
+        .addSingleCol(dec("0.0001"))
+        .addSingleCol(dec("-0.0001"))
+        .addSingleCol(dec(big))
+        .addSingleCol(dec("-" + big))
+        .addSingleCol(dec("1234.56789"))
+        .build();
+
+    RowSetReader reader = rs.reader();
+    ScalarReader decReader = reader.scalar(0);
+    assertTrue(reader.next());
+    assertEquals(dec("0.0000"), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("0.0000"), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("0.0001"), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("-0.0001"), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec(big), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("-" + big), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("1234.5679"), decReader.getDecimal());
+    assertFalse(reader.next());
+    rs.clear();
+  }
+
+  @Test
+  public void testVarDecimalOverflow() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.VARDECIMAL, 8, 4)
+        .buildSchema();
+
+    RowSetBuilder rsb = new RowSetBuilder(fixture.allocator(), schema, 100);
+    try {
+
+      // With rounding due to scale, value exceeds allowed precision.
+
+      rsb.addSingleCol(dec("9999.99999"));
+      fail();
+    } catch (UserException e) {
+      // Expected
+    }
+    rsb.build().clear();
   }
 }

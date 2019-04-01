@@ -56,6 +56,15 @@ public interface ScalarWriter extends ColumnWriter {
    */
 
   ValueType valueType();
+
+  /**
+   * The extended type of the value, describes the secondary type
+   * for DATE, TIME and TIMESTAMP for which the value type is
+   * int or long.
+   */
+
+  ValueType extendedType();
+  void setBoolean(boolean value);
   void setInt(int value);
   void setLong(long value);
   void setDouble(double value);
@@ -81,4 +90,15 @@ public interface ScalarWriter extends ColumnWriter {
    */
 
   void setValue(Object value);
+
+  /**
+   * Set the default value to be used to fill empties for this writer.
+   * Only valid for required writers: null writers set this is-set bit
+   * to 0 and set the data value to 0.
+   *
+   * @param value the value to set. Cannot be null. The type of the value
+   * must match that legal for {@link #setValue(Object)}
+   */
+
+  void setDefaultValue(Object value);
 }

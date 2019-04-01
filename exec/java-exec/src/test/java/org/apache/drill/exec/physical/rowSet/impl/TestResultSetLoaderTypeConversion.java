@@ -26,6 +26,7 @@ import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
@@ -118,7 +119,7 @@ public class TestResultSetLoaderTypeConversion extends SubOperatorTest {
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(inputSchema)
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchemaTransform(new SchemaTransformerImpl(outputSchema))
+        .setSchemaTransform(new SchemaTransformerImpl(outputSchema, null))
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     rsLoader.startBatch();
@@ -143,6 +144,64 @@ public class TestResultSetLoaderTypeConversion extends SubOperatorTest {
         .build();
 
     // Compare
+
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * Test using a type converter with a default value. The default value
+   * must be valid for the output type.
+   */
+  @Test
+  public void testTypeConversionWithDefault() {
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("n1", MinorType.INT)
+        .add("n2", MinorType.INT)
+        .buildSchema();
+    outputSchema.metadata("n1").setDefaultValue("888");
+    outputSchema.metadata("n2").setDefaultValue("999");
+
+    TupleMetadata inputSchema = new SchemaBuilder()
+        .add("n1", MinorType.VARCHAR)
+        .add("n2", MinorType.VARCHAR)
+        .buildSchema();
+
+    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+        .setSchema(inputSchema)
+        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .setSchemaTransform(new SchemaTransformerImpl(outputSchema, null))
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    rsLoader.startBatch();
+
+    // Write data as both a string as an integer
+
+    RowSetLoader rootWriter = rsLoader.writer();
+    ScalarWriter n1 = rootWriter.scalar("n1");
+    ScalarWriter n2 = rootWriter.scalar("n2");
+    rootWriter.start();
+    n1.setString("1");
+    rootWriter.save();
+    rootWriter.start();
+    n2.setString("22");
+    rootWriter.save();
+    rootWriter.start();
+    n1.setString("31");
+    n2.setString("32");
+    rootWriter.save();
+    RowSet actual = fixture.wrap(rsLoader.harvest());
+
+    // Build the expected vector without a type converter or defaults.
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("n1", MinorType.INT)
+        .add("n2", MinorType.INT)
+        .buildSchema();
+    final SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addRow(1, 999)
+        .addRow(888, 22)
+        .addRow(31, 32)
+        .build();
 
     RowSetUtilities.verify(expected, actual);
   }

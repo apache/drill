@@ -47,7 +47,7 @@ public class SimpleCastFunctions {
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
       String input = new String(buf, com.google.common.base.Charsets.UTF_8);
-      out.value = org.apache.drill.exec.expr.BooleanType.get(input).getNumericValue();
+      out.value = org.apache.drill.common.types.BooleanType.get(input).getNumericValue();
     }
   }
 
@@ -66,7 +66,7 @@ public class SimpleCastFunctions {
     public void setup() {}
 
     public void eval() {
-      byte[] outB = org.apache.drill.exec.expr.BooleanType.get(String.valueOf(in.value)).name().toLowerCase().getBytes();
+      byte[] outB = org.apache.drill.common.types.BooleanType.get(String.valueOf(in.value)).name().toLowerCase().getBytes();
       buffer.setBytes(0, outB);
       out.buffer = buffer;
       out.start = 0;

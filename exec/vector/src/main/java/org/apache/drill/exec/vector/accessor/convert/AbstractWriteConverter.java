@@ -69,8 +69,19 @@ public abstract class AbstractWriteConverter extends AbstractScalarWriter {
   }
 
   @Override
+  public void setDefaultValue(Object value) {
+    throw new IllegalStateException(
+        "Cannot set a default value through a shim; types conflict: " + value);
+  }
+
+  @Override
   public void setNull() {
     baseWriter.setNull();
+  }
+
+  @Override
+  public void setBoolean(boolean value) {
+    baseWriter.setBoolean(value);
   }
 
   @Override

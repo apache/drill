@@ -29,6 +29,12 @@ package org.apache.drill.exec.vector.accessor;
 public enum ValueType {
 
   /**
+   * The value is set from a boolean: BIT.
+   */
+
+  BOOLEAN,
+
+  /**
    * The value is set from an integer: TINYINT,
    * SMALLINT, INT, UINT1, and UINT2.
    */

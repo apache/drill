@@ -32,9 +32,9 @@ public class ResolvedNullColumn extends ResolvedColumn implements NullColumnSpec
 
   private final String name;
   private MajorType type;
-  private Object defaultValue;
+  private String defaultValue;
 
-  public ResolvedNullColumn(String name, MajorType type, Object defaultValue,
+  public ResolvedNullColumn(String name, MajorType type, String defaultValue,
       VectorSource source, int sourceIndex) {
     super(source, sourceIndex);
     this.name = name;
@@ -47,7 +47,7 @@ public class ResolvedNullColumn extends ResolvedColumn implements NullColumnSpec
     super(colDefn, source, sourceIndex);
     this.name = colDefn.name();
     this.type = colDefn.majorType();
-    this.defaultValue = colDefn.decodeDefaultValue();
+    this.defaultValue = colDefn.defaultValue();
   }
 
   @Override
@@ -77,5 +77,5 @@ public class ResolvedNullColumn extends ResolvedColumn implements NullColumnSpec
   }
 
   @Override
-  public Object defaultValue() { return defaultValue; }
+  public String defaultValue() { return defaultValue; }
 }

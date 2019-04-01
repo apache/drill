@@ -45,13 +45,13 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    */
 
   public static class ResultSetOptions {
-    public final int vectorSizeLimit;
-    public final int rowCountLimit;
-    public final ResultVectorCache vectorCache;
-    public final RequestedTuple projectionSet;
-    public final TupleMetadata schema;
-    public final long maxBatchSize;
-    public final SchemaTransformer schemaTransformer;
+    protected final int vectorSizeLimit;
+    protected final int rowCountLimit;
+    protected final ResultVectorCache vectorCache;
+    protected final RequestedTuple projectionSet;
+    protected final TupleMetadata schema;
+    protected final long maxBatchSize;
+    protected final SchemaTransformer schemaTransformer;
 
     public ResultSetOptions() {
       vectorSizeLimit = ValueVector.MAX_BUFFER_SIZE;
@@ -87,7 +87,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
         .startObject(this)
         .attribute("vectorSizeLimit", vectorSizeLimit)
         .attribute("rowCountLimit", rowCountLimit)
-//        .attribute("projection", projection)
         .endObject();
     }
   }
@@ -167,7 +166,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     CLOSED
   }
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResultSetLoaderImpl.class);
+  protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResultSetLoaderImpl.class);
 
   /**
    * Options provided to this loader.
@@ -179,20 +178,20 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * Allocator for vectors created by this loader.
    */
 
-  final BufferAllocator allocator;
+  private final BufferAllocator allocator;
 
   /**
    * Builds columns (vector, writer, state).
    */
 
-  final ColumnBuilder columnBuilder;
+  private final ColumnBuilder columnBuilder;
 
   /**
    * Internal structure used to work with the vectors (real or dummy) used
    * by this loader.
    */
 
-  final RowState rootState;
+  private final RowState rootState;
 
   /**
    * Top-level writer index that steps through the rows as they are written.

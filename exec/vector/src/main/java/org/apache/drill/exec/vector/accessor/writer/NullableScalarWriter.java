@@ -131,6 +131,13 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   }
 
   @Override
+  public void setBoolean(boolean value) {
+    baseWriter.setBoolean(value);
+    isSetWriter.setInt(1);
+    writerIndex.nextElement();
+  }
+
+  @Override
   public void setInt(int value) {
     baseWriter.setInt(value);
     isSetWriter.setInt(1);
@@ -277,5 +284,11 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
     format.attribute("baseWriter");
     baseWriter.dump(format);
     format.endObject();
+  }
+
+  @Override
+  public void setDefaultValue(Object value) {
+    throw new UnsupportedOperationException(
+        "Default values not supported for nullable types:" + value);
   }
 }

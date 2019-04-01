@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import java.util.Map;
+
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ProjectionType;
@@ -33,6 +35,9 @@ import org.apache.drill.exec.vector.accessor.convert.StandardConversions.Convers
  * column is defined and has a type or mode different than the input.
  * Else, assumes no transform is needed. Subclases can change or enhance
  * this policy. The subclass provides the actual per-column transform logic.
+ * <p>
+ * This class also handles setting default values for required vectors
+ * when a default value is available from the column schema.
  */
 
 public class SchemaTransformerImpl implements SchemaTransformer {
@@ -40,62 +45,17 @@ public class SchemaTransformerImpl implements SchemaTransformer {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(SchemaTransformerImpl.class);
 
-  /**
-   * A no-op transform that simply keeps the input column schema and
-   * writer without any changes.
-   */
-  public static class PassThroughColumnTransform implements ColumnTransform {
-
-    private final ColumnMetadata colDefn;
-    private final ProjectionType projType;
-
-    public PassThroughColumnTransform(ColumnMetadata colDefn, ProjectionType projType) {
-      this.colDefn = colDefn;
-      this.projType = projType;
-    }
-
-    @Override
-    public AbstractWriteConverter newWriter(ScalarWriter baseWriter) {
-      return null;
-    }
-
-    @Override
-    public ProjectionType projectionType() { return projType; }
-
-    @Override
-    public ColumnMetadata inputSchema() { return colDefn; }
-
-    @Override
-    public ColumnMetadata outputSchema() { return colDefn; }
-  }
-
-  /**
-   * Full column transform that has separate input and output types
-   * and provides a type conversion writer to convert between the
-   * two. The conversion writer factory is provided via composition,
-   * not by subclassing this class.
-   */
-  public static class ColumnTransformImpl implements ColumnTransform {
+  public static abstract class AbstractColumnTransform implements ColumnTransform {
 
     private final ColumnMetadata inputSchema;
     private final ColumnMetadata outputSchema;
     private final ProjectionType projType;
-    private final ColumnConversionFactory conversionFactory;
 
-    public ColumnTransformImpl(ColumnMetadata inputSchema, ColumnMetadata outputSchema,
-        ProjectionType projType, ColumnConversionFactory conversionFactory) {
-      this.inputSchema = inputSchema;
-      this.outputSchema = outputSchema;
+    public AbstractColumnTransform(ColumnMetadata colDefn, ProjectionType projType,
+        ColumnMetadata outputDefn) {
+      inputSchema = colDefn;
+      outputSchema = outputDefn;
       this.projType = projType;
-      this.conversionFactory = conversionFactory;
-    }
-
-    @Override
-    public AbstractWriteConverter newWriter(ScalarWriter baseWriter) {
-      if (conversionFactory == null) {
-        return null;
-      }
-      return conversionFactory.newWriter(baseWriter);
     }
 
     @Override
@@ -108,23 +68,55 @@ public class SchemaTransformerImpl implements SchemaTransformer {
     public ColumnMetadata outputSchema() { return outputSchema; }
   }
 
-  protected final TupleMetadata outputSchema;
+  /**
+   * A no-op transform that simply keeps the input column schema and
+   * writer without any changes.
+   */
+  public static class PassThroughColumnTransform extends AbstractColumnTransform {
 
-  public SchemaTransformerImpl(TupleMetadata outputSchema) {
-    this.outputSchema = outputSchema;
+    public PassThroughColumnTransform(ColumnMetadata colDefn, ProjectionType projType,
+        ColumnMetadata outputDefn) {
+      super(colDefn, projType, outputDefn);
+    }
+
+    @Override
+    public AbstractWriteConverter newWriter(ScalarWriter baseWriter) {
+      return null;
+    }
   }
 
   /**
-   * Creates a "null" or "no-op" transform: just uses the input schema
-   * as the output schema.
-   *
-   * @param inputSchema the input schema from the reader
-   * @param projType projection type
-   * @return a no-op transform
+   * Full column transform that has separate input and output types
+   * and provides a type conversion writer to convert between the
+   * two. The conversion writer factory is provided via composition,
+   * not by subclassing this class.
    */
-  protected ColumnTransform noOpTransform(ColumnMetadata inputSchema,
-      ProjectionType projType) {
-    return new PassThroughColumnTransform(inputSchema, projType);
+  public static class ColumnSchemaTransform extends AbstractColumnTransform {
+
+    private final ColumnConversionFactory conversionFactory;
+
+    public ColumnSchemaTransform(ColumnMetadata inputSchema, ColumnMetadata outputSchema,
+        ProjectionType projType, ColumnConversionFactory conversionFactory) {
+      super(inputSchema, projType, outputSchema);
+      this.conversionFactory = conversionFactory;
+    }
+
+    @Override
+    public AbstractWriteConverter newWriter(ScalarWriter baseWriter) {
+      if (conversionFactory == null) {
+        return null;
+      }
+      return conversionFactory.newWriter(baseWriter);
+    }
+  }
+
+  protected final TupleMetadata outputSchema;
+  protected final Map<String, String> properties;
+
+  public SchemaTransformerImpl(TupleMetadata outputSchema,
+      Map<String, String> properties) {
+    this.outputSchema = outputSchema;
+    this.properties = properties;
   }
 
   /**
@@ -149,7 +141,7 @@ public class SchemaTransformerImpl implements SchemaTransformer {
 
     ColumnMetadata outputCol = outputSchema.metadata(inputSchema.name());
     if (outputCol == null) {
-      return noOpTransform(inputSchema, projType);
+      return new PassThroughColumnTransform(inputSchema, projType, inputSchema);
     }
 
     ConversionDefn defn = StandardConversions.analyze(inputSchema, outputCol);
@@ -158,7 +150,7 @@ public class SchemaTransformerImpl implements SchemaTransformer {
       switch (defn.type) {
       case NONE:
       case IMPLICIT:
-        return noOpTransform(inputSchema, projType);
+        return new PassThroughColumnTransform(inputSchema, projType, outputCol);
       case EXPLICIT:
         if (defn.conversionClass == null) {
           throw UserException.validationError()
@@ -167,13 +159,13 @@ public class SchemaTransformerImpl implements SchemaTransformer {
             .addContext("Output type", outputCol.typeString())
             .build(logger);
         }
-        factory = StandardConversions.factory(defn.conversionClass);
+        factory = StandardConversions.factory(defn.conversionClass, properties);
         break;
       default:
         throw new IllegalStateException("Unexpected conversion type: " + defn.type);
       }
     }
-    return new ColumnTransformImpl(inputSchema, outputCol, projType, factory);
+    return new ColumnSchemaTransform(inputSchema, outputCol, projType, factory);
   }
 
   /**

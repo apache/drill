@@ -18,12 +18,15 @@
 package org.apache.drill.test.rowSet.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
@@ -89,30 +92,42 @@ public class TestFillEmpties extends SubOperatorTest {
     testFillEmpties(DataMode.REPEATED);
   }
 
+  private boolean isSupported(MinorType type) {
+    switch (type) {
+    case DECIMAL28DENSE:
+    case DECIMAL38DENSE:
+      // Not yet supported, now deprecated
+      return false;
+    case GENERIC_OBJECT:
+    case LATE:
+    case LIST:
+    case MAP:
+    case NULL:
+    case UNION:
+      // Writer N/A
+      return false;
+    case FIXEDBINARY:
+    case FIXEDCHAR:
+    case FIXED16CHAR:
+    case MONEY:
+    case TIMESTAMPTZ:
+    case TIMETZ:
+      // Not supported in Drill
+      return false;
+    case BIT:
+      // Requires special test
+      return false;
+    default:
+      return true;
+    }
+  }
+
   private void testFillEmpties(DataMode mode) {
     for (MinorType type : MinorType.values()) {
+      if (! isSupported(type)) {
+        continue;
+      }
       switch (type) {
-      case DECIMAL28DENSE:
-      case DECIMAL38DENSE:
-        // Not yet supported
-        break;
-      case GENERIC_OBJECT:
-      case LATE:
-      case LIST:
-      case MAP:
-      case NULL:
-      case UNION:
-        // Writer N/A
-        break;
-      case BIT:
-      case FIXEDBINARY:
-      case FIXEDCHAR:
-      case FIXED16CHAR:
-      case MONEY:
-      case TIMESTAMPTZ:
-      case TIMETZ:
-        // Not supported in Drill
-        break;
       case DECIMAL18:
       case DECIMAL28SPARSE:
       case DECIMAL9:
@@ -171,9 +186,7 @@ public class TestFillEmpties extends SubOperatorTest {
     RowSetReader reader = result.reader();
     ScalarReader colReader = reader.scalar(0);
     MinorType type = majorType.getMinorType();
-    boolean isVariable = (type == MinorType.VARCHAR ||
-                          type == MinorType.VAR16CHAR ||
-                          type == MinorType.VARBINARY);
+    boolean isVariable = Types.isVarWidthType(type);
     for (int i = 0; i < ROW_COUNT; i++) {
       assertTrue(reader.next());
       if (i % 5 != 0) {
@@ -241,6 +254,178 @@ public class TestFillEmpties extends SubOperatorTest {
               valueType, expected, actual);
         }
       }
+    }
+    result.clear();
+  }
+
+  /**
+   * Test each vector type to ensure it supports setting a default value.
+   * Sets the default directly on the write to avoid the need to serialize
+   * the default value to string, which is awkward for some types when
+   * using the generic "test value from int" tool.
+   */
+
+  @Test
+  public void testDefaultValue() {
+    doTestDefaultValue(Types.required(MinorType.VARCHAR));
+    for (MinorType type : MinorType.values()) {
+      if (! isSupported(type)) {
+        continue;
+      }
+      switch (type) {
+      case DECIMAL18:
+      case DECIMAL28SPARSE:
+      case DECIMAL9:
+      case DECIMAL38SPARSE:
+      case VARDECIMAL:
+        MajorType majorType = MajorType.newBuilder()
+          .setMinorType(type)
+          .setMode(DataMode.REQUIRED)
+          .setPrecision(9)
+          .setScale(2)
+          .build();
+        doTestDefaultValue(majorType);
+        break;
+      default:
+        doTestDefaultValue(Types.required(type));
+      }
+    }
+  }
+
+  private void doTestDefaultValue(MajorType majorType) {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", majorType)
+        .buildSchema();
+    ExtendableRowSet rs = fixture.rowSet(schema);
+    RowSetWriter writer = rs.writer();
+    ScalarWriter colWriter = writer.scalar(0);
+    ValueType valueType = colWriter.extendedType();
+    Object defaultValue = RowSetUtilities.testDataFromInt(valueType, majorType, 100);
+    colWriter.setDefaultValue(defaultValue);
+    for (int i = 0; i < ROW_COUNT; i++) {
+      if (i % 5 == 0) {
+        colWriter.setObject(RowSetUtilities.testDataFromInt(valueType, majorType, i));
+      }
+      writer.save();
+    }
+    SingleRowSet result = writer.done();
+    RowSetReader reader = result.reader();
+    ScalarReader colReader = reader.scalar(0);
+    for (int i = 0; i < ROW_COUNT; i++) {
+      assertTrue(reader.next());
+      Object actual = colReader.getValue();
+      Object expected = i % 5 == 0 ? RowSetUtilities.testDataFromInt(valueType, majorType, i) : defaultValue;
+      RowSetUtilities.assertEqualValues(
+          majorType.toString().replace('\n', ' ') + "[" + i + "]",
+          valueType, expected, actual);
+    }
+    result.clear();
+  }
+
+  /**
+   * Test the more typical case in which the default value is set in the
+   * column metadata. The reader mechanism will automatically set the default
+   * for the column writer from the (properly formed) default value in the
+   * column metadata.
+   */
+
+  @Test
+  public void testDefaultInSchema() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .buildSchema();
+    schema.metadata("a").setDefaultValue("11");
+    ExtendableRowSet rs = fixture.rowSet(schema);
+    RowSetWriter writer = rs.writer();
+    ScalarWriter colWriter = writer.scalar(0);
+    ValueType valueType = colWriter.extendedType();
+    for (int i = 0; i < ROW_COUNT; i++) {
+      if (i % 5 == 0) {
+        colWriter.setInt(i);
+      }
+      writer.save();
+    }
+    SingleRowSet result = writer.done();
+    RowSetReader reader = result.reader();
+    ScalarReader colReader = reader.scalar(0);
+    Object defaultValue = schema.metadata("a").decodeDefaultValue();
+    assertNotNull(defaultValue);
+    for (int i = 0; i < ROW_COUNT; i++) {
+      assertTrue(reader.next());
+      Object actual = colReader.getValue();
+      Object expected = i % 5 == 0 ? i : defaultValue;
+      RowSetUtilities.assertEqualValues(
+          MinorType.INT.toString() + "[" + i + "]",
+          valueType, expected, actual);
+    }
+    result.clear();
+  }
+
+  @Test
+  public void testInvalidDefault() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .buildSchema();
+    schema.metadata("a").setDefaultValue("bogus");
+    ExtendableRowSet rs = fixture.rowSet(schema);
+    try {
+      rs.writer();
+      fail();
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
+    rs.clear();
+  }
+
+  /**
+   * Bit vector is special; packs 8 values per byte. Use custom
+   * logic to ship entire bytes.
+   */
+  @Test
+  public void testBitFillEmpties() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.BIT)
+        .buildSchema();
+    ExtendableRowSet rs = fixture.rowSet(schema);
+    RowSetWriter writer = rs.writer();
+    ScalarWriter colWriter = writer.scalar(0);
+    for (int i = 0; i < ROW_COUNT; i++) {
+      if (i % 43 == 0) {
+        colWriter.setInt(1);
+      }
+      writer.save();
+    }
+    SingleRowSet result = writer.done();
+    RowSetReader reader = result.reader();
+    ScalarReader colReader = reader.scalar(0);
+    for (int i = 0; i < ROW_COUNT; i++) {
+      assertTrue(reader.next());
+      assertEquals(i % 43 == 0 ? 1 : 0, colReader.getInt());
+    }
+    result.clear();
+  }
+
+  @Test
+  public void testBitDefaultValue() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.BIT)
+        .buildSchema();
+    ExtendableRowSet rs = fixture.rowSet(schema);
+    RowSetWriter writer = rs.writer();
+    ScalarWriter colWriter = writer.scalar(0);
+    colWriter.setDefaultValue(true);
+    for (int i = 0; i < ROW_COUNT; i++) {
+      if (i % 43 == 0) {
+        colWriter.setInt(0);
+      }
+      writer.save();
+    }
+    SingleRowSet result = writer.done();
+    RowSetReader reader = result.reader();
+    ScalarReader colReader = reader.scalar(0);
+    for (int i = 0; i < ROW_COUNT; i++) {
+      assertTrue(reader.next());
+      assertEquals(i % 43 == 0 ? 0 : 1, colReader.getInt());
     }
     result.clear();
   }

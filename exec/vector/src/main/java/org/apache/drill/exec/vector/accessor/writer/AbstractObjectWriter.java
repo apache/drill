@@ -88,9 +88,6 @@ public abstract class AbstractObjectWriter implements ObjectWriter {
       return baseWriter;
     }
     final AbstractWriteConverter shim = conversionFactory.newWriter(baseWriter);
-    if (shim == null) {
-      return baseWriter;
-    }
-    return shim;
+    return shim == null ? baseWriter : shim;
   }
 }

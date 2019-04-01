@@ -83,6 +83,7 @@ public final class RowSetBuilder {
    * set as <br><tt>add(10, "foo");</tt><br> Values of arrays can be expressed as a Java
    * array. A schema of (a:int, b:int[]) can be set as<br>
    * <tt>add(10, new int[] {100, 200});</tt><br>
+   *
    * @param values column values in column index order
    * @return this builder
    * @throws IllegalStateException if the batch, or any vector in the batch,

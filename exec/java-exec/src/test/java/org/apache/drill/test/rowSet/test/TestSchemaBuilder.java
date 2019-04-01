@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -317,11 +318,11 @@ public class TestSchemaBuilder extends DrillTest {
   @Test
   public void testDecimal() {
     TupleMetadata schema = new SchemaBuilder()
-        .addDecimal("a", MinorType.DECIMAL18, DataMode.OPTIONAL, 5, 2)
-        .addDecimal("b", MinorType.DECIMAL18, DataMode.REQUIRED, 6, 3)
-        .addDecimal("c", MinorType.DECIMAL18, DataMode.REPEATED, 7, 4)
+        .addNullable("a", MinorType.DECIMAL18, 5, 2)
+        .add("b", MinorType.DECIMAL18, 6, 3)
+        .addArray("c", MinorType.DECIMAL18, 7, 4)
         .addMap("m")
-          .addDecimal("d", MinorType.DECIMAL18, DataMode.OPTIONAL, 8, 1)
+          .addNullable("d", MinorType.DECIMAL18, 8, 1)
           .resumeSchema()
         .buildSchema();
 
@@ -346,6 +347,105 @@ public class TestSchemaBuilder extends DrillTest {
     assertEquals(DataMode.OPTIONAL, d.mode());
     assertEquals(8, d.precision());
     assertEquals(1, d.scale());
+  }
+
+  @Test
+  public void testVarDecimal() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("a", MinorType.VARDECIMAL, 5, 2)
+        .add("b", MinorType.VARDECIMAL, 6, 3)
+        .addArray("c", MinorType.VARDECIMAL, 7, 4)
+        .add("e", MinorType.VARDECIMAL)
+        .add("g", MinorType.VARDECIMAL, 38, 4)
+        .addMap("m")
+          .addNullable("d", MinorType.VARDECIMAL, 8, 1)
+          .add("f", MinorType.VARDECIMAL)
+          .resumeSchema()
+        .buildSchema();
+
+    // Use name methods, just for variety
+
+    ColumnMetadata a = schema.metadata("a");
+    assertEquals(MinorType.VARDECIMAL, a.type());
+    assertEquals(DataMode.OPTIONAL, a.mode());
+    assertEquals(5, a.precision());
+    assertEquals(2, a.scale());
+
+    ColumnMetadata b = schema.metadata("b");
+    assertEquals(MinorType.VARDECIMAL, b.type());
+    assertEquals(DataMode.REQUIRED, b.mode());
+    assertEquals(6, b.precision());
+    assertEquals(3, b.scale());
+
+    ColumnMetadata c = schema.metadata("c");
+    assertEquals(MinorType.VARDECIMAL, c.type());
+    assertEquals(DataMode.REPEATED, c.mode());
+    assertEquals(7, c.precision());
+    assertEquals(4, c.scale());
+
+    ColumnMetadata e = schema.metadata("e");
+    assertEquals(MinorType.VARDECIMAL, e.type());
+    assertEquals(DataMode.REQUIRED, e.mode());
+    assertEquals(38, e.precision());
+    assertEquals(0, e.scale());
+
+    ColumnMetadata g = schema.metadata("g");
+    assertEquals(MinorType.VARDECIMAL, g.type());
+    assertEquals(DataMode.REQUIRED, g.mode());
+    assertEquals(38, g.precision());
+    assertEquals(4, g.scale());
+
+    ColumnMetadata d = schema.metadata("m").mapSchema().metadata("d");
+    assertEquals(MinorType.VARDECIMAL, d.type());
+    assertEquals(DataMode.OPTIONAL, d.mode());
+    assertEquals(8, d.precision());
+    assertEquals(1, d.scale());
+
+    ColumnMetadata f = schema.metadata("m").mapSchema().metadata("f");
+    assertEquals(MinorType.VARDECIMAL, f.type());
+    assertEquals(DataMode.REQUIRED, f.mode());
+    assertEquals(38, f.precision());
+    assertEquals(0, f.scale());
+  }
+
+  @Test
+  public void testVarDecimalOverflow() {
+
+    try {
+      new SchemaBuilder()
+        .add("a", MinorType.VARDECIMAL, 39, 0)
+        .buildSchema();
+      fail();
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
+
+    try {
+      new SchemaBuilder()
+        .add("a", MinorType.VARDECIMAL, -1, 0)
+        .buildSchema();
+      fail();
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
+
+    try {
+      new SchemaBuilder()
+        .add("a", MinorType.VARDECIMAL, 38, -1)
+        .buildSchema();
+      fail();
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
+
+    try {
+      new SchemaBuilder()
+        .add("a", MinorType.VARDECIMAL, 5, 6)
+        .buildSchema();
+      fail();
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
   }
 
   /**

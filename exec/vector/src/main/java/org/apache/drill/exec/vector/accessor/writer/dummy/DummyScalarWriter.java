@@ -54,6 +54,9 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
   public void setNull() { }
 
   @Override
+  public void setBoolean(boolean value) { }
+
+  @Override
   public void setInt(int value) { }
 
   @Override
@@ -109,4 +112,7 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
 
   @Override
   public void setValue(Object value) { }
+
+  @Override
+  public void setDefaultValue(Object value) { }
 }
