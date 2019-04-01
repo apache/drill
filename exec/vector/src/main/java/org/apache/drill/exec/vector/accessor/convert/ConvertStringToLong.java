@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector.accessor.convert;
 
+import java.util.Map;
+
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
@@ -26,21 +28,22 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
  */
 public class ConvertStringToLong extends AbstractConvertFromString {
 
-  public ConvertStringToLong(ScalarWriter baseWriter) {
-    super(baseWriter);
+  public ConvertStringToLong(ScalarWriter baseWriter,
+      Map<String, String> properties) {
+    super(baseWriter, properties);
   }
 
   @Override
   public void setString(final String value) {
-    if (value == null) {
-      baseWriter.setNull();
-    } else {
-      try {
-        baseWriter.setLong(Long.parseLong(value));
-      }
-      catch (final NumberFormatException e) {
-        throw InvalidConversionError.writeError(schema(), value, e);
-      }
+    final String prepared = prepare.apply(value);
+    if (prepared == null) {
+      return;
+    }
+    try {
+      baseWriter.setLong(Long.parseLong(prepared));
+    }
+    catch (final NumberFormatException e) {
+      throw InvalidConversionError.writeError(schema(), value, e);
     }
   }
 }

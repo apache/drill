@@ -24,14 +24,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.convert.AbstractConvertFromString;
 import org.apache.drill.exec.vector.accessor.convert.AbstractWriteConverter;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.convert.StandardConversions;
@@ -197,10 +202,16 @@ public class TestColumnConverter extends SubOperatorTest {
    */
   private static class ConversionTestFixture implements ColumnConversionFactory {
 
-    private TupleMetadata inputSchema;
+    private final TupleMetadata inputSchema;
+    private final Map<String, String> properties;
 
     public ConversionTestFixture(TupleMetadata inputSchema) {
+      this(inputSchema, null);
+    }
+
+    public ConversionTestFixture(TupleMetadata inputSchema, Map<String, String> props) {
       this.inputSchema = inputSchema;
+      this.properties = props;
     }
 
     @Override
@@ -208,8 +219,11 @@ public class TestColumnConverter extends SubOperatorTest {
       ColumnMetadata inputCol = inputSchema.metadata(baseWriter.schema().name());
       assertNotNull(inputCol);
       ConversionDefn defn = StandardConversions.analyze(inputCol, baseWriter.schema());
+      if (defn.type == ConversionType.NONE) {
+        return null;
+      }
       assertNotNull(defn.conversionClass);
-      return StandardConversions.newInstance(defn.conversionClass, baseWriter);
+      return StandardConversions.newInstance(defn.conversionClass, baseWriter, properties);
     }
   }
 
@@ -230,7 +244,7 @@ public class TestColumnConverter extends SubOperatorTest {
         .add("bi", MinorType.BIGINT)
         .add("fl", MinorType.FLOAT4)
         .add("db", MinorType.FLOAT8)
-         .buildSchema();
+        .buildSchema();
     TupleMetadata inputSchema = new SchemaBuilder()
         .add("ti", MinorType.VARCHAR)
         .add("si", MinorType.VARCHAR)
@@ -643,8 +657,9 @@ public class TestColumnConverter extends SubOperatorTest {
   }
 
   /**
-   * Test conversion two-from Java-style booleans.
+   * Test conversion to/from Java-style Booleans.
    */
+
   @Test
   public void testBooleanToFromString() {
 
@@ -662,14 +677,84 @@ public class TestColumnConverter extends SubOperatorTest {
         new ConversionTestFixture(inputSchema))
         .addRow("true", false)
         .addRow("false", true)
+        .addRow("TRUE", false)
+        .addRow("FALSE", true)
         .build();
 
     final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
         .addRow(true, "false")
         .addRow(false, "true")
+        .addRow(true, "false")
+        .addRow(false, "true")
         .build();
 
     RowSetUtilities.verify(expected, actual);
+  }
+
+  private static BigDecimal dec(String value) {
+    return new BigDecimal(value);
+  }
+
+  @Test
+  public void testDecimalFromString() {
+
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("id", MinorType.INT)
+        .add("dec", MinorType.VARDECIMAL, 4, 2)
+        .buildSchema();
+
+    TupleMetadata inputSchema = new SchemaBuilder()
+        .add("id", MinorType.INT)
+        .add("dec", MinorType.VARCHAR)
+        .buildSchema();
+
+    RowSet actual = new RowSetBuilder(fixture.allocator(), outputSchema,
+        new ConversionTestFixture(inputSchema))
+        .addRow(1, "0")
+        .addRow(2, "-0")
+        .addRow(3, "0.12")
+        .addRow(4, "1.23")
+        .addRow(5, "12.34")
+        // Rounding occurs for VARDECIMAL
+        .addRow(6, "23.456")
+        .addRow(7, "-99.99")
+        .build();
+
+    final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
+        .addRow(1, dec("0"))
+        .addRow(2, dec("-0"))
+        .addRow(3, dec("0.12"))
+        .addRow(4, dec("1.23"))
+        .addRow(5, dec("12.34"))
+        .addRow(6, dec("23.46"))
+        .addRow(7, dec("-99.99"))
+        .build();
+
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  @Test
+  public void testDecimalOverflow() {
+
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("id", MinorType.INT)
+        .add("dec", MinorType.VARDECIMAL, 4, 2)
+        .buildSchema();
+
+    TupleMetadata inputSchema = new SchemaBuilder()
+        .add("id", MinorType.INT)
+        .add("dec", MinorType.VARCHAR)
+        .buildSchema();
+
+    RowSetBuilder rsBuilder = new RowSetBuilder(fixture.allocator(), outputSchema,
+        new ConversionTestFixture(inputSchema));
+    try {
+      rsBuilder.addRow(1, "1234567.89");
+      fail();
+    } catch (UserException e) {
+      // Expected
+    }
+    rsBuilder.build().clear();
   }
 
   private static void expect(ConversionType type, ConversionDefn defn) {
@@ -848,5 +933,100 @@ public class TestColumnConverter extends SubOperatorTest {
     expect(ConversionType.NONE, StandardConversions.analyze(dayCol, dayCol));
     expect(ConversionType.EXPLICIT, StandardConversions.analyze(dayCol, stringCol));
     expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, dayCol));
+  }
+
+  /**
+   * Test the properties for how to handle blanks on string-to-number
+   * conversions.
+   */
+
+  @Test
+  public void testBlankOptions() {
+
+    // Nullable
+
+    try {
+      doTestBlanks(DataMode.OPTIONAL, null, null, null);
+    } catch (InvalidConversionError e) {
+      // Expected
+    }
+    doTestBlanks(DataMode.OPTIONAL, AbstractConvertFromString.BLANK_AS_NULL,
+        null, null);
+    doTestBlanks(DataMode.OPTIONAL, AbstractConvertFromString.BLANK_AS_ZERO,
+        null, 0);
+    doTestBlanks(DataMode.OPTIONAL, AbstractConvertFromString.BLANK_AS_SKIP,
+        null, null);
+
+    // Non-nullable
+
+    try {
+      doTestBlanks(DataMode.REQUIRED, null, null, 99);
+    } catch (InvalidConversionError e) {
+      // Expected
+    }
+    doTestBlanks(DataMode.REQUIRED, AbstractConvertFromString.BLANK_AS_NULL,
+        null, 20);
+    doTestBlanks(DataMode.REQUIRED, AbstractConvertFromString.BLANK_AS_ZERO,
+        null, 0);
+    doTestBlanks(DataMode.REQUIRED, AbstractConvertFromString.BLANK_AS_SKIP,
+        null, 0);
+
+    // Property on column
+
+    doTestBlanks(DataMode.REQUIRED, null,
+        AbstractConvertFromString.BLANK_AS_NULL, 20);
+    doTestBlanks(DataMode.REQUIRED, null,
+        AbstractConvertFromString.BLANK_AS_ZERO, 0);
+
+    // Properties on both: column takes precedence
+
+    doTestBlanks(DataMode.REQUIRED, AbstractConvertFromString.BLANK_AS_ZERO,
+        AbstractConvertFromString.BLANK_AS_NULL, 20);
+    doTestBlanks(DataMode.REQUIRED, AbstractConvertFromString.BLANK_AS_NULL,
+        AbstractConvertFromString.BLANK_AS_ZERO, 0);
+  }
+
+  private void doTestBlanks(DataMode mode, String frameworkOption, String colOption, Integer value) {
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("col", MinorType.INT, mode)
+        .buildSchema();
+    ColumnMetadata colSchema = outputSchema.metadata("col");
+    if (colOption != null) {
+      colSchema.setProperty(ColumnMetadata.BLANK_AS_PROP, colOption);
+    }
+    colSchema.setProperty(ColumnMetadata.DEFAULT_VALUE_PROP, "20");
+
+    TupleMetadata inputSchema = new SchemaBuilder()
+        .addNullable("col", MinorType.VARCHAR)
+        .buildSchema();
+
+    Map<String, String> props = null;
+    if (frameworkOption != null) {
+      props = new HashMap<>();
+      props.put(AbstractConvertFromString.BLANK_ACTION_PROP, frameworkOption);
+    }
+    RowSetBuilder builder = new RowSetBuilder(fixture.allocator(), outputSchema,
+        new ConversionTestFixture(inputSchema, props));
+    try {
+      builder
+        .addSingleCol("")
+        .addSingleCol("  ")
+        .addSingleCol("10")
+        .addSingleCol(" 11  ");
+    }
+    catch (Exception e) {
+      builder.build().clear();
+      throw e;
+    }
+    SingleRowSet actual = builder.build();
+
+    final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
+        .addSingleCol(value)
+        .addSingleCol(value)
+        .addSingleCol(10)
+        .addSingleCol(11)
+        .build();
+
+    RowSetUtilities.verify(expected, actual);
   }
 }

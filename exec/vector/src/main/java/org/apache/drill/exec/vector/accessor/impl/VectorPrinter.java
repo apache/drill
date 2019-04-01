@@ -20,7 +20,6 @@ package org.apache.drill.exec.vector.accessor.impl;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 /**
@@ -33,7 +32,10 @@ public class VectorPrinter {
   public static void printOffsets(UInt4Vector vector, int start, int length) {
     header(vector, start, length);
     for (int i = start, j = 0; j < length; i++, j++) {
-      if (j > 0) {
+      if (j % 40 == 0) {
+        System.out.print("\n          ");
+      }
+      else if (j > 0) {
         System.out.print(" ");
       }
       System.out.print(vector.getAccessor().get(i));
@@ -68,5 +70,4 @@ public class VectorPrinter {
   public static String stringAt(VarCharVector vector, int i) {
     return new String(vector.getAccessor().get(i), Charsets.UTF_8);
   }
-
 }

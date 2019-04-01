@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.vector.accessor.convert;
 
+import java.util.Map;
+
+import org.apache.drill.common.types.BooleanType;
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
@@ -27,21 +30,22 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
  */
 public class ConvertStringToBoolean extends AbstractConvertFromString {
 
-  public ConvertStringToBoolean(ScalarWriter baseWriter) {
-    super(baseWriter);
+  public ConvertStringToBoolean(ScalarWriter baseWriter,
+      Map<String, String> properties) {
+    super(baseWriter, properties);
   }
 
   @Override
   public void setString(final String value) {
-    if (value == null) {
-      baseWriter.setNull();
-    } else {
-      try {
-        baseWriter.setInt(Boolean.parseBoolean(value) ? 1 : 0);
-      }
-      catch (final NumberFormatException e) {
-        throw InvalidConversionError.writeError(schema(), value, e);
-      }
+    final String prepared = prepare.apply(value);
+    if (prepared == null) {
+      return;
+    }
+    try {
+      baseWriter.setBoolean(BooleanType.fromString(prepared));
+    }
+    catch (final NumberFormatException e) {
+      throw InvalidConversionError.writeError(schema(), value, e);
     }
   }
 }

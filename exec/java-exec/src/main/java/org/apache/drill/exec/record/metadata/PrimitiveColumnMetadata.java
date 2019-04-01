@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import org.apache.drill.common.types.BooleanType;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -53,6 +54,10 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   public PrimitiveColumnMetadata(MaterializedField schema) {
     super(schema);
+  }
+
+  public PrimitiveColumnMetadata(String name, MajorType type) {
+    super(name, type);
   }
 
   public PrimitiveColumnMetadata(String name, MinorType type, DataMode mode) {
@@ -241,13 +246,13 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
         case BIGINT:
           return Long.parseLong(value);
         case FLOAT4:
-          return Float.parseFloat(value);
+          return (double) Float.parseFloat(value);
         case FLOAT8:
           return Double.parseDouble(value);
         case VARDECIMAL:
           return new BigDecimal(value);
         case BIT:
-          return Boolean.parseBoolean(value);
+          return BooleanType.fromString(value);
         case VARCHAR:
         case VARBINARY:
           return value;

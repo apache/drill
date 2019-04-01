@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector.accessor.convert;
 
+import java.util.Map;
+
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.joda.time.LocalTime;
@@ -31,22 +33,23 @@ public class ConvertStringToTime extends AbstractConvertFromString {
 
   private final DateTimeFormatter dateTimeFormatter;
 
-  public ConvertStringToTime(ScalarWriter baseWriter) {
-    super(baseWriter);
+  public ConvertStringToTime(ScalarWriter baseWriter,
+      Map<String, String> properties) {
+    super(baseWriter, properties);
     dateTimeFormatter = baseWriter.schema().dateTimeFormatter();
   }
 
   @Override
   public void setString(final String value) {
-    if (value == null) {
-      baseWriter.setNull();
-    } else {
-      try {
-        baseWriter.setTime(LocalTime.parse(value, dateTimeFormatter));
-      }
-      catch (final IllegalStateException e) {
-        throw InvalidConversionError.writeError(schema(), value, e);
-      }
+    final String prepared = prepare.apply(value);
+    if (prepared == null) {
+      return;
+    }
+    try {
+      baseWriter.setTime(LocalTime.parse(prepared, dateTimeFormatter));
+    }
+    catch (final IllegalStateException e) {
+      throw InvalidConversionError.writeError(schema(), value, e);
     }
   }
 }

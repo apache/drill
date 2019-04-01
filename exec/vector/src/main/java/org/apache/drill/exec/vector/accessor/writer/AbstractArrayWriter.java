@@ -257,13 +257,14 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
     }
   }
 
-  protected final ColumnMetadata schema;
+  private final ColumnMetadata schema;
   protected AbstractObjectWriter elementObjWriter;
   protected final OffsetVectorWriter offsetsWriter;
   protected ColumnWriterIndex outerIndex;
   protected ArrayElementWriterIndex elementIndex;
 
-  public AbstractArrayWriter(ColumnMetadata schema, AbstractObjectWriter elementObjWriter, OffsetVectorWriter offsetVectorWriter) {
+  public AbstractArrayWriter(ColumnMetadata schema, AbstractObjectWriter elementObjWriter,
+      OffsetVectorWriter offsetVectorWriter) {
     this.schema = schema;
     this.elementObjWriter = elementObjWriter;
     this.offsetsWriter = offsetVectorWriter;
@@ -337,7 +338,7 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
 
   @Override
   public void setNull(boolean isNull) {
-    if (isNull == true) {
+    if (isNull) {
       throw new UnsupportedOperationException();
     }
   }
@@ -357,7 +358,7 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
     format
       .startObject(this)
       .attribute("elementObjWriter");
-      elementObjWriter.dump(format);
+    elementObjWriter.dump(format);
     format.endObject();
   }
 }

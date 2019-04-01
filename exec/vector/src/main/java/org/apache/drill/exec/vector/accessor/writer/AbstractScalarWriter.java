@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
+import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
@@ -33,6 +34,9 @@ import org.joda.time.Period;
  */
 
 public abstract class AbstractScalarWriter implements ScalarWriter {
+
+  @Override
+  public ValueType extendedType() { return valueType(); }
 
   @Override
   public void setObject(Object value) {
@@ -66,7 +70,7 @@ public abstract class AbstractScalarWriter implements ScalarWriter {
     } else if (value instanceof Short) {
       setInt((Short) value);
     } else if (value instanceof Boolean) {
-      setInt(((boolean) value) ? 1 : 0);
+      setBoolean((boolean) value);
     } else {
       throw conversionError(value.getClass().getSimpleName());
     }

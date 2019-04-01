@@ -36,7 +36,6 @@ import org.junit.experimental.categories.Category;
 
 @Category({UnlikelyTest.class, VectorTest.class})
 public class TestByteComparisonFunctions extends ExecTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestByteComparisonFunctions.class);
 
   private static BufferAllocator allocator;
   private static VarCharHolder hello;

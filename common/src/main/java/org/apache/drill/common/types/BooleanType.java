@@ -15,13 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr;
+package org.apache.drill.common.types;
+
+import java.util.Map;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Enum that contains two boolean types: TRUE and FALSE.
@@ -30,30 +28,26 @@ import java.util.Map;
  * {@link <a href="https://www.postgresql.org/docs/9.6/static/datatype-boolean.html">Postgre Documentation</a>}
  */
 public enum BooleanType {
-  TRUE(1, Arrays.asList("t", "true", "y", "yes", "on", "1")),
-  FALSE(0, Arrays.asList("f", "false", "n", "no", "off", "0"));
+  TRUE(1, new String [] {"true", "1", "t", "y", "yes", "on",}),
+  FALSE(0, new String [] {"false", "0", "f", "n", "no", "off"});
 
   private final int numericValue;
-  private final List<String> literals;
+  private final String[] literals;
 
-  BooleanType(int numericValue, List<String> literals) {
+  BooleanType(int numericValue, String[] literals) {
     this.numericValue = numericValue;
     this.literals = literals;
   }
 
-  public int getNumericValue() {
-    return numericValue;
-  }
+  public int getNumericValue() { return numericValue; }
 
-  public List<String> getLiterals() {
-    return literals;
-  }
+  public String[] getLiterals() { return literals; }
 
   /** Contains all literals that are allowed to represent boolean type. */
   private static final Map<String, BooleanType> allLiterals = CaseInsensitiveMap.newHashMap();
   static {
-    for (BooleanType booleanType : BooleanType.values()) {
-      for (String literal : booleanType.getLiterals()) {
+    for (final BooleanType booleanType : BooleanType.values()) {
+      for (final String literal : booleanType.getLiterals()) {
         allLiterals.put(literal, booleanType);
       }
     }
@@ -76,4 +70,23 @@ public enum BooleanType {
     return booleanType;
   }
 
+  /**
+   * Runtime form of Boolean conversion: allows any of the valid "true" values;
+   * assumes all other values are false. Does case-insensitive comparisons.
+   * If the string must be trimmed, the caller should do it.
+   *
+   * @param value non-null string value
+   * @return true (if one of the TRUE literals), else false
+   */
+
+  public static boolean fromString(final String value) {
+    // Optimized for runtime speed
+    final String lower = value.toLowerCase();
+    for (int i = 0; i < TRUE.literals.length; i++) {
+      if (TRUE.literals[i].equals(lower)) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

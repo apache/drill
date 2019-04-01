@@ -99,6 +99,14 @@ public class BaseCsvTest extends ClusterTest {
     client.resetSession(ExecConstants.MIN_READER_WIDTH_KEY);
   }
 
+  protected void enableSchema(boolean enable) {
+    client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, enable);
+  }
+
+  protected void resetSchema() {
+    client.resetSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE);
+  }
+
   protected static void buildFile(String fileName, String[] data) throws IOException {
     buildFile(new File(testDir, fileName), data);
   }

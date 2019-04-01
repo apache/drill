@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.accessor.convert;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -30,21 +31,22 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
  */
 public class ConvertStringToDecimal extends AbstractConvertFromString {
 
-  public ConvertStringToDecimal(ScalarWriter baseWriter) {
-    super(baseWriter);
+  public ConvertStringToDecimal(ScalarWriter baseWriter,
+      Map<String, String> properties) {
+    super(baseWriter, properties);
   }
 
   @Override
   public void setString(final String value) {
-    if (value == null) {
-      baseWriter.setNull();
-    } else {
-      try {
-        baseWriter.setDecimal(new BigDecimal(value));
-      }
-      catch (final NumberFormatException e) {
-        throw InvalidConversionError.writeError(schema(), value, e);
-      }
+    final String prepared = prepare.apply(value);
+    if (prepared == null) {
+      return;
+    }
+    try {
+      baseWriter.setDecimal(new BigDecimal(prepared));
+    }
+    catch (final NumberFormatException e) {
+      throw InvalidConversionError.writeError(schema(), value, e);
     }
   }
 }

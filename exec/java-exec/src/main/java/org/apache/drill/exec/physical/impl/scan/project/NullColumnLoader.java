@@ -24,8 +24,9 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 
 /**
  * Create and populate null columns for the case in which a SELECT statement
@@ -62,7 +63,8 @@ public class NullColumnLoader extends StaticColumnLoader {
     String name();
     MajorType type();
     void setType(MajorType type);
-    Object defaultValue();
+    String defaultValue();
+    ColumnMetadata metadata();
   }
 
   public static final MajorType DEFAULT_NULL_TYPE = MajorType.newBuilder()
@@ -72,14 +74,10 @@ public class NullColumnLoader extends StaticColumnLoader {
 
   private final MajorType nullType;
   private final boolean allowRequired;
-  private final List<? extends NullColumnSpec> colDefns;
-  private final int colsWithDefaultValues[];
-  private final Object defaultValues[];
 
   public NullColumnLoader(ResultVectorCache vectorCache, List<? extends NullColumnSpec> defns,
       MajorType nullType, boolean allowRequired) {
     super(vectorCache);
-    this.colDefns = defns;
 
     // Normally, null columns must be optional or arrays. However
     // we allow required columns either if the client requests it,
@@ -102,32 +100,15 @@ public class NullColumnLoader extends StaticColumnLoader {
     // Populate the loader schema from that provided
 
     RowSetLoader schema = loader.writer();
-    int defaultCount = 0;
     for (int i = 0; i < defns.size(); i++) {
       NullColumnSpec defn = defns.get(i);
-      MaterializedField colSchema = selectType(defn);
+      ColumnMetadata colSchema = selectType(defn);
+      if (defn.metadata() != null) {
+        colSchema.setProperties(defn.metadata().properties());
+      } else if (defn.defaultValue() != null) {
+        colSchema.setDefaultValue(defn.defaultValue());
+      }
       schema.addColumn(colSchema);
-      if (defn.defaultValue() != null) {
-        defaultCount++;
-      }
-    }
-
-    // Setup default values, if any
-
-    if (defaultCount == 0) {
-      colsWithDefaultValues = null;
-      defaultValues = null;
-      return;
-    }
-    colsWithDefaultValues = new int[defaultCount];
-    defaultValues = new Object[defaultCount];
-    int defIndex = 0;
-    for (int i = 0; i < defns.size(); i++) {
-      NullColumnSpec defn = defns.get(i);
-      if (defn.defaultValue() != null) {
-        colsWithDefaultValues[defIndex] = i;
-        defaultValues[defIndex++] = defn.defaultValue();
-      }
     }
   }
 
@@ -138,7 +119,7 @@ public class NullColumnLoader extends StaticColumnLoader {
    * @return type of the empty column that implements the definition
    */
 
-  private MaterializedField selectType(NullColumnSpec defn) {
+  private ColumnMetadata selectType(NullColumnSpec defn) {
 
     // Prefer the type of any previous occurrence of
     // this column.
@@ -178,7 +159,7 @@ public class NullColumnLoader extends StaticColumnLoader {
       type = nullType;
     }
     defn.setType(type);
-    return MaterializedField.create(defn.name(), type);
+    return MetadataUtils.newScalar(defn.name(), type);
   }
 
   public VectorContainer output() {
@@ -188,20 +169,7 @@ public class NullColumnLoader extends StaticColumnLoader {
   @Override
   public VectorContainer load(int rowCount) {
     loader.startBatch();
-    if (colsWithDefaultValues == null) {
-      loader.skipRows(rowCount);
-    } else {
-     // At least one column has a default value. Set values
-      // for all columns. Any null values are a no-op.
-      RowSetLoader writer = loader.writer();
-      for (int i = 0; i < rowCount; i++) {
-        writer.start();
-        for (int j = 0; j < colsWithDefaultValues.length; j++) {
-          writer.scalar(colsWithDefaultValues[j]).setValue(defaultValues[j]);
-        }
-        writer.save();
-      }
-    }
+    loader.skipRows(rowCount);
     return loader.harvest();
   }
 }

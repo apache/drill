@@ -76,7 +76,9 @@ public interface ScalarReader extends ColumnReader {
    */
 
   ValueType extendedType();
+
   int getInt();
+  boolean getBoolean();
   long getLong();
   double getDouble();
   String getString();
@@ -86,4 +88,9 @@ public interface ScalarReader extends ColumnReader {
   LocalDate getDate();
   LocalTime getTime();
   Instant getTimestamp();
+
+  /**
+   * Return the value of the object using the extended type.
+   */
+  Object getValue();
 }

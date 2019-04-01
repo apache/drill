@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.accessor.convert;
 
 import java.lang.reflect.Constructor;
+import java.util.Map;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -101,22 +102,50 @@ public class StandardConversions {
 
   /**
    * Column conversion factory for the case where a conversion class is provided.
+   * Also holds an optional set of properties to be passed to the converter instance.
    */
   public static class SimpleWriterConverterFactory implements ColumnConversionFactory {
     private final Class<? extends AbstractWriteConverter> conversionClass;
+    private final Map<String, String> properties;
 
-    SimpleWriterConverterFactory(Class<? extends AbstractWriteConverter> conversionClass) {
+    SimpleWriterConverterFactory(Class<? extends AbstractWriteConverter> conversionClass,
+        Map<String, String> properties) {
       this.conversionClass = conversionClass;
+      this.properties = properties;
     }
 
     @Override
     public AbstractWriteConverter newWriter(ScalarWriter baseWriter) {
-      return newInstance(conversionClass, baseWriter);
+      return newInstance(conversionClass, baseWriter, properties);
     }
   }
 
   public static ColumnConversionFactory factory(Class<? extends AbstractWriteConverter> converterClass) {
-    return new SimpleWriterConverterFactory(converterClass);
+    return new SimpleWriterConverterFactory(converterClass, null);
+  }
+
+  public static ColumnConversionFactory factory(Class<? extends AbstractWriteConverter> converterClass,
+      Map<String, String> properties) {
+    return new SimpleWriterConverterFactory(converterClass, properties);
+  }
+
+  public static AbstractWriteConverter newInstance(
+      Class<? extends AbstractWriteConverter> conversionClass, ScalarWriter baseWriter,
+      Map<String,String> properties) {
+
+    // Try the Converter(ScalerWriter writer, Map<String, String> props) constructor first.
+    // This first form is optional.
+
+    try {
+      final Constructor<? extends AbstractWriteConverter> ctor = conversionClass.getDeclaredConstructor(ScalarWriter.class, Map.class);
+      return ctor.newInstance(baseWriter, properties);
+    } catch (final ReflectiveOperationException e) {
+      // Ignore
+    }
+
+    // Then try the Converter(ScalarSriter writer) constructor.
+
+    return newInstance(conversionClass, baseWriter);
   }
 
   public static AbstractWriteConverter newInstance(

@@ -22,10 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.procedures.IntObjectProcedure;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
@@ -74,11 +74,10 @@ class RequestIdMap {
     public void apply(int key, RpcOutcome<?> value) {
       try{
         value.setException(exception);
-      }catch(Exception e){
+      }catch (final Exception e){
         logger.warn("Failure while attempting to fail rpc response.", e);
       }
     }
-
   }
 
   public <V> ChannelListenerWithCoordinationId createNewRpcListener(RpcOutcomeListener<V> handler, Class<V> clazz,
@@ -101,6 +100,7 @@ class RequestIdMap {
     final RpcOutcomeListener<T> handler;
     final Class<T> clazz;
     final int coordinationId;
+    @SuppressWarnings("unused")
     final RemoteConnection connection;
 
     public RpcListener(RpcOutcomeListener<T> handler, Class<T> clazz, int coordinationId, RemoteConnection connection) {
@@ -140,15 +140,10 @@ class RequestIdMap {
     }
 
     @Override
-    public Class<T> getOutcomeType() {
-      return clazz;
-    }
+    public Class<T> getOutcomeType() { return clazz; }
 
     @Override
-    public int getCoordinationId() {
-      return coordinationId;
-    }
-
+    public int getCoordinationId() { return coordinationId; }
   }
 
   private RpcOutcome<?> removeFromMap(int coordinationId) {
@@ -165,9 +160,9 @@ class RequestIdMap {
 
   public <V> RpcOutcome<V> getAndRemoveRpcOutcome(int rpcType, int coordinationId, Class<V> clazz) {
 
-    RpcOutcome<?> rpc = removeFromMap(coordinationId);
+    final RpcOutcome<?> rpc = removeFromMap(coordinationId);
     // logger.debug("Got rpc from map {}", rpc);
-    Class<?> outcomeClass = rpc.getOutcomeType();
+    final Class<?> outcomeClass = rpc.getOutcomeType();
 
     if (outcomeClass != clazz) {
       throw new IllegalStateException(String.format(
@@ -178,6 +173,7 @@ class RequestIdMap {
     }
 
     @SuppressWarnings("unchecked")
+    final
     RpcOutcome<V> crpc = (RpcOutcome<V>) rpc;
 
     // logger.debug("Returning casted future");
@@ -187,11 +183,10 @@ class RequestIdMap {
   public void recordRemoteFailure(int coordinationId, DrillPBError failure) {
     // logger.debug("Updating failed future.");
     try {
-      RpcOutcome<?> rpc = removeFromMap(coordinationId);
+      final RpcOutcome<?> rpc = removeFromMap(coordinationId);
       rpc.setException(new UserRemoteException(failure));
-    } catch (Exception ex) {
+    } catch (final Exception ex) {
       logger.warn("Failed to remove from map.  Not a problem since we were updating on failed future.", ex);
     }
   }
-
 }

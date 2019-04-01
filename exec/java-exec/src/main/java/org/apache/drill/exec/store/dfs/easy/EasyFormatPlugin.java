@@ -248,6 +248,10 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
         builder.setProjection(scan.getColumns());
         builder.setFiles(scan.getWorkUnits());
         builder.setConfig(plugin.easyConfig().fsConf);
+
+        // The text readers use required Varchar columns to represent null columns.
+
+        builder.allowRequiredNullColumns(true);
         final Path selectionRoot = scan.getSelectionRoot();
         if (selectionRoot != null) {
           builder.metadataOptions().setSelectionRoot(selectionRoot);

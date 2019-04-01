@@ -238,8 +238,7 @@ public class ColumnBuilder {
       vectorState = new RepeatedVectorState(colWriter.array(), (RepeatedValueVector) vector);
     } else if (columnSchema.isNullable()) {
       vectorState = new NullableVectorState(
-          colWriter,
-          (NullableVector) vector);
+          colWriter, (NullableVector) vector);
     } else {
       vectorState = SimpleVectorState.vectorState(columnSchema,
             colWriter.events(), vector);

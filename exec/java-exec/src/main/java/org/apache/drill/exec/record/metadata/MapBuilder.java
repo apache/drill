@@ -78,6 +78,10 @@ public class MapBuilder implements SchemaContainer {
     return this;
   }
 
+  public MapBuilder add(String name, MinorType type, int precision, int scale) {
+    return addDecimal(name, type, DataMode.REQUIRED, precision, scale);
+  }
+
   public MapBuilder addNullable(String name, MinorType type) {
     tupleBuilder.addNullable(name,  type);
     return this;
@@ -88,6 +92,10 @@ public class MapBuilder implements SchemaContainer {
     return this;
   }
 
+  public MapBuilder addNullable(String name, MinorType type, int precision, int scale) {
+    return addDecimal(name, type, DataMode.OPTIONAL, precision, scale);
+  }
+
   public MapBuilder addArray(String name, MinorType type) {
     tupleBuilder.addArray(name, type);
     return this;
@@ -96,6 +104,10 @@ public class MapBuilder implements SchemaContainer {
   public MapBuilder addArray(String name, MinorType type, int dims) {
     tupleBuilder.addArray(name,  type, dims);
     return this;
+  }
+
+  public MapBuilder addArray(String name, MinorType type, int precision, int scale) {
+    return addDecimal(name, type, DataMode.REPEATED, precision, scale);
   }
 
   public MapBuilder addDecimal(String name, MinorType type,

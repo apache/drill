@@ -137,7 +137,7 @@ public class NullColumnBuilder implements VectorSource {
           // use the default value from the output schema.
 
           col = new ResolvedNullColumn(name, type,
-              outputCol.decodeDefaultValue(), this, nullCols.size());
+              outputCol.defaultValue(), this, nullCols.size());
         } else {
 
           // Type and modes matches, just the output column

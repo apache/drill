@@ -18,7 +18,9 @@
 package org.apache.drill.exec.physical.impl.scan.project;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -165,6 +167,7 @@ public class ScanSchemaOrchestrator {
     private List<SchemaPath> projection;
     private TupleMetadata outputSchema;
     private SchemaTransformer schemaTransformer;
+    private Map<String, String> conversionProps;
 
     /**
      * Specify an optional metadata manager. Metadata is a set of constant
@@ -245,6 +248,16 @@ public class ScanSchemaOrchestrator {
     public void setSchemaTransformer(SchemaTransformer transformer) {
       this.schemaTransformer = transformer;
     }
+
+    public void setConversionProperty(String key, String value) {
+      if (key == null || value == null) {
+        return;
+      }
+      if (conversionProps == null) {
+        conversionProps = new HashMap<>();
+      }
+      conversionProps.put(key, value);
+    }
   }
 
   public static class ScanSchemaOptions {
@@ -281,16 +294,20 @@ public class ScanSchemaOrchestrator {
       schemaResolvers = builder.schemaResolvers;
       projection = builder.projection;
       useSchemaSmoothing = builder.useSchemaSmoothing;
-      allowRequiredNullColumns = builder.allowRequiredNullColumns;
+      boolean allowRequiredNulls = builder.allowRequiredNullColumns;
       if (builder.schemaTransformer != null) {
         // Use client-provided conversions
         schemaTransformer = builder.schemaTransformer;
       } else if (builder.outputSchema != null) {
         // Use only implicit conversions
-        schemaTransformer = new SchemaTransformerImpl(builder.outputSchema);
+        schemaTransformer = new SchemaTransformerImpl(builder.outputSchema, builder.conversionProps);
+        if (builder.outputSchema.getBooleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)) {
+          allowRequiredNulls = true;
+        }
       } else {
         schemaTransformer = null;
       }
+      allowRequiredNullColumns = allowRequiredNulls;
     }
   }
 

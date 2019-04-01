@@ -19,6 +19,7 @@ package org.apache.drill.exec.vector.accessor.writer;
 
 import java.math.BigDecimal;
 
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.joda.time.Instant;
@@ -143,6 +144,13 @@ public abstract class BaseScalarWriter extends AbstractScalarWriterImpl {
 
   protected ColumnWriterListener listener;
 
+  /**
+   * Value to use to fill empties. Must be at least as wide as each
+   * value.
+   */
+
+  protected byte emptyValue[];
+
   protected DrillBuf drillBuf;
 
   /**
@@ -156,6 +164,18 @@ public abstract class BaseScalarWriter extends AbstractScalarWriterImpl {
   @Override
   public void bindListener(ColumnWriterListener listener) {
     this.listener = listener;
+  }
+
+  @Override
+  public void bindSchema(ColumnMetadata schema) {
+    super.bindSchema(schema);
+
+    // Set the default value, if any, from the schema.
+
+    final Object defaultValue = schema.decodeDefaultValue();
+    if (defaultValue != null) {
+      setDefaultValue(defaultValue);
+    }
   }
 
   /**
@@ -211,6 +231,11 @@ public abstract class BaseScalarWriter extends AbstractScalarWriterImpl {
   @Override
   public void setNull() {
     throw UnsupportedConversionError.nullError(schema());
+  }
+
+  @Override
+  public void setBoolean(boolean value) {
+    throw conversionError("boolean");
   }
 
   @Override

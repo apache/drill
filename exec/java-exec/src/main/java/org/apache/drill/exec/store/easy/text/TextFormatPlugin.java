@@ -62,6 +62,7 @@ import org.apache.drill.exec.store.easy.text.compliant.v3.TextParsingSettingsV3;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.drill.exec.store.text.DrillTextRecordReader;
 import org.apache.drill.exec.store.text.DrillTextRecordWriter;
+import org.apache.drill.exec.vector.accessor.convert.AbstractConvertFromString;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -236,6 +237,12 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       // Pass along the output schema, if any
 
       builder.setOutputSchema(scan.getSchema());
+
+      // CSV maps blank columns to nulls (for nullable non-string columns),
+      // or to the default value (for non-nullable non-string columns.)
+
+      builder.setConversionProperty(AbstractConvertFromString.BLANK_ACTION_PROP,
+          AbstractConvertFromString.BLANK_AS_NULL);
 
       return builder;
     }

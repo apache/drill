@@ -63,7 +63,7 @@ public class TestNullColumnLoader extends SubOperatorTest {
     return makeNullCol(name, null, null);
   }
 
-  private ResolvedNullColumn makeNullCol(String name, MajorType nullType, Object defaultValue) {
+  private ResolvedNullColumn makeNullCol(String name, MajorType nullType, String defaultValue) {
 
     // For this test, we don't need the projection, so just
     // set it to null.
@@ -159,16 +159,18 @@ public class TestNullColumnLoader extends SubOperatorTest {
   }
 
   /**
-   * Test the ability to provide a default value for a null column
+   * Test the ability to provide a default value for a "null" column.
+   * Default values are only allowed for required "null" columns. For
+   * nullable columns, NULL is already the default.
    */
 
   @Test
   public void testDefaultValue() {
 
     final List<ResolvedNullColumn> defns = new ArrayList<>();
-    defns.add(makeNullCol("int", Types.optional(MinorType.INT), 10));
-    defns.add(makeNullCol("str", Types.optional(MinorType.VARCHAR), "foo"));
-    defns.add(makeNullCol("dub", Types.optional(MinorType.FLOAT8), 20.0D));
+    defns.add(makeNullCol("int", Types.required(MinorType.INT), "10"));
+    defns.add(makeNullCol("str", Types.required(MinorType.VARCHAR), "foo"));
+    defns.add(makeNullCol("dub", Types.required(MinorType.FLOAT8), "20.0"));
 
     final ResultVectorCache cache = new NullResultVectorCacheImpl(fixture.allocator());
     final MajorType nullType = Types.optional(MinorType.VARCHAR);
@@ -181,9 +183,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
     // Verify values and types
 
     final TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("int", MinorType.INT)
-        .addNullable("str", MinorType.VARCHAR)
-        .addNullable("dub", MinorType.FLOAT8)
+        .add("int", MinorType.INT)
+        .add("str", MinorType.VARCHAR)
+        .add("dub", MinorType.FLOAT8)
         .buildSchema();
     final SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(10, "foo", 20.0D)
@@ -402,8 +404,8 @@ public class TestNullColumnLoader extends SubOperatorTest {
         .addNullable("extra", MinorType.VARCHAR)
         .buildSchema();
     final SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow("foo", "bar", null, 10, 20, null)
-        .addRow("foo", "bar", null, 10, 20, null)
+        .addRow("foo", null, null, 10, null, null)
+        .addRow("foo", null, null, 10, null, null)
         .build();
 
     RowSetUtilities.verify(expected, fixture.wrap(builder.output()));
@@ -421,6 +423,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
    * The type and mode provided to the builder is that which would result from
    * schema smoothing. The types and modes should usually match, but verify
    * the rules when they don't.
+   * <p>
+   * Defaults for null columns are ignored: null columns use NULL as the
+   * null value.
    */
   @Test
   public void testSchemaWithConflicts() {
@@ -464,8 +469,8 @@ public class TestNullColumnLoader extends SubOperatorTest {
         .add("intOpt", MinorType.INT)
         .buildSchema();
     final SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow(null, "bar", null, 20)
-        .addRow(null, "bar", null, 20)
+        .addRow(null, null, null, 20)
+        .addRow(null, null, null, 20)
         .build();
 
     RowSetUtilities.verify(expected, fixture.wrap(builder.output()));

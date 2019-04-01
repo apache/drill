@@ -231,7 +231,7 @@ public abstract class TupleState extends ContainerState
 
     @Override
     public void dump(HierarchicalFormatter format) {
-      // TODO Auto-generated method stub
+      // TODO
     }
   }
 
@@ -390,7 +390,7 @@ public abstract class TupleState extends ContainerState
         ResultVectorCache vectorCache,
         RequestedTuple projectionSet) {
       super(events, vectorCache, projectionSet);
-     }
+    }
 
     /**
      * Return the tuple writer for the map. If this is a single
