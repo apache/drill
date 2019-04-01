@@ -34,6 +34,7 @@ import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.work.foreman.rm.EmbeddedQueryQueue;
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
@@ -223,5 +224,19 @@ public class TestMemoryCalculator extends PlanTestBase {
     PlanningSet planningSet = preparePlanningSet(activeEndpoints, 2, resources, sql, parallelizer);
     parallelizer.adjustMemory(planningSet, createSet(planningSet.getRootWrapper()), activeEndpoints);
     assertTrue("memory requirement is different", Iterables.all(resources.entrySet(), (e) -> e.getValue().getMemory() == 481490));
+  }
+
+  @Test
+  public void TestZKBasedQueue() throws Exception {
+    String sql = "select * from cp.`employee.json`";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher).configProperty(EmbeddedQueryQueue.ENABLED, true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      client
+        .queryBuilder()
+        .sql(sql)
+        .run();
+    }
   }
 }

@@ -55,7 +55,7 @@ public class QueueQueryParallelizer extends SimpleParallelizer {
   // return the memory computed for a physical operator on a drillbitendpoint.
   public BiFunction<DrillbitEndpoint, PhysicalOperator, Long> getMemory() {
     return (endpoint, operator) -> {
-      if (planHasMemory) {
+      if (!planHasMemory) {
         return operators.get(endpoint).get(operator);
       }
       else {
