@@ -223,22 +223,6 @@ export SERVER_GC_OPTS="$SERVER_GC_OPTS -XX:+UseG1GC"
 # No GC options by default for SQLLine
 export CLIENT_GC_OPTS=${CLIENT_GC_OPTS:-""}
 
-# Source the optional drill-env.sh for any user configured values.
-# We read the file only in the $DRILL_CONF_DIR, which might be a
-# site-specific folder. By design, we do not search both the site
-# folder and the $DRILL_HOME/conf folder; we look in just the one
-# identified by $DRILL_CONF_DIR.
-#
-# Note: the env files must set properties as follows for "inheritance"
-# to work correctly:
-#
-# export FOO=${FOO:-"value"}
-
-drillEnv="$DRILL_CONF_DIR/drill-env.sh"
-if [ -r "$drillEnv" ]; then
-  . "$drillEnv"
-fi
-
 # Source distrib-env.sh for any distribution-specific settings.
 # distrib-env.sh is optional; it is created by some distribution installers
 # that need distribution-specific settings.
@@ -253,6 +237,22 @@ else
   if [ -r "$distribEnv" ]; then
     . "$distribEnv"
   fi
+fi
+
+# Source the optional drill-env.sh for any user configured values.
+# We read the file only in the $DRILL_CONF_DIR, which might be a
+# site-specific folder. By design, we do not search both the site
+# folder and the $DRILL_HOME/conf folder; we look in just the one
+# identified by $DRILL_CONF_DIR.
+#
+# Note: the env files must set properties as follows for "inheritance"
+# to work correctly:
+#
+# export FOO=${FOO:-"value"}
+
+drillEnv="$DRILL_CONF_DIR/drill-env.sh"
+if [ -r "$drillEnv" ]; then
+  . "$drillEnv"
 fi
 
 # Execute distrib-setup.sh for any distribution-specific setup (e.g. checks).
