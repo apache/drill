@@ -35,7 +35,6 @@ import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.joda.time.LocalTime;
 import org.ojai.Value;
 import org.ojai.types.ODate;
@@ -46,6 +45,10 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import com.mapr.db.util.SqlHelper;
 
 import org.ojai.types.OTimestamp;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpression, RuntimeException> {
 
@@ -93,7 +96,11 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       protected boolean visitTimestampExpr(SchemaPath path, TimeStampExpression valueArg) {
         // converts timestamp value from local time zone to UTC since the record reader
         // reads the timestamp in local timezone if the readTimestampWithZoneOffset flag is enabled
-        long timeStamp = valueArg.getTimeStamp() - DateUtility.TIMEZONE_OFFSET_MILLIS;
+        Instant localInstant = Instant.ofEpochMilli(valueArg.getTimeStamp());
+        ZonedDateTime utcZonedDateTime = localInstant.atZone(ZoneId.of("UTC"));
+        ZonedDateTime convertedZonedDateTime = utcZonedDateTime.withZoneSameLocal(ZoneId.systemDefault());
+        long timeStamp = convertedZonedDateTime.toInstant().toEpochMilli();
+
         this.value = KeyValueBuilder.initFrom(new OTimestamp(timeStamp));
         this.path = path;
         return true;
