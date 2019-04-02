@@ -83,14 +83,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -138,14 +142,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -189,14 +197,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -244,14 +256,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -295,14 +311,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -350,14 +370,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -401,14 +425,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -456,14 +484,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -507,14 +539,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -562,14 +598,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -613,14 +653,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -668,14 +712,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -719,14 +767,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -774,14 +826,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -825,14 +881,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }
@@ -880,14 +940,18 @@ public class TDigestFunctions {
       if (work.obj != null) {
         com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
         try {
-          int size = tdigest.smallByteSize();
-          java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
-          tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
-          out.start = 0;
-          out.end = size;
-          out.buffer.setBytes(0, byteBuf.array());
-          out.isSet = 1;
+          if (tdigest.size() > 0) {
+            int size = tdigest.smallByteSize();
+            java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
+            tdigest.asSmallBytes(byteBuf);
+            out.buffer = buffer.reallocIfNeeded(size);
+            out.start = 0;
+            out.end = size;
+            out.buffer.setBytes(0, byteBuf.array());
+            out.isSet = 1;
+          } else {
+            out.isSet = 0;
+          }
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get TDigest output", e);
         }

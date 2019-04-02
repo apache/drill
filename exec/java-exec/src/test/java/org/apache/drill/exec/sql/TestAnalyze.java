@@ -429,6 +429,42 @@ public class TestAnalyze extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testHistogramWithColumnsWithAllNulls() throws Exception {
+    try {
+      test("ALTER SESSION SET `planner.slice_target` = 1");
+      test("ALTER SESSION SET `store.format` = 'parquet'");
+      test("CREATE TABLE dfs.tmp.all_nulls AS SELECT employee_id, cast(null as int) as null_int_col, "
+              + "cast(null as bigint) as null_bigint_col, cast(null as float) as null_float_col, "
+              + "cast(null as double) as null_double_col, cast(null as date) as null_date_col, "
+              + "cast(null as timestamp) as null_timestamp_col, cast(null as time) as null_time_col, "
+              + "cast(null as boolean) as null_boolean_col "
+              + "from cp.`employee.json` ");
+      test("ANALYZE TABLE dfs.tmp.all_nulls COMPUTE STATISTICS ");
+
+      testBuilder()
+              .sqlQuery("SELECT tbl.`columns`.`column` as `column`, "
+                      + " repeated_count(tbl.`columns`.`histogram`.`buckets`) as num_bucket_entries "
+                      + " from (select flatten(`directories`[0].`columns`) as `columns` "
+                      + "  from dfs.tmp.`all_nulls/.stats.drill`) as tbl")
+              .unOrdered()
+              .baselineColumns("column", "num_bucket_entries")
+              .baselineValues("`employee_id`", 11)
+              .baselineValues("`null_int_col`", 0)
+              .baselineValues("`null_bigint_col`", 0)
+              .baselineValues("`null_float_col`", 0)
+              .baselineValues("`null_double_col`", 0)
+              .baselineValues("`null_date_col`", 0)
+              .baselineValues("`null_timestamp_col`", 0)
+              .baselineValues("`null_time_col`", 0)
+              .baselineValues("`null_boolean_col`", 0)
+              .go();
+
+    } finally {
+      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+    }
+  }
+
   //Helper function to verify output of ANALYZE statement
   private void verifyAnalyzeOutput(String query, String message) throws Exception {
     List<QueryDataBatch>result = testRunAndReturn(QueryType.SQL, query);
