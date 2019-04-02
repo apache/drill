@@ -18,15 +18,15 @@
 package org.apache.drill.exec.vector.complex.writer;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.exec.physical.impl.join.JoinTestBase;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.physical.impl.join.JoinTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -244,12 +244,7 @@ public class TestJsonNanInf extends BaseTestQuery {
       builder.append(chunk);
     }
     String data = builder.toString();
-    String query = String.format("select string_binary(binary_string('%s')) from (values(1))", data);
-    List<QueryDataBatch> results = testSqlWithResults(query);
-    RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-    QueryDataBatch batch = results.get(0);
-    batch.release();
-    batchLoader.clear();
+    test("select string_binary(binary_string('%s')) from (values(1))", data);
  }
 
   @Test
