@@ -54,9 +54,12 @@ public class FilterEvaluatorUtils {
   private FilterEvaluatorUtils() {
   }
 
+  @SuppressWarnings("RedundantTypeArguments")
   public static RowsMatch evalFilter(LogicalExpression expr, MetadataBase.ParquetTableMetadataBase footer,
                                      int rowGroupIndex, OptionManager options, FragmentContext fragmentContext) {
-    List<SchemaPath> schemaPathsInExpr = new ArrayList<>(expr.accept(new FieldReferenceFinder(), null));
+    // Specifies type arguments explicitly to avoid compilation error caused by JDK-8066974
+    List<SchemaPath> schemaPathsInExpr = new ArrayList<>(
+            expr.<Set<SchemaPath>, Void, RuntimeException>accept(new FieldReferenceFinder(), null));
 
     RowGroupMetadata rowGroupMetadata = new ArrayList<>(ParquetTableMetadataUtils.getRowGroupsMetadata(footer).values()).get(rowGroupIndex);
     Map<SchemaPath, ColumnStatistics> columnsStatistics = rowGroupMetadata.getColumnsStatistics();
