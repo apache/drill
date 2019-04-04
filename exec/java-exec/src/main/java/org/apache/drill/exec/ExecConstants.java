@@ -987,4 +987,12 @@ public final class ExecConstants {
   public static final LongValidator TDIGEST_COMPRESSION_VALIDATOR = new PositiveLongValidator(TDIGEST_COMPRESSION, 10000,
     new OptionDescription("Controls trade-off between t-digest quantile statistic storage cost and accuracy. " +
       "Higher values use more groups (clusters) for the t-digest and improve accuracy at the expense of extra storage. "));
+
+  /**
+   * Options that have a JDBC Statement implementation already in place
+   */
+  public static final String QUERY_MAX_ROWS = "exec.query.max_rows";
+  public static final RangeLongValidator QUERY_MAX_ROWS_VALIDATOR = new RangeLongValidator(QUERY_MAX_ROWS, 0, Integer.MAX_VALUE,
+      new OptionDescription("The maximum number of rows that the query will return. This can be only set at a SYSTEM level by an admin. (Drill 1.16+)"));
+
 }

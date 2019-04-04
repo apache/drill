@@ -1210,11 +1210,13 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::user::RunQuery, plan_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::user::RunQuery, fragments_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::user::RunQuery, prepared_statement_handle_),
-  2,
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::user::RunQuery, autolimit_rowcount_),
   3,
+  4,
   0,
   ~0u,
   1,
+  2,
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 7, sizeof(::exec::user::Property)},
@@ -1247,7 +1249,7 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 371, 378, sizeof(::exec::user::ConvertSupport)},
   { 380, 388, sizeof(::exec::user::GetServerMetaResp)},
   { 391, 446, sizeof(::exec::user::ServerMeta)},
-  { 496, 506, sizeof(::exec::user::RunQuery)},
+  { 496, 507, sizeof(::exec::user::RunQuery)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -1464,73 +1466,74 @@ void AddDescriptorsImpl() {
       "ySupport\022\030\n\020system_functions\030. \003(\t\022\022\n\nta"
       "ble_term\030/ \001(\t\022\035\n\025transaction_supported\030"
       "0 \001(\010\022.\n\runion_support\0301 \003(\0162\027.exec.user"
-      ".UnionSupport\022\026\n\016current_schema\0302 \001(\t\"\353\001"
+      ".UnionSupport\022\026\n\016current_schema\0302 \001(\t\"\207\002"
       "\n\010RunQuery\0221\n\014results_mode\030\001 \001(\0162\033.exec."
       "user.QueryResultsMode\022$\n\004type\030\002 \001(\0162\026.ex"
       "ec.shared.QueryType\022\014\n\004plan\030\003 \001(\t\0221\n\tfra"
       "gments\030\004 \003(\0132\036.exec.bit.control.PlanFrag"
       "ment\022E\n\031prepared_statement_handle\030\005 \001(\0132"
-      "\".exec.user.PreparedStatementHandle*\320\003\n\007"
-      "RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODB"
-      "YE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n"
-      "\017REQUEST_RESULTS\020\005\022\027\n\023RESUME_PAUSED_QUER"
-      "Y\020\013\022\034\n\030GET_QUERY_PLAN_FRAGMENTS\020\014\022\020\n\014GET"
-      "_CATALOGS\020\016\022\017\n\013GET_SCHEMAS\020\017\022\016\n\nGET_TABL"
-      "ES\020\020\022\017\n\013GET_COLUMNS\020\021\022\035\n\031CREATE_PREPARED"
-      "_STATEMENT\020\026\022\023\n\017GET_SERVER_META\020\010\022\016\n\nQUE"
-      "RY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\030\n\024QUERY_PLA"
-      "N_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022\022\013\n\007SCHEMAS\020\023"
-      "\022\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_ST"
-      "ATEMENT\020\027\022\017\n\013SERVER_META\020\t\022\020\n\014QUERY_RESU"
-      "LT\020\n\022\020\n\014SASL_MESSAGE\020\030*H\n\013SaslSupport\022\030\n"
-      "\024UNKNOWN_SASL_SUPPORT\020\000\022\r\n\tSASL_AUTH\020\001\022\020"
-      "\n\014SASL_PRIVACY\020\002*#\n\020QueryResultsMode\022\017\n\013"
-      "STREAM_FULL\020\001*q\n\017HandshakeStatus\022\013\n\007SUCC"
-      "ESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n\013AUTH_"
-      "FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004\022\021\n\rAUTH_RE"
-      "QUIRED\020\005*D\n\rRequestStatus\022\022\n\016UNKNOWN_STA"
-      "TUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y"
-      "\n\023ColumnSearchability\022\031\n\025UNKNOWN_SEARCHA"
-      "BILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003"
-      "\022\007\n\003ALL\020\004*K\n\022ColumnUpdatability\022\030\n\024UNKNO"
-      "WN_UPDATABILITY\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRIT"
-      "ABLE\020\002*1\n\016CollateSupport\022\016\n\nCS_UNKNOWN\020\000"
-      "\022\017\n\013CS_GROUP_BY\020\001*J\n\027CorrelationNamesSup"
-      "port\022\013\n\007CN_NONE\020\001\022\026\n\022CN_DIFFERENT_NAMES\020"
-      "\002\022\n\n\006CN_ANY\020\003*\271\003\n\027DateTimeLiteralsSuppor"
-      "t\022\016\n\nDL_UNKNOWN\020\000\022\013\n\007DL_DATE\020\001\022\013\n\007DL_TIM"
-      "E\020\002\022\020\n\014DL_TIMESTAMP\020\003\022\024\n\020DL_INTERVAL_YEA"
-      "R\020\004\022\025\n\021DL_INTERVAL_MONTH\020\005\022\023\n\017DL_INTERVA"
-      "L_DAY\020\006\022\024\n\020DL_INTERVAL_HOUR\020\007\022\026\n\022DL_INTE"
-      "RVAL_MINUTE\020\010\022\026\n\022DL_INTERVAL_SECOND\020\t\022\035\n"
-      "\031DL_INTERVAL_YEAR_TO_MONTH\020\n\022\033\n\027DL_INTER"
-      "VAL_DAY_TO_HOUR\020\013\022\035\n\031DL_INTERVAL_DAY_TO_"
-      "MINUTE\020\014\022\035\n\031DL_INTERVAL_DAY_TO_SECOND\020\r\022"
-      "\036\n\032DL_INTERVAL_HOUR_TO_MINUTE\020\016\022\036\n\032DL_IN"
-      "TERVAL_HOUR_TO_SECOND\020\017\022 \n\034DL_INTERVAL_M"
-      "INUTE_TO_SECOND\020\020*Y\n\016GroupBySupport\022\013\n\007G"
-      "B_NONE\020\001\022\022\n\016GB_SELECT_ONLY\020\002\022\024\n\020GB_BEYON"
-      "D_SELECT\020\003\022\020\n\014GB_UNRELATED\020\004*x\n\020Identifi"
-      "erCasing\022\016\n\nIC_UNKNOWN\020\000\022\023\n\017IC_STORES_LO"
-      "WER\020\001\022\023\n\017IC_STORES_MIXED\020\002\022\023\n\017IC_STORES_"
-      "UPPER\020\003\022\025\n\021IC_SUPPORTS_MIXED\020\004*X\n\rNullCo"
-      "llation\022\016\n\nNC_UNKNOWN\020\000\022\017\n\013NC_AT_START\020\001"
-      "\022\r\n\tNC_AT_END\020\002\022\013\n\007NC_HIGH\020\003\022\n\n\006NC_LOW\020\004"
-      "*E\n\016OrderBySupport\022\016\n\nOB_UNKNOWN\020\000\022\020\n\014OB"
-      "_UNRELATED\020\001\022\021\n\rOB_EXPRESSION\020\002*\226\001\n\020Oute"
-      "rJoinSupport\022\016\n\nOJ_UNKNOWN\020\000\022\013\n\007OJ_LEFT\020"
-      "\001\022\014\n\010OJ_RIGHT\020\002\022\013\n\007OJ_FULL\020\003\022\r\n\tOJ_NESTE"
-      "D\020\004\022\022\n\016OJ_NOT_ORDERED\020\005\022\014\n\010OJ_INNER\020\006\022\031\n"
-      "\025OJ_ALL_COMPARISON_OPS\020\007*\204\001\n\017SubQuerySup"
-      "port\022\016\n\nSQ_UNKNOWN\020\000\022\021\n\rSQ_CORRELATED\020\001\022"
-      "\024\n\020SQ_IN_COMPARISON\020\002\022\020\n\014SQ_IN_EXISTS\020\003\022"
-      "\020\n\014SQ_IN_INSERT\020\004\022\024\n\020SQ_IN_QUANTIFIED\020\005*"
-      ";\n\014UnionSupport\022\r\n\tU_UNKNOWN\020\000\022\013\n\007U_UNIO"
-      "N\020\001\022\017\n\013U_UNION_ALL\020\002B+\n\033org.apache.drill"
-      ".exec.protoB\nUserProtosH\001"
+      "\".exec.user.PreparedStatementHandle\022\032\n\022a"
+      "utolimit_rowcount\030\006 \001(\005*\320\003\n\007RpcType\022\r\n\tH"
+      "ANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_"
+      "QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RES"
+      "ULTS\020\005\022\027\n\023RESUME_PAUSED_QUERY\020\013\022\034\n\030GET_Q"
+      "UERY_PLAN_FRAGMENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022"
+      "\017\n\013GET_SCHEMAS\020\017\022\016\n\nGET_TABLES\020\020\022\017\n\013GET_"
+      "COLUMNS\020\021\022\035\n\031CREATE_PREPARED_STATEMENT\020\026"
+      "\022\023\n\017GET_SERVER_META\020\010\022\016\n\nQUERY_DATA\020\006\022\020\n"
+      "\014QUERY_HANDLE\020\007\022\030\n\024QUERY_PLAN_FRAGMENTS\020"
+      "\r\022\014\n\010CATALOGS\020\022\022\013\n\007SCHEMAS\020\023\022\n\n\006TABLES\020\024"
+      "\022\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_STATEMENT\020\027\022\017\n"
+      "\013SERVER_META\020\t\022\020\n\014QUERY_RESULT\020\n\022\020\n\014SASL"
+      "_MESSAGE\020\030*H\n\013SaslSupport\022\030\n\024UNKNOWN_SAS"
+      "L_SUPPORT\020\000\022\r\n\tSASL_AUTH\020\001\022\020\n\014SASL_PRIVA"
+      "CY\020\002*#\n\020QueryResultsMode\022\017\n\013STREAM_FULL\020"
+      "\001*q\n\017HandshakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC"
+      "_VERSION_MISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017"
+      "UNKNOWN_FAILURE\020\004\022\021\n\rAUTH_REQUIRED\020\005*D\n\r"
+      "RequestStatus\022\022\n\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020"
+      "\001\022\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y\n\023ColumnSear"
+      "chability\022\031\n\025UNKNOWN_SEARCHABILITY\020\000\022\010\n\004"
+      "NONE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n"
+      "\022ColumnUpdatability\022\030\n\024UNKNOWN_UPDATABIL"
+      "ITY\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRITABLE\020\002*1\n\016Co"
+      "llateSupport\022\016\n\nCS_UNKNOWN\020\000\022\017\n\013CS_GROUP"
+      "_BY\020\001*J\n\027CorrelationNamesSupport\022\013\n\007CN_N"
+      "ONE\020\001\022\026\n\022CN_DIFFERENT_NAMES\020\002\022\n\n\006CN_ANY\020"
+      "\003*\271\003\n\027DateTimeLiteralsSupport\022\016\n\nDL_UNKN"
+      "OWN\020\000\022\013\n\007DL_DATE\020\001\022\013\n\007DL_TIME\020\002\022\020\n\014DL_TI"
+      "MESTAMP\020\003\022\024\n\020DL_INTERVAL_YEAR\020\004\022\025\n\021DL_IN"
+      "TERVAL_MONTH\020\005\022\023\n\017DL_INTERVAL_DAY\020\006\022\024\n\020D"
+      "L_INTERVAL_HOUR\020\007\022\026\n\022DL_INTERVAL_MINUTE\020"
+      "\010\022\026\n\022DL_INTERVAL_SECOND\020\t\022\035\n\031DL_INTERVAL"
+      "_YEAR_TO_MONTH\020\n\022\033\n\027DL_INTERVAL_DAY_TO_H"
+      "OUR\020\013\022\035\n\031DL_INTERVAL_DAY_TO_MINUTE\020\014\022\035\n\031"
+      "DL_INTERVAL_DAY_TO_SECOND\020\r\022\036\n\032DL_INTERV"
+      "AL_HOUR_TO_MINUTE\020\016\022\036\n\032DL_INTERVAL_HOUR_"
+      "TO_SECOND\020\017\022 \n\034DL_INTERVAL_MINUTE_TO_SEC"
+      "OND\020\020*Y\n\016GroupBySupport\022\013\n\007GB_NONE\020\001\022\022\n\016"
+      "GB_SELECT_ONLY\020\002\022\024\n\020GB_BEYOND_SELECT\020\003\022\020"
+      "\n\014GB_UNRELATED\020\004*x\n\020IdentifierCasing\022\016\n\n"
+      "IC_UNKNOWN\020\000\022\023\n\017IC_STORES_LOWER\020\001\022\023\n\017IC_"
+      "STORES_MIXED\020\002\022\023\n\017IC_STORES_UPPER\020\003\022\025\n\021I"
+      "C_SUPPORTS_MIXED\020\004*X\n\rNullCollation\022\016\n\nN"
+      "C_UNKNOWN\020\000\022\017\n\013NC_AT_START\020\001\022\r\n\tNC_AT_EN"
+      "D\020\002\022\013\n\007NC_HIGH\020\003\022\n\n\006NC_LOW\020\004*E\n\016OrderByS"
+      "upport\022\016\n\nOB_UNKNOWN\020\000\022\020\n\014OB_UNRELATED\020\001"
+      "\022\021\n\rOB_EXPRESSION\020\002*\226\001\n\020OuterJoinSupport"
+      "\022\016\n\nOJ_UNKNOWN\020\000\022\013\n\007OJ_LEFT\020\001\022\014\n\010OJ_RIGH"
+      "T\020\002\022\013\n\007OJ_FULL\020\003\022\r\n\tOJ_NESTED\020\004\022\022\n\016OJ_NO"
+      "T_ORDERED\020\005\022\014\n\010OJ_INNER\020\006\022\031\n\025OJ_ALL_COMP"
+      "ARISON_OPS\020\007*\204\001\n\017SubQuerySupport\022\016\n\nSQ_U"
+      "NKNOWN\020\000\022\021\n\rSQ_CORRELATED\020\001\022\024\n\020SQ_IN_COM"
+      "PARISON\020\002\022\020\n\014SQ_IN_EXISTS\020\003\022\020\n\014SQ_IN_INS"
+      "ERT\020\004\022\024\n\020SQ_IN_QUANTIFIED\020\005*;\n\014UnionSupp"
+      "ort\022\r\n\tU_UNKNOWN\020\000\022\013\n\007U_UNION\020\001\022\017\n\013U_UNI"
+      "ON_ALL\020\002B+\n\033org.apache.drill.exec.protoB"
+      "\nUserProtosH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 8905);
+      descriptor, 8933);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "User.proto", &protobuf_RegisterTypes);
   ::protobuf_SchemaDef_2eproto::AddDescriptors();
@@ -16121,6 +16124,7 @@ const int RunQuery::kTypeFieldNumber;
 const int RunQuery::kPlanFieldNumber;
 const int RunQuery::kFragmentsFieldNumber;
 const int RunQuery::kPreparedStatementHandleFieldNumber;
+const int RunQuery::kAutolimitRowcountFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 RunQuery::RunQuery()
@@ -16145,15 +16149,17 @@ RunQuery::RunQuery(const RunQuery& from)
   } else {
     prepared_statement_handle_ = NULL;
   }
-  ::memcpy(&results_mode_, &from.results_mode_,
+  ::memcpy(&autolimit_rowcount_, &from.autolimit_rowcount_,
     static_cast<size_t>(reinterpret_cast<char*>(&type_) -
-    reinterpret_cast<char*>(&results_mode_)) + sizeof(type_));
+    reinterpret_cast<char*>(&autolimit_rowcount_)) + sizeof(type_));
   // @@protoc_insertion_point(copy_constructor:exec.user.RunQuery)
 }
 
 void RunQuery::SharedCtor() {
   plan_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  prepared_statement_handle_ = NULL;
+  ::memset(&prepared_statement_handle_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&autolimit_rowcount_) -
+      reinterpret_cast<char*>(&prepared_statement_handle_)) + sizeof(autolimit_rowcount_));
   results_mode_ = 1;
   type_ = 1;
 }
@@ -16190,7 +16196,7 @@ void RunQuery::Clear() {
 
   fragments_.Clear();
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 15u) {
+  if (cached_has_bits & 3u) {
     if (cached_has_bits & 0x00000001u) {
       plan_.ClearNonDefaultToEmptyNoArena();
     }
@@ -16198,6 +16204,9 @@ void RunQuery::Clear() {
       GOOGLE_DCHECK(prepared_statement_handle_ != NULL);
       prepared_statement_handle_->Clear();
     }
+  }
+  if (cached_has_bits & 28u) {
+    autolimit_rowcount_ = 0;
     results_mode_ = 1;
     type_ = 1;
   }
@@ -16295,6 +16304,20 @@ bool RunQuery::MergePartialFromCodedStream(
         break;
       }
 
+      // optional int32 autolimit_rowcount = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(48u /* 48 & 0xFF */)) {
+          set_has_autolimit_rowcount();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &autolimit_rowcount_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -16323,13 +16346,13 @@ void RunQuery::SerializeWithCachedSizes(
 
   cached_has_bits = _has_bits_[0];
   // optional .exec.user.QueryResultsMode results_mode = 1;
-  if (cached_has_bits & 0x00000004u) {
+  if (cached_has_bits & 0x00000008u) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
       1, this->results_mode(), output);
   }
 
   // optional .exec.shared.QueryType type = 2;
-  if (cached_has_bits & 0x00000008u) {
+  if (cached_has_bits & 0x00000010u) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
       2, this->type(), output);
   }
@@ -16359,6 +16382,11 @@ void RunQuery::SerializeWithCachedSizes(
       5, this->_internal_prepared_statement_handle(), output);
   }
 
+  // optional int32 autolimit_rowcount = 6;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(6, this->autolimit_rowcount(), output);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         _internal_metadata_.unknown_fields(), output);
@@ -16375,13 +16403,13 @@ void RunQuery::SerializeWithCachedSizes(
 
   cached_has_bits = _has_bits_[0];
   // optional .exec.user.QueryResultsMode results_mode = 1;
-  if (cached_has_bits & 0x00000004u) {
+  if (cached_has_bits & 0x00000008u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
       1, this->results_mode(), target);
   }
 
   // optional .exec.shared.QueryType type = 2;
-  if (cached_has_bits & 0x00000008u) {
+  if (cached_has_bits & 0x00000010u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
       2, this->type(), target);
   }
@@ -16412,6 +16440,11 @@ void RunQuery::SerializeWithCachedSizes(
         5, this->_internal_prepared_statement_handle(), deterministic, target);
   }
 
+  // optional int32 autolimit_rowcount = 6;
+  if (cached_has_bits & 0x00000004u) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(6, this->autolimit_rowcount(), target);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields(), target);
@@ -16440,7 +16473,7 @@ size_t RunQuery::ByteSizeLong() const {
     }
   }
 
-  if (_has_bits_[0 / 32] & 15u) {
+  if (_has_bits_[0 / 32] & 31u) {
     // optional string plan = 3;
     if (has_plan()) {
       total_size += 1 +
@@ -16453,6 +16486,13 @@ size_t RunQuery::ByteSizeLong() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
           *prepared_statement_handle_);
+    }
+
+    // optional int32 autolimit_rowcount = 6;
+    if (has_autolimit_rowcount()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->autolimit_rowcount());
     }
 
     // optional .exec.user.QueryResultsMode results_mode = 1;
@@ -16497,7 +16537,7 @@ void RunQuery::MergeFrom(const RunQuery& from) {
 
   fragments_.MergeFrom(from.fragments_);
   cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 15u) {
+  if (cached_has_bits & 31u) {
     if (cached_has_bits & 0x00000001u) {
       set_has_plan();
       plan_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.plan_);
@@ -16506,9 +16546,12 @@ void RunQuery::MergeFrom(const RunQuery& from) {
       mutable_prepared_statement_handle()->::exec::user::PreparedStatementHandle::MergeFrom(from.prepared_statement_handle());
     }
     if (cached_has_bits & 0x00000004u) {
-      results_mode_ = from.results_mode_;
+      autolimit_rowcount_ = from.autolimit_rowcount_;
     }
     if (cached_has_bits & 0x00000008u) {
+      results_mode_ = from.results_mode_;
+    }
+    if (cached_has_bits & 0x00000010u) {
       type_ = from.type_;
     }
     _has_bits_[0] |= cached_has_bits;
@@ -16543,6 +16586,7 @@ void RunQuery::InternalSwap(RunQuery* other) {
   plan_.Swap(&other->plan_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(prepared_statement_handle_, other->prepared_statement_handle_);
+  swap(autolimit_rowcount_, other->autolimit_rowcount_);
   swap(results_mode_, other->results_mode_);
   swap(type_, other->type_);
   swap(_has_bits_[0], other->_has_bits_[0]);

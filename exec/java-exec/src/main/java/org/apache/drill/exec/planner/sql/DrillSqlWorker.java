@@ -21,7 +21,12 @@ import java.io.IOException;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlNumericLiteral;
+import org.apache.calcite.sql.SqlOrderBy;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
@@ -141,7 +146,7 @@ public class DrillSqlWorker {
 
     final SqlConverter parser = new SqlConverter(context);
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
-    final SqlNode sqlNode = parser.parse(sql);
+    final SqlNode sqlNode = checkAndApplyAutoLimit(parser, context, sql);
     final AbstractSqlHandler handler;
     final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
 
@@ -209,5 +214,33 @@ public class DrillSqlWorker {
     }
 
     return handler.getPlan(sqlNode);
+  }
+
+  private static boolean isAutoLimitShouldBeApplied(QueryContext context, SqlNode sqlNode) {
+    return (context.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue() > 0) && sqlNode.getKind().belongsTo(SqlKind.QUERY)
+        && (sqlNode.getKind() != SqlKind.ORDER_BY || isAutoLimitLessThanOrderByFetch((SqlOrderBy) sqlNode, context));
+  }
+
+  private static SqlNode checkAndApplyAutoLimit(SqlConverter parser, QueryContext context, String sql) {
+    SqlNode sqlNode = parser.parse(sql);
+    if (isAutoLimitShouldBeApplied(context, sqlNode)) {
+      sqlNode = wrapWithAutoLimit(sqlNode, context);
+    } else {
+      context.getOptions().setLocalOption(ExecConstants.QUERY_MAX_ROWS, 0);
+    }
+    return sqlNode;
+  }
+
+  private static boolean isAutoLimitLessThanOrderByFetch(SqlOrderBy orderBy, QueryContext context) {
+    return orderBy.fetch == null || Integer.parseInt(orderBy.fetch.toString()) > context.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+  }
+
+  private static SqlNode wrapWithAutoLimit(SqlNode sqlNode, QueryContext context) {
+    SqlNumericLiteral autoLimitLiteral = SqlLiteral.createExactNumeric(String.valueOf(context.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue()), SqlParserPos.ZERO);
+    if (sqlNode.getKind() == SqlKind.ORDER_BY) {
+      SqlOrderBy orderBy = (SqlOrderBy) sqlNode;
+      return new SqlOrderBy(orderBy.getParserPosition(), orderBy.query, orderBy.orderList, orderBy.offset, autoLimitLiteral);
+    }
+    return new SqlOrderBy(SqlParserPos.ZERO, sqlNode, SqlNodeList.EMPTY, null, autoLimitLiteral);
   }
 }

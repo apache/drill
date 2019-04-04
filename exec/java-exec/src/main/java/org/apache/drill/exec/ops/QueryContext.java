@@ -41,6 +41,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.PartitionExplorerImpl;
@@ -60,7 +61,6 @@ import io.netty.buffer.DrillBuf;
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
 public class QueryContext implements AutoCloseable, OptimizerRulesContext, SchemaConfigInfoProvider {
-
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
   public enum SqlStatementType {OTHER, ANALYZE, CTAS, EXPLAIN, DESCRIBE_TABLE, DESCRIBE_SCHEMA, REFRESH, SELECT, SETOPTION};
 
@@ -105,6 +105,23 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
       this.table = new DrillOperatorTable(drillbitContext.getFunctionImplementationRegistry(), drillbitContext.getOptionManager());
     } else {
       this.table = drillbitContext.getOperatorTable();
+    }
+
+    // Checking for limit on ResultSet rowcount and if user attempting to override the system value
+    int sessionMaxRowCount = queryOptions.getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    int defaultMaxRowCount = queryOptions.getOptionManager(OptionScope.SYSTEM).getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    int autoLimitRowCount = 0;
+    if (sessionMaxRowCount > 0 && defaultMaxRowCount > 0) {
+      autoLimitRowCount = Math.min(sessionMaxRowCount, defaultMaxRowCount);
+    } else {
+      autoLimitRowCount = Math.max(sessionMaxRowCount, defaultMaxRowCount);
+    }
+    if (autoLimitRowCount == defaultMaxRowCount && defaultMaxRowCount != sessionMaxRowCount) {
+      // Required to indicate via OptionScope=QueryLevel that session limit is overridden by system limit
+      queryOptions.setLocalOption(ExecConstants.QUERY_MAX_ROWS, autoLimitRowCount);
+    }
+    if (autoLimitRowCount > 0) {
+      logger.debug("ResultSet size is auto-limited to {} rows [Session: {} / Default: {}]", autoLimitRowCount, sessionMaxRowCount, defaultMaxRowCount);
     }
 
     queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaPath(), session.getSessionId());

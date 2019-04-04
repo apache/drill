@@ -21,11 +21,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLType;
+import java.sql.Statement;
 
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.AvaticaPreparedStatement;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.Meta.StatementHandle;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatement;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillPreparedStatement;
@@ -258,5 +260,13 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public void setObject(int parameterIndex, Object x, SQLType targetSqlType) throws SQLException {
     checkOpen();
     super.setObject(parameterIndex, x, targetSqlType);
+  }
+
+  @Override
+  public void setLargeMaxRows(long maxRowCount) throws SQLException {
+    super.setLargeMaxRows(maxRowCount);
+    try (Statement statement = this.connection.createStatement()) {
+      statement.execute("ALTER SESSION SET `" + ExecConstants.QUERY_MAX_ROWS + "`=" + maxRowCount);
+    }
   }
 }

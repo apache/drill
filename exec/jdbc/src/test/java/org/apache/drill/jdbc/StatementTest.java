@@ -46,6 +46,7 @@ import java.sql.SQLException;
 public class StatementTest extends JdbcTestBase {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatementTest.class);
+  private static final Random RANDOMIZER = new Random(20150304);
 
   private static final String SYS_VERSION_SQL = "select * from sys.version";
   private static final String SYS_RANDOM_SQL =
@@ -54,7 +55,6 @@ public class StatementTest extends JdbcTestBase {
       "union SELECT cast(random() as varchar) as myStr FROM (VALUES(1)) ";
 
   private static Connection connection;
-  private static Statement statement;
 
   @BeforeClass
   public static void setUpStatement() throws SQLException {
@@ -68,7 +68,6 @@ public class StatementTest extends JdbcTestBase {
   public static void tearDownStatement() throws SQLException {
     connection.close();
   }
-
 
   ////////////////////////////////////////
   // Query timeout methods:
@@ -96,12 +95,12 @@ public class StatementTest extends JdbcTestBase {
   @Test
   public void testInvalidSetQueryTimeout() throws SQLException {
     try (Statement stmt = connection.createStatement()) {
-      //Setting negative value
+      // Setting negative value
       int valueToSet = -10;
       try {
         stmt.setQueryTimeout(valueToSet);
-      } catch ( final SQLException e) {
-        assertThat( e.getMessage(), containsString( "illegal timeout value") );
+      } catch (final SQLException e) {
+        assertThat(e.getMessage(), containsString( "illegal timeout value"));
       }
     }
   }
@@ -112,11 +111,11 @@ public class StatementTest extends JdbcTestBase {
   @Test
   public void testValidSetQueryTimeout() throws SQLException {
     try (Statement stmt = connection.createStatement()) {
-      //Setting positive value
-      int valueToSet = new Random(20150304).nextInt(59)+1;
+      // Setting positive value
+      int valueToSet = RANDOMIZER.nextInt(59) + 1;
       logger.info("Setting timeout as {} seconds", valueToSet);
       stmt.setQueryTimeout(valueToSet);
-      assertEquals( valueToSet, stmt.getQueryTimeout() );
+      assertEquals(valueToSet, stmt.getQueryTimeout());
     }
   }
 
@@ -144,19 +143,19 @@ public class StatementTest extends JdbcTestBase {
    */
   @Test
   public void testClientTriggeredQueryTimeout() throws Exception {
-    //Setting to a very low value (3sec)
+    // Setting to a very low value (3sec)
     int timeoutDuration = 3;
     int rowsCounted = 0;
     try (Statement stmt = connection.createStatement()) {
       stmt.setQueryTimeout(timeoutDuration);
       logger.info("Set a timeout of {} seconds", stmt.getQueryTimeout());
       ResultSet rs = stmt.executeQuery(SYS_RANDOM_SQL);
-      //Fetch each row and pause (simulate a slow client)
+      // Fetch each row and pause (simulate a slow client)
       try {
         while (rs.next()) {
           rs.getString(1);
           rowsCounted++;
-          //Pause briefly (a second beyond the timeout) before attempting to fetch rows
+          // Pause briefly (a second beyond the timeout) before attempting to fetch rows
           try {
             Thread.sleep( TimeUnit.SECONDS.toMillis(timeoutDuration + 1) );
           } catch (InterruptedException e) {/*DoNothing*/}
@@ -164,7 +163,7 @@ public class StatementTest extends JdbcTestBase {
         }
       } catch (SQLTimeoutException sqlEx) {
         logger.info("Counted "+rowsCounted+" rows before hitting timeout");
-        return; //Successfully return
+        return; // Successfully return
       }
     }
     //Throw an exception to indicate that we shouldn't have reached this point
@@ -176,19 +175,19 @@ public class StatementTest extends JdbcTestBase {
    */
   @Test ( expected = SqlTimeoutException.class )
   public void testServerTriggeredQueryTimeout() throws Exception {
-    //Setting to a very low value (2sec)
+    // Setting to a very low value (2sec)
     int timeoutDuration = 2;
-    //Server will be paused marginally longer than the test timeout
+    // Server will be paused marginally longer than the test timeout
     long serverPause = timeoutDuration + 2;
-    //Additional time for JDBC timeout and server pauses to complete
+    // Additional time for JDBC timeout and server pauses to complete
     int cleanupPause = 3;
 
-    //Simulate a lack of timely server response by injecting a pause in the Screen operator's sending-data RPC
+    // Simulate a lack of timely server response by injecting a pause in the Screen operator's sending-data RPC
     final String controls = Controls.newBuilder()
         .addTimedPause(ScreenCreator.class, "sending-data", 0, TimeUnit.SECONDS.toMillis(serverPause))
         .build();
 
-    //Fetching an exclusive connection since injected pause affects all sessions on the connection
+    // Fetching an exclusive connection since injected pause affects all sessions on the connection
     try ( Connection exclusiveConnection = new Driver().connect( "jdbc:drill:zk=local", null )) {
       try(Statement stmt = exclusiveConnection.createStatement()) {
         assertThat(
@@ -202,9 +201,9 @@ public class StatementTest extends JdbcTestBase {
         stmt.setQueryTimeout(timeoutDuration);
         logger.info("Set a timeout of {} seconds", stmt.getQueryTimeout());
 
-        //Executing a query with the paused server. Expecting timeout to occur here
+        // Executing a query with the paused server. Expecting timeout to occur here
         ResultSet rs = stmt.executeQuery(SYS_VERSION_SQL);
-        //Fetch rows
+        // Fetch rows
         while (rs.next()) {
           rs.getBytes(1);
         }
@@ -212,7 +211,7 @@ public class StatementTest extends JdbcTestBase {
         logger.info("SQLTimeoutException thrown: {}", sqlEx.getMessage());
         throw (SqlTimeoutException) sqlEx;
       } finally {
-        //Pause briefly to wait for server to unblock
+        // Pause briefly to wait for server to unblock
         try {
           Thread.sleep( TimeUnit.SECONDS.toMillis(cleanupPause) );
         } catch (InterruptedException e) {/*DoNothing*/}
@@ -238,5 +237,4 @@ public class StatementTest extends JdbcTestBase {
       assertEquals( 1, rowCount );
     }
   }
-
 }

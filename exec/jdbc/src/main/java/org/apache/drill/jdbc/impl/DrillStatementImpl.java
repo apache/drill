@@ -25,6 +25,7 @@ import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Meta.StatementHandle;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillStatement;
 
@@ -269,5 +270,11 @@ public class DrillStatementImpl extends AvaticaStatement implements DrillStateme
   @Override
   public void setUpdateCount(int value) {
     updateCount = value;
+  }
+
+  @Override
+  public void setLargeMaxRows(long maxRowCount) throws SQLException {
+    super.setLargeMaxRows(maxRowCount);
+    execute("ALTER SESSION SET `" + ExecConstants.QUERY_MAX_ROWS + "`=" + maxRowCount);
   }
 }

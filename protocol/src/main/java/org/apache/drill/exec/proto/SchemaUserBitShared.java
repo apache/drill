@@ -1828,6 +1828,8 @@ public final class SchemaUserBitShared
                     output.writeString(21, message.getQueueName(), false);
                 if(message.hasQueryId())
                     output.writeString(22, message.getQueryId(), false);
+                if(message.hasAutoLimit())
+                    output.writeInt32(23, message.getAutoLimit(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryProfile message)
             {
@@ -1936,6 +1938,9 @@ public final class SchemaUserBitShared
                         case 22:
                             builder.setQueryId(input.readString());
                             break;
+                        case 23:
+                            builder.setAutoLimit(input.readInt32());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1998,6 +2003,7 @@ public final class SchemaUserBitShared
                 case 20: return "totalCost";
                 case 21: return "queueName";
                 case 22: return "queryId";
+                case 23: return "autoLimit";
                 default: return null;
             }
         }
@@ -2031,6 +2037,7 @@ public final class SchemaUserBitShared
             fieldMap.put("totalCost", 20);
             fieldMap.put("queueName", 21);
             fieldMap.put("queryId", 22);
+            fieldMap.put("autoLimit", 23);
         }
     }
 
