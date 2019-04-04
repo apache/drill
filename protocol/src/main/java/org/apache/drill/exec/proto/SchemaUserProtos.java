@@ -4447,6 +4447,8 @@ public final class SchemaUserProtos
                 if(message.hasPreparedStatementHandle())
                     output.writeObject(5, message.getPreparedStatementHandle(), org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.WRITE, false);
 
+                if(message.hasAutolimitRowcount())
+                    output.writeInt32(6, message.getAutolimitRowcount(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.RunQuery message)
             {
@@ -4503,6 +4505,9 @@ public final class SchemaUserProtos
                             builder.setPreparedStatementHandle(input.mergeObject(org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.MERGE));
 
                             break;
+                        case 6:
+                            builder.setAutolimitRowcount(input.readInt32());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -4548,6 +4553,7 @@ public final class SchemaUserProtos
                 case 3: return "plan";
                 case 4: return "fragments";
                 case 5: return "preparedStatementHandle";
+                case 6: return "autolimitRowcount";
                 default: return null;
             }
         }
@@ -4564,6 +4570,7 @@ public final class SchemaUserProtos
             fieldMap.put("plan", 3);
             fieldMap.put("fragments", 4);
             fieldMap.put("preparedStatementHandle", 5);
+            fieldMap.put("autolimitRowcount", 6);
         }
     }
 

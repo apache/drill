@@ -59,25 +59,23 @@ function doSubmitQueryWithAutoLimit() {
         $("#query").focus();
         return;
     }
-    /** DISABLED : See DRILL-7061 (PR #1689)
     //Wrap if required
     let mustWrapWithLimit = $('input[name="forceLimit"]:checked').length > 0;
     //Clear field when submitting if not mustWrapWithLimit
     if (!mustWrapWithLimit) {
       //Wipe out any numeric entry in the field before
-      $('#queryLimit').attr('value', '');
+      $('#autoLimit').attr('value', '');
     } else {
-      let autoLimitValue=document.getElementById('queryLimit').value;
+      let autoLimitValue=document.getElementById('autoLimit').value;
       let positiveIntRegex = new RegExp("^[1-9]\\d*$");
-      let isValidRowCount = positiveIntRegex.test(autoLimitValue);
+      let isValidRowCount = positiveIntRegex.test(autoLimitValue.trim());
       if (!isValidRowCount) {
-        let alertValues = {'_autoLimitValue_': autoLimitValue };
+        let alertValues = {'_autoLimitValue_': autoLimitValue.trim() };
         populateAndShowAlert("invalidRowCount", alertValues);
-        $('#queryLimit').focus();
+        $('#autoLimit').focus();
         return;
       }
     }
-    */
     //Submit query
     submitQuery();
 }

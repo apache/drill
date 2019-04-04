@@ -72,6 +72,7 @@ import org.junit.experimental.categories.Category;
 public class PreparedStatementTest extends JdbcTestBase {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PreparedStatementTest.class);
+  private static final Random RANDOMIZER = new Random(20150304);
 
   private static final String SYS_VERSION_SQL = "select * from sys.version";
   private static final String SYS_RANDOM_SQL =
@@ -272,8 +273,8 @@ public class PreparedStatementTest extends JdbcTestBase {
       int valueToSet = -10;
       try {
         stmt.setQueryTimeout(valueToSet);
-      } catch ( final SQLException e) {
-        assertThat( e.getMessage(), containsString( "illegal timeout value") );
+      } catch (final SQLException e) {
+        assertThat(e.getMessage(), containsString( "illegal timeout value") );
       }
     }
   }
@@ -285,7 +286,7 @@ public class PreparedStatementTest extends JdbcTestBase {
   public void testValidSetQueryTimeout() throws SQLException {
     try (PreparedStatement stmt = connection.prepareStatement(SYS_VERSION_SQL)) {
       //Setting positive value
-      int valueToSet = new Random(20150304).nextInt(59)+1;
+      int valueToSet = RANDOMIZER.nextInt(59) + 1;
       logger.info("Setting timeout as {} seconds", valueToSet);
       stmt.setQueryTimeout(valueToSet);
       assertEquals(valueToSet, stmt.getQueryTimeout());
@@ -461,5 +462,4 @@ public class PreparedStatementTest extends JdbcTestBase {
       }
     }
   }
-
 }

@@ -64,10 +64,12 @@ public class ProfileWrapper {
   private final boolean onlyImpersonationEnabled;
   private Map<String, String> physicalOperatorMap;
   private final String noProgressWarningThreshold;
+  private final int defaultAutoLimit;
 
   public ProfileWrapper(final QueryProfile profile, DrillConfig drillConfig) {
     this.profile = profile;
     this.id = profile.hasQueryId() ? profile.getQueryId() : QueryIdHelper.getQueryId(profile.getId());
+    this.defaultAutoLimit = drillConfig.getInt(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_AUTOLIMIT_ROWS);
     //Generating Operator Name map (DRILL-6140)
     String profileTextPlan = profile.hasPlan()? profile.getPlan(): "";
     generateOpMap(profileTextPlan);
@@ -148,6 +150,18 @@ public class ProfileWrapper {
       globalProcessNanos += processNanos;
     }
     return globalProcessNanos;
+  }
+
+  public boolean hasAutoLimit() {
+    return profile.hasAutoLimit();
+  }
+
+  public int getAutoLimit() {
+    return profile.getAutoLimit();
+  }
+
+  public int getDefaultAutoLimit() {
+    return defaultAutoLimit;
   }
 
   public boolean hasError() {

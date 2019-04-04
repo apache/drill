@@ -54,6 +54,7 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
     private String plan;
     private List<PlanFragment> fragments;
     private PreparedStatementHandle preparedStatementHandle;
+    private int autolimitRowcount;
 
     public RunQuery()
     {
@@ -124,6 +125,19 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
     public RunQuery setPreparedStatementHandle(PreparedStatementHandle preparedStatementHandle)
     {
         this.preparedStatementHandle = preparedStatementHandle;
+        return this;
+    }
+
+    // autolimitRowcount
+
+    public int getAutolimitRowcount()
+    {
+        return autolimitRowcount;
+    }
+
+    public RunQuery setAutolimitRowcount(int autolimitRowcount)
+    {
+        this.autolimitRowcount = autolimitRowcount;
         return this;
     }
 
@@ -200,6 +214,9 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
                     message.preparedStatementHandle = input.mergeObject(message.preparedStatementHandle, PreparedStatementHandle.getSchema());
                     break;
 
+                case 6:
+                    message.autolimitRowcount = input.readInt32();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -231,6 +248,9 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
         if(message.preparedStatementHandle != null)
              output.writeObject(5, message.preparedStatementHandle, PreparedStatementHandle.getSchema(), false);
 
+
+        if(message.autolimitRowcount != 0)
+            output.writeInt32(6, message.autolimitRowcount, false);
     }
 
     public String getFieldName(int number)
@@ -242,6 +262,7 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
             case 3: return "plan";
             case 4: return "fragments";
             case 5: return "preparedStatementHandle";
+            case 6: return "autolimitRowcount";
             default: return null;
         }
     }
@@ -260,6 +281,7 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
         __fieldMap.put("plan", 3);
         __fieldMap.put("fragments", 4);
         __fieldMap.put("preparedStatementHandle", 5);
+        __fieldMap.put("autolimitRowcount", 6);
     }
     
 }

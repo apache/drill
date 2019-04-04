@@ -2865,6 +2865,20 @@ class QueryProfile : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::google::protobuf::int32 total_fragments() const;
   void set_total_fragments(::google::protobuf::int32 value);
 
+  // optional int32 finished_fragments = 10;
+  bool has_finished_fragments() const;
+  void clear_finished_fragments();
+  static const int kFinishedFragmentsFieldNumber = 10;
+  ::google::protobuf::int32 finished_fragments() const;
+  void set_finished_fragments(::google::protobuf::int32 value);
+
+  // optional int32 autoLimit = 23;
+  bool has_autolimit() const;
+  void clear_autolimit();
+  static const int kAutoLimitFieldNumber = 23;
+  ::google::protobuf::int32 autolimit() const;
+  void set_autolimit(::google::protobuf::int32 value);
+
   // optional int64 planEnd = 18;
   bool has_planend() const;
   void clear_planend();
@@ -2885,13 +2899,6 @@ class QueryProfile : public ::google::protobuf::Message /* @@protoc_insertion_po
   static const int kTotalCostFieldNumber = 20;
   double total_cost() const;
   void set_total_cost(double value);
-
-  // optional int32 finished_fragments = 10;
-  bool has_finished_fragments() const;
-  void clear_finished_fragments();
-  static const int kFinishedFragmentsFieldNumber = 10;
-  ::google::protobuf::int32 finished_fragments() const;
-  void set_finished_fragments(::google::protobuf::int32 value);
 
   // optional .exec.shared.QueryType type = 2;
   bool has_type() const;
@@ -2944,6 +2951,8 @@ class QueryProfile : public ::google::protobuf::Message /* @@protoc_insertion_po
   void clear_has_queue_name();
   void set_has_queryid();
   void clear_has_queryid();
+  void set_has_autolimit();
+  void clear_has_autolimit();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -2971,10 +2980,11 @@ class QueryProfile : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::google::protobuf::int64 end_;
   int state_;
   ::google::protobuf::int32 total_fragments_;
+  ::google::protobuf::int32 finished_fragments_;
+  ::google::protobuf::int32 autolimit_;
   ::google::protobuf::int64 planend_;
   ::google::protobuf::int64 queuewaitend_;
   double total_cost_;
-  ::google::protobuf::int32 finished_fragments_;
   int type_;
   friend struct ::protobuf_UserBitShared_2eproto::TableStruct;
 };
@@ -6481,13 +6491,13 @@ inline void QueryProfile::set_allocated_id(::exec::shared::QueryId* id) {
 
 // optional .exec.shared.QueryType type = 2;
 inline bool QueryProfile::has_type() const {
-  return (_has_bits_[0] & 0x00100000u) != 0;
+  return (_has_bits_[0] & 0x00200000u) != 0;
 }
 inline void QueryProfile::set_has_type() {
-  _has_bits_[0] |= 0x00100000u;
+  _has_bits_[0] |= 0x00200000u;
 }
 inline void QueryProfile::clear_has_type() {
-  _has_bits_[0] &= ~0x00100000u;
+  _has_bits_[0] &= ~0x00200000u;
 }
 inline void QueryProfile::clear_type() {
   type_ = 1;
@@ -6789,13 +6799,13 @@ inline void QueryProfile::set_total_fragments(::google::protobuf::int32 value) {
 
 // optional int32 finished_fragments = 10;
 inline bool QueryProfile::has_finished_fragments() const {
-  return (_has_bits_[0] & 0x00080000u) != 0;
+  return (_has_bits_[0] & 0x00010000u) != 0;
 }
 inline void QueryProfile::set_has_finished_fragments() {
-  _has_bits_[0] |= 0x00080000u;
+  _has_bits_[0] |= 0x00010000u;
 }
 inline void QueryProfile::clear_has_finished_fragments() {
-  _has_bits_[0] &= ~0x00080000u;
+  _has_bits_[0] &= ~0x00010000u;
 }
 inline void QueryProfile::clear_finished_fragments() {
   finished_fragments_ = 0;
@@ -7239,13 +7249,13 @@ inline void QueryProfile::set_allocated_options_json(::std::string* options_json
 
 // optional int64 planEnd = 18;
 inline bool QueryProfile::has_planend() const {
-  return (_has_bits_[0] & 0x00010000u) != 0;
+  return (_has_bits_[0] & 0x00040000u) != 0;
 }
 inline void QueryProfile::set_has_planend() {
-  _has_bits_[0] |= 0x00010000u;
+  _has_bits_[0] |= 0x00040000u;
 }
 inline void QueryProfile::clear_has_planend() {
-  _has_bits_[0] &= ~0x00010000u;
+  _has_bits_[0] &= ~0x00040000u;
 }
 inline void QueryProfile::clear_planend() {
   planend_ = GOOGLE_LONGLONG(0);
@@ -7263,13 +7273,13 @@ inline void QueryProfile::set_planend(::google::protobuf::int64 value) {
 
 // optional int64 queueWaitEnd = 19;
 inline bool QueryProfile::has_queuewaitend() const {
-  return (_has_bits_[0] & 0x00020000u) != 0;
+  return (_has_bits_[0] & 0x00080000u) != 0;
 }
 inline void QueryProfile::set_has_queuewaitend() {
-  _has_bits_[0] |= 0x00020000u;
+  _has_bits_[0] |= 0x00080000u;
 }
 inline void QueryProfile::clear_has_queuewaitend() {
-  _has_bits_[0] &= ~0x00020000u;
+  _has_bits_[0] &= ~0x00080000u;
 }
 inline void QueryProfile::clear_queuewaitend() {
   queuewaitend_ = GOOGLE_LONGLONG(0);
@@ -7287,13 +7297,13 @@ inline void QueryProfile::set_queuewaitend(::google::protobuf::int64 value) {
 
 // optional double total_cost = 20;
 inline bool QueryProfile::has_total_cost() const {
-  return (_has_bits_[0] & 0x00040000u) != 0;
+  return (_has_bits_[0] & 0x00100000u) != 0;
 }
 inline void QueryProfile::set_has_total_cost() {
-  _has_bits_[0] |= 0x00040000u;
+  _has_bits_[0] |= 0x00100000u;
 }
 inline void QueryProfile::clear_has_total_cost() {
-  _has_bits_[0] &= ~0x00040000u;
+  _has_bits_[0] &= ~0x00100000u;
 }
 inline void QueryProfile::clear_total_cost() {
   total_cost_ = 0;
@@ -7439,6 +7449,30 @@ inline void QueryProfile::set_allocated_queryid(::std::string* queryid) {
   }
   queryid_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), queryid);
   // @@protoc_insertion_point(field_set_allocated:exec.shared.QueryProfile.queryId)
+}
+
+// optional int32 autoLimit = 23;
+inline bool QueryProfile::has_autolimit() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void QueryProfile::set_has_autolimit() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void QueryProfile::clear_has_autolimit() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void QueryProfile::clear_autolimit() {
+  autolimit_ = 0;
+  clear_has_autolimit();
+}
+inline ::google::protobuf::int32 QueryProfile::autolimit() const {
+  // @@protoc_insertion_point(field_get:exec.shared.QueryProfile.autoLimit)
+  return autolimit_;
+}
+inline void QueryProfile::set_autolimit(::google::protobuf::int32 value) {
+  set_has_autolimit();
+  autolimit_ = value;
+  // @@protoc_insertion_point(field_set:exec.shared.QueryProfile.autoLimit)
 }
 
 // -------------------------------------------------------------------

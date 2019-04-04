@@ -6197,6 +6197,13 @@ class RunQuery : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::exec::user::PreparedStatementHandle* mutable_prepared_statement_handle();
   void set_allocated_prepared_statement_handle(::exec::user::PreparedStatementHandle* prepared_statement_handle);
 
+  // optional int32 autolimit_rowcount = 6;
+  bool has_autolimit_rowcount() const;
+  void clear_autolimit_rowcount();
+  static const int kAutolimitRowcountFieldNumber = 6;
+  ::google::protobuf::int32 autolimit_rowcount() const;
+  void set_autolimit_rowcount(::google::protobuf::int32 value);
+
   // optional .exec.user.QueryResultsMode results_mode = 1;
   bool has_results_mode() const;
   void clear_results_mode();
@@ -6221,6 +6228,8 @@ class RunQuery : public ::google::protobuf::Message /* @@protoc_insertion_point(
   void clear_has_plan();
   void set_has_prepared_statement_handle();
   void clear_has_prepared_statement_handle();
+  void set_has_autolimit_rowcount();
+  void clear_has_autolimit_rowcount();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -6228,6 +6237,7 @@ class RunQuery : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment > fragments_;
   ::google::protobuf::internal::ArenaStringPtr plan_;
   ::exec::user::PreparedStatementHandle* prepared_statement_handle_;
+  ::google::protobuf::int32 autolimit_rowcount_;
   int results_mode_;
   int type_;
   friend struct ::protobuf_User_2eproto::TableStruct;
@@ -13771,13 +13781,13 @@ inline void ServerMeta::set_allocated_current_schema(::std::string* current_sche
 
 // optional .exec.user.QueryResultsMode results_mode = 1;
 inline bool RunQuery::has_results_mode() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void RunQuery::set_has_results_mode() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void RunQuery::clear_has_results_mode() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void RunQuery::clear_results_mode() {
   results_mode_ = 1;
@@ -13796,13 +13806,13 @@ inline void RunQuery::set_results_mode(::exec::user::QueryResultsMode value) {
 
 // optional .exec.shared.QueryType type = 2;
 inline bool RunQuery::has_type() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void RunQuery::set_has_type() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void RunQuery::clear_has_type() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void RunQuery::clear_type() {
   type_ = 1;
@@ -13968,6 +13978,30 @@ inline void RunQuery::set_allocated_prepared_statement_handle(::exec::user::Prep
   }
   prepared_statement_handle_ = prepared_statement_handle;
   // @@protoc_insertion_point(field_set_allocated:exec.user.RunQuery.prepared_statement_handle)
+}
+
+// optional int32 autolimit_rowcount = 6;
+inline bool RunQuery::has_autolimit_rowcount() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void RunQuery::set_has_autolimit_rowcount() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void RunQuery::clear_has_autolimit_rowcount() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void RunQuery::clear_autolimit_rowcount() {
+  autolimit_rowcount_ = 0;
+  clear_has_autolimit_rowcount();
+}
+inline ::google::protobuf::int32 RunQuery::autolimit_rowcount() const {
+  // @@protoc_insertion_point(field_get:exec.user.RunQuery.autolimit_rowcount)
+  return autolimit_rowcount_;
+}
+inline void RunQuery::set_autolimit_rowcount(::google::protobuf::int32 value) {
+  set_has_autolimit_rowcount();
+  autolimit_rowcount_ = value;
+  // @@protoc_insertion_point(field_set:exec.user.RunQuery.autolimit_rowcount)
 }
 
 #ifdef __GNUC__
