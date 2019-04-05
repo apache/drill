@@ -1,6 +1,6 @@
 ---
 title: "Querying the INFORMATION SCHEMA"
-date: 2018-11-07
+date: 2019-04-05
 parent: "Query Data"
 ---  
 
@@ -249,7 +249,7 @@ Drill can access:
     dfs.default              CustomerSocialProfile VIEW
     ----------------------------------------------------------------
 
-{% include startnote.html %}Currently, Drill only supports querying Drill views; Hive views are not yet supported.{% include endnote.html %}
+{% include startnote.html %}Starting in Drill 1.16, Drill can query Hive views.{% include endnote.html %}
 
 You can run a similar query to identify columns in tables and the data types
 of those columns:
