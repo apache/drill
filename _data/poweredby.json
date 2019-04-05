@@ -54,6 +54,24 @@
         "height": 60
       },
       "description": "At FinAnt, we use Apache Drill to do some ad-hoc queries, service data analytics."
+    },
+    {
+      "name": "IORA NUS",
+      "logo": {
+        "fileName": "IORA_NUS.png",
+        "width": 93,
+        "height": 60
+      },
+      "description": "At Institute of Operational Research & Analytics, our PhD students leverage Drill on desktops to conduct research work on large different datasets. This allows adhoc access to the data repository, while using R with Sergeant package to run analytical SQL queries."
+    },
+    {
+      "name": "Option3",
+      "logo": {
+        "fileName": "option3-io-logo.png",
+        "width": 153,
+        "height": 60
+      },
+      "description": "Docube&trade; is a Analytics and Visualization platform that allows users to import data, create and share interactive BI visualizations. We use Drill to respond to data requirements for chart visualization by processing large Parquet dataset using SQL and custom UDFs to provide a fast user experience."
     }
   ]
 }
