@@ -196,7 +196,9 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
     public void addAllocation(PhysicalOperator pop) {
       info.addInitialAllocation(pop.getInitialAllocation());
-      info.addMaxAllocation(memoryPerOperPerDrillbit.apply(this.endpoint.apply(info, minorFragmentId), pop));
+      long maxAllocation = memoryPerOperPerDrillbit.apply(this.endpoint.apply(info, minorFragmentId), pop);
+      info.addMaxAllocation(maxAllocation);
+      pop.setMaxAllocation(maxAllocation);
     }
 
     public void addUnnest(UnnestPOP unnest) {

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -165,17 +166,23 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
     return true;
   }
 
-  public List<PhysicalOperator> getBufferedOperators() {
+  public List<PhysicalOperator> getBufferedOperators(QueryContext queryContext) {
     List<PhysicalOperator> bufferedOps = new ArrayList<>();
-    root.accept(new BufferedOpFinder(), bufferedOps);
+    root.accept(new BufferedOpFinder(queryContext), bufferedOps);
     return bufferedOps;
   }
 
   protected static class BufferedOpFinder extends AbstractPhysicalVisitor<Void, List<PhysicalOperator>, RuntimeException> {
+    private final QueryContext context;
+
+    public BufferedOpFinder(QueryContext queryContext) {
+      this.context = queryContext;
+    }
+
     @Override
     public Void visitOp(PhysicalOperator op, List<PhysicalOperator> value)
       throws RuntimeException {
-      if (op.isBufferedOperator(null)) {
+      if (op.isBufferedOperator(context)) {
         value.add(op);
       }
       visitChildren(op, value);

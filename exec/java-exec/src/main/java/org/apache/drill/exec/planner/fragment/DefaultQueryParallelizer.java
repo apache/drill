@@ -55,7 +55,7 @@ public class DefaultQueryParallelizer extends SimpleParallelizer {
     if (planHasMemory) {
       return;
     }
-    List<PhysicalOperator> bufferedOpers = planningSet.getRootWrapper().getNode().getBufferedOperators();
+    List<PhysicalOperator> bufferedOpers = planningSet.getRootWrapper().getNode().getBufferedOperators(queryContext);
     MemoryAllocationUtilities.setupBufferedOpsMemoryAllocations(planHasMemory, bufferedOpers, queryContext);
   }
 
