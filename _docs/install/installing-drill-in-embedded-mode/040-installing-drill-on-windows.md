@@ -1,6 +1,6 @@
 ---
 title: "Installing Drill on Windows"
-date: 2019-04-05
+date: 2019-04-08
 parent: "Installing Drill in Embedded Mode"
 ---
 
@@ -17,17 +17,18 @@ Before you download and install Drill on your Windows machine, complete the foll
 
 ### Set the JAVA_HOME and PATH environment variables.  
 1.	Go to System Properties. 
-2.	On the Advanced Tab, click Environment Variables.![](https://i.imgur.com/ZQ04USE.png)  
-3.	Click New, and enter JAVA_HOME as the variable name. For the variable value, enter the path to your JDK installation. Note that instead of using Program Files in the path name, use progra~1. This is required because Drill cannot use file paths with spaces.![](https://i.imgur.com/sne3pE2.png)  
+2.	On the Advanced Tab, click Environment Variables.  
+![](https://i.imgur.com/lpytfmu.png)  
+3.	Click New, and enter JAVA_HOME as the variable name. For the variable value, enter the path to your JDK installation. Instead of using `Program Files` in the path name, use `progra~1`. This is required because Drill cannot use file paths with spaces.![](https://i.imgur.com/3CUoNNZ.png)  
 4.	Click OK to continue. 
-5.	In the System Variables section, select Path and then click Edit.![](https://i.imgur.com/yZAg2aB.png)
-6.	In the edit environment variable window, click New and enter `%JAVA_HOME%\bin`.![](https://i.imgur.com/Bpbjooe.png)
+5.	In the System Variables section, select Path and then click Edit.![](https://i.imgur.com/nqv68Nu.png)
+6.	In the Edit Environment Variable window, click New and enter `%JAVA_HOME%\bin`.![](https://i.imgur.com/2kevwLV.png)
 7.	Click OK to continue and exit the System Properties window.    
 
 
 ### Create Drill UDF directories and change the owner.  
 
-Drill has a UDF directories that you must create and assign yourself as owner (or the user that will start Drill) before starting Drill for the first time.  
+You, or the user that will start Drill, must manually create and own UDF directories. The directories must exist before starting Drill for the first time.   
 
 1.	Run the command prompt as administrator, and issue the following commands:  
   
@@ -38,8 +39,9 @@ Drill has a UDF directories that you must create and assign yourself as owner (o
 			mkdir "%userprofile%\drill\udf\staging"
 			takeown /R /F "%userprofile%\drill"
 
-2.	To verify that you (or the user that will run Drill) owns the directories and files, go to the `"%userprofile%\drill"` directory, right-click on it, and select Properties from the list.![](https://i.imgur.com/z8WRvqK.png)
-3.	Complete step 2 for all the directories within drill, including the /udf, /registry, /tmp, and /staging directories. 
+2.	To verify that you (or the user that will run Drill) owns the directories and files, go to the `"%userprofile%\drill"` directory, right-click on it, and select Properties from the list.  
+![](https://i.imgur.com/lLLYOMX.png)
+3.	Verify that you are the owner for all the directories within drill, including the /udf, /registry, /tmp, and /staging directories. If you are not the owner, Edit the permissions. 
 
 
 ## Download and Install Drill 
