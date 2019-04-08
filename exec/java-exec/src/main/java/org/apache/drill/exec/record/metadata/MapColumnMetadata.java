@@ -127,7 +127,7 @@ public class MapColumnMetadata extends AbstractColumnMetadata {
     if (isArray()) {
       builder.append("ARRAY<");
     }
-    builder.append("MAP<");
+    builder.append("STRUCT<");
     builder.append(mapSchema().toMetadataList().stream()
       .map(ColumnMetadata::columnString)
       .collect(Collectors.joining(", ")));
