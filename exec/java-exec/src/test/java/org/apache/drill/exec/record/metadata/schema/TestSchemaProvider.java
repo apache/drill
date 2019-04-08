@@ -132,7 +132,7 @@ public class TestSchemaProvider {
     properties.put("k2", "v2");
 
     assertFalse(provider.exists());
-    provider.store("i int, v varchar(10)", properties, StorageStrategy.DEFAULT);
+    provider.store("i int, v varchar(10), s struct<s1 int, s2 varchar>", properties, StorageStrategy.DEFAULT);
     assertTrue(provider.exists());
 
     String expectedContent = "{\n"
@@ -147,6 +147,11 @@ public class TestSchemaProvider {
       + "        \"name\" : \"v\",\n"
       + "        \"type\" : \"VARCHAR(10)\",\n"
       + "        \"mode\" : \"OPTIONAL\"\n"
+      + "      },\n"
+      + "      {\n"
+      + "        \"name\" : \"s\",\n"
+      + "        \"type\" : \"STRUCT<`s1` INT, `s2` VARCHAR>\",\n"
+      + "        \"mode\" : \"REQUIRED\"\n"
       + "      }\n"
       + "    ],\n"
       + "    \"properties\" : {\n"

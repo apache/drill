@@ -295,7 +295,7 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
       } catch (IOException e) {
         throw UserException.resourceError(e)
           .message(e.getMessage())
-          .addContext("Error while accessing table location for [%s]", sqlCall.getTable())
+          .addContext("Error while accessing schema for table [%s]", sqlCall.getTable())
           .build(logger);
       }
     }
