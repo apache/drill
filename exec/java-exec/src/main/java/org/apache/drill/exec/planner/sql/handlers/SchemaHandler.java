@@ -35,6 +35,7 @@ import org.apache.drill.exec.record.metadata.schema.FsMetastoreSchemaProvider;
 import org.apache.drill.exec.record.metadata.schema.PathSchemaProvider;
 import org.apache.drill.exec.record.metadata.schema.SchemaContainer;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
+import org.apache.drill.exec.record.metadata.schema.parser.SchemaParsingException;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
@@ -133,7 +134,11 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
           ExecConstants.PERSISTENT_TABLE_UMASK).string_val, false);
         schemaProvider.store(schemaString, sqlCall.getProperties(), storageStrategy);
         return DirectPlan.createDirectPlan(context, true, String.format("Created schema for [%s]", schemaSource));
-
+      } catch (SchemaParsingException e) {
+        throw UserException.parseError(e)
+          .message(e.getMessage())
+          .addContext("Schema: " + schemaString)
+          .build(logger);
       } catch (IOException e) {
         throw UserException.resourceError(e)
           .message(e.getMessage())
