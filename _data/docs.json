@@ -920,8 +920,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ODBC/JDBC Interfaces", 
-            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "next_title": "Syslog Format Plugin", 
+            "next_url": "/docs/syslog-format-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "Image Metadata Format Plugin", 
             "previous_url": "/docs/image-metadata-format-plugin/", 
@@ -2911,14 +2911,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "Syslog Format Plugin", 
+                    "next_url": "/docs/syslog-format-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Image Metadata Format Plugin", 
                     "previous_url": "/docs/image-metadata-format-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/115-azure-blob-storage-plugin.md", 
                     "title": "Azure Blob Storage Plugin", 
                     "url": "/docs/azure-blob-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Azure Blob Storage Plugin", 
+                    "previous_url": "/docs/azure-blob-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/116-sys-log-format-plugin.md", 
+                    "title": "Syslog Format Plugin", 
+                    "url": "/docs/syslog-format-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -7673,8 +7690,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "Azure Blob Storage Plugin", 
-            "previous_url": "/docs/azure-blob-storage-plugin/", 
+            "previous_title": "Syslog Format Plugin", 
+            "previous_url": "/docs/syslog-format-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
@@ -14538,6 +14555,23 @@
             "title": "Supported SQL Commands", 
             "url": "/docs/supported-sql-commands/"
         }, 
+        "Syslog Format Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "ODBC/JDBC Interfaces", 
+            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "Azure Blob Storage Plugin", 
+            "previous_url": "/docs/azure-blob-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/116-sys-log-format-plugin.md", 
+            "title": "Syslog Format Plugin", 
+            "url": "/docs/syslog-format-plugin/"
+        }, 
         "Tableau Examples": {
             "breadcrumbs": [
                 {
@@ -17791,14 +17825,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "Syslog Format Plugin", 
+                    "next_url": "/docs/syslog-format-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Image Metadata Format Plugin", 
                     "previous_url": "/docs/image-metadata-format-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/115-azure-blob-storage-plugin.md", 
                     "title": "Azure Blob Storage Plugin", 
                     "url": "/docs/azure-blob-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Azure Blob Storage Plugin", 
+                    "previous_url": "/docs/azure-blob-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/116-sys-log-format-plugin.md", 
+                    "title": "Syslog Format Plugin", 
+                    "url": "/docs/syslog-format-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -18423,8 +18474,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "Azure Blob Storage Plugin", 
-            "previous_url": "/docs/azure-blob-storage-plugin/", 
+            "previous_title": "Syslog Format Plugin", 
+            "previous_url": "/docs/syslog-format-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
