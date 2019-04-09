@@ -24,7 +24,7 @@ Install Prerequisites
 0) Install development tools
     $>yum groupinstall 'Development Tools'
 
-1) CMAKE 3
+1) CMAKE 3.0
     $> yum install cmake3
 
 2.1) Download protobuf 3.6 from :
