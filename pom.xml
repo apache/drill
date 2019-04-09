@@ -99,7 +99,6 @@
     <commons.net.version>3.6</commons.net.version>
     <commons.validator.version>1.6</commons.validator.version>
     <commons.text.version>1.6</commons.text.version>
-    <protobuf.version>3.6.1</protobuf.version>
   </properties>
 
   <scm>
@@ -1769,11 +1768,6 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
         <version>${commons.text.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>${protobuf.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

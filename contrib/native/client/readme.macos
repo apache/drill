@@ -36,7 +36,7 @@ Install Prerequisites
 2.0) Install cppunit 
   $> brew install cppunit 
 
-2.1) Install protobuf 3.6.1 (or higher)
+2.1) Install protobuf 2.5.0 (or higher)
   $> brew install protobuf
 
 2.2) Install zookeeper

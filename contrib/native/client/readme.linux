@@ -27,15 +27,15 @@ Install Prerequisites
 1) CMAKE 3.0
     $> yum install cmake3
 
-2.1) Download protobuf 3.6 from :
-    https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protobuf-java-3.6.1.zip
+2.1) Download protobuf 2.5 from :
+    http://rpm.pbone.net/index.php3/stat/4/idpl/23552166/dir/centos_6/com/protobuf-2.5.0-16.1.x86_64.rpm.html
+    http://rpm.pbone.net/index.php3/stat/4/idpl/23552167/dir/centos_6/com/protobuf-compiler-2.5.0-16.1.x86_64.rpm.html
+    http://rpm.pbone.net/index.php3/stat/4/idpl/23552169/dir/centos_6/com/protobuf-devel-2.5.0-16.1.x86_64.rpm.html
 
 2.2) Install Protobufs
-    $> unzip protobuf-java-3.6.1.zip
-    $> cd protobuf-3.6.1
-    $> ./configure
-    $> sudo make
-    $> sudo make install
+    $> sudo yum install protobuf
+    $> sudo yum install protobuf-compiler
+    $> sudo yum install protobuf-devel
 
 3)
 3.1) Install Zookeeper prerequisites

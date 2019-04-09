@@ -4,7 +4,7 @@ The java sources are generated into src/main/java and checked in.
 
 To regenerate the sources after making changes to .proto files
 ---------------------------------------------------------------
-1. Ensure that the protobuf 'protoc' tool (version 3.6.1 or newer (but 3.x series)) is
+1. Ensure that the protobuf 'protoc' tool (version 2.5 or newer (but 2.x series)) is
 in your PATH (you may need to download and build it first). You can 
 download it from http://code.google.com/p/protobuf/downloads/list.
 
@@ -14,7 +14,7 @@ download it from http://code.google.com/p/protobuf/downloads/list.
                  Command: /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
               b) Download and install "protoc"
-                 Command: brew install protobuf361  --- installs protobuf for version 3.6.1
+                 Command: brew install protobuf250  --- installs protobuf for version 2.5.0
                           brew install protobuf     --- installs latest protobuf version
 
               c) Check the version of "protoc"

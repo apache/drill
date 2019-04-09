@@ -23,18 +23,12 @@ package org.apache.drill.exec.proto;
 public final class ExecProtos {
   private ExecProtos() {}
   public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
-  }
-
-  public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions(
-        (com.google.protobuf.ExtensionRegistryLite) registry);
   }
-  public interface FragmentHandleOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.FragmentHandle)
-      com.google.protobuf.MessageOrBuilder {
+  public interface FragmentHandleOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.shared.QueryId query_id = 1;
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      */
@@ -48,6 +42,7 @@ public final class ExecProtos {
      */
     org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder();
 
+    // optional int32 major_fragment_id = 2;
     /**
      * <code>optional int32 major_fragment_id = 2;</code>
      */
@@ -57,6 +52,7 @@ public final class ExecProtos {
      */
     int getMajorFragmentId();
 
+    // optional int32 minor_fragment_id = 3;
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
      */
@@ -66,6 +62,7 @@ public final class ExecProtos {
      */
     int getMinorFragmentId();
 
+    // optional .exec.shared.QueryId parent_query_id = 4;
     /**
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
      */
@@ -82,33 +79,36 @@ public final class ExecProtos {
   /**
    * Protobuf type {@code exec.bit.FragmentHandle}
    */
-  public  static final class FragmentHandle extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:exec.bit.FragmentHandle)
-      FragmentHandleOrBuilder {
-  private static final long serialVersionUID = 0L;
+  public static final class FragmentHandle extends
+      com.google.protobuf.GeneratedMessage
+      implements FragmentHandleOrBuilder {
     // Use FragmentHandle.newBuilder() to construct.
-    private FragmentHandle(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private FragmentHandle(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private FragmentHandle() {
-      majorFragmentId_ = 0;
-      minorFragmentId_ = 0;
+    private FragmentHandle(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final FragmentHandle defaultInstance;
+    public static FragmentHandle getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public FragmentHandle getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private FragmentHandle(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -120,6 +120,13 @@ public final class ExecProtos {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -156,20 +163,13 @@ public final class ExecProtos {
               bitField0_ |= 0x00000008;
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -180,15 +180,30 @@ public final class ExecProtos {
       return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_FragmentHandle_descriptor;
     }
 
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_FragmentHandle_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               org.apache.drill.exec.proto.ExecProtos.FragmentHandle.class, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder.class);
     }
 
+    public static com.google.protobuf.Parser<FragmentHandle> PARSER =
+        new com.google.protobuf.AbstractParser<FragmentHandle>() {
+      public FragmentHandle parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new FragmentHandle(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<FragmentHandle> getParserForType() {
+      return PARSER;
+    }
+
     private int bitField0_;
+    // optional .exec.shared.QueryId query_id = 1;
     public static final int QUERY_ID_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
     /**
@@ -201,15 +216,16 @@ public final class ExecProtos {
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
-      return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
+      return queryId_;
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
-      return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
+      return queryId_;
     }
 
+    // optional int32 major_fragment_id = 2;
     public static final int MAJOR_FRAGMENT_ID_FIELD_NUMBER = 2;
     private int majorFragmentId_;
     /**
@@ -225,6 +241,7 @@ public final class ExecProtos {
       return majorFragmentId_;
     }
 
+    // optional int32 minor_fragment_id = 3;
     public static final int MINOR_FRAGMENT_ID_FIELD_NUMBER = 3;
     private int minorFragmentId_;
     /**
@@ -240,6 +257,7 @@ public final class ExecProtos {
       return minorFragmentId_;
     }
 
+    // optional .exec.shared.QueryId parent_query_id = 4;
     public static final int PARENT_QUERY_ID_FIELD_NUMBER = 4;
     private org.apache.drill.exec.proto.UserBitShared.QueryId parentQueryId_;
     /**
@@ -252,31 +270,35 @@ public final class ExecProtos {
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryId getParentQueryId() {
-      return parentQueryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : parentQueryId_;
+      return parentQueryId_;
     }
     /**
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getParentQueryIdOrBuilder() {
-      return parentQueryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : parentQueryId_;
+      return parentQueryId_;
     }
 
+    private void initFields() {
+      queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+      majorFragmentId_ = 0;
+      minorFragmentId_ = 0;
+      parentQueryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+    }
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, getQueryId());
+        output.writeMessage(1, queryId_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeInt32(2, majorFragmentId_);
@@ -285,20 +307,20 @@ public final class ExecProtos {
         output.writeInt32(3, minorFragmentId_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeMessage(4, getParentQueryId());
+        output.writeMessage(4, parentQueryId_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
-    @java.lang.Override
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getQueryId());
+          .computeMessageSize(1, queryId_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -310,87 +332,20 @@ public final class ExecProtos {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, getParentQueryId());
+          .computeMessageSize(4, parentQueryId_);
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof org.apache.drill.exec.proto.ExecProtos.FragmentHandle)) {
-        return super.equals(obj);
-      }
-      org.apache.drill.exec.proto.ExecProtos.FragmentHandle other = (org.apache.drill.exec.proto.ExecProtos.FragmentHandle) obj;
-
-      boolean result = true;
-      result = result && (hasQueryId() == other.hasQueryId());
-      if (hasQueryId()) {
-        result = result && getQueryId()
-            .equals(other.getQueryId());
-      }
-      result = result && (hasMajorFragmentId() == other.hasMajorFragmentId());
-      if (hasMajorFragmentId()) {
-        result = result && (getMajorFragmentId()
-            == other.getMajorFragmentId());
-      }
-      result = result && (hasMinorFragmentId() == other.hasMinorFragmentId());
-      if (hasMinorFragmentId()) {
-        result = result && (getMinorFragmentId()
-            == other.getMinorFragmentId());
-      }
-      result = result && (hasParentQueryId() == other.hasParentQueryId());
-      if (hasParentQueryId()) {
-        result = result && getParentQueryId()
-            .equals(other.getParentQueryId());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasQueryId()) {
-        hash = (37 * hash) + QUERY_ID_FIELD_NUMBER;
-        hash = (53 * hash) + getQueryId().hashCode();
-      }
-      if (hasMajorFragmentId()) {
-        hash = (37 * hash) + MAJOR_FRAGMENT_ID_FIELD_NUMBER;
-        hash = (53 * hash) + getMajorFragmentId();
-      }
-      if (hasMinorFragmentId()) {
-        hash = (37 * hash) + MINOR_FRAGMENT_ID_FIELD_NUMBER;
-        hash = (53 * hash) + getMinorFragmentId();
-      }
-      if (hasParentQueryId()) {
-        hash = (37 * hash) + PARENT_QUERY_ID_FIELD_NUMBER;
-        hash = (53 * hash) + getParentQueryId().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
     public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -414,59 +369,46 @@ public final class ExecProtos {
     }
     public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
-    @java.lang.Override
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(org.apache.drill.exec.proto.ExecProtos.FragmentHandle prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -474,16 +416,14 @@ public final class ExecProtos {
      * Protobuf type {@code exec.bit.FragmentHandle}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.FragmentHandle)
-        org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_FragmentHandle_descriptor;
       }
 
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_FragmentHandle_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -496,22 +436,24 @@ public final class ExecProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getQueryIdFieldBuilder();
           getParentQueryIdFieldBuilder();
         }
       }
-      @java.lang.Override
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         if (queryIdBuilder_ == null) {
-          queryId_ = null;
+          queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
         } else {
           queryIdBuilder_.clear();
         }
@@ -521,7 +463,7 @@ public final class ExecProtos {
         minorFragmentId_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
         if (parentQueryIdBuilder_ == null) {
-          parentQueryId_ = null;
+          parentQueryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
         } else {
           parentQueryIdBuilder_.clear();
         }
@@ -529,18 +471,19 @@ public final class ExecProtos {
         return this;
       }
 
-      @java.lang.Override
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_FragmentHandle_descriptor;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.ExecProtos.FragmentHandle getDefaultInstanceForType() {
         return org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.ExecProtos.FragmentHandle build() {
         org.apache.drill.exec.proto.ExecProtos.FragmentHandle result = buildPartial();
         if (!result.isInitialized()) {
@@ -549,7 +492,6 @@ public final class ExecProtos {
         return result;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.ExecProtos.FragmentHandle buildPartial() {
         org.apache.drill.exec.proto.ExecProtos.FragmentHandle result = new org.apache.drill.exec.proto.ExecProtos.FragmentHandle(this);
         int from_bitField0_ = bitField0_;
@@ -583,39 +525,6 @@ public final class ExecProtos {
         return result;
       }
 
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.apache.drill.exec.proto.ExecProtos.FragmentHandle) {
           return mergeFrom((org.apache.drill.exec.proto.ExecProtos.FragmentHandle)other);
@@ -639,17 +548,14 @@ public final class ExecProtos {
         if (other.hasParentQueryId()) {
           mergeParentQueryId(other.getParentQueryId());
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -659,7 +565,7 @@ public final class ExecProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (org.apache.drill.exec.proto.ExecProtos.FragmentHandle) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -669,8 +575,9 @@ public final class ExecProtos {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
+      // optional .exec.shared.QueryId query_id = 1;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
       /**
        * <code>optional .exec.shared.QueryId query_id = 1;</code>
@@ -683,7 +590,7 @@ public final class ExecProtos {
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
         if (queryIdBuilder_ == null) {
-          return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
+          return queryId_;
         } else {
           return queryIdBuilder_.getMessage();
         }
@@ -724,7 +631,6 @@ public final class ExecProtos {
       public Builder mergeQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
         if (queryIdBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              queryId_ != null &&
               queryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
             queryId_ =
               org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(queryId_).mergeFrom(value).buildPartial();
@@ -743,7 +649,7 @@ public final class ExecProtos {
        */
       public Builder clearQueryId() {
         if (queryIdBuilder_ == null) {
-          queryId_ = null;
+          queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
           onChanged();
         } else {
           queryIdBuilder_.clear();
@@ -766,20 +672,19 @@ public final class ExecProtos {
         if (queryIdBuilder_ != null) {
           return queryIdBuilder_.getMessageOrBuilder();
         } else {
-          return queryId_ == null ?
-              org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
+          return queryId_;
         }
       }
       /**
        * <code>optional .exec.shared.QueryId query_id = 1;</code>
        */
-      private com.google.protobuf.SingleFieldBuilderV3<
+      private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> 
           getQueryIdFieldBuilder() {
         if (queryIdBuilder_ == null) {
-          queryIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          queryIdBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>(
-                  getQueryId(),
+                  queryId_,
                   getParentForChildren(),
                   isClean());
           queryId_ = null;
@@ -787,6 +692,7 @@ public final class ExecProtos {
         return queryIdBuilder_;
       }
 
+      // optional int32 major_fragment_id = 2;
       private int majorFragmentId_ ;
       /**
        * <code>optional int32 major_fragment_id = 2;</code>
@@ -819,6 +725,7 @@ public final class ExecProtos {
         return this;
       }
 
+      // optional int32 minor_fragment_id = 3;
       private int minorFragmentId_ ;
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
@@ -851,8 +758,9 @@ public final class ExecProtos {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.QueryId parentQueryId_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
+      // optional .exec.shared.QueryId parent_query_id = 4;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId parentQueryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> parentQueryIdBuilder_;
       /**
        * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
@@ -865,7 +773,7 @@ public final class ExecProtos {
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryId getParentQueryId() {
         if (parentQueryIdBuilder_ == null) {
-          return parentQueryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : parentQueryId_;
+          return parentQueryId_;
         } else {
           return parentQueryIdBuilder_.getMessage();
         }
@@ -906,7 +814,6 @@ public final class ExecProtos {
       public Builder mergeParentQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
         if (parentQueryIdBuilder_ == null) {
           if (((bitField0_ & 0x00000008) == 0x00000008) &&
-              parentQueryId_ != null &&
               parentQueryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
             parentQueryId_ =
               org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(parentQueryId_).mergeFrom(value).buildPartial();
@@ -925,7 +832,7 @@ public final class ExecProtos {
        */
       public Builder clearParentQueryId() {
         if (parentQueryIdBuilder_ == null) {
-          parentQueryId_ = null;
+          parentQueryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
           onChanged();
         } else {
           parentQueryIdBuilder_.clear();
@@ -948,83 +855,41 @@ public final class ExecProtos {
         if (parentQueryIdBuilder_ != null) {
           return parentQueryIdBuilder_.getMessageOrBuilder();
         } else {
-          return parentQueryId_ == null ?
-              org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : parentQueryId_;
+          return parentQueryId_;
         }
       }
       /**
        * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
        */
-      private com.google.protobuf.SingleFieldBuilderV3<
+      private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> 
           getParentQueryIdFieldBuilder() {
         if (parentQueryIdBuilder_ == null) {
-          parentQueryIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          parentQueryIdBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>(
-                  getParentQueryId(),
+                  parentQueryId_,
                   getParentForChildren(),
                   isClean());
           parentQueryId_ = null;
         }
         return parentQueryIdBuilder_;
       }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:exec.bit.FragmentHandle)
     }
 
-    // @@protoc_insertion_point(class_scope:exec.bit.FragmentHandle)
-    private static final org.apache.drill.exec.proto.ExecProtos.FragmentHandle DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.apache.drill.exec.proto.ExecProtos.FragmentHandle();
+      defaultInstance = new FragmentHandle(true);
+      defaultInstance.initFields();
     }
 
-    public static org.apache.drill.exec.proto.ExecProtos.FragmentHandle getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<FragmentHandle>
-        PARSER = new com.google.protobuf.AbstractParser<FragmentHandle>() {
-      @java.lang.Override
-      public FragmentHandle parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FragmentHandle(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<FragmentHandle> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<FragmentHandle> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public org.apache.drill.exec.proto.ExecProtos.FragmentHandle getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:exec.bit.FragmentHandle)
   }
 
-  public interface ServerPreparedStatementStateOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.ServerPreparedStatementState)
-      com.google.protobuf.MessageOrBuilder {
+  public interface ServerPreparedStatementStateOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional string sql_query = 1;
     /**
      * <code>optional string sql_query = 1;</code>
      */
@@ -1040,40 +905,45 @@ public final class ExecProtos {
         getSqlQueryBytes();
   }
   /**
+   * Protobuf type {@code exec.bit.ServerPreparedStatementState}
+   *
    * <pre>
+   *
    * Prepared statement state on server side. Clients do not
    * need to know the contents. They just need to submit it back to
    * server when executing the prepared statement.
    * </pre>
-   *
-   * Protobuf type {@code exec.bit.ServerPreparedStatementState}
    */
-  public  static final class ServerPreparedStatementState extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:exec.bit.ServerPreparedStatementState)
-      ServerPreparedStatementStateOrBuilder {
-  private static final long serialVersionUID = 0L;
+  public static final class ServerPreparedStatementState extends
+      com.google.protobuf.GeneratedMessage
+      implements ServerPreparedStatementStateOrBuilder {
     // Use ServerPreparedStatementState.newBuilder() to construct.
-    private ServerPreparedStatementState(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private ServerPreparedStatementState(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private ServerPreparedStatementState() {
-      sqlQuery_ = "";
+    private ServerPreparedStatementState(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ServerPreparedStatementState defaultInstance;
+    public static ServerPreparedStatementState getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public ServerPreparedStatementState getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private ServerPreparedStatementState(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1085,17 +955,16 @@ public final class ExecProtos {
             case 0:
               done = true;
               break;
-            case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000001;
-              sqlQuery_ = bs;
-              break;
-            }
             default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              sqlQuery_ = input.readBytes();
               break;
             }
           }
@@ -1104,7 +973,7 @@ public final class ExecProtos {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -1115,17 +984,32 @@ public final class ExecProtos {
       return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_ServerPreparedStatementState_descriptor;
     }
 
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_ServerPreparedStatementState_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.class, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder.class);
     }
 
+    public static com.google.protobuf.Parser<ServerPreparedStatementState> PARSER =
+        new com.google.protobuf.AbstractParser<ServerPreparedStatementState>() {
+      public ServerPreparedStatementState parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ServerPreparedStatementState(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ServerPreparedStatementState> getParserForType() {
+      return PARSER;
+    }
+
     private int bitField0_;
+    // optional string sql_query = 1;
     public static final int SQL_QUERY_FIELD_NUMBER = 1;
-    private volatile java.lang.Object sqlQuery_;
+    private java.lang.Object sqlQuery_;
     /**
      * <code>optional string sql_query = 1;</code>
      */
@@ -1166,87 +1050,49 @@ public final class ExecProtos {
       }
     }
 
+    private void initFields() {
+      sqlQuery_ = "";
+    }
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, sqlQuery_);
+        output.writeBytes(1, getSqlQueryBytes());
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
-    @java.lang.Override
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, sqlQuery_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getSqlQueryBytes());
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState)) {
-        return super.equals(obj);
-      }
-      org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState other = (org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState) obj;
-
-      boolean result = true;
-      result = result && (hasSqlQuery() == other.hasSqlQuery());
-      if (hasSqlQuery()) {
-        result = result && getSqlQuery()
-            .equals(other.getSqlQuery());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasSqlQuery()) {
-        hash = (37 * hash) + SQL_QUERY_FIELD_NUMBER;
-        hash = (53 * hash) + getSqlQuery().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
     public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1270,82 +1116,68 @@ public final class ExecProtos {
     }
     public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
-    @java.lang.Override
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
     /**
+     * Protobuf type {@code exec.bit.ServerPreparedStatementState}
+     *
      * <pre>
+     *
      * Prepared statement state on server side. Clients do not
      * need to know the contents. They just need to submit it back to
      * server when executing the prepared statement.
      * </pre>
-     *
-     * Protobuf type {@code exec.bit.ServerPreparedStatementState}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.ServerPreparedStatementState)
-        org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementStateOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementStateOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_ServerPreparedStatementState_descriptor;
       }
 
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_ServerPreparedStatementState_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -1358,16 +1190,18 @@ public final class ExecProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         sqlQuery_ = "";
@@ -1375,18 +1209,19 @@ public final class ExecProtos {
         return this;
       }
 
-      @java.lang.Override
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_ServerPreparedStatementState_descriptor;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState getDefaultInstanceForType() {
         return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.getDefaultInstance();
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState build() {
         org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState result = buildPartial();
         if (!result.isInitialized()) {
@@ -1395,7 +1230,6 @@ public final class ExecProtos {
         return result;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState buildPartial() {
         org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState result = new org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState(this);
         int from_bitField0_ = bitField0_;
@@ -1409,39 +1243,6 @@ public final class ExecProtos {
         return result;
       }
 
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState) {
           return mergeFrom((org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState)other);
@@ -1458,17 +1259,14 @@ public final class ExecProtos {
           sqlQuery_ = other.sqlQuery_;
           onChanged();
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1478,7 +1276,7 @@ public final class ExecProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -1488,6 +1286,7 @@ public final class ExecProtos {
       }
       private int bitField0_;
 
+      // optional string sql_query = 1;
       private java.lang.Object sqlQuery_ = "";
       /**
        * <code>optional string sql_query = 1;</code>
@@ -1501,12 +1300,9 @@ public final class ExecProtos {
       public java.lang.String getSqlQuery() {
         java.lang.Object ref = sqlQuery_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            sqlQuery_ = s;
-          }
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          sqlQuery_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -1563,75 +1359,34 @@ public final class ExecProtos {
         onChanged();
         return this;
       }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:exec.bit.ServerPreparedStatementState)
     }
 
-    // @@protoc_insertion_point(class_scope:exec.bit.ServerPreparedStatementState)
-    private static final org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState();
+      defaultInstance = new ServerPreparedStatementState(true);
+      defaultInstance.initFields();
     }
 
-    public static org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<ServerPreparedStatementState>
-        PARSER = new com.google.protobuf.AbstractParser<ServerPreparedStatementState>() {
-      @java.lang.Override
-      public ServerPreparedStatementState parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ServerPreparedStatementState(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<ServerPreparedStatementState> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<ServerPreparedStatementState> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:exec.bit.ServerPreparedStatementState)
   }
 
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_FragmentHandle_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_FragmentHandle_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_ServerPreparedStatementState_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_ServerPreparedStatementState_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
+  private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
     java.lang.String[] descriptorData = {
@@ -1646,33 +1401,31 @@ public final class ExecProtos {
       "ecProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
+      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+        public com.google.protobuf.ExtensionRegistry assignDescriptors(
+            com.google.protobuf.Descriptors.FileDescriptor root) {
+          descriptor = root;
+          internal_static_exec_bit_FragmentHandle_descriptor =
+            getDescriptor().getMessageTypes().get(0);
+          internal_static_exec_bit_FragmentHandle_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_FragmentHandle_descriptor,
+              new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", "ParentQueryId", });
+          internal_static_exec_bit_ServerPreparedStatementState_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_exec_bit_ServerPreparedStatementState_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_ServerPreparedStatementState_descriptor,
+              new java.lang.String[] { "SqlQuery", });
+          return null;
+        }
+      };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.exec.proto.CoordinationProtos.getDescriptor(),
           org.apache.drill.exec.proto.UserBitShared.getDescriptor(),
         }, assigner);
-    internal_static_exec_bit_FragmentHandle_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_exec_bit_FragmentHandle_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_exec_bit_FragmentHandle_descriptor,
-        new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", "ParentQueryId", });
-    internal_static_exec_bit_ServerPreparedStatementState_descriptor =
-      getDescriptor().getMessageTypes().get(1);
-    internal_static_exec_bit_ServerPreparedStatementState_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_exec_bit_ServerPreparedStatementState_descriptor,
-        new java.lang.String[] { "SqlQuery", });
-    org.apache.drill.exec.proto.CoordinationProtos.getDescriptor();
-    org.apache.drill.exec.proto.UserBitShared.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

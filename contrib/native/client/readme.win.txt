@@ -118,8 +118,8 @@ Windows platforms should be more or less similar.
         iii) If you do not have the 64 bit assembler installed, boost-context does not
         build. It is safe to ignore it as boost-context is not needed for Drill
 
-2.2 Protobuf (3.6.1)
-    Get protobuf from here: https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-win32.zip
+2.2 Protobuf (2.5.0)
+    Get protobuf from here: https://protobuf.googlecode.com/files/protobuf-2.5.0.zip
 
     a) Protobuf builds static libraries
     b) In Visual Studio, open <PROTOBUF_HOME>/vsprojects/protobuf.sln. The IDE may
